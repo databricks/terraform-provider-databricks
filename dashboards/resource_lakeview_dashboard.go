@@ -2,35 +2,11 @@ package dashboards
 
 import (
 	"context"
-	"crypto/md5"
-	"fmt"
-	"log"
 
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// Calculates MD5 hash of the given content
-func calculateMd5Hash(content []byte) string {
-	return fmt.Sprintf("%x", md5.Sum(content))
-}
-
-// Reads content from a JSON string or a file path and returns the content and its MD5 hash
-func readSerializedJsonContent(jsonStr, filePath string) (serJSON string, md5Hash string, err error) {
-	var content []byte
-	if filePath != "" {
-		content, err = common.ReadFileContent(filePath)
-		if err != nil {
-			return "", "", err
-		}
-	} else {
-		log.Printf("[INFO] Reading `serialized_json` of %d bytes", len(jsonStr))
-		content = []byte(jsonStr)
-	}
-	md5Hash = calculateMd5Hash(content)
-	return string(content), md5Hash, nil
-}
 
 // ResourceLakeviewDashboard manages lakeview dashboards
 func ResourceLakeviewDashboard() common.Resource {
@@ -48,11 +24,11 @@ func ResourceLakeviewDashboard() common.Resource {
 			s["path"].Computed = true
 			s["serialized_dashboard"].ConflictsWith = []string{"file_path"}
 			s["serialized_dashboard"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				_, new_json_hash, err := readSerializedJsonContent(new, d.Get("file_path").(string))
+				_, newHash, err := common.ReadSerializedJsonContent(new, d.Get("file_path").(string))
 				if err != nil {
 					return false
 				}
-				return d.Get("md5").(string) == new_json_hash && !d.Get("dashboard_change_detected").(bool)
+				return d.Get("md5").(string) == newHash && !d.Get("dashboard_change_detected").(bool)
 			}
 			s["update_time"].Computed = true
 			s["warehouse_id"].Optional = false
@@ -85,24 +61,24 @@ func ResourceLakeviewDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			var new_dashboard dashboards.CreateDashboardRequest
-			common.DataToStructPointer(d, s, &new_dashboard)
-			content, md5Hash, err := readSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
+			var newDashboardRequest dashboards.CreateDashboardRequest
+			common.DataToStructPointer(d, s, &newDashboardRequest)
+			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
 			}
 			d.Set("md5", md5Hash)
-			new_dashboard.SerializedDashboard = content
-			created_dashboard, err := w.Lakeview.Create(ctx, new_dashboard)
+			newDashboardRequest.SerializedDashboard = content
+			createdDashboard, err := w.Lakeview.Create(ctx, newDashboardRequest)
 			if err != nil {
 				return err
 			}
 
-			d.Set("etag", created_dashboard.Etag)
+			d.Set("etag", createdDashboard.Etag)
 
 			// We need to 'Force send' the EmbedCredentials field because it is 'omitempty' and if it is not set, it will be ignored. This is a workaround to force the field to be sent if the user wants to set 'embed_credentials' to false.
 			_, err = w.Lakeview.Publish(ctx, dashboards.PublishRequest{
-				DashboardId:      created_dashboard.DashboardId,
+				DashboardId:      createdDashboard.DashboardId,
 				WarehouseId:      d.Get("warehouse_id").(string),
 				EmbedCredentials: d.Get("embed_credentials").(bool),
 				ForceSendFields:  []string{"EmbedCredentials"},
@@ -111,7 +87,7 @@ func ResourceLakeviewDashboard() common.Resource {
 				return err
 			}
 
-			d.SetId(created_dashboard.DashboardId)
+			d.SetId(createdDashboard.DashboardId)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -134,20 +110,20 @@ func ResourceLakeviewDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			var dashboard dashboards.UpdateDashboardRequest
-			common.DataToStructPointer(d, s, &dashboard)
-			dashboard.DashboardId = d.Get("dashboard_id").(string)
-			content, md5Hash, err := readSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
+			var updateDashboardRequest dashboards.UpdateDashboardRequest
+			common.DataToStructPointer(d, s, &updateDashboardRequest)
+			updateDashboardRequest.DashboardId = d.Get("dashboard_id").(string)
+			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
 			}
 			d.Set("md5", md5Hash)
-			dashboard.SerializedDashboard = content
-			resp, err := w.Lakeview.Update(ctx, dashboard)
+			updateDashboardRequest.SerializedDashboard = content
+			updatedDashboard, err := w.Lakeview.Update(ctx, updateDashboardRequest)
 			if err != nil {
 				return err
 			}
-			d.Set("etag", resp.Etag)
+			d.Set("etag", updatedDashboard.Etag)
 
 			// We need to 'Force send' the EmbedCredentials field because it is 'omitempty' and if it is not set, it will be ignored. This is a workaround to force the field to be sent if the user wants to set 'embed_credentials' to false.
 			_, err = w.Lakeview.Publish(ctx, dashboards.PublishRequest{

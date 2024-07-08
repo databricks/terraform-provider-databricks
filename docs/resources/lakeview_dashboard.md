@@ -50,5 +50,5 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The unique ID of the Lakeview dashboard.
 
 ## Notes
-* Currently, only one of `serialized_dashboard` or `file_path` can be used throughout the lifecycle of the dashboard. If you want to switch from one to the other, you must first destroy the dashboard resource and then recreate it with the new attribute.
-* Currently, dashboards managed by Terraform will be published automatically.
+* Only one of `serialized_dashboard` or `file_path` can be used throughout the lifecycle of the dashboard. If you want to switch from one to the other, you must first destroy the dashboard resource and then recreate it with the new attribute.
+* Dashboards managed by Terraform will be published automatically.

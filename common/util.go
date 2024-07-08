@@ -3,6 +3,8 @@ package common
 import (
 	"bufio"
 	"context"
+	"crypto/md5"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -57,4 +59,25 @@ func ReadFileContent(source string) ([]byte, error) {
 	defer f.Close()
 	reader := bufio.NewReader(f)
 	return io.ReadAll(reader)
+}
+
+// Calculates MD5 hash of the given content
+func CalculateMd5Hash(content []byte) string {
+	return fmt.Sprintf("%x", md5.Sum(content))
+}
+
+// Reads content from a JSON string or a file path and returns the content and its MD5 hash
+func ReadSerializedJsonContent(jsonStr, filePath string) (serJSON string, md5Hash string, err error) {
+	var content []byte
+	if filePath != "" {
+		content, err = ReadFileContent(filePath)
+		if err != nil {
+			return "", "", err
+		}
+	} else {
+		log.Printf("[INFO] Reading `serialized_json` of %d bytes", len(jsonStr))
+		content = []byte(jsonStr)
+	}
+	md5Hash = CalculateMd5Hash(content)
+	return string(content), md5Hash, nil
 }

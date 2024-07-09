@@ -54,3 +54,22 @@ jobs:
         run: |
           # Exit with status code 1 if there are differences (i.e. unformatted files)
           git diff --exit-code
+
+  commit-message:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Validate Tag
+        run: |
+          TAG=$(echo ${{ github.event.pull_request.title }} | sed -ne 's/\[\(.*\)\].*/\1/p')
+          if grep -q "tag: \"[$TAG]\"" .codegen/changelog_config.yml; then 
+            echo "Invalid or missing tag in commit message: [$TAG]" 
+            exit 1
+          else 
+            echo "Valid tag found: [$TAG]"
+          fi

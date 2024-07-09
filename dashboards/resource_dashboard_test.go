@@ -3,56 +3,49 @@ package dashboards
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestDashboardCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/lakeview/dashboards",
-				ExpectedRequest: dashboards.Dashboard{
-					DisplayName:         "Dashboard name",
-					WarehouseId:         "abc",
-					ParentPath:          "/path",
-					SerializedDashboard: "serialized_json",
-				},
-				Response: dashboards.Dashboard{
-					DashboardId:         "xyz",
-					DisplayName:         "Dashboard name",
-					SerializedDashboard: "serialized_json_2",
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/lakeview/dashboards/xyz/published",
-				ExpectedRequest: dashboards.PublishRequest{
-					EmbedCredentials: true,
-					WarehouseId:      "abc",
-				},
-				Response: dashboards.PublishedDashboard{
-					EmbedCredentials:   true,
-					WarehouseId:        "abc",
-					DisplayName:        "Dashboard name",
-					RevisionCreateTime: "823828",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/lakeview/dashboards/xyz?",
-				Response: dashboards.Dashboard{
-					DashboardId:         "xyz",
-					DisplayName:         "Dashboard name",
-					SerializedDashboard: "serialized_json_2",
-					WarehouseId:         "abc",
-					CreateTime:          "12345678",
-					UpdateTime:          "2125678",
-				},
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockLakeviewAPI().EXPECT()
+			e.Create(mock.Anything, dashboards.CreateDashboardRequest{
+				DisplayName:         "Dashboard name",
+				WarehouseId:         "abc",
+				ParentPath:          "/path",
+				SerializedDashboard: "serialized_json",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_json_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
+			e.Publish(mock.Anything, dashboards.PublishRequest{
+				EmbedCredentials: true,
+				WarehouseId:      "abc",
+				DashboardId:      "xyz",
+				ForceSendFields:  []string{"EmbedCredentials"},
+			}).Return(&dashboards.PublishedDashboard{
+				EmbedCredentials:   true,
+				WarehouseId:        "abc",
+				DisplayName:        "Dashboard name",
+				RevisionCreateTime: "823828",
+			}, nil)
+			e.Get(mock.Anything, dashboards.GetDashboardRequest{
+				DashboardId: "xyz",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_json_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
 		},
 		Resource: ResourceDashboard(),
 		Create:   true,
@@ -62,81 +55,77 @@ func TestDashboardCreate(t *testing.T) {
 			"parent_path":          "/path",
 			"serialized_dashboard": "serialized_json",
 		},
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
-	assert.Equal(t, "Dashboard name", d.Get("display_name"))
-	assert.Equal(t, "12345678", d.Get("create_time"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           "xyz",
+		"display_name": "Dashboard name",
+	})
 }
 
 func TestDashboardRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/lakeview/dashboards/xyz?",
-				Response: dashboards.Dashboard{
-					DashboardId:         "xyz",
-					WarehouseId:         "abc",
-					SerializedDashboard: "{\"pages\":[{\"name\":\"43622\",\"displayName\":\"New Page\"}]}",
-					CreateTime:          "12345678",
-					UpdateTime:          "2125678",
-				},
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockLakeviewAPI().EXPECT().Get(mock.Anything, dashboards.GetDashboardRequest{
+				DashboardId: "xyz",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				WarehouseId:         "abc",
+				SerializedDashboard: "serialized_json",
+				CreateTime:          "12345678",
+				UpdateTime:          "2125678",
+			}, nil)
 		},
 		Resource: ResourceDashboard(),
 		Read:     true,
 		ID:       "xyz",
-	}.Apply(t)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
-	assert.Equal(t, "12345678", d.Get("create_time"))
-	assert.Equal(t, "2125678", d.Get("update_time"))
+		State: map[string]any{
+			"display_name":         "Dashboard name",
+			"warehouse_id":         "abc",
+			"parent_path":          "/path",
+			"serialized_dashboard": "serialized_json",
+		},
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           "xyz",
+		"warehouse_id": "abc",
+		"create_time":  "12345678",
+	})
 }
 
 func TestDashboardUpdate(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/lakeview/dashboards/",
-				ExpectedRequest: dashboards.UpdateDashboardRequest{
-					DisplayName:         "Dashboard name",
-					WarehouseId:         "abc",
-					SerializedDashboard: "serialized_dashboard_updated",
-				},
-				Response: dashboards.Dashboard{
-					WarehouseId:         "abc",
-					DashboardId:         "xyz",
-					DisplayName:         "Dashboard name",
-					SerializedDashboard: "serialized_dashboard_updated_2",
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/lakeview/dashboards/xyz/published",
-				ExpectedRequest: dashboards.PublishRequest{
-					EmbedCredentials: true,
-					WarehouseId:      "abc",
-				},
-				Response: dashboards.PublishedDashboard{
-					EmbedCredentials:   true,
-					WarehouseId:        "abc",
-					DisplayName:        "Dashboard name",
-					RevisionCreateTime: "823828",
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/lakeview/dashboards/xyz?",
-				Response: dashboards.Dashboard{
-					WarehouseId:         "abc",
-					DashboardId:         "xyz",
-					DisplayName:         "Dashboard name",
-					SerializedDashboard: "serialized_dashboard_updated_2",
-				},
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockLakeviewAPI().EXPECT()
+			e.Update(mock.Anything, dashboards.UpdateDashboardRequest{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				WarehouseId:         "abc",
+				SerializedDashboard: "serialized_dashboard_updated",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_dashboard_updated_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
+			e.Publish(mock.Anything, dashboards.PublishRequest{
+				EmbedCredentials: true,
+				WarehouseId:      "abc",
+				DashboardId:      "xyz",
+				ForceSendFields:  []string{"EmbedCredentials"},
+			}).Return(&dashboards.PublishedDashboard{
+				EmbedCredentials:   true,
+				WarehouseId:        "abc",
+				DisplayName:        "Dashboard name",
+				RevisionCreateTime: "823828",
+			}, nil)
+			e.Get(mock.Anything, dashboards.GetDashboardRequest{
+				DashboardId: "xyz",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_dashboard_updated_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125679",
+			}, nil)
 		},
 		Resource:    ResourceDashboard(),
 		Update:      true,
@@ -154,28 +143,29 @@ func TestDashboardUpdate(t *testing.T) {
 			"parent_path":          "/path",
 			"serialized_dashboard": "serialized_dashboard",
 		},
-	}.Apply(t)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
-	assert.Equal(t, "Dashboard name", d.Get("display_name"))
-	assert.Equal(t, "serialized_dashboard_updated_2", d.Get("serialized_dashboard"))
-	assert.Equal(t, "abc", d.Get("warehouse_id"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":                   "xyz",
+		"display_name":         "Dashboard name",
+		"warehouse_id":         "abc",
+		"serialized_dashboard": "serialized_dashboard_updated_2",
+	})
 }
 
 func TestDashboardDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.0/lakeview/dashboards/xyz?",
-			},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockLakeviewAPI().EXPECT().Trash(mock.Anything, dashboards.TrashDashboardRequest{
+				DashboardId: "xyz",
+			}).Return(nil)
 		},
 		Resource: ResourceDashboard(),
 		Delete:   true,
 		ID:       "xyz",
-	}.Apply(t)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
+		State: map[string]any{
+			"display_name":         "Dashboard name",
+			"warehouse_id":         "abc",
+			"parent_path":          "/path",
+			"serialized_dashboard": "serialized_dashboard",
+		},
+	}.ApplyNoError(t)
 }

@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/serving"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -277,7 +277,7 @@ func TestModelServingCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/serving-endpoints",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -335,7 +335,7 @@ func TestModelServingCreate_WithErrorOnWait(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -449,7 +449,7 @@ func TestModelServingRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -565,7 +565,7 @@ func TestModelServingUpdate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint/config",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -620,7 +620,7 @@ func TestModelServingDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

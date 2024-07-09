@@ -349,7 +349,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var c compute.ClusterDetails
+			var c compute.ClusterSpec
 			s := ic.Resources["databricks_cluster"].Schema
 			common.DataToStructPointer(r.Data, s, &c)
 			ic.importCluster(&c)
@@ -390,6 +390,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.whl", Resource: "databricks_file"},
 			{Path: "task.library.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "task.library.requirements", Resource: "databricks_file"},
+			{Path: "task.library.requirements", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "task.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -457,17 +459,11 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var job jobs.JobSettings
+			var job jobs.JobSettingsResource
 			s := ic.Resources["databricks_job"].Schema
 			common.DataToStructPointer(r.Data, s, &job)
-			ic.importClusterLegacy(job.NewCluster)
-			ic.Emit(&resource{
-				Resource: "databricks_cluster",
-				ID:       job.ExistingClusterID,
-			})
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/jobs/%s", r.ID),
 				"job_"+ic.Importables["databricks_job"].Name(ic, r.Data))
-			// Support for multitask jobs
 			for _, task := range job.Tasks {
 				if task.NotebookTask != nil {
 					if task.NotebookTask.Source != "GIT" {
@@ -484,7 +480,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if task.PipelineTask != nil {
 					ic.Emit(&resource{
 						Resource: "databricks_pipeline",
-						ID:       task.PipelineTask.PipelineID,
+						ID:       task.PipelineTask.PipelineId,
 					})
 				}
 				if task.SparkPythonTask != nil {
@@ -514,25 +510,25 @@ var resourcesMap map[string]importable = map[string]importable{
 					if task.SqlTask.Query != nil {
 						ic.Emit(&resource{
 							Resource: "databricks_sql_query",
-							ID:       task.SqlTask.Query.QueryID,
+							ID:       task.SqlTask.Query.QueryId,
 						})
 					}
 					if task.SqlTask.Dashboard != nil {
 						ic.Emit(&resource{
 							Resource: "databricks_sql_dashboard",
-							ID:       task.SqlTask.Dashboard.DashboardID,
+							ID:       task.SqlTask.Dashboard.DashboardId,
 						})
 					}
 					if task.SqlTask.Alert != nil {
 						ic.Emit(&resource{
 							Resource: "databricks_sql_alert",
-							ID:       task.SqlTask.Alert.AlertID,
+							ID:       task.SqlTask.Alert.AlertId,
 						})
 					}
-					if task.SqlTask.WarehouseID != "" {
+					if task.SqlTask.WarehouseId != "" {
 						ic.Emit(&resource{
 							Resource: "databricks_sql_endpoint",
-							ID:       task.SqlTask.WarehouseID,
+							ID:       task.SqlTask.WarehouseId,
 						})
 					}
 					if task.SqlTask.File != nil && task.SqlTask.File.Source == "WORKSPACE" {
@@ -567,22 +563,22 @@ var resourcesMap map[string]importable = map[string]importable{
 						}
 					}
 				}
-				if task.RunJobTask != nil && task.RunJobTask.JobID != 0 {
+				if task.RunJobTask != nil && task.RunJobTask.JobId != 0 {
 					ic.Emit(&resource{
 						Resource: "databricks_job",
-						ID:       strconv.FormatInt(task.RunJobTask.JobID, 10),
+						ID:       strconv.FormatInt(task.RunJobTask.JobId, 10),
 					})
 					ic.emitFilesFromMap(task.RunJobTask.JobParameters)
 				}
-				ic.importClusterLegacy(task.NewCluster)
+				ic.importCluster(task.NewCluster)
 				ic.Emit(&resource{
 					Resource: "databricks_cluster",
-					ID:       task.ExistingClusterID,
+					ID:       task.ExistingClusterId,
 				})
 				ic.emitLibraries(task.Libraries)
 			}
 			for _, jc := range job.JobClusters {
-				ic.importClusterLegacy(jc.NewCluster)
+				ic.importCluster(&jc.NewCluster)
 			}
 			if job.RunAs != nil {
 				if job.RunAs.UserName != "" {
@@ -620,7 +616,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			case "url", "format":
 				return true
 			}
-			var js jobs.JobSettings
+			var js jobs.JobSettingsResource
 			common.DataToStructPointer(d, ic.Resources["databricks_job"].Schema, &js)
 			switch pathString {
 			case "email_notifications":
@@ -635,6 +631,17 @@ var resourcesMap map[string]importable = map[string]importable{
 				if js.NotificationSettings != nil {
 					return reflect.DeepEqual(*js.NotificationSettings, sdk_jobs.JobNotificationSettings{})
 				}
+			case "run_as":
+				if js.RunAs != nil && (js.RunAs.UserName != "" || js.RunAs.ServicePrincipalName != "") {
+					var user string
+					if js.RunAs.UserName != "" {
+						user = js.RunAs.UserName
+					} else {
+						user = js.RunAs.ServicePrincipalName
+					}
+					return user == ic.meUserName
+				}
+				return true
 			}
 			if strings.HasPrefix(pathString, "task.") {
 				parts := strings.Split(pathString, ".")

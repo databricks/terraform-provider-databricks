@@ -3,9 +3,9 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -88,7 +88,7 @@ func TestCreateIsolatedStorageCredential(t *testing.T) {
 					RoleArn: "def",
 				},
 				Comment:       "c",
-				IsolationMode: "ISOLATED",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
 			}).Return(&catalog.StorageCredentialInfo{
 				Name: "a",
 				AwsIamRole: &catalog.AwsIamRoleResponse{
@@ -98,7 +98,7 @@ func TestCreateIsolatedStorageCredential(t *testing.T) {
 				MetastoreId:   "d",
 				Id:            "1234-5678",
 				Owner:         "f",
-				IsolationMode: "ISOLATED",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
 			}, nil)
 			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
 				MetastoreId: "e",
@@ -130,7 +130,7 @@ func TestCreateIsolatedStorageCredential(t *testing.T) {
 				MetastoreId:   "d",
 				Id:            "1234-5678",
 				Owner:         "f",
-				IsolationMode: "ISOLATED",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
 			}, nil)
 		},
 		Resource: ResourceStorageCredential(),
@@ -141,14 +141,14 @@ func TestCreateIsolatedStorageCredential(t *testing.T) {
 			role_arn = "def"
 		}
 		comment = "c"
-		isolation_mode = "ISOLATED"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"aws_iam_role.0.external_id": "123",
 		"aws_iam_role.0.role_arn":    "def",
 		"name":                       "a",
 		"storage_credential_id":      "1234-5678",
-		"isolation_mode":             "ISOLATED",
+		"isolation_mode":             "ISOLATION_MODE_ISOLATED",
 	})
 }
 
@@ -506,7 +506,7 @@ func TestUpdateStorageCredentialsRollback(t *testing.T) {
 						RoleArn: "CHANGED",
 					},
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},

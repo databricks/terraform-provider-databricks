@@ -360,10 +360,10 @@ func (ic *importContext) Run() error {
 		if err != nil {
 			return err
 		}
+		ic.meUserName = me.UserName
 		for _, g := range me.Groups {
 			if g.Display == "admins" {
 				ic.meAdmin = true
-				ic.meUserName = me.UserName
 				break
 			}
 		}

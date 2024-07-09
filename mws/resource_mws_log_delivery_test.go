@@ -3,7 +3,7 @@ package mws
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -142,7 +142,7 @@ func TestResourceLogDeliveryCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/log-delivery",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -226,7 +226,7 @@ func TestResourceLogDeliveryRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/log-delivery/nid",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -307,7 +307,7 @@ func TestUpdateLogDeliveryError(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/log-delivery/nid",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -369,7 +369,7 @@ func TestResourceLogDeliveryDelete_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/log-delivery/nid",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

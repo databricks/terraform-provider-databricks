@@ -1,5 +1,6 @@
 {
     "formatter": "make fmt",
+    "changelog_config": ".codegen/changelog_config.yml",
     "version": {
         "common/version.go": "version = \"$VERSION\""
     },

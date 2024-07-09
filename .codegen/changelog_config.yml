@@ -11,5 +11,8 @@ change_types:
     tag: "[Dependency]"
   - message: Exporter
     tag: "[Exporter]"
+  # Does not appear in the Changelog. Only for PR validation.
+  - message: Release
+    tag: "[Release]"
   # Default for messages without a tag
   - message: Other Changes

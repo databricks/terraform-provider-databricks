@@ -143,13 +143,9 @@ func ResourceLakeviewDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = w.Lakeview.Trash(ctx, dashboards.TrashDashboardRequest{
+			return w.Lakeview.Trash(ctx, dashboards.TrashDashboardRequest{
 				DashboardId: d.Id(),
 			})
-			if err != nil {
-				return err
-			}
-			return nil
 		},
 	}
 }

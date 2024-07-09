@@ -67,13 +67,9 @@ jobs:
       - name: Validate Tag
         run: |
           TAG=$(echo ${{ github.event.pull_request.title }} | sed -ne 's/\[\(.*\)\].*/\1/p')
-          echo "Found tag {$TAG}"
-          # The status code for grep will be 1 if no match, and 0 if a match.
-          # Store in variable to hide the actual grep result from the console output.
-          MATCH=$(cat .codegen/changelog_config.yml | grep "tag: \"\[$(echo $TAG)\]\"")
-
-      - name: Log failure
-        if: failure()
-        run: |
-          echo "Invalid or missing tag in commit message"
-          exit 1
+          if grep -q "tag: \"[$TAG]\"" .codegen/changelog_config.yml; then 
+            echo "Invalid or missing tag in commit message: [$TAG]" 
+            exit 1
+          else 
+            echo "Valid tag found: [$TAG]"
+          fi

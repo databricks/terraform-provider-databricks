@@ -4,7 +4,7 @@ change_types:
   - message: Bug Fixes
     tag: "[Fix]"
   - message: Documentation
-    tag: "[Docs]" 
+    tag: "[Doc]" 
   - message: Internal Changes
     tag: "[Internal]"
   - message: Dependency Updates

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -144,7 +144,7 @@ func TestStartClusterAndGetInfo_StartingError(t *testing.T) {
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
-			Response: apierr.APIErrorBody{
+			Response: common.APIErrorBody{
 				Message: "I am a teapot!",
 			},
 			Status: 418,

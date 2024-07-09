@@ -3,7 +3,7 @@ package scim
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -178,7 +178,7 @@ func TestResourceEntitlementsGroupRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -273,7 +273,7 @@ func TestResourceEntitlementsGroupDeleteEmptyEntitlement(t *testing.T) {
 				Method:          "PATCH",
 				Resource:        "/api/2.0/preview/scim/v2/Groups/abc",
 				ExpectedRequest: deleteRequest,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_PATH",
 					Message:   "invalidPath No such attribute with the name : entitlements in the current resource",
 				},
@@ -420,7 +420,7 @@ func TestResourceEntitlementsUserRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -441,7 +441,7 @@ func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -451,7 +451,7 @@ func TestResourceEntitlementsUserUpdate_Error(t *testing.T) {
 				Resource:        "/api/2.0/preview/scim/v2/Users/abc",
 				ExpectedRequest: updateRequest,
 				Status:          400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -630,7 +630,7 @@ func TestResourceEntitlementsSPNRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},

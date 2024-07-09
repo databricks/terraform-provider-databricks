@@ -50,7 +50,7 @@ Databricks SQL
 * Create [databricks_sql_endpoint](resources/sql_endpoint.md) controlled by [databricks_permissions](resources/permissions.md).
 * Manage [queries](resources/sql_query.md) and their [visualizations](resources/sql_visualization.md).
 * Manage [dashboards](resources/sql_dashboard.md) and their [widgets](resources/sql_widget.md).
-* Provide [global configuration for all SQL warehouses](docs/resources/sql_global_config.md)
+* Provide [global configuration for all SQL warehouses](resources/sql_global_config.md)
 
 Machine Learning
 

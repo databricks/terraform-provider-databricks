@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLakeviewDashboardCreate(t *testing.T) {
+func TestDashboardCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -54,7 +54,7 @@ func TestLakeviewDashboardCreate(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceLakeviewDashboard(),
+		Resource: ResourceDashboard(),
 		Create:   true,
 		State: map[string]any{
 			"display_name":         "Dashboard name",
@@ -69,7 +69,7 @@ func TestLakeviewDashboardCreate(t *testing.T) {
 	assert.Equal(t, "12345678", d.Get("create_time"))
 }
 
-func TestLakeviewDashboardRead(t *testing.T) {
+func TestDashboardRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -84,7 +84,7 @@ func TestLakeviewDashboardRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceLakeviewDashboard(),
+		Resource: ResourceDashboard(),
 		Read:     true,
 		ID:       "xyz",
 	}.Apply(t)
@@ -95,7 +95,7 @@ func TestLakeviewDashboardRead(t *testing.T) {
 	assert.Equal(t, "2125678", d.Get("update_time"))
 }
 
-func TestLakeviewDashboardUpdate(t *testing.T) {
+func TestDashboardUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -138,7 +138,7 @@ func TestLakeviewDashboardUpdate(t *testing.T) {
 				},
 			},
 		},
-		Resource:    ResourceLakeviewDashboard(),
+		Resource:    ResourceDashboard(),
 		Update:      true,
 		ID:          "xyz",
 		RequiresNew: true,
@@ -163,7 +163,7 @@ func TestLakeviewDashboardUpdate(t *testing.T) {
 	assert.Equal(t, "abc", d.Get("warehouse_id"))
 }
 
-func TestLakeviewDashboardDelete(t *testing.T) {
+func TestDashboardDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -171,7 +171,7 @@ func TestLakeviewDashboardDelete(t *testing.T) {
 				Resource: "/api/2.0/lakeview/dashboards/xyz?",
 			},
 		},
-		Resource: ResourceLakeviewDashboard(),
+		Resource: ResourceDashboard(),
 		Delete:   true,
 		ID:       "xyz",
 	}.Apply(t)

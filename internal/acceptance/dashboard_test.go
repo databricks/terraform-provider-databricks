@@ -26,7 +26,7 @@ type templateStruct struct {
 
 func makeTemplate(template templateStruct) string {
 	templateString := fmt.Sprintf(`
-	resource "databricks_lakeview_dashboard" "d1" {
+	resource "databricks_dashboard" "d1" {
 		display_name			= 	"%s"
 		warehouse_id			=	"%s"
 		parent_path				= 	"%s"
@@ -76,7 +76,7 @@ func (t *templateStruct) SetAttributes(mapper map[string]string) templateStruct 
 	return *t
 }
 
-func TestAccLakeviewDashboard(t *testing.T) {
+func TestAccLDashboard(t *testing.T) {
 	var template templateStruct
 	workspaceLevel(t, step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
@@ -85,7 +85,7 @@ func TestAccLakeviewDashboard(t *testing.T) {
 			"parent_path":          "/Shared/provider-test",
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
 		})),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -115,7 +115,7 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
 			"embed_credentials":    "false",
 		})),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -135,7 +135,7 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}`,
 			"embed_credentials":    "true",
 		})),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -151,14 +151,14 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "etag", dashboard.Etag)
+			resource.TestCheckResourceAttr("databricks_dashboard.d1", "etag", dashboard.Etag)
 			return nil
 		}),
 	})
 }
 
 func TestAccDashboardWithFilePath(t *testing.T) {
-	tmpDir := fmt.Sprintf("/tmp/Lakeview_dashboard-%s", qa.RandomName())
+	tmpDir := fmt.Sprintf("/tmp/Dashboard-%s", qa.RandomName())
 	fileName := tmpDir + "/Dashboard.json"
 	var template templateStruct
 	workspaceLevel(t, step{
@@ -172,7 +172,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			"file_path":    fileName,
 			"parent_path":  "/Shared/provider-test",
 		})),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -192,7 +192,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
 		},
 		Template: makeTemplate(template),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -206,7 +206,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
 			require.NoError(t, err)
 			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "etag", dashboard.Etag)
+			resource.TestCheckResourceAttr("databricks_dashboard.d1", "etag", dashboard.Etag)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			return nil
@@ -224,7 +224,7 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 			"parent_path":          "/Shared/provider-test",
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
 		})),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -242,7 +242,7 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 		}),
 	}, step{
 		Template: makeTemplate(template),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -276,7 +276,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			"parent_path":          "/Shared/provider-test",
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
 		})),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -309,7 +309,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			require.NoError(t, err)
 		},
 		Template: makeTemplate(template),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -325,7 +325,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "etag", dashboard.Etag)
+			resource.TestCheckResourceAttr("databricks_dashboard.d1", "etag", dashboard.Etag)
 			return nil
 		}),
 	})
@@ -336,7 +336,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 	display_name := ""
 	warehouse_id := ""
 	etag := ""
-	tmpDir := fmt.Sprintf("/tmp/Lakeview_dashboard-%s", qa.RandomName())
+	tmpDir := fmt.Sprintf("/tmp/Dashboard-%s", qa.RandomName())
 	fileName := tmpDir + "/Dashboard.json"
 	var template templateStruct
 	workspaceLevel(t, step{
@@ -352,7 +352,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			"file_path":         fileName,
 			"embed_credentials": "false",
 		})),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -377,7 +377,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
 		},
 		Template: makeTemplate(template),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -412,7 +412,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			require.NoError(t, err)
 		},
 		Template: makeTemplate(template),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -424,7 +424,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 				return err
 			}
 			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "etag", dashboard.Etag)
+			resource.TestCheckResourceAttr("databricks_dashboard.d1", "etag", dashboard.Etag)
 			require.NoError(t, err)
 			return nil
 		}),
@@ -433,7 +433,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			"embed_credentials": "true",
 			"parent_path":       "/Shared/Teams",
 		})),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -455,7 +455,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified again\"}]}"), 0644)
 		},
 		Template: makeTemplate(template),
-		Check: resourceCheck("databricks_lakeview_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {
 				return err
@@ -468,7 +468,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			}
 			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
 			require.NoError(t, err)
-			resource.TestCheckResourceAttr("databricks_lakeview_dashboard.d1", "etag", dashboard.Etag)
+			resource.TestCheckResourceAttr("databricks_dashboard.d1", "etag", dashboard.Etag)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			return nil

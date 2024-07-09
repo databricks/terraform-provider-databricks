@@ -8,61 +8,66 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ResourceLakeviewDashboard manages lakeview dashboards
-func ResourceLakeviewDashboard() common.Resource {
-	s := common.StructToSchema(dashboards.Dashboard{},
-		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			s["create_time"].Computed = true
-			s["dashboard_id"].Computed = true
-			s["display_name"].Optional = false
-			s["display_name"].Required = true
-			s["etag"].Computed = true
-			s["lifecycle_state"].Computed = true
-			s["parent_path"].Optional = false
-			s["parent_path"].Required = true
-			s["parent_path"].ForceNew = true
-			s["path"].Computed = true
-			s["serialized_dashboard"].ConflictsWith = []string{"file_path"}
-			s["serialized_dashboard"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				_, newHash, err := common.ReadSerializedJsonContent(new, d.Get("file_path").(string))
-				if err != nil {
-					return false
-				}
-				return d.Get("md5").(string) == newHash && !d.Get("dashboard_change_detected").(bool)
-			}
-			s["update_time"].Computed = true
-			s["warehouse_id"].Optional = false
-			s["warehouse_id"].Required = true
+type Dashboard struct {
+	dashboards.Dashboard
+	EmbedCredentials        bool   `json:"embed_credentials,omitempty"`
+	FilePath                string `json:"file_path,omitempty"`
+	Md5                     string `json:"md5,omitempty"`
+	DashboardChangeDetected bool   `json:"dashboard_change_detected,omitempty"`
+}
 
-			s["file_path"] = &schema.Schema{
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"serialized_dashboard"},
-			}
-			s["md5"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			}
-			s["dashboard_change_detected"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			s["embed_credentials"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			}
-			return s
-		})
+func customDiffSerializedDashboard(k, old, new string, d *schema.ResourceData) bool {
+	_, newHash, err := common.ReadSerializedJsonContent(new, d.Get("file_path").(string))
+	if err != nil {
+		return false
+	}
+	return d.Get("md5").(string) == newHash && !d.Get("dashboard_change_detected").(bool)
+}
+
+func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	// Required fields
+	s.SchemaPath("display_name").SetRequired()
+	s.SchemaPath("parent_path").SetRequired()
+	s.SchemaPath("warehouse_id").SetRequired()
+
+	// Computed fields
+	s.SchemaPath("create_time").SetComputed()
+	s.SchemaPath("dashboard_id").SetComputed()
+	s.SchemaPath("etag").SetComputed()
+	s.SchemaPath("lifecycle_state").SetComputed()
+	s.SchemaPath("path").SetComputed()
+	s.SchemaPath("update_time").SetComputed()
+	s.SchemaPath("md5").SetComputed()
+
+	// ForceNew fields
+	s.SchemaPath("parent_path").SetForceNew()
+
+	// ConflictsWith fields
+	s.SchemaPath("serialized_dashboard").SetConflictsWith([]string{"file_path"})
+	s.SchemaPath("file_path").SetConflictsWith([]string{"serialized_dashboard"})
+
+	// Default values
+	s.SchemaPath("embed_credentials").SetDefault(true)
+
+	// DiffSuppressFunc
+	s.SchemaPath("serialized_dashboard").SetCustomSuppressDiff(customDiffSerializedDashboard)
+
+	return s
+}
+
+var dashboardsSchema = common.StructToSchema(Dashboard{}, nil)
+
+// ResourceDashboard manages dashboards
+func ResourceDashboard() common.Resource {
 	return common.Resource{
-		Schema: s,
+		Schema: dashboardsSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
 			var newDashboardRequest dashboards.CreateDashboardRequest
-			common.DataToStructPointer(d, s, &newDashboardRequest)
+			common.DataToStructPointer(d, dashboardsSchema, &newDashboardRequest)
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
@@ -79,11 +84,18 @@ func ResourceLakeviewDashboard() common.Resource {
 			// We need to 'Force send' the EmbedCredentials field because it is 'omitempty' and if it is not set, it will be ignored. This is a workaround to force the field to be sent if the user wants to set 'embed_credentials' to false.
 			_, err = w.Lakeview.Publish(ctx, dashboards.PublishRequest{
 				DashboardId:      createdDashboard.DashboardId,
-				WarehouseId:      d.Get("warehouse_id").(string),
+				WarehouseId:      createdDashboard.WarehouseId,
 				EmbedCredentials: d.Get("embed_credentials").(bool),
 				ForceSendFields:  []string{"EmbedCredentials"},
 			})
 			if err != nil {
+				// If the publish fails, we should delete the dashboard to avoid leaving it in a bad state.
+				deleteErr := w.Lakeview.Trash(ctx, dashboards.TrashDashboardRequest{
+					DashboardId: createdDashboard.DashboardId,
+				})
+				if deleteErr != nil {
+					return deleteErr
+				}
 				return err
 			}
 
@@ -103,7 +115,7 @@ func ResourceLakeviewDashboard() common.Resource {
 				return err
 			}
 			d.Set("dashboard_change_detected", (resp.Etag != d.Get("etag").(string)))
-			return common.StructToData(resp, s, d)
+			return common.StructToData(resp, dashboardsSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -111,8 +123,8 @@ func ResourceLakeviewDashboard() common.Resource {
 				return err
 			}
 			var updateDashboardRequest dashboards.UpdateDashboardRequest
-			common.DataToStructPointer(d, s, &updateDashboardRequest)
-			updateDashboardRequest.DashboardId = d.Get("dashboard_id").(string)
+			common.DataToStructPointer(d, dashboardsSchema, &updateDashboardRequest)
+			updateDashboardRequest.DashboardId = d.Id()
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
@@ -133,6 +145,13 @@ func ResourceLakeviewDashboard() common.Resource {
 				ForceSendFields:  []string{"EmbedCredentials"},
 			})
 			if err != nil {
+				// If the publish fails, we should delete the dashboard to avoid leaving it in a bad state.
+				deleteErr := w.Lakeview.Trash(ctx, dashboards.TrashDashboardRequest{
+					DashboardId: d.Id(),
+				})
+				if deleteErr != nil {
+					return deleteErr
+				}
 				return err
 			}
 

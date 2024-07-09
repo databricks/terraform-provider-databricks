@@ -73,7 +73,7 @@ func TestResourceServicePrincipalRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -474,7 +474,7 @@ func TestResourceServicePrincipalDelete_NonExistingRepo(t *testing.T) {
 					Path:      "/Repos/abc",
 					Recursive: true,
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/Repos/abc) doesn't exist.",
 				},
@@ -533,7 +533,7 @@ func TestResourceServicePrincipalDelete_NonExistingDir(t *testing.T) {
 					Path:      "/Users/abc",
 					Recursive: true,
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/Users/abc) doesn't exist.",
 				},

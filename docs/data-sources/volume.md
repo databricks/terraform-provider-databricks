@@ -40,8 +40,8 @@ data "databricks_volume" "this" {
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this Unity Catalog Volume in form of `<catalog>.<schema>.<name>`.
-* `volume_info` - TableInfo object for a Unity Catalog table. This contains the following attributes:
-  * `name` - Name of table, relative to parent schema.
+* `volume_info` - `VolumeInfo` object for a Unity Catalog volume. This contains the following attributes:
+  * `name` - Name of the volume, relative to parent schema.
   * `access_point` - the AWS access point to use when accessing s3 bucket for this volume's external location
   * `browse_only` - indicates whether the principal is limited to retrieving metadata for the volume through the BROWSE privilege when include_browse is enabled in the request. 
   * `catalog_name` - the name of the catalog where the schema and the volume are

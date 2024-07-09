@@ -101,6 +101,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_notebook":                             workspace.DataSourceNotebook().ToResource(),
 			"databricks_notebook_paths":                       workspace.DataSourceNotebookPaths().ToResource(),
 			"databricks_pipelines":                            pipelines.DataSourcePipelines().ToResource(),
+			"databricks_schema":                               catalog.DataSourceSchema().ToResource(),
 			"databricks_schemas":                              catalog.DataSourceSchemas().ToResource(),
 			"databricks_service_principal":                    scim.DataSourceServicePrincipal().ToResource(),
 			"databricks_service_principals":                   scim.DataSourceServicePrincipals().ToResource(),

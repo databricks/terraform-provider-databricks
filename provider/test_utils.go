@@ -129,8 +129,7 @@ func configureProviderAndReturnClient_SDKv2(t *testing.T, tt providerFixture) (*
 	}
 	p := DatabricksProvider()
 	ctx := context.Background()
-	testConfig := terraform.NewResourceConfigRaw(tt.rawConfigSDKv2())
-	diags := p.Configure(ctx, testConfig)
+	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(tt.rawConfigSDKv2()))
 	if len(diags) > 0 {
 		issues := []string{}
 		for _, d := range diags {
@@ -157,6 +156,11 @@ func configureProviderAndReturnClient_PluginFramework(t *testing.T, tt providerF
 	p := GetDatabricksProviderPluginFramework()
 	ctx := context.Background()
 	rawConfig := tt.rawConfigPluginFramework()
+	// rawConfig := `
+	// 	provider "databricks" {
+	// 		host = y
+	// 	}
+	// `
 	var providerSchemaResponse provider.SchemaResponse
 	p.Schema(ctx, provider.SchemaRequest{}, &providerSchemaResponse)
 	configRequest := provider.ConfigureRequest{

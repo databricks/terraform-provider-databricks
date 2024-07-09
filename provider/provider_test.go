@@ -8,12 +8,10 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -383,32 +381,6 @@ func testOAuthFetchesToken(t *testing.T, c *common.DatabricksClient) {
 		_, err = ws.Clusters.GetByClusterId(bgCtx, "123")
 		require.NoError(t, err)
 	}
-}
-
-func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
-	for k, v := range tt.env {
-		t.Setenv(k, v)
-	}
-	p := DatabricksProvider()
-	ctx := context.Background()
-	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(tt.rawConfigSDKv2()))
-	if len(diags) > 0 {
-		issues := []string{}
-		for _, d := range diags {
-			issues = append(issues, d.Summary)
-		}
-		return nil, fmt.Errorf(strings.Join(issues, ", "))
-	}
-	client := p.Meta().(*common.DatabricksClient)
-	r, err := http.NewRequest("GET", "", nil)
-	if err != nil {
-		return nil, err
-	}
-	err = client.Config.Authenticate(r)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
 }
 
 type parseUserAgentTestCase struct {

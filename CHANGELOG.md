@@ -2,32 +2,33 @@
 
 ## 1.48.3
 
-### Internal Changes
+### New Features and Improvements
+ * Added `databricks_schema` data source ([#3732](https://github.com/databricks/terraform-provider-databricks/pull/3732)).
+ * Added support for binding storage credentials and external locations to specific workspaces ([#3678](https://github.com/databricks/terraform-provider-databricks/pull/3678)).
+ * Added `databricks_volume` as data source  ([#3211](https://github.com/databricks/terraform-provider-databricks/pull/3211)).
+ * Make the `schedule.pause_status` field read-only ([#3692](https://github.com/databricks/terraform-provider-databricks/pull/3692)).
+ * Renamed `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#3703](https://github.com/databricks/terraform-provider-databricks/pull/3703)).
 
+### Exporter
+ * Emit directories during the listing only if they are explicitly configured in `-listing` ([#3673](https://github.com/databricks/terraform-provider-databricks/pull/3673)).
+ * Export libraries specified as `requirements.txt` ([#3649](https://github.com/databricks/terraform-provider-databricks/pull/3649)).
+ * Fix generation of `run_as` blocks in `databricks_job` ([#3724](https://github.com/databricks/terraform-provider-databricks/pull/3724)).
+ * Use Go SDK structs for `databricks_job` resource ([#3727](https://github.com/databricks/terraform-provider-databricks/pull/3727)).
+
+### Documentation
+ * Fix invalid priviledges in grants.md ([#3716](https://github.com/databricks/terraform-provider-databricks/pull/3716)).
+ * Update cluster.md: add data_security_mode parameters `NONE` and `NO_ISOLATION` ([#3740](https://github.com/databricks/terraform-provider-databricks/pull/3740)).
+ * Remove references to basic auth ([#3720](https://github.com/databricks/terraform-provider-databricks/pull/3720)).
+
+### Internal Changes
  * Add Release tag ([#3748](https://github.com/databricks/terraform-provider-databricks/pull/3748)).
  * Improve Changelog by grouping changes ([#3747](https://github.com/databricks/terraform-provider-databricks/pull/3747)).
  * Upgrade Go SDK to v0.43.2 ([#3750](https://github.com/databricks/terraform-provider-databricks/pull/3750)).
-
-
-### Other Changes
-
- * Add `databricks_schema` data source ([#3732](https://github.com/databricks/terraform-provider-databricks/pull/3732)).
  * Add new APIErrorBody struct and update deps ([#3745](https://github.com/databricks/terraform-provider-databricks/pull/3745)).
- * Added support for binding storage credentials and external locations to specific workspaces ([#3678](https://github.com/databricks/terraform-provider-databricks/pull/3678)).
- * Adds `databricks_volume` as data source  ([#3211](https://github.com/databricks/terraform-provider-databricks/pull/3211)).
  * Change TF registry ownership ([#3736](https://github.com/databricks/terraform-provider-databricks/pull/3736)).
- * Exporter: Emit directories during the listing only if they are explicitly configured in `-listing` ([#3673](https://github.com/databricks/terraform-provider-databricks/pull/3673)).
- * Exporter: export libraries specified as `requirements.txt` ([#3649](https://github.com/databricks/terraform-provider-databricks/pull/3649)).
- * Exporter: fix generation of `run_as` blocks in `databricks_job` ([#3724](https://github.com/databricks/terraform-provider-databricks/pull/3724)).
- * Exporter: use Go SDK structs for `databricks_job` resource ([#3727](https://github.com/databricks/terraform-provider-databricks/pull/3727)).
- * Fix invalid priviledges in grants.md ([#3716](https://github.com/databricks/terraform-provider-databricks/pull/3716)).
- * Make the schedule.pause_status field read-only ([#3692](https://github.com/databricks/terraform-provider-databricks/pull/3692)).
  * Refactored `databricks_cluster(s)` data sources to Go SDK ([#3685](https://github.com/databricks/terraform-provider-databricks/pull/3685)).
- * Renamed `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#3703](https://github.com/databricks/terraform-provider-databricks/pull/3703)).
- * Run goreleaser action in snapshot mode from merge queue ([#3646](https://github.com/databricks/terraform-provider-databricks/pull/3646)).
- * Update cluster.md: add data_security_mode parameters `NONE` and `NO_ISOLATION` ([#3740](https://github.com/databricks/terraform-provider-databricks/pull/3740)).
  * Upgrade databricks-sdk-go ([#3743](https://github.com/databricks/terraform-provider-databricks/pull/3743)).
- * remove references to basic auth ([#3720](https://github.com/databricks/terraform-provider-databricks/pull/3720)).
+ * Run goreleaser action in snapshot mode from merge queue ([#3646](https://github.com/databricks/terraform-provider-databricks/pull/3646)).
 
 
 ## 1.48.2

@@ -25,6 +25,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/dashboards"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	tflogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
@@ -131,6 +132,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_connection":                      catalog.ResourceConnection().ToResource(),
 			"databricks_cluster":                         clusters.ResourceCluster().ToResource(),
 			"databricks_cluster_policy":                  policies.ResourceClusterPolicy().ToResource(),
+			"databricks_dashboard":                       dashboards.ResourceDashboard().ToResource(),
 			"databricks_dbfs_file":                       storage.ResourceDbfsFile().ToResource(),
 			"databricks_directory":                       workspace.ResourceDirectory().ToResource(),
 			"databricks_entitlements":                    scim.ResourceEntitlements().ToResource(),

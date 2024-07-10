@@ -3,6 +3,7 @@
 ## 1.48.3
 
 ### New Features and Improvements
+ * Added `databricks_dashboard` resource ([#3729](https://github.com/databricks/terraform-provider-databricks/pull/3729)).
  * Added `databricks_schema` data source ([#3732](https://github.com/databricks/terraform-provider-databricks/pull/3732)).
  * Added support for binding storage credentials and external locations to specific workspaces ([#3678](https://github.com/databricks/terraform-provider-databricks/pull/3678)).
  * Added `databricks_volume` as data source  ([#3211](https://github.com/databricks/terraform-provider-databricks/pull/3211)).

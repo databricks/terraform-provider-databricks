@@ -55,19 +55,19 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	return s
 }
 
-var dashboardsSchema = common.StructToSchema(Dashboard{}, nil)
+var dashboardSchema = common.StructToSchema(Dashboard{}, nil)
 
 // ResourceDashboard manages dashboards
 func ResourceDashboard() common.Resource {
 	return common.Resource{
-		Schema: dashboardsSchema,
+		Schema: dashboardSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
 			var newDashboardRequest dashboards.CreateDashboardRequest
-			common.DataToStructPointer(d, dashboardsSchema, &newDashboardRequest)
+			common.DataToStructPointer(d, dashboardSchema, &newDashboardRequest)
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
@@ -115,7 +115,7 @@ func ResourceDashboard() common.Resource {
 				return err
 			}
 			d.Set("dashboard_change_detected", (resp.Etag != d.Get("etag").(string)))
-			return common.StructToData(resp, dashboardsSchema, d)
+			return common.StructToData(resp, dashboardSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -123,7 +123,7 @@ func ResourceDashboard() common.Resource {
 				return err
 			}
 			var updateDashboardRequest dashboards.UpdateDashboardRequest
-			common.DataToStructPointer(d, dashboardsSchema, &updateDashboardRequest)
+			common.DataToStructPointer(d, dashboardSchema, &updateDashboardRequest)
 			updateDashboardRequest.DashboardId = d.Id()
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {

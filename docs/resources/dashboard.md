@@ -10,25 +10,33 @@ This resource allows you to manage Databricks [Dashboards](https://docs.databric
 Dashboard using `serialized_dashboard` attribute:
 
 ```hcl
+data "databricks_sql_warehouse" "starter" {
+    name = "Starter Warehouse"
+}
+
 resource "databricks_dashboard" "dashboard" {
-			display_name			= 	"New Dashboard"
-			warehouse_id			=	"{env.TEST_DEFAULT_WAREHOUSE_ID}"
-			serialized_dashboard	        =	"{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
-			embed_credentials		=	false // Optional
-			parent_path			= 	"/Shared/provider-test"
-		}
+    display_name	 = "New Dashboard"
+    warehouse_id	 = data.databricks_sql_warehouse.starter.id
+    serialized_dashboard = "{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+    embed_credentials    = false // Optional
+    parent_path	         = "/Shared/provider-test"
+}
 ```
 
 Dashboard using `file_path` attribute:
 
 ```hcl
+data "databricks_sql_warehouse" "starter" {
+    name = "Starter Warehouse"
+}
+
 resource "databricks_dashboard" "dashboard" {
-            display_name			= 	"New Dashboard"
-            warehouse_id			=	"{env.TEST_DEFAULT_WAREHOUSE_ID}"
-            file_path				=	"${path.module}/dashboard.json"
-            embed_credentials   		=	false // Optional
-            parent_path				= 	"/Shared/provider-test"
-        }
+    display_name         = "New Dashboard"
+    warehouse_id         = data.databricks_sql_warehouse.starter.id
+    file_path	         = "${path.module}/dashboard.json"
+    embed_credentials    = false // Optional
+    parent_path	         = "/Shared/provider-test"
+}
 ```
 
 

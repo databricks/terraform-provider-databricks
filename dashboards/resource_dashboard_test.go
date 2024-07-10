@@ -49,12 +49,12 @@ func TestDashboardCreate(t *testing.T) {
 		},
 		Resource: ResourceDashboard(),
 		Create:   true,
-		State: map[string]any{
-			"display_name":         "Dashboard name",
-			"warehouse_id":         "abc",
-			"parent_path":          "/path",
-			"serialized_dashboard": "serialized_json",
-		},
+		HCL: `
+			display_name = "Dashboard name"
+			warehouse_id = "abc"
+			parent_path = "/path"
+			serialized_dashboard = "serialized_json"
+		`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":           "xyz",
 		"display_name": "Dashboard name",
@@ -77,12 +77,12 @@ func TestDashboardRead(t *testing.T) {
 		Resource: ResourceDashboard(),
 		Read:     true,
 		ID:       "xyz",
-		State: map[string]any{
-			"display_name":         "Dashboard name",
-			"warehouse_id":         "abc",
-			"parent_path":          "/path",
-			"serialized_dashboard": "serialized_json",
-		},
+		HCL: `
+			display_name = "Dashboard name"
+			warehouse_id = "abc"
+			parent_path = "/path"
+			serialized_dashboard = "serialized_json"
+		`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":           "xyz",
 		"warehouse_id": "abc",
@@ -105,6 +105,7 @@ func TestDashboardUpdate(t *testing.T) {
 				SerializedDashboard: "serialized_dashboard_updated_2",
 				WarehouseId:         "abc",
 				UpdateTime:          "2125678",
+				ParentPath:          "/path",
 			}, nil)
 			e.Publish(mock.Anything, dashboards.PublishRequest{
 				EmbedCredentials: true,
@@ -125,18 +126,18 @@ func TestDashboardUpdate(t *testing.T) {
 				SerializedDashboard: "serialized_dashboard_updated_2",
 				WarehouseId:         "abc",
 				UpdateTime:          "2125679",
+				ParentPath:          "/path",
 			}, nil)
 		},
-		Resource:    ResourceDashboard(),
-		Update:      true,
-		ID:          "xyz",
-		RequiresNew: true,
-		State: map[string]any{
-			"display_name":         "Dashboard name",
-			"warehouse_id":         "abc",
-			"parent_path":          "/path",
-			"serialized_dashboard": "serialized_dashboard_updated",
-		},
+		Resource: ResourceDashboard(),
+		Update:   true,
+		ID:       "xyz",
+		HCL: `
+			display_name = "Dashboard name"
+			warehouse_id = "abc"
+			parent_path = "/path"
+			serialized_dashboard = "serialized_dashboard_updated"
+		`,
 		InstanceState: map[string]string{
 			"display_name":         "Dashboard name",
 			"warehouse_id":         "abc",
@@ -161,11 +162,11 @@ func TestDashboardDelete(t *testing.T) {
 		Resource: ResourceDashboard(),
 		Delete:   true,
 		ID:       "xyz",
-		State: map[string]any{
-			"display_name":         "Dashboard name",
-			"warehouse_id":         "abc",
-			"parent_path":          "/path",
-			"serialized_dashboard": "serialized_dashboard",
-		},
+		HCL: `
+			display_name = "Dashboard name"
+			warehouse_id = "abc"
+			parent_path = "/path"
+			serialized_dashboard = "serialized_json"
+		`,
 	}.ApplyNoError(t)
 }

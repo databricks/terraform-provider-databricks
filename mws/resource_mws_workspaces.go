@@ -12,8 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/oauth2"
-
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/tokens"
@@ -407,8 +406,7 @@ func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 // need to manually create a workspace-level service principal and use it to authenticate to
 // the workspace.
 func isInvalidClient(err error) bool {
-	var retrieveError *oauth2.RetrieveError
-	return errors.As(err, &retrieveError) && retrieveError.ErrorCode == "invalid_client"
+	return errors.Is(err, databricks.ErrUnauthenticated)
 }
 
 func EnsureTokenExistsIfNeeded(a WorkspacesAPI,

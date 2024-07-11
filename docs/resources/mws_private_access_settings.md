@@ -24,7 +24,7 @@ resource "databricks_mws_private_access_settings" "pas" {
 
 ```
 
-The `databricks_mws_private_access_settings.pas.private_access_settings_id` can then be used as part of a [databricks_mws_workspaces](databricks_mws_workspaces.md) resource:
+The `databricks_mws_private_access_settings.pas.private_access_settings_id` can then be used as part of a [databricks_mws_workspaces](mws_workspaces.md) resource:
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {

@@ -90,12 +90,9 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 				addToForceSendFields(srcFieldName, forceSendFieldsField)
 			}
 		case types.List:
-			diag := v.ElementsAs(ctx, destField.Addr().Interface(), false)
-			if len(diag) != 0 {
-				panic("Error")
-			}
+			panic("types.List should never be used, use go native slices instead")
 		case types.Map:
-			v.ElementsAs(ctx, destField.Addr().Interface(), false)
+			panic("types.Map should never be used, use go native maps instead")
 		default:
 			// If it is a real stuct instead of a tfsdk type, recursively resolve it.
 			if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx); err != nil {

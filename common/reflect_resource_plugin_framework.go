@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -288,4 +289,26 @@ func checkTheStringInForceSendFields(fieldName string, forceSendFields []string)
 		}
 	}
 	return false
+}
+
+func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
+	rk := v.Kind()
+	if rk == reflect.Ptr {
+		v = v.Elem()
+		rk = v.Kind()
+	}
+	if rk != reflect.Struct {
+		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
+	}
+	fields := listAllFields(v)
+	for _, field := range fields {
+		typeField := field.sf
+		fieldName := typeField.Tag.Get("tfsdk")
+		if fieldName == "-" {
+			continue
+		}
+		// TODO: handle optional and all kinds of stuff
+
+	}
+
 }

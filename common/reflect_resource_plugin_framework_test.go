@@ -12,7 +12,7 @@ import (
 )
 
 type DummyTfSdk struct {
-	Enabled           types.Bool                  `tfsdk:"enabled"`
+	Enabled           types.Bool                  `tfsdk:"enabled",tf:"optional"`
 	Workers           types.Int64                 `tfsdk:"workers"`
 	Floats            types.Float64               `tfsdk:"floats"`
 	Description       types.String                `tfsdk:"description"`

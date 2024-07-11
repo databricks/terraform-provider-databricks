@@ -1339,6 +1339,25 @@ func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 	}, ``)
 }
 
+func TestUpdateWorkspace_DeleteTokenIgnoreOAuthFailure(t *testing.T) {
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+			Status: 400,
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+	}, ``)
+}
+
 func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
 	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
 		{
@@ -1503,7 +1522,7 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
-	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")
+	assert.EqualError(t, removeTokenIfNeeded(wsApi, "x", d), noAuth, "remove")
 }
 
 func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
@@ -1533,7 +1552,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		for msg, err := range map[string]error{
 			"cannot create token: i'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
 			"cannot read token: i'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
-			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
+			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, "x", d),
 		} {
 			assert.EqualError(t, err, msg)
 		}

@@ -8,6 +8,54 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type Pipeline struct {
+	pipelines.PipelineSpec
+	AllowDuplicateNames bool `json:"allow_duplicate_names,omitempty"`
+	DryRun              bool `json:"dry_run,omitempty"`
+	// An optional message detailing the cause of the pipeline state.
+	Cause string `json:"cause,omitempty"`
+	// The ID of the cluster that the pipeline is running on.
+	ClusterId string `json:"cluster_id,omitempty"`
+	// The username of the pipeline creator.
+	CreatorUserName string `json:"creator_user_name,omitempty"`
+	// The health of a pipeline.
+	Health pipelines.GetPipelineResponseHealth `json:"health,omitempty"`
+	// The last time the pipeline settings were modified or created.
+	LastModified int64 `json:"last_modified,omitempty"`
+	// Status of the latest updates for the pipeline. Ordered with the newest
+	// update first.
+	LatestUpdates []pipelines.UpdateStateInfo `json:"latest_updates,omitempty"`
+	// Username of the user that the pipeline will run on behalf of.
+	RunAsUserName string `json:"run_as_user_name,omitempty"`
+	// The pipeline state.
+	State pipelines.PipelineState `json:"state,omitempty"`
+}
+
+func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	// Required fields
+	s.SchemaPath("name").SetRequired()
+	s.SchemaPath("storage").SetRequired()
+	s.SchemaPath("clusters").SetRequired()
+
+	// Optional fields
+	s.SchemaPath("configuration").SetOptional()
+	s.SchemaPath("libraries").SetOptional()
+	s.SchemaPath("target").SetOptional()
+	s.SchemaPath("filters").SetOptional()
+	s.SchemaPath("continuous").SetOptional()
+	s.SchemaPath("development").SetOptional()
+	s.SchemaPath("photon").SetOptional()
+	s.SchemaPath("edition").SetOptional()
+	s.SchemaPath("channel").SetOptional()
+	s.SchemaPath("catalog").SetOptional()
+	s.SchemaPath("notifications").SetOptional()
+	s.SchemaPath("deployment").SetOptional()
+	s.SchemaPath("allow_duplicate_names").SetDefault(false)
+	s.SchemaPath("dry_run").SetOptional()
+
+	return s
+}
+
 func ResourcePipeline() common.Resource {
 	s := common.StructToSchema(pipelines.CreatePipeline{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {

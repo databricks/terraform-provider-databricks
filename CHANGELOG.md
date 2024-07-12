@@ -1,6 +1,6 @@
 # Version changelog
 
-## 1.48.3
+## 1.49.0
 
 ### New Features and Improvements
  * Added `databricks_dashboard` resource ([#3729](https://github.com/databricks/terraform-provider-databricks/pull/3729)).

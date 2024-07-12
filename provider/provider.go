@@ -224,7 +224,7 @@ func DatabricksProvider() *schema.Provider {
 			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 		}
 		tflogger.SetLogger()
-		return configureDatabricksClient(ctx, d)
+		return ConfigureDatabricksClient(ctx, d)
 	}
 	common.AddContextToAllResources(p, "databricks")
 	return p
@@ -255,7 +255,7 @@ func providerSchema() map[string]*schema.Schema {
 	return ps
 }
 
-func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}

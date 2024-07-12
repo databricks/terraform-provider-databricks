@@ -13,7 +13,7 @@ func DataSourceClusters() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		Id                  string   `json:"id,omitempty" tf:"computed"`
 		Ids                 []string `json:"ids,omitempty" tf:"computed,slice_set"`
-		ClusterNameContains string   `json:"cluster_name_contains"`
+		ClusterNameContains string   `json:"cluster_name_contains,omitempty"`
 	}, w *databricks.WorkspaceClient) error {
 		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
 		if err != nil {

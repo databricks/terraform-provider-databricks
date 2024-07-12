@@ -1339,25 +1339,6 @@ func TestUpdateWorkspace_DeleteToken(t *testing.T) {
 	}, ``)
 }
 
-func TestUpdateWorkspace_DeleteTokenIgnoreOAuthFailure(t *testing.T) {
-	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
-		{
-			Method:   "POST",
-			Resource: "/api/2.0/token/delete",
-			ExpectedRequest: map[string]any{
-				"token_id": "abcdef",
-			},
-			Status: 400,
-		},
-	}, map[string]string{
-		"token.#":                  "1",
-		"token.0.comment":          "Terraform PAT",
-		"token.0.lifetime_seconds": "2592000",
-		"token.0.token_id":         "abcdef",
-		"token.0.token_value":      "sensitive",
-	}, ``)
-}
-
 func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
 	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
 		{

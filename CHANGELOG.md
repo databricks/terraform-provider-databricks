@@ -9,12 +9,15 @@
  * Added `databricks_volume` as data source  ([#3211](https://github.com/databricks/terraform-provider-databricks/pull/3211)).
  * Make the `schedule.pause_status` field read-only ([#3692](https://github.com/databricks/terraform-provider-databricks/pull/3692)).
  * Renamed `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#3703](https://github.com/databricks/terraform-provider-databricks/pull/3703)).
+ * Make `cluster_name_contains` optional in `databricks_clusters` data source ([#3760](https://github.com/databricks/terraform-provider-databricks/pull/3760)).
+ * Tolerate OAuth errors in databricks_mws_workspaces when managing tokens ([#3761](https://github.com/databricks/terraform-provider-databricks/pull/3761)).
 
 ### Exporter
  * Emit directories during the listing only if they are explicitly configured in `-listing` ([#3673](https://github.com/databricks/terraform-provider-databricks/pull/3673)).
  * Export libraries specified as `requirements.txt` ([#3649](https://github.com/databricks/terraform-provider-databricks/pull/3649)).
  * Fix generation of `run_as` blocks in `databricks_job` ([#3724](https://github.com/databricks/terraform-provider-databricks/pull/3724)).
  * Use Go SDK structs for `databricks_job` resource ([#3727](https://github.com/databricks/terraform-provider-databricks/pull/3727)).
+ * Clarify use of `-listing` and `-services` options ([#3755](https://github.com/databricks/terraform-provider-databricks/pull/3755)).
 
 ### Documentation
  * Fix invalid priviledges in grants.md ([#3716](https://github.com/databricks/terraform-provider-databricks/pull/3716)).
@@ -30,6 +33,7 @@
  * Refactored `databricks_cluster(s)` data sources to Go SDK ([#3685](https://github.com/databricks/terraform-provider-databricks/pull/3685)).
  * Upgrade databricks-sdk-go ([#3743](https://github.com/databricks/terraform-provider-databricks/pull/3743)).
  * Run goreleaser action in snapshot mode from merge queue ([#3646](https://github.com/databricks/terraform-provider-databricks/pull/3646)).
+ * Make `dashboard_name` random in integration tests for `databricks_dashboard` resource ([#3763](https://github.com/databricks/terraform-provider-databricks/pull/3763)).
 
 
 ## 1.48.2

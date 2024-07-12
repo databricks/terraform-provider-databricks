@@ -36,6 +36,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("name").SetRequired()
 	s.SchemaPath("storage").SetRequired()
 	s.SchemaPath("clusters").SetRequired()
+	s.SchemaPath("continuous").SetRequired()
 
 	// Optional fields
 	s.SchemaPath("configuration").SetOptional()
@@ -56,66 +57,23 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	return s
 }
 
+var pipelineSchema = common.StructToSchema(Pipeline{}, nil)
+
 func ResourcePipeline() common.Resource {
-	s := common.StructToSchema(pipelines.CreatePipeline{},
-		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			s["pipeline_id"].Computed = true
-			s["name"].Optional = false
-			s["name"].Required = true
-			// does this require force new?
-			s["storage"].Optional = false
-			s["storage"].Required = true
-			// see it (if optional, then remove)
-			s["configuration"].Optional = true
-			s["clusters"].Optional = false
-			s["clusters"].Required = true
-			// see it (if optional, then remove)
-			s["libraries"].Optional = true
-			// see it (if optional, then remove)
-			s["target"].Optional = true
-
-			s["filters"].Optional = true
-
-			s["continuous"].Optional = true
-
-			s["development"].Optional = true
-			s["development"].Default = false
-
-			s["photon"].Optional = true
-
-			s["edition"].Optional = true
-
-			s["channel"].Optional = true
-
-			s["catalog"].Optional = true
-
-			s["notifications"].Optional = true
-
-			s["deployment"].Optional = true
-
-			s["allow_duplicate_names"].Default = false
-
-			s["dry_run"].Optional = true
-
-			// s["spec"] = &schema.Schema{
-			// 	Type: schema.TypeString,
-
-			return s
-		})
 	return common.Resource{
-		Schema: s,
+		Schema: pipelineSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			var new_pipeline pipelines.CreatePipeline
-			common.DataToStructPointer(d, s, &new_pipeline)
-			created_pipeline, err := w.Pipelines.Create(ctx, new_pipeline)
+			var createPipelineRequest pipelines.CreatePipeline
+			common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
+			createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest)
 			if err != nil {
 				return err
 			}
-			d.SetId(created_pipeline.PipelineId)
+			d.SetId(createdPipeline.PipelineId)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -123,13 +81,31 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			pipeline, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
+			readPipeline, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
 				PipelineId: d.Id(),
 			})
 			if err != nil {
 				return err
 			}
-			return common.StructToData(pipeline, s, d)
+			return common.StructToData(readPipeline, pipelineSchema, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			var updatePipelineRequest pipelines.EditPipeline
+			common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
+			return w.Pipelines.Update(ctx, updatePipelineRequest)
+		},
+		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return w.Pipelines.Delete(ctx, pipelines.DeletePipelineRequest{
+				PipelineId: d.Id(),
+			})
 		},
 	}
 }

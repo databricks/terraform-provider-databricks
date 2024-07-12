@@ -254,3 +254,7 @@ func TestStructConversion(t *testing.T) {
 	// Assert that the struct is exactly the same after tfsdk --> gosdk --> tfsdk
 	assert.True(t, reflect.DeepEqual(tfSdkStruct, convertedTfSdkStruct))
 }
+
+func TestStructToSchema(t *testing.T) {
+	pluginFrameworkTypeToSchema(reflect.ValueOf(DummyTfSdk{}))
+}

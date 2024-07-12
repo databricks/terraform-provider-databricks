@@ -308,7 +308,58 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 			continue
 		}
 		// TODO: handle optional and all kinds of stuff
+		kind := typeField.Type.Kind()
+		if kind == reflect.Ptr {
+			// In the schema ptr and non ptr are treated the same way
+			// Seems like in the original typeToSchema implementation we assumed that the ptr can only be a ptr to a struct
+			// If so, we just need to recursively call this function with its elem
+			// Otherwise we need more helper functions
 
+		} else if kind == reflect.Slice {
+			// If it's a slice, we need to check what type it is
+			//   If it's a slice of primitive types (tfsdk primiritive types), it's a schema.ListAttribute
+			//   If it's a slice of nested types (struct), it's a schema.ListNestedAttribute
+			//     If it's a list of struct, we can create a schema.NestedAttributeObject and call the function recursively
+			//     It seems like the two scenarios below are not covered in the existing structToSchema
+			//       If it's a list of list, what to do?
+			//       If it's a list of map, what to do?
+
+		} else if kind == reflect.Map {
+			// If it's a slice, we need to check what type it is
+			//   If it's a map with values of primitive types (tfsdk primiritive types), it's a schema.MapAttribute
+			//   If it's a map with values of nested types (struct), it's a schema.MapNestedAttribute
+			// Complicated nested maps are not covered for structToSchema's existing implementation
+
+		} else if kind == reflect.Struct {
+			switch field.v.Interface().(type) {
+			case types.Bool:
+				println("bool!")
+				println(field.sf.Name)
+			case types.Int64:
+				println("int64!")
+				println(field.sf.Name)
+			case types.Float64:
+				println("float64!")
+				println(field.sf.Name)
+			case types.String:
+				println("string!")
+				println(field.sf.Name)
+			case types.List:
+				println("list!")
+				println(field.sf.Name)
+			case types.Map:
+				println("map!")
+				println(field.sf.Name)
+			default:
+				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
+				println("real struct")
+				println(field.sf.Name)
+				return nil
+			}
+
+		} else {
+			panic(fmt.Errorf("unknown type for field: %s", typeField.Name))
+		}
 	}
-
+	return nil
 }

@@ -44,7 +44,17 @@ func makeTemplate(template templateStruct) string {
 	`, template.EmbedCredentials)
 	}
 	templateString += `}
-	`
+
+resource "databricks_permissions" "dashboard_usage" {
+    dashboard_id = databricks_dashboard.d1.id
+
+	access_control {
+        group_name       = "users"
+        permission_level = "CAN_READ"
+    }
+}
+`
+
 	return templateString
 }
 

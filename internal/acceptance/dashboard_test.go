@@ -76,11 +76,12 @@ func (t *templateStruct) SetAttributes(mapper map[string]string) templateStruct 
 	return *t
 }
 
-func TestAccLDashboard(t *testing.T) {
+func TestAccBasicDashboard(t *testing.T) {
 	var template templateStruct
+	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
 	workspaceLevel(t, step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
-			"display_name":         "Monthly Traffic Report",
+			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
 			"parent_path":          "/Shared/provider-test",
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
@@ -98,7 +99,7 @@ func TestAccLDashboard(t *testing.T) {
 			}
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			return nil
 		}),
@@ -107,9 +108,10 @@ func TestAccLDashboard(t *testing.T) {
 
 func TestAccDashboardWithSerializedJSON(t *testing.T) {
 	var template templateStruct
+	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
 	workspaceLevel(t, step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
-			"display_name":         "Monthly Traffic Report",
+			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
 			"parent_path":          "/Shared/provider-test",
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
@@ -126,7 +128,7 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			return nil
 		}),
@@ -146,7 +148,7 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
@@ -161,13 +163,14 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 	tmpDir := fmt.Sprintf("/tmp/Dashboard-%s", qa.RandomName())
 	fileName := tmpDir + "/Dashboard.json"
 	var template templateStruct
+	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
 	workspaceLevel(t, step{
 		PreConfig: func() {
 			os.Mkdir(tmpDir, 0755)
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"), 0644)
 		},
 		Template: makeTemplate(template.SetAttributes(map[string]string{
-			"display_name": "Monthly Traffic Report",
+			"display_name": displayName,
 			"warehouse_id": "{env.TEST_DEFAULT_WAREHOUSE_ID}",
 			"file_path":    fileName,
 			"parent_path":  "/Shared/provider-test",
@@ -183,7 +186,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			return nil
 		}),
@@ -203,7 +206,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
 			resource.TestCheckResourceAttr("databricks_dashboard.d1", "etag", dashboard.Etag)
@@ -217,9 +220,10 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 func TestAccDashboardWithNoChange(t *testing.T) {
 	initial_update_time := ""
 	var template templateStruct
+	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
 	workspaceLevel(t, step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
-			"display_name":         "Monthly Traffic Report",
+			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
 			"parent_path":          "/Shared/provider-test",
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
@@ -235,7 +239,7 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			initial_update_time = dashboard.UpdateTime
 			return nil
@@ -253,7 +257,7 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			require.NoError(t, err)
@@ -269,9 +273,10 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 	warehouse_id := ""
 	etag := ""
 	var template templateStruct
+	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
 	workspaceLevel(t, step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
-			"display_name":         "Monthly Traffic Report",
+			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
 			"parent_path":          "/Shared/provider-test",
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
@@ -287,7 +292,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			dashboard_id = dashboard.DashboardId
 			display_name = dashboard.DisplayName
@@ -320,7 +325,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
@@ -339,6 +344,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 	tmpDir := fmt.Sprintf("/tmp/Dashboard-%s", qa.RandomName())
 	fileName := tmpDir + "/Dashboard.json"
 	var template templateStruct
+	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
 	workspaceLevel(t, step{
 		PreConfig: func() {
 			os.Mkdir(tmpDir, 0755)
@@ -346,7 +352,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 
 		},
 		Template: makeTemplate(template.SetAttributes(map[string]string{
-			"display_name":      "Monthly Traffic Report",
+			"display_name":      displayName,
 			"warehouse_id":      "{env.TEST_DEFAULT_WAREHOUSE_ID}",
 			"parent_path":       "/Shared/provider-test",
 			"file_path":         fileName,
@@ -366,7 +372,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			publish_dash, err := w.Lakeview.GetPublished(ctx, dashboards.GetPublishedDashboardRequest{
 				DashboardId: id,
 			})
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			require.NotEqual(t, dashboard.UpdateTime, dashboard.CreateTime)
 			require.Equal(t, publish_dash.EmbedCredentials, false)
@@ -388,7 +394,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			dashboard_id = dashboard.DashboardId
 			display_name = dashboard.DisplayName
@@ -423,7 +429,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			resource.TestCheckResourceAttr("databricks_dashboard.d1", "etag", dashboard.Etag)
 			require.NoError(t, err)
 			return nil
@@ -444,7 +450,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
@@ -466,7 +472,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			assert.Equal(t, "Monthly Traffic Report", dashboard.DisplayName)
+			assert.Equal(t, displayName, dashboard.DisplayName)
 			require.NoError(t, err)
 			resource.TestCheckResourceAttr("databricks_dashboard.d1", "etag", dashboard.Etag)
 			// As the format of the serialized dashboard is not fixed, we can only check if it is not empty

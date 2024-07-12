@@ -30,6 +30,8 @@ github.com/databricks/databricks-sdk-go v0.43.1 h1:JJJ0S5yiDLQF8dzo6V1O2jKsOAkUL
 github.com/databricks/databricks-sdk-go v0.43.1/go.mod h1:nlzeOEgJ1Tmb5HyknBJ3GEorCZKWqEBoHprvPmTSNq8=
 github.com/databricks/databricks-sdk-go v0.43.2 h1:4B+sHAYO5kFqwZNQRmsF70eecqsFX6i/0KfXoDFQT/E=
 github.com/databricks/databricks-sdk-go v0.43.2/go.mod h1:nlzeOEgJ1Tmb5HyknBJ3GEorCZKWqEBoHprvPmTSNq8=
+github.com/databricks/databricks-sdk-go v0.43.3-0.20240712182131-69a9c987dab4 h1:HQS3I1IylWStGHcNsNEvL5PhsSNJg7bmBa/80fhbmQ0=
+github.com/databricks/databricks-sdk-go v0.43.3-0.20240712182131-69a9c987dab4/go.mod h1:nlzeOEgJ1Tmb5HyknBJ3GEorCZKWqEBoHprvPmTSNq8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

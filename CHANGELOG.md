@@ -2,7 +2,7 @@
 
 ## 1.48.3
 
-### Internal Changes
+### Internal Changes 
  * Bump Go SDK to `0.43.2` ([#3750](https://github.com/databricks/terraform-provider-databricks/pull/3750))
  * Added new `APIErrorBody` struct and update deps ([#3745](https://github.com/databricks/terraform-provider-databricks/pull/3745))
 

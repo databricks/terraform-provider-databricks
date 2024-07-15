@@ -4,11 +4,24 @@ import (
 	"context"
 
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
+	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type Pipeline struct {
+	// not setting group:node_type and max_items:10 for fields in pipelineCluster
+	// Cluster->Autoscale->Mode (difference in type)
+	// Cluster->AwsAttributes->Availability (difference in type)
+	// Cluster->enable_local_disk_encryption (not in new)
+	// In cluster, ID in old Id in new
+	// Cluster->init_scripts->Abfss (difference in type)
+	// not setting alias for Clusters in pipelineCluster
+	// Libraries->Whl does not exist in new
+	// Not setting alias for Libraries
+	// Not setting alias for Notifications
+	// Did not set min_items:1 for sub-fields of Notifications
+	// Why is serverless Optional in Serverless
 	pipelines.PipelineSpec
 	AllowDuplicateNames bool `json:"allow_duplicate_names,omitempty"`
 	DryRun              bool `json:"dry_run,omitempty"`
@@ -38,21 +51,37 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("clusters").SetRequired()
 	s.SchemaPath("continuous").SetRequired()
 
-	// Optional fields
-	s.SchemaPath("configuration").SetOptional()
-	s.SchemaPath("libraries").SetOptional()
-	s.SchemaPath("target").SetOptional()
-	s.SchemaPath("filters").SetOptional()
-	s.SchemaPath("continuous").SetOptional()
-	s.SchemaPath("development").SetOptional()
-	s.SchemaPath("photon").SetOptional()
-	s.SchemaPath("edition").SetOptional()
-	s.SchemaPath("channel").SetOptional()
-	s.SchemaPath("catalog").SetOptional()
-	s.SchemaPath("notifications").SetOptional()
-	s.SchemaPath("deployment").SetOptional()
-	s.SchemaPath("allow_duplicate_names").SetDefault(false)
-	s.SchemaPath("dry_run").SetOptional()
+	// ForceNew fields
+	s.SchemaPath("storage").SetForceNew()
+	s.SchemaPath("catalog").SetForceNew()
+
+	// Computed fields
+	s.SchemaPath("id").SetComputed()
+	s.SchemaPath("clusters", "node_type_id").SetComputed()
+	s.SchemaPath("clusters", "driver_node_type_id").SetComputed()
+	s.SchemaPath("clusters", "enable_local_disk_encryption").SetComputed()
+
+	// SuppressDiff fields
+	s.SchemaPath("edition").SetSuppressDiff()
+	s.SchemaPath("channel").SetSuppressDiff()
+	s.SchemaPath("clusters", "spark_conf").SetCustomSuppressDiff(clusters.SparkConfDiffSuppressFunc)
+	s.SchemaPath("clusters", "aws_attributes", "zone_id").SetCustomSuppressDiff(clusters.ZoneDiffSuppress)
+	s.SchemaPath("clusters", "autoscale", "mode").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+
+	// Deprecated fields
+	s.SchemaPath("clusters", "init_scripts", "dbfs").SetDeprecated(clusters.DbfsDeprecationWarning)
+
+	// Delete fields
+	s.SchemaPath("clusters", "gcp_attributes").RemoveField("use_preemptible_executors")
+	s.SchemaPath("clusters", "gcp_attributes").RemoveField("boot_disk_size")
+
+	// Default values
+	s.SchemaPath("edition").SetDefault("ADVANCED")
+	s.SchemaPath("channel").SetDefault("CURRENT")
+
+	// ConflictsWith fields
+	s.SchemaPath("storage").SetConflictsWith([]string{"catalog"})
+	s.SchemaPath("catalog").SetConflictsWith([]string{"storage"})
 
 	return s
 }

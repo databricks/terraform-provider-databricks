@@ -15,6 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 )
 
+const startMessageFormat = `Databricks Terraform Provider
+	
+Version %s
+	
+https://registry.terraform.io/providers/databricks/databricks/latest/docs
+	
+`
+
 func main() {
 	log.SetFlags(0)
 	if len(os.Args) > 1 && os.Args[1] == "version" {
@@ -28,17 +36,8 @@ func main() {
 		}
 		return
 	}
-	var debug bool
-	if len(os.Args) > 1 && os.Args[1] == "debug" {
-		debug = true
-	}
-	log.Printf(`Databricks Terraform Provider
-	
-	Version %s
-	
-	https://registry.terraform.io/providers/databricks/databricks/latest/docs
-	
-	`, common.Version())
+
+	log.Printf(startMessageFormat, common.Version())
 
 	sdkPluginProvider := provider.DatabricksProvider()
 
@@ -50,20 +49,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	providers := []func() tfprotov6.ProviderServer{
-		func() tfprotov6.ProviderServer {
-			return upgradedSdkPluginProvider
-		},
-	}
-
 	ctx := context.Background()
-	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, func() tfprotov6.ProviderServer {
+		return upgradedSdkPluginProvider
+	})
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var serveOpts []tf6server.ServeOpt
-	if debug {
+	if len(os.Args) > 1 && os.Args[1] == "debug" { // debug mode
 		serveOpts = append(serveOpts, tf6server.WithManagedDebug())
 	}
 

@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
@@ -436,6 +437,13 @@ var emptyMetastoreList = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyLakeviewList = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/lakeview/dashboards?",
+	Response:     sdk_dashboards.ListDashboardsResponse{},
+	ReuseRequest: true,
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
 		{
@@ -457,6 +465,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			noCurrentMetastoreAttached,
+			emptyLakeviewList,
 			emptyMetastoreList,
 			meAdminFixture,
 			emptyRepos,
@@ -729,6 +738,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 				},
 			},
 			noCurrentMetastoreAttached,
+			emptyLakeviewList,
 			emptyMetastoreList,
 			emptyRepos,
 			emptyExternalLocations,
@@ -2621,5 +2631,72 @@ func TestImportingRunJobTask(t *testing.T) {
 			assert.False(t, strings.Contains(contentStr, `run_as {
      user_name = "user@domain.com"
   }`))
+		})
+}
+
+func TestImportingLakeviewDashboards(t *testing.T) {
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Response: scim.User{
+					Groups: []scim.ComplexValue{
+						{
+							Display: "admins",
+						},
+					},
+					UserName: "user@domain.com",
+				},
+			},
+			noCurrentMetastoreAttached,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/lakeview/dashboards?",
+				Response: sdk_dashboards.ListDashboardsResponse{
+					Dashboards: []sdk_dashboards.Dashboard{
+						{
+							DashboardId: "9cb0c8f562624a1f",
+							DisplayName: "Dashboard1",
+						},
+					},
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/lakeview/dashboards/9cb0c8f562624a1f?",
+				Response: sdk_dashboards.Dashboard{
+					DashboardId:         "9cb0c8f562624a1f",
+					DisplayName:         "Dashboard1",
+					ParentPath:          "/",
+					Path:                "/Dashboard1.lvdash.json",
+					SerializedDashboard: `{}`,
+					WarehouseId:         "1234",
+				},
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.enableListing("dashboards")
+			ic.enableServices("dashboards")
+
+			err := ic.Run()
+			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/dashboards.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_dashboard" "dashboard1_9cb0c8f562624a1f"`))
+			assert.True(t, strings.Contains(contentStr, `file_path         = "${path.module}/dashboards/Dashboard1_9cb0c8f562624a1f.lvdash.json"`))
+			content, err = os.ReadFile(tmpDir + "/dashboards/Dashboard1_9cb0c8f562624a1f.lvdash.json")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.Equal(t, `{}`, contentStr)
 		})
 }

@@ -49,7 +49,7 @@ The following arguments are supported:
 * `serialized_dashboard` - (Optional) The contents of the dashboard in serialized string form. Conflicts with `file_path`.
 * `file_path` - (Optional) The path to the dashboard JSON file. Conflicts with `serialized_dashboard`.
 * `embed_credentials` - (Optional) Whether to embed credentials in the dashboard. Default is `true`.
-* `parent_path` - (Required) The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash.
+* `parent_path` - (Required) The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash.  If folder doesn't exist, it will be created.
 
 ## Attribute Reference
 

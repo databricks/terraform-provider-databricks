@@ -439,7 +439,7 @@ var emptyMetastoreList = qa.HTTPFixture{
 
 var emptyLakeviewList = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/lakeview/dashboards?",
+	Resource:     "/api/2.0/lakeview/dashboards?page_size=100",
 	Response:     sdk_dashboards.ListDashboardsResponse{},
 	ReuseRequest: true,
 }
@@ -2653,7 +2653,7 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			noCurrentMetastoreAttached,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/lakeview/dashboards?",
+				Resource: "/api/2.0/lakeview/dashboards?page_size=100",
 				Response: sdk_dashboards.ListDashboardsResponse{
 					Dashboards: []sdk_dashboards.Dashboard{
 						{

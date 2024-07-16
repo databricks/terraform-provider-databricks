@@ -21,6 +21,9 @@ func ResourceModelServing() common.Resource {
 			m["name"].ForceNew = true
 			common.MustSchemaPath(m, "config", "served_models").ConflictsWith = []string{"config.served_entities"}
 			common.MustSchemaPath(m, "config", "served_entities").ConflictsWith = []string{"config.served_models"}
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
 			common.MustSchemaPath(m, "config", "auto_capture_config", "table_name_prefix").Computed = true
 

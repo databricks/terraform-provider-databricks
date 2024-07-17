@@ -27,14 +27,18 @@
 ### Internal Changes
  * Add Release tag ([#3748](https://github.com/databricks/terraform-provider-databricks/pull/3748)).
  * Improve Changelog by grouping changes ([#3747](https://github.com/databricks/terraform-provider-databricks/pull/3747)).
- * Upgrade Go SDK to v0.43.2 ([#3750](https://github.com/databricks/terraform-provider-databricks/pull/3750)).
- * Add new APIErrorBody struct and update deps ([#3745](https://github.com/databricks/terraform-provider-databricks/pull/3745)).
  * Change TF registry ownership ([#3736](https://github.com/databricks/terraform-provider-databricks/pull/3736)).
  * Refactored `databricks_cluster(s)` data sources to Go SDK ([#3685](https://github.com/databricks/terraform-provider-databricks/pull/3685)).
  * Upgrade databricks-sdk-go ([#3743](https://github.com/databricks/terraform-provider-databricks/pull/3743)).
  * Run goreleaser action in snapshot mode from merge queue ([#3646](https://github.com/databricks/terraform-provider-databricks/pull/3646)).
  * Make `dashboard_name` random in integration tests for `databricks_dashboard` resource ([#3763](https://github.com/databricks/terraform-provider-databricks/pull/3763)).
 
+
+## 1.48.3
+
+### Internal Changes 
+ * Bump Go SDK to `0.43.2` ([#3750](https://github.com/databricks/terraform-provider-databricks/pull/3750))
+ * Added new `APIErrorBody` struct and update deps ([#3745](https://github.com/databricks/terraform-provider-databricks/pull/3745))
 
 ## 1.48.2
 

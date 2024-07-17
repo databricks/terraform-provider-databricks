@@ -170,6 +170,13 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 			name = "tf-{var.RANDOM}"
 			cluster_size = "2X-Small"
 			max_num_clusters = 1
+
+			tags {
+				custom_tags {
+					key   = "Owner"
+					value = "eng-dev-ecosystem-team@databricks.com"
+				}
+			}
 		}
 
 		resource "databricks_schema" "this" {

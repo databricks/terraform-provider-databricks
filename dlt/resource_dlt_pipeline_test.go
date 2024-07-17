@@ -1,172 +1,1349 @@
 package pipelines
 
 import (
+	"context"
+	"fmt"
+
+	"errors"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/experimental/mocks"
-	"github.com/databricks/databricks-sdk-go/service/dashboards"
+	// import a package for assert
+	"github.com/stretchr/testify/assert"
+
+	// import common package
+
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/stretchr/testify/mock"
+	// import the library of go-mock
+	// "github.com/golang/mock/gomock"
 )
 
-func TestDLTPipelineCreate(t *testing.T) {
+var createRequest = pipelines.CreatePipeline{
+	Name:    "test-pipeline",
+	Storage: "/test/storage",
+	Configuration: map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	},
+	Clusters: []pipelines.PipelineCluster{
+		{
+			Label: "default",
+			CustomTags: map[string]string{
+				"cluster_tag1": "cluster_value1",
+			},
+		},
+	},
+	Libraries: []pipelines.PipelineLibrary{
+		{
+			Notebook: &pipelines.NotebookLibrary{
+				Path: "/Test",
+			},
+		},
+	},
+	Filters: &pipelines.Filters{
+		Include: []string{"com.databricks.include"},
+		Exclude: []string{"com.databricks.exclude"},
+	},
+	Deployment: &pipelines.PipelineDeployment{
+		Kind:             "BUNDLE",
+		MetadataFilePath: "/foo/bar",
+	},
+	Edition: "ADVANCED",
+	Channel: "CURRENT",
+}
+
+var updateRequest = pipelines.EditPipeline{
+	Id:      "abcd",
+	Name:    "test",
+	Storage: "/test/storage",
+	Libraries: []pipelines.PipelineLibrary{
+		{
+			Notebook: &pipelines.NotebookLibrary{
+				Path: "/Test",
+			},
+		},
+	},
+	Filters: &pipelines.Filters{
+		Include: []string{"com.databricks.include"},
+	},
+	Channel: "CURRENT",
+	Edition: "ADVANCED",
+}
+
+var basicPipelineSpec = pipelines.PipelineSpec{
+	Name:    "test-pipeline",
+	Storage: "/test/storage",
+	Configuration: map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	},
+	Clusters: []pipelines.PipelineCluster{
+		{
+			Label: "default",
+			CustomTags: map[string]string{
+				"cluster_tag1": "cluster_value1",
+			},
+		},
+	},
+	Libraries: []pipelines.PipelineLibrary{
+		{
+			Notebook: &pipelines.NotebookLibrary{
+				Path: "/Test",
+			},
+		},
+	},
+	Filters: &pipelines.Filters{
+		Include: []string{"com.databricks.include"},
+		Exclude: []string{"com.databricks.exclude"},
+	},
+	Deployment: &pipelines.PipelineDeployment{
+		Kind:             "BUNDLE",
+		MetadataFilePath: "/foo/bar",
+	},
+	Edition: "ADVANCED",
+	Channel: "CURRENT",
+}
+
+func TestResourcePipelineCreate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockLakeviewAPI().EXPECT()
-			e.Create(mock.Anything, dashboards.CreateDashboardRequest{
-				DisplayName:         "Dashboard name",
-				WarehouseId:         "abc",
-				ParentPath:          "/path",
-				SerializedDashboard: "serialized_json",
-			}).Return(&dashboards.Dashboard{
-				DashboardId:         "xyz",
-				DisplayName:         "Dashboard name",
-				SerializedDashboard: "serialized_json_2",
-				WarehouseId:         "abc",
-				UpdateTime:          "2125678",
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, createRequest).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
 			}, nil)
-			e.Publish(mock.Anything, dashboards.PublishRequest{
-				EmbedCredentials: true,
-				WarehouseId:      "abc",
-				DashboardId:      "xyz",
-				ForceSendFields:  []string{"EmbedCredentials"},
-			}).Return(&dashboards.PublishedDashboard{
-				EmbedCredentials:   true,
-				WarehouseId:        "abc",
-				DisplayName:        "Dashboard name",
-				RevisionCreateTime: "823828",
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateDeploying,
+				Spec:       &basicPipelineSpec,
 			}, nil)
-			e.Get(mock.Anything, dashboards.GetDashboardRequest{
-				DashboardId: "xyz",
-			}).Return(&dashboards.Dashboard{
-				DashboardId:         "xyz",
-				DisplayName:         "Dashboard name",
-				SerializedDashboard: "serialized_json_2",
-				WarehouseId:         "abc",
-				UpdateTime:          "2125678",
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateRunning,
+				Spec:       &basicPipelineSpec,
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateRunning,
+				Spec:       &basicPipelineSpec,
 			}, nil)
 		},
 		Resource: ResourcePipeline(),
 		Create:   true,
 		HCL: `
-			display_name = "Dashboard name"
-			warehouse_id = "abc"
-			parent_path = "/path"
-			serialized_dashboard = "serialized_json"
+			name = "test-pipeline"
+			storage = "/test/storage"
+			configuration = {
+			  key1 = "value1"
+			  key2 = "value2"
+			}
+			cluster {
+			  label = "default"
+			  custom_tags = {
+				"cluster_tag1" = "cluster_value1"
+			  }
+			}
+			library {
+			  notebook {
+				path = "/Test"
+			  }
+			}
+			filters {
+			  include = ["com.databricks.include"]
+			  exclude = ["com.databricks.exclude"]
+			}
+			continuous = false
+			deployment {
+				kind = "BUNDLE"
+				metadata_file_path = "/foo/bar"
+			}
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id":           "xyz",
-		"display_name": "Dashboard name",
+		"id": "abcd",
 	})
+	// 	Fixtures: []qa.HTTPFixture{
+	// 		{
+	// 			Method:          "POST",
+	// 			Resource:        "/api/2.0/pipelines",
+	// 			ExpectedRequest: createRequest,
+	// 			Response: pipelines.CreatePipelineResponse{
+	// 				PipelineId: "abcd",
+	// 			},
+	// 		},
+	// 		{
+	// 			Method:   "GET",
+	// 			Resource: "/api/2.0/pipelines/abcd?",
+	// 			Response: map[string]any{
+	// 				"id":    "abcd",
+	// 				"name":  "test-pipeline",
+	// 				"state": "DEPLOYING",
+	// 				"spec":  basicPipelineSpec,
+	// 			},
+	// 		},
+	// 		{
+	// 			Method:   "GET",
+	// 			Resource: "/api/2.0/pipelines/abcd?",
+	// 			Response: map[string]any{
+	// 				"id":    "abcd",
+	// 				"name":  "test-pipeline",
+	// 				"state": "RUNNING",
+	// 				"spec":  basicPipelineSpec,
+	// 			},
+	// 		},
+	// 		{
+	// 			Method:   "GET",
+	// 			Resource: "/api/2.0/pipelines/abcd?",
+	// 			Response: map[string]any{
+	// 				"id":    "abcd",
+	// 				"name":  "test-pipeline",
+	// 				"state": "RUNNING",
+	// 				"spec":  basicPipelineSpec,
+	// 			},
+	// 		},
+	// 	},
+	// 	Create:   true,
+	// 	Resource: ResourcePipeline(),
+	// 	HCL: `name = "test-pipeline"
+	// 	storage = "/test/storage"
+	// 	configuration = {
+	// 	  key1 = "value1"
+	// 	  key2 = "value2"
+	// 	}
+	// 	cluster {
+	// 	  label = "default"
+	// 	  custom_tags = {
+	// 		"cluster_tag1" = "cluster_value1"
+	// 	  }
+	// 	}
+	// 	library {
+	// 	  notebook {
+	// 		path = "/Test"
+	// 	  }
+	// 	}
+	// 	filters {
+	// 	  include = ["com.databricks.include"]
+	// 	  exclude = ["com.databricks.exclude"]
+	// 	}
+	// 	continuous = false
+	// 	deployment {
+	// 		kind = "BUNDLE"
+	// 		metadata_file_path = "/foo/bar"
+	// 	}
+	// 	`,
+	// }.Apply(t)
+	// assert.NoError(t, err)
+	// assert.Equal(t, "abcd", d.Id())
 }
 
-func TestDLTPipelinedRead(t *testing.T) {
+func TestResourcePipelineCreate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockLakeviewAPI().EXPECT().Get(mock.Anything, dashboards.GetDashboardRequest{
-				DashboardId: "xyz",
-			}).Return(&dashboards.Dashboard{
-				DashboardId:         "xyz",
-				WarehouseId:         "abc",
-				SerializedDashboard: "serialized_json",
-				CreateTime:          "12345678",
-				UpdateTime:          "2125678",
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, mock.Anything).Return(nil, errors.New("Internal error happened"))
+		},
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = ["a"]
+		}
+		`,
+		Create: true,
+	}.ExpectError(t, "Internal error happened")
+
+	// d, err := qa.ResourceFixture{
+	// 	Fixtures: []qa.HTTPFixture{
+	// 		{
+	// 			Method:   "POST",
+	// 			Resource: "/api/2.0/pipelines",
+	// 			Response: common.APIErrorBody{
+	// 				ErrorCode: "INVALID_REQUEST",
+	// 				Message:   "Internal error happened",
+	// 			},
+	// 			Status: 400,
+	// 		},
+	// 	},
+	// 	Resource: ResourcePipeline(),
+	// 	HCL: `name = "test"
+	// 	storage = "/test/storage"
+	// 	library {
+	// 		notebook {
+	// 			path = "/Test"
+	// 		}
+	// 	}
+	// 	filters {
+	// 		include = ["a"]
+	// 	}
+	// 	`,
+	// 	Create: true,
+	// }.Apply(t)
+	// qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	// assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, mock.Anything).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateFailed,
+			}, nil)
+			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
+				PipelineId: "abcd",
+			}).Return(errors.New("Internal error"))
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil, errors.New("Internal error"))
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "POST",
+		// 		Resource: "/api/2.0/pipelines",
+		// 		Response: pipelines.CreatePipelineResponse{
+		// 			PipelineId: "abcd",
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: map[string]any{
+		// 			"id":    "abcd",
+		// 			"name":  "test-pipeline",
+		// 			"state": "FAILED",
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "DELETE",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: common.APIErrorBody{
+		// 			ErrorCode: "INTERNAL_ERROR",
+		// 			Message:   "Internal error",
+		// 		},
+		// 		Status: 500,
+		// 	},
+		// },
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = ["a"]
+		}
+		`,
+		Create: true,
+	}.ExpectError(t, "multiple errors occurred when creating pipeline. "+
+		"Error while waiting for creation: \"pipeline abcd has failed\"; "+
+		"error while attempting to clean up failed pipeline: \"Internal error\"")
+}
+
+// THis test is not working
+func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, mock.Anything).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateFailed,
+			}, nil)
+
+			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil)
+
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil, apierr.ErrNotFound)
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "POST",
+		// 		Resource: "/api/2.0/pipelines",
+		// 		Response: createPipelineResponse{
+		// 			PipelineID: "abcd",
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd",
+		// 		Response: map[string]any{
+		// 			"id":    "abcd",
+		// 			"name":  "test-pipeline",
+		// 			"state": "FAILED",
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "DELETE",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd",
+		// 		Response: common.APIErrorBody{
+		// 			ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+		// 			Message:   "No such resource",
+		// 		},
+		// 		Status: 404,
+		// 	},
+		// },
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = ["a"]
+		}
+		`,
+		Create: true,
+	}.ExpectError(t, "pipeline abcd has failed")
+	// qa.AssertErrorStartsWith(t, err, "pipeline abcd has failed")
+	// assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourcePipelineRead(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &basicPipelineSpec,
 			}, nil)
 		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: pipelines.GetPipelineResponse{
+		// 			PipelineId: "abcd",
+		// 			Spec:       &basicPipelineSpec,
+		// 		},
+		// 	},
+		// },
 		Resource: ResourcePipeline(),
 		Read:     true,
-		ID:       "xyz",
-		HCL: `
-			display_name = "Dashboard name"
-			warehouse_id = "abc"
-			parent_path = "/path"
-			serialized_dashboard = "serialized_json"
-		`,
+		New:      true,
+		ID:       "abcd",
 	}.ApplyAndExpectData(t, map[string]any{
-		"id":           "xyz",
-		"warehouse_id": "abc",
-		"create_time":  "12345678",
+		"id":      "abcd",
+		"storage": "/test/storage",
+		"configuration": map[string]any{
+			"key1": "value1",
+			"key2": "value2",
+		},
+		"filters.0.include.0": "com.databricks.include",
+		"continuous":          false,
 	})
+	// assert.NoError(t, err)
+	// assert.Equal(t, "abcd", d.Id(), "Id should not be empty")
+	// assert.Equal(t, "/test/storage", d.Get("storage"))
+	// assert.Equal(t, "value1", d.Get("configuration.key1"))
+	// assert.Equal(t, "com.databricks.include", d.Get("filters.0.include.0"))
+	// assert.Equal(t, false, d.Get("continuous"))
 }
 
-func TestDLTPipelineUpdate(t *testing.T) {
+func TestResourcePipelineRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockLakeviewAPI().EXPECT()
-			e.Update(mock.Anything, dashboards.UpdateDashboardRequest{
-				DashboardId:         "xyz",
-				DisplayName:         "Dashboard name",
-				WarehouseId:         "abc",
-				SerializedDashboard: "serialized_dashboard_updated",
-			}).Return(&dashboards.Dashboard{
-				DashboardId:         "xyz",
-				DisplayName:         "Dashboard name",
-				SerializedDashboard: "serialized_dashboard_updated_2",
-				WarehouseId:         "abc",
-				UpdateTime:          "2125678",
-				ParentPath:          "/path",
-			}, nil)
-			e.Publish(mock.Anything, dashboards.PublishRequest{
-				EmbedCredentials: true,
-				WarehouseId:      "abc",
-				DashboardId:      "xyz",
-				ForceSendFields:  []string{"EmbedCredentials"},
-			}).Return(&dashboards.PublishedDashboard{
-				EmbedCredentials:   true,
-				WarehouseId:        "abc",
-				DisplayName:        "Dashboard name",
-				RevisionCreateTime: "823828",
-			}, nil)
-			e.Get(mock.Anything, dashboards.GetDashboardRequest{
-				DashboardId: "xyz",
-			}).Return(&dashboards.Dashboard{
-				DashboardId:         "xyz",
-				DisplayName:         "Dashboard name",
-				SerializedDashboard: "serialized_dashboard_updated_2",
-				WarehouseId:         "abc",
-				UpdateTime:          "2125679",
-				ParentPath:          "/path",
-			}, nil)
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil, apierr.ErrNotFound)
 		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: common.APIErrorBody{
+		// 			ErrorCode: "NOT_FOUND",
+		// 			Message:   "Item not found",
+		// 		},
+		// 		Status: 404,
+		// 	},
+		// },
 		Resource: ResourcePipeline(),
-		Update:   true,
-		ID:       "xyz",
-		HCL: `
-			display_name = "Dashboard name"
-			warehouse_id = "abc"
-			parent_path = "/path"
-			serialized_dashboard = "serialized_dashboard_updated"
-		`,
-		InstanceState: map[string]string{
-			"display_name":         "Dashboard name",
-			"warehouse_id":         "abc",
-			"parent_path":          "/path",
-			"serialized_dashboard": "serialized_dashboard",
-		},
-	}.ApplyAndExpectData(t, map[string]any{
-		"id":                   "xyz",
-		"display_name":         "Dashboard name",
-		"warehouse_id":         "abc",
-		"serialized_dashboard": "serialized_dashboard_updated_2",
-	})
+		Read:     true,
+		Removed:  true,
+		ID:       "abcd",
+	}.ApplyNoError(t)
 }
 
-func TestDashboardDelete(t *testing.T) {
+// Did not use ExpectError in this
+func TestResourcePipelineRead_Error(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil, errors.New("Internal error happened"))
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: common.APIErrorBody{
+		// 			ErrorCode: "INVALID_REQUEST",
+		// 			Message:   "Internal error happened",
+		// 		},
+		// 		Status: 400,
+		// 	},
+		// },
+		Resource: ResourcePipeline(),
+		Read:     true,
+		ID:       "abcd",
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "abcd", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestResourcePipelineUpdate(t *testing.T) {
+	state := StateRunning
+	spec := pipelines.PipelineSpec{
+		Id:      "abcd",
+		Name:    "test",
+		Storage: "/test/storage",
+		Libraries: []pipelines.PipelineLibrary{
+			{
+				Notebook: &pipelines.NotebookLibrary{
+					Path: "/Test",
+				},
+			},
+		},
+		Filters: &pipelines.Filters{
+			Include: []string{"com.databricks.include"},
+		},
+		Channel: "CURRENT",
+		Edition: "ADVANCED",
+	}
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockLakeviewAPI().EXPECT().Trash(mock.Anything, dashboards.TrashDashboardRequest{
-				DashboardId: "xyz",
-			}).Return(nil)
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Update(mock.Anything, updateRequest).Return(nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &spec,
+				State:      state,
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &spec,
+				State:      state,
+			}, nil)
 		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:          "PUT",
+		// 		Resource:        "/api/2.0/pipelines/abcd",
+		// 		ExpectedRequest: spec,
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: pipelines.GetPipelineResponse{
+		// 			PipelineId: "abcd",
+		// 			Spec:       &spec,
+		// 			State:      state,
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: pipelines.GetPipelineResponse{
+		// 			PipelineId: "abcd",
+		// 			Spec:       &spec,
+		// 			State:      state,
+		// 		},
+		// 	},
+		// },
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = [ "com.databricks.include" ]
+		}`,
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
+		Update: true,
+		ID:     "abcd",
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "abcd",
+	})
+	// assert.NoError(t, err)
+	// assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
+}
+
+func TestResourcePipelineUpdate_Error(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Update(mock.Anything, mock.Anything).Return(errors.New("Internal error happened"))
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{ // read log output for better stub url...
+		// 		Method:   "PUT",
+		// 		Resource: "/api/2.0/pipelines/abcd",
+		// 		Response: common.APIErrorBody{
+		// 			ErrorCode: "INVALID_REQUEST",
+		// 			Message:   "Internal error happened",
+		// 		},
+		// 		Status: 400,
+		// 	},
+		// },
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = [ "com.databricks.include" ]
+		}`,
+		Update: true,
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
+		ID: "abcd",
+	}.ExpectError(t, "Internal error happened")
+	// qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	// assert.Equal(t, "abcd", d.Id())
+}
+
+func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
+	state := StateFailed
+	spec := pipelines.PipelineSpec{
+		Id:      "abcd",
+		Name:    "test",
+		Storage: "/test/storage",
+		Libraries: []pipelines.PipelineLibrary{
+			{
+				Notebook: &pipelines.NotebookLibrary{
+					Path: "/Test",
+				},
+			},
+		},
+		Filters: &pipelines.Filters{
+			Include: []string{"com.databricks.include"},
+		},
+		Channel: "CURRENT",
+		Edition: "ADVANCED",
+	}
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Update(mock.Anything, updateRequest).Return(nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &spec,
+				State:      state,
+			}, nil)
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:          "PUT",
+		// 		Resource:        "/api/2.0/pipelines/abcd",
+		// 		ExpectedRequest: spec,
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd",
+		// 		Response: pipelines.GetPipelineResponse{
+		// 			PipelineId: "abcd",
+		// 			Spec:       &spec,
+		// 			State:      state,
+		// 		},
+		// 	},
+		// },
+		Resource: ResourcePipeline(),
+		HCL: `name = "test"
+		storage = "/test/storage"
+		library {
+			notebook {
+				path = "/Test"
+			}
+		}
+		filters {
+			include = [ "com.databricks.include" ]
+		}`,
+		Update: true,
+		InstanceState: map[string]string{
+			"name":    "test",
+			"storage": "/test/storage",
+		},
+		ID: "abcd",
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "pipeline abcd has failed")
+	assert.Equal(t, "abcd", d.Id(), "Id should be the same as in reading")
+}
+
+// This test also not working
+func TestResourcePipelineDelete(t *testing.T) {
+	state := StateRunning
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Spec:       &basicPipelineSpec,
+				State:      state,
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil, apierr.ErrNotFound)
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "DELETE",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: pipelines.GetPipelineResponse{
+		// 			PipelineId: "abcd",
+		// 			Spec:       &basicPipelineSpec,
+		// 			State:      state,
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: common.APIErrorBody{
+		// 			ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+		// 			Message:   "No such resource",
+		// 		},
+		// 		Status: 404,
+		// 	},
+		// },
 		Resource: ResourcePipeline(),
 		Delete:   true,
-		ID:       "xyz",
-		HCL: `
-			display_name = "Dashboard name"
-			warehouse_id = "abc"
-			parent_path = "/path"
-			serialized_dashboard = "serialized_json"
+		ID:       "abcd",
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "abcd",
+	})
+	// assert.NoError(t, err)
+	// assert.Equal(t, "abcd", d.Id())
+}
+
+func TestResourcePipelineDelete_Error(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Delete(mock.Anything, mock.Anything).Return(errors.New("Internal error happened"))
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "DELETE",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: common.APIErrorBody{
+		// 			ErrorCode: "INVALID_REQUEST",
+		// 			Message:   "Internal error happened",
+		// 		},
+		// 		Status: 500,
+		// 	},
+		// },
+		Resource: ResourcePipeline(),
+		Delete:   true,
+		ID:       "abcd",
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "abcd", d.Id())
+}
+
+type pipelineListResponse struct {
+	Statuses      []pipelines.PipelineStateInfo `json:"statuses"`
+	NextPageToken string                        `json:"next_page_token"`
+	PrevPageToken string                        `json:"prev_page_token"`
+}
+
+func listPipelines(ctx context.Context, client *common.DatabricksClient, maxResults int, filter string) ([]pipelines.PipelineStateInfo, error) {
+	w, err2 := client.WorkspaceClient()
+	if err2 != nil {
+		return nil, err2
+	}
+
+	data, err := w.Pipelines.ListPipelinesAll(ctx, pipelines.ListPipelinesRequest{
+		MaxResults: maxResults,
+		Filter:     filter,
+	})
+	fmt.Println(data)
+	return data, err
+}
+
+// Giving error (don't know how to resolve)
+func TestListPipelines(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines?max_results=1",
+			Response: pipelineListResponse{
+				Statuses: []pipelines.PipelineStateInfo{
+					{
+						PipelineId:      "123",
+						Name:            "Pipeline1",
+						CreatorUserName: "user1",
+					},
+				},
+				NextPageToken: "token1",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines?max_results=1&page_token=token1",
+			Response: pipelineListResponse{
+				Statuses: []pipelines.PipelineStateInfo{
+					{
+						PipelineId:      "456",
+						Name:            "Pipeline2",
+						CreatorUserName: "user2",
+					},
+				},
+				PrevPageToken: "token0",
+			},
+		},
+		// {
+		// 	Method:   "GET",
+		// 	Resource: "/api/2.0/pipelines?max_results=2",
+		// 	Response: pipelineListResponse{
+		// 		Statuses: []pipelines.PipelineStateInfo{
+		// 			{
+		// 				PipelineId:      "123",
+		// 				Name:            "Pipeline1",
+		// 				CreatorUserName: "user1",
+		// 			},
+		// 			{
+		// 				PipelineId:      "456",
+		// 				Name:            "Pipeline2",
+		// 				CreatorUserName: "user2",
+		// 			},
+		// 		},
+		// 	},
+		// },
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	data, err := listPipelines(ctx, client, 1, "")
+	require.NoError(t, err)
+	require.Equal(t, 2, len(data))
+	require.Equal(t, "Pipeline1", data[0].Name)
+	require.Equal(t, "456", data[1].PipelineId)
+}
+
+// Not sure about this test
+func TestListPipelinesWithFilter(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/pipelines?filter=name+LIKE+%27Pipeline1%27&max_results=1",
+			Response: pipelineListResponse{
+				Statuses: []pipelines.PipelineStateInfo{
+					{
+						PipelineId:      "123",
+						Name:            "Pipeline1",
+						CreatorUserName: "user1",
+					},
+				},
+			},
+		},
+	})
+	defer server.Close()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	data, err := listPipelines(ctx, client, 1, "name LIKE 'Pipeline1'")
+	// data, err := NewPipelinesAPI(ctx, client).List(1, "name LIKE 'Pipeline1'")
+	require.NoError(t, err)
+	require.Equal(t, 1, len(data))
+}
+
+func TestStorageSuppressDiff(t *testing.T) {
+	k := "storage"
+	generated := "dbfs:/pipelines/c609bbb0-2e42-4bc8-bb4e-a1c26d6e9403"
+	require.True(t, suppressStorageDiff(k, generated, "", nil))
+	require.False(t, suppressStorageDiff(k, generated, "/tmp/abc", nil))
+	require.False(t, suppressStorageDiff(k, "/tmp/abc", "", nil))
+}
+
+func TestResourcePipelineCreateServerless(t *testing.T) {
+	var serverlessPipelineSpec = pipelines.PipelineSpec{
+		Name:    "test-pipeline-serverless",
+		Storage: "/test/storage",
+		Configuration: map[string]string{
+			"key1": "value1",
+			"key2": "value2",
+		},
+		Clusters: []pipelines.PipelineCluster{
+			{
+				Label: "default",
+				CustomTags: map[string]string{
+					"cluster_tag1": "cluster_value1",
+				},
+			},
+		},
+		Libraries: []pipelines.PipelineLibrary{
+			{
+				Notebook: &pipelines.NotebookLibrary{
+					Path: "/TestServerless",
+				},
+			},
+		},
+		Filters: &pipelines.Filters{
+			Include: []string{"com.databricks.include"},
+			Exclude: []string{"com.databricks.exclude"},
+		},
+		Serverless: true,
+	}
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, mock.Anything).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "serverless",
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "serverless",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "serverless",
+				Name:       "test-pipeline-serverless",
+				State:      StateDeploying,
+				Spec:       &serverlessPipelineSpec,
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "serverless",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "serverless",
+				Name:       "test-pipeline-serverless",
+				State:      StateRunning,
+				Spec:       &serverlessPipelineSpec,
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "serverless",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "serverless",
+				Name:       "test-pipeline-serverless",
+				State:      StateRunning,
+				Spec:       &serverlessPipelineSpec,
+			}, nil)
+		},
+
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "POST",
+		// 		Resource: "/api/2.0/pipelines",
+		// 		Response: pipelines.CreatePipelineResponse{
+		// 			PipelineId: "serverless",
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/serverless?",
+		// 		Response: map[string]any{
+		// 			"id":    "serverless",
+		// 			"name":  "test-pipeline-serverless",
+		// 			"state": "DEPLOYING",
+		// 			"spec":  serverlessPipelineSpec,
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/serverless?",
+		// 		Response: map[string]any{
+		// 			"id":    "serverless",
+		// 			"name":  "test-pipeline-serverless",
+		// 			"state": "RUNNING",
+		// 			"spec":  serverlessPipelineSpec,
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/serverless?",
+		// 		Response: map[string]any{
+		// 			"id":    "serverless",
+		// 			"name":  "test-pipeline-serverless",
+		// 			"state": "RUNNING",
+		// 			"spec":  serverlessPipelineSpec,
+		// 		},
+		// 	},
+		// },
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline-serverless"
+		storage = "/test/storage"
+		configuration = {
+		  key1 = "value1"
+		  key2 = "value2"
+		}
+		cluster {
+		  label = "default"
+		  custom_tags = {
+			"cluster_tag1" = "cluster_value1"
+		  }
+		}
+		library {
+		  notebook {
+			path = "/TestServerless"
+		  }
+		}
+		filters {
+		  include = ["com.databricks.include"]
+		  exclude = ["com.databricks.exclude"]
+		}
+		continuous = false
+		serverless = true
 		`,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "serverless",
+	})
+	// assert.NoError(t, err)
+	// assert.Equal(t, "serverless", d.Id())
+}
+
+func TestZeroWorkers(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, pipelines.CreatePipeline{
+				Name:    "test-pipeline",
+				Channel: "CURRENT",
+				Edition: "ADVANCED",
+				Clusters: []pipelines.PipelineCluster{
+					{
+						Label:      "default",
+						NumWorkers: 0,
+						SparkConf: map[string]string{
+							"spark.databricks.cluster.profile": "singleNode",
+						},
+						ForceSendFields: []string{"NumWorkers"},
+					},
+				},
+			}).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateRunning,
+				Spec:       &basicPipelineSpec,
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateRunning,
+				Spec:       &basicPipelineSpec,
+			}, nil)
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "POST",
+		// 		Resource: "/api/2.0/pipelines",
+		// 		ExpectedRequest: pipelines.CreatePipeline{
+		// 			Name:    "test-pipeline",
+		// 			Channel: "CURRENT",
+		// 			Edition: "ADVANCED",
+		// 			Clusters: []pipelines.PipelineCluster{
+		// 				{
+		// 					Label:      "default",
+		// 					NumWorkers: 0,
+		// 					SparkConf: map[string]string{
+		// 						"spark.databricks.cluster.profile": "singleNode",
+		// 					},
+		// 					ForceSendFields: []string{"NumWorkers"},
+		// 				},
+		// 			},
+		// 		},
+		// 		Response: pipelines.CreatePipelineResponse{
+		// 			PipelineId: "abcd",
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: map[string]any{
+		// 			"id":    "abcd",
+		// 			"name":  "test-pipeline",
+		// 			"state": "RUNNING",
+		// 			"spec":  basicPipelineSpec,
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: map[string]any{
+		// 			"id":    "abcd",
+		// 			"name":  "test-pipeline",
+		// 			"state": "RUNNING",
+		// 			"spec":  basicPipelineSpec,
+		// 		},
+		// 	},
+		// },
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline"
+		cluster {
+		  label = "default"
+		  num_workers = 0
+		  spark_conf = {
+			spark.databricks.cluster.profile = "singleNode"
+		  }
+		}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "abcd",
+	})
+	// assert.NoError(t, err)
+	// assert.Equal(t, "abcd", d.Id())
+}
+
+func TestAutoscaling(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, pipelines.CreatePipeline{
+				Name:    "test-pipeline",
+				Channel: "CURRENT",
+				Edition: "ADVANCED",
+				Clusters: []pipelines.PipelineCluster{
+					{
+						Label: "default",
+						Autoscale: &pipelines.PipelineClusterAutoscale{
+							MinWorkers: 2,
+							MaxWorkers: 10,
+						},
+					},
+				},
+			}).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateRunning,
+				Spec:       &basicPipelineSpec,
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateRunning,
+				Spec:       &basicPipelineSpec,
+			}, nil)
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "POST",
+		// 		Resource: "/api/2.0/pipelines",
+		// 		ExpectedRequest: pipelines.CreatePipeline{
+		// 			Name:    "test-pipeline",
+		// 			Channel: "CURRENT",
+		// 			Edition: "ADVANCED",
+		// 			Clusters: []pipelines.PipelineCluster{
+		// 				{
+		// 					Label: "default",
+
+		// 					Autoscale: &pipelines.PipelineClusterAutoscale{
+		// 						MinWorkers: 2,
+		// 						MaxWorkers: 10,
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 		Response: pipelines.CreatePipelineResponse{
+		// 			PipelineId: "abcd",
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: map[string]any{
+		// 			"id":    "abcd",
+		// 			"name":  "test-pipeline",
+		// 			"state": "RUNNING",
+		// 			"spec":  basicPipelineSpec,
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: map[string]any{
+		// 			"id":    "abcd",
+		// 			"name":  "test-pipeline",
+		// 			"state": "RUNNING",
+		// 			"spec":  basicPipelineSpec,
+		// 		},
+		// 	},
+		// },
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline"
+		cluster {
+		  label = "default"
+		  autoscale {
+			min_workers = 2
+			max_workers = 10
+		  }
+		}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "abcd",
+	})
+	// assert.NoError(t, err)
+	// assert.Equal(t, "abcd", d.Id())
+}
+
+func TestDefault(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, pipelines.CreatePipeline{
+				Name:    "test-pipeline",
+				Channel: "CURRENT",
+				Edition: "ADVANCED",
+				Clusters: []pipelines.PipelineCluster{
+					{
+						Label: "default",
+					},
+				},
+			}).Return(&pipelines.CreatePipelineResponse{
+				PipelineId: "abcd",
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateRunning,
+				Spec:       &basicPipelineSpec,
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(&pipelines.GetPipelineResponse{
+				PipelineId: "abcd",
+				Name:       "test-pipeline",
+				State:      StateRunning,
+				Spec:       &basicPipelineSpec,
+			}, nil)
+		},
+		// Fixtures: []qa.HTTPFixture{
+		// 	{
+		// 		Method:   "POST",
+		// 		Resource: "/api/2.0/pipelines",
+		// 		ExpectedRequest: pipelines.CreatePipeline{
+		// 			Name:    "test-pipeline",
+		// 			Channel: "CURRENT",
+		// 			Edition: "ADVANCED",
+		// 			Clusters: []pipelines.PipelineCluster{
+		// 				{
+		// 					Label: "default",
+		// 				},
+		// 			},
+		// 		},
+		// 		Response: pipelines.CreatePipelineResponse{
+		// 			PipelineId: "abcd",
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: map[string]any{
+		// 			"id":    "abcd",
+		// 			"name":  "test-pipeline",
+		// 			"state": "RUNNING",
+		// 			"spec":  basicPipelineSpec,
+		// 		},
+		// 	},
+		// 	{
+		// 		Method:   "GET",
+		// 		Resource: "/api/2.0/pipelines/abcd?",
+		// 		Response: map[string]any{
+		// 			"id":    "abcd",
+		// 			"name":  "test-pipeline",
+		// 			"state": "RUNNING",
+		// 			"spec":  basicPipelineSpec,
+		// 		},
+		// 	},
+		// },
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline"
+		cluster {
+		  label = "default"
+		}
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abcd", d.Id())
 }

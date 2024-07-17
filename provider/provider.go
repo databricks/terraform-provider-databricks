@@ -31,7 +31,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/mlflow"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
+
+	// "github.com/databricks/terraform-provider-databricks/pipelines"
+	pipelines "github.com/databricks/terraform-provider-databricks/dlt"
+
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/repos"
@@ -100,25 +103,25 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_node_type":                            clusters.DataSourceNodeType().ToResource(),
 			"databricks_notebook":                             workspace.DataSourceNotebook().ToResource(),
 			"databricks_notebook_paths":                       workspace.DataSourceNotebookPaths().ToResource(),
-			"databricks_pipelines":                            pipelines.DataSourcePipelines().ToResource(),
-			"databricks_schema":                               catalog.DataSourceSchema().ToResource(),
-			"databricks_schemas":                              catalog.DataSourceSchemas().ToResource(),
-			"databricks_service_principal":                    scim.DataSourceServicePrincipal().ToResource(),
-			"databricks_service_principals":                   scim.DataSourceServicePrincipals().ToResource(),
-			"databricks_share":                                sharing.DataSourceShare().ToResource(),
-			"databricks_shares":                               sharing.DataSourceShares().ToResource(),
-			"databricks_spark_version":                        clusters.DataSourceSparkVersion().ToResource(),
-			"databricks_sql_warehouse":                        sql.DataSourceWarehouse().ToResource(),
-			"databricks_sql_warehouses":                       sql.DataSourceWarehouses().ToResource(),
-			"databricks_storage_credential":                   catalog.DataSourceStorageCredential().ToResource(),
-			"databricks_storage_credentials":                  catalog.DataSourceStorageCredentials().ToResource(),
-			"databricks_table":                                catalog.DataSourceTable().ToResource(),
-			"databricks_tables":                               catalog.DataSourceTables().ToResource(),
-			"databricks_views":                                catalog.DataSourceViews().ToResource(),
-			"databricks_volume":                               catalog.DataSourceVolume().ToResource(),
-			"databricks_volumes":                              catalog.DataSourceVolumes().ToResource(),
-			"databricks_user":                                 scim.DataSourceUser().ToResource(),
-			"databricks_zones":                                clusters.DataSourceClusterZones().ToResource(),
+			// "databricks_pipelines":                            pipelines.DataSourcePipelines().ToResource(),
+			"databricks_schema":              catalog.DataSourceSchema().ToResource(),
+			"databricks_schemas":             catalog.DataSourceSchemas().ToResource(),
+			"databricks_service_principal":   scim.DataSourceServicePrincipal().ToResource(),
+			"databricks_service_principals":  scim.DataSourceServicePrincipals().ToResource(),
+			"databricks_share":               sharing.DataSourceShare().ToResource(),
+			"databricks_shares":              sharing.DataSourceShares().ToResource(),
+			"databricks_spark_version":       clusters.DataSourceSparkVersion().ToResource(),
+			"databricks_sql_warehouse":       sql.DataSourceWarehouse().ToResource(),
+			"databricks_sql_warehouses":      sql.DataSourceWarehouses().ToResource(),
+			"databricks_storage_credential":  catalog.DataSourceStorageCredential().ToResource(),
+			"databricks_storage_credentials": catalog.DataSourceStorageCredentials().ToResource(),
+			"databricks_table":               catalog.DataSourceTable().ToResource(),
+			"databricks_tables":              catalog.DataSourceTables().ToResource(),
+			"databricks_views":               catalog.DataSourceViews().ToResource(),
+			"databricks_volume":              catalog.DataSourceVolume().ToResource(),
+			"databricks_volumes":             catalog.DataSourceVolumes().ToResource(),
+			"databricks_user":                scim.DataSourceUser().ToResource(),
+			"databricks_zones":               clusters.DataSourceClusterZones().ToResource(),
 		},
 		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
 			"databricks_access_control_rule_set":         permissions.ResourceAccessControlRuleSet().ToResource(),

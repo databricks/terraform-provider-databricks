@@ -1917,6 +1917,13 @@ func TestImportingSqlObjects(t *testing.T) {
 
 			err := ic.Run()
 			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/sql-endpoints.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `enable_serverless_compute = false`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_sql_endpoint" "test" {`))
+			assert.False(t, strings.Contains(contentStr, `tags {`))
 		})
 }
 
@@ -2553,7 +2560,19 @@ resource "databricks_pipeline" "def" {
 func TestImportingRunJobTask(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
-			meAdminFixture,
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/preview/scim/v2/Me",
+				Response: scim.User{
+					Groups: []scim.ComplexValue{
+						{
+							Display: "admins",
+						},
+					},
+					UserName: "user@domain.com",
+				},
+			},
 			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyIpAccessLIst,
@@ -2596,5 +2615,11 @@ func TestImportingRunJobTask(t *testing.T) {
 			assert.True(t, strings.Contains(contentStr, `job_id = databricks_job.jartask_932035899730845.id`))
 			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "runjobtask_1047501313827425"`))
 			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "jartask_932035899730845"`))
+			assert.True(t, strings.Contains(contentStr, `run_as {
+    service_principal_name = "c1b2a35b-87c4-481a-a0fb-0508be621957"
+  }`))
+			assert.False(t, strings.Contains(contentStr, `run_as {
+     user_name = "user@domain.com"
+  }`))
 		})
 }

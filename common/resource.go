@@ -365,7 +365,7 @@ func genericDatabricksData[T, P, C any](
 	hasOther bool) Resource {
 	var dummy T
 	var other P
-	otherFields := StructToSchema(other, NoCustomize)
+	otherFields := StructToSchema(other, nil)
 	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		// For WorkspaceData and AccountData, a single data type is used to represent all of the fields of
 		// the resource, so its configuration is correct. For the *WithParams methods, the SdkType parameter

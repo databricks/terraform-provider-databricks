@@ -62,6 +62,7 @@ func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 		if is.Volumes != nil {
+			// TODO: we should emit allow list for init scripts as well
 			ic.emitIfVolumeFile(is.Volumes.Destination)
 		}
 	}
@@ -120,7 +121,7 @@ func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
-func (ic *importContext) importCluster(c *compute.ClusterDetails) {
+func (ic *importContext) importCluster(c *compute.ClusterSpec) {
 	if c == nil {
 		return
 	}
@@ -410,11 +411,13 @@ func (ic *importContext) emitLibraries(libs []compute.Library) {
 		ic.emitIfWsfsFile(lib.Whl)
 		ic.emitIfWsfsFile(lib.Jar)
 		ic.emitIfWsfsFile(lib.Egg)
+		ic.emitIfWsfsFile(lib.Requirements)
 		// Files on UC Volumes
 		ic.emitIfVolumeFile(lib.Whl)
+		// TODO: we should emit UC allow list as well
 		ic.emitIfVolumeFile(lib.Jar)
+		ic.emitIfVolumeFile(lib.Requirements)
 	}
-
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
@@ -1159,7 +1162,7 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
 			if object.ObjectType == workspace.Directory {
-				if !ic.incremental && object.Path != "/" && ic.isServiceEnabled("directories") {
+				if !ic.incremental && object.Path != "/" && ic.isServiceInListing("directories") {
 					objectsChannel <- object
 				}
 			} else {
@@ -1184,9 +1187,9 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
 				continue
 			}
-			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceEnabled("directories") && object.Path != "/" {
+			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceInListing("directories") && object.Path != "/" {
 				emitWorkpaceObject(ic, object)
-			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceEnabled("notebooks") {
+			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceInListing("notebooks") {
 				emitWorkpaceObject(ic, object)
 			}
 		}

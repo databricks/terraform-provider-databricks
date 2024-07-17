@@ -4,25 +4,24 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
 func DataSourceCluster() common.Resource {
-	type clusterData struct {
-		Id          string       `json:"id,omitempty" tf:"computed"`
-		ClusterId   string       `json:"cluster_id,omitempty" tf:"computed"`
-		Name        string       `json:"cluster_name,omitempty" tf:"computed"`
-		ClusterInfo *ClusterInfo `json:"cluster_info,omitempty" tf:"computed"`
-	}
-	return common.DataResource(clusterData{}, func(ctx context.Context, e interface{}, c *common.DatabricksClient) error {
-		data := e.(*clusterData)
-		clusterAPI := NewClustersAPI(ctx, c)
+	return common.WorkspaceData(func(ctx context.Context, data *struct {
+		Id          string                  `json:"id,omitempty" tf:"computed"`
+		ClusterId   string                  `json:"cluster_id,omitempty" tf:"computed"`
+		Name        string                  `json:"cluster_name,omitempty" tf:"computed"`
+		ClusterInfo *compute.ClusterDetails `json:"cluster_info,omitempty" tf:"computed"`
+	}, w *databricks.WorkspaceClient) error {
 		if data.Name != "" {
-			clusters, err := clusterAPI.List()
+			clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
 			if err != nil {
 				return err
 			}
-			namedClusters := []ClusterInfo{}
+			namedClusters := []compute.ClusterDetails{}
 			for _, clst := range clusters {
 				cluster := clst
 				if cluster.ClusterName == data.Name {
@@ -37,16 +36,16 @@ func DataSourceCluster() common.Resource {
 			}
 			data.ClusterInfo = &namedClusters[0]
 		} else if data.ClusterId != "" {
-			cls, err := clusterAPI.Get(data.ClusterId)
+			cls, err := w.Clusters.GetByClusterId(ctx, data.ClusterId)
 			if err != nil {
 				return err
 			}
-			data.ClusterInfo = &cls
+			data.ClusterInfo = cls
 		} else {
 			return fmt.Errorf("you need to specify either `cluster_name` or `cluster_id`")
 		}
-		data.Id = data.ClusterInfo.ClusterID
-		data.ClusterId = data.ClusterInfo.ClusterID
+		data.Id = data.ClusterInfo.ClusterId
+		data.ClusterId = data.ClusterInfo.ClusterId
 
 		return nil
 	})

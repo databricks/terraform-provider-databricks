@@ -1,0 +1,25 @@
+name: Validate Commit Message
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited]
+
+jobs:
+      
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Validate Tag
+        run: |
+          TAG=$(echo ${{ github.event.pull_request.title }} | sed -ne 's/\[\(.*\)\].*/\1/p')
+          if grep -q "tag: \"\[$TAG\]\"" .codegen/changelog_config.yml; then 
+            echo "Valid tag found: [$TAG]"
+          else 
+            echo "Invalid or missing tag in commit message: [$TAG]" 
+            exit 1
+          fi

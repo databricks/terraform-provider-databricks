@@ -1,5 +1,18 @@
 # Version changelog
 
+## 1.48.3
+
+### Internal Changes 
+ * Bump Go SDK to `0.43.2` ([#3750](https://github.com/databricks/terraform-provider-databricks/pull/3750))
+ * Added new `APIErrorBody` struct and update deps ([#3745](https://github.com/databricks/terraform-provider-databricks/pull/3745))
+
+## 1.48.2
+
+### New Features and Improvements
+* Added isolation mode support for `databricks_external_location` & `databricks_storage_credential` ([#3704](https://github.com/databricks/terraform-provider-databricks/pull/3704)).
+* Add terraform support for periodic triggers ([#3700](https://github.com/databricks/terraform-provider-databricks/pull/3700)).
+
+
 ## 1.48.1
 
 ### New Features and Improvements

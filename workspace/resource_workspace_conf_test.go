@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,7 +47,7 @@ func TestWorkspaceConfCreate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -120,7 +120,7 @@ func TestWorkspaceConfUpdate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"enableIpAccessLists": "true",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -159,7 +159,7 @@ func TestWorkspaceConfRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace-conf?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -208,7 +208,7 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -230,7 +230,7 @@ func TestWorkspaceConfUpdateOnInvalidConf(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "some-invalid-conf is an invalid config key",
 				},

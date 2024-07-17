@@ -11,6 +11,7 @@
  * Renamed `databricks_catalog_workspace_binding` to `databricks_workspace_binding` ([#3703](https://github.com/databricks/terraform-provider-databricks/pull/3703)).
  * Make `cluster_name_contains` optional in `databricks_clusters` data source ([#3760](https://github.com/databricks/terraform-provider-databricks/pull/3760)).
  * Tolerate OAuth errors in databricks_mws_workspaces when managing tokens ([#3761](https://github.com/databricks/terraform-provider-databricks/pull/3761)).
+ * Permissions for `databricks_dashboard` resource ([#3762](https://github.com/databricks/terraform-provider-databricks/pull/3762)).
 
 ### Exporter
  * Emit directories during the listing only if they are explicitly configured in `-listing` ([#3673](https://github.com/databricks/terraform-provider-databricks/pull/3673)).
@@ -18,11 +19,13 @@
  * Fix generation of `run_as` blocks in `databricks_job` ([#3724](https://github.com/databricks/terraform-provider-databricks/pull/3724)).
  * Use Go SDK structs for `databricks_job` resource ([#3727](https://github.com/databricks/terraform-provider-databricks/pull/3727)).
  * Clarify use of `-listing` and `-services` options ([#3755](https://github.com/databricks/terraform-provider-databricks/pull/3755)).
+ * Improve code generation for SQL Endpoints ([#3764](https://github.com/databricks/terraform-provider-databricks/pull/3764))
 
 ### Documentation
  * Fix invalid priviledges in grants.md ([#3716](https://github.com/databricks/terraform-provider-databricks/pull/3716)).
  * Update cluster.md: add data_security_mode parameters `NONE` and `NO_ISOLATION` ([#3740](https://github.com/databricks/terraform-provider-databricks/pull/3740)).
  * Remove references to basic auth ([#3720](https://github.com/databricks/terraform-provider-databricks/pull/3720)).
+ * Update resources diagram ([#3765](https://github.com/databricks/terraform-provider-databricks/pull/3765)).
 
 ### Internal Changes
  * Add Release tag ([#3748](https://github.com/databricks/terraform-provider-databricks/pull/3748)).
@@ -32,6 +35,14 @@
  * Upgrade databricks-sdk-go ([#3743](https://github.com/databricks/terraform-provider-databricks/pull/3743)).
  * Run goreleaser action in snapshot mode from merge queue ([#3646](https://github.com/databricks/terraform-provider-databricks/pull/3646)).
  * Make `dashboard_name` random in integration tests for `databricks_dashboard` resource ([#3763](https://github.com/databricks/terraform-provider-databricks/pull/3763)).
+ * Clear stale go.sum values ([#3768](https://github.com/databricks/terraform-provider-databricks/pull/3768)).
+ * Add "Owner" tag to test cluster in acceptance test ([#3771](https://github.com/databricks/terraform-provider-databricks/pull/3771)).
+ * Fix integration test for restrict workspace admins setting ([#3772](https://github.com/databricks/terraform-provider-databricks/pull/3772)).
+ * Add "Owner" tag to test SQL endpoint in acceptance test ([#3774](https://github.com/databricks/terraform-provider-databricks/pull/3774)).
+ * Move PR message validation to a separate workflow ([#3777](https://github.com/databricks/terraform-provider-databricks/pull/3777)).
+ * Trigger the validate workflow in the merge queue ([#3782](https://github.com/databricks/terraform-provider-databricks/pull/3782)).
+ * Update properties for managed SQL table on latest DBR ([#3784](https://github.com/databricks/terraform-provider-databricks/pull/3784)).
+ * Add "Owner" tag to test SQL endpoint in acceptance test ([#3785](https://github.com/databricks/terraform-provider-databricks/pull/3785)).
 
 
 ## 1.48.3

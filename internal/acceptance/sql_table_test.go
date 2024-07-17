@@ -288,11 +288,13 @@ func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.Sq
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
 			properties         = {
-				this      = "that"
-				something = "else"
-				"delta.minReaderVersion" = 2
-				"delta.minWriterVersion" = 5
-				"delta.columnMapping.mode" = "name"
+				"this"                        = "that"
+				"something"                   = "else"
+				"delta.feature.columnMapping" = "supported"
+				"delta.feature.invariants"    = "supported"
+				"delta.minReaderVersion"      = 3
+				"delta.minWriterVersion"      = 7
+				"delta.columnMapping.mode"    = "name"
 			}
 
 			%s

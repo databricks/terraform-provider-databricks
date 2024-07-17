@@ -21,7 +21,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 		}
 	}
 	`
-	workspaceLevel(t, step{
+	unityWorkspaceLevel(t, step{
 		Template: template,
 		Check: resourceCheckWithState("databricks_restrict_workspace_admins_setting.this",
 			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {

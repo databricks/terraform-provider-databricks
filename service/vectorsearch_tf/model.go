@@ -1,0 +1,641 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
+/*
+These generated types are for terraform plugin framework to interact with the terraform state conveniently.
+
+These types follow the same structure as the types in go-sdk.
+The only difference is that the primitive types are no longer using the go-native types, but with tfsdk types.
+Plus the json tags get converted into tfsdk tags.
+We use go-native types for lists and maps intentionally for the ease for converting these types into the go-sdk types.
+*/
+
+package vectorsearch_tf
+
+import (
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
+
+type ColumnInfo struct {
+	// Name of the column.
+	Name types.String `tfsdk:"name"`
+}
+
+type CreateEndpoint struct {
+	// Type of endpoint.
+	EndpointType EndpointType `tfsdk:"endpoint_type"`
+	// Name of endpoint
+	Name types.String `tfsdk:"name"`
+}
+
+type CreateVectorIndexRequest struct {
+	// Specification for Delta Sync Index. Required if `index_type` is
+	// `DELTA_SYNC`.
+	DeltaSyncIndexSpec *DeltaSyncVectorIndexSpecRequest `tfsdk:"delta_sync_index_spec"`
+	// Specification for Direct Vector Access Index. Required if `index_type` is
+	// `DIRECT_ACCESS`.
+	DirectAccessIndexSpec *DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec"`
+	// Name of the endpoint to be used for serving the index
+	EndpointName types.String `tfsdk:"endpoint_name"`
+	// There are 2 types of Vector Search indexes:
+	//
+	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
+	// Table, automatically and incrementally updating the index as the
+	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
+	// that supports direct read and write of vectors and metadata through our
+	// REST and SDK APIs. With this model, the user manages index updates.
+	IndexType VectorIndexType `tfsdk:"index_type"`
+	// Name of the index
+	Name types.String `tfsdk:"name"`
+	// Primary key of the index
+	PrimaryKey types.String `tfsdk:"primary_key"`
+}
+
+type CreateVectorIndexResponse struct {
+	VectorIndex *VectorIndex `tfsdk:"vector_index"`
+}
+
+// Result of the upsert or delete operation.
+type DeleteDataResult struct {
+	// List of primary keys for rows that failed to process.
+	FailedPrimaryKeys []types.String `tfsdk:"failed_primary_keys"`
+	// Count of successfully processed rows.
+	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
+}
+
+// Status of the delete operation.
+type DeleteDataStatus string
+
+const DeleteDataStatusFailure DeleteDataStatus = `FAILURE`
+
+const DeleteDataStatusPartialSuccess DeleteDataStatus = `PARTIAL_SUCCESS`
+
+const DeleteDataStatusSuccess DeleteDataStatus = `SUCCESS`
+
+// String representation for [fmt.Print]
+func (f *DeleteDataStatus) String() string {
+	return string(*f)
+}
+
+// Set raw string value and validate it against allowed values
+func (f *DeleteDataStatus) Set(v string) error {
+	switch v {
+	case `FAILURE`, `PARTIAL_SUCCESS`, `SUCCESS`:
+		*f = DeleteDataStatus(v)
+		return nil
+	default:
+		return fmt.Errorf(`value "%s" is not one of "FAILURE", "PARTIAL_SUCCESS", "SUCCESS"`, v)
+	}
+}
+
+// Type always returns DeleteDataStatus to satisfy [pflag.Value] interface
+func (f *DeleteDataStatus) Type() string {
+	return "DeleteDataStatus"
+}
+
+// Request payload for deleting data from a vector index.
+type DeleteDataVectorIndexRequest struct {
+	// Name of the vector index where data is to be deleted. Must be a Direct
+	// Vector Access Index.
+	IndexName types.String `tfsdk:"-" url:"-"`
+	// List of primary keys for the data to be deleted.
+	PrimaryKeys []types.String `tfsdk:"primary_keys"`
+}
+
+// Response to a delete data vector index request.
+type DeleteDataVectorIndexResponse struct {
+	// Result of the upsert or delete operation.
+	Result *DeleteDataResult `tfsdk:"result"`
+	// Status of the delete operation.
+	Status DeleteDataStatus `tfsdk:"status"`
+}
+
+// Delete an endpoint
+type DeleteEndpointRequest struct {
+	// Name of the endpoint
+	EndpointName types.String `tfsdk:"-" url:"-"`
+}
+
+type DeleteEndpointResponse struct {
+}
+
+// Delete an index
+type DeleteIndexRequest struct {
+	// Name of the index
+	IndexName types.String `tfsdk:"-" url:"-"`
+}
+
+type DeleteIndexResponse struct {
+}
+
+type DeltaSyncVectorIndexSpecRequest struct {
+	// The columns that contain the embedding source.
+	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns"`
+	// The columns that contain the embedding vectors. The format should be
+	// array[double].
+	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns"`
+	// [Optional] Automatically sync the vector index contents and computed
+	// embeddings to the specified Delta table. The only supported table name is
+	// the index name with the suffix `_writeback_table`.
+	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table"`
+	// Pipeline execution mode.
+	//
+	// - `TRIGGERED`: If the pipeline uses the triggered execution mode, the
+	// system stops processing after successfully refreshing the source table in
+	// the pipeline once, ensuring the table is updated based on the data
+	// available when the update started. - `CONTINUOUS`: If the pipeline uses
+	// continuous execution, the pipeline processes new data as it arrives in
+	// the source table to keep vector index fresh.
+	PipelineType PipelineType `tfsdk:"pipeline_type"`
+	// The name of the source table.
+	SourceTable types.String `tfsdk:"source_table"`
+}
+
+type DeltaSyncVectorIndexSpecResponse struct {
+	// The columns that contain the embedding source.
+	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns"`
+	// The columns that contain the embedding vectors.
+	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns"`
+	// [Optional] Name of the Delta table to sync the vector index contents and
+	// computed embeddings to.
+	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table"`
+	// The ID of the pipeline that is used to sync the index.
+	PipelineId types.String `tfsdk:"pipeline_id"`
+	// Pipeline execution mode.
+	//
+	// - `TRIGGERED`: If the pipeline uses the triggered execution mode, the
+	// system stops processing after successfully refreshing the source table in
+	// the pipeline once, ensuring the table is updated based on the data
+	// available when the update started. - `CONTINUOUS`: If the pipeline uses
+	// continuous execution, the pipeline processes new data as it arrives in
+	// the source table to keep vector index fresh.
+	PipelineType PipelineType `tfsdk:"pipeline_type"`
+	// The name of the source table.
+	SourceTable types.String `tfsdk:"source_table"`
+}
+
+type DirectAccessVectorIndexSpec struct {
+	// Contains the optional model endpoint to use during query time.
+	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns"`
+
+	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns"`
+	// The schema of the index in JSON format.
+	//
+	// Supported types are `integer`, `long`, `float`, `double`, `boolean`,
+	// `string`, `date`, `timestamp`.
+	//
+	// Supported types for vector column: `array<float>`, `array<double>`,`.
+	SchemaJson types.String `tfsdk:"schema_json"`
+}
+
+type EmbeddingSourceColumn struct {
+	// Name of the embedding model endpoint
+	EmbeddingModelEndpointName types.String `tfsdk:"embedding_model_endpoint_name"`
+	// Name of the column
+	Name types.String `tfsdk:"name"`
+}
+
+type EmbeddingVectorColumn struct {
+	// Dimension of the embedding vector
+	EmbeddingDimension types.Int64 `tfsdk:"embedding_dimension"`
+	// Name of the column
+	Name types.String `tfsdk:"name"`
+}
+
+type EndpointInfo struct {
+	// Timestamp of endpoint creation
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
+	// Creator of the endpoint
+	Creator types.String `tfsdk:"creator"`
+	// Current status of the endpoint
+	EndpointStatus *EndpointStatus `tfsdk:"endpoint_status"`
+	// Type of endpoint.
+	EndpointType EndpointType `tfsdk:"endpoint_type"`
+	// Unique identifier of the endpoint
+	Id types.String `tfsdk:"id"`
+	// Timestamp of last update to the endpoint
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+	// User who last updated the endpoint
+	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
+	// Name of endpoint
+	Name types.String `tfsdk:"name"`
+	// Number of indexes on the endpoint
+	NumIndexes types.Int64 `tfsdk:"num_indexes"`
+}
+
+// Status information of an endpoint
+type EndpointStatus struct {
+	// Additional status message
+	Message types.String `tfsdk:"message"`
+	// Current state of the endpoint
+	State EndpointStatusState `tfsdk:"state"`
+}
+
+// Current state of the endpoint
+type EndpointStatusState string
+
+const EndpointStatusStateOffline EndpointStatusState = `OFFLINE`
+
+const EndpointStatusStateOnline EndpointStatusState = `ONLINE`
+
+const EndpointStatusStateProvisioning EndpointStatusState = `PROVISIONING`
+
+// String representation for [fmt.Print]
+func (f *EndpointStatusState) String() string {
+	return string(*f)
+}
+
+// Set raw string value and validate it against allowed values
+func (f *EndpointStatusState) Set(v string) error {
+	switch v {
+	case `OFFLINE`, `ONLINE`, `PROVISIONING`:
+		*f = EndpointStatusState(v)
+		return nil
+	default:
+		return fmt.Errorf(`value "%s" is not one of "OFFLINE", "ONLINE", "PROVISIONING"`, v)
+	}
+}
+
+// Type always returns EndpointStatusState to satisfy [pflag.Value] interface
+func (f *EndpointStatusState) Type() string {
+	return "EndpointStatusState"
+}
+
+// Type of endpoint.
+type EndpointType string
+
+const EndpointTypeStandard EndpointType = `STANDARD`
+
+// String representation for [fmt.Print]
+func (f *EndpointType) String() string {
+	return string(*f)
+}
+
+// Set raw string value and validate it against allowed values
+func (f *EndpointType) Set(v string) error {
+	switch v {
+	case `STANDARD`:
+		*f = EndpointType(v)
+		return nil
+	default:
+		return fmt.Errorf(`value "%s" is not one of "STANDARD"`, v)
+	}
+}
+
+// Type always returns EndpointType to satisfy [pflag.Value] interface
+func (f *EndpointType) Type() string {
+	return "EndpointType"
+}
+
+// Get an endpoint
+type GetEndpointRequest struct {
+	// Name of the endpoint
+	EndpointName types.String `tfsdk:"-" url:"-"`
+}
+
+// Get an index
+type GetIndexRequest struct {
+	// Name of the index
+	IndexName types.String `tfsdk:"-" url:"-"`
+}
+
+type ListEndpointResponse struct {
+	// An array of Endpoint objects
+	Endpoints []EndpointInfo `tfsdk:"endpoints"`
+	// A token that can be used to get the next page of results. If not present,
+	// there are no more results to show.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+// List all endpoints
+type ListEndpointsRequest struct {
+	// Token for pagination
+	PageToken types.String `tfsdk:"-" url:"page_token,omitempty"`
+}
+
+// List indexes
+type ListIndexesRequest struct {
+	// Name of the endpoint
+	EndpointName types.String `tfsdk:"-" url:"endpoint_name"`
+	// Token for pagination
+	PageToken types.String `tfsdk:"-" url:"page_token,omitempty"`
+}
+
+type ListValue struct {
+	Values []Value `tfsdk:"values"`
+}
+
+type ListVectorIndexesResponse struct {
+	// A token that can be used to get the next page of results. If not present,
+	// there are no more results to show.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	VectorIndexes []MiniVectorIndex `tfsdk:"vector_indexes"`
+}
+
+// Key-value pair.
+type MapStringValueEntry struct {
+	// Column name.
+	Key types.String `tfsdk:"key"`
+	// Column value, nullable.
+	Value *Value `tfsdk:"value"`
+}
+
+type MiniVectorIndex struct {
+	// The user who created the index.
+	Creator types.String `tfsdk:"creator"`
+	// Name of the endpoint associated with the index
+	EndpointName types.String `tfsdk:"endpoint_name"`
+	// There are 2 types of Vector Search indexes:
+	//
+	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
+	// Table, automatically and incrementally updating the index as the
+	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
+	// that supports direct read and write of vectors and metadata through our
+	// REST and SDK APIs. With this model, the user manages index updates.
+	IndexType VectorIndexType `tfsdk:"index_type"`
+	// Name of the index
+	Name types.String `tfsdk:"name"`
+	// Primary key of the index
+	PrimaryKey types.String `tfsdk:"primary_key"`
+}
+
+// Pipeline execution mode.
+//
+// - `TRIGGERED`: If the pipeline uses the triggered execution mode, the system
+// stops processing after successfully refreshing the source table in the
+// pipeline once, ensuring the table is updated based on the data available when
+// the update started. - `CONTINUOUS`: If the pipeline uses continuous
+// execution, the pipeline processes new data as it arrives in the source table
+// to keep vector index fresh.
+type PipelineType string
+
+// If the pipeline uses continuous execution, the pipeline processes new data as
+// it arrives in the source table to keep vector index fresh.
+const PipelineTypeContinuous PipelineType = `CONTINUOUS`
+
+// If the pipeline uses the triggered execution mode, the system stops
+// processing after successfully refreshing the source table in the pipeline
+// once, ensuring the table is updated based on the data available when the
+// update started.
+const PipelineTypeTriggered PipelineType = `TRIGGERED`
+
+// String representation for [fmt.Print]
+func (f *PipelineType) String() string {
+	return string(*f)
+}
+
+// Set raw string value and validate it against allowed values
+func (f *PipelineType) Set(v string) error {
+	switch v {
+	case `CONTINUOUS`, `TRIGGERED`:
+		*f = PipelineType(v)
+		return nil
+	default:
+		return fmt.Errorf(`value "%s" is not one of "CONTINUOUS", "TRIGGERED"`, v)
+	}
+}
+
+// Type always returns PipelineType to satisfy [pflag.Value] interface
+func (f *PipelineType) Type() string {
+	return "PipelineType"
+}
+
+// Request payload for getting next page of results.
+type QueryVectorIndexNextPageRequest struct {
+	// Name of the endpoint.
+	EndpointName types.String `tfsdk:"endpoint_name"`
+	// Name of the vector index to query.
+	IndexName types.String `tfsdk:"-" url:"-"`
+	// Page token returned from previous `QueryVectorIndex` or
+	// `QueryVectorIndexNextPage` API.
+	PageToken types.String `tfsdk:"page_token"`
+}
+
+type QueryVectorIndexRequest struct {
+	// List of column names to include in the response.
+	Columns []types.String `tfsdk:"columns"`
+	// JSON string representing query filters.
+	//
+	// Example filters: - `{"id <": 5}`: Filter for id less than 5. - `{"id >":
+	// 5}`: Filter for id greater than 5. - `{"id <=": 5}`: Filter for id less
+	// than equal to 5. - `{"id >=": 5}`: Filter for id greater than equal to 5.
+	// - `{"id": 5}`: Filter for id equal to 5.
+	FiltersJson types.String `tfsdk:"filters_json"`
+	// Name of the vector index to query.
+	IndexName types.String `tfsdk:"-" url:"-"`
+	// Number of results to return. Defaults to 10.
+	NumResults types.Int64 `tfsdk:"num_results"`
+	// Query text. Required for Delta Sync Index using model endpoint.
+	QueryText types.String `tfsdk:"query_text"`
+	// The query type to use. Choices are `ANN` and `HYBRID`. Defaults to `ANN`.
+	QueryType types.String `tfsdk:"query_type"`
+	// Query vector. Required for Direct Vector Access Index and Delta Sync
+	// Index using self-managed vectors.
+	QueryVector []types.Float64 `tfsdk:"query_vector"`
+	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
+	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
+}
+
+type QueryVectorIndexResponse struct {
+	// Metadata about the result set.
+	Manifest *ResultManifest `tfsdk:"manifest"`
+	// [Optional] Token that can be used in `QueryVectorIndexNextPage` API to
+	// get next page of results. If more than 1000 results satisfy the query,
+	// they are returned in groups of 1000. Empty value means no more results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// Data returned in the query result.
+	Result *ResultData `tfsdk:"result"`
+}
+
+// Data returned in the query result.
+type ResultData struct {
+	// Data rows returned in the query.
+	DataArray [][]types.String `tfsdk:"data_array"`
+	// Number of rows in the result set.
+	RowCount types.Int64 `tfsdk:"row_count"`
+}
+
+// Metadata about the result set.
+type ResultManifest struct {
+	// Number of columns in the result set.
+	ColumnCount types.Int64 `tfsdk:"column_count"`
+	// Information about each column in the result set.
+	Columns []ColumnInfo `tfsdk:"columns"`
+}
+
+// Request payload for scanning data from a vector index.
+type ScanVectorIndexRequest struct {
+	// Name of the vector index to scan.
+	IndexName types.String `tfsdk:"-" url:"-"`
+	// Primary key of the last entry returned in the previous scan.
+	LastPrimaryKey types.String `tfsdk:"last_primary_key"`
+	// Number of results to return. Defaults to 10.
+	NumResults types.Int64 `tfsdk:"num_results"`
+}
+
+// Response to a scan vector index request.
+type ScanVectorIndexResponse struct {
+	// List of data entries
+	Data []Struct `tfsdk:"data"`
+	// Primary key of the last entry.
+	LastPrimaryKey types.String `tfsdk:"last_primary_key"`
+}
+
+type Struct struct {
+	// Data entry, corresponding to a row in a vector index.
+	Fields []MapStringValueEntry `tfsdk:"fields"`
+}
+
+// Synchronize an index
+type SyncIndexRequest struct {
+	// Name of the vector index to synchronize. Must be a Delta Sync Index.
+	IndexName types.String `tfsdk:"-" url:"-"`
+}
+
+type SyncIndexResponse struct {
+}
+
+// Result of the upsert or delete operation.
+type UpsertDataResult struct {
+	// List of primary keys for rows that failed to process.
+	FailedPrimaryKeys []types.String `tfsdk:"failed_primary_keys"`
+	// Count of successfully processed rows.
+	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
+}
+
+// Status of the upsert operation.
+type UpsertDataStatus string
+
+const UpsertDataStatusFailure UpsertDataStatus = `FAILURE`
+
+const UpsertDataStatusPartialSuccess UpsertDataStatus = `PARTIAL_SUCCESS`
+
+const UpsertDataStatusSuccess UpsertDataStatus = `SUCCESS`
+
+// String representation for [fmt.Print]
+func (f *UpsertDataStatus) String() string {
+	return string(*f)
+}
+
+// Set raw string value and validate it against allowed values
+func (f *UpsertDataStatus) Set(v string) error {
+	switch v {
+	case `FAILURE`, `PARTIAL_SUCCESS`, `SUCCESS`:
+		*f = UpsertDataStatus(v)
+		return nil
+	default:
+		return fmt.Errorf(`value "%s" is not one of "FAILURE", "PARTIAL_SUCCESS", "SUCCESS"`, v)
+	}
+}
+
+// Type always returns UpsertDataStatus to satisfy [pflag.Value] interface
+func (f *UpsertDataStatus) Type() string {
+	return "UpsertDataStatus"
+}
+
+// Request payload for upserting data into a vector index.
+type UpsertDataVectorIndexRequest struct {
+	// Name of the vector index where data is to be upserted. Must be a Direct
+	// Vector Access Index.
+	IndexName types.String `tfsdk:"-" url:"-"`
+	// JSON string representing the data to be upserted.
+	InputsJson types.String `tfsdk:"inputs_json"`
+}
+
+// Response to an upsert data vector index request.
+type UpsertDataVectorIndexResponse struct {
+	// Result of the upsert or delete operation.
+	Result *UpsertDataResult `tfsdk:"result"`
+	// Status of the upsert operation.
+	Status UpsertDataStatus `tfsdk:"status"`
+}
+
+type Value struct {
+	BoolValue types.Bool `tfsdk:"bool_value"`
+
+	ListValue *ListValue `tfsdk:"list_value"`
+
+	NullValue types.String `tfsdk:"null_value"`
+
+	NumberValue types.Float64 `tfsdk:"number_value"`
+
+	StringValue types.String `tfsdk:"string_value"`
+
+	StructValue *Struct `tfsdk:"struct_value"`
+}
+
+type VectorIndex struct {
+	// The user who created the index.
+	Creator types.String `tfsdk:"creator"`
+
+	DeltaSyncIndexSpec *DeltaSyncVectorIndexSpecResponse `tfsdk:"delta_sync_index_spec"`
+
+	DirectAccessIndexSpec *DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec"`
+	// Name of the endpoint associated with the index
+	EndpointName types.String `tfsdk:"endpoint_name"`
+	// There are 2 types of Vector Search indexes:
+	//
+	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
+	// Table, automatically and incrementally updating the index as the
+	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
+	// that supports direct read and write of vectors and metadata through our
+	// REST and SDK APIs. With this model, the user manages index updates.
+	IndexType VectorIndexType `tfsdk:"index_type"`
+	// Name of the index
+	Name types.String `tfsdk:"name"`
+	// Primary key of the index
+	PrimaryKey types.String `tfsdk:"primary_key"`
+
+	Status *VectorIndexStatus `tfsdk:"status"`
+}
+
+type VectorIndexStatus struct {
+	// Index API Url to be used to perform operations on the index
+	IndexUrl types.String `tfsdk:"index_url"`
+	// Number of rows indexed
+	IndexedRowCount types.Int64 `tfsdk:"indexed_row_count"`
+	// Message associated with the index status
+	Message types.String `tfsdk:"message"`
+	// Whether the index is ready for search
+	Ready types.Bool `tfsdk:"ready"`
+}
+
+// There are 2 types of Vector Search indexes:
+//
+// - `DELTA_SYNC`: An index that automatically syncs with a source Delta Table,
+// automatically and incrementally updating the index as the underlying data in
+// the Delta Table changes. - `DIRECT_ACCESS`: An index that supports direct
+// read and write of vectors and metadata through our REST and SDK APIs. With
+// this model, the user manages index updates.
+type VectorIndexType string
+
+// An index that automatically syncs with a source Delta Table, automatically
+// and incrementally updating the index as the underlying data in the Delta
+// Table changes.
+const VectorIndexTypeDeltaSync VectorIndexType = `DELTA_SYNC`
+
+// An index that supports direct read and write of vectors and metadata through
+// our REST and SDK APIs. With this model, the user manages index updates.
+const VectorIndexTypeDirectAccess VectorIndexType = `DIRECT_ACCESS`
+
+// String representation for [fmt.Print]
+func (f *VectorIndexType) String() string {
+	return string(*f)
+}
+
+// Set raw string value and validate it against allowed values
+func (f *VectorIndexType) Set(v string) error {
+	switch v {
+	case `DELTA_SYNC`, `DIRECT_ACCESS`:
+		*f = VectorIndexType(v)
+		return nil
+	default:
+		return fmt.Errorf(`value "%s" is not one of "DELTA_SYNC", "DIRECT_ACCESS"`, v)
+	}
+}
+
+// Type always returns VectorIndexType to satisfy [pflag.Value] interface
+func (f *VectorIndexType) Type() string {
+	return "VectorIndexType"
+}

@@ -199,7 +199,7 @@ func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 						"SoldToCode": "1234",
 					},
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_PARAMETER_VALUE",
 					Message:   "custom_tags are only allowed for AWS workspaces",
 				},
@@ -532,7 +532,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -541,7 +541,7 @@ func TestResourceWorkspaceCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/accounts/abc/workspaces",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -671,7 +671,7 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -691,7 +691,7 @@ func TestResourceWorkspaceRead_Error(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -873,7 +873,7 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -918,7 +918,7 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cannot find anything",
 				},
@@ -939,7 +939,7 @@ func TestResourceWorkspaceDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/accounts/abc/workspaces/1234",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1503,7 +1503,7 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
-	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")
+	assert.EqualError(t, removeTokenIfNeeded(wsApi, "x", d), noAuth, "remove")
 }
 
 func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
@@ -1533,7 +1533,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		for msg, err := range map[string]error{
 			"cannot create token: i'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
 			"cannot read token: i'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
-			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
+			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, "x", d),
 		} {
 			assert.EqualError(t, err, msg)
 		}

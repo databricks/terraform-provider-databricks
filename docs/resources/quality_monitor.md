@@ -112,7 +112,6 @@ table.
 * `schedule` - The schedule for automatically updating and refreshing metric tables.  This block consists of following fields:
     * `quartz_cron_expression` - string expression that determines when to run the monitor. See [Quartz documentation](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) for examples.
     * `timezone_id` - string with timezone id (e.g., `PST`) in which to evaluate the Quartz expression.
-    * `pause_status` - optional string field that indicates whether a schedule is paused (`PAUSED`) or not (`UNPAUSED`).
 * `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
 * `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.

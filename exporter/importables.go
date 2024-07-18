@@ -3129,6 +3129,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			path := r.Data.Get("path").(string)
 			if strings.HasPrefix(path, "/Repos") {
+				ic.emitRepoByPath(path)
 				return nil
 			}
 			parts := strings.Split(path, "/")

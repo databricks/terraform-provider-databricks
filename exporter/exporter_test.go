@@ -1917,6 +1917,13 @@ func TestImportingSqlObjects(t *testing.T) {
 
 			err := ic.Run()
 			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/sql-endpoints.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `enable_serverless_compute = false`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_sql_endpoint" "test" {`))
+			assert.False(t, strings.Contains(contentStr, `tags {`))
 		})
 }
 

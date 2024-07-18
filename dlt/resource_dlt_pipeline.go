@@ -20,6 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// DefaultTimeout is the default amount of time that Terraform will wait when creating, updating and deleting pipelines.
+const DefaultTimeout = 20 * time.Minute
+
 type createPipelineRequestStruct struct {
 	pipelines.CreatePipeline
 }
@@ -28,42 +31,21 @@ type updatePipelineRequestStruct struct {
 	pipelines.EditPipeline
 }
 
-// *******************
-// Original one only maintains Pipeline spec as the schema whereas this one maintains the entire pipeline struct
-// *******************
-
+// Name not keeping twice
 type Pipeline struct {
-	// not setting group:node_type for fields in pipelineCluster
-	// Cluster->Autoscale->Mode (difference in type)
-	// Cluster->AwsAttributes->Availability (difference in type)
-	// Cluster->enable_local_disk_encryption (not in new)
-	// In cluster, ID in old Id in new
-	// Cluster->init_scripts->Abfss (difference in type)
-	// Libraries->Whl does not exist in new
-	// Why is serverless Optional in Serverless
-	// Why is every field omitempty by default
 	pipelines.PipelineSpec
-	AllowDuplicateNames bool `json:"allow_duplicate_names,omitempty"`
-	DryRun              bool `json:"dry_run,omitempty"`
-	// An optional message detailing the cause of the pipeline state.
-	Cause string `json:"cause,omitempty"`
-	// The ID of the cluster that the pipeline is running on.
-	ClusterId string `json:"cluster_id,omitempty"`
-	// The username of the pipeline creator.
-	CreatorUserName string `json:"creator_user_name,omitempty"`
-	// The health of a pipeline.
-	Health pipelines.GetPipelineResponseHealth `json:"health,omitempty"`
-	// The last time the pipeline settings were modified or created.
-	LastModified int64 `json:"last_modified,omitempty"`
-	// Status of the latest updates for the pipeline. Ordered with the newest
-	// update first.
-	LatestUpdates []pipelines.UpdateStateInfo `json:"latest_updates,omitempty"`
-	// Username of the user that the pipeline will run on behalf of.
-	RunAsUserName string `json:"run_as_user_name,omitempty"`
-	// The pipeline state.
-	State pipelines.PipelineState `json:"state,omitempty"`
-	// URL field
-	URL string `json:"url,omitempty"`
+	PipelineId          string                              `json:"pipeline_id,omitempty"`
+	AllowDuplicateNames bool                                `json:"allow_duplicate_names,omitempty"`
+	DryRun              bool                                `json:"dry_run,omitempty"`
+	Cause               string                              `json:"cause,omitempty"`
+	ClusterId           string                              `json:"cluster_id,omitempty"`
+	CreatorUserName     string                              `json:"creator_user_name,omitempty"`
+	Health              pipelines.GetPipelineResponseHealth `json:"health,omitempty"`
+	LastModified        int64                               `json:"last_modified,omitempty"`
+	LatestUpdates       []pipelines.UpdateStateInfo         `json:"latest_updates,omitempty"`
+	RunAsUserName       string                              `json:"run_as_user_name,omitempty"`
+	State               pipelines.PipelineState             `json:"state,omitempty"`
+	URL                 string                              `json:"url,omitempty"`
 }
 
 // Constants for PipelineStates
@@ -79,16 +61,9 @@ const (
 	StateIdle       pipelines.PipelineState = "IDLE"
 )
 
-type workspaceClient struct {
-	*databricks.WorkspaceClient
-}
-
-func (w workspaceClient) Create(ctx context.Context, d *schema.ResourceData, timeout time.Duration) error {
-	var createPipelineRequest createPipelineRequestStruct
-	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
-
-	for i := range createPipelineRequest.Clusters {
-		cluster := &createPipelineRequest.Clusters[i]
+func adjustForceSendFields(clusterList *[]pipelines.PipelineCluster) {
+	for i := range *clusterList {
+		cluster := &((*clusterList)[i])
 		// TF Go SDK doesn't differentiate between the default and not set values.
 		// If nothing is specified, DLT creates a cluster with enhanced autoscaling
 		// from 1 to 5 nodes, which is different than sending a request for zero workers.
@@ -98,6 +73,13 @@ func (w workspaceClient) Create(ctx context.Context, d *schema.ResourceData, tim
 			cluster.ForceSendFields = append(cluster.ForceSendFields, "NumWorkers")
 		}
 	}
+}
+
+func (w workspaceClient) Create(ctx context.Context, d *schema.ResourceData, timeout time.Duration) error {
+	var createPipelineRequest createPipelineRequestStruct
+	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
+
+	adjustForceSendFields(&createPipelineRequest.Clusters)
 
 	createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest.CreatePipeline)
 	if err != nil {
@@ -123,17 +105,7 @@ func (w workspaceClient) Update(ctx context.Context, d *schema.ResourceData, tim
 	var updatePipelineRequest updatePipelineRequestStruct
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 
-	for i := range updatePipelineRequest.Clusters {
-		cluster := &updatePipelineRequest.Clusters[i]
-		// TF Go SDK doesn't differentiate between the default and not set values.
-		// If nothing is specified, DLT creates a cluster with enhanced autoscaling
-		// from 1 to 5 nodes, which is different than sending a request for zero workers.
-		// The solution here is to look for the Spark configuration to determine
-		// if the user only wants a single node cluster (only master, no workers).
-		if cluster.SparkConf["spark.databricks.cluster.profile"] == "singleNode" {
-			cluster.ForceSendFields = append(cluster.ForceSendFields, "NumWorkers")
-		}
-	}
+	adjustForceSendFields(&updatePipelineRequest.Clusters)
 
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
@@ -174,9 +146,6 @@ func (w workspaceClient) waitForState(ctx context.Context, id string, timeout ti
 	return retry.RetryContext(ctx, timeout,
 		func() *retry.RetryError {
 			i, err := w.Read(ctx, id)
-			// i, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
-			// 	PipelineId: id,
-			// })
 			if err != nil {
 				return retry.NonRetryableError(err)
 			}
@@ -196,20 +165,6 @@ func (w workspaceClient) waitForState(ctx context.Context, id string, timeout ti
 			return retry.RetryableError(fmt.Errorf(message))
 		})
 }
-
-// func adjustForceSendFields(s *pipelines.CreatePipeline) {
-// 	for i := range s.Clusters {
-// 		cluster := &s.Clusters[i]
-// 		// TF Go SDK doesn't differentiate between the default and not set values.
-// 		// If nothing is specified, DLT creates a cluster with enhanced autoscaling
-// 		// from 1 to 5 nodes, which is different than sending a request for zero workers.
-// 		// The solution here is to look for the Spark configuration to determine
-// 		// if the user only wants a single node cluster (only master, no workers).
-// 		if cluster.SparkConf["spark.databricks.cluster.profile"] == "singleNode" {
-// 			cluster.ForceSendFields = append(cluster.ForceSendFields, "NumWorkers")
-// 		}
-// 	}
-// }
 
 func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 	defaultStorageRegex := regexp.MustCompile(
@@ -321,6 +276,10 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 
 var pipelineSchema = common.StructToSchema(Pipeline{}, nil)
 
+type workspaceClient struct {
+	*databricks.WorkspaceClient
+}
+
 func ResourcePipeline() common.Resource {
 	return common.Resource{
 		Schema: pipelineSchema,
@@ -334,31 +293,7 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			// var createPipelineRequest pipelines.CreatePipeline
 
-			// adjustForceSendFields(&createPipelineRequest)
-
-			// common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
-			// createdPipeline, err := wsClient.Pipelines.Create(ctx, createPipelineRequest)
-			// if err != nil {
-			// 	return err
-			// }
-			// id := createdPipeline.PipelineId
-			// timeout := d.Timeout(schema.TimeoutCreate)
-			// err = waitForState(w, ctx, id, timeout, StateRunning)
-			// if err != nil {
-			// 	log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
-			// 	err2 := a.Delete(id, timeout)
-			// 	if err2 != nil {
-			// 		log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
-			// 		return "", fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
-			// 	}
-			// 	log.Printf("[INFO] Successfully cleaned up pipeline %s", id)
-			// 	return "", err
-			// }
-			// return id, nil
-
-			// d.SetId(createdPipeline.PipelineId)
 			// why is it required
 			d.Set("url", c.FormatURL("#joblist/pipelines/", d.Id()))
 			return nil
@@ -370,25 +305,15 @@ func ResourcePipeline() common.Resource {
 			}
 			wsClient := workspaceClient{w}
 			readPipeline, err := wsClient.Read(ctx, d.Id())
-			// readPipeline, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
-			// 	PipelineId: d.Id(),
-			// })
+
 			if err != nil {
 				return err
 			}
 			if readPipeline.Spec == nil {
 				return fmt.Errorf("pipeline spec is nil for '%v'", readPipeline.PipelineId)
 			}
-			fmt.Println("readPipeline.Spec", readPipeline.Spec)
-			// err = common.StructToData(readPipeline, pipelineSchema, d)
-			// if err != nil {
-			// 	return err
-			// }
-			err = common.StructToData(readPipeline.Spec, pipelineSchema, d)
-			if err != nil {
-				return err
-			}
-			return nil
+			// fmt.Println("readPipeline.Spec", readPipeline.Spec)
+			return common.StructToData(readPipeline.Spec, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -397,9 +322,7 @@ func ResourcePipeline() common.Resource {
 			}
 			wsClient := workspaceClient{w}
 			return wsClient.Update(ctx, d, d.Timeout(schema.TimeoutUpdate))
-			// var updatePipelineRequest pipelines.EditPipeline
-			// common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
-			// return w.Pipelines.Update(ctx, updatePipelineRequest)
+
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -408,9 +331,27 @@ func ResourcePipeline() common.Resource {
 			}
 			wsClient := workspaceClient{w}
 			return wsClient.Delete(ctx, d.Id(), d.Timeout(schema.TimeoutDelete))
-			// return w.Pipelines.Delete(ctx, pipelines.DeletePipelineRequest{
-			// 	PipelineId: d.Id(),
-			// })
+
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Default: schema.DefaultTimeout(DefaultTimeout),
 		},
 	}
 }
+
+// Notes:
+// not setting group:node_type for fields in pipelineCluster
+// In cluster, ID in old Id in new
+// Cluster->Autoscale->Mode (difference in type)
+// Cluster->AwsAttributes->Availability (difference in type)
+// Cluster->AwsAttributes->EbsVolumeIops, EbsVolumeThroughput new
+// Cluster->AzureAttributes->LogAnalyticsInfo new
+// Cluster->enable_local_disk_encryption (not in new)
+// Cluster->init_scripts->Abfss (difference in type)
+// Libraries->Whl does not exist in new
+// Why is serverless Optional in Serverless
+// Why is every field omitempty by default
+// Arrays in terraform (cluster)
+// What to do of dryrun as it affects create response
+// AllowDuplicateNames is given a default value in new
+// LatestUpdates, RunAsUserName is in new

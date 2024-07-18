@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/exporter"
 	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
@@ -49,10 +50,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	pluginFrameworkProvider := provider.GetDatabricksProviderPluginFramework()
+
+	providers := []func() tfprotov6.ProviderServer{
+		func() tfprotov6.ProviderServer {
+			return upgradedSdkPluginProvider
+		},
+		providerserver.NewProtocol6(pluginFrameworkProvider),
+	}
+
 	ctx := context.Background()
-	muxServer, err := tf6muxserver.NewMuxServer(ctx, func() tfprotov6.ProviderServer {
-		return upgradedSdkPluginProvider
-	})
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
 
 	if err != nil {
 		log.Fatal(err)

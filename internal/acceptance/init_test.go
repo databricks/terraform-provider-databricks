@@ -76,6 +76,7 @@ type step struct {
 	PreventPostDestroyRefresh bool
 	ImportState               bool
 	ImportStateVerify         bool
+	ProviderFactories         map[string]func() (*schema.Provider, error)
 }
 
 func createUuid() string {
@@ -163,6 +164,14 @@ func run(t *testing.T, steps []step) {
 		thisStep := s
 		stepCheck := thisStep.Check
 		stepPreConfig := s.PreConfig
+		providerFactories := map[string]func() (*schema.Provider, error){
+			"databricks": func() (*schema.Provider, error) {
+				return provider, nil
+			},
+		}
+		if thisStep.ProviderFactories != nil {
+			providerFactories = thisStep.ProviderFactories
+		}
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
 				if stepConfig == "" {
@@ -185,6 +194,7 @@ func run(t *testing.T, steps []step) {
 			ImportState:               s.ImportState,
 			ImportStateVerify:         s.ImportStateVerify,
 			ExpectError:               s.ExpectError,
+			ProviderFactories:         providerFactories,
 			Check: func(state *terraform.State) error {
 				// get configured client from provider
 				client := provider.Meta().(*common.DatabricksClient)
@@ -212,12 +222,7 @@ func run(t *testing.T, steps []step) {
 	}
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
-		ProviderFactories: map[string]func() (*schema.Provider, error){
-			"databricks": func() (*schema.Provider, error) {
-				return provider, nil
-			},
-		},
-		Steps: ts,
+		Steps:      ts,
 		CheckDestroy: func(t *terraform.State) error {
 			// TODO: generically check if all of ID's are removed.
 			return nil

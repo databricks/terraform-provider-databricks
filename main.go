@@ -9,12 +9,19 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/exporter"
 	"github.com/databricks/terraform-provider-databricks/provider"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 )
+
+const startMessageFormat = `Databricks Terraform Provider
+	
+Version %s
+	
+https://registry.terraform.io/providers/databricks/databricks/latest/docs
+	
+`
 
 func main() {
 	log.SetFlags(0)
@@ -29,21 +36,11 @@ func main() {
 		}
 		return
 	}
-	var debug bool
-	if len(os.Args) > 1 && os.Args[1] == "debug" {
-		debug = true
-	}
-	log.Printf(`Databricks Terraform Provider
-	
-	Version %s
-	
-	https://registry.terraform.io/providers/databricks/databricks/latest/docs
-	
-	`, common.Version())
+
+	log.Printf(startMessageFormat, common.Version())
 
 	sdkPluginProvider := provider.DatabricksProvider()
 
-	// Translate terraform sdk plugin to protocol 6
 	upgradedSdkPluginProvider, err := tf5to6server.UpgradeServer(
 		context.Background(),
 		sdkPluginProvider.GRPCProvider,
@@ -52,32 +49,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pluginFrameworkProvider := provider.GetDatabricksProviderPluginFramework()
-
-	providers := []func() tfprotov6.ProviderServer{
-		func() tfprotov6.ProviderServer {
-			return upgradedSdkPluginProvider
-		},
-		providerserver.NewProtocol6(pluginFrameworkProvider),
-	}
-
-	// Translate plugin framework to protocol 5,
-	// we would use tf5muxserver.NewMuxServer(ctx, providers...) and tf5server.Serve below
-	// providers := []func() tfprotov5.ProviderServer{
-	// 	sdkPluginProvider.GRPCProvider,
-	// 	providerserver.NewProtocol5(
-	// 		pluginFrameworkProvider,
-	// 	),
-	// }
-
 	ctx := context.Background()
-	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, func() tfprotov6.ProviderServer {
+		return upgradedSdkPluginProvider
+	})
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var serveOpts []tf6server.ServeOpt
-	if debug {
+	if len(os.Args) > 1 && os.Args[1] == "debug" { // debug mode
 		serveOpts = append(serveOpts, tf6server.WithManagedDebug())
 	}
 

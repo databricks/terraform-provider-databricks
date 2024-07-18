@@ -1,5 +1,9 @@
 {
     "formatter": "make fmt",
+    "changelog_config": ".codegen/changelog_config.yml",
+    "packages": {
+        ".codegen/model.go.tmpl": "service/{{.Name}}_tf/model.go"
+    },
     "version": {
         "common/version.go": "version = \"$VERSION\""
     },

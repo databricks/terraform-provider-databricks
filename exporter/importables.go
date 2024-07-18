@@ -390,6 +390,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.library.whl", Resource: "databricks_file"},
 			{Path: "task.library.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "task.library.requirements", Resource: "databricks_file"},
+			{Path: "task.library.requirements", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
 			{Path: "task.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
 			{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
@@ -1711,6 +1713,25 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Ignore: generateIgnoreObjectWithoutName("databricks_sql_endpoint"),
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "enable_serverless_compute":
+				return false
+			case "tags":
+				return d.Get("tags.0.custom_tags.#").(int) == 0
+			case "channel.0.name":
+				channelName := d.Get(pathString).(string)
+				return channelName == "" || channelName == "CHANNEL_NAME_CURRENT"
+			case "channel":
+				channelName := d.Get(pathString + ".0.name").(string)
+				return channelName == "" || channelName == "CHANNEL_NAME_CURRENT"
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		ShouldGenerateField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			// We need to generate it even if it's false...
+			return pathString == "enable_serverless_compute"
+		},
 	},
 	"databricks_sql_global_config": {
 		WorkspaceLevel: true,
@@ -1736,6 +1757,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "enable_serverless_compute" {
+				return false
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Depends: []reference{
 			{Path: "instance_profile_arn", Resource: "databricks_instance_profile"},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -163,6 +164,7 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 		// SQLA entities use POST for permission updates.
 		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
 	}
+	log.Printf("[DEBUG] PUT %s %v", objectID, objectACL)
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
 }
 
@@ -262,6 +264,10 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 		err = apiErr
 		return
 	}
+	if strings.HasPrefix(objectID, "/dashboards/") {
+		// workaround for inconsistent API response returning object ID of file in the workspace
+		objectACL.ObjectID = objectID
+	}
 	return
 }
 
@@ -306,6 +312,7 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
 		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
 		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
+		{"dashboard_id", "dashboard", "dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_READ"}, SIMPLE},
 		{"experiment_id", "mlflowExperiment", "experiments", []string{"CAN_READ", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
 		{"registered_model_id", "registered-model", "registered-models", []string{
 			"CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE"}, SIMPLE},
@@ -335,9 +342,10 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 		}
 	}
 	for _, mapping := range permissionsResourceIDFields() {
-		if mapping.objectType != oa.ObjectType {
+		if mapping.objectType != oa.ObjectType || !strings.HasPrefix(oa.ObjectID[1:], mapping.resourceType) {
 			continue
 		}
+		log.Printf("[DEBUG] mapping %v for object %v", mapping, oa)
 		entity.ObjectType = mapping.objectType
 		var pathVariant any
 		if mapping.objectType == "file" {

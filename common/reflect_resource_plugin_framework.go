@@ -1,0 +1,288 @@
+package common
+
+import (
+	"context"
+	"fmt"
+	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
+
+// Converts a tfsdk struct into a go-sdk struct.
+func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Context) error {
+	srcVal := reflect.ValueOf(tfsdk)
+	destVal := reflect.ValueOf(gosdk)
+
+	if srcVal.Kind() == reflect.Ptr {
+		srcVal = srcVal.Elem()
+	}
+
+	if destVal.Kind() != reflect.Ptr {
+		panic("please provide a pointer for the gosdk struct")
+	}
+	destVal = destVal.Elem()
+
+	if srcVal.Kind() != reflect.Struct || destVal.Kind() != reflect.Struct {
+		panic("input should be structs")
+	}
+
+	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
+
+	srcType := srcVal.Type()
+	for i := 0; i < srcVal.NumField(); i++ {
+		srcField := srcVal.Field(i)
+		srcFieldName := srcType.Field(i).Name
+
+		destField := destVal.FieldByName(srcFieldName)
+
+		srcFieldTag := srcType.Field(i).Tag.Get("tfsdk")
+		if srcFieldTag == "-" {
+			continue
+		}
+
+		tfSdkToGoSdkSingleField(srcField, destField, srcFieldName, &forceSendFieldsField, ctx)
+	}
+
+	return nil
+}
+
+func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendFieldsField *reflect.Value, ctx context.Context) error {
+
+	if !destField.IsValid() {
+		panic(fmt.Errorf("destination field is not valid: %s", destField.Type().Name()))
+	}
+
+	if !destField.CanSet() {
+		panic(fmt.Errorf("destination field can not be set: %s", destField.Type().Name()))
+	}
+	srcFieldValue := srcField.Interface()
+
+	if srcFieldValue == nil {
+		return nil
+	} else if srcField.Kind() == reflect.Ptr {
+		// Allocate new memory for the destination field
+		destField.Set(reflect.New(destField.Type().Elem()))
+
+		// Recursively populate the nested struct.
+		if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Interface(), ctx); err != nil {
+			return err
+		}
+	} else if srcField.Kind() == reflect.Struct {
+		switch v := srcFieldValue.(type) {
+		case types.Bool:
+			destField.SetBool(v.ValueBool())
+			if !v.IsNull() {
+				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			}
+		case types.Int64:
+			destField.SetInt(v.ValueInt64())
+			if !v.IsNull() {
+				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			}
+		case types.Float64:
+			destField.SetFloat(v.ValueFloat64())
+			if !v.IsNull() {
+				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			}
+		case types.String:
+			destField.SetString(v.ValueString())
+			if !v.IsNull() {
+				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			}
+		case types.List:
+			panic("types.List should never be used, use go native slices instead")
+		case types.Map:
+			panic("types.Map should never be used, use go native maps instead")
+		default:
+			// If it is a real stuct instead of a tfsdk type, recursively resolve it.
+			if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx); err != nil {
+				return err
+			}
+		}
+	} else if srcField.Kind() == reflect.Slice {
+		destSlice := reflect.MakeSlice(destField.Type(), srcField.Len(), srcField.Cap())
+		for j := 0; j < srcField.Len(); j++ {
+			nestedSrcField := srcField.Index(j)
+			nestedSrcField.Kind()
+
+			srcElem := srcField.Index(j)
+
+			destElem := destSlice.Index(j)
+			if err := tfSdkToGoSdkSingleField(srcElem, destElem, "", nil, ctx); err != nil {
+				return err
+			}
+		}
+		destField.Set(destSlice)
+	} else if srcField.Kind() == reflect.Map {
+		destMap := reflect.MakeMap(destField.Type())
+		for _, key := range srcField.MapKeys() {
+			srcMapValue := srcField.MapIndex(key)
+			destMapValue := reflect.New(destField.Type().Elem()).Elem()
+			destMapKey := reflect.ValueOf(key.Interface())
+			if err := tfSdkToGoSdkSingleField(srcMapValue, destMapValue, "", nil, ctx); err != nil {
+				return err
+			}
+			destMap.SetMapIndex(destMapKey, destMapValue)
+		}
+		destField.Set(destMap)
+	} else {
+		panic(fmt.Errorf("unknown type for field: %s", srcField.Type().Name()))
+	}
+	return nil
+}
+
+// Converts a go-sdk struct into a tfsdk struct.
+func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Context) error {
+
+	srcVal := reflect.ValueOf(gosdk)
+	destVal := reflect.ValueOf(tfsdk)
+
+	if srcVal.Kind() == reflect.Ptr {
+		srcVal = srcVal.Elem()
+	}
+
+	if destVal.Kind() != reflect.Ptr {
+		panic("please provide a pointer for the tfsdk struct")
+	}
+	destVal = destVal.Elem()
+
+	if srcVal.Kind() != reflect.Struct || destVal.Kind() != reflect.Struct {
+		panic(fmt.Errorf("input should be structs %s, %s", srcVal.Type().Name(), destVal.Type().Name()))
+	}
+
+	forceSendField := srcVal.FieldByName("ForceSendFields")
+	if !forceSendField.IsValid() {
+		panic(fmt.Errorf("go sdk struct does not have valid ForceSendField %s", srcVal.Type().Name()))
+	}
+	switch forceSendField.Interface().(type) {
+	case []string:
+	default:
+		panic(fmt.Errorf("ForceSendField is not of type []string"))
+	}
+	forceSendFieldVal := forceSendField.Interface().([]string)
+	srcType := srcVal.Type()
+	for i := 0; i < srcVal.NumField(); i++ {
+		srcField := srcVal.Field(i)
+		srcFieldName := srcVal.Type().Field(i).Name
+
+		destField := destVal.FieldByName(srcFieldName)
+		srcFieldTag := srcType.Field(i).Tag.Get("json")
+		if srcFieldTag == "-" {
+			continue
+		}
+		goSdkToTfSdkSingleField(srcField, destField, srcFieldName, forceSendFieldVal, false, ctx)
+	}
+	return nil
+}
+
+func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendField []string, alwaysAdd bool, ctx context.Context) error {
+
+	if !destField.IsValid() {
+		panic(fmt.Errorf("destination field is not valid: %s", destField.Type().Name()))
+	}
+
+	if !destField.CanSet() {
+		panic(fmt.Errorf("destination field can not be set: %s", destField.Type().Name()))
+	}
+
+	srcFieldValue := srcField.Interface()
+
+	if srcFieldValue == nil {
+		return nil
+	}
+	switch srcField.Kind() {
+	case reflect.Ptr:
+		destField.Set(reflect.New(destField.Type().Elem()))
+
+		// Recursively populate the nested struct.
+		if err := GoSdkToTfSdkStruct(srcFieldValue, destField.Interface(), ctx); err != nil {
+			return err
+		}
+	case reflect.Bool:
+		boolVal := srcFieldValue.(bool)
+		// check if alwaysAdd is false or the value is zero or if the field is in the forceSendFields list
+		if alwaysAdd || !(!boolVal && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+			destField.Set(reflect.ValueOf(types.BoolValue(boolVal)))
+		} else {
+			destField.Set(reflect.ValueOf(types.BoolNull()))
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		// convert any kind of integer to int64
+		intVal := srcField.Convert(reflect.TypeOf(int64(0))).Interface().(int64)
+		// check if alwaysAdd is true or the value is zero or if the field is in the forceSendFields list
+		if alwaysAdd || !(intVal == 0 && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+			destField.Set(reflect.ValueOf(types.Int64Value(int64(intVal))))
+		} else {
+			destField.Set(reflect.ValueOf(types.Int64Null()))
+		}
+	case reflect.Float32, reflect.Float64:
+		// convert any kind of float to float64
+		float64Val := srcField.Convert(reflect.TypeOf(float64(0))).Interface().(float64)
+		// check if alwaysAdd is true or the value is zero or if the field is in the forceSendFields list
+		if alwaysAdd || !(float64Val == 0 && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+			destField.Set(reflect.ValueOf(types.Float64Value(float64Val)))
+		} else {
+			destField.Set(reflect.ValueOf(types.Float64Null()))
+		}
+	case reflect.String:
+		strVal := srcFieldValue.(string)
+		// check if alwaysAdd is false or the value is zero or if the field is in the forceSendFields list
+		if alwaysAdd || !(strVal == "" && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+			destField.Set(reflect.ValueOf(types.StringValue(strVal)))
+		} else {
+			destField.Set(reflect.ValueOf(types.StringNull()))
+		}
+	case reflect.Struct:
+		// resolve the nested struct by recursively calling the function
+		if err := GoSdkToTfSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx); err != nil {
+			return err
+		}
+	case reflect.Slice:
+		destSlice := reflect.MakeSlice(destField.Type(), srcField.Len(), srcField.Cap())
+		for j := 0; j < srcField.Len(); j++ {
+			nestedSrcField := srcField.Index(j)
+			nestedSrcField.Kind()
+
+			srcElem := srcField.Index(j)
+
+			destElem := destSlice.Index(j)
+			if err := goSdkToTfSdkSingleField(srcElem, destElem, "", nil, true, ctx); err != nil {
+				return err
+			}
+		}
+		destField.Set(destSlice)
+	case reflect.Map:
+		destMap := reflect.MakeMap(destField.Type())
+		for _, key := range srcField.MapKeys() {
+			srcMapValue := srcField.MapIndex(key)
+			destMapValue := reflect.New(destField.Type().Elem()).Elem()
+			destMapKey := reflect.ValueOf(key.Interface())
+			if err := goSdkToTfSdkSingleField(srcMapValue, destMapValue, "", nil, true, ctx); err != nil {
+				return err
+			}
+			destMap.SetMapIndex(destMapKey, destMapValue)
+		}
+		destField.Set(destMap)
+	default:
+		panic(fmt.Errorf("unknown type for field: %s", srcField.Type().Name()))
+	}
+	return nil
+}
+
+func addToForceSendFields(fieldName string, forceSendFieldsField *reflect.Value) {
+	if forceSendFieldsField == nil {
+		return
+	}
+	forceSendFields := forceSendFieldsField.Interface().([]string)
+	forceSendFields = append(forceSendFields, fieldName)
+	forceSendFieldsField.Set(reflect.ValueOf(forceSendFields))
+}
+
+func checkTheStringInForceSendFields(fieldName string, forceSendFields []string) bool {
+	for _, field := range forceSendFields {
+		if field == fieldName {
+			return true
+		}
+	}
+	return false
+}

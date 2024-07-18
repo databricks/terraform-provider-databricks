@@ -153,6 +153,8 @@ type importable struct {
 	Ignore func(ic *importContext, r *resource) bool
 	// Function to check if the field in the given resource should be omitted or not
 	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
+	// Function to check if the field in the given resource should be generated or not independently of the value
+	ShouldGenerateField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
 	// Defines if specific service is account level resource

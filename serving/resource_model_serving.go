@@ -21,14 +21,19 @@ func ResourceModelServing() common.Resource {
 			m["name"].ForceNew = true
 			common.MustSchemaPath(m, "config", "served_models").ConflictsWith = []string{"config.served_entities"}
 			common.MustSchemaPath(m, "config", "served_entities").ConflictsWith = []string{"config.served_models"}
-			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false
-			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
-			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
+
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
 			common.MustSchemaPath(m, "config", "auto_capture_config", "table_name_prefix").Computed = true
+			common.MustSchemaPath(m, "config", "auto_capture_config", "enabled").Computed = true
+			common.MustSchemaPath(m, "config", "auto_capture_config", "catalog_name").ForceNew = true
+			common.MustSchemaPath(m, "config", "auto_capture_config", "schema_name").ForceNew = true
+			common.MustSchemaPath(m, "config", "auto_capture_config", "table_name_prefix").ForceNew = true
 
 			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
 			common.MustSchemaPath(m, "config", "served_models", "workload_type").Computed = true
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
+			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
 			common.MustSchemaPath(m, "config", "served_models").Deprecated = "Please use 'config.served_entities' instead of 'config.served_models'."
 
 			common.MustSchemaPath(m, "config", "served_entities", "name").Computed = true

@@ -1992,7 +1992,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines/123",
+				Resource: "/api/2.0/pipelines/123?",
 				Response: getJSONObject("test-data/get-dlt-pipeline.json"),
 			},
 			{
@@ -2128,7 +2128,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines/123",
+				Resource: "/api/2.0/pipelines/123?",
 				Response: getJSONObject("test-data/get-dlt-pipeline.json"),
 			},
 			{

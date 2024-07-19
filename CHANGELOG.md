@@ -12,6 +12,7 @@
  * Make `cluster_name_contains` optional in `databricks_clusters` data source ([#3760](https://github.com/databricks/terraform-provider-databricks/pull/3760)).
  * Tolerate OAuth errors in databricks_mws_workspaces when managing tokens ([#3761](https://github.com/databricks/terraform-provider-databricks/pull/3761)).
  * Permissions for `databricks_dashboard` resource ([#3762](https://github.com/databricks/terraform-provider-databricks/pull/3762)).
+ * Fix model serving resource ([#3690](https://github.com/databricks/terraform-provider-databricks/pull/3690))
 
 ### Exporter
  * Emit directories during the listing only if they are explicitly configured in `-listing` ([#3673](https://github.com/databricks/terraform-provider-databricks/pull/3673)).
@@ -43,6 +44,9 @@
  * Trigger the validate workflow in the merge queue ([#3782](https://github.com/databricks/terraform-provider-databricks/pull/3782)).
  * Update properties for managed SQL table on latest DBR ([#3784](https://github.com/databricks/terraform-provider-databricks/pull/3784)).
  * Add "Owner" tag to test SQL endpoint in acceptance test ([#3785](https://github.com/databricks/terraform-provider-databricks/pull/3785)).
+ * Ignore managed property for liquid clustering integration test ([#3786](https://github.com/databricks/terraform-provider-databricks/pull/3786))
+ * Fix processing of quoted titles ([#3790](https://github.com/databricks/terraform-provider-databricks/pull/3790))
+
 
 
 ## 1.48.3

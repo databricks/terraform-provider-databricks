@@ -2023,10 +2023,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			if res := dltClusterRegex.FindStringSubmatch(pathString); res != nil { // analyze DLT clusters
 				return makeShouldOmitFieldForCluster(dltClusterRegex)(ic, pathString, as, d)
 			}
-			if pathString == "storage" {
+			switch pathString {
+			case "storage":
 				return dltDefaultStorageRegex.FindStringSubmatch(d.Get("storage").(string)) != nil
+			case "edition":
+				return d.Get("edition").(string) == ""
+			case "creator_user_name":
+				return true
 			}
-			return pathString == "creator_user_name" || defaultShouldOmitFieldFunc(ic, pathString, as, d)
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
 			numLibraries := r.Data.Get("library.#").(int)

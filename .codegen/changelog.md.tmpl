@@ -1,22 +1,12 @@
 # Version changelog
 
 ## {{.Version}}
+{{- range .GroupChanges}}
 
-### New Features and Improvements
-{{range .Changes -}}
+### {{.Type.Message}}
+{{range .Changes}}
  * {{.}}.
-{{end}}
-
-### Documentation Changes
-
-### Exporter
-
-### Internal Changes
-{{if .DependencyUpdates}}
-Dependency updates:
-{{range .DependencyUpdates}}
- * {{.}}.
-{{- end -}}
+{{- end}}
 {{end}}
 
 ## {{.PrevVersion}}

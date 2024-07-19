@@ -351,7 +351,7 @@ You can specify a `token` block in the body of the workspace resource, so that T
 
 On AWS, the following arguments could be modified after the workspace is running:
 
-* `network_id` - Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
+* `network_id` - Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces-aws-only) would require three separate `terraform apply` steps.
 * `credentials_id`
 * `storage_customer_managed_key_id`
 * `private_access_settings_id`

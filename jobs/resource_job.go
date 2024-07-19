@@ -272,9 +272,15 @@ type TableUpdate struct {
 	WaitAfterLastChangeSeconds    int32    `json:"wait_after_last_change_seconds,omitempty"`
 }
 
+type Periodic struct {
+	Interval int32  `json:"interval"`
+	Unit     string `json:"unit"`
+}
+
 type Trigger struct {
 	FileArrival *FileArrival `json:"file_arrival,omitempty"`
 	TableUpdate *TableUpdate `json:"table_update,omitempty"`
+	Periodic    *Periodic    `json:"periodic,omitempty"`
 	PauseStatus string       `json:"pause_status,omitempty" tf:"default:UNPAUSED"`
 }
 
@@ -566,9 +572,10 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("continuous").SetConflictsWith([]string{"schedule", "trigger"})
 	s.SchemaPath("trigger").SetConflictsWith([]string{"continuous", "schedule"})
 
-	trigger_eoo := []string{"trigger.0.file_arrival", "trigger.0.table_update"}
+	trigger_eoo := []string{"trigger.0.file_arrival", "trigger.0.table_update", "trigger.0.periodic"}
 	s.SchemaPath("trigger", "file_arrival").SetExactlyOneOf(trigger_eoo)
 	s.SchemaPath("trigger", "table_update").SetExactlyOneOf(trigger_eoo)
+	s.SchemaPath("trigger", "periodic").SetExactlyOneOf(trigger_eoo)
 
 	// Deprecated Job API 2.0 attributes
 	var topLevelDeprecatedAttr = []string{

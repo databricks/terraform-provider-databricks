@@ -90,6 +90,7 @@ func ResourceCatalog() common.Resource {
 			if !updateRequired(d, []string{"owner", "isolation_mode", "enable_predictive_optimization"}) {
 				return nil
 			}
+
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
@@ -98,6 +99,7 @@ func ResourceCatalog() common.Resource {
 				return err
 			}
 
+			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, "catalog")
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -163,9 +165,6 @@ func ResourceCatalog() common.Resource {
 			// So if we don't update the field then the requests would be made to old Name which doesn't exists.
 			d.SetId(ci.Name)
 
-			if d.Get("isolation_mode") != "ISOLATED" {
-				return nil
-			}
 			// Bind the current workspace if the catalog is isolated, otherwise the read will fail
 			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, ci.Name, "catalog")
 		},

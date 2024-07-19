@@ -88,7 +88,10 @@ func awsClusterTemplate(availability string) string {
 			num_workers = 1
 			autotermination_minutes = 10
 			aws_attributes {
-				availability     = "%s"
+				availability = "%s"
+			}
+			custom_tags = {
+				"Owner" = "eng-dev-ecosystem-team@databricks.com"
 			}
 			node_type_id = "i3.xlarge"
 		}

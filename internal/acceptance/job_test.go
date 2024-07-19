@@ -413,3 +413,36 @@ func TestAccRemoveWebhooks(t *testing.T) {
 		`,
 	})
 }
+
+func TestAccPeriodicTrigger(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+
+			trigger {
+				pause_status = "UNPAUSED"
+				periodic {
+					interval = 17
+					unit = "HOURS"
+				}
+			}
+		}`,
+		Check: resourceCheck("databricks_job.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+
+			jobID, err := strconv.ParseInt(id, 10, 64)
+			assert.NoError(t, err)
+
+			res, err := w.Jobs.GetByJobId(ctx, jobID)
+			assert.NoError(t, err)
+
+			assert.Equal(t, jobs.PauseStatus("UNPAUSED"), res.Settings.Trigger.PauseStatus)
+			assert.Equal(t, 17, res.Settings.Trigger.Periodic.Interval)
+			assert.Equal(t, jobs.PeriodicTriggerConfigurationTimeUnit("HOURS"), res.Settings.Trigger.Periodic.Unit)
+
+			return nil
+		}),
+	})
+}

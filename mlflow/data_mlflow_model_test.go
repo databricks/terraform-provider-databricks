@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/ml"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -59,7 +59,7 @@ func TestDataSourceModelNotFound(t *testing.T) {
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/mlflow/databricks/registered-models/get?name=%s", modelName),
 				Status:   404,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   fmt.Sprintf("RegisteredModel '%s' does not exist. It might have been deleted.", modelName),
 				},

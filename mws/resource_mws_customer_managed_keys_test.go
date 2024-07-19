@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -75,7 +75,7 @@ func TestResourceCustomerManagedKeyCreate_Error(t *testing.T) {
 					},
 					UseCases: []string{"MANAGED_SERVICE"},
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -160,7 +160,7 @@ func TestResourceCustomerManagedKeyRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/accounts/abc/customer-managed-keys/cmkid",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					Message: "Invalid endpoint",
 				},
 				Status: 404,

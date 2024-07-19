@@ -12,18 +12,34 @@ import (
 
 func TestAccSQLEndpoint(t *testing.T) {
 	workspaceLevel(t, step{
-		Template: `resource "databricks_sql_endpoint" "this" {
-				name = "tf-{var.RANDOM}"
-				cluster_size = "2X-Small"
-				max_num_clusters = 1
-			}`,
+		Template: `
+		resource "databricks_sql_endpoint" "this" {
+			name = "tf-{var.RANDOM}"
+			cluster_size = "2X-Small"
+			max_num_clusters = 1
+
+			tags {
+				custom_tags {
+					key   = "Owner"
+					value = "eng-dev-ecosystem-team@databricks.com"
+				}
+			}
+		}`,
 	}, step{
 		Template: `
 		resource "databricks_sql_endpoint" "that" {
 			name = "tf-{var.RANDOM}"
 			cluster_size = "2X-Small"
 			max_num_clusters = 1
+
 			enable_serverless_compute = false
+
+			tags {
+				custom_tags {
+					key   = "Owner"
+					value = "eng-dev-ecosystem-team@databricks.com"
+				}
+			}
 		}`,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()

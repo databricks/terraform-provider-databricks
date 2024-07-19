@@ -360,10 +360,10 @@ func (ic *importContext) Run() error {
 		if err != nil {
 			return err
 		}
+		ic.meUserName = me.UserName
 		for _, g := range me.Groups {
 			if g.Display == "admins" {
 				ic.meAdmin = true
-				ic.meUserName = me.UserName
 				break
 			}
 		}
@@ -1651,7 +1651,7 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 			// In case when have zero value, but there is non-zero default, we also need to produce it
 			shouldSkip = false
 		}
-		if shouldSkip {
+		if shouldSkip && (i.ShouldGenerateField == nil || !i.ShouldGenerateField(ic, pathString, as, d)) {
 			continue
 		}
 		switch as.Type {

@@ -30,6 +30,7 @@
  * Update resources diagram ([#3765](https://github.com/databricks/terraform-provider-databricks/pull/3765)).
  * Improve docs for Network Connectivity Config ([#3794](https://github.com/databricks/terraform-provider-databricks/pull/3794))
  * Document serverless flag in databricks_pipeline ([#3797](https://github.com/databricks/terraform-provider-databricks/pull/3797))
+ * Add description of environment block to databricks_job ([#3798](https://github.com/databricks/terraform-provider-databricks/pull/3798))
  
 
 ### Internal Changes

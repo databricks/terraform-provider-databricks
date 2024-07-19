@@ -5,14 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
 
 type DummyTfSdk struct {
-	Enabled           types.Bool                  `tfsdk:"enabled"`
+	Enabled           types.Bool                  `tfsdk:"enabled",tf:"optional"`
 	Workers           types.Int64                 `tfsdk:"workers"`
 	Floats            types.Float64               `tfsdk:"floats"`
 	Description       types.String                `tfsdk:"description"`
@@ -129,99 +128,8 @@ var tfSdkStruct = DummyTfSdk{
 }
 
 func TestGetAndSetPluginFramework(t *testing.T) {
-	// Creating schema.
-	scm := schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"enabled": schema.BoolAttribute{
-				Required: true,
-			},
-			"workers": schema.Int64Attribute{
-				Optional: true,
-			},
-			"description": schema.StringAttribute{
-				Optional: true,
-			},
-			"task": schema.StringAttribute{
-				Optional: true,
-			},
-			"repeated": schema.ListAttribute{
-				ElementType: types.Int64Type,
-				Optional:    true,
-			},
-			"floats": schema.Float64Attribute{
-				Optional: true,
-			},
-			"nested": schema.SingleNestedAttribute{
-				Optional: true,
-				Attributes: map[string]schema.Attribute{
-					"name": schema.StringAttribute{
-						Optional: true,
-					},
-					"enabled": schema.BoolAttribute{
-						Optional: true,
-					},
-				},
-			},
-			"no_pointer_nested": schema.SingleNestedAttribute{
-				Optional: true,
-				Attributes: map[string]schema.Attribute{
-					"name": schema.StringAttribute{
-						Optional: true,
-					},
-					"enabled": schema.BoolAttribute{
-						Optional: true,
-					},
-				},
-			},
-			"nested_list": schema.ListNestedAttribute{
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Optional: true,
-						},
-						"enabled": schema.BoolAttribute{
-							Optional: true,
-						},
-					},
-				},
-				Optional: true,
-			},
-			"map": schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-			"nested_pointer_list": schema.ListNestedAttribute{
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Optional: true,
-						},
-						"enabled": schema.BoolAttribute{
-							Optional: true,
-						},
-					},
-				},
-				Optional: true,
-			},
-			"attributes": schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-			"nested_map": schema.MapNestedAttribute{
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Optional: true,
-						},
-						"enabled": schema.BoolAttribute{
-							Optional: true,
-						},
-					},
-				},
-				Optional: true,
-			},
-		},
-	}
+	// Also test StructToSchema.
+	scm := pluginFrameworkStructToSchema(DummyTfSdk{})
 	state := tfsdk.State{
 		Schema: scm,
 	}
@@ -237,7 +145,6 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 
 	// Assert the struct populated from .Get is exactly the same as the original tfsdk struct.
 	assert.True(t, reflect.DeepEqual(getterStruct, tfSdkStruct))
-
 }
 
 func TestStructConversion(t *testing.T) {

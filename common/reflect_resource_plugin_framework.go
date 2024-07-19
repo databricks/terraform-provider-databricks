@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -285,4 +286,106 @@ func checkTheStringInForceSendFields(fieldName string, forceSendFields []string)
 		}
 	}
 	return false
+}
+
+func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
+	scm := map[string]schema.Attribute{}
+	rk := v.Kind()
+	if rk == reflect.Ptr {
+		v = v.Elem()
+		rk = v.Kind()
+	}
+	if rk != reflect.Struct {
+		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
+	}
+	fields := listAllFields(v)
+	for _, field := range fields {
+		typeField := field.sf
+		fieldName := typeField.Tag.Get("tfsdk")
+		if fieldName == "-" {
+			continue
+		}
+		// For now everything is marked as optional. TODO: add tf annotations for computed, optional, etc.
+		kind := typeField.Type.Kind()
+		if kind == reflect.Ptr {
+			elem := typeField.Type.Elem()
+			sv := reflect.New(elem).Elem()
+			nestedScm := pluginFrameworkTypeToSchema(sv)
+			scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: true}
+		} else if kind == reflect.Slice {
+			elem := typeField.Type.Elem()
+			if elem.Kind() == reflect.Ptr {
+				elem = elem.Elem()
+			}
+			if elem.Kind() != reflect.Struct {
+				panic(fmt.Errorf("unsupported slice value for %s: %s", fieldName, reflectKind(elem.Kind())))
+			}
+			switch elem {
+			case reflect.TypeOf(types.Bool{}):
+				scm[fieldName] = schema.ListAttribute{ElementType: types.BoolType, Optional: true}
+			case reflect.TypeOf(types.Int64{}):
+				scm[fieldName] = schema.ListAttribute{ElementType: types.Int64Type, Optional: true}
+			case reflect.TypeOf(types.Float64{}):
+				scm[fieldName] = schema.ListAttribute{ElementType: types.Float64Type, Optional: true}
+			case reflect.TypeOf(types.String{}):
+				scm[fieldName] = schema.ListAttribute{ElementType: types.StringType, Optional: true}
+			default:
+				// Nested struct
+				nestedScm := pluginFrameworkTypeToSchema(reflect.New(elem).Elem())
+				scm[fieldName] = schema.ListNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: true}
+			}
+		} else if kind == reflect.Map {
+			elem := typeField.Type.Elem()
+			if elem.Kind() == reflect.Ptr {
+				elem = elem.Elem()
+			}
+			if elem.Kind() != reflect.Struct {
+				panic(fmt.Errorf("unsupported map value for %s: %s", fieldName, reflectKind(elem.Kind())))
+			}
+			switch elem {
+			case reflect.TypeOf(types.Bool{}):
+				scm[fieldName] = schema.MapAttribute{ElementType: types.BoolType, Optional: true}
+			case reflect.TypeOf(types.Int64{}):
+				scm[fieldName] = schema.MapAttribute{ElementType: types.Int64Type, Optional: true}
+			case reflect.TypeOf(types.Float64{}):
+				scm[fieldName] = schema.MapAttribute{ElementType: types.Float64Type, Optional: true}
+			case reflect.TypeOf(types.String{}):
+				scm[fieldName] = schema.MapAttribute{ElementType: types.StringType, Optional: true}
+			default:
+				// Nested struct
+				nestedScm := pluginFrameworkTypeToSchema(reflect.New(elem).Elem())
+				scm[fieldName] = schema.MapNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: true}
+			}
+		} else if kind == reflect.Struct {
+			switch field.v.Interface().(type) {
+			case types.Bool:
+				scm[fieldName] = schema.BoolAttribute{Optional: true}
+			case types.Int64:
+				scm[fieldName] = schema.Int64Attribute{Optional: true}
+			case types.Float64:
+				scm[fieldName] = schema.Float64Attribute{Optional: true}
+			case types.String:
+				scm[fieldName] = schema.StringAttribute{Optional: true}
+			case types.List:
+				panic("types.List should never be used in tfsdk structs")
+			case types.Map:
+				panic("types.Map should never be used in tfsdk structs")
+			default:
+				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
+				elem := typeField.Type
+				sv := reflect.New(elem)
+				nestedScm := pluginFrameworkTypeToSchema(sv)
+				scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: true}
+			}
+		} else {
+			panic(fmt.Errorf("unknown type for field: %s", typeField.Name))
+		}
+	}
+	return scm
+}
+
+func pluginFrameworkStructToSchema(v any) schema.Schema {
+	return schema.Schema{
+		Attributes: pluginFrameworkTypeToSchema(reflect.ValueOf(v)),
+	}
 }

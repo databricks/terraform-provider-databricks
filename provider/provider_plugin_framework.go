@@ -96,22 +96,65 @@ func providerSchemaPluginFramework() schema.Schema {
 	}
 }
 
+func setConfigAttributePluginFramework(a *config.ConfigAttribute, cfg *config.Config, i interface{}) error {
+	rv := reflect.ValueOf(cfg)
+	field := rv.Elem().Field(0)
+	switch a.Kind {
+	case reflect.String:
+		field.SetString(i.(string))
+	case reflect.Bool:
+		field.SetBool(i.(bool))
+	case reflect.Int:
+		field.SetInt(int64(i.(int)))
+	default:
+		// must extensively test with providerFixture to avoid this one
+		return fmt.Errorf("cannot set %s of unknown type %s", a.Name, reflectKind(a.Kind))
+	}
+	return nil
+}
+
 func configureDatabricksClient_PluginFramework(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) any {
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}
 	for _, attr := range config.ConfigAttributes {
-		var attrValue types.String
-		// tanmaytodo, failing here TerraformValueAtTerraformPath
-		diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrValue)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return nil
-		}
-		err := attr.Set(cfg, attrValue)
-		if err != nil {
-			resp.Diagnostics.Append(diag.NewErrorDiagnostic("Failed to set attribute", err.Error()))
-			return nil
+		switch attr.Kind {
+		case reflect.Bool:
+			var attrValue types.Bool
+			diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrValue) // tanmaytodo, failing here TerraformValueAtTerraformPath
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return nil
+			}
+			err := attr.Set(cfg, attrValue) // tanmaytodo, failing here
+			if err != nil {
+				resp.Diagnostics.Append(diag.NewErrorDiagnostic("Failed to set attribute", err.Error()))
+				return nil
+			}
+		case reflect.Int:
+			var attrValue types.Int64
+			diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrValue) // tanmaytodo, failing here TerraformValueAtTerraformPath
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return nil
+			}
+			// err := attr.Set(cfg, attrValue) // tanmaytodo, failing here
+			// if err != nil {
+			// 	resp.Diagnostics.Append(diag.NewErrorDiagnostic("Failed to set attribute", err.Error()))
+			// 	return nil
+			// }
+		case reflect.String:
+			var attrValue types.String
+			diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrValue) // tanmaytodo, failing here TerraformValueAtTerraformPath
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return nil
+			}
+			// err := attr.Set(cfg, attrValue) // tanmaytodo, failing here
+			// if err != nil {
+			// 	resp.Diagnostics.Append(diag.NewErrorDiagnostic("Failed to set attribute", err.Error()))
+			// 	return nil
+			// }
 		}
 		if attr.Kind == reflect.String {
 			attrsUsed = append(attrsUsed, attr.Name)

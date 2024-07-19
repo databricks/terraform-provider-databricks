@@ -21,12 +21,16 @@
  * Use Go SDK structs for `databricks_job` resource ([#3727](https://github.com/databricks/terraform-provider-databricks/pull/3727)).
  * Clarify use of `-listing` and `-services` options ([#3755](https://github.com/databricks/terraform-provider-databricks/pull/3755)).
  * Improve code generation for SQL Endpoints ([#3764](https://github.com/databricks/terraform-provider-databricks/pull/3764))
+ * Fix to support Serverless DLT ([#3796](https://github.com/databricks/terraform-provider-databricks/pull/3796))
 
 ### Documentation
  * Fix invalid priviledges in grants.md ([#3716](https://github.com/databricks/terraform-provider-databricks/pull/3716)).
  * Update cluster.md: add data_security_mode parameters `NONE` and `NO_ISOLATION` ([#3740](https://github.com/databricks/terraform-provider-databricks/pull/3740)).
  * Remove references to basic auth ([#3720](https://github.com/databricks/terraform-provider-databricks/pull/3720)).
  * Update resources diagram ([#3765](https://github.com/databricks/terraform-provider-databricks/pull/3765)).
+ * Improve docs for Network Connectivity Config ([#3794](https://github.com/databricks/terraform-provider-databricks/pull/3794))
+ * Document serverless flag in databricks_pipeline ([#3797](https://github.com/databricks/terraform-provider-databricks/pull/3797))
+ 
 
 ### Internal Changes
  * Add Release tag ([#3748](https://github.com/databricks/terraform-provider-databricks/pull/3748)).

@@ -16,6 +16,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
@@ -1109,6 +1110,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "sql_alert_id", Resource: "databricks_sql_alert"},
 			{Path: "sql_dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "sql_endpoint_id", Resource: "databricks_sql_endpoint"},
+			{Path: "dashboard_id", Resource: "databricks_dashboard"},
 			{Path: "registered_model_id", Resource: "databricks_mlflow_model"},
 			{Path: "experiment_id", Resource: "databricks_mlflow_experiment"},
 			{Path: "repo_id", Resource: "databricks_repo"},
@@ -3089,6 +3091,98 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Resource: "databricks_service_principal", Path: "principal_id"},
 			{Resource: "databricks_user", Path: "principal_id"},
 			{Resource: "databricks_group", Path: "principal_id"},
+		},
+	},
+	"databricks_dashboard": {
+		WorkspaceLevel: true,
+		Service:        "dashboards",
+		List: func(ic *importContext) error {
+			dashboards, err := ic.workspaceClient.Lakeview.ListAll(ic.Context, dashboards.ListDashboardsRequest{PageSize: 100})
+			if err != nil {
+				return err
+			}
+			for i, d := range dashboards {
+				if !ic.MatchesName(d.DisplayName) {
+					continue
+				}
+				// TODO: add emit for incremental mode. Use already defined functions for emitting?
+				ic.Emit(&resource{
+					Resource: "databricks_dashboard",
+					ID:       d.DashboardId,
+				})
+				if i%100 == 0 {
+					log.Printf("[INFO] Processed %d dashboard out of %d", i+1, len(dashboards))
+				}
+			}
+			return nil
+		},
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			s := d.Get("parent_path").(string)
+			if s != "" {
+				s = s[1:]
+				if s != "" {
+					s = s + "_"
+				}
+			}
+			dname := d.Get("display_name").(string)
+			if dname != "" {
+				s = s + dname
+			}
+			s = s + "_" + d.Id()
+			return nameNormalizationRegex.ReplaceAllString(s, "_")
+		},
+		Import: func(ic *importContext, r *resource) error {
+			path := r.Data.Get("path").(string)
+			if strings.HasPrefix(path, "/Repos") {
+				ic.emitRepoByPath(path)
+				return nil
+			}
+			parts := strings.Split(path, "/")
+			plen := len(parts)
+			if idx := strings.Index(parts[plen-1], "."); idx != -1 {
+				parts[plen-1] = parts[plen-1][:idx] + "_" + r.ID + parts[plen-1][idx:]
+			} else {
+				parts[plen-1] = parts[plen-1] + "_" + r.ID
+			}
+			name := fileNameNormalizationRegex.ReplaceAllString(strings.Join(parts, "/")[1:], "_")
+			fileName, err := ic.saveFileIn("dashboards", name, []byte(r.Data.Get("serialized_dashboard").(string)))
+			if err != nil {
+				return err
+			}
+			r.Data.Set("file_path", fileName)
+			r.Data.Set("serialized_dashboard", "")
+
+			ic.emitPermissionsIfNotIgnored(r, "/dashboards/"+r.ID,
+				"dashboard_"+ic.Importables["databricks_dashboard"].Name(ic, r.Data))
+			parentPath := r.Data.Get("parent_path").(string)
+			if parentPath != "" && parentPath != "/" {
+				ic.Emit(&resource{
+					Resource: "databricks_directory",
+					ID:       parentPath,
+				})
+			}
+			warehouseId := r.Data.Get("warehouse_id").(string)
+			if warehouseId != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_endpoint",
+					ID:       warehouseId,
+				})
+			}
+
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			return pathString == "dashboard_change_detected" || shouldOmitMd5Field(ic, pathString, as, d)
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			return strings.HasPrefix(r.Data.Get("path").(string), "/Repos") || strings.HasPrefix(r.Data.Get("parent_path").(string), "/Repos")
+		},
+		Depends: []reference{
+			{Path: "file_path", File: true},
+			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "parent_path", Resource: "databricks_directory"},
+			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_service_principal"},
 		},
 	},
 }

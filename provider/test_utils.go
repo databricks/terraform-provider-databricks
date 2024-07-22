@@ -84,11 +84,21 @@ func (tt providerFixture) rawConfigSDKv2() map[string]any {
 
 func (tt providerFixture) rawConfigPluginFramework() tftypes.Value {
 	rawConfig := tt.rawConfig()
-	pluginFrameworkMap := map[string]tftypes.Value{}
-	for k, v := range rawConfig {
-		pluginFrameworkMap[k] = tftypes.NewValue(tftypes.String, v)
+
+	rawConfigTypeMap := map[string]tftypes.Type{}
+	for k, _ := range rawConfig {
+		rawConfigTypeMap[k] = tftypes.String
 	}
-	return tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, pluginFrameworkMap)
+	rawConfigType := tftypes.Object{
+		AttributeTypes: rawConfigTypeMap,
+	}
+
+	rawConfigValueMap := map[string]tftypes.Value{}
+	for k, v := range rawConfig {
+		rawConfigValueMap[k] = tftypes.NewValue(tftypes.String, v)
+	}
+	rawConfigValue := tftypes.NewValue(rawConfigType, rawConfigValueMap)
+	return rawConfigValue
 }
 
 func (tc providerFixture) applyWithSDKv2(t *testing.T) *common.DatabricksClient {

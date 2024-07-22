@@ -92,7 +92,8 @@ func providerSchemaPluginFramework() schema.Schema {
 		}
 	}
 	return schema.Schema{
-		Attributes: ps,
+		Description: "Databricks provider schema for plugin framework",
+		Attributes:  ps,
 	}
 }
 
@@ -128,7 +129,7 @@ func configureDatabricksClient_PluginFramework(ctx context.Context, req provider
 			}
 		case reflect.String:
 			var attrValue types.String
-			diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrValue) // tanmaytodo: not getting the value from config
+			diags := req.Config.GetAttribute(ctx, path.Root(attr.Name), &attrValue)
 			resp.Diagnostics.Append(diags...)
 			if resp.Diagnostics.HasError() {
 				return nil

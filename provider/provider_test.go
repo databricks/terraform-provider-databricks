@@ -92,7 +92,6 @@ func TestConfig_BasicAuth(t *testing.T) {
 	}.apply(t)
 }
 
-// tanmaytodo: fix this
 func TestConfig_AttributePrecedence(t *testing.T) {
 	providerFixture{
 		host: "y",
@@ -139,6 +138,7 @@ func TestConfig_AzurePAT(t *testing.T) {
 	}.apply(t)
 }
 
+// tanmaytodo: fix this
 func TestConfig_ConflictingEnvs(t *testing.T) {
 	providerFixture{
 		env: map[string]string{

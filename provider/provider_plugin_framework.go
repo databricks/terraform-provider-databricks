@@ -165,7 +165,7 @@ func configureDatabricksClient_PluginFramework(ctx context.Context, req provider
 	}
 	client, err := client.New(cfg)
 	if err != nil {
-		resp.Diagnostics.Append(diag.NewErrorDiagnostic("Error while generating client", err.Error()))
+		resp.Diagnostics.Append(diag.NewErrorDiagnostic(err.Error(), ""))
 		return nil
 	}
 	pc := &common.DatabricksClient{

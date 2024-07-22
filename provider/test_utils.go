@@ -86,7 +86,7 @@ func (tt providerFixture) rawConfigPluginFramework() tftypes.Value {
 	rawConfig := tt.rawConfig()
 
 	rawConfigTypeMap := map[string]tftypes.Type{}
-	for k, _ := range rawConfig {
+	for k := range rawConfig {
 		rawConfigTypeMap[k] = tftypes.String
 	}
 	rawConfigType := tftypes.Object{

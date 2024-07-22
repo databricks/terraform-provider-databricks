@@ -8,15 +8,13 @@ import (
 
 	"time"
 
+	"reflect"
+
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"reflect"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -360,3 +358,6 @@ func ResourcePipeline() common.Resource {
 // dry_run is in new - wrote unit test for it
 // RunAsUserName - checked
 // ExpectedLastModified - Test written
+
+// PipelineStateInfo
+// PipelineListResponse

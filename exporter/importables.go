@@ -20,6 +20,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -30,7 +31,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
+
+	// "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
@@ -1940,8 +1942,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			api := pipelines.NewPipelinesAPI(ic.Context, ic.Client)
-			pipelinesList, err := api.List(50, "")
+			w, err := ic.Client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			pipelinesList, err := w.Pipelines.ListPipelinesAll(ic.Context, pipelines.ListPipelinesRequest{
+				MaxResults: 50,
+			})
+
+			// api := pipelines.NewPipelinesAPI(ic.Context, ic.Client)
+			// pipelinesList, err := api.List(50, "")
 			if err != nil {
 				return err
 			}
@@ -1951,7 +1961,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 				var modifiedAt int64
 				if ic.incremental {
-					pipeline, err := api.Read(q.PipelineID)
+					pipeline, err := w.Pipelines.Get(ic.Context, pipelines.GetPipelineRequest{
+						PipelineId: q.PipelineId,
+					})
 					if err != nil {
 						return err
 					}
@@ -1959,7 +1971,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_pipeline",
-					ID:       q.PipelineID,
+					ID:       q.PipelineId,
 				}, modifiedAt, fmt.Sprintf("DLT Pipeline '%s'", q.Name))
 				log.Printf("[INFO] Imported %d of %d DLT Pipelines", i+1, len(pipelinesList))
 			}
@@ -1993,25 +2005,26 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       cluster.AwsAttributes.InstanceProfileArn,
 					})
 				}
-				if cluster.InstancePoolID != "" {
+				if cluster.InstancePoolId != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_pool",
-						ID:       cluster.InstancePoolID,
+						ID:       cluster.InstancePoolId,
 					})
 				}
-				if cluster.DriverInstancePoolID != "" {
+				if cluster.DriverInstancePoolId != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_instance_pool",
-						ID:       cluster.DriverInstancePoolID,
+						ID:       cluster.DriverInstancePoolId,
 					})
 				}
-				if cluster.PolicyID != "" {
+				if cluster.PolicyId != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_cluster_policy",
-						ID:       cluster.PolicyID,
+						ID:       cluster.PolicyId,
 					})
 				}
-				ic.emitInitScriptsLegacy(cluster.InitScripts)
+				// ic.emitInitScriptsLegacy(cluster.InitScripts)
+				ic.emitInitScripts(cluster.InitScripts)
 				ic.emitSecretsFromSecretsPath(cluster.SparkConf)
 				ic.emitSecretsFromSecretsPath(cluster.SparkEnvVars)
 			}

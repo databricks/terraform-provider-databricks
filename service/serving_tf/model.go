@@ -20,22 +20,22 @@ import (
 
 type Ai21LabsConfig struct {
 	// The Databricks secret key reference for an AI21Labs API key.
-	Ai21labsApiKey types.String `tfsdk:"ai21labs_api_key"`
+	Ai21labsApiKey types.String `tfsdk:"ai21labs_api_key" tf:""`
 }
 
 type AmazonBedrockConfig struct {
 	// The Databricks secret key reference for an AWS Access Key ID with
 	// permissions to interact with Bedrock services.
-	AwsAccessKeyId types.String `tfsdk:"aws_access_key_id"`
+	AwsAccessKeyId types.String `tfsdk:"aws_access_key_id" tf:""`
 	// The AWS region to use. Bedrock has to be enabled there.
-	AwsRegion types.String `tfsdk:"aws_region"`
+	AwsRegion types.String `tfsdk:"aws_region" tf:""`
 	// The Databricks secret key reference for an AWS Secret Access Key paired
 	// with the access key ID, with permissions to interact with Bedrock
 	// services.
-	AwsSecretAccessKey types.String `tfsdk:"aws_secret_access_key"`
+	AwsSecretAccessKey types.String `tfsdk:"aws_secret_access_key" tf:""`
 	// The underlying provider in Amazon Bedrock. Supported values (case
 	// insensitive) include: Anthropic, Cohere, AI21Labs, Amazon.
-	BedrockProvider AmazonBedrockConfigBedrockProvider `tfsdk:"bedrock_provider"`
+	BedrockProvider AmazonBedrockConfigBedrockProvider `tfsdk:"bedrock_provider" tf:""`
 }
 
 // The underlying provider in Amazon Bedrock. Supported values (case
@@ -73,48 +73,48 @@ func (f *AmazonBedrockConfigBedrockProvider) Type() string {
 
 type AnthropicConfig struct {
 	// The Databricks secret key reference for an Anthropic API key.
-	AnthropicApiKey types.String `tfsdk:"anthropic_api_key"`
+	AnthropicApiKey types.String `tfsdk:"anthropic_api_key" tf:""`
 }
 
 type App struct {
 	// The active deployment of the app.
-	ActiveDeployment *AppDeployment `tfsdk:"active_deployment"`
+	ActiveDeployment *AppDeployment `tfsdk:"active_deployment" tf:"optional"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time"`
+	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
 	// The email of the user that created the app.
-	Creator types.String `tfsdk:"creator"`
+	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// The description of the app.
-	Description types.String `tfsdk:"description"`
+	Description types.String `tfsdk:"description" tf:"optional"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:""`
 	// The pending deployment of the app.
-	PendingDeployment *AppDeployment `tfsdk:"pending_deployment"`
+	PendingDeployment *AppDeployment `tfsdk:"pending_deployment" tf:"optional"`
 
-	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"optional"`
 
-	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 
-	Status *AppStatus `tfsdk:"status"`
+	Status *AppStatus `tfsdk:"status" tf:"optional"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time"`
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 	// The email of the user that last updated the app.
-	Updater types.String `tfsdk:"updater"`
+	Updater types.String `tfsdk:"updater" tf:"optional"`
 	// The URL of the app once it is deployed.
-	Url types.String `tfsdk:"url"`
+	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
 type AppDeployment struct {
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time"`
+	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
 	// The email of the user creates the deployment.
-	Creator types.String `tfsdk:"creator"`
+	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// The deployment artifacts for an app.
-	DeploymentArtifacts *AppDeploymentArtifacts `tfsdk:"deployment_artifacts"`
+	DeploymentArtifacts *AppDeploymentArtifacts `tfsdk:"deployment_artifacts" tf:"optional"`
 	// The unique id of the deployment.
-	DeploymentId types.String `tfsdk:"deployment_id"`
+	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
 	// The mode of which the deployment will manage the source code.
-	Mode AppDeploymentMode `tfsdk:"mode"`
+	Mode AppDeploymentMode `tfsdk:"mode" tf:""`
 	// The workspace file system path of the source code used to create the app
 	// deployment. This is different from
 	// `deployment_artifacts.source_code_path`, which is the path used by the
@@ -122,17 +122,17 @@ type AppDeployment struct {
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
 	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path"`
+	SourceCodePath types.String `tfsdk:"source_code_path" tf:""`
 	// Status and status message of the deployment
-	Status *AppDeploymentStatus `tfsdk:"status"`
+	Status *AppDeploymentStatus `tfsdk:"status" tf:"optional"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time"`
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 }
 
 type AppDeploymentArtifacts struct {
 	// The snapshotted workspace file system path of the source code loaded by
 	// the deployed app.
-	SourceCodePath types.String `tfsdk:"source_code_path"`
+	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
 }
 
 type AppDeploymentMode string
@@ -199,13 +199,13 @@ func (f *AppDeploymentState) Type() string {
 
 type AppDeploymentStatus struct {
 	// Message corresponding with the deployment state.
-	Message types.String `tfsdk:"message"`
+	Message types.String `tfsdk:"message" tf:"optional"`
 	// State of the deployment.
-	State AppDeploymentState `tfsdk:"state"`
+	State AppDeploymentState `tfsdk:"state" tf:"optional"`
 }
 
 type AppEnvironment struct {
-	Env []EnvVariable `tfsdk:"env"`
+	Env []EnvVariable `tfsdk:"env" tf:"optional"`
 }
 
 type AppState string
@@ -249,40 +249,40 @@ func (f *AppState) Type() string {
 
 type AppStatus struct {
 	// Message corresponding with the app state.
-	Message types.String `tfsdk:"message"`
+	Message types.String `tfsdk:"message" tf:"optional"`
 	// State of the app.
-	State AppState `tfsdk:"state"`
+	State AppState `tfsdk:"state" tf:"optional"`
 }
 
 type AutoCaptureConfigInput struct {
 	// The name of the catalog in Unity Catalog. NOTE: On update, you cannot
 	// change the catalog name if the inference table is already enabled.
-	CatalogName types.String `tfsdk:"catalog_name"`
+	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
 	// Indicates whether the inference table is enabled.
-	Enabled types.Bool `tfsdk:"enabled"`
+	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
 	// The name of the schema in Unity Catalog. NOTE: On update, you cannot
 	// change the schema name if the inference table is already enabled.
-	SchemaName types.String `tfsdk:"schema_name"`
+	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
 	// The prefix of the table in Unity Catalog. NOTE: On update, you cannot
 	// change the prefix name if the inference table is already enabled.
-	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
+	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
 }
 
 type AutoCaptureConfigOutput struct {
 	// The name of the catalog in Unity Catalog.
-	CatalogName types.String `tfsdk:"catalog_name"`
+	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
 	// Indicates whether the inference table is enabled.
-	Enabled types.Bool `tfsdk:"enabled"`
+	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
 	// The name of the schema in Unity Catalog.
-	SchemaName types.String `tfsdk:"schema_name"`
+	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
 
-	State *AutoCaptureState `tfsdk:"state"`
+	State *AutoCaptureState `tfsdk:"state" tf:"optional"`
 	// The prefix of the table in Unity Catalog.
-	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
+	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
 }
 
 type AutoCaptureState struct {
-	PayloadTable *PayloadTable `tfsdk:"payload_table"`
+	PayloadTable *PayloadTable `tfsdk:"payload_table" tf:"optional"`
 }
 
 // Get build logs for a served model
@@ -297,14 +297,14 @@ type BuildLogsRequest struct {
 
 type BuildLogsResponse struct {
 	// The logs associated with building the served entity's environment.
-	Logs types.String `tfsdk:"logs"`
+	Logs types.String `tfsdk:"logs" tf:""`
 }
 
 type ChatMessage struct {
 	// The content of the message.
-	Content types.String `tfsdk:"content"`
+	Content types.String `tfsdk:"content" tf:"optional"`
 	// The role of the message. One of [system, user, assistant].
-	Role ChatMessageRole `tfsdk:"role"`
+	Role ChatMessageRole `tfsdk:"role" tf:"optional"`
 }
 
 // The role of the message. One of [system, user, assistant].
@@ -339,14 +339,14 @@ func (f *ChatMessageRole) Type() string {
 
 type CohereConfig struct {
 	// The Databricks secret key reference for a Cohere API key.
-	CohereApiKey types.String `tfsdk:"cohere_api_key"`
+	CohereApiKey types.String `tfsdk:"cohere_api_key" tf:""`
 }
 
 type CreateAppDeploymentRequest struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-" url:"-"`
 	// The mode of which the deployment will manage the source code.
-	Mode AppDeploymentMode `tfsdk:"mode"`
+	Mode AppDeploymentMode `tfsdk:"mode" tf:""`
 	// The workspace file system path of the source code used to create the app
 	// deployment. This is different from
 	// `deployment_artifacts.source_code_path`, which is the path used by the
@@ -354,50 +354,50 @@ type CreateAppDeploymentRequest struct {
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
 	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path"`
+	SourceCodePath types.String `tfsdk:"source_code_path" tf:""`
 }
 
 type CreateAppRequest struct {
 	// The description of the app.
-	Description types.String `tfsdk:"description"`
+	Description types.String `tfsdk:"description" tf:"optional"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:""`
 }
 
 type CreateServingEndpoint struct {
 	// The core config of the serving endpoint.
-	Config EndpointCoreConfigInput `tfsdk:"config"`
+	Config EndpointCoreConfigInput `tfsdk:"config" tf:""`
 	// The name of the serving endpoint. This field is required and must be
 	// unique across a Databricks workspace. An endpoint name can consist of
 	// alphanumeric characters, dashes, and underscores.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:""`
 	// Rate limits to be applied to the serving endpoint. NOTE: only external
 	// and foundation model endpoints are supported as of now.
-	RateLimits []RateLimit `tfsdk:"rate_limits"`
+	RateLimits []RateLimit `tfsdk:"rate_limits" tf:"optional"`
 	// Enable route optimization for the serving endpoint.
-	RouteOptimized types.Bool `tfsdk:"route_optimized"`
+	RouteOptimized types.Bool `tfsdk:"route_optimized" tf:"optional"`
 	// Tags to be attached to the serving endpoint and automatically propagated
 	// to billing logs.
-	Tags []EndpointTag `tfsdk:"tags"`
+	Tags []EndpointTag `tfsdk:"tags" tf:"optional"`
 }
 
 type DatabricksModelServingConfig struct {
 	// The Databricks secret key reference for a Databricks API token that
 	// corresponds to a user or service principal with Can Query access to the
 	// model serving endpoint pointed to by this external model.
-	DatabricksApiToken types.String `tfsdk:"databricks_api_token"`
+	DatabricksApiToken types.String `tfsdk:"databricks_api_token" tf:""`
 	// The URL of the Databricks workspace containing the model serving endpoint
 	// pointed to by this external model.
-	DatabricksWorkspaceUrl types.String `tfsdk:"databricks_workspace_url"`
+	DatabricksWorkspaceUrl types.String `tfsdk:"databricks_workspace_url" tf:""`
 }
 
 type DataframeSplitInput struct {
-	Columns []any `tfsdk:"columns"`
+	Columns []any `tfsdk:"columns" tf:"optional"`
 
-	Data []any `tfsdk:"data"`
+	Data []any `tfsdk:"data" tf:"optional"`
 
-	Index []types.Int64 `tfsdk:"index"`
+	Index []types.Int64 `tfsdk:"index" tf:"optional"`
 }
 
 // Delete an app
@@ -416,11 +416,11 @@ type DeleteServingEndpointRequest struct {
 }
 
 type EmbeddingsV1ResponseEmbeddingElement struct {
-	Embedding []types.Float64 `tfsdk:"embedding"`
+	Embedding []types.Float64 `tfsdk:"embedding" tf:"optional"`
 	// The index of the embedding in the response.
-	Index types.Int64 `tfsdk:"index"`
+	Index types.Int64 `tfsdk:"index" tf:"optional"`
 	// This will always be 'embedding'.
-	Object EmbeddingsV1ResponseEmbeddingElementObject `tfsdk:"object"`
+	Object EmbeddingsV1ResponseEmbeddingElementObject `tfsdk:"object" tf:"optional"`
 }
 
 // This will always be 'embedding'.
@@ -452,60 +452,60 @@ func (f *EmbeddingsV1ResponseEmbeddingElementObject) Type() string {
 type EndpointCoreConfigInput struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig *AutoCaptureConfigInput `tfsdk:"auto_capture_config"`
+	AutoCaptureConfig *AutoCaptureConfigInput `tfsdk:"auto_capture_config" tf:"optional"`
 	// The name of the serving endpoint to update. This field is required.
 	Name types.String `tfsdk:"-" url:"-"`
 	// A list of served entities for the endpoint to serve. A serving endpoint
 	// can have up to 15 served entities.
-	ServedEntities []ServedEntityInput `tfsdk:"served_entities"`
+	ServedEntities []ServedEntityInput `tfsdk:"served_entities" tf:"optional"`
 	// (Deprecated, use served_entities instead) A list of served models for the
 	// endpoint to serve. A serving endpoint can have up to 15 served models.
-	ServedModels []ServedModelInput `tfsdk:"served_models"`
+	ServedModels []ServedModelInput `tfsdk:"served_models" tf:"optional"`
 	// The traffic config defining how invocations to the serving endpoint
 	// should be routed.
-	TrafficConfig *TrafficConfig `tfsdk:"traffic_config"`
+	TrafficConfig *TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
 }
 
 type EndpointCoreConfigOutput struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig *AutoCaptureConfigOutput `tfsdk:"auto_capture_config"`
+	AutoCaptureConfig *AutoCaptureConfigOutput `tfsdk:"auto_capture_config" tf:"optional"`
 	// The config version that the serving endpoint is currently serving.
-	ConfigVersion types.Int64 `tfsdk:"config_version"`
+	ConfigVersion types.Int64 `tfsdk:"config_version" tf:"optional"`
 	// The list of served entities under the serving endpoint config.
-	ServedEntities []ServedEntityOutput `tfsdk:"served_entities"`
+	ServedEntities []ServedEntityOutput `tfsdk:"served_entities" tf:"optional"`
 	// (Deprecated, use served_entities instead) The list of served models under
 	// the serving endpoint config.
-	ServedModels []ServedModelOutput `tfsdk:"served_models"`
+	ServedModels []ServedModelOutput `tfsdk:"served_models" tf:"optional"`
 	// The traffic configuration associated with the serving endpoint config.
-	TrafficConfig *TrafficConfig `tfsdk:"traffic_config"`
+	TrafficConfig *TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
 }
 
 type EndpointCoreConfigSummary struct {
 	// The list of served entities under the serving endpoint config.
-	ServedEntities []ServedEntitySpec `tfsdk:"served_entities"`
+	ServedEntities []ServedEntitySpec `tfsdk:"served_entities" tf:"optional"`
 	// (Deprecated, use served_entities instead) The list of served models under
 	// the serving endpoint config.
-	ServedModels []ServedModelSpec `tfsdk:"served_models"`
+	ServedModels []ServedModelSpec `tfsdk:"served_models" tf:"optional"`
 }
 
 type EndpointPendingConfig struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig *AutoCaptureConfigOutput `tfsdk:"auto_capture_config"`
+	AutoCaptureConfig *AutoCaptureConfigOutput `tfsdk:"auto_capture_config" tf:"optional"`
 	// The config version that the serving endpoint is currently serving.
-	ConfigVersion types.Int64 `tfsdk:"config_version"`
+	ConfigVersion types.Int64 `tfsdk:"config_version" tf:"optional"`
 	// The list of served entities belonging to the last issued update to the
 	// serving endpoint.
-	ServedEntities []ServedEntityOutput `tfsdk:"served_entities"`
+	ServedEntities []ServedEntityOutput `tfsdk:"served_entities" tf:"optional"`
 	// (Deprecated, use served_entities instead) The list of served models
 	// belonging to the last issued update to the serving endpoint.
-	ServedModels []ServedModelOutput `tfsdk:"served_models"`
+	ServedModels []ServedModelOutput `tfsdk:"served_models" tf:"optional"`
 	// The timestamp when the update to the pending config started.
-	StartTime types.Int64 `tfsdk:"start_time"`
+	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// The traffic config defining how invocations to the serving endpoint
 	// should be routed.
-	TrafficConfig *TrafficConfig `tfsdk:"traffic_config"`
+	TrafficConfig *TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
 }
 
 type EndpointState struct {
@@ -514,12 +514,12 @@ type EndpointState struct {
 	// update in progress. Note that if the endpoint's config_update state value
 	// is IN_PROGRESS, another update can not be made until the update completes
 	// or fails."
-	ConfigUpdate EndpointStateConfigUpdate `tfsdk:"config_update"`
+	ConfigUpdate EndpointStateConfigUpdate `tfsdk:"config_update" tf:"optional"`
 	// The state of an endpoint, indicating whether or not the endpoint is
 	// queryable. An endpoint is READY if all of the served entities in its
 	// active configuration are ready. If any of the actively served entities
 	// are in a non-ready state, the endpoint state will be NOT_READY.
-	Ready EndpointStateReady `tfsdk:"ready"`
+	Ready EndpointStateReady `tfsdk:"ready" tf:"optional"`
 }
 
 // The state of an endpoint's config update. This informs the user if the
@@ -589,17 +589,17 @@ func (f *EndpointStateReady) Type() string {
 
 type EndpointTag struct {
 	// Key field for a serving endpoint tag.
-	Key types.String `tfsdk:"key"`
+	Key types.String `tfsdk:"key" tf:""`
 	// Optional value field for a serving endpoint tag.
-	Value types.String `tfsdk:"value"`
+	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
 type EnvVariable struct {
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 
-	Value types.String `tfsdk:"value"`
+	Value types.String `tfsdk:"value" tf:"optional"`
 
-	ValueFrom types.String `tfsdk:"value_from"`
+	ValueFrom types.String `tfsdk:"value_from" tf:"optional"`
 }
 
 // Get metrics of a serving endpoint
@@ -615,28 +615,28 @@ type ExportMetricsResponse struct {
 
 type ExternalModel struct {
 	// AI21Labs Config. Only required if the provider is 'ai21labs'.
-	Ai21labsConfig *Ai21LabsConfig `tfsdk:"ai21labs_config"`
+	Ai21labsConfig *Ai21LabsConfig `tfsdk:"ai21labs_config" tf:"optional"`
 	// Amazon Bedrock Config. Only required if the provider is 'amazon-bedrock'.
-	AmazonBedrockConfig *AmazonBedrockConfig `tfsdk:"amazon_bedrock_config"`
+	AmazonBedrockConfig *AmazonBedrockConfig `tfsdk:"amazon_bedrock_config" tf:"optional"`
 	// Anthropic Config. Only required if the provider is 'anthropic'.
-	AnthropicConfig *AnthropicConfig `tfsdk:"anthropic_config"`
+	AnthropicConfig *AnthropicConfig `tfsdk:"anthropic_config" tf:"optional"`
 	// Cohere Config. Only required if the provider is 'cohere'.
-	CohereConfig *CohereConfig `tfsdk:"cohere_config"`
+	CohereConfig *CohereConfig `tfsdk:"cohere_config" tf:"optional"`
 	// Databricks Model Serving Config. Only required if the provider is
 	// 'databricks-model-serving'.
-	DatabricksModelServingConfig *DatabricksModelServingConfig `tfsdk:"databricks_model_serving_config"`
+	DatabricksModelServingConfig *DatabricksModelServingConfig `tfsdk:"databricks_model_serving_config" tf:"optional"`
 	// The name of the external model.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:""`
 	// OpenAI Config. Only required if the provider is 'openai'.
-	OpenaiConfig *OpenAiConfig `tfsdk:"openai_config"`
+	OpenaiConfig *OpenAiConfig `tfsdk:"openai_config" tf:"optional"`
 	// PaLM Config. Only required if the provider is 'palm'.
-	PalmConfig *PaLmConfig `tfsdk:"palm_config"`
+	PalmConfig *PaLmConfig `tfsdk:"palm_config" tf:"optional"`
 	// The name of the provider for the external model. Currently, the supported
 	// providers are 'ai21labs', 'anthropic', 'amazon-bedrock', 'cohere',
 	// 'databricks-model-serving', 'openai', and 'palm'.",
-	Provider ExternalModelProvider `tfsdk:"provider"`
+	Provider ExternalModelProvider `tfsdk:"provider" tf:""`
 	// The task type of the external model.
-	Task types.String `tfsdk:"task"`
+	Task types.String `tfsdk:"task" tf:""`
 }
 
 // The name of the provider for the external model. Currently, the supported
@@ -681,22 +681,22 @@ func (f *ExternalModelProvider) Type() string {
 
 type ExternalModelUsageElement struct {
 	// The number of tokens in the chat/completions response.
-	CompletionTokens types.Int64 `tfsdk:"completion_tokens"`
+	CompletionTokens types.Int64 `tfsdk:"completion_tokens" tf:"optional"`
 	// The number of tokens in the prompt.
-	PromptTokens types.Int64 `tfsdk:"prompt_tokens"`
+	PromptTokens types.Int64 `tfsdk:"prompt_tokens" tf:"optional"`
 	// The total number of tokens in the prompt and response.
-	TotalTokens types.Int64 `tfsdk:"total_tokens"`
+	TotalTokens types.Int64 `tfsdk:"total_tokens" tf:"optional"`
 }
 
 type FoundationModel struct {
 	// The description of the foundation model.
-	Description types.String `tfsdk:"description"`
+	Description types.String `tfsdk:"description" tf:"optional"`
 	// The display name of the foundation model.
-	DisplayName types.String `tfsdk:"display_name"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// The URL to the documentation of the foundation model.
-	Docs types.String `tfsdk:"docs"`
+	Docs types.String `tfsdk:"docs" tf:"optional"`
 	// The name of the foundation model.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
 // Get an app deployment
@@ -739,7 +739,7 @@ type GetServingEndpointPermissionLevelsRequest struct {
 
 type GetServingEndpointPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []ServingEndpointPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels []ServingEndpointPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
 }
 
 // Get serving endpoint permissions
@@ -767,9 +767,9 @@ type ListAppDeploymentsRequest struct {
 
 type ListAppDeploymentsResponse struct {
 	// Deployment history of the app.
-	AppDeployments []AppDeployment `tfsdk:"app_deployments"`
+	AppDeployments []AppDeployment `tfsdk:"app_deployments" tf:"optional"`
 	// Pagination token to request the next page of apps.
-	NextPageToken types.String `tfsdk:"next_page_token"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
 // List apps
@@ -782,14 +782,14 @@ type ListAppsRequest struct {
 }
 
 type ListAppsResponse struct {
-	Apps []App `tfsdk:"apps"`
+	Apps []App `tfsdk:"apps" tf:"optional"`
 	// Pagination token to request the next page of apps.
-	NextPageToken types.String `tfsdk:"next_page_token"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
 type ListEndpointsResponse struct {
 	// The list of endpoints.
-	Endpoints []ServingEndpoint `tfsdk:"endpoints"`
+	Endpoints []ServingEndpoint `tfsdk:"endpoints" tf:"optional"`
 }
 
 // Get the latest logs for a served model
@@ -804,54 +804,54 @@ type LogsRequest struct {
 
 type ModelDataPlaneInfo struct {
 	// Information required to query DataPlane API 'query' endpoint.
-	QueryInfo *oauth2.DataPlaneInfo `tfsdk:"query_info"`
+	QueryInfo *oauth2.DataPlaneInfo `tfsdk:"query_info" tf:"optional"`
 }
 
 type OpenAiConfig struct {
 	// This field is only required for Azure AD OpenAI and is the Microsoft
 	// Entra Client ID.
-	MicrosoftEntraClientId types.String `tfsdk:"microsoft_entra_client_id"`
+	MicrosoftEntraClientId types.String `tfsdk:"microsoft_entra_client_id" tf:"optional"`
 	// The Databricks secret key reference for the Microsoft Entra Client Secret
 	// that is only required for Azure AD OpenAI.
-	MicrosoftEntraClientSecret types.String `tfsdk:"microsoft_entra_client_secret"`
+	MicrosoftEntraClientSecret types.String `tfsdk:"microsoft_entra_client_secret" tf:"optional"`
 	// This field is only required for Azure AD OpenAI and is the Microsoft
 	// Entra Tenant ID.
-	MicrosoftEntraTenantId types.String `tfsdk:"microsoft_entra_tenant_id"`
+	MicrosoftEntraTenantId types.String `tfsdk:"microsoft_entra_tenant_id" tf:"optional"`
 	// This is the base URL for the OpenAI API (default:
 	// "https://api.openai.com/v1"). For Azure OpenAI, this field is required,
 	// and is the base URL for the Azure OpenAI API service provided by Azure.
-	OpenaiApiBase types.String `tfsdk:"openai_api_base"`
+	OpenaiApiBase types.String `tfsdk:"openai_api_base" tf:"optional"`
 	// The Databricks secret key reference for an OpenAI or Azure OpenAI API
 	// key.
-	OpenaiApiKey types.String `tfsdk:"openai_api_key"`
+	OpenaiApiKey types.String `tfsdk:"openai_api_key" tf:"optional"`
 	// This is an optional field to specify the type of OpenAI API to use. For
 	// Azure OpenAI, this field is required, and adjust this parameter to
 	// represent the preferred security access validation protocol. For access
 	// token validation, use azure. For authentication using Azure Active
 	// Directory (Azure AD) use, azuread.
-	OpenaiApiType types.String `tfsdk:"openai_api_type"`
+	OpenaiApiType types.String `tfsdk:"openai_api_type" tf:"optional"`
 	// This is an optional field to specify the OpenAI API version. For Azure
 	// OpenAI, this field is required, and is the version of the Azure OpenAI
 	// service to utilize, specified by a date.
-	OpenaiApiVersion types.String `tfsdk:"openai_api_version"`
+	OpenaiApiVersion types.String `tfsdk:"openai_api_version" tf:"optional"`
 	// This field is only required for Azure OpenAI and is the name of the
 	// deployment resource for the Azure OpenAI service.
-	OpenaiDeploymentName types.String `tfsdk:"openai_deployment_name"`
+	OpenaiDeploymentName types.String `tfsdk:"openai_deployment_name" tf:"optional"`
 	// This is an optional field to specify the organization in OpenAI or Azure
 	// OpenAI.
-	OpenaiOrganization types.String `tfsdk:"openai_organization"`
+	OpenaiOrganization types.String `tfsdk:"openai_organization" tf:"optional"`
 }
 
 type PaLmConfig struct {
 	// The Databricks secret key reference for a PaLM API key.
-	PalmApiKey types.String `tfsdk:"palm_api_key"`
+	PalmApiKey types.String `tfsdk:"palm_api_key" tf:""`
 }
 
 type PatchServingEndpointTags struct {
 	// List of endpoint tags to add
-	AddTags []EndpointTag `tfsdk:"add_tags"`
+	AddTags []EndpointTag `tfsdk:"add_tags" tf:"optional"`
 	// List of tag keys to delete
-	DeleteTags []types.String `tfsdk:"delete_tags"`
+	DeleteTags []types.String `tfsdk:"delete_tags" tf:"optional"`
 	// The name of the serving endpoint who's tags to patch. This field is
 	// required.
 	Name types.String `tfsdk:"-" url:"-"`
@@ -859,11 +859,11 @@ type PatchServingEndpointTags struct {
 
 type PayloadTable struct {
 	// The name of the payload table.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// The status of the payload table.
-	Status types.String `tfsdk:"status"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// The status message of the payload table.
-	StatusMessage types.String `tfsdk:"status_message"`
+	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
 }
 
 // Update rate limits of a serving endpoint
@@ -872,95 +872,95 @@ type PutRequest struct {
 	// This field is required.
 	Name types.String `tfsdk:"-" url:"-"`
 	// The list of endpoint rate limits.
-	RateLimits []RateLimit `tfsdk:"rate_limits"`
+	RateLimits []RateLimit `tfsdk:"rate_limits" tf:"optional"`
 }
 
 type PutResponse struct {
 	// The list of endpoint rate limits.
-	RateLimits []RateLimit `tfsdk:"rate_limits"`
+	RateLimits []RateLimit `tfsdk:"rate_limits" tf:"optional"`
 }
 
 type QueryEndpointInput struct {
 	// Pandas Dataframe input in the records orientation.
-	DataframeRecords []any `tfsdk:"dataframe_records"`
+	DataframeRecords []any `tfsdk:"dataframe_records" tf:"optional"`
 	// Pandas Dataframe input in the split orientation.
-	DataframeSplit *DataframeSplitInput `tfsdk:"dataframe_split"`
+	DataframeSplit *DataframeSplitInput `tfsdk:"dataframe_split" tf:"optional"`
 	// The extra parameters field used ONLY for __completions, chat,__ and
 	// __embeddings external & foundation model__ serving endpoints. This is a
 	// map of strings and should only be used with other external/foundation
 	// model query fields.
-	ExtraParams map[string]types.String `tfsdk:"extra_params"`
+	ExtraParams map[string]types.String `tfsdk:"extra_params" tf:"optional"`
 	// The input string (or array of strings) field used ONLY for __embeddings
 	// external & foundation model__ serving endpoints and is the only field
 	// (along with extra_params if needed) used by embeddings queries.
-	Input any `tfsdk:"input"`
+	Input any `tfsdk:"input" tf:"optional"`
 	// Tensor-based input in columnar format.
-	Inputs any `tfsdk:"inputs"`
+	Inputs any `tfsdk:"inputs" tf:"optional"`
 	// Tensor-based input in row format.
-	Instances []any `tfsdk:"instances"`
+	Instances []any `tfsdk:"instances" tf:"optional"`
 	// The max tokens field used ONLY for __completions__ and __chat external &
 	// foundation model__ serving endpoints. This is an integer and should only
 	// be used with other chat/completions query fields.
-	MaxTokens types.Int64 `tfsdk:"max_tokens"`
+	MaxTokens types.Int64 `tfsdk:"max_tokens" tf:"optional"`
 	// The messages field used ONLY for __chat external & foundation model__
 	// serving endpoints. This is a map of strings and should only be used with
 	// other chat query fields.
-	Messages []ChatMessage `tfsdk:"messages"`
+	Messages []ChatMessage `tfsdk:"messages" tf:"optional"`
 	// The n (number of candidates) field used ONLY for __completions__ and
 	// __chat external & foundation model__ serving endpoints. This is an
 	// integer between 1 and 5 with a default of 1 and should only be used with
 	// other chat/completions query fields.
-	N types.Int64 `tfsdk:"n"`
+	N types.Int64 `tfsdk:"n" tf:"optional"`
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-" url:"-"`
 	// The prompt string (or array of strings) field used ONLY for __completions
 	// external & foundation model__ serving endpoints and should only be used
 	// with other completions query fields.
-	Prompt any `tfsdk:"prompt"`
+	Prompt any `tfsdk:"prompt" tf:"optional"`
 	// The stop sequences field used ONLY for __completions__ and __chat
 	// external & foundation model__ serving endpoints. This is a list of
 	// strings and should only be used with other chat/completions query fields.
-	Stop []types.String `tfsdk:"stop"`
+	Stop []types.String `tfsdk:"stop" tf:"optional"`
 	// The stream field used ONLY for __completions__ and __chat external &
 	// foundation model__ serving endpoints. This is a boolean defaulting to
 	// false and should only be used with other chat/completions query fields.
-	Stream types.Bool `tfsdk:"stream"`
+	Stream types.Bool `tfsdk:"stream" tf:"optional"`
 	// The temperature field used ONLY for __completions__ and __chat external &
 	// foundation model__ serving endpoints. This is a float between 0.0 and 2.0
 	// with a default of 1.0 and should only be used with other chat/completions
 	// query fields.
-	Temperature types.Float64 `tfsdk:"temperature"`
+	Temperature types.Float64 `tfsdk:"temperature" tf:"optional"`
 }
 
 type QueryEndpointResponse struct {
 	// The list of choices returned by the __chat or completions
 	// external/foundation model__ serving endpoint.
-	Choices []V1ResponseChoiceElement `tfsdk:"choices"`
+	Choices []V1ResponseChoiceElement `tfsdk:"choices" tf:"optional"`
 	// The timestamp in seconds when the query was created in Unix time returned
 	// by a __completions or chat external/foundation model__ serving endpoint.
-	Created types.Int64 `tfsdk:"created"`
+	Created types.Int64 `tfsdk:"created" tf:"optional"`
 	// The list of the embeddings returned by the __embeddings
 	// external/foundation model__ serving endpoint.
-	Data []EmbeddingsV1ResponseEmbeddingElement `tfsdk:"data"`
+	Data []EmbeddingsV1ResponseEmbeddingElement `tfsdk:"data" tf:"optional"`
 	// The ID of the query that may be returned by a __completions or chat
 	// external/foundation model__ serving endpoint.
-	Id types.String `tfsdk:"id"`
+	Id types.String `tfsdk:"id" tf:"optional"`
 	// The name of the __external/foundation model__ used for querying. This is
 	// the name of the model that was specified in the endpoint config.
-	Model types.String `tfsdk:"model"`
+	Model types.String `tfsdk:"model" tf:"optional"`
 	// The type of object returned by the __external/foundation model__ serving
 	// endpoint, one of [text_completion, chat.completion, list (of
 	// embeddings)].
-	Object QueryEndpointResponseObject `tfsdk:"object"`
+	Object QueryEndpointResponseObject `tfsdk:"object" tf:"optional"`
 	// The predictions returned by the serving endpoint.
-	Predictions []any `tfsdk:"predictions"`
+	Predictions []any `tfsdk:"predictions" tf:"optional"`
 	// The name of the served model that served the request. This is useful when
 	// there are multiple models behind the same endpoint with traffic split.
 	ServedModelName types.String `tfsdk:"-" url:"-" header:"served-model-name,omitempty"`
 	// The usage object that may be returned by the __external/foundation
 	// model__ serving endpoint. This contains information about the number of
 	// tokens used in the prompt and response.
-	Usage *ExternalModelUsageElement `tfsdk:"usage"`
+	Usage *ExternalModelUsageElement `tfsdk:"usage" tf:"optional"`
 }
 
 // The type of object returned by the __external/foundation model__ serving
@@ -997,14 +997,14 @@ func (f *QueryEndpointResponseObject) Type() string {
 type RateLimit struct {
 	// Used to specify how many calls are allowed for a key within the
 	// renewal_period.
-	Calls types.Int64 `tfsdk:"calls"`
+	Calls types.Int64 `tfsdk:"calls" tf:""`
 	// Key field for a serving endpoint rate limit. Currently, only 'user' and
 	// 'endpoint' are supported, with 'endpoint' being the default if not
 	// specified.
-	Key RateLimitKey `tfsdk:"key"`
+	Key RateLimitKey `tfsdk:"key" tf:"optional"`
 	// Renewal period field for a serving endpoint rate limit. Currently, only
 	// 'minute' is supported.
-	RenewalPeriod RateLimitRenewalPeriod `tfsdk:"renewal_period"`
+	RenewalPeriod RateLimitRenewalPeriod `tfsdk:"renewal_period" tf:""`
 }
 
 // Key field for a serving endpoint rate limit. Currently, only 'user' and
@@ -1065,10 +1065,10 @@ func (f *RateLimitRenewalPeriod) Type() string {
 
 type Route struct {
 	// The name of the served model this route configures traffic for.
-	ServedModelName types.String `tfsdk:"served_model_name"`
+	ServedModelName types.String `tfsdk:"served_model_name" tf:""`
 	// The percentage of endpoint traffic to send to this route. It must be an
 	// integer between 0 and 100 inclusive.
-	TrafficPercentage types.Int64 `tfsdk:"traffic_percentage"`
+	TrafficPercentage types.Int64 `tfsdk:"traffic_percentage" tf:""`
 }
 
 type ServedEntityInput struct {
@@ -1077,17 +1077,17 @@ type ServedEntityInput struct {
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
 	// name of the object should be given in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
-	EntityName types.String `tfsdk:"entity_name"`
+	EntityName types.String `tfsdk:"entity_name" tf:"optional"`
 	// The version of the model in Databricks Model Registry to be served or
 	// empty if the entity is a FEATURE_SPEC.
-	EntityVersion types.String `tfsdk:"entity_version"`
+	EntityVersion types.String `tfsdk:"entity_version" tf:"optional"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
 	// experimental feature and subject to change. Example entity environment
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars map[string]types.String `tfsdk:"environment_vars"`
+	EnvironmentVars map[string]types.String `tfsdk:"environment_vars" tf:"optional"`
 	// The external model to be served. NOTE: Only one of external_model and
 	// (entity_name, entity_version, workload_size, workload_type, and
 	// scale_to_zero_enabled) can be specified with the latter set being used
@@ -1097,24 +1097,24 @@ type ServedEntityInput struct {
 	// can not be updated to an endpoint without external_model. If the endpoint
 	// is created without external_model, users cannot update it to add
 	// external_model later.
-	ExternalModel *ExternalModel `tfsdk:"external_model"`
+	ExternalModel *ExternalModel `tfsdk:"external_model" tf:"optional"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
 	// The maximum tokens per second that the endpoint can scale up to.
-	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
+	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput" tf:"optional"`
 	// The minimum tokens per second that the endpoint can scale down to.
-	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
+	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput" tf:"optional"`
 	// The name of a served entity. It must be unique across an endpoint. A
 	// served entity name can consist of alphanumeric characters, dashes, and
 	// underscores. If not specified for an external model, this field defaults
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to
 	// <entity-name>-<entity-version>.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
-	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
+	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:"optional"`
 	// The workload size of the served entity. The workload size corresponds to
 	// a range of provisioned concurrency that the compute autoscales between. A
 	// single unit of provisioned concurrency can process one request at a time.
@@ -1122,7 +1122,7 @@ type ServedEntityInput struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size is 0.
-	WorkloadSize types.String `tfsdk:"workload_size"`
+	WorkloadSize types.String `tfsdk:"workload_size" tf:"optional"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -1130,54 +1130,54 @@ type ServedEntityInput struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType types.String `tfsdk:"workload_type"`
+	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
 }
 
 type ServedEntityOutput struct {
 	// The creation timestamp of the served entity in Unix time.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
 	// The email of the user who created the served entity.
-	Creator types.String `tfsdk:"creator"`
+	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// The name of the entity served. The entity may be a model in the
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
 	// name of the object is given in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
-	EntityName types.String `tfsdk:"entity_name"`
+	EntityName types.String `tfsdk:"entity_name" tf:"optional"`
 	// The version of the served entity in Databricks Model Registry or empty if
 	// the entity is a FEATURE_SPEC.
-	EntityVersion types.String `tfsdk:"entity_version"`
+	EntityVersion types.String `tfsdk:"entity_version" tf:"optional"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
 	// experimental feature and subject to change. Example entity environment
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars map[string]types.String `tfsdk:"environment_vars"`
+	EnvironmentVars map[string]types.String `tfsdk:"environment_vars" tf:"optional"`
 	// The external model that is served. NOTE: Only one of external_model,
 	// foundation_model, and (entity_name, entity_version, workload_size,
 	// workload_type, and scale_to_zero_enabled) is returned based on the
 	// endpoint type.
-	ExternalModel *ExternalModel `tfsdk:"external_model"`
+	ExternalModel *ExternalModel `tfsdk:"external_model" tf:"optional"`
 	// The foundation model that is served. NOTE: Only one of foundation_model,
 	// external_model, and (entity_name, entity_version, workload_size,
 	// workload_type, and scale_to_zero_enabled) is returned based on the
 	// endpoint type.
-	FoundationModel *FoundationModel `tfsdk:"foundation_model"`
+	FoundationModel *FoundationModel `tfsdk:"foundation_model" tf:"optional"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
 	// The maximum tokens per second that the endpoint can scale up to.
-	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
+	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput" tf:"optional"`
 	// The minimum tokens per second that the endpoint can scale down to.
-	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
+	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput" tf:"optional"`
 	// The name of the served entity.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
-	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
+	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:"optional"`
 	// Information corresponding to the state of the served entity.
-	State *ServedModelState `tfsdk:"state"`
+	State *ServedModelState `tfsdk:"state" tf:"optional"`
 	// The workload size of the served entity. The workload size corresponds to
 	// a range of provisioned concurrency that the compute autoscales between. A
 	// single unit of provisioned concurrency can process one request at a time.
@@ -1185,7 +1185,7 @@ type ServedEntityOutput struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size will be 0.
-	WorkloadSize types.String `tfsdk:"workload_size"`
+	WorkloadSize types.String `tfsdk:"workload_size" tf:"optional"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -1193,7 +1193,7 @@ type ServedEntityOutput struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType types.String `tfsdk:"workload_type"`
+	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
 }
 
 type ServedEntitySpec struct {
@@ -1202,20 +1202,20 @@ type ServedEntitySpec struct {
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
 	// name of the object is given in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
-	EntityName types.String `tfsdk:"entity_name"`
+	EntityName types.String `tfsdk:"entity_name" tf:"optional"`
 	// The version of the served entity in Databricks Model Registry or empty if
 	// the entity is a FEATURE_SPEC.
-	EntityVersion types.String `tfsdk:"entity_version"`
+	EntityVersion types.String `tfsdk:"entity_version" tf:"optional"`
 	// The external model that is served. NOTE: Only one of external_model,
 	// foundation_model, and (entity_name, entity_version) is returned based on
 	// the endpoint type.
-	ExternalModel *ExternalModel `tfsdk:"external_model"`
+	ExternalModel *ExternalModel `tfsdk:"external_model" tf:"optional"`
 	// The foundation model that is served. NOTE: Only one of foundation_model,
 	// external_model, and (entity_name, entity_version) is returned based on
 	// the endpoint type.
-	FoundationModel *FoundationModel `tfsdk:"foundation_model"`
+	FoundationModel *FoundationModel `tfsdk:"foundation_model" tf:"optional"`
 	// The name of the served entity.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
 type ServedModelInput struct {
@@ -1225,25 +1225,25 @@ type ServedModelInput struct {
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars map[string]types.String `tfsdk:"environment_vars"`
+	EnvironmentVars map[string]types.String `tfsdk:"environment_vars" tf:"optional"`
 	// ARN of the instance profile that the served model will use to access AWS
 	// resources.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
 	// The name of the model in Databricks Model Registry to be served or if the
 	// model resides in Unity Catalog, the full name of model, in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
-	ModelName types.String `tfsdk:"model_name"`
+	ModelName types.String `tfsdk:"model_name" tf:""`
 	// The version of the model in Databricks Model Registry or Unity Catalog to
 	// be served.
-	ModelVersion types.String `tfsdk:"model_version"`
+	ModelVersion types.String `tfsdk:"model_version" tf:""`
 	// The name of a served model. It must be unique across an endpoint. If not
 	// specified, this field will default to <model-name>-<model-version>. A
 	// served model name can consist of alphanumeric characters, dashes, and
 	// underscores.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// Whether the compute resources for the served model should scale down to
 	// zero.
-	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
+	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:""`
 	// The workload size of the served model. The workload size corresponds to a
 	// range of provisioned concurrency that the compute will autoscale between.
 	// A single unit of provisioned concurrency can process one request at a
@@ -1251,7 +1251,7 @@ type ServedModelInput struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size will be 0.
-	WorkloadSize ServedModelInputWorkloadSize `tfsdk:"workload_size"`
+	WorkloadSize ServedModelInputWorkloadSize `tfsdk:"workload_size" tf:""`
 	// The workload type of the served model. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -1259,7 +1259,7 @@ type ServedModelInput struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType ServedModelInputWorkloadType `tfsdk:"workload_type"`
+	WorkloadType ServedModelInputWorkloadType `tfsdk:"workload_type" tf:"optional"`
 }
 
 // The workload size of the served model. The workload size corresponds to a
@@ -1340,32 +1340,32 @@ func (f *ServedModelInputWorkloadType) Type() string {
 
 type ServedModelOutput struct {
 	// The creation timestamp of the served model in Unix time.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
 	// The email of the user who created the served model.
-	Creator types.String `tfsdk:"creator"`
+	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this model. Note: this is an
 	// experimental feature and subject to change. Example model environment
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars map[string]types.String `tfsdk:"environment_vars"`
+	EnvironmentVars map[string]types.String `tfsdk:"environment_vars" tf:"optional"`
 	// ARN of the instance profile that the served model will use to access AWS
 	// resources.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
 	// The name of the model in Databricks Model Registry or the full name of
 	// the model in Unity Catalog.
-	ModelName types.String `tfsdk:"model_name"`
+	ModelName types.String `tfsdk:"model_name" tf:"optional"`
 	// The version of the model in Databricks Model Registry or Unity Catalog to
 	// be served.
-	ModelVersion types.String `tfsdk:"model_version"`
+	ModelVersion types.String `tfsdk:"model_version" tf:"optional"`
 	// The name of the served model.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// Whether the compute resources for the Served Model should scale down to
 	// zero.
-	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
+	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:"optional"`
 	// Information corresponding to the state of the Served Model.
-	State *ServedModelState `tfsdk:"state"`
+	State *ServedModelState `tfsdk:"state" tf:"optional"`
 	// The workload size of the served model. The workload size corresponds to a
 	// range of provisioned concurrency that the compute will autoscale between.
 	// A single unit of provisioned concurrency can process one request at a
@@ -1373,7 +1373,7 @@ type ServedModelOutput struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size will be 0.
-	WorkloadSize types.String `tfsdk:"workload_size"`
+	WorkloadSize types.String `tfsdk:"workload_size" tf:"optional"`
 	// The workload type of the served model. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -1381,18 +1381,18 @@ type ServedModelOutput struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType types.String `tfsdk:"workload_type"`
+	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
 }
 
 type ServedModelSpec struct {
 	// The name of the model in Databricks Model Registry or the full name of
 	// the model in Unity Catalog.
-	ModelName types.String `tfsdk:"model_name"`
+	ModelName types.String `tfsdk:"model_name" tf:"optional"`
 	// The version of the model in Databricks Model Registry or Unity Catalog to
 	// be served.
-	ModelVersion types.String `tfsdk:"model_version"`
+	ModelVersion types.String `tfsdk:"model_version" tf:"optional"`
 	// The name of the served model.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
 type ServedModelState struct {
@@ -1408,9 +1408,9 @@ type ServedModelState struct {
 	// etc.) DEPLOYMENT_ABORTED indicates that the deployment was terminated
 	// likely due to a failure in bringing up another served entity under the
 	// same endpoint and config version.
-	Deployment ServedModelStateDeployment `tfsdk:"deployment"`
+	Deployment ServedModelStateDeployment `tfsdk:"deployment" tf:"optional"`
 	// More information about the state of the served entity, if available.
-	DeploymentStateMessage types.String `tfsdk:"deployment_state_message"`
+	DeploymentStateMessage types.String `tfsdk:"deployment_state_message" tf:"optional"`
 }
 
 // The state of the served entity deployment. DEPLOYMENT_CREATING indicates that
@@ -1460,86 +1460,86 @@ func (f *ServedModelStateDeployment) Type() string {
 type ServerLogsResponse struct {
 	// The most recent log lines of the model server processing invocation
 	// requests.
-	Logs types.String `tfsdk:"logs"`
+	Logs types.String `tfsdk:"logs" tf:""`
 }
 
 type ServingEndpoint struct {
 	// The config that is currently being served by the endpoint.
-	Config *EndpointCoreConfigSummary `tfsdk:"config"`
+	Config *EndpointCoreConfigSummary `tfsdk:"config" tf:"optional"`
 	// The timestamp when the endpoint was created in Unix time.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
 	// The email of the user who created the serving endpoint.
-	Creator types.String `tfsdk:"creator"`
+	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// System-generated ID of the endpoint. This is used to refer to the
 	// endpoint in the Permissions API
-	Id types.String `tfsdk:"id"`
+	Id types.String `tfsdk:"id" tf:"optional"`
 	// The timestamp when the endpoint was last updated by a user in Unix time.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// The name of the serving endpoint.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// Information corresponding to the state of the serving endpoint.
-	State *EndpointState `tfsdk:"state"`
+	State *EndpointState `tfsdk:"state" tf:"optional"`
 	// Tags attached to the serving endpoint.
-	Tags []EndpointTag `tfsdk:"tags"`
+	Tags []EndpointTag `tfsdk:"tags" tf:"optional"`
 	// The task type of the serving endpoint.
-	Task types.String `tfsdk:"task"`
+	Task types.String `tfsdk:"task" tf:"optional"`
 }
 
 type ServingEndpointAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name"`
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
 type ServingEndpointAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []ServingEndpointPermission `tfsdk:"all_permissions"`
+	AllPermissions []ServingEndpointPermission `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name"`
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
 type ServingEndpointDetailed struct {
 	// The config that is currently being served by the endpoint.
-	Config *EndpointCoreConfigOutput `tfsdk:"config"`
+	Config *EndpointCoreConfigOutput `tfsdk:"config" tf:"optional"`
 	// The timestamp when the endpoint was created in Unix time.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
 	// The email of the user who created the serving endpoint.
-	Creator types.String `tfsdk:"creator"`
+	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// Information required to query DataPlane APIs.
-	DataPlaneInfo *ModelDataPlaneInfo `tfsdk:"data_plane_info"`
+	DataPlaneInfo *ModelDataPlaneInfo `tfsdk:"data_plane_info" tf:"optional"`
 	// Endpoint invocation url if route optimization is enabled for endpoint
-	EndpointUrl types.String `tfsdk:"endpoint_url"`
+	EndpointUrl types.String `tfsdk:"endpoint_url" tf:"optional"`
 	// System-generated ID of the endpoint. This is used to refer to the
 	// endpoint in the Permissions API
-	Id types.String `tfsdk:"id"`
+	Id types.String `tfsdk:"id" tf:"optional"`
 	// The timestamp when the endpoint was last updated by a user in Unix time.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// The name of the serving endpoint.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// The config that the endpoint is attempting to update to.
-	PendingConfig *EndpointPendingConfig `tfsdk:"pending_config"`
+	PendingConfig *EndpointPendingConfig `tfsdk:"pending_config" tf:"optional"`
 	// The permission level of the principal making the request.
-	PermissionLevel ServingEndpointDetailedPermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel ServingEndpointDetailedPermissionLevel `tfsdk:"permission_level" tf:"optional"`
 	// Boolean representing if route optimization has been enabled for the
 	// endpoint
-	RouteOptimized types.Bool `tfsdk:"route_optimized"`
+	RouteOptimized types.Bool `tfsdk:"route_optimized" tf:"optional"`
 	// Information corresponding to the state of the serving endpoint.
-	State *EndpointState `tfsdk:"state"`
+	State *EndpointState `tfsdk:"state" tf:"optional"`
 	// Tags attached to the serving endpoint.
-	Tags []EndpointTag `tfsdk:"tags"`
+	Tags []EndpointTag `tfsdk:"tags" tf:"optional"`
 	// The task type of the serving endpoint.
-	Task types.String `tfsdk:"task"`
+	Task types.String `tfsdk:"task" tf:"optional"`
 }
 
 // The permission level of the principal making the request.
@@ -1573,11 +1573,11 @@ func (f *ServingEndpointDetailedPermissionLevel) Type() string {
 }
 
 type ServingEndpointPermission struct {
-	Inherited types.Bool `tfsdk:"inherited"`
+	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -1611,21 +1611,21 @@ func (f *ServingEndpointPermissionLevel) Type() string {
 }
 
 type ServingEndpointPermissions struct {
-	AccessControlList []ServingEndpointAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList []ServingEndpointAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
 
-	ObjectId types.String `tfsdk:"object_id"`
+	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
-	ObjectType types.String `tfsdk:"object_type"`
+	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
 type ServingEndpointPermissionsDescription struct {
-	Description types.String `tfsdk:"description"`
+	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level" tf:"optional"`
 }
 
 type ServingEndpointPermissionsRequest struct {
-	AccessControlList []ServingEndpointAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList []ServingEndpointAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-" url:"-"`
 }
@@ -1645,26 +1645,26 @@ type StopAppResponse struct {
 
 type TrafficConfig struct {
 	// The list of routes that define traffic to each served entity.
-	Routes []Route `tfsdk:"routes"`
+	Routes []Route `tfsdk:"routes" tf:"optional"`
 }
 
 type UpdateAppRequest struct {
 	// The description of the app.
-	Description types.String `tfsdk:"description"`
+	Description types.String `tfsdk:"description" tf:"optional"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" url:"-"`
+	Name types.String `tfsdk:"name" tf:"" url:"-"`
 }
 
 type V1ResponseChoiceElement struct {
 	// The finish reason returned by the endpoint.
-	FinishReason types.String `tfsdk:"finishReason"`
+	FinishReason types.String `tfsdk:"finishReason" tf:"optional"`
 	// The index of the choice in the __chat or completions__ response.
-	Index types.Int64 `tfsdk:"index"`
+	Index types.Int64 `tfsdk:"index" tf:"optional"`
 	// The logprobs returned only by the __completions__ endpoint.
-	Logprobs types.Int64 `tfsdk:"logprobs"`
+	Logprobs types.Int64 `tfsdk:"logprobs" tf:"optional"`
 	// The message response from the __chat__ endpoint.
-	Message *ChatMessage `tfsdk:"message"`
+	Message *ChatMessage `tfsdk:"message" tf:"optional"`
 	// The text response from the __completions__ endpoint.
-	Text types.String `tfsdk:"text"`
+	Text types.String `tfsdk:"text" tf:"optional"`
 }

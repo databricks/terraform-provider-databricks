@@ -1503,7 +1503,7 @@ func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
 
 	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
 	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
-	assert.EqualError(t, removeTokenIfNeeded(wsApi, r.Schema, "x", d), noAuth, "remove")
+	assert.EqualError(t, removeTokenIfNeeded(wsApi, "x", d), noAuth, "remove")
 }
 
 func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
@@ -1533,7 +1533,7 @@ func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
 		for msg, err := range map[string]error{
 			"cannot create token: i'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
 			"cannot read token: i'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
-			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, r.Schema, "x", d),
+			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, "x", d),
 		} {
 			assert.EqualError(t, err, msg)
 		}

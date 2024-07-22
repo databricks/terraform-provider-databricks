@@ -82,6 +82,9 @@ func parseComment(s string) string {
 // This needs to be replaced with something a bit more robust in the future
 func sqlTableIsManagedProperty(key string) bool {
 	managedProps := map[string]bool{
+		// Property set if the table uses `cluster_keys`.
+		"clusteringColumns": true,
+
 		"delta.lastCommitTimestamp":                                true,
 		"delta.lastUpdateVersion":                                  true,
 		"delta.minReaderVersion":                                   true,

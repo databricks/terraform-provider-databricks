@@ -365,6 +365,44 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
 }
 
+func TestResourcePermissionsRead_Dashboard(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/dashboards/abc",
+				Response: ObjectACL{
+					ObjectID:   "dashboards/abc",
+					ObjectType: "dashboard",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_READ",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		New:      true,
+		ID:       "/dashboards/abc",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "/dashboards/abc", d.Id())
+	ac := d.Get("access_control").(*schema.Set)
+	assert.Equal(t, "abc", d.Get("dashboard_id").(string))
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_READ", firstElem["permission_level"])
+}
+
 func TestResourcePermissionsRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -57,6 +57,18 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the dashboard.
 
+## Access Control
+
+[databricks_permissions](permissions.md#dashboard-usage) can control which groups or individual users can *Manage*, *Edit*, *Read* or *Run* individual dashboards.
+
+## Import
+
+You can import a `databricks_dashboard` resource with ID like the following:
+
+```bash
+terraform import databricks_dashboard.this <dashboard-id>
+```
+
 ## Notes
 * Only one of `serialized_dashboard` or `file_path` can be used throughout the lifecycle of the dashboard. If you want to switch from one to the other, you must first destroy the dashboard resource and then recreate it with the new attribute.
 * Dashboards managed by Terraform will be published automatically.

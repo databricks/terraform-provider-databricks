@@ -2,10 +2,12 @@ package acceptance
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -94,10 +96,11 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 }
 
 func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
+	pipelineName := fmt.Sprintf("pipeline-acceptance-aws-%s", qa.RandomName())
 	workspaceLevel(t, step{
 		Template: `
 		locals {
-			name = "pipeline-acceptance-aws-{var.RANDOM}"
+			name = "` + pipelineName + `"
 		}
 		resource "databricks_pipeline" "this" {
 			name = local.name
@@ -137,7 +140,7 @@ func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 	}, step{
 		Template: `
 		locals {
-			name = "pipeline-acceptance-aws-{var.RANDOM}"
+			name = "` + pipelineName + `"
 		}
 		resource "databricks_pipeline" "this" {
 			name = local.name
@@ -227,4 +230,116 @@ func TestAccPipelineResource_CreatePipelineWithoutWorkers(t *testing.T) {
 		},
 		),
 	})
+}
+
+func TestAccPipelineResourcLastModified(t *testing.T) {
+	var lastModified int64
+	pipelineName := fmt.Sprintf("pipeline-acceptance-%s", qa.RandomName())
+	workspaceLevel(t, step{
+		Template: `
+		locals {
+			name = "` + pipelineName + `"
+		}
+		resource "databricks_pipeline" "this" {
+			name = local.name
+			storage = "/test/${local.name}"
+
+			configuration = {
+				key1 = "value1"
+				key2 = "value2"
+			}
+
+			library {
+				notebook {
+					path = databricks_notebook.this.path
+				}
+			}
+
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "default"
+				num_workers = 2
+				custom_tags = {
+					cluster_type = "default"
+				}
+			}
+
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "maintenance"
+				num_workers = 1
+				custom_tags = {
+					cluster_type = "maintenance"
+				}
+			}
+			continuous = false
+		}
+		` + dltNotebookResource,
+		Check: resourceCheck("databricks_pipeline.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+			pipeline, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
+				PipelineId: id,
+			})
+			assert.NoError(t, err)
+			assert.Equal(t, pipeline.CreatorUserName, pipeline.RunAsUserName)
+			lastModified = pipeline.LastModified
+			return nil
+		}),
+	}, step{
+		Template: `
+		locals {
+			name = "` + pipelineName + `"
+		}
+		resource "databricks_pipeline" "this" {
+			name = local.name
+			storage = "/test/${local.name}"
+
+			configuration = {
+				key1 = "value1"
+				key2 = "value2"
+				key3 = "value3"
+			}
+
+			library {
+				notebook {
+					path = databricks_notebook.this.path
+				}
+			}
+
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "default"
+				num_workers = 2
+				custom_tags = {
+					cluster_type = "default"
+				}
+			}
+
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "maintenance"
+				num_workers = 1
+				custom_tags = {
+					cluster_type = "maintenance"
+				}
+			}
+			continuous = false
+			expected_last_modified = ` + fmt.Sprintf("%d", lastModified) + `
+		}
+		` + dltNotebookResource,
+		Check: resourceCheck("databricks_pipeline.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			ctx = context.WithValue(ctx, common.Api, common.API_2_1)
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+			pipeline, err := w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
+				PipelineId: id,
+			})
+			assert.NoError(t, err)
+			assert.NotEqual(t, pipeline.LastModified, lastModified)
+			return nil
+		}),
+	})
+
 }

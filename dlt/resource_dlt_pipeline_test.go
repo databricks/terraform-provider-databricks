@@ -116,7 +116,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateDeploying,
+				State:      pipelines.PipelineStateDeploying,
 				Spec:       &basicPipelineSpec,
 			}, nil).Once()
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
@@ -124,7 +124,7 @@ func TestResourcePipelineCreate(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &basicPipelineSpec,
 			}, nil).Once()
 
@@ -198,7 +198,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateFailed,
+				State:      pipelines.PipelineStateFailed,
 			}, nil).Once()
 			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
 				PipelineId: "abcd",
@@ -238,7 +238,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateFailed,
+				State:      pipelines.PipelineStateFailed,
 			}, nil).Once()
 
 			e.Delete(mock.Anything, pipelines.DeletePipelineRequest{
@@ -324,7 +324,7 @@ func TestResourcePipelineRead_Error(t *testing.T) {
 }
 
 func TestResourcePipelineUpdate(t *testing.T) {
-	state := StateRunning
+	state := pipelines.PipelineStateRunning
 	spec := pipelines.PipelineSpec{
 		Id:      "abcd",
 		Name:    "test",
@@ -410,7 +410,7 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 }
 
 func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
-	state := StateFailed
+	state := pipelines.PipelineStateFailed
 	spec := pipelines.PipelineSpec{
 		Id:      "abcd",
 		Name:    "test",
@@ -463,7 +463,7 @@ func TestResourcePipelineUpdate_FailsAfterUpdate(t *testing.T) {
 }
 
 func TestResourcePipelineDelete(t *testing.T) {
-	state := StateRunning
+	state := pipelines.PipelineStateRunning
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockPipelinesAPI().EXPECT()
@@ -659,7 +659,7 @@ func TestResourcePipelineCreateServerless(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "serverless",
 				Name:       "test-pipeline-serverless",
-				State:      StateDeploying,
+				State:      pipelines.PipelineStateDeploying,
 				Spec:       &serverlessPipelineSpec,
 			}, nil).Once()
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
@@ -667,7 +667,7 @@ func TestResourcePipelineCreateServerless(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "serverless",
 				Name:       "test-pipeline-serverless",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &serverlessPipelineSpec,
 			}, nil).Once()
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
@@ -675,7 +675,7 @@ func TestResourcePipelineCreateServerless(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "serverless",
 				Name:       "test-pipeline-serverless",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &serverlessPipelineSpec,
 			}, nil)
 		},
@@ -736,7 +736,7 @@ func TestZeroWorkers(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &basicPipelineSpec,
 			}, nil).Once()
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
@@ -744,7 +744,7 @@ func TestZeroWorkers(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &basicPipelineSpec,
 			}, nil).Once()
 		},
@@ -789,7 +789,7 @@ func TestAutoscaling(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &basicPipelineSpec,
 			}, nil).Once()
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
@@ -797,7 +797,7 @@ func TestAutoscaling(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &basicPipelineSpec,
 			}, nil).Once()
 		},
@@ -838,7 +838,7 @@ func TestDefault(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &basicPipelineSpec,
 			}, nil).Once()
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
@@ -846,7 +846,7 @@ func TestDefault(t *testing.T) {
 			}).Return(&pipelines.GetPipelineResponse{
 				PipelineId: "abcd",
 				Name:       "test-pipeline",
-				State:      StateRunning,
+				State:      pipelines.PipelineStateRunning,
 				Spec:       &basicPipelineSpec,
 			}, nil).Once()
 		},
@@ -860,4 +860,41 @@ func TestDefault(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abcd", d.Id())
+}
+
+func TestDryRun(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockPipelinesAPI().EXPECT()
+			e.Create(mock.Anything, pipelines.CreatePipeline{
+				Name:    "test-pipeline",
+				Channel: "CURRENT",
+				Edition: "ADVANCED",
+				Clusters: []pipelines.PipelineCluster{
+					{
+						Label: "default",
+					},
+				},
+				DryRun: true,
+			}).Return(&pipelines.CreatePipelineResponse{
+				EffectiveSettings: &pipelines.PipelineSpec{
+					Id:      "abcd",
+					Name:    "test-pipeline",
+					Channel: "CURRENT",
+					Edition: "ADVANCED",
+				},
+			}, nil)
+			e.Get(mock.Anything, pipelines.GetPipelineRequest{
+				PipelineId: "abcd",
+			}).Return(nil, apierr.ErrNotFound)
+		},
+		Create:   true,
+		Resource: ResourcePipeline(),
+		HCL: `name = "test-pipeline"
+		cluster {
+		  label = "default"
+		}
+		dry_run = true
+		`,
+	}.Apply(t)
 }

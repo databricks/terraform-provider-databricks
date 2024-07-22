@@ -156,11 +156,6 @@ func configureProviderAndReturnClient_PluginFramework(t *testing.T, tt providerF
 	p := GetDatabricksProviderPluginFramework()
 	ctx := context.Background()
 	rawConfig := tt.rawConfigPluginFramework()
-	// rawConfig := `
-	// 	provider "databricks" {
-	// 		host = y
-	// 	}
-	// `
 	var providerSchemaResponse provider.SchemaResponse
 	p.Schema(ctx, provider.SchemaRequest{}, &providerSchemaResponse)
 	configRequest := provider.ConfigureRequest{

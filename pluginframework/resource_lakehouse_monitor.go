@@ -44,27 +44,8 @@ func (r *LakehouseMonitorResource) Metadata(ctx context.Context, req resource.Me
 
 func (r *LakehouseMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Schema for lakehouse monitor",
-		// We would need similar method to common.StructToSchema but since this is PoC, we are not implementing it here
-		// Also this isn't complete, using incomplete schema for PoCs just to check if it's working
-		Attributes: map[string]schema.Attribute{
-			"assets_dir": schema.StringAttribute{
-				Description: "The directory to store monitoring assets (e.g. dashboard, metric tables)",
-				Optional:    true,
-			},
-			"baseline_table_name": schema.StringAttribute{
-				Description: "Name of the baseline table from which drift metrics are computed from Columns in the monitored table should also be present in the baseline table.",
-				Optional:    true,
-			},
-			"dashboard_id": schema.StringAttribute{
-				Description: "Id of dashboard that visualizes the computed metrics. This can be empty if the monitor is in PENDING state.",
-				Optional:    true,
-			},
-			"table_name": schema.StringAttribute{
-				Description: "The full name of the table to monitor. Format:__catalog_name__.__schema_name__.__table_name__.",
-				Required:    true,
-			},
-		},
+		Description: "Terraform schema for Databricks Lakehouse Monitor. MonitorInfo struct is used to create the schema",
+		Attributes:  common.PluginFrameworkStructToSchemaMap(catalog.MonitorInfo{}),
 	}
 }
 

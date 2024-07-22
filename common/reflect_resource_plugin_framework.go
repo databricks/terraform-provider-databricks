@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -384,8 +384,12 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 	return scm
 }
 
-func pluginFrameworkStructToSchema(v any) schema.Schema {
+func PluginFrameworkStructToSchema(v any) schema.Schema {
 	return schema.Schema{
-		Attributes: pluginFrameworkTypeToSchema(reflect.ValueOf(v)),
+		Attributes: PluginFrameworkStructToSchemaMap(v),
 	}
+}
+
+func PluginFrameworkStructToSchemaMap(v any) map[string]schema.Attribute {
+	return pluginFrameworkTypeToSchema(reflect.ValueOf(v))
 }

@@ -130,6 +130,7 @@ This block describes individual tasks:
 * `job_cluster_key` - (Optional) Identifier of the Job cluster specified in the `job_cluster` block.
 * `existing_cluster_id` - (Optional) Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*
 * `new_cluster` - (Optional) Task will run on a dedicated cluster.  See [databricks_cluster](cluster.md) documentation for specification. *Some parameters, such as `autotermination_minutes`, `is_pinned`, `workload_type` aren't supported!*
+* `environment_key` - (Optional) identifier of an `environment` block that is used to specify libraries.  Required for some tasks (`spark_python_task`, `python_wheel_task`, ...) running on serverless compute.
 * `run_if` - (Optional) An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. One of `ALL_SUCCESS`, `AT_LEAST_ONE_SUCCESS`, `NONE_FAILED`, `ALL_DONE`, `AT_LEAST_ONE_FAILED` or `ALL_FAILED`. When omitted, defaults to `ALL_SUCCESS`.
 * `retry_on_timeout` - (Optional) (Bool) An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on timeout.
 * `max_retries` - (Optional) (Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`.
@@ -276,6 +277,7 @@ resource "databricks_job" "sql_aggregation_job" {
 ```
 
 #### library Configuration Block
+
 This block descripes an optional library to be installed on the cluster that will execute the job. For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 
 ```hcl
@@ -287,6 +289,26 @@ resource "databricks_job" "this" {
   }
 }
 ```
+
+#### environment Configuration Block
+
+This block describes [an Environment](https://docs.databricks.com/en/compute/serverless/dependencies.html) that is used to specify libraries used by the tasks running on serverless compute.  This block contains following attributes:
+
+* `environment_key` - an unique identifier of the Environment.  It will be referenced from `environment_key` attribute of corresponding task.
+* `spec` - block describing the Environment. Consists of following attributes:
+  * `client` - (Required, string) client version used by the environment.
+  * `dependencies` - (list of strings) List of pip dependencies, as supported by the version of pip in this environment. Each dependency is a pip requirement file line.  See [API docs](https://docs.databricks.com/api/workspace/jobs/create#environments-spec-dependencies) for more information.
+
+```hcl
+  environment {
+    spec {
+      dependencies = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
+      client       = "1"
+    }
+    environment_key = "Default"
+  }
+```
+
 
 #### depends_on Configuration Block
 

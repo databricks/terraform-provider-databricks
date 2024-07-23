@@ -24,8 +24,17 @@ type DummyTfSdk struct {
 	NestedMap         map[string]DummyNestedTfSdk `tfsdk:"nested_map" tf:"optional"`
 	Repeated          []types.Int64               `tfsdk:"repeated" tf:"optional"`
 	Attributes        map[string]types.String     `tfsdk:"attributes" tf:"optional"`
+	EnumField         TestEnum                    `tfsdk:"enum_field" tf:"optional"`
 	Irrelevant        types.String                `tfsdk:"-"`
 }
+
+type TestEnum string
+
+const TestEnumA TestEnum = `TEST_ENUM_A`
+
+const TestEnumB TestEnum = `TEST_ENUM_B`
+
+const TestEnumC TestEnum = `TEST_ENUM_C`
 
 type DummyNestedTfSdk struct {
 	Name    types.String `tfsdk:"name" tf:"optional"`
@@ -46,6 +55,7 @@ type DummyGoSdk struct {
 	NestedMap         map[string]DummyNestedGoSdk `json:"nested_map"`
 	Repeated          []int64                     `json:"repeated"`
 	Attributes        map[string]string           `json:"attributes"`
+	EnumField         TestEnum                    `json:"enum_field"`
 	ForceSendFields   []string                    `json:"-"`
 }
 
@@ -124,6 +134,7 @@ var tfSdkStruct = DummyTfSdk{
 		},
 	},
 	Attributes: map[string]types.String{"key": types.StringValue("value")},
+	EnumField:  TestEnumA,
 	Repeated:   []types.Int64{types.Int64Value(12), types.Int64Value(34)},
 }
 

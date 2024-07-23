@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
@@ -23,7 +24,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/permissions"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
+
+	// "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -1335,19 +1337,20 @@ func TestSqlListObjects(t *testing.T) {
 	})
 }
 
+// ????
 func TestIncrementalListDLT(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/pipelines?max_results=50",
-			Response: pipelines.PipelineListResponse{
+			Response: pipelines.ListPipelinesResponse{
 				Statuses: []pipelines.PipelineStateInfo{
 					{
-						PipelineID: "abc",
+						PipelineId: "abc",
 						Name:       "abc",
 					},
 					{
-						PipelineID: "def",
+						PipelineId: "def",
 						Name:       "def",
 					},
 				},
@@ -1356,8 +1359,8 @@ func TestIncrementalListDLT(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/pipelines/abc",
-			Response: pipelines.PipelineInfo{
-				PipelineID:   "abc",
+			Response: pipelines.GetPipelineResponse{
+				PipelineId:   "abc",
 				Name:         "abc",
 				LastModified: 1681466931226,
 			},
@@ -1365,8 +1368,8 @@ func TestIncrementalListDLT(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/pipelines/def",
-			Response: pipelines.PipelineInfo{
-				PipelineID:   "def",
+			Response: pipelines.GetPipelineResponse{
+				PipelineId:   "def",
 				Name:         "def",
 				LastModified: 1690156900000,
 			},

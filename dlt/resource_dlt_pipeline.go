@@ -236,6 +236,14 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()
 	// s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
 	s.SchemaPath("url").SetComputed()
+	// Manually set the computed fields
+	s.SchemaPath("state").SetComputed()
+	s.SchemaPath("latest_updates").SetComputed()
+	s.SchemaPath("last_modified").SetComputed()
+	s.SchemaPath("health").SetComputed()
+	s.SchemaPath("cause").SetComputed()
+	s.SchemaPath("cluster_id").SetComputed()
+	s.SchemaPath("creator_user_name").SetComputed()
 
 	// SuppressDiff fields
 	s.SchemaPath("edition").SetSuppressDiff()

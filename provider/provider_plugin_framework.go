@@ -45,7 +45,7 @@ var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		pluginframework.ResourceLakehouseMonitor,
+		pluginframework.ResourceQualityMonitor,
 	}
 }
 

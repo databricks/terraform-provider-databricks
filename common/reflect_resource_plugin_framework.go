@@ -288,7 +288,7 @@ func checkTheStringInForceSendFields(fieldName string, forceSendFields []string)
 	return false
 }
 
-func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
+func pluginFrameworkResourceTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 	scm := map[string]schema.Attribute{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -310,7 +310,7 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 		if kind == reflect.Ptr {
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedScm := pluginFrameworkTypeToSchema(sv)
+			nestedScm := pluginFrameworkResourceTypeToSchema(sv)
 			scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: true}
 		} else if kind == reflect.Slice {
 			elem := typeField.Type.Elem()
@@ -331,7 +331,7 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 				scm[fieldName] = schema.ListAttribute{ElementType: types.StringType, Optional: true}
 			default:
 				// Nested struct
-				nestedScm := pluginFrameworkTypeToSchema(reflect.New(elem).Elem())
+				nestedScm := pluginFrameworkResourceTypeToSchema(reflect.New(elem).Elem())
 				scm[fieldName] = schema.ListNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: true}
 			}
 		} else if kind == reflect.Map {
@@ -353,7 +353,7 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 				scm[fieldName] = schema.MapAttribute{ElementType: types.StringType, Optional: true}
 			default:
 				// Nested struct
-				nestedScm := pluginFrameworkTypeToSchema(reflect.New(elem).Elem())
+				nestedScm := pluginFrameworkResourceTypeToSchema(reflect.New(elem).Elem())
 				scm[fieldName] = schema.MapNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: true}
 			}
 		} else if kind == reflect.Struct {
@@ -374,7 +374,7 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
 				elem := typeField.Type
 				sv := reflect.New(elem)
-				nestedScm := pluginFrameworkTypeToSchema(sv)
+				nestedScm := pluginFrameworkResourceTypeToSchema(sv)
 				scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: true}
 			}
 		} else {
@@ -384,12 +384,12 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 	return scm
 }
 
-func PluginFrameworkStructToSchema(v any) schema.Schema {
+func PluginFrameworkResourceStructToSchema(v any) schema.Schema {
 	return schema.Schema{
-		Attributes: PluginFrameworkStructToSchemaMap(v),
+		Attributes: PluginFrameworkResourceStructToSchemaMap(v),
 	}
 }
 
-func PluginFrameworkStructToSchemaMap(v any) map[string]schema.Attribute {
-	return pluginFrameworkTypeToSchema(reflect.ValueOf(v))
+func PluginFrameworkResourceStructToSchemaMap(v any) map[string]schema.Attribute {
+	return pluginFrameworkResourceTypeToSchema(reflect.ValueOf(v))
 }

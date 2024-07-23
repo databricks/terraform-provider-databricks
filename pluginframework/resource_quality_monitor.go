@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-const lakehouseMonitorDefaultProvisionTimeout = 15 * time.Minute
+const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
-	return retry.RetryContext(ctx, lakehouseMonitorDefaultProvisionTimeout, func() *retry.RetryError {
+	return retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
 		endpoint, err := w.QualityMonitors.GetByTableName(ctx, monitorName)
 		if err != nil {
 			return retry.NonRetryableError(err)
@@ -32,24 +32,25 @@ func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorN
 	})
 }
 
-func ResourceLakehouseMonitor() resource.Resource {
-	return &LakehouseMonitorResource{}
+func ResourceQualityMonitor() resource.Resource {
+	return &QualityMonitorResource{}
 }
 
-type LakehouseMonitorResource struct{}
+type QualityMonitorResource struct{}
 
-func (r *LakehouseMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_lakehouse_monitor_plugin_framework"
 }
 
-func (r *LakehouseMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Lakehouse Monitor. MonitorInfo struct is used to create the schema",
-		Attributes:  common.PluginFrameworkStructToSchemaMap(catalog.MonitorInfo{}),
+		// Attributes:  common.PluginFrameworkResourceStructToSchemaMap(catalog.MonitorInfo{}),
+		Attributes: map[string]schema.Attribute{},
 	}
 }
 
-func (r *LakehouseMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	c := common.DatabricksClient{}
 	w, err := c.WorkspaceClient()
 	if err != nil {
@@ -74,7 +75,7 @@ func (r *LakehouseMonitorResource) Create(ctx context.Context, req resource.Crea
 	}
 }
 
-func (r *LakehouseMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	c := common.DatabricksClient{}
 	w, err := c.WorkspaceClient()
 	if err != nil {
@@ -99,7 +100,7 @@ func (r *LakehouseMonitorResource) Read(ctx context.Context, req resource.ReadRe
 	}
 }
 
-func (r *LakehouseMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	c := common.DatabricksClient{}
 	w, err := c.WorkspaceClient()
 	if err != nil {
@@ -124,7 +125,7 @@ func (r *LakehouseMonitorResource) Update(ctx context.Context, req resource.Upda
 	}
 }
 
-func (r *LakehouseMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	c := common.DatabricksClient{}
 	w, err := c.WorkspaceClient()
 	if err != nil {

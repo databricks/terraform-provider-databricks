@@ -129,7 +129,7 @@ var tfSdkStruct = DummyTfSdk{
 
 func TestGetAndSetPluginFramework(t *testing.T) {
 	// Also test StructToSchema.
-	scm := PluginFrameworkStructToSchema(DummyTfSdk{})
+	scm := PluginFrameworkResourceStructToSchema(DummyTfSdk{})
 	state := tfsdk.State{
 		Schema: scm,
 	}

@@ -181,10 +181,10 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/clusters/spark-versions",
-				Response: clusters.SparkVersionsList{
-					SparkVersions: []clusters.SparkVersion{
+				Response: compute.GetSparkVersionsResponse{
+					Versions: []compute.SparkVersion{
 						{
-							Version: "Foo LTS",
+							Key: "Foo LTS",
 						},
 					},
 				},

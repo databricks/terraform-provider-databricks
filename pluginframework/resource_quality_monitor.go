@@ -45,8 +45,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Lakehouse Monitor. MonitorInfo struct is used to create the schema",
-		// Attributes:  common.PluginFrameworkResourceStructToSchemaMap(catalog.MonitorInfo{}),
-		Attributes: map[string]schema.Attribute{},
+		Attributes:  common.PluginFrameworkResourceStructToSchemaMap(catalog.MonitorInfo{}),
 	}
 }
 

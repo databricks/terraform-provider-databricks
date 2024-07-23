@@ -19,9 +19,9 @@ import (
 type AddBlock struct {
 	// The base64-encoded data to append to the stream. This has a limit of 1
 	// MB.
-	Data types.String `tfsdk:"data"`
+	Data types.String `tfsdk:"data" tf:""`
 	// The handle on an open stream.
-	Handle types.Int64 `tfsdk:"handle"`
+	Handle types.Int64 `tfsdk:"handle" tf:""`
 }
 
 type AddBlockResponse struct {
@@ -29,7 +29,7 @@ type AddBlockResponse struct {
 
 type Close struct {
 	// The handle on an open stream.
-	Handle types.Int64 `tfsdk:"handle"`
+	Handle types.Int64 `tfsdk:"handle" tf:""`
 }
 
 type CloseResponse struct {
@@ -37,9 +37,9 @@ type CloseResponse struct {
 
 type Create struct {
 	// The flag that specifies whether to overwrite existing file/files.
-	Overwrite types.Bool `tfsdk:"overwrite"`
+	Overwrite types.Bool `tfsdk:"overwrite" tf:"optional"`
 	// The path of the new file. The path should be the absolute DBFS path.
-	Path types.String `tfsdk:"path"`
+	Path types.String `tfsdk:"path" tf:""`
 }
 
 // Create a directory
@@ -54,16 +54,16 @@ type CreateDirectoryResponse struct {
 type CreateResponse struct {
 	// Handle which should subsequently be passed into the AddBlock and Close
 	// calls when writing to a file through a stream.
-	Handle types.Int64 `tfsdk:"handle"`
+	Handle types.Int64 `tfsdk:"handle" tf:"optional"`
 }
 
 type Delete struct {
 	// The path of the file or directory to delete. The path should be the
 	// absolute DBFS path.
-	Path types.String `tfsdk:"path"`
+	Path types.String `tfsdk:"path" tf:""`
 	// Whether or not to recursively delete the directory's contents. Deleting
 	// empty directories can be done without providing the recursive flag.
-	Recursive types.Bool `tfsdk:"recursive"`
+	Recursive types.Bool `tfsdk:"recursive" tf:"optional"`
 }
 
 // Delete a directory
@@ -86,16 +86,16 @@ type DeleteResponse struct {
 
 type DirectoryEntry struct {
 	// The length of the file in bytes. This field is omitted for directories.
-	FileSize types.Int64 `tfsdk:"file_size"`
+	FileSize types.Int64 `tfsdk:"file_size" tf:"optional"`
 	// True if the path is a directory.
-	IsDirectory types.Bool `tfsdk:"is_directory"`
+	IsDirectory types.Bool `tfsdk:"is_directory" tf:"optional"`
 	// Last modification time of given file in milliseconds since unix epoch.
-	LastModified types.Int64 `tfsdk:"last_modified"`
+	LastModified types.Int64 `tfsdk:"last_modified" tf:"optional"`
 	// The name of the file or directory. This is the last component of the
 	// path.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// The absolute path of the file or directory.
-	Path types.String `tfsdk:"path"`
+	Path types.String `tfsdk:"path" tf:"optional"`
 }
 
 // Download a file
@@ -116,13 +116,13 @@ type DownloadResponse struct {
 
 type FileInfo struct {
 	// The length of the file in bytes. This field is omitted for directories.
-	FileSize types.Int64 `tfsdk:"file_size"`
+	FileSize types.Int64 `tfsdk:"file_size" tf:"optional"`
 	// True if the path is a directory.
-	IsDir types.Bool `tfsdk:"is_dir"`
+	IsDir types.Bool `tfsdk:"is_dir" tf:"optional"`
 	// Last modification time of given file in milliseconds since epoch.
-	ModificationTime types.Int64 `tfsdk:"modification_time"`
+	ModificationTime types.Int64 `tfsdk:"modification_time" tf:"optional"`
 	// The absolute path of the file or directory.
-	Path types.String `tfsdk:"path"`
+	Path types.String `tfsdk:"path" tf:"optional"`
 }
 
 // Get directory metadata
@@ -190,20 +190,20 @@ type ListDirectoryContentsRequest struct {
 
 type ListDirectoryResponse struct {
 	// Array of DirectoryEntry.
-	Contents []DirectoryEntry `tfsdk:"contents"`
+	Contents []DirectoryEntry `tfsdk:"contents" tf:"optional"`
 	// A token, which can be sent as `page_token` to retrieve the next page.
-	NextPageToken types.String `tfsdk:"next_page_token"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
 type ListStatusResponse struct {
 	// A list of FileInfo's that describe contents of directory or file. See
 	// example above.
-	Files []FileInfo `tfsdk:"files"`
+	Files []FileInfo `tfsdk:"files" tf:"optional"`
 }
 
 type MkDirs struct {
 	// The path of the new directory. The path should be the absolute DBFS path.
-	Path types.String `tfsdk:"path"`
+	Path types.String `tfsdk:"path" tf:""`
 }
 
 type MkDirsResponse struct {
@@ -212,10 +212,10 @@ type MkDirsResponse struct {
 type Move struct {
 	// The destination path of the file or directory. The path should be the
 	// absolute DBFS path.
-	DestinationPath types.String `tfsdk:"destination_path"`
+	DestinationPath types.String `tfsdk:"destination_path" tf:""`
 	// The source path of the file or directory. The path should be the absolute
 	// DBFS path.
-	SourcePath types.String `tfsdk:"source_path"`
+	SourcePath types.String `tfsdk:"source_path" tf:""`
 }
 
 type MoveResponse struct {
@@ -223,11 +223,11 @@ type MoveResponse struct {
 
 type Put struct {
 	// This parameter might be absent, and instead a posted file will be used.
-	Contents types.String `tfsdk:"contents"`
+	Contents types.String `tfsdk:"contents" tf:"optional"`
 	// The flag that specifies whether to overwrite existing file/files.
-	Overwrite types.Bool `tfsdk:"overwrite"`
+	Overwrite types.Bool `tfsdk:"overwrite" tf:"optional"`
 	// The path of the new file. The path should be the absolute DBFS path.
-	Path types.String `tfsdk:"path"`
+	Path types.String `tfsdk:"path" tf:""`
 }
 
 type PutResponse struct {
@@ -248,9 +248,9 @@ type ReadResponse struct {
 	// The number of bytes read (could be less than ``length`` if we hit end of
 	// file). This refers to number of bytes read in unencoded version (response
 	// data is base64-encoded).
-	BytesRead types.Int64 `tfsdk:"bytes_read"`
+	BytesRead types.Int64 `tfsdk:"bytes_read" tf:"optional"`
 	// The base64-encoded contents of the file read.
-	Data types.String `tfsdk:"data"`
+	Data types.String `tfsdk:"data" tf:"optional"`
 }
 
 // Upload a file

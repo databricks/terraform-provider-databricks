@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -305,13 +306,14 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 		if fieldName == "-" {
 			continue
 		}
+		isOptional := fieldIsOptional(typeField)
 		// For now everything is marked as optional. TODO: add tf annotations for computed, optional, etc.
 		kind := typeField.Type.Kind()
 		if kind == reflect.Ptr {
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
 			nestedScm := pluginFrameworkTypeToSchema(sv)
-			scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: true}
+			scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}
 		} else if kind == reflect.Slice {
 			elem := typeField.Type.Elem()
 			if elem.Kind() == reflect.Ptr {
@@ -322,17 +324,17 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 			}
 			switch elem {
 			case reflect.TypeOf(types.Bool{}):
-				scm[fieldName] = schema.ListAttribute{ElementType: types.BoolType, Optional: true}
+				scm[fieldName] = schema.ListAttribute{ElementType: types.BoolType, Optional: isOptional, Required: !isOptional}
 			case reflect.TypeOf(types.Int64{}):
-				scm[fieldName] = schema.ListAttribute{ElementType: types.Int64Type, Optional: true}
+				scm[fieldName] = schema.ListAttribute{ElementType: types.Int64Type, Optional: isOptional, Required: !isOptional}
 			case reflect.TypeOf(types.Float64{}):
-				scm[fieldName] = schema.ListAttribute{ElementType: types.Float64Type, Optional: true}
+				scm[fieldName] = schema.ListAttribute{ElementType: types.Float64Type, Optional: isOptional, Required: !isOptional}
 			case reflect.TypeOf(types.String{}):
-				scm[fieldName] = schema.ListAttribute{ElementType: types.StringType, Optional: true}
+				scm[fieldName] = schema.ListAttribute{ElementType: types.StringType, Optional: isOptional, Required: !isOptional}
 			default:
 				// Nested struct
 				nestedScm := pluginFrameworkTypeToSchema(reflect.New(elem).Elem())
-				scm[fieldName] = schema.ListNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: true}
+				scm[fieldName] = schema.ListNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: isOptional, Required: !isOptional}
 			}
 		} else if kind == reflect.Map {
 			elem := typeField.Type.Elem()
@@ -344,28 +346,28 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 			}
 			switch elem {
 			case reflect.TypeOf(types.Bool{}):
-				scm[fieldName] = schema.MapAttribute{ElementType: types.BoolType, Optional: true}
+				scm[fieldName] = schema.MapAttribute{ElementType: types.BoolType, Optional: isOptional, Required: !isOptional}
 			case reflect.TypeOf(types.Int64{}):
-				scm[fieldName] = schema.MapAttribute{ElementType: types.Int64Type, Optional: true}
+				scm[fieldName] = schema.MapAttribute{ElementType: types.Int64Type, Optional: isOptional, Required: !isOptional}
 			case reflect.TypeOf(types.Float64{}):
-				scm[fieldName] = schema.MapAttribute{ElementType: types.Float64Type, Optional: true}
+				scm[fieldName] = schema.MapAttribute{ElementType: types.Float64Type, Optional: isOptional, Required: !isOptional}
 			case reflect.TypeOf(types.String{}):
-				scm[fieldName] = schema.MapAttribute{ElementType: types.StringType, Optional: true}
+				scm[fieldName] = schema.MapAttribute{ElementType: types.StringType, Optional: isOptional, Required: !isOptional}
 			default:
 				// Nested struct
 				nestedScm := pluginFrameworkTypeToSchema(reflect.New(elem).Elem())
-				scm[fieldName] = schema.MapNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: true}
+				scm[fieldName] = schema.MapNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: isOptional, Required: !isOptional}
 			}
 		} else if kind == reflect.Struct {
 			switch field.v.Interface().(type) {
 			case types.Bool:
-				scm[fieldName] = schema.BoolAttribute{Optional: true}
+				scm[fieldName] = schema.BoolAttribute{Optional: isOptional, Required: !isOptional}
 			case types.Int64:
-				scm[fieldName] = schema.Int64Attribute{Optional: true}
+				scm[fieldName] = schema.Int64Attribute{Optional: isOptional, Required: !isOptional}
 			case types.Float64:
-				scm[fieldName] = schema.Float64Attribute{Optional: true}
+				scm[fieldName] = schema.Float64Attribute{Optional: isOptional, Required: !isOptional}
 			case types.String:
-				scm[fieldName] = schema.StringAttribute{Optional: true}
+				scm[fieldName] = schema.StringAttribute{Optional: isOptional, Required: !isOptional}
 			case types.List:
 				panic("types.List should never be used in tfsdk structs")
 			case types.Map:
@@ -375,13 +377,18 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 				elem := typeField.Type
 				sv := reflect.New(elem)
 				nestedScm := pluginFrameworkTypeToSchema(sv)
-				scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: true}
+				scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}
 			}
 		} else {
 			panic(fmt.Errorf("unknown type for field: %s", typeField.Name))
 		}
 	}
 	return scm
+}
+
+func fieldIsOptional(field reflect.StructField) bool {
+	tagValue := field.Tag.Get("tf")
+	return strings.Contains(tagValue, "optional")
 }
 
 func pluginFrameworkStructToSchema(v any) schema.Schema {

@@ -18,38 +18,38 @@ import (
 
 type AccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel PermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel PermissionLevel `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name"`
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
 type AccessControlResponse struct {
 	// All permissions.
-	AllPermissions []Permission `tfsdk:"all_permissions"`
+	AllPermissions []Permission `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name"`
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
 type ComplexValue struct {
-	Display types.String `tfsdk:"display"`
+	Display types.String `tfsdk:"display" tf:"optional"`
 
-	Primary types.Bool `tfsdk:"primary"`
+	Primary types.Bool `tfsdk:"primary" tf:"optional"`
 
-	Ref types.String `tfsdk:"$ref"`
+	Ref types.String `tfsdk:"$ref" tf:"optional"`
 
-	Type types.String `tfsdk:"type"`
+	Type types.String `tfsdk:"type" tf:"optional"`
 
-	Value types.String `tfsdk:"value"`
+	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
 // Delete a group
@@ -148,7 +148,7 @@ type GetAssignableRolesForResourceRequest struct {
 }
 
 type GetAssignableRolesForResourceResponse struct {
-	Roles []Role `tfsdk:"roles"`
+	Roles []Role `tfsdk:"roles" tf:"optional"`
 }
 
 // Get group details
@@ -159,7 +159,7 @@ type GetGroupRequest struct {
 
 type GetPasswordPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []PasswordPermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels []PasswordPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
 }
 
 // Get object permission levels
@@ -172,7 +172,7 @@ type GetPermissionLevelsRequest struct {
 
 type GetPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []PermissionsDescription `tfsdk:"permission_levels"`
+	PermissionLevels []PermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
 }
 
 // Get object permissions
@@ -269,33 +269,33 @@ type GetWorkspaceAssignmentRequest struct {
 
 type GrantRule struct {
 	// Principals this grant rule applies to.
-	Principals []types.String `tfsdk:"principals"`
+	Principals []types.String `tfsdk:"principals" tf:"optional"`
 	// Role that is assigned to the list of principals.
-	Role types.String `tfsdk:"role"`
+	Role types.String `tfsdk:"role" tf:""`
 }
 
 type Group struct {
 	// String that represents a human-readable group name
-	DisplayName types.String `tfsdk:"displayName"`
+	DisplayName types.String `tfsdk:"displayName" tf:"optional"`
 	// Entitlements assigned to the group. See [assigning entitlements] for a
 	// full list of supported values.
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
-	Entitlements []ComplexValue `tfsdk:"entitlements"`
+	Entitlements []ComplexValue `tfsdk:"entitlements" tf:"optional"`
 
-	ExternalId types.String `tfsdk:"externalId"`
+	ExternalId types.String `tfsdk:"externalId" tf:"optional"`
 
-	Groups []ComplexValue `tfsdk:"groups"`
+	Groups []ComplexValue `tfsdk:"groups" tf:"optional"`
 	// Databricks group ID
-	Id types.String `tfsdk:"id" url:"-"`
+	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Members []ComplexValue `tfsdk:"members"`
+	Members []ComplexValue `tfsdk:"members" tf:"optional"`
 	// Container for the group identifier. Workspace local versus account.
-	Meta *ResourceMeta `tfsdk:"meta"`
+	Meta *ResourceMeta `tfsdk:"meta" tf:"optional"`
 	// Corresponds to AWS instance profile/arn role.
-	Roles []ComplexValue `tfsdk:"roles"`
+	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
 	// The schema of the group.
-	Schemas []GroupSchema `tfsdk:"schemas"`
+	Schemas []GroupSchema `tfsdk:"schemas" tf:"optional"`
 }
 
 type GroupSchema string
@@ -422,16 +422,16 @@ type ListGroupsRequest struct {
 
 type ListGroupsResponse struct {
 	// Total results returned in the response.
-	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage"`
+	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
 	// User objects returned in the response.
-	Resources []Group `tfsdk:"Resources"`
+	Resources []Group `tfsdk:"Resources" tf:"optional"`
 	// The schema of the service principal.
-	Schemas []ListResponseSchema `tfsdk:"schemas"`
+	Schemas []ListResponseSchema `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
-	StartIndex types.Int64 `tfsdk:"startIndex"`
+	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
 	// Total results that match the request filters.
-	TotalResults types.Int64 `tfsdk:"totalResults"`
+	TotalResults types.Int64 `tfsdk:"totalResults" tf:"optional"`
 }
 
 type ListResponseSchema string
@@ -461,16 +461,16 @@ func (f *ListResponseSchema) Type() string {
 
 type ListServicePrincipalResponse struct {
 	// Total results returned in the response.
-	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage"`
+	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
 	// User objects returned in the response.
-	Resources []ServicePrincipal `tfsdk:"Resources"`
+	Resources []ServicePrincipal `tfsdk:"Resources" tf:"optional"`
 	// The schema of the List response.
-	Schemas []ListResponseSchema `tfsdk:"schemas"`
+	Schemas []ListResponseSchema `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
-	StartIndex types.Int64 `tfsdk:"startIndex"`
+	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
 	// Total results that match the request filters.
-	TotalResults types.Int64 `tfsdk:"totalResults"`
+	TotalResults types.Int64 `tfsdk:"totalResults" tf:"optional"`
 }
 
 // List service principals
@@ -551,16 +551,16 @@ type ListUsersRequest struct {
 
 type ListUsersResponse struct {
 	// Total results returned in the response.
-	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage"`
+	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
 	// User objects returned in the response.
-	Resources []User `tfsdk:"Resources"`
+	Resources []User `tfsdk:"Resources" tf:"optional"`
 	// The schema of the List response.
-	Schemas []ListResponseSchema `tfsdk:"schemas"`
+	Schemas []ListResponseSchema `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
-	StartIndex types.Int64 `tfsdk:"startIndex"`
+	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
 	// Total results that match the request filters.
-	TotalResults types.Int64 `tfsdk:"totalResults"`
+	TotalResults types.Int64 `tfsdk:"totalResults" tf:"optional"`
 }
 
 // Get permission assignments
@@ -571,59 +571,59 @@ type ListWorkspaceAssignmentRequest struct {
 
 type Name struct {
 	// Family name of the Databricks user.
-	FamilyName types.String `tfsdk:"familyName"`
+	FamilyName types.String `tfsdk:"familyName" tf:"optional"`
 	// Given name of the Databricks user.
-	GivenName types.String `tfsdk:"givenName"`
+	GivenName types.String `tfsdk:"givenName" tf:"optional"`
 }
 
 type ObjectPermissions struct {
-	AccessControlList []AccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList []AccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
 
-	ObjectId types.String `tfsdk:"object_id"`
+	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
-	ObjectType types.String `tfsdk:"object_type"`
+	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
 type PartialUpdate struct {
 	// Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-" url:"-"`
 
-	Operations []Patch `tfsdk:"Operations"`
+	Operations []Patch `tfsdk:"Operations" tf:"optional"`
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
-	Schemas []PatchSchema `tfsdk:"schemas"`
+	Schemas []PatchSchema `tfsdk:"schemas" tf:"optional"`
 }
 
 type PasswordAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name"`
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
 type PasswordAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []PasswordPermission `tfsdk:"all_permissions"`
+	AllPermissions []PasswordPermission `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name"`
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
 type PasswordPermission struct {
-	Inherited types.Bool `tfsdk:"inherited"`
+	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -653,30 +653,30 @@ func (f *PasswordPermissionLevel) Type() string {
 }
 
 type PasswordPermissions struct {
-	AccessControlList []PasswordAccessControlResponse `tfsdk:"access_control_list"`
+	AccessControlList []PasswordAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
 
-	ObjectId types.String `tfsdk:"object_id"`
+	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
-	ObjectType types.String `tfsdk:"object_type"`
+	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
 type PasswordPermissionsDescription struct {
-	Description types.String `tfsdk:"description"`
+	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PasswordPermissionsRequest struct {
-	AccessControlList []PasswordAccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList []PasswordAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 }
 
 type Patch struct {
 	// Type of patch operation.
-	Op PatchOp `tfsdk:"op"`
+	Op PatchOp `tfsdk:"op" tf:"optional"`
 	// Selection of patch operation
-	Path types.String `tfsdk:"path"`
+	Path types.String `tfsdk:"path" tf:"optional"`
 	// Value to modify
-	Value any `tfsdk:"value"`
+	Value any `tfsdk:"value" tf:"optional"`
 }
 
 // Type of patch operation.
@@ -738,25 +738,25 @@ func (f *PatchSchema) Type() string {
 }
 
 type Permission struct {
-	Inherited types.Bool `tfsdk:"inherited"`
+	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel PermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel PermissionLevel `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PermissionAssignment struct {
 	// Error response associated with a workspace permission assignment, if any.
-	Error types.String `tfsdk:"error"`
+	Error types.String `tfsdk:"error" tf:"optional"`
 	// The permissions level of the principal.
-	Permissions []WorkspacePermission `tfsdk:"permissions"`
+	Permissions []WorkspacePermission `tfsdk:"permissions" tf:"optional"`
 	// Information about the principal assigned to the workspace.
-	Principal *PrincipalOutput `tfsdk:"principal"`
+	Principal *PrincipalOutput `tfsdk:"principal" tf:"optional"`
 }
 
 type PermissionAssignments struct {
 	// Array of permissions assignments defined for a workspace.
-	PermissionAssignments []PermissionAssignment `tfsdk:"permission_assignments"`
+	PermissionAssignments []PermissionAssignment `tfsdk:"permission_assignments" tf:"optional"`
 }
 
 // Permission level
@@ -817,37 +817,37 @@ func (f *PermissionLevel) Type() string {
 
 type PermissionMigrationRequest struct {
 	// The name of the workspace group that permissions will be migrated from.
-	FromWorkspaceGroupName types.String `tfsdk:"from_workspace_group_name"`
+	FromWorkspaceGroupName types.String `tfsdk:"from_workspace_group_name" tf:""`
 	// The maximum number of permissions that will be migrated.
-	Size types.Int64 `tfsdk:"size"`
+	Size types.Int64 `tfsdk:"size" tf:"optional"`
 	// The name of the account group that permissions will be migrated to.
-	ToAccountGroupName types.String `tfsdk:"to_account_group_name"`
+	ToAccountGroupName types.String `tfsdk:"to_account_group_name" tf:""`
 	// WorkspaceId of the associated workspace where the permission migration
 	// will occur. Both workspace group and account group must be in this
 	// workspace.
-	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
+	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:""`
 }
 
 type PermissionMigrationResponse struct {
 	// Number of permissions migrated.
-	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated"`
+	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated" tf:"optional"`
 }
 
 type PermissionOutput struct {
 	// The results of a permissions query.
-	Description types.String `tfsdk:"description"`
+	Description types.String `tfsdk:"description" tf:"optional"`
 
-	PermissionLevel WorkspacePermission `tfsdk:"permission_level"`
+	PermissionLevel WorkspacePermission `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PermissionsDescription struct {
-	Description types.String `tfsdk:"description"`
+	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel PermissionLevel `tfsdk:"permission_level"`
+	PermissionLevel PermissionLevel `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PermissionsRequest struct {
-	AccessControlList []AccessControlRequest `tfsdk:"access_control_list"`
+	AccessControlList []AccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-" url:"-"`
 	// The type of the request object. Can be one of the following:
@@ -859,71 +859,71 @@ type PermissionsRequest struct {
 
 type PrincipalOutput struct {
 	// The display name of the principal.
-	DisplayName types.String `tfsdk:"display_name"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// The group name of the group. Present only if the principal is a group.
-	GroupName types.String `tfsdk:"group_name"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// The unique, opaque id of the principal.
-	PrincipalId types.Int64 `tfsdk:"principal_id"`
+	PrincipalId types.Int64 `tfsdk:"principal_id" tf:"optional"`
 	// The name of the service principal. Present only if the principal is a
 	// service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// The username of the user. Present only if the principal is a user.
-	UserName types.String `tfsdk:"user_name"`
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
 type ResourceMeta struct {
 	// Identifier for group type. Can be local workspace group
 	// (`WorkspaceGroup`) or account group (`Group`).
-	ResourceType types.String `tfsdk:"resourceType"`
+	ResourceType types.String `tfsdk:"resourceType" tf:"optional"`
 }
 
 type Role struct {
 	// Role to assign to a principal or a list of principals on a resource.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:""`
 }
 
 type RuleSetResponse struct {
 	// Identifies the version of the rule set returned.
-	Etag types.String `tfsdk:"etag"`
+	Etag types.String `tfsdk:"etag" tf:"optional"`
 
-	GrantRules []GrantRule `tfsdk:"grant_rules"`
+	GrantRules []GrantRule `tfsdk:"grant_rules" tf:"optional"`
 	// Name of the rule set.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
 type RuleSetUpdateRequest struct {
 	// The expected etag of the rule set to update. The update will fail if the
 	// value does not match the value that is stored in account access control
 	// service.
-	Etag types.String `tfsdk:"etag"`
+	Etag types.String `tfsdk:"etag" tf:""`
 
-	GrantRules []GrantRule `tfsdk:"grant_rules"`
+	GrantRules []GrantRule `tfsdk:"grant_rules" tf:"optional"`
 	// Name of the rule set.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:""`
 }
 
 type ServicePrincipal struct {
 	// If this user is active
-	Active types.Bool `tfsdk:"active"`
+	Active types.Bool `tfsdk:"active" tf:"optional"`
 	// UUID relating to the service principal
-	ApplicationId types.String `tfsdk:"applicationId"`
+	ApplicationId types.String `tfsdk:"applicationId" tf:"optional"`
 	// String that represents a concatenation of given and family names.
-	DisplayName types.String `tfsdk:"displayName"`
+	DisplayName types.String `tfsdk:"displayName" tf:"optional"`
 	// Entitlements assigned to the service principal. See [assigning
 	// entitlements] for a full list of supported values.
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
-	Entitlements []ComplexValue `tfsdk:"entitlements"`
+	Entitlements []ComplexValue `tfsdk:"entitlements" tf:"optional"`
 
-	ExternalId types.String `tfsdk:"externalId"`
+	ExternalId types.String `tfsdk:"externalId" tf:"optional"`
 
-	Groups []ComplexValue `tfsdk:"groups"`
+	Groups []ComplexValue `tfsdk:"groups" tf:"optional"`
 	// Databricks service principal ID.
-	Id types.String `tfsdk:"id"`
+	Id types.String `tfsdk:"id" tf:"optional"`
 	// Corresponds to AWS instance profile/arn role.
-	Roles []ComplexValue `tfsdk:"roles"`
+	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
 	// The schema of the List response.
-	Schemas []ServicePrincipalSchema `tfsdk:"schemas"`
+	Schemas []ServicePrincipalSchema `tfsdk:"schemas" tf:"optional"`
 }
 
 type ServicePrincipalSchema string
@@ -956,16 +956,16 @@ type UpdateResponse struct {
 
 type UpdateRuleSetRequest struct {
 	// Name of the rule set.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:""`
 
-	RuleSet RuleSetUpdateRequest `tfsdk:"rule_set"`
+	RuleSet RuleSetUpdateRequest `tfsdk:"rule_set" tf:""`
 }
 
 type UpdateWorkspaceAssignments struct {
 	// Array of permissions assignments to update on the workspace. Note that
 	// excluding this field will have the same effect as providing an empty list
 	// which will result in the deletion of all permissions for the principal.
-	Permissions []WorkspacePermission `tfsdk:"permissions"`
+	Permissions []WorkspacePermission `tfsdk:"permissions" tf:""`
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-" url:"-"`
 	// The workspace ID.
@@ -974,36 +974,36 @@ type UpdateWorkspaceAssignments struct {
 
 type User struct {
 	// If this user is active
-	Active types.Bool `tfsdk:"active"`
+	Active types.Bool `tfsdk:"active" tf:"optional"`
 	// String that represents a concatenation of given and family names. For
 	// example `John Smith`. This field cannot be updated through the Workspace
 	// SCIM APIs when [identity federation is enabled]. Use Account SCIM APIs to
 	// update `displayName`.
 	//
 	// [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
-	DisplayName types.String `tfsdk:"displayName"`
+	DisplayName types.String `tfsdk:"displayName" tf:"optional"`
 	// All the emails associated with the Databricks user.
-	Emails []ComplexValue `tfsdk:"emails"`
+	Emails []ComplexValue `tfsdk:"emails" tf:"optional"`
 	// Entitlements assigned to the user. See [assigning entitlements] for a
 	// full list of supported values.
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
-	Entitlements []ComplexValue `tfsdk:"entitlements"`
+	Entitlements []ComplexValue `tfsdk:"entitlements" tf:"optional"`
 	// External ID is not currently supported. It is reserved for future use.
-	ExternalId types.String `tfsdk:"externalId"`
+	ExternalId types.String `tfsdk:"externalId" tf:"optional"`
 
-	Groups []ComplexValue `tfsdk:"groups"`
+	Groups []ComplexValue `tfsdk:"groups" tf:"optional"`
 	// Databricks user ID. This is automatically set by Databricks. Any value
 	// provided by the client will be ignored.
-	Id types.String `tfsdk:"id"`
+	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Name *Name `tfsdk:"name"`
+	Name *Name `tfsdk:"name" tf:"optional"`
 	// Corresponds to AWS instance profile/arn role.
-	Roles []ComplexValue `tfsdk:"roles"`
+	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
 	// The schema of the user.
-	Schemas []UserSchema `tfsdk:"schemas"`
+	Schemas []UserSchema `tfsdk:"schemas" tf:"optional"`
 	// Email address of the Databricks user.
-	UserName types.String `tfsdk:"userName"`
+	UserName types.String `tfsdk:"userName" tf:"optional"`
 }
 
 type UserSchema string
@@ -1064,5 +1064,5 @@ func (f *WorkspacePermission) Type() string {
 
 type WorkspacePermissions struct {
 	// Array of permissions defined for a workspace.
-	Permissions []PermissionOutput `tfsdk:"permissions"`
+	Permissions []PermissionOutput `tfsdk:"permissions" tf:"optional"`
 }

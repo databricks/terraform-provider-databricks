@@ -11,25 +11,25 @@ import (
 )
 
 type DummyTfSdk struct {
-	Enabled           types.Bool                  `tfsdk:"enabled",tf:"optional"`
-	Workers           types.Int64                 `tfsdk:"workers"`
-	Floats            types.Float64               `tfsdk:"floats"`
-	Description       types.String                `tfsdk:"description"`
-	Tasks             types.String                `tfsdk:"task"`
-	Nested            *DummyNestedTfSdk           `tfsdk:"nested"`
-	NoPointerNested   DummyNestedTfSdk            `tfsdk:"no_pointer_nested"`
-	NestedList        []DummyNestedTfSdk          `tfsdk:"nested_list"`
-	NestedPointerList []*DummyNestedTfSdk         `tfsdk:"nested_pointer_list"`
-	Map               map[string]types.String     `tfsdk:"map"`
-	NestedMap         map[string]DummyNestedTfSdk `tfsdk:"nested_map"`
-	Repeated          []types.Int64               `tfsdk:"repeated"`
-	Attributes        map[string]types.String     `tfsdk:"attributes"`
+	Enabled           types.Bool                  `tfsdk:"enabled" tf:"optional"`
+	Workers           types.Int64                 `tfsdk:"workers" tf:""` // Test required field
+	Floats            types.Float64               `tfsdk:"floats" tf:""`  // Test required field
+	Description       types.String                `tfsdk:"description" tf:""`
+	Tasks             types.String                `tfsdk:"task" tf:"optional"`
+	Nested            *DummyNestedTfSdk           `tfsdk:"nested" tf:"optional"`
+	NoPointerNested   DummyNestedTfSdk            `tfsdk:"no_pointer_nested" tf:"optional"`
+	NestedList        []DummyNestedTfSdk          `tfsdk:"nested_list" tf:"optional"`
+	NestedPointerList []*DummyNestedTfSdk         `tfsdk:"nested_pointer_list" tf:"optional"`
+	Map               map[string]types.String     `tfsdk:"map" tf:"optional"`
+	NestedMap         map[string]DummyNestedTfSdk `tfsdk:"nested_map" tf:"optional"`
+	Repeated          []types.Int64               `tfsdk:"repeated" tf:"optional"`
+	Attributes        map[string]types.String     `tfsdk:"attributes" tf:"optional"`
 	Irrelevant        types.String                `tfsdk:"-"`
 }
 
 type DummyNestedTfSdk struct {
-	Name    types.String `tfsdk:"name"`
-	Enabled types.Bool   `tfsdk:"enabled"`
+	Name    types.String `tfsdk:"name" tf:"optional"`
+	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
 }
 
 type DummyGoSdk struct {
@@ -133,6 +133,11 @@ func TestGetAndSetPluginFramework(t *testing.T) {
 	state := tfsdk.State{
 		Schema: scm,
 	}
+
+	// Test optional is being handled properly.
+	assert.True(t, scm.Attributes["enabled"].IsOptional())
+	assert.True(t, scm.Attributes["workers"].IsRequired())
+	assert.True(t, scm.Attributes["floats"].IsRequired())
 
 	// Assert that we can set state from the tfsdk struct.
 	diags := state.Set(ctx, tfSdkStruct)

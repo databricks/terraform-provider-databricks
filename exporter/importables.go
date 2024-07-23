@@ -2413,37 +2413,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			if cat.IsolationMode == "ISOLATED" {
-				securable := "catalog"
-				bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindings(ic.Context, catalog.GetBindingsRequest{
-					SecurableName: cat.Name,
-					SecurableType: catalog.GetBindingsSecurableType(securable),
-				})
-				if err == nil {
-					for _, binding := range bindings.Bindings {
-						id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securable, cat.Name)
-						// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
-						// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now
-						// to decrease a number of API calls.
-						d := ic.Resources["databricks_catalog_workspace_binding"].Data(
-							&terraform.InstanceState{
-								ID: id,
-								Attributes: map[string]string{
-									"workspace_id":   fmt.Sprintf("%d", binding.WorkspaceId),
-									"securable_type": securable,
-									"securable_name": cat.Name,
-									"binding_type":   binding.BindingType.String(),
-								},
-							})
-						ic.Emit(&resource{
-							Resource: "databricks_catalog_workspace_binding",
-							ID:       id,
-							Name:     fmt.Sprintf("%s_%s_ws_%d", securable, cat.Name, binding.WorkspaceId),
-							Data:     d,
-						})
-					}
-				} else {
-					log.Printf("[ERROR] listing catalog bindings: %s", err.Error())
-				}
+				ic.emitWorkspaceBindings("catalog", cat.Name)
 			}
 			return nil
 		},
@@ -2684,6 +2654,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-storage-credentials",
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUCGrantsWithOwner("storage_credential/"+r.ID, r)
+			if r.Data != nil {
+				isolationMode := r.Data.Get("isolation_mode").(string)
+				if isolationMode == "ISOLATION_MODE_ISOLATED" {
+					ic.emitWorkspaceBindings("storage_credential", r.ID)
+				}
+			}
 			return nil
 		},
 		List: func(ic *importContext) error {
@@ -2699,7 +2675,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: shouldOmitForUnityCatalog,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "isolation_mode" {
+				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
+			}
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		},
 		Depends: []reference{
 			{Path: "azure_service_principal.client_secret", Variable: true},
 		},
@@ -2714,6 +2695,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_storage_credential",
 				ID:       credentialName,
 			})
+			if r.Data != nil {
+				isolationMode := r.Data.Get("isolation_mode").(string)
+				if isolationMode == "ISOLATION_MODE_ISOLATED" {
+					ic.emitWorkspaceBindings("external_location", r.ID)
+				}
+			}
 			// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "storage_credential/" + credentialName})
 			return nil
 		},
@@ -2732,7 +2719,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: shouldOmitForUnityCatalog,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "isolation_mode" {
+				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
+			}
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		},
 		// This external location is automatically created when metastore is created with the `storage_root`
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.ID == "metastore_default_location"
@@ -2966,11 +2958,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "metastore_id", Resource: "databricks_metastore"},
 		},
 	},
-	"databricks_catalog_workspace_binding": {
+	"databricks_workspace_binding": {
 		WorkspaceLevel: true,
 		Service:        "uc-catalogs",
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "securable_name" {
+				return d.Get(pathString).(string) == ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
 		Depends: []reference{
-			{Path: "securable_name", Resource: "databricks_catalog", Match: "name"},
+			{Path: "securable_name", Resource: "databricks_catalog", Match: "name",
+				IsValidApproximation: isMatchingSecurableTypeAndName, SkipDirectLookup: true},
+			{Path: "securable_name", Resource: "databricks_storage_credential", Match: "name",
+				IsValidApproximation: isMatchingSecurableTypeAndName, SkipDirectLookup: true},
+			{Path: "securable_name", Resource: "databricks_external_location", Match: "name",
+				IsValidApproximation: isMatchingSecurableTypeAndName, SkipDirectLookup: true},
 		},
 	},
 	"databricks_file": {

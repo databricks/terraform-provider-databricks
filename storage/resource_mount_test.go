@@ -271,13 +271,13 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/spark-versions",
+				Resource:     "/api/2.1/clusters/spark-versions",
 				Response:     sparkVersionsResponse,
 				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				ReuseRequest: true,
 				Response:     nodeListResponse,
 			},
@@ -1480,13 +1480,13 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/spark-versions",
+				Resource:     "/api/2.1/clusters/spark-versions",
 				Response:     sparkVersionsResponse,
 				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				ReuseRequest: true,
 				Response:     nodeListResponse,
 			},

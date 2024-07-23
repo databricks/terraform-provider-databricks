@@ -1211,7 +1211,7 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 					WarehouseId:   "existingwarehouse",
 					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
 				},
-				Response: sql.ExecuteStatementResponse{
+				Response: sql.StatementResponse{
 					StatementId: "statement1",
 					Status: &sql.StatementStatus{
 						State: "SUCCEEDED",
@@ -1247,7 +1247,7 @@ var baseClusterFixture = []qa.HTTPFixture{
 	{
 		Method:       "GET",
 		ReuseRequest: true,
-		Resource:     "/api/2.0/clusters/spark-versions",
+		Resource:     "/api/2.1/clusters/spark-versions",
 		Response: compute.GetSparkVersionsResponse{
 			Versions: []compute.SparkVersion{
 				{
@@ -1264,7 +1264,7 @@ var baseClusterFixture = []qa.HTTPFixture{
 	{
 		Method:       "GET",
 		ReuseRequest: true,
-		Resource:     "/api/2.0/clusters/list-node-types",
+		Resource:     "/api/2.1/clusters/list-node-types",
 		Response: compute.ListNodeTypesResponse{
 			NodeTypes: []compute.NodeType{
 				{

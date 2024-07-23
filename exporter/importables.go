@@ -1892,7 +1892,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string) + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			alerts, err := ic.workspaceClient.Alerts.List(ic.Context)
+			alerts, err := ic.workspaceClient.AlertsLegacy.List(ic.Context)
 			if err != nil {
 				return err
 			}
@@ -2416,7 +2416,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				securable := "catalog"
 				bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindings(ic.Context, catalog.GetBindingsRequest{
 					SecurableName: cat.Name,
-					SecurableType: securable,
+					SecurableType: catalog.GetBindingsSecurableType(securable),
 				})
 				if err == nil {
 					for _, binding := range bindings.Bindings {

@@ -47,12 +47,12 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/clusters/spark-versions",
+			Resource:     "/api/2.1/clusters/spark-versions",
 		},
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/clusters/list-node-types",
+			Resource:     "/api/2.1/clusters/list-node-types",
 		},
 		{
 			Method:   "POST",

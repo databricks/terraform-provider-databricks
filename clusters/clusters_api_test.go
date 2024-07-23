@@ -27,7 +27,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/spark-versions",
+			Resource:     "/api/2.1/clusters/spark-versions",
 			Response: compute.GetSparkVersionsResponse{
 				Versions: []compute.SparkVersion{
 					{
@@ -52,7 +52,7 @@ func TestGetOrCreateRunningCluster_AzureAuth(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/list-node-types",
+			Resource:     "/api/2.1/clusters/list-node-types",
 			Response: compute.ListNodeTypesResponse{
 				NodeTypes: []compute.NodeType{
 					{

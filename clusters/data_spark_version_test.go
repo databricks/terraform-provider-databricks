@@ -237,7 +237,7 @@ func TestSparkVersionErrorBadAnswer(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/spark-versions",
+				Resource: "/api/2.1/clusters/spark-versions",
 				Response: "{garbage....",
 			},
 		},

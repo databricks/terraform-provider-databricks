@@ -52,7 +52,7 @@ func adjustForceSendFields(clusterList *[]pipelines.PipelineCluster) {
 func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.ResourceData, timeout time.Duration) error {
 	var createPipelineRequest createPipelineRequestStruct
 	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
-	PrintStruct(createPipelineRequest.CreatePipeline)
+	// PrintStruct(createPipelineRequest.CreatePipeline)
 	adjustForceSendFields(&createPipelineRequest.Clusters)
 
 	createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest.CreatePipeline)
@@ -67,7 +67,6 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	} else {
 		id = createdPipeline.PipelineId
 	}
-	// _, err = w.Pipelines.WaitGetPipelineRunning(ctx, id, timeout, nil)
 	err = waitForState(w, ctx, id, timeout, pipelines.PipelineStateRunning)
 	if err != nil {
 		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
@@ -80,7 +79,6 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 		return err
 	}
 	d.SetId(id)
-	d.Set("pipeline_id", id)
 	return nil
 }
 
@@ -92,11 +90,9 @@ func Read(w *databricks.WorkspaceClient, ctx context.Context, id string) (*pipel
 
 func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.ResourceData, timeout time.Duration) error {
 	var updatePipelineRequest updatePipelineRequestStruct
-	fmt.Println("ExpectedLastModified", d.Get("expected_last_modified"))
-	// fmt.Println(d.Get("expected_last_modified"))
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
-	PrintStruct(updatePipelineRequest.EditPipeline)
-	// fmt.Println("updatePipelineRequest", updatePipelineRequest)
+	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
+	// PrintStruct(updatePipelineRequest.EditPipeline)
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
 
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
@@ -189,7 +185,6 @@ func (updatePipelineRequestStruct) CustomizeSchema(s *common.CustomizableSchema)
 // Name not keeping twice
 type Pipeline struct {
 	pipelines.PipelineSpec
-	PipelineId           string                              `json:"pipeline_id,omitempty"`
 	AllowDuplicateNames  bool                                `json:"allow_duplicate_names,omitempty"`
 	DryRun               bool                                `json:"dry_run,omitempty"`
 	Cause                string                              `json:"cause,omitempty"`
@@ -231,12 +226,11 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 
 	// Computed fields
 	s.SchemaPath("id").SetComputed()
-	s.SchemaPath("pipeline_id").SetComputed()
 	s.SchemaPath("cluster", "node_type_id").SetComputed()
 	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()
 	// s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
 	s.SchemaPath("url").SetComputed()
-	// Manually set the computed fields
+
 	s.SchemaPath("state").SetComputed()
 	s.SchemaPath("latest_updates").SetComputed()
 	s.SchemaPath("last_modified").SetComputed()
@@ -287,10 +281,6 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 
 var pipelineSchema = common.StructToSchema(Pipeline{}, nil)
 
-// type workspaceClient struct {
-// 	*databricks.WorkspaceClient
-// }
-
 func ResourcePipeline() common.Resource {
 	return common.Resource{
 		Schema: pipelineSchema,
@@ -299,7 +289,6 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			// wsClient := workspaceClient{w}
 			err = Create(w, ctx, d, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return err
@@ -312,7 +301,6 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			// wsClient := workspaceClient{w}
 			readPipeline, err := Read(w, ctx, d.Id())
 
 			if err != nil {
@@ -321,7 +309,6 @@ func ResourcePipeline() common.Resource {
 			if readPipeline.Spec == nil {
 				return fmt.Errorf("pipeline spec is nil for '%v'", readPipeline.PipelineId)
 			}
-			// fmt.Println("readPipeline.Spec", readPipeline.Spec)
 			return common.StructToData(readPipeline.Spec, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -329,7 +316,6 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			// wsClient := workspaceClient{w}
 			return Update(w, ctx, d, d.Timeout(schema.TimeoutUpdate))
 
 		},
@@ -338,7 +324,6 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			// wsClient := workspaceClient{w}
 			return Delete(w, ctx, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 		},

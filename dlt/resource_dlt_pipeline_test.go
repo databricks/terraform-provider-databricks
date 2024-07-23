@@ -53,9 +53,10 @@ var createRequest = pipelines.CreatePipeline{
 }
 
 var updateRequest = pipelines.EditPipeline{
-	Id:      "abcd",
-	Name:    "test",
-	Storage: "/test/storage",
+	Id:         "abcd",
+	PipelineId: "abcd",
+	Name:       "test",
+	Storage:    "/test/storage",
 	Libraries: []pipelines.PipelineLibrary{
 		{
 			Notebook: &pipelines.NotebookLibrary{

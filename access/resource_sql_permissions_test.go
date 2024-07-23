@@ -185,11 +185,11 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/spark-versions",
-		Response: clusters.SparkVersionsList{
-			SparkVersions: []clusters.SparkVersion{
+		Response: compute.GetSparkVersionsResponse{
+			Versions: []compute.SparkVersion{
 				{
-					Version:     "7.1.x-cpu-ml-scala2.12",
-					Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					Key:  "7.1.x-cpu-ml-scala2.12",
+					Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
 				},
 			},
 		},
@@ -222,7 +222,7 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 			AutoterminationMinutes: 10,
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
-			SparkVersion:           "7.3.x-scala2.12",
+			SparkVersion:           "11.3.x-scala2.12",
 			CustomTags: map[string]string{
 				"ResourceClass": "SingleNode",
 			},
@@ -262,11 +262,11 @@ var createSharedCluster = []qa.HTTPFixture{
 		Method:       "GET",
 		ReuseRequest: true,
 		Resource:     "/api/2.0/clusters/spark-versions",
-		Response: clusters.SparkVersionsList{
-			SparkVersions: []clusters.SparkVersion{
+		Response: compute.GetSparkVersionsResponse{
+			Versions: []compute.SparkVersion{
 				{
-					Version:     "7.1.x-cpu-ml-scala2.12",
-					Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					Key:  "7.1.x-cpu-ml-scala2.12",
+					Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
 				},
 			},
 		},
@@ -299,7 +299,7 @@ var createSharedCluster = []qa.HTTPFixture{
 			AutoterminationMinutes: 10,
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
-			SparkVersion:           "7.3.x-scala2.12",
+			SparkVersion:           "11.3.x-scala2.12",
 			CustomTags: map[string]string{
 				"ResourceClass": "SingleNode",
 			},

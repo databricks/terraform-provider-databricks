@@ -137,11 +137,10 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 	return clusters.Cluster{
 		NumWorkers:  0,
 		ClusterName: clusterName,
-		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
-			clusters.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
-			}),
+		SparkVersion: clusters.LatestSparkVersionOrDefault(clustersAPI.Context(), clustersAPI.WorkspaceClient(), compute.SparkVersionRequest{
+			Latest:          true,
+			LongTermSupport: true,
+		}),
 		NodeTypeID: clustersAPI.GetSmallestNodeType(
 			compute.NodeTypeRequest{
 				LocalDisk: true,

@@ -1,83 +1,47 @@
 package clusters
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func commonFixtures() []qa.HTTPFixture {
-	return []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/clusters/spark-versions",
-			Response: SparkVersionsList{
-				SparkVersions: []SparkVersion{
-					{
-						Version:     "7.1.x-scala2.12",
-						Description: "7.1 (includes Apache Spark 3.0.0, Scala 2.12)",
-					},
-					{
-						Version:     "7.1.x-gpu-ml-scala2.12",
-						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
-					},
-					{
-						Version:     "apache-spark-2.4.x-scala2.11",
-						Description: "Light 2.4 (includes Apache Spark 2.4, Scala 2.11)",
-					},
-					{
-						Version:     "5.5.x-cpu-esr-ml-scala2.11",
-						Description: "5.5 Extended Support ML (includes Apache Spark 2.4.3, Scala 2.11)",
-					},
-					{
-						Version:     "7.3.x-hls-scala2.12",
-						Description: "7.3 LTS Genomics (includes Apache Spark 3.0.1, Scala 2.12)",
-					},
-					{
-						Version:     "6.4.x-scala2.11",
-						Description: "6.4 (includes Apache Spark 2.4.5, Scala 2.11)",
-					},
-					{
-						Version:     "7.3.x-scala2.12",
-						Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
-					},
-					{
-						Version:     "7.4.x-scala2.12",
-						Description: "7.4 (includes Apache Spark 3.0.1, Scala 2.12)",
-					},
-					{
-						Version:     "7.5.x-scala2.12",
-						Description: "7.5 Beta (includes Apache Spark 3.0.1, Scala 2.12)",
-					},
-					{
-						Version:     "8.3.x-photon-scala2.12",
-						Description: "8.3 Photon (includes Apache Spark 3.1.1, Scala 2.12)",
-					},
-				},
-			},
-		},
-	}
-}
-
 func TestSparkVersionLatest(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest: true,
+				Scala:  "2.12",
+			}).Return("7.4.x-scala2.12", nil)
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
 		State:       map[string]any{},
 		ID:          ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "7.4.x-scala2.12", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "7.4.x-scala2.12",
+	})
 }
 
 func TestSparkVersionLTS(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest:          true,
+				Scala:           "2.12",
+				LongTermSupport: true,
+			}).Return("7.3.x-scala2.12", nil)
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -85,14 +49,22 @@ func TestSparkVersionLTS(t *testing.T) {
 			"long_term_support": true,
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "7.3.x-scala2.12", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "7.3.x-scala2.12",
+	})
 }
 
 func TestSparkVersionESR(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest:          true,
+				Scala:           "2.11",
+				LongTermSupport: true,
+				ML:              true,
+			}).Return("5.5.x-cpu-esr-ml-scala2.11", nil)
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -102,14 +74,22 @@ func TestSparkVersionESR(t *testing.T) {
 			"ml":                true,
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "5.5.x-cpu-esr-ml-scala2.11", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "5.5.x-cpu-esr-ml-scala2.11",
+	})
 }
 
 func TestSparkVersionGpuMl(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest: true,
+				Scala:  "2.12",
+				GPU:    true,
+				ML:     true,
+			}).Return("7.1.x-gpu-ml-scala2.12", nil)
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -118,14 +98,21 @@ func TestSparkVersionGpuMl(t *testing.T) {
 			"ml":  true,
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "7.1.x-gpu-ml-scala2.12", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "7.1.x-gpu-ml-scala2.12",
+	})
 }
 
 func TestSparkVersionGenomics(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest:   true,
+				Scala:    "2.12",
+				Genomics: true,
+			}).Return("7.3.x-hls-scala2.12", nil)
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -133,14 +120,21 @@ func TestSparkVersionGenomics(t *testing.T) {
 			"genomics": true,
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "7.3.x-hls-scala2.12", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "7.3.x-hls-scala2.12",
+	})
 }
 
 func TestSparkVersion300(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest:       true,
+				Scala:        "2.12",
+				SparkVersion: "3.0.0",
+			}).Return("7.1.x-scala2.12", nil)
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -148,14 +142,21 @@ func TestSparkVersion300(t *testing.T) {
 			"spark_version": "3.0.0",
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "7.1.x-scala2.12", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "7.1.x-scala2.12",
+	})
 }
 
 func TestSparkVersionBeta(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest: true,
+				Scala:  "2.12",
+				Beta:   true,
+			}).Return("7.5.x-scala2.12", nil)
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -163,14 +164,21 @@ func TestSparkVersionBeta(t *testing.T) {
 			"beta": true,
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "7.5.x-scala2.12", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "7.5.x-scala2.12",
+	})
 }
 
 func TestSparkVersionPhoton(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest: true,
+				Scala:  "2.12",
+				Photon: true,
+			}).Return("8.3.x-photon-scala2.12", nil)
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -178,14 +186,22 @@ func TestSparkVersionPhoton(t *testing.T) {
 			"photon": true,
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "8.3.x-photon-scala2.12", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "8.3.x-photon-scala2.12",
+	})
 }
 
 func TestSparkVersionErrorNoResults(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest:          true,
+				Scala:           "2.12",
+				Beta:            true,
+				LongTermSupport: true,
+			}).Return("", fmt.Errorf("spark versions query returned no results. Please change your search criteria and try again"))
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -194,14 +210,18 @@ func TestSparkVersionErrorNoResults(t *testing.T) {
 			"long_term_support": true,
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.Error(t, err)
-	assert.Equal(t, true, strings.Contains(err.Error(), "query returned no results"))
+	}.ExpectError(t, "spark versions query returned no results. Please change your search criteria and try again")
 }
 
 func TestSparkVersionErrorMultipleResults(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Fixtures:    commonFixtures(),
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.SelectSparkVersion(mock.Anything, compute.SparkVersionRequest{
+				Latest: false,
+				Scala:  "2.12",
+			}).Return("", fmt.Errorf("spark versions query returned multiple results. Please change your search criteria and try again"))
+		},
 		Read:        true,
 		Resource:    DataSourceSparkVersion(),
 		NonWritable: true,
@@ -209,9 +229,7 @@ func TestSparkVersionErrorMultipleResults(t *testing.T) {
 			"latest": false,
 		},
 		ID: ".",
-	}.Apply(t)
-	assert.Error(t, err)
-	assert.Equal(t, true, strings.Contains(err.Error(), "query returned multiple results"))
+	}.ExpectError(t, "spark versions query returned multiple results. Please change your search criteria and try again")
 }
 
 func TestSparkVersionErrorBadAnswer(t *testing.T) {

@@ -739,7 +739,7 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "endpoint_usage" {
+resource "databricks_permissions" "query_usage" {
   sql_query_id = "3244325"
 
   access_control {
@@ -767,7 +767,7 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "endpoint_usage" {
+resource "databricks_permissions" "alert_usage" {
   sql_alert_id = "3244325"
 
   access_control {

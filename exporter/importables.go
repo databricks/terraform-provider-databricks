@@ -1023,7 +1023,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			ic.emitGroups(u)
+			ic.emitGroups(*u)
 			ic.emitRoles("user", u.ID, u.Roles)
 			return nil
 		},
@@ -1081,7 +1081,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			ic.emitGroups(u)
+			ic.emitGroups(*u)
 			ic.emitRoles("service_principal", u.ID, u.Roles)
 			if ic.accountLevel {
 				ic.Emit(&resource{

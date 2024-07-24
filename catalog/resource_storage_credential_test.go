@@ -106,7 +106,7 @@ func TestCreateIsolatedStorageCredential(t *testing.T) {
 			}, nil)
 			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
 				SecurableName: "a",
-				SecurableType: "storage-credential",
+				SecurableType: "storage_credential",
 				Add: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(123456789101112),

@@ -1,4 +1,4 @@
-package pipelines
+package dlt
 
 import (
 	"context"
@@ -160,7 +160,7 @@ var aliasMap = map[string]string{
 
 func (createPipelineRequestStruct) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"pipelines.createPipelineRequestStruct": aliasMap,
+		"dlt.createPipelineRequestStruct": aliasMap,
 	}
 }
 
@@ -174,7 +174,7 @@ type updatePipelineRequestStruct struct {
 
 func (updatePipelineRequestStruct) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"pipelines.updatePipelineRequestStruct": aliasMap,
+		"dlt.updatePipelineRequestStruct": aliasMap,
 	}
 }
 
@@ -202,7 +202,7 @@ type Pipeline struct {
 
 func (Pipeline) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"pipelines.Pipeline": aliasMap,
+		"dlt.Pipeline": aliasMap,
 	}
 
 }

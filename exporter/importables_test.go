@@ -25,7 +25,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 
-	// "github.com/databricks/terraform-provider-databricks/pipelines"
+	"github.com/databricks/terraform-provider-databricks/dlt"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -291,9 +291,10 @@ func TestRepoIgnore(t *testing.T) {
 	assert.False(t, resourcesMap["databricks_repo"].Ignore(ic, r))
 }
 
+// ????
 func TestDLTIgnore(t *testing.T) {
 	ic := importContextForTest()
-	d := pipelines.ResourcePipeline().ToResource().TestResourceData()
+	d := dlt.ResourcePipeline().ToResource().TestResourceData()
 	d.SetId("12345")
 	r := &resource{ID: "12345", Data: d}
 	// job without libraries

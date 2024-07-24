@@ -52,13 +52,13 @@ func workspaceBindingTemplateWithWorkspaceId(workspaceId string) string {
 
 		resource "databricks_workspace_binding" "ext" {
 			securable_name = databricks_external_location.some.id
-			securable_type = "external-location"
+			securable_type = "external_location"
 			workspace_id   = %s
 		}
 
 		resource "databricks_workspace_binding" "cred" {
 			securable_name = databricks_storage_credential.external.id
-			securable_type = "storage-credential"
+			securable_type = "storage_credential"
 			workspace_id   = %s
 		}		
 	`, workspaceId, workspaceId, workspaceId, workspaceId)

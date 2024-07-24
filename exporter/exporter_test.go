@@ -182,11 +182,11 @@ func TestImportingMounts(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/spark-versions",
-				Response: clusters.SparkVersionsList{
-					SparkVersions: []clusters.SparkVersion{
+				Resource:     "/api/2.1/clusters/spark-versions",
+				Response: compute.GetSparkVersionsResponse{
+					Versions: []compute.SparkVersion{
 						{
-							Version: "Foo LTS",
+							Key: "Foo LTS",
 						},
 					},
 				},
@@ -194,7 +194,7 @@ func TestImportingMounts(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				Response: compute.ListNodeTypesResponse{
 					NodeTypes: []compute.NodeType{
 						{
@@ -829,13 +829,13 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=test1",
+				Resource:     "/api/2.1/clusters/get?cluster_id=test1",
 				Response:     getJSONObject("test-data/get-cluster-test1-response.json"),
 				ReuseRequest: true,
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				Response: compute.GetEvents{},
 			},
 			{
@@ -863,12 +863,12 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=test2",
+				Resource: "/api/2.1/clusters/get?cluster_id=test2",
 				Response: getJSONObject("test-data/get-cluster-test2-response.json"),
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "test2",
 					Order:      compute.GetEventsOrderDesc,
@@ -880,7 +880,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "test1",
 					Order:      compute.GetEventsOrderDesc,
@@ -912,12 +912,12 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=awscluster",
+				Resource: "/api/2.1/clusters/get?cluster_id=awscluster",
 				Response: getJSONObject("test-data/get-cluster-awscluster-response.json"),
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "awscluster",
 					Order:      compute.GetEventsOrderDesc,

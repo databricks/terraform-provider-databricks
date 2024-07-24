@@ -326,6 +326,23 @@ type PermissionsEntity struct {
 	AccessControlList []AccessControlChange `json:"access_control" tf:"slice_set"`
 }
 
+func (oa *ObjectACL) isMatchingMapping(mapping permissionsIDFieldMapping) bool {
+	if mapping.objectType != oa.ObjectType {
+		return false
+	}
+	if oa.ObjectID != "" && oa.ObjectID[0] == '/' {
+		return strings.HasPrefix(oa.ObjectID[1:], mapping.resourceType)
+	}
+	if strings.HasPrefix(oa.ObjectID, "dashboards/") || strings.HasPrefix(oa.ObjectID, "alerts/") || strings.HasPrefix(oa.ObjectID, "queries/") {
+		idx := strings.Index(oa.ObjectID, "/")
+		if idx != -1 {
+			return mapping.resourceType == "sql/"+oa.ObjectID[:idx]
+		}
+	}
+
+	return false
+}
+
 func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (PermissionsEntity, error) {
 	entity := PermissionsEntity{}
 	for _, accessControl := range oa.AccessControlList {
@@ -342,10 +359,9 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 		}
 	}
 	for _, mapping := range permissionsResourceIDFields() {
-		if mapping.objectType != oa.ObjectType || !strings.HasPrefix(oa.ObjectID[1:], mapping.resourceType) {
+		if !oa.isMatchingMapping(mapping) {
 			continue
 		}
-		log.Printf("[DEBUG] mapping %v for object %v", mapping, oa)
 		entity.ObjectType = mapping.objectType
 		var pathVariant any
 		if mapping.objectType == "file" {

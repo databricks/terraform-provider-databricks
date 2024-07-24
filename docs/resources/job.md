@@ -82,9 +82,9 @@ The resource supports the following arguments:
 * `description` - (Optional) An optional description for the job. The maximum length is 1024 characters in UTF-8 encoding.
 * `task` - (Optional) A list of task specification that the job will execute. See [task Configuration Block](#task-configuration-block) below.
 * `job_cluster` - (Optional) A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*
-* `schedule` - (Optional) (List) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. This field is a block and is [documented below](#schedule-configuration-block).
+* `schedule` - (Optional) An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. See [schedule Configuration Block](#schedule-configuration-block) below.
 * `trigger` - (Optional) The conditions that triggers the job to start. See [trigger Configuration Block](#trigger-configuration-block) below.
-* `continuous`- (Optional) Configuration block to configure pause status. See [continuous Configuration Block](#continuous-configuration-block). 
+* `continuous`- (Optional) Configuration block to configure pause status. See [continuous Configuration Block](#continuous-configuration-block).
 * `queue` - (Optional) The queue status for the job. See [queue Configuration Block](#queue-configuration-block) below.
 * `always_running` - (Optional, Deprecated) (Bool) Whenever the job is always running, like a Spark Streaming application, on every update restart the current active run or start it again, if nothing it is not running. False by default. Any job runs are started with `parameters` specified in `spark_jar_task` or `spark_submit_task` or `spark_python_task` or `notebook_task` blocks.
 * `run_as` - (Optional) The user or the service prinicipal the job runs as. See [run_as Configuration Block](#run_as-configuration-block) below.
@@ -309,7 +309,6 @@ This block describes [an Environment](https://docs.databricks.com/en/compute/ser
   }
 ```
 
-
 #### depends_on Configuration Block
 
 This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
@@ -405,6 +404,7 @@ This block can be configured on both job and task levels for corresponding effec
 * `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
 
 The following parameter is only available for the job level configuration.
+
 * `no_alert_for_skipped_runs` - (Optional) (Bool) don't send alert for skipped runs. (It's recommended to use the corresponding setting in the `notification_settings` configuration block).
 
 ### webhook_notifications Configuration Block
@@ -443,6 +443,7 @@ It can be configured on both job and task level for corresponding effect.
 * `no_alert_for_canceled_runs` - (Optional) (Bool) don't send alert for cancelled runs.
 
 The following parameter is only available on task level.
+
 * `alert_on_last_attempt` - (Optional) (Bool) do not send notifications to recipients specified in `on_start` for the retried runs and do not send notifications to recipients specified in `on_failure` until the last retry of the run.
 
 ### health Configuration Block

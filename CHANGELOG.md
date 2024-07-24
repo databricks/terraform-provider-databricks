@@ -1,5 +1,24 @@
 # Version changelog
 
+## 1.49.1
+
+### Bug Fixes
+ * Fixed reading of permissions for SQL objects ([#3800](https://github.com/databricks/terraform-provider-databricks/pull/3800)).
+ * don't update `databricks_metastore` during creation if not required ([#3783](https://github.com/databricks/terraform-provider-databricks/pull/3783)).
+
+### Documentation
+ * Clarified schedule block in `databricks_job` ([#3805](https://github.com/databricks/terraform-provider-databricks/pull/3805)).
+ * Use correct names for isolation mode for storage credentials and external locations ([#3804](https://github.com/databricks/terraform-provider-databricks/pull/3804)).
+ * Fix incomplete note in databricks_workspace_binding resource ([#3806](https://github.com/databricks/terraform-provider-databricks/pull/3806))
+
+### Internal Changes
+ * Refactored `databricks_zones` and `databricks_spark_versions` data sources to Go SDK ([#3687](https://github.com/databricks/terraform-provider-databricks/pull/3687)).
+
+### Exporter
+ * Add support for exporting of Lakeview dashboards ([#3779](https://github.com/databricks/terraform-provider-databricks/pull/3779)).
+ * Adding more retries for SCIM API calls ([#3807](https://github.com/databricks/terraform-provider-databricks/pull/3807))
+
+
 ## 1.49.0
 
 ### New Features and Improvements

@@ -1025,7 +1025,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			ic.emitGroups(u)
+			ic.emitGroups(*u)
 			ic.emitRoles("user", u.ID, u.Roles)
 			return nil
 		},
@@ -1083,7 +1083,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			ic.emitGroups(u)
+			ic.emitGroups(*u)
 			ic.emitRoles("service_principal", u.ID, u.Roles)
 			if ic.accountLevel {
 				ic.Emit(&resource{
@@ -1894,7 +1894,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string) + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			alerts, err := ic.workspaceClient.Alerts.List(ic.Context)
+			alerts, err := ic.workspaceClient.AlertsLegacy.List(ic.Context)
 			if err != nil {
 				return err
 			}
@@ -2429,7 +2429,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				securable := "catalog"
 				bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindings(ic.Context, catalog.GetBindingsRequest{
 					SecurableName: cat.Name,
-					SecurableType: securable,
+					SecurableType: catalog.GetBindingsSecurableType(securable),
 				})
 				if err == nil {
 					for _, binding := range bindings.Bindings {

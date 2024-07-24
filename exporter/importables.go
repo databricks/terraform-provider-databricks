@@ -2534,15 +2534,24 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:        table.FullName,
 							DependsOn: dependsOn,
 						}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+					case "FOREIGN":
+						// TODO: it's better to use SecurableKind if it will be added to the Go SDK
+						switch table.DataSourceFormat {
+						case "VECTOR_INDEX_FORMAT":
+						case "MYSQL_FORMAT":
+							ic.EmitIfUpdatedAfterMillis(&resource{
+								Resource:  "databricks_online_table",
+								ID:        table.FullName,
+								DependsOn: dependsOn,
+							}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+						default:
+							log.Printf("[DEBUG] Skipping foreign table %s of format %s", table.FullName, table.DataSourceFormat)
+						}
 					default:
 						log.Printf("[DEBUG] Skipping table %s of type %s", table.FullName, table.TableType)
 					}
 				}
 			}
-			// TODO: list VectorSearch indexes
-
-			// TODO: list online tables
-
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
@@ -2603,6 +2612,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			switch pathString {
 			case "storage_location":
 				return d.Get("table_type").(string) == "MANAGED"
+			case "enable_predictive_optimization":
+				epo := d.Get(pathString).(string)
+				return epo == "" || epo == "INHERIT"
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
@@ -3183,6 +3195,28 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parent_path", Resource: "databricks_directory"},
 			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
 			{Path: "parent_path", Resource: "databricks_service_principal"},
+		},
+	},
+	"databricks_online_table": {
+		WorkspaceLevel: true,
+		Service:        "uc-online-tables",
+		Import: func(ic *importContext, r *resource) error {
+			tableFullName := r.ID
+			ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
+			ic.Emit(&resource{
+				Resource: "databricks_sql_table",
+				ID:       r.Data.Get("spec.0.source_table_full_name").(string),
+			})
+			// TODO: emit owner? See comment in catalog resource
+			return nil
+		},
+		Ignore:          generateIgnoreObjectWithoutName("databricks_online_table"),
+		ShouldOmitField: shouldOmitForUnityCatalog,
+		Depends: []reference{
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
+			{Path: "spec.source_table_full_name", Resource: "databricks_sql_table"},
 		},
 	},
 }

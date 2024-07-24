@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -45,8 +46,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Lakehouse Monitor. MonitorInfo struct is used to create the schema",
-		// Attributes:  common.PluginFrameworkResourceStructToSchemaMap(catalog_tf.MonitorInfo{}),
-		Attributes: map[string]schema.Attribute{},
+		Attributes:  common.PluginFrameworkResourceStructToSchemaMap(catalog_tf.MonitorInfo{}),
 	}
 }
 

@@ -173,6 +173,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_vpc_endpoint":                mws.ResourceMwsVpcEndpoint().ToResource(),
 			"databricks_mws_workspaces":                  mws.ResourceMwsWorkspaces().ToResource(),
 			"databricks_notebook":                        workspace.ResourceNotebook().ToResource(),
+			"databricks_notification_destination":        settings.ResourceNotificationDestination().ToResource(),
 			"databricks_obo_token":                       tokens.ResourceOboToken().ToResource(),
 			"databricks_online_table":                    catalog.ResourceOnlineTable().ToResource(),
 			"databricks_permission_assignment":           access.ResourcePermissionAssignment().ToResource(),

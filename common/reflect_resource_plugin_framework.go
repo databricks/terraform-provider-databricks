@@ -127,6 +127,9 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			destMap.SetMapIndex(destMapKey, destMapValue)
 		}
 		destField.Set(destMap)
+	} else if srcField.Kind() == reflect.String {
+		// This case is only for the Enum types.
+		destField.SetString(srcField.String())
 	} else {
 		panic(fmt.Errorf("unknown type for field: %s", srcField.Type().Name()))
 	}
@@ -227,12 +230,17 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			destField.Set(reflect.ValueOf(types.Float64Null()))
 		}
 	case reflect.String:
-		strVal := srcFieldValue.(string)
-		// check if alwaysAdd is false or the value is zero or if the field is in the forceSendFields list
-		if alwaysAdd || !(strVal == "" && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
-			destField.Set(reflect.ValueOf(types.StringValue(strVal)))
+		if srcField.Type().Name() != "string" {
+			// This case is for Enum Types.
+			destField.Set(reflect.ValueOf(srcFieldValue))
 		} else {
-			destField.Set(reflect.ValueOf(types.StringNull()))
+			strVal := srcFieldValue.(string)
+			// check if alwaysAdd is false or the value is zero or if the field is in the forceSendFields list
+			if alwaysAdd || !(strVal == "" && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+				destField.Set(reflect.ValueOf(types.StringValue(strVal)))
+			} else {
+				destField.Set(reflect.ValueOf(types.StringNull()))
+			}
 		}
 	case reflect.Struct:
 		// resolve the nested struct by recursively calling the function
@@ -379,6 +387,9 @@ func pluginFrameworkResourceTypeToSchema(v reflect.Value) map[string]schema.Attr
 				nestedScm := pluginFrameworkResourceTypeToSchema(sv)
 				scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}
 			}
+		} else if kind == reflect.String {
+			// This case is for Enum types.
+			scm[fieldName] = schema.StringAttribute{Optional: isOptional, Required: !isOptional}
 		} else {
 			panic(fmt.Errorf("unknown type for field: %s", typeField.Name))
 		}

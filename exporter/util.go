@@ -116,8 +116,8 @@ func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
 		})
 	}
 	ic.emitInitScriptsLegacy(c.InitScripts)
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
+	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
@@ -151,19 +151,23 @@ func (ic *importContext) importCluster(c *compute.ClusterSpec) {
 		})
 	}
 	ic.emitInitScripts(c.InitScripts)
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
+	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
-func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
+func (ic *importContext) emitSecretsFromSecretPathString(v string) {
+	if res := secretPathRegex.FindStringSubmatch(v); res != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_secret_scope",
+			ID:       res[1],
+		})
+	}
+}
+
+func (ic *importContext) emitSecretsFromSecretsPathMap(m map[string]string) {
 	for _, v := range m {
-		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_secret_scope",
-				ID:       res[1],
-			})
-		}
+		ic.emitSecretsFromSecretPathString(v)
 	}
 }
 
@@ -1431,6 +1435,21 @@ func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceAp
 	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
 	// log.Printf("[DEBUG] matchingCatalogAndSchema: result: %v approximation: catalog='%v' schema='%v', res: catalog='%s' schema='%s'",
 	// 	result, ra_catalog_name, ra_schema_name, res_catalog_name, res_schema_name)
+	return result
+}
+
+func isMatchingCatalogAndSchemaInModelServing(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	res_catalog_name := res.Data.Get("config.0.auto_capture_config.0.catalog_name").(string)
+	res_schema_name := res.Data.Get("config.0.auto_capture_config.0.schema_name").(string)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
 	return result
 }
 

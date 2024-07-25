@@ -16,16 +16,6 @@ func ConstructCustomizableSchema(attributes map[string]schema.Attribute) *Custom
 	return &CustomizableSchemaPluginFramework{attr: attr}
 }
 
-// func (s *CustomizableSchemaPluginFramework) SchemaPath(path ...string) *CustomizableSchemaPluginFramework {
-// 	// The attr returned here is not the original object, it's a copy.
-// 	attr, err := navigateSchema(&s.attr, path...)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	return &CustomizableSchemaPluginFramework{attr}
-// }
-
 // Converts CustomizableSchema into a map from string to Attribute.
 func (s *CustomizableSchemaPluginFramework) ToAttributeMap() map[string]schema.Attribute {
 	return attributeToMap(&s.attr)

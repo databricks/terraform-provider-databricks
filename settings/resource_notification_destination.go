@@ -14,6 +14,43 @@ type NDStruct struct {
 
 func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 	// Required fields
+	s.SchemaPath("display_name").SetRequired()
+	// s.SchemaPath("config").SetRequired()
+
+	// Computed fields
+	s.SchemaPath("id").SetComputed()
+	s.SchemaPath("destination_type").SetComputed()
+	s.SchemaPath("config", "slack", "url_set").SetComputed()
+	s.SchemaPath("config", "pagerduty", "integration_key_set").SetComputed()
+	s.SchemaPath("config", "microsoft_teams", "url_set").SetComputed()
+	s.SchemaPath("config", "generic_webhook", "url_set").SetComputed()
+	s.SchemaPath("config", "generic_webhook", "password_set").SetComputed()
+	s.SchemaPath("config", "generic_webhook", "username_set").SetComputed()
+
+	// ForceNew fields
+	s.SchemaPath("destination_type").SetForceNew()
+
+	// ConflictsWith fields
+	config_eoo := []string{"config.0.slack", "config.0.pagerduty", "config.0.microsoft_teams", "config.0.generic_webhook", "config.0.email"}
+	s.SchemaPath("config", "slack").SetExactlyOneOf(config_eoo)
+	// s.SchemaPath("config", "pagerduty").SetExactlyOneOf(config_eoo)
+	// s.SchemaPath("config", "microsoft_teams").SetExactlyOneOf(config_eoo)
+	// s.SchemaPath("config", "generic_webhook").SetExactlyOneOf(config_eoo)
+	// s.SchemaPath("config", "email").SetExactlyOneOf(config_eoo)
+
+	// RequiredWith fields
+	s.SchemaPath("config", "slack").SetRequiredWith([]string{"config.0.slack.0.url"})
+	s.SchemaPath("config", "pagerduty").SetRequiredWith([]string{"config.0.pagerduty.0.integration_key"})
+	s.SchemaPath("config", "microsoft_teams").SetRequiredWith([]string{"config.0.microsoft_teams.0.url"})
+	s.SchemaPath("config", "generic_webhook").SetRequiredWith([]string{"config.0.generic_webhook.0.url"})
+	s.SchemaPath("config", "email").SetRequiredWith([]string{"config.0.email.0.addresses"})
+
+	// s.SchemaPath("config", "slack", "url").SetRequiredWith([]string{"config.0.slack"})
+	// s.SchemaPath("config", "pagerduty", "integration_key").SetRequiredWith([]string{"config.0.pagerduty"})
+	// s.SchemaPath("config", "microsoft_teams", "url").SetRequiredWith([]string{"config.0.microsoft_teams"})
+	// s.SchemaPath("config", "generic_webhook", "url").SetRequiredWith([]string{"config.0.generic_webhook"})
+	// s.SchemaPath("config", "generic_webhook", "password").SetRequiredWith([]string{"config.0.generic_webhook"})
+	// s.SchemaPath("config", "email", "addresses").SetRequiredWith([]string{"config.0.email"})
 
 	return s
 }
@@ -57,6 +94,7 @@ func ResourceNotificationDestination() common.Resource {
 			}
 			var updateNDRequest settings.UpdateNotificationDestinationRequest
 			common.DataToStructPointer(d, ndSchema, &updateNDRequest)
+			updateNDRequest.Id = d.Id()
 			_, err = w.NotificationDestinations.Update(ctx, updateNDRequest)
 			if err != nil {
 				return err

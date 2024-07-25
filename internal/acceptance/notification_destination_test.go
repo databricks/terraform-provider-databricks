@@ -1,16 +1,22 @@
 package acceptance
 
 import (
+	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccNDEmail(t *testing.T) {
+	display_name := "Email Notification Destination - " + qa.RandomName()
 	workspaceLevel(t, step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
-			display_name = "Email Notification Destination"
+			display_name = "` + display_name + `"
 			config {
 				email {
 					addresses = ["` + qa.RandomEmail() + `"]
@@ -18,5 +24,21 @@ func TestAccNDEmail(t *testing.T) {
 			}
 		}
 		`,
+		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
+				Id: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, settings.DestinationType("EMAIL"), ndResource.DestinationType)
+			assert.Equal(t, display_name, ndResource.DisplayName)
+			require.NoError(t, err)
+			return nil
+		}),
 	})
 }

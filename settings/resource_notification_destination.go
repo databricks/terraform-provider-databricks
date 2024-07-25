@@ -15,7 +15,6 @@ type NDStruct struct {
 func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 	// Required fields
 	s.SchemaPath("display_name").SetRequired()
-	// s.SchemaPath("config").SetRequired()
 
 	// Computed fields
 	s.SchemaPath("id").SetComputed()
@@ -44,13 +43,6 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "microsoft_teams").SetRequiredWith([]string{"config.0.microsoft_teams.0.url"})
 	s.SchemaPath("config", "generic_webhook").SetRequiredWith([]string{"config.0.generic_webhook.0.url"})
 	s.SchemaPath("config", "email").SetRequiredWith([]string{"config.0.email.0.addresses"})
-
-	// s.SchemaPath("config", "slack", "url").SetRequiredWith([]string{"config.0.slack"})
-	// s.SchemaPath("config", "pagerduty", "integration_key").SetRequiredWith([]string{"config.0.pagerduty"})
-	// s.SchemaPath("config", "microsoft_teams", "url").SetRequiredWith([]string{"config.0.microsoft_teams"})
-	// s.SchemaPath("config", "generic_webhook", "url").SetRequiredWith([]string{"config.0.generic_webhook"})
-	// s.SchemaPath("config", "generic_webhook", "password").SetRequiredWith([]string{"config.0.generic_webhook"})
-	// s.SchemaPath("config", "email", "addresses").SetRequiredWith([]string{"config.0.email"})
 
 	// Sensitive fields
 	s.SchemaPath("config", "generic_webhook", "password").SetSensitive()

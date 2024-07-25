@@ -52,6 +52,9 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	// s.SchemaPath("config", "generic_webhook", "password").SetRequiredWith([]string{"config.0.generic_webhook"})
 	// s.SchemaPath("config", "email", "addresses").SetRequiredWith([]string{"config.0.email"})
 
+	// Sensitive fields
+	s.SchemaPath("config", "generic_webhook", "password").SetSensitive()
+
 	return s
 }
 

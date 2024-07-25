@@ -1939,7 +1939,6 @@ func TestImportingSqlObjects(t *testing.T) {
 		})
 }
 
-// ????
 func TestImportingDLTPipelines(t *testing.T) {
 	userFixture := qa.ListUsersFixtures([]iam.User{
 		{Id: "123", UserName: "user@domain.com"},
@@ -2119,7 +2118,6 @@ func TestImportingDLTPipelines(t *testing.T) {
 		})
 }
 
-// ????
 func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
@@ -2421,7 +2419,6 @@ func TestIncrementalErrors(t *testing.T) {
 		})
 }
 
-// ????
 func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 	webhooks := []ml.RegistryWebhook{
 		{
@@ -2480,7 +2477,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines/abc",
+				Resource: "/api/2.0/pipelines/abc?",
 				Response: pipelines.GetPipelineResponse{
 					PipelineId:   "abc",
 					Name:         "abc",
@@ -2489,7 +2486,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines/def",
+				Resource: "/api/2.0/pipelines/def?",
 				Response: pipelines.GetPipelineResponse{
 					PipelineId:   "def",
 					Name:         "def",

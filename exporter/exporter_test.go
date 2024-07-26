@@ -310,7 +310,7 @@ var emptyRepos = qa.HTTPFixture{
 var emptyShares = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.1/unity-catalog/shares",
+	Resource:     "/api/2.1/unity-catalog/shares?",
 	Response:     sharing.ListSharesResponse{},
 }
 

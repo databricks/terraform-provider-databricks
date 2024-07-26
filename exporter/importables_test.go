@@ -1730,7 +1730,7 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 		assert.NoError(t, err)
 		require.Equal(t, 2, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/ctest)"])
-		assert.True(t, ic.testEmits["databricks_catalog_workspace_binding[catalog_ctest_ws_1234] (id: 1234|catalog|ctest)"])
+		assert.True(t, ic.testEmits["databricks_workspace_binding[catalog_ctest_ws_1234] (id: 1234|catalog|ctest)"])
 	})
 }
 
@@ -2070,7 +2070,7 @@ func TestListShares(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/shares",
+			Resource:     "/api/2.1/unity-catalog/shares?",
 			Response: sharing.ListSharesResponse{
 				Shares: []sharing.ShareInfo{
 					{

@@ -53,6 +53,7 @@ func TestCustomizeSchema(t *testing.T) {
 		c.RemoveField("to_be_removed", "nested")
 		c.SetRequired("nested", "enabled")
 		c.SetSensitive("nested", "name")
+		c.SetDeprecated("deprecated", "map")
 		c.AddValidator(stringLengthBetweenValidator{}, "description")
 		return c
 	})
@@ -60,6 +61,7 @@ func TestCustomizeSchema(t *testing.T) {
 	assert.True(t, MustSchemaAttributePath(scm.Attributes, "nested", "new_field").IsRequired())
 	assert.True(t, MustSchemaAttributePath(scm.Attributes, "nested", "enabled").IsRequired())
 	assert.True(t, MustSchemaAttributePath(scm.Attributes, "nested", "name").IsSensitive())
+	assert.True(t, MustSchemaAttributePath(scm.Attributes, "map").GetDeprecationMessage() == "deprecated")
 	attr := MustSchemaAttributePath(scm.Attributes, "nested").(schema.SingleNestedAttribute).Attributes
 	_, ok := attr["to_be_removed"]
 	assert.True(t, len(MustSchemaAttributePath(scm.Attributes, "description").(schema.StringAttribute).Validators) == 1)

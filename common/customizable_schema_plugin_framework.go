@@ -288,6 +288,46 @@ func (s *CustomizableSchemaPluginFramework) SetSensitive(path ...string) *Custom
 	return s
 }
 
+func (s *CustomizableSchemaPluginFramework) SetDeprecated(msg string, path ...string) *CustomizableSchemaPluginFramework {
+	cb := func(a schema.Attribute) schema.Attribute {
+		switch attr := a.(type) {
+		case schema.SingleNestedAttribute:
+			attr.DeprecationMessage = msg
+			return attr
+		case schema.ListNestedAttribute:
+			attr.DeprecationMessage = msg
+			return attr
+		case schema.MapNestedAttribute:
+			attr.DeprecationMessage = msg
+			return attr
+		case schema.BoolAttribute:
+			attr.DeprecationMessage = msg
+			return attr
+		case schema.Float64Attribute:
+			attr.DeprecationMessage = msg
+			return attr
+		case schema.StringAttribute:
+			attr.DeprecationMessage = msg
+			return attr
+		case schema.Int64Attribute:
+			attr.DeprecationMessage = msg
+			return attr
+		case schema.ListAttribute:
+			attr.DeprecationMessage = msg
+			return attr
+		case schema.MapAttribute:
+			attr.DeprecationMessage = msg
+			return attr
+		default:
+			panic(fmt.Sprintf("Unsupported type %T", s.attr))
+		}
+	}
+
+	navigateSchemaWithCallback(&s.attr, cb, path...)
+
+	return s
+}
+
 // Given a attribute map, navigate through the given path, panics if the path is not valid.
 func MustSchemaAttributePath(attrs map[string]schema.Attribute, path ...string) schema.Attribute {
 	attr := ConstructCustomizableSchema(attrs).attr

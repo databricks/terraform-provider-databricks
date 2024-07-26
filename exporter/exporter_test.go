@@ -2311,18 +2311,36 @@ func TestImportingModelServing(t *testing.T) {
 					Name: "abc",
 					Id:   "1234",
 					Config: &serving.EndpointCoreConfigOutput{
-						ServedModels: []serving.ServedModelOutput{
-							{
-								ModelName:    "def",
-								ModelVersion: "1",
-								Name:         "def",
-							},
+						AutoCaptureConfig: &serving.AutoCaptureConfigOutput{
+							Enabled:         true,
+							CatalogName:     "main",
+							SchemaName:      "tmp",
+							TableNamePrefix: "test",
 						},
 						ServedEntities: []serving.ServedEntityOutput{
 							{
-								EntityName:    "def",
-								EntityVersion: "1",
-								Name:          "def",
+								EntityName:         "main.tmp.model",
+								EntityVersion:      "1",
+								Name:               "def",
+								ScaleToZeroEnabled: true,
+							},
+							{
+								EntityName:         "def",
+								EntityVersion:      "1",
+								Name:               "def",
+								ScaleToZeroEnabled: false,
+								InstanceProfileArn: "arn:aws:iam::123456789012:instance-profile/MyInstanceProfile",
+							},
+							{
+								ExternalModel: &serving.ExternalModel{
+									Provider: "databricks",
+									Task:     "llm/v1/embeddings",
+									Name:     "e5_small_v2",
+									DatabricksModelServingConfig: &serving.DatabricksModelServingConfig{
+										DatabricksApiToken:     "dapi",
+										DatabricksWorkspaceUrl: "https://adb-1234.azuredatabricks.net",
+									},
+								},
 							},
 						},
 					},
@@ -2336,9 +2354,25 @@ func TestImportingModelServing(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.enableListing("model-serving")
+			ic.enableServices("model-serving")
 
 			err := ic.Run()
 			assert.NoError(t, err)
+
+			content, err := os.ReadFile(tmpDir + "/model-serving.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_model_serving" "abc_90015098"`))
+			assert.True(t, strings.Contains(contentStr, `scale_to_zero_enabled = false`))
+			assert.True(t, strings.Contains(contentStr, `instance_profile_arn  = "arn:aws:iam::123456789012:instance-profile/MyInstanceProfile"`))
+			assert.True(t, strings.Contains(contentStr, `databricks_api_token     = "dapi"`))
+			assert.True(t, strings.Contains(contentStr, `databricks_workspace_url = "https://adb-1234.azuredatabricks.net"`))
+			assert.True(t, strings.Contains(contentStr, `served_entities {
+      scale_to_zero_enabled = true
+      name                  = "def"
+      entity_version        = "1"
+      entity_name           = "main.tmp.model"
+    }`))
 		})
 }
 

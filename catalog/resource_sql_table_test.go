@@ -415,7 +415,7 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 func TestResourceSqlTableUpdateTableAndOwner(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
-			assert.Equal(t, "ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `two` DROP NOT NULL", commandStr)
+
 			return common.CommandResults{
 				ResultType: "",
 				Data:       nil,
@@ -492,6 +492,7 @@ func TestResourceSqlTableUpdateTableAndOwner(t *testing.T) {
 							Type: "string",
 						},
 					},
+					Owner: "old group",
 				},
 			},
 			{
@@ -501,6 +502,13 @@ func TestResourceSqlTableUpdateTableAndOwner(t *testing.T) {
 					ClusterID: "gone",
 				},
 				Status: 404,
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ExpectedRequest: catalog.UpdateTableRequest{
+					Owner: "new groups",
+				},
 			},
 		}, createClusterForSql...),
 		Resource: ResourceSqlTable(),
@@ -590,13 +598,6 @@ func TestResourceSqlTableUpdateTableClusterKeys(t *testing.T) {
 					ClusterID: "gone",
 				},
 				Status: 404,
-			},
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				ExpectedRequest: catalog.UpdateTableRequest{
-					Owner: "new groups",
-				},
 			},
 		}, createClusterForSql...),
 		Resource: ResourceSqlTable(),

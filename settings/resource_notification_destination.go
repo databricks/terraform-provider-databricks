@@ -2,6 +2,7 @@ package settings
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -45,7 +46,12 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "email").SetRequiredWith([]string{"config.0.email.0.addresses"})
 
 	// Sensitive fields
-	s.SchemaPath("config", "generic_webhook", "password").SetSensitive()
+	// s.SchemaPath("config", "generic_webhook", "password").SetSensitive()
+	// s.SchemaPath("config", "generic_webhook", "username").SetSensitive()
+	// s.SchemaPath("config", "generic_webhook", "url").SetSensitive()
+	// s.SchemaPath("config", "microsoft_teams", "url").SetSensitive()
+	// s.SchemaPath("config", "pagerduty", "integration_key").SetSensitive()
+	// s.SchemaPath("config", "slack", "url").SetSensitive()
 
 	return s
 }
@@ -56,6 +62,7 @@ func ResourceNotificationDestination() common.Resource {
 	return common.Resource{
 		Schema: ndSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -74,13 +81,26 @@ func ResourceNotificationDestination() common.Resource {
 			if err != nil {
 				return err
 			}
+			var s settings.NotificationDestination
+			common.DataToStructPointer(d, ndSchema, &s)
+
 			readND, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
 				Id: d.Id(),
 			})
 			if err != nil {
 				return err
 			}
-			return common.StructToData(readND, ndSchema, d)
+
+			err = common.StructToData(readND, ndSchema, d)
+			if err != nil {
+				return err
+			}
+			// fmt.Println(s.Config.Slack.Url)
+			// common.StructToData(s.Config, ndSchema, d)
+			// d.Get("config.0.slack.0.url")
+			d.Set("config.0.slack.0.url", s.Config.Slack.Url)
+			fmt.Println(d.Get("config.0.slack.0.url"))
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

@@ -25,14 +25,26 @@ func TestNDCreate(t *testing.T) {
 			}).Return(&settings.NotificationDestination{
 				Id:              "xyz",
 				DisplayName:     "Notification Destination",
-				DestinationType: "EMAIL",
+				DestinationType: "WEBHOOK",
+				Config: &settings.Config{
+					GenericWebhook: &settings.GenericWebhookConfig{
+						UrlSet:      true,
+						PasswordSet: true,
+					},
+				},
 			}, nil)
 			e.Get(mock.Anything, settings.GetNotificationDestinationRequest{
 				Id: "xyz",
 			}).Return(&settings.NotificationDestination{
 				Id:              "xyz",
 				DisplayName:     "Notification Destination",
-				DestinationType: "EMAIL",
+				DestinationType: "WEBHOOK",
+				Config: &settings.Config{
+					GenericWebhook: &settings.GenericWebhookConfig{
+						UrlSet:      true,
+						PasswordSet: true,
+					},
+				},
 			}, nil)
 		},
 		Resource: ResourceNotificationDestination(),
@@ -61,6 +73,11 @@ func TestNDRead(t *testing.T) {
 				Id:              "xyz",
 				DisplayName:     "Notification Destination",
 				DestinationType: "EMAIL",
+				Config: &settings.Config{
+					Email: &settings.EmailConfig{
+						Addresses: []string{"abc@gmail.com"},
+					},
+				},
 			}, nil)
 		},
 		Resource: ResourceNotificationDestination(),
@@ -96,6 +113,11 @@ func TestNDUpdate(t *testing.T) {
 				Id:              "xyz",
 				DisplayName:     "Notification Destination",
 				DestinationType: "EMAIL",
+				Config: &settings.Config{
+					Email: &settings.EmailConfig{
+						Addresses: []string{"pqr@gmail.com"},
+					},
+				},
 			}, nil)
 			e.Get(mock.Anything, settings.GetNotificationDestinationRequest{
 				Id: "xyz",
@@ -103,6 +125,11 @@ func TestNDUpdate(t *testing.T) {
 				Id:              "xyz",
 				DisplayName:     "Notification Destination",
 				DestinationType: "EMAIL",
+				Config: &settings.Config{
+					Email: &settings.EmailConfig{
+						Addresses: []string{"pqr@gmail.com"},
+					},
+				},
 			}, nil)
 		},
 		Resource: ResourceNotificationDestination(),

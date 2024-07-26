@@ -2,6 +2,7 @@ package pluginframework
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -10,24 +11,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func DataSourceVolumes() datasource.DataSource {
-	return &VolumesDataSource{}
+func DataSourceVolumes() func() datasource.DataSource {
+	return func() datasource.DataSource {
+		return &VolumesDataSource{}
+	}
 }
 
-type VolumesDataSource struct{}
+var _ datasource.DataSource = &VolumesDataSource{}
+
+type VolumesDataSource struct {
+	Client *common.DatabricksClient
+}
 
 type VolumesList struct {
-	CatalogName string   `json:"catalog_name"`
-	SchemaName  string   `json:"schema_name"`
-	Ids         []string `json:"ids,omitempty"`
+	CatalogName types.String   `tfsdk:"catalog_name"`
+	SchemaName  types.String   `tfsdk:"schema_name"`
+	Ids         []types.String `tfsdk:"ids" tf:"optional"`
 }
 
 func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_volumes_plugin_framework"
+	resp.TypeName = "databricks_volumes_pluginframework"
 }
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		// TODO: Use StructToSchemaMap to generate the schema once it supports schema for data sources
 		Attributes: map[string]schema.Attribute{
 			"catalog_name": schema.StringAttribute{
 				Required: true,
@@ -43,30 +51,44 @@ func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 	}
 }
 
+func (d *VolumesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	client, ok := req.ProviderData.(*common.DatabricksClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *common.DatabricksClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	d.Client = client
+}
+
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	c := common.DatabricksClient{}
-	w, err := c.WorkspaceClient()
+	client := d.Client
+	w, err := client.WorkspaceClient()
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return
 	}
-	var volumeInfo catalog.VolumeInfo
-	diags := req.Config.Get(ctx, &volumeInfo)
+	var volumesList VolumesList
+	diags := req.Config.Get(ctx, &volumesList)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	volumes, err := w.Volumes.ListAll(ctx, catalog.ListVolumesRequest{
-		CatalogName: volumeInfo.CatalogName,
-		SchemaName:  volumeInfo.SchemaName,
+		CatalogName: volumesList.CatalogName.ValueString(),
+		SchemaName:  volumesList.SchemaName.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get volumes for the catalog and schema", err.Error())
 		return
 	}
-	volumeList := VolumesList{}
 	for _, v := range volumes {
-		volumeList.Ids = append(volumeList.Ids, v.FullName)
+		volumesList.Ids = append(volumesList.Ids, types.StringValue(v.FullName))
 	}
-	resp.State.Set(ctx, volumeList)
+	resp.State.Set(ctx, volumesList)
 }

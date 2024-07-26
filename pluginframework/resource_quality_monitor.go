@@ -33,14 +33,20 @@ func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorN
 	})
 }
 
-func ResourceQualityMonitor() resource.Resource {
-	return &QualityMonitorResource{}
+var _ resource.Resource = &QualityMonitorResource{}
+
+func ResourceQualityMonitor() func() resource.Resource {
+	return func() resource.Resource {
+		return &QualityMonitorResource{}
+	}
 }
 
-type QualityMonitorResource struct{}
+type QualityMonitorResource struct {
+	Client *common.DatabricksClient
+}
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_lakehouse_monitor_plugin_framework"
+	resp.TypeName = "databricks_lakehouse_monitor_pluginframework"
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -50,9 +56,23 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
+func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	client, ok := req.ProviderData.(*common.DatabricksClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *common.DatabricksClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	d.Client = client
+}
+
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	c := common.DatabricksClient{}
-	w, err := c.WorkspaceClient()
+	w, err := r.Client.WorkspaceClient()
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return
@@ -76,8 +96,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	c := common.DatabricksClient{}
-	w, err := c.WorkspaceClient()
+	w, err := r.Client.WorkspaceClient()
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return
@@ -101,8 +120,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	c := common.DatabricksClient{}
-	w, err := c.WorkspaceClient()
+	w, err := r.Client.WorkspaceClient()
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return
@@ -126,8 +144,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	c := common.DatabricksClient{}
-	w, err := c.WorkspaceClient()
+	w, err := r.Client.WorkspaceClient()
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return

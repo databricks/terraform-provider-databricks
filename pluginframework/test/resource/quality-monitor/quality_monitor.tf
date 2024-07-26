@@ -40,7 +40,7 @@ resource "databricks_sql_table" "testTable" {
   }
 }
 
-resource "databricks_lakehouse_monitor_plugin_framework" "testMonitor" { 
+resource "databricks_lakehouse_monitor_pluginframework" "testMonitor" { 
   table_name = "${databricks_catalog.testCatalog.name}.${databricks_schema.testSchema.name}.${databricks_sql_table.testTable.name}"
 }
 

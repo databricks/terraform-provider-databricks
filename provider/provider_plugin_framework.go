@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var pluginFrameworkProviderName = "databricks-tf-provider-plugin-framework"
+var pluginFrameworkProviderName = "databricks-tf-provider-pluginframework"
 
 func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
@@ -45,13 +45,13 @@ var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		pluginframework.ResourceQualityMonitor,
+		pluginframework.ResourceQualityMonitor(),
 	}
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		pluginframework.DataSourceVolumes,
+		pluginframework.DataSourceVolumes(),
 	}
 }
 
@@ -92,8 +92,7 @@ func providerSchemaPluginFramework() schema.Schema {
 		}
 	}
 	return schema.Schema{
-		Description: "Databricks provider schema for plugin framework",
-		Attributes:  ps,
+		Attributes: ps,
 	}
 }
 

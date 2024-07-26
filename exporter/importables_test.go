@@ -291,7 +291,6 @@ func TestRepoIgnore(t *testing.T) {
 	assert.False(t, resourcesMap["databricks_repo"].Ignore(ic, r))
 }
 
-// ????
 func TestDLTIgnore(t *testing.T) {
 	ic := importContextForTest()
 	d := dlt.ResourcePipeline().ToResource().TestResourceData()
@@ -1338,7 +1337,6 @@ func TestSqlListObjects(t *testing.T) {
 	})
 }
 
-// ????
 func TestIncrementalListDLT(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -1359,7 +1357,7 @@ func TestIncrementalListDLT(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/abc",
+			Resource: "/api/2.0/pipelines/abc?",
 			Response: pipelines.GetPipelineResponse{
 				PipelineId:   "abc",
 				Name:         "abc",
@@ -1368,7 +1366,7 @@ func TestIncrementalListDLT(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/def",
+			Resource: "/api/2.0/pipelines/def?",
 			Response: pipelines.GetPipelineResponse{
 				PipelineId:   "def",
 				Name:         "def",

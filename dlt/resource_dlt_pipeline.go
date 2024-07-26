@@ -228,7 +228,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("id").SetComputed()
 	s.SchemaPath("cluster", "node_type_id").SetComputed()
 	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()
-	// s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
+	s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
 	s.SchemaPath("url").SetComputed()
 
 	s.SchemaPath("state").SetComputed()
@@ -250,6 +250,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 
 	// Deprecated fields
 	s.SchemaPath("cluster", "init_scripts", "dbfs").SetDeprecated(clusters.DbfsDeprecationWarning)
+	s.SchemaPath("library", "whl").SetDeprecated("The 'whl' field is deprecated")
 
 	// Delete fields
 	s.SchemaPath("cluster", "gcp_attributes").RemoveField("use_preemptible_executors")
@@ -332,25 +333,3 @@ func ResourcePipeline() common.Resource {
 		},
 	}
 }
-
-// Notes:
-// Cluster->enable_local_disk_encryption (not in new)
-// Libraries->Whl does not exist in new
-// not setting group:node_type for fields in pipelineCluster
-// In cluster, ID in old Id in new
-// Cluster->Autoscale->Mode (difference in type)
-// Cluster->AwsAttributes->Availability (difference in type)
-// Cluster->init_scripts->Abfss (difference in type)
-// Why is serverless Optional in Serverless
-// What to do of dryrun as it affects create response
-// AllowDuplicateNames is given a default value in new
-// Cluster->AwsAttributes->EbsVolumeIops, EbsVolumeThroughput new
-// Cluster->AzureAttributes->LogAnalyticsInfo new
-// Gatewaydefinitions and ingestiondefinition in new
-// LastestUpdates
-// dry_run is in new - wrote unit test for it
-// RunAsUserName - checked
-// ExpectedLastModified - Test written
-
-// PipelineStateInfo
-// PipelineListResponse

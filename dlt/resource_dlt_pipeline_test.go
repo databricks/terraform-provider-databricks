@@ -1,12 +1,9 @@
 package dlt
 
 import (
-	// "context"
 	"errors"
-	// "fmt"
 	"testing"
 
-	// "github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 
@@ -503,114 +500,6 @@ func TestResourcePipelineDelete_Error(t *testing.T) {
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abcd", d.Id())
 }
-
-// type pipelineListResponse struct {
-// 	Statuses      []pipelines.PipelineStateInfo `json:"statuses"`
-// 	NextPageToken string                        `json:"next_page_token"`
-// 	PrevPageToken string                        `json:"prev_page_token"`
-// }
-
-// func listPipelines(ctx context.Context, client *common.DatabricksClient, maxResults int, filter string) ([]pipelines.PipelineStateInfo, error) {
-// 	w, err2 := client.WorkspaceClient()
-// 	if err2 != nil {
-// 		return nil, err2
-// 	}
-
-// 	data, err := w.Pipelines.ListPipelinesAll(ctx, pipelines.ListPipelinesRequest{
-// 		MaxResults: maxResults,
-// 		Filter:     filter,
-// 	})
-// 	fmt.Println(data)
-// 	return data, err
-// }
-
-// // Giving error (don't know how to resolve)
-// func TestListPipelines(t *testing.T) {
-// 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-// 		{
-// 			Method:   "GET",
-// 			Resource: "/api/2.0/pipelines?max_results=1",
-// 			Response: pipelineListResponse{
-// 				Statuses: []pipelines.PipelineStateInfo{
-// 					{
-// 						PipelineId:      "123",
-// 						Name:            "Pipeline1",
-// 						CreatorUserName: "user1",
-// 					},
-// 				},
-// 				NextPageToken: "token1",
-// 			},
-// 		},
-// 		{
-// 			Method:   "GET",
-// 			Resource: "/api/2.0/pipelines?max_results=1&page_token=token1",
-// 			Response: pipelineListResponse{
-// 				Statuses: []pipelines.PipelineStateInfo{
-// 					{
-// 						PipelineId:      "456",
-// 						Name:            "Pipeline2",
-// 						CreatorUserName: "user2",
-// 					},
-// 				},
-// 				PrevPageToken: "token0",
-// 			},
-// 		},
-// 		// {
-// 		// 	Method:   "GET",
-// 		// 	Resource: "/api/2.0/pipelines?max_results=2",
-// 		// 	Response: pipelineListResponse{
-// 		// 		Statuses: []pipelines.PipelineStateInfo{
-// 		// 			{
-// 		// 				PipelineId:      "123",
-// 		// 				Name:            "Pipeline1",
-// 		// 				CreatorUserName: "user1",
-// 		// 			},
-// 		// 			{
-// 		// 				PipelineId:      "456",
-// 		// 				Name:            "Pipeline2",
-// 		// 				CreatorUserName: "user2",
-// 		// 			},
-// 		// 		},
-// 		// 	},
-// 		// },
-// 	})
-// 	defer server.Close()
-// 	require.NoError(t, err)
-
-// 	ctx := context.Background()
-// 	data, err := listPipelines(ctx, client, 1, "")
-// 	require.NoError(t, err)
-// 	require.Equal(t, 2, len(data))
-// 	require.Equal(t, "Pipeline1", data[0].Name)
-// 	require.Equal(t, "456", data[1].PipelineId)
-// }
-
-// // Not sure about this test
-// func TestListPipelinesWithFilter(t *testing.T) {
-// 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-// 		{
-// 			Method:   "GET",
-// 			Resource: "/api/2.0/pipelines?filter=name+LIKE+%27Pipeline1%27&max_results=1",
-// 			Response: pipelineListResponse{
-// 				Statuses: []pipelines.PipelineStateInfo{
-// 					{
-// 						PipelineId:      "123",
-// 						Name:            "Pipeline1",
-// 						CreatorUserName: "user1",
-// 					},
-// 				},
-// 			},
-// 		},
-// 	})
-// 	defer server.Close()
-// 	require.NoError(t, err)
-
-// 	ctx := context.Background()
-// 	data, err := listPipelines(ctx, client, 1, "name LIKE 'Pipeline1'")
-// 	// data, err := NewPipelinesAPI(ctx, client).List(1, "name LIKE 'Pipeline1'")
-// 	require.NoError(t, err)
-// 	require.Equal(t, 1, len(data))
-// }
 
 func TestStorageSuppressDiff(t *testing.T) {
 	k := "storage"

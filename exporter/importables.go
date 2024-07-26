@@ -2770,7 +2770,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-shares",
 		List: func(ic *importContext) error {
-			shares, err := ic.workspaceClient.Shares.ListAll(ic.Context)
+			shares, err := ic.workspaceClient.Shares.ListAll(ic.Context, sharing.ListSharesRequest{})
 			if err != nil {
 				return err
 			}

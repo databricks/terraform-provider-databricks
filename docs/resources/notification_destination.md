@@ -76,7 +76,7 @@ resource "databricks_notification_destination" "ndresource" {
 The following arguments are supported:
 
 * `display_name` - (Required) The display name of the Notification Destination.
-* `config` - (Required) The configuration of the Notification Destination. It must be one of the following:
+* `config` - (Required) The configuration of the Notification Destination. It must contain exactly one of the following blocks:
   * `email` - The email configuration of the Notification Destination. It must contain the following:
     * `addresses` - (Required) The list of email addresses to send notifications to.
   * `slack` - The Slack configuration of the Notification Destination. It must contain the following:

@@ -2028,7 +2028,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 				// ic.emitInitScriptsLegacy(cluster.InitScripts)
 				ic.emitInitScripts(cluster.InitScripts)
-				ic.emitSecretsFromSecretsPathMao(cluster.SparkConf)
+				ic.emitSecretsFromSecretsPathMap(cluster.SparkConf)
 				ic.emitSecretsFromSecretsPathMap(cluster.SparkEnvVars)
 			}
 			ic.emitFilesFromMap(pipeline.Configuration)

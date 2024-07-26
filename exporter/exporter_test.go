@@ -30,8 +30,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-
-	// "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"

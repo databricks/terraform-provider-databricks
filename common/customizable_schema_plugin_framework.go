@@ -2,9 +2,9 @@ package common
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 type CustomizableSchemaPluginFramework struct {
@@ -112,38 +112,37 @@ func (s *CustomizableSchemaPluginFramework) RemoveField(key string, path ...stri
 }
 
 func (s *CustomizableSchemaPluginFramework) AddValidator(v any, path ...string) *CustomizableSchemaPluginFramework {
-	cb := func(a schema.Attribute) schema.Attribute {
-		switch attr := a.(type) {
-		case schema.SingleNestedAttribute:
-			attr.Validators = append(attr.Validators, v.(validator.Object))
-			return attr
-		case schema.ListNestedAttribute:
-			attr.Validators = append(attr.Validators, v.(validator.List))
-			return attr
-		case schema.MapNestedAttribute:
-			attr.Validators = append(attr.Validators, v.(validator.Map))
-			return attr
-		case schema.BoolAttribute:
-			attr.Validators = append(attr.Validators, v.(validator.Bool))
-			return attr
-		case schema.Float64Attribute:
-			attr.Validators = append(attr.Validators, v.(validator.Float64))
-			return attr
-		case schema.StringAttribute:
-			attr.Validators = append(attr.Validators, v.(validator.String))
-			return attr
-		case schema.Int64Attribute:
-			attr.Validators = append(attr.Validators, v.(validator.Int64))
-			return attr
-		case schema.ListAttribute:
-			attr.Validators = append(attr.Validators, v.(validator.List))
-			return attr
-		case schema.MapAttribute:
-			attr.Validators = append(attr.Validators, v.(validator.Map))
-			return attr
-		default:
-			panic(fmt.Sprintf("Unsupported type %T", s.attr))
+	cb := func(attr schema.Attribute) schema.Attribute {
+		val := reflect.ValueOf(attr)
+
+		// Make a copy of the existing attr.
+		newAttr := reflect.New(val.Type()).Elem()
+		newAttr.Set(val)
+		val = newAttr
+
+		field := val.FieldByName("Validators")
+		if !field.IsValid() {
+			panic(fmt.Sprintf("Validators field not found in %T", attr))
 		}
+		if field.Kind() != reflect.Slice {
+			panic(fmt.Sprintf("Validators field is not a slice in %T", attr))
+		}
+		if !field.CanSet() {
+			panic(fmt.Sprintf("Validators field cannot be set in %T", attr))
+		}
+
+		elemType := field.Type().Elem()
+		value := reflect.ValueOf(v)
+
+		if !value.Type().AssignableTo(elemType) {
+			panic(fmt.Sprintf("Value of type %T is not assignable to slice of %s", v, elemType))
+		}
+
+		// Append the value
+		newSlice := reflect.Append(field, value)
+		field.Set(newSlice)
+
+		return val.Interface().(schema.Attribute)
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -152,47 +151,38 @@ func (s *CustomizableSchemaPluginFramework) AddValidator(v any, path ...string) 
 }
 
 func (s *CustomizableSchemaPluginFramework) SetOptional(path ...string) *CustomizableSchemaPluginFramework {
-	cb := func(a schema.Attribute) schema.Attribute {
-		switch attr := a.(type) {
-		case schema.SingleNestedAttribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		case schema.ListNestedAttribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		case schema.MapNestedAttribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		case schema.BoolAttribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		case schema.Float64Attribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		case schema.StringAttribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		case schema.Int64Attribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		case schema.ListAttribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		case schema.MapAttribute:
-			attr.Optional = true
-			attr.Required = false
-			return attr
-		default:
-			panic(fmt.Sprintf("Unsupported type %T", s.attr))
+	cb := func(attr schema.Attribute) schema.Attribute {
+		// Get the concrete value stored in the interface
+		v := reflect.ValueOf(attr)
+
+		// Make a new addressable value and copy the original value into it
+		newAttr := reflect.New(v.Type()).Elem()
+		newAttr.Set(v)
+		v = newAttr
+
+		field := v.FieldByName("Required")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(false)
+			} else {
+				panic(fmt.Sprintf("Required is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Required field not found or cannot be set in %T", attr))
 		}
+
+		field = v.FieldByName("Optional")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(true)
+			} else {
+				panic(fmt.Sprintf("Optional is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Optional field not found or cannot be set in %T", attr))
+		}
+
+		return v.Interface().(schema.Attribute)
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -201,47 +191,38 @@ func (s *CustomizableSchemaPluginFramework) SetOptional(path ...string) *Customi
 }
 
 func (s *CustomizableSchemaPluginFramework) SetRequired(path ...string) *CustomizableSchemaPluginFramework {
-	cb := func(a schema.Attribute) schema.Attribute {
-		switch attr := a.(type) {
-		case schema.SingleNestedAttribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		case schema.ListNestedAttribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		case schema.MapNestedAttribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		case schema.BoolAttribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		case schema.Float64Attribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		case schema.StringAttribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		case schema.Int64Attribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		case schema.ListAttribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		case schema.MapAttribute:
-			attr.Optional = false
-			attr.Required = true
-			return attr
-		default:
-			panic(fmt.Sprintf("Unsupported type %T", s.attr))
+	cb := func(attr schema.Attribute) schema.Attribute {
+		// Get the concrete value stored in the interface
+		v := reflect.ValueOf(attr)
+
+		// Make a new addressable value and copy the original value into it
+		newAttr := reflect.New(v.Type()).Elem()
+		newAttr.Set(v)
+		v = newAttr
+
+		field := v.FieldByName("Required")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(true)
+			} else {
+				panic(fmt.Sprintf("Required is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Required field not found or cannot be set in %T", attr))
 		}
+
+		field = v.FieldByName("Optional")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(false)
+			} else {
+				panic(fmt.Sprintf("Optional is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Optional field not found or cannot be set in %T", attr))
+		}
+
+		return v.Interface().(schema.Attribute)
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -250,38 +231,27 @@ func (s *CustomizableSchemaPluginFramework) SetRequired(path ...string) *Customi
 }
 
 func (s *CustomizableSchemaPluginFramework) SetSensitive(path ...string) *CustomizableSchemaPluginFramework {
-	cb := func(a schema.Attribute) schema.Attribute {
-		switch attr := a.(type) {
-		case schema.SingleNestedAttribute:
-			attr.Sensitive = true
-			return attr
-		case schema.ListNestedAttribute:
-			attr.Sensitive = true
-			return attr
-		case schema.MapNestedAttribute:
-			attr.Sensitive = true
-			return attr
-		case schema.BoolAttribute:
-			attr.Sensitive = true
-			return attr
-		case schema.Float64Attribute:
-			attr.Sensitive = true
-			return attr
-		case schema.StringAttribute:
-			attr.Sensitive = true
-			return attr
-		case schema.Int64Attribute:
-			attr.Sensitive = true
-			return attr
-		case schema.ListAttribute:
-			attr.Sensitive = true
-			return attr
-		case schema.MapAttribute:
-			attr.Sensitive = true
-			return attr
-		default:
-			panic(fmt.Sprintf("Unsupported type %T", s.attr))
+	cb := func(attr schema.Attribute) schema.Attribute {
+		// Get the concrete value stored in the interface
+		v := reflect.ValueOf(attr)
+
+		// Make a new addressable value and copy the original value into it
+		newAttr := reflect.New(v.Type()).Elem()
+		newAttr.Set(v)
+		v = newAttr
+
+		field := v.FieldByName("Sensitive")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(true)
+			} else {
+				panic(fmt.Sprintf("Sensitive is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Sensitive field not found or cannot be set in %T", attr))
 		}
+
+		return v.Interface().(schema.Attribute)
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -289,38 +259,27 @@ func (s *CustomizableSchemaPluginFramework) SetSensitive(path ...string) *Custom
 }
 
 func (s *CustomizableSchemaPluginFramework) SetDeprecated(msg string, path ...string) *CustomizableSchemaPluginFramework {
-	cb := func(a schema.Attribute) schema.Attribute {
-		switch attr := a.(type) {
-		case schema.SingleNestedAttribute:
-			attr.DeprecationMessage = msg
-			return attr
-		case schema.ListNestedAttribute:
-			attr.DeprecationMessage = msg
-			return attr
-		case schema.MapNestedAttribute:
-			attr.DeprecationMessage = msg
-			return attr
-		case schema.BoolAttribute:
-			attr.DeprecationMessage = msg
-			return attr
-		case schema.Float64Attribute:
-			attr.DeprecationMessage = msg
-			return attr
-		case schema.StringAttribute:
-			attr.DeprecationMessage = msg
-			return attr
-		case schema.Int64Attribute:
-			attr.DeprecationMessage = msg
-			return attr
-		case schema.ListAttribute:
-			attr.DeprecationMessage = msg
-			return attr
-		case schema.MapAttribute:
-			attr.DeprecationMessage = msg
-			return attr
-		default:
-			panic(fmt.Sprintf("Unsupported type %T", s.attr))
+	cb := func(attr schema.Attribute) schema.Attribute {
+		// Get the concrete value stored in the interface
+		v := reflect.ValueOf(attr)
+
+		// Make a new addressable value and copy the original value into it
+		newAttr := reflect.New(v.Type()).Elem()
+		newAttr.Set(v)
+		v = newAttr
+
+		field := v.FieldByName("DeprecationMessage")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.String {
+				field.SetString(msg)
+			} else {
+				panic(fmt.Sprintf("DeprecationMessage is not a string field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("DeprecationMessage field not found or cannot be set in %T", attr))
 		}
+
+		return v.Interface().(schema.Attribute)
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -342,9 +301,9 @@ func MustSchemaAttributePath(attrs map[string]schema.Attribute, path ...string) 
 
 // Helper function for navigating through schema attributes, panics if path does not exist or invalid.
 func navigateSchema(s *schema.Attribute, path ...string) (schema.Attribute, error) {
-	cs := s
+	current_scm := s
 	for i, p := range path {
-		m := attributeToMap(cs)
+		m := attributeToMap(current_scm)
 
 		v, ok := m[p]
 		if !ok {
@@ -354,16 +313,16 @@ func navigateSchema(s *schema.Attribute, path ...string) (schema.Attribute, erro
 		if i == len(path)-1 {
 			return v, nil
 		}
-		cs = &v
+		current_scm = &v
 	}
 	return nil, fmt.Errorf("path %v is incomplete", path)
 }
 
 // Helper function for navigating through schema attributes, panics if path does not exist or invalid.
 func navigateSchemaWithCallback(s *schema.Attribute, cb func(schema.Attribute) schema.Attribute, path ...string) (schema.Attribute, error) {
-	cs := s
+	current_scm := s
 	for i, p := range path {
-		m := attributeToMap(cs)
+		m := attributeToMap(current_scm)
 
 		v, ok := m[p]
 		if !ok {
@@ -374,7 +333,7 @@ func navigateSchemaWithCallback(s *schema.Attribute, cb func(schema.Attribute) s
 			m[p] = cb(v)
 			return m[p], nil
 		}
-		cs = &v
+		current_scm = &v
 	}
 	return nil, fmt.Errorf("path %v is incomplete", path)
 }

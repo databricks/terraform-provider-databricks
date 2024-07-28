@@ -402,9 +402,14 @@ func fieldIsOptional(field reflect.StructField) bool {
 	return strings.Contains(tagValue, "optional")
 }
 
-func PluginFrameworkResourceStructToSchema(v any) schema.Schema {
-	return schema.Schema{
-		Attributes: PluginFrameworkResourceStructToSchemaMap(v),
+func PluginFrameworkResourceStructToSchema(v any, customizeSchema func(CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework) schema.Schema {
+	attributes := pluginFrameworkResourceTypeToSchema(reflect.ValueOf(v))
+
+	if customizeSchema != nil {
+		cs := customizeSchema(*ConstructCustomizableSchema(attributes))
+		return schema.Schema{Attributes: cs.ToAttributeMap()}
+	} else {
+		return schema.Schema{Attributes: attributes}
 	}
 }
 

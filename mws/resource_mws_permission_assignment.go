@@ -23,14 +23,14 @@ func getPermissionsByPrincipal(list iam.PermissionAssignments, principalId int64
 func ResourceMwsPermissionAssignment() common.Resource {
 	s := common.StructToSchema(iam.UpdateWorkspaceAssignments{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["workspace_id"] = &schema.Schema{
+			common.CustomizeSchemaPath(m).AddNewField("workspace_id", &schema.Schema{
 				Type:     schema.TypeInt,
 				Required: true,
-			}
-			m["principal_id"] = &schema.Schema{
+			}).AddNewField("principal_id", &schema.Schema{
 				Type:     schema.TypeInt,
 				Required: true,
-			}
+			})
+			common.CustomizeSchemaPath(m, "permissions").SetRequired().SetSliceSet()
 			return m
 		})
 	pair := common.NewPairID("workspace_id", "principal_id").Schema(
@@ -72,6 +72,8 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("workspace_id", common.MustInt64(workspaceId))
+			d.Set("principal_id", common.MustInt64(principalId))
 			return common.StructToData(permissions, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

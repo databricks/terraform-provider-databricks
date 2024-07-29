@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -114,7 +114,7 @@ func TestResourceInstanceProfileCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/add",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -249,7 +249,7 @@ func TestResourceInstanceProfileRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/instance-profiles/list",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -289,7 +289,7 @@ func TestResourceInstanceProfileDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/remove",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -356,7 +356,7 @@ func TestResourceInstanceProfileUpdate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-profiles/edit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

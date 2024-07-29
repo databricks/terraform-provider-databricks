@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -70,7 +70,7 @@ func TestResourceDirectoryDelete_NotFound(t *testing.T) {
 				Method:          http.MethodPost,
 				Resource:        "/api/2.0/workspace/delete",
 				ExpectedRequest: DeletePath{Path: path, Recursive: delete_recursive},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/test/path) doesn't exist.",
 				},
@@ -96,7 +96,7 @@ func TestResourceDirectoryRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -117,7 +117,7 @@ func TestResourceDirectoryRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -175,7 +175,7 @@ func TestResourceDirectoryCreate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"path": path,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -200,7 +200,7 @@ func TestResourceDirectoryDelete_Error(t *testing.T) {
 				Method:          "POST",
 				Resource:        "/api/2.0/workspace/delete",
 				ExpectedRequest: DeletePath{Path: path, Recursive: false},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

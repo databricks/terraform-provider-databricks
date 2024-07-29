@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -50,7 +50,7 @@ func TestDataSourceExperimentByIdNotFound(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=0987654321",
 				Status:   404,
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Node ID 0987654321 does not exist.",
 				},
@@ -107,7 +107,7 @@ func TestDataSourceExperimentByNameNotFound(t *testing.T) {
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/mlflow/experiments/get-by-name?experiment_name=%s", url.QueryEscape(experimentName)),
 				Status:   404,
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Node /Users/databricks/non-existent-experiment does not exist.",
 				},
@@ -130,7 +130,7 @@ func TestDataSourceExperimentByNameInvalidPath(t *testing.T) {
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/mlflow/experiments/get-by-name?experiment_name=%s", url.QueryEscape(experimentName)),
 				Status:   404,
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Got an invalid experiment name 'invalid_path'. An experiment name must be an absolute path within the Databricks workspace, e.g. '/Users/<some-username>/my-experiment'.",
 				},

@@ -133,6 +133,44 @@ func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(object
 	return isDbsqlPermissionsWorkaroundNecessary(objectID)
 }
 
+func isOwnershipWorkaroundNecessary(objectID string) bool {
+	return strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/sql/warehouses")
+}
+
+func (a PermissionsAPI) getObjectCreator(objectID string) (string, error) {
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return "", err
+	}
+	if strings.HasPrefix(objectID, "/jobs") {
+		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
+		if err != nil {
+			return "", err
+		}
+		job, err := w.Jobs.GetByJobId(a.context, jobId)
+		if err != nil {
+			if strings.HasSuffix(err.Error(), " does not exist.") {
+				return "", nil
+			}
+			return "", err
+		}
+		return job.CreatorUserName, nil
+	} else if strings.HasPrefix(objectID, "/pipelines") {
+		pipeline, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
+		if err != nil {
+			return "", err
+		}
+		return pipeline.CreatorUserName, nil
+	} else if strings.HasPrefix(objectID, "/sql/warehouses") {
+		warehouse, err := w.Warehouses.GetById(a.context, strings.ReplaceAll(objectID, "/sql/warehouses/", ""))
+		if err != nil {
+			return "", err
+		}
+		return warehouse.CreatorName, nil
+	}
+	return "", nil
+}
+
 func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
 	if !a.shouldExplicitlyGrantCallingUserManagePermissions(objectID) {
 		return objectACL, nil
@@ -177,7 +215,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") {
+	if isOwnershipWorkaroundNecessary(objectID) {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -218,33 +256,16 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			}
 		}
 	}
-	w, err := a.client.WorkspaceClient()
-	if err != nil {
-		return err
-	}
-	if strings.HasPrefix(objectID, "/jobs") {
-		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
+	if isOwnershipWorkaroundNecessary(objectID) {
+		creator, err := a.getObjectCreator(objectID)
 		if err != nil {
 			return err
 		}
-		job, err := w.Jobs.GetByJobId(a.context, jobId)
-		if err != nil {
-			if strings.HasSuffix(err.Error(), " does not exist.") {
-				return nil
-			}
-			return err
+		if creator == "" {
+			return nil
 		}
 		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
-			UserName:        job.CreatorUserName,
-			PermissionLevel: "IS_OWNER",
-		})
-	} else if strings.HasPrefix(objectID, "/pipelines") {
-		job, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
-		if err != nil {
-			return err
-		}
-		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
-			UserName:        job.CreatorUserName,
+			UserName:        creator,
 			PermissionLevel: "IS_OWNER",
 		})
 	}

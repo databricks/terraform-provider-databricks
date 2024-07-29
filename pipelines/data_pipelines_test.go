@@ -96,7 +96,7 @@ func TestDataSourcePipelines_SearchError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?filter=name+LIKE+%27Pipeline2%27&max_results=100",
-				Response: pipelines.ListPipelineEventsResponse{},
+				Response: pipelines.ListPipelinesResponse{},
 			},
 		},
 		Resource:    DataSourcePipelines(),
@@ -115,7 +115,7 @@ func TestDataSourcePipelines_NoneFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=100",
-				Response: pipelines.ListPipelineEventsResponse{},
+				Response: pipelines.ListPipelinesResponse{},
 			},
 		},
 		Resource:    DataSourcePipelines(),

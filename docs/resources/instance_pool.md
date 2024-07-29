@@ -62,7 +62,7 @@ The following options are [available](https://docs.databricks.com/dev-tools/api/
 The following options are [available](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes):
 
 * `availability` - (Optional) Availability type used for all nodes. Valid values are `SPOT_AZURE` and `ON_DEMAND_AZURE`.
-* `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify the lowest price.
+* `spot_bid_max_price` - (Optional) The max bid price used for Azure spot instances. You can set this to greater than or equal to the current spot price. You can also set this to `-1`, which specifies that the instance cannot be evicted on the basis of price. The price for the instance will be the current price for spot instances or the price for a standard instance.
 
 ### gcp_attributes Configuration Block
 

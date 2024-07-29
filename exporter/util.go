@@ -23,6 +23,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 
@@ -30,6 +31,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // Remove this once databricks_pipeline and databricks_job resources are migrated to Go SDK
@@ -116,8 +118,8 @@ func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
 		})
 	}
 	ic.emitInitScriptsLegacy(c.InitScripts)
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
+	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
@@ -151,19 +153,23 @@ func (ic *importContext) importCluster(c *compute.ClusterSpec) {
 		})
 	}
 	ic.emitInitScripts(c.InitScripts)
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
+	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
-func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
+func (ic *importContext) emitSecretsFromSecretPathString(v string) {
+	if res := secretPathRegex.FindStringSubmatch(v); res != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_secret_scope",
+			ID:       res[1],
+		})
+	}
+}
+
+func (ic *importContext) emitSecretsFromSecretsPathMap(m map[string]string) {
 	for _, v := range m {
-		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_secret_scope",
-				ID:       res[1],
-			})
-		}
+		ic.emitSecretsFromSecretPathString(v)
 	}
 }
 
@@ -1434,6 +1440,21 @@ func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceAp
 	return result
 }
 
+func isMatchingCatalogAndSchemaInModelServing(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	res_catalog_name := res.Data.Get("config.0.auto_capture_config.0.catalog_name").(string)
+	res_schema_name := res.Data.Get("config.0.auto_capture_config.0.schema_name").(string)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	return result
+}
+
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
 	shareName, ok := res.Data.GetOk("share")
 	// principal := res.Data.Get(origPath)
@@ -1555,4 +1576,44 @@ func (ic *importContext) makeGroupMemberData(id, groupId, memberId string) *sche
 	data.Set("group_id", groupId)
 	data.Set("member_id", memberId)
 	return data
+}
+
+func (ic *importContext) emitWorkspaceBindings(securableType, securableName string) {
+	bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindings(ic.Context, catalog.GetBindingsRequest{
+		SecurableName: securableName,
+		SecurableType: catalog.GetBindingsSecurableType(securableType),
+	})
+	if err != nil {
+		log.Printf("[ERROR] listing %s bindings for %s: %s", securableType, securableName, err.Error())
+		return
+	}
+	for _, binding := range bindings.Bindings {
+		id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securableType, securableName)
+		// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
+		// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now
+		// to decrease a number of API calls.
+		d := ic.Resources["databricks_workspace_binding"].Data(
+			&terraform.InstanceState{
+				ID: id,
+				Attributes: map[string]string{
+					"workspace_id":   fmt.Sprintf("%d", binding.WorkspaceId),
+					"securable_type": securableType,
+					"securable_name": securableName,
+					"binding_type":   binding.BindingType.String(),
+				},
+			})
+		ic.Emit(&resource{
+			Resource: "databricks_workspace_binding",
+			ID:       id,
+			Name:     fmt.Sprintf("%s_%s_ws_%d", securableType, securableName, binding.WorkspaceId),
+			Data:     d,
+		})
+	}
+}
+
+func isMatchingSecurableTypeAndName(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	res_securable_type := res.Data.Get("securable_type").(string)
+	res_securable_name := res.Data.Get("securable_name").(string)
+	ra_name, _ := ra.Get("name")
+	return ra.Type == ("databricks_"+res_securable_type) && ra_name.(string) == res_securable_name
 }

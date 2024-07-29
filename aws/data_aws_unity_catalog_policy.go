@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -44,6 +45,10 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 		},
 	}
 	if kmsKey, ok := d.GetOk("kms_name"); ok {
+		kmsArn := fmt.Sprintf("arn:aws:kms:%s", kmsKey)
+		if strings.HasPrefix(kmsKey.(string), "arn:aws") {
+			kmsArn = kmsKey.(string)
+		}
 		policy.Statements = append(policy.Statements, &awsIamPolicyStatement{
 			Effect: "Allow",
 			Actions: []string{
@@ -51,9 +56,7 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 				"kms:Encrypt",
 				"kms:GenerateDataKey*",
 			},
-			Resources: []string{
-				fmt.Sprintf("arn:aws:kms:%s", kmsKey),
-			},
+			Resources: []string{kmsArn},
 		})
 	}
 	policyJSON, err := json.MarshalIndent(policy, "", "  ")
@@ -73,9 +76,6 @@ func validateSchema() map[string]*schema.Schema {
 		"kms_name": {
 			Type:     schema.TypeString,
 			Optional: true,
-			ValidateFunc: validation.StringMatch(
-				regexp.MustCompile(`^[0-9a-zA-Z/_-]+$`),
-				"must contain only alphanumeric, hyphens, forward slashes, and underscores characters"),
 		},
 		"bucket_name": {
 			Type:     schema.TypeString,

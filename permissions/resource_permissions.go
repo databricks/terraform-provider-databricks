@@ -137,7 +137,7 @@ func isOwnershipWorkaroundNecessary(objectID string) bool {
 	return strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/sql/warehouses")
 }
 
-// Check if an error is 404
+// Suppress the error if it is 404
 func ignoreNotFound(err error) error {
 	var apiErr *apierr.APIError
 	if !errors.As(err, &apiErr) {

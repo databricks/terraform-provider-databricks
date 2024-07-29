@@ -47,7 +47,7 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	if d.Get("dry_run").(bool) {
 		id = createdPipeline.EffectiveSettings.Id
 		d.SetId(id)
-		return nil
+		return fmt.Errorf("dry run succeeded; pipeline %s was not created", id)
 	} else {
 		id = createdPipeline.PipelineId
 	}
@@ -205,6 +205,11 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	// ForceNew fields
 	s.SchemaPath("storage").SetForceNew()
 	s.SchemaPath("catalog").SetForceNew()
+	s.SchemaPath("gateway_definition", "connection_id").SetForceNew()
+	s.SchemaPath("gateway_definition", "gateway_storage_catalog").SetForceNew()
+	s.SchemaPath("gateway_definition", "gateway_storage_schema").SetForceNew()
+	s.SchemaPath("ingestion_definition", "connection_name").SetForceNew()
+	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
 
 	// Computed fields
 	s.SchemaPath("id").SetComputed()
@@ -245,6 +250,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	// ConflictsWith fields
 	s.SchemaPath("storage").SetConflictsWith([]string{"catalog"})
 	s.SchemaPath("catalog").SetConflictsWith([]string{"storage"})
+	s.SchemaPath("ingestion_definition", "connection_name").SetConflictsWith([]string{"ingestion_definition.0.ingestion_gateway_id"})
 
 	// MinItems fields
 	s.SchemaPath("library").SetMinItems(1)
@@ -258,6 +264,10 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	// ValidateFunc fields
 	s.SchemaPath("channel").SetValidateFunc(validation.StringInSlice([]string{"current", "preview"}, true))
 	s.SchemaPath("edition").SetValidateFunc(validation.StringInSlice([]string{"pro", "core", "advanced"}, true))
+
+	// RequiredWith fields
+	s.SchemaPath("gateway_definition").SetRequiredWith([]string{"gateway_definition.0.gateway_storage_name", "gateway_definition.0.gateway_storage_catalog", "gateway_definition.0.gateway_storage_schema"})
+	s.SchemaPath("ingestion_definition").SetRequiredWith([]string{"ingestion_definition.0.objects"})
 
 	return s
 }

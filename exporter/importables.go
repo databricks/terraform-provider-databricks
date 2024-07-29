@@ -32,8 +32,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
-
-	// "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
@@ -1952,9 +1950,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			pipelinesList, err := w.Pipelines.ListPipelinesAll(ic.Context, pipelines.ListPipelinesRequest{
 				MaxResults: 50,
 			})
-
-			// api := pipelines.NewPipelinesAPI(ic.Context, ic.Client)
-			// pipelinesList, err := api.List(50, "")
 			if err != nil {
 				return err
 			}
@@ -2026,7 +2021,6 @@ var resourcesMap map[string]importable = map[string]importable{
 						ID:       cluster.PolicyId,
 					})
 				}
-				// ic.emitInitScriptsLegacy(cluster.InitScripts)
 				ic.emitInitScripts(cluster.InitScripts)
 				ic.emitSecretsFromSecretsPathMap(cluster.SparkConf)
 				ic.emitSecretsFromSecretsPathMap(cluster.SparkEnvVars)

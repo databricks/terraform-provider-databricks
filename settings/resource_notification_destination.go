@@ -2,7 +2,6 @@ package settings
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -95,11 +94,8 @@ func ResourceNotificationDestination() common.Resource {
 			if err != nil {
 				return err
 			}
-			// fmt.Println(s.Config.Slack.Url)
-			// common.StructToData(s.Config, ndSchema, d)
-			// d.Get("config.0.slack.0.url")
 			d.Set("config.0.slack.0.url", s.Config.Slack.Url)
-			fmt.Println(d.Get("config.0.slack.0.url"))
+			// fmt.Println(d.Get("config.0.slack.0.url"))
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

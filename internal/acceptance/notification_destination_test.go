@@ -51,7 +51,7 @@ func TestAccNDSlack(t *testing.T) {
 			display_name = "` + display_name + `"
 			config {
 				slack {
-					url = "https://hooks.slack.com/services/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"
+					url = "https://hooks.slack.com/services/..."
 				}
 			}
 		}
@@ -67,7 +67,104 @@ func TestAccNDSlack(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			// assert.Equal(t, settings.DestinationType("EMAIL"), ndResource.DestinationType)
+			assert.Equal(t, settings.DestinationType("SLACK"), ndResource.DestinationType)
+			assert.Equal(t, display_name, ndResource.DisplayName)
+			require.NoError(t, err)
+			return nil
+		}),
+	})
+}
+
+func TestAccNDMicrosoftTeams(t *testing.T) {
+	display_name := "Notification Destination - " + qa.RandomName()
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_notification_destination" "this" {
+			display_name = "` + display_name + `"
+			config {
+				microsoft_teams {
+					url = "https://outlook.office.com/webhook/..."
+				}
+			}
+		}
+		`,
+		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
+				Id: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, settings.DestinationType("MICROSOFT_TEAMS"), ndResource.DestinationType)
+			assert.Equal(t, display_name, ndResource.DisplayName)
+			require.NoError(t, err)
+			return nil
+		}),
+	})
+}
+
+func TestAccNDPagerduty(t *testing.T) {
+	display_name := "Notification Destination - " + qa.RandomName()
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_notification_destination" "this" {
+			display_name = "` + display_name + `"
+			config {
+				pagerduty {
+					integration_key = "..."
+				}
+			}
+		}
+		`,
+		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
+				Id: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, settings.DestinationType("PAGERDUTY"), ndResource.DestinationType)
+			assert.Equal(t, display_name, ndResource.DisplayName)
+			require.NoError(t, err)
+			return nil
+		}),
+	})
+}
+
+func TestAccNDGenericWebhook(t *testing.T) {
+	display_name := "Notification Destination - " + qa.RandomName()
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_notification_destination" "this" {
+			display_name = "` + display_name + `"
+			config {
+				generic_webhook {
+					url = "https://webhook.site/abc"
+					password = "password"
+				}
+			}
+		}
+		`,
+		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
+				Id: id,
+			})
+			if err != nil {
+				return err
+			}
+			assert.Equal(t, settings.DestinationType("WEBHOOK"), ndResource.DestinationType)
 			assert.Equal(t, display_name, ndResource.DisplayName)
 			require.NoError(t, err)
 			return nil

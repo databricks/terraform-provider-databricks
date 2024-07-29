@@ -403,16 +403,17 @@ func fieldIsOptional(field reflect.StructField) bool {
 }
 
 func PluginFrameworkResourceStructToSchema(v any, customizeSchema func(CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework) schema.Schema {
+	attributes := PluginFrameworkResourceStructToSchemaMap(v, customizeSchema)
+	return schema.Schema{Attributes: attributes}
+}
+
+func PluginFrameworkResourceStructToSchemaMap(v any, customizeSchema func(CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework) map[string]schema.Attribute {
 	attributes := pluginFrameworkResourceTypeToSchema(reflect.ValueOf(v))
 
 	if customizeSchema != nil {
 		cs := customizeSchema(*ConstructCustomizableSchema(attributes))
-		return schema.Schema{Attributes: cs.ToAttributeMap()}
+		return cs.ToAttributeMap()
 	} else {
-		return schema.Schema{Attributes: attributes}
+		return attributes
 	}
-}
-
-func PluginFrameworkResourceStructToSchemaMap(v any) map[string]schema.Attribute {
-	return pluginFrameworkResourceTypeToSchema(reflect.ValueOf(v))
 }

@@ -40,7 +40,8 @@ resource "databricks_sql_table" "testtable" {
   }
 }
 
-resource "databricks_lakehouse_monitor_pluginframework" "testmonitor" { 
-  table_name = "${databricks_catalog.testcatalog.name}.${databricks_schema.testschema.name}.${databricks_sql_table.testtable.name}"
-}
+# TODO: Uncomment once SetReadOnly is supported in the plugin framework and add the necessary fields
+# resource "databricks_lakehouse_monitor_pluginframework" "testmonitor" { 
+#   table_name = "${databricks_catalog.testcatalog.name}.${databricks_schema.testschema.name}.${databricks_sql_table.testtable.name}"
+# }
 

@@ -52,8 +52,21 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Lakehouse Monitor. MonitorInfo struct is used to create the schema",
-		// TODO: Add CustomizeSchemaPath once it is supported in the plugin framework
-		Attributes: common.PluginFrameworkResourceStructToSchemaMap(catalog_tf.MonitorInfo{}),
+		Attributes: common.PluginFrameworkResourceStructToSchemaMap(catalog_tf.MonitorInfo{}, func(c common.CustomizableSchemaPluginFramework) common.CustomizableSchemaPluginFramework {
+			c.AddNewField("skip_builtin_dashboard", schema.BoolAttribute{Optional: true, Required: false})
+			c.AddNewField("warehouse_id", schema.StringAttribute{Optional: true, Required: false})
+			c.SetRequired("assets_dir")
+			c.SetRequired("output_schema_name")
+			c.SetRequired("table_name")
+			// TODO: Uncomment this once SetReadOnly is supported in the plugin framework
+			// c.SetReadOnly("monitor_version")
+			// c.SetReadOnly("drift_metrics_table_name")
+			// c.SetReadOnly("profile_metrics_table_name")
+			// c.SetReadOnly("status")
+			// c.SetReadOnly("dashboard_id")
+			// c.SetReadOnly("schedule", "pause_status")
+			return c
+		}),
 	}
 }
 

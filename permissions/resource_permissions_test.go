@@ -336,7 +336,7 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
 				Response: ObjectACL{
-					ObjectID:   "/sql/dashboards/abc",
+					ObjectID:   "dashboards/abc",
 					ObjectType: "dashboard",
 					AccessControlList: []AccessControl{
 						{
@@ -812,7 +812,7 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
 				Response: ObjectACL{
-					ObjectID:   "/sql/dashboards/abc",
+					ObjectID:   "dashboards/abc",
 					ObjectType: "dashboard",
 					AccessControlList: []AccessControl{
 						{
@@ -871,7 +871,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
 				Response: ObjectACL{
-					ObjectID:   "/sql/dashboards/abc",
+					ObjectID:   "dashboards/abc",
 					ObjectType: "dashboard",
 					AccessControlList: []AccessControl{
 						{
@@ -934,7 +934,7 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
 				Response: ObjectACL{
-					ObjectID:   "/sql/dashboards/abc",
+					ObjectID:   "dashboards/abc",
 					ObjectType: "dashboard",
 					AccessControlList: []AccessControl{
 						{
@@ -1651,7 +1651,7 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
 				Response: ObjectACL{
-					ObjectID:   "/sql/queries/id111",
+					ObjectID:   "queries/id111",
 					ObjectType: "query",
 					AccessControlList: []AccessControl{
 						{
@@ -1711,7 +1711,7 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
 				Response: ObjectACL{
-					ObjectID:   "/sql/queries/id111",
+					ObjectID:   "queries/id111",
 					ObjectType: "query",
 					AccessControlList: []AccessControl{
 						{

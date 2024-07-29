@@ -17,7 +17,7 @@ func TestResourceClusterCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/create",
+				Resource: "/api/2.1/clusters/create",
 				ExpectedRequest: compute.ClusterSpec{
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
@@ -33,7 +33,7 @@ func TestResourceClusterCreate(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
 					NumWorkers:             100,
@@ -46,7 +46,7 @@ func TestResourceClusterCreate(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -86,7 +86,7 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/create",
+				Resource: "/api/2.1/clusters/create",
 				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
@@ -102,7 +102,7 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
 					NumWorkers:             100,
@@ -115,7 +115,7 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/pin",
+				Resource: "/api/2.1/clusters/pin",
 				ExpectedRequest: compute.PinCluster{
 					ClusterId: "abc",
 				},
@@ -129,7 +129,7 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -169,7 +169,7 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/create",
+				Resource: "/api/2.1/clusters/create",
 				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             100,
 					SparkVersion:           "7.1-scala12",
@@ -184,7 +184,7 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
 					NumWorkers:             100,
@@ -197,7 +197,7 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -365,7 +365,7 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/create",
+				Resource: "/api/2.1/clusters/create",
 				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             100,
 					ClusterName:            "Shared Autoscaling",
@@ -382,7 +382,7 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
 					NumWorkers:             100,
@@ -396,7 +396,7 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -437,7 +437,11 @@ func TestResourceClusterCreate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
+<<<<<<< HEAD
 				Resource: "/api/2.0/clusters/create",
+=======
+				Resource: "/api/2.1/clusters/create",
+>>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -464,7 +468,7 @@ func TestResourceClusterRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
 					NumWorkers:             100,
@@ -480,7 +484,7 @@ func TestResourceClusterRead(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -517,7 +521,11 @@ func TestResourceClusterRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
+<<<<<<< HEAD
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+=======
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
+>>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					// clusters API is not fully restful, so let's test for that
 					// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
@@ -539,7 +547,11 @@ func TestResourceClusterRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
+<<<<<<< HEAD
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+=======
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
+>>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -561,7 +573,7 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId: "abc",
@@ -578,7 +590,7 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -592,7 +604,7 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/resize",
+				Resource: "/api/2.1/clusters/resize",
 				ExpectedRequest: compute.ResizeCluster{
 					ClusterId:  "abc",
 					NumWorkers: 3,
@@ -628,7 +640,7 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
@@ -642,7 +654,7 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -656,7 +668,7 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/resize",
+				Resource: "/api/2.1/clusters/resize",
 				ExpectedRequest: compute.ResizeCluster{
 					ClusterId: "abc",
 					Autoscale: &compute.AutoScale{
@@ -695,7 +707,7 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
@@ -709,7 +721,7 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -723,7 +735,7 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/edit",
+				Resource: "/api/2.1/clusters/edit",
 				ExpectedRequest: compute.ClusterDetails{
 					AutoterminationMinutes: 15,
 					ClusterId:              "abc",
@@ -759,7 +771,7 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId: "abc",
@@ -774,7 +786,7 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/resize",
+				Resource: "/api/2.1/clusters/resize",
 				ExpectedRequest: compute.ResizeCluster{
 					ClusterId: "abc",
 					Autoscale: &compute.AutoScale{
@@ -785,7 +797,7 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -830,7 +842,7 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
@@ -844,7 +856,7 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -858,7 +870,7 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/resize",
+				Resource: "/api/2.1/clusters/resize",
 				ExpectedRequest: compute.ResizeCluster{
 					ClusterId:  "abc",
 					NumWorkers: 100,
@@ -890,7 +902,7 @@ func TestResourceClusterUpdate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
@@ -904,7 +916,7 @@ func TestResourceClusterUpdate(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -918,7 +930,7 @@ func TestResourceClusterUpdate(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/start",
+				Resource: "/api/2.1/clusters/start",
 				ExpectedRequest: compute.StartCluster{
 					ClusterId: "abc",
 				},
@@ -932,7 +944,7 @@ func TestResourceClusterUpdate(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/edit",
+				Resource: "/api/2.1/clusters/edit",
 				ExpectedRequest: compute.ClusterDetails{
 					AutoterminationMinutes: 15,
 					ClusterId:              "abc",
@@ -970,7 +982,7 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
@@ -984,7 +996,7 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -998,7 +1010,7 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/start",
+				Resource: "/api/2.1/clusters/start",
 				ExpectedRequest: compute.StartCluster{
 					ClusterId: "abc",
 				},
@@ -1012,7 +1024,7 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/pin",
+				Resource: "/api/2.1/clusters/pin",
 				ExpectedRequest: compute.PinCluster{
 					ClusterId: "abc",
 				},
@@ -1051,7 +1063,7 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) {
 	terminated := qa.HTTPFixture{
 		Method:   "GET",
-		Resource: "/api/2.0/clusters/get?cluster_id=abc",
+		Resource: "/api/2.1/clusters/get?cluster_id=abc",
 		Response: compute.ClusterDetails{
 			ClusterId:    "abc",
 			NumWorkers:   100,
@@ -1087,7 +1099,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			terminated, // 1 of ...
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/edit",
+				Resource: "/api/2.1/clusters/edit",
 				ExpectedRequest: compute.EditCluster{
 					AutoterminationMinutes: 60,
 					ClusterId:              "abc",
@@ -1121,7 +1133,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			},
 			{ // check to see if cluster is restarting (if so wait)
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:    "abc",
 					NumWorkers:   100,
@@ -1132,7 +1144,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -1146,14 +1158,14 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			},
 			{ // start cluster before libs install
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/start",
+				Resource: "/api/2.1/clusters/start",
 				ExpectedRequest: compute.StartCluster{
 					ClusterId: "abc",
 				},
 			},
 			{ // 2 of ...
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:    "abc",
 					NumWorkers:   100,
@@ -1191,7 +1203,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 			newLibs,
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/delete",
+				Resource: "/api/2.1/clusters/delete",
 				ExpectedRequest: compute.DeleteCluster{
 					ClusterId: "abc",
 				},
@@ -1225,7 +1237,11 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
+<<<<<<< HEAD
 				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+=======
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
+>>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -1253,7 +1269,7 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
@@ -1272,7 +1288,7 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -1286,7 +1302,7 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/start",
+				Resource: "/api/2.1/clusters/start",
 				ExpectedRequest: compute.StartCluster{
 					ClusterId: "abc",
 				},
@@ -1300,7 +1316,7 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/edit",
+				Resource: "/api/2.1/clusters/edit",
 				ExpectedRequest: compute.EditCluster{
 					AutoterminationMinutes: 15,
 					ClusterId:              "abc",
@@ -1348,21 +1364,21 @@ func TestResourceClusterDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/delete",
+				Resource: "/api/2.1/clusters/delete",
 				ExpectedRequest: compute.DeleteCluster{
 					ClusterId: "abc",
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
+				Resource: "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					State: compute.StateTerminated,
 				},
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/permanent-delete",
+				Resource: "/api/2.1/clusters/permanent-delete",
 				ExpectedRequest: compute.PermanentDeleteCluster{
 					ClusterId: "abc",
 				},
@@ -1381,7 +1397,11 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
+<<<<<<< HEAD
 				Resource: "/api/2.0/clusters/permanent-delete",
+=======
+				Resource: "/api/2.1/clusters/permanent-delete",
+>>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -1402,7 +1422,7 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/create",
+				Resource: "/api/2.1/clusters/create",
 				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             0,
 					ClusterName:            "Single Node Cluster",
@@ -1425,7 +1445,7 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -1440,7 +1460,7 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 			{
 				Method:       "GET",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
 					ClusterName:            "Single Node Cluster",
@@ -1604,14 +1624,14 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=foo",
+				Resource: "/api/2.1/clusters/get?cluster_id=foo",
 				Response: compute.ClusterDetails{
 					State: compute.StateTerminated,
 				},
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 			},
 			{
 				Method:       "GET",
@@ -1642,14 +1662,14 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=foo",
+				Resource: "/api/2.1/clusters/get?cluster_id=foo",
 				Response: compute.ClusterDetails{
 					State: compute.StateRunning,
 				},
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 			},
 			{
 				Method:   "GET",
@@ -1696,7 +1716,7 @@ func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
@@ -1713,7 +1733,7 @@ func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/events",
+				Resource: "/api/2.1/clusters/events",
 				ExpectedRequest: compute.GetEvents{
 					ClusterId:  "abc",
 					Limit:      1,
@@ -1727,7 +1747,7 @@ func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 			},
 			{
 				Method:   "POST",
-				Resource: "/api/2.0/clusters/edit",
+				Resource: "/api/2.1/clusters/edit",
 				ExpectedRequest: compute.ClusterDetails{
 					AutoterminationMinutes: 15,
 					ClusterId:              "abc",

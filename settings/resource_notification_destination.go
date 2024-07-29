@@ -3,6 +3,7 @@ package settings
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,6 +30,75 @@ func setStruct(s *settings.NotificationDestination, readND *settings.Notificatio
 	}
 }
 
+func Create(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient) error {
+	var newNDrequest settings.CreateNotificationDestinationRequest
+	common.DataToStructPointer(d, ndSchema, &newNDrequest)
+	createdND, err := w.NotificationDestinations.Create(ctx, newNDrequest)
+	if err != nil {
+		return err
+	}
+	d.SetId(createdND.Id)
+	d.Set("destination_type", createdND.DestinationType)
+	return nil
+}
+
+func Read(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient) error {
+	var tempND settings.NotificationDestination
+	common.DataToStructPointer(d, ndSchema, &tempND)
+
+	readND, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
+		Id: d.Id(),
+	})
+	if err != nil {
+		return err
+	}
+	setStruct(&tempND, readND)
+	return common.StructToData(readND, ndSchema, d)
+}
+
+func detectConfigTypeChange(d *schema.ResourceData) bool {
+	switch d.Get("destination_type").(string) {
+	case string(settings.DestinationTypeSlack):
+		_, ok := d.GetOk("config.0.slack")
+		return !ok
+	case string(settings.DestinationTypePagerduty):
+		_, ok := d.GetOk("config.0.pagerduty")
+		return !ok
+	case string(settings.DestinationTypeMicrosoftTeams):
+		_, ok := d.GetOk("config.0.microsoft_teams")
+		return !ok
+	case string(settings.DestinationTypeWebhook):
+		_, ok := d.GetOk("config.0.generic_webhook")
+		return !ok
+	}
+	return false
+}
+
+func Update(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient) error {
+	if detectConfigTypeChange(d) {
+		err := Delete(ctx, d, w)
+		if err != nil {
+			return err
+		}
+		return Create(ctx, d, w)
+	}
+	var updateNDRequest settings.UpdateNotificationDestinationRequest
+	common.DataToStructPointer(d, ndSchema, &updateNDRequest)
+	updateNDRequest.Id = d.Id()
+	updatedND, err := w.NotificationDestinations.Update(ctx, updateNDRequest)
+	if err != nil {
+		return err
+	}
+	d.Set("destination_type", updatedND.DestinationType)
+	return nil
+}
+
+func Delete(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient) error {
+	return w.NotificationDestinations.Delete(ctx, settings.DeleteNotificationDestinationRequest{
+		Id: d.Id(),
+	})
+}
+
 type NDStruct struct {
 	settings.NotificationDestination
 }
@@ -46,9 +116,6 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "generic_webhook", "url_set").SetComputed()
 	s.SchemaPath("config", "generic_webhook", "password_set").SetComputed()
 	s.SchemaPath("config", "generic_webhook", "username_set").SetComputed()
-
-	// ForceNew fields
-	s.SchemaPath("destination_type").SetForceNew()
 
 	// ConflictsWith fields
 	config_eoo := []string{"config.0.slack", "config.0.pagerduty", "config.0.microsoft_teams", "config.0.generic_webhook", "config.0.email"}
@@ -83,54 +150,28 @@ func ResourceNotificationDestination() common.Resource {
 			if err != nil {
 				return err
 			}
-			var newNDrequest settings.CreateNotificationDestinationRequest
-			common.DataToStructPointer(d, ndSchema, &newNDrequest)
-			createdND, err := w.NotificationDestinations.Create(ctx, newNDrequest)
-			if err != nil {
-				return err
-			}
-			d.SetId(createdND.Id)
-			return nil
+			return Create(ctx, d, w)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			var tempND settings.NotificationDestination
-			common.DataToStructPointer(d, ndSchema, &tempND)
-
-			readND, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: d.Id(),
-			})
-			if err != nil {
-				return err
-			}
-			setStruct(&tempND, readND)
-			return common.StructToData(readND, ndSchema, d)
+			return Read(ctx, d, w)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			var updateNDRequest settings.UpdateNotificationDestinationRequest
-			common.DataToStructPointer(d, ndSchema, &updateNDRequest)
-			updateNDRequest.Id = d.Id()
-			_, err = w.NotificationDestinations.Update(ctx, updateNDRequest)
-			if err != nil {
-				return err
-			}
-			return nil
+			return Update(ctx, d, w)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			return w.NotificationDestinations.Delete(ctx, settings.DeleteNotificationDestinationRequest{
-				Id: d.Id(),
-			})
+			return Delete(ctx, d, w)
 		},
 	}
 }

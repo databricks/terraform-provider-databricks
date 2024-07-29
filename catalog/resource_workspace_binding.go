@@ -43,11 +43,7 @@ func ResourceWorkspaceBinding() common.Resource {
 				Optional: true,
 				Default:  "catalog",
 			}
-<<<<<<< HEAD
-			common.CustomizeSchemaPath(m, "securable_type").SetValidateFunc(validation.StringInSlice([]string{"catalog", "external-location", "storage-credential"}, false))
-=======
 			common.CustomizeSchemaPath(m, "securable_type").SetValidateFunc(validation.StringInSlice([]string{"catalog", "external_location", "storage_credential"}, false))
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 			common.CustomizeSchemaPath(m, "binding_type").SetDefault(catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite).SetValidateFunc(validation.StringInSlice([]string{
 				string(catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite),
 				string(catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly),
@@ -73,11 +69,7 @@ func ResourceWorkspaceBinding() common.Resource {
 			var update catalog.WorkspaceBinding
 			common.DataToStructPointer(d, workspaceBindingSchema, &update)
 			securableName := getSecurableName(d)
-<<<<<<< HEAD
-			securableType := d.Get("securable_type").(string)
-=======
 			securableType := catalog.UpdateBindingsSecurableType(d.Get("securable_type").(string))
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
 				Add:           []catalog.WorkspaceBinding{update},
 				SecurableName: securableName,
@@ -96,11 +88,7 @@ func ResourceWorkspaceBinding() common.Resource {
 				return fmt.Errorf("incorrect binding id: %s. Correct format: <workspace_id>|<securable_type>|<securable_name>", d.Id())
 			}
 			securableName := parts[2]
-<<<<<<< HEAD
-			securableType := parts[1]
-=======
 			securableType := catalog.GetBindingsSecurableType(parts[1])
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 			workspaceId, err := strconv.ParseInt(parts[0], 10, 0)
 			if err != nil {
 				return fmt.Errorf("can't parse workspace_id: %w", err)
@@ -129,11 +117,7 @@ func ResourceWorkspaceBinding() common.Resource {
 			_, err = w.WorkspaceBindings.UpdateBindings(ctx, catalog.UpdateWorkspaceBindingsParameters{
 				Remove:        []catalog.WorkspaceBinding{update},
 				SecurableName: getSecurableName(d),
-<<<<<<< HEAD
-				SecurableType: d.Get("securable_type").(string),
-=======
 				SecurableType: catalog.UpdateBindingsSecurableType(d.Get("securable_type").(string)),
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 			})
 			return err
 		},

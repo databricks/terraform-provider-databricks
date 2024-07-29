@@ -437,11 +437,7 @@ func TestResourceClusterCreate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-<<<<<<< HEAD
-				Resource: "/api/2.0/clusters/create",
-=======
 				Resource: "/api/2.1/clusters/create",
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -521,11 +517,7 @@ func TestResourceClusterRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-<<<<<<< HEAD
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-=======
 				Resource: "/api/2.1/clusters/get?cluster_id=abc",
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					// clusters API is not fully restful, so let's test for that
 					// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
@@ -547,11 +539,7 @@ func TestResourceClusterRead_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-<<<<<<< HEAD
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-=======
 				Resource: "/api/2.1/clusters/get?cluster_id=abc",
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -1237,11 +1225,7 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-<<<<<<< HEAD
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-=======
 				Resource: "/api/2.1/clusters/get?cluster_id=abc",
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -1397,11 +1381,7 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-<<<<<<< HEAD
-				Resource: "/api/2.0/clusters/permanent-delete",
-=======
 				Resource: "/api/2.1/clusters/permanent-delete",
->>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",

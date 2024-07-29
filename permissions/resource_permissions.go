@@ -228,6 +228,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 		})
 	}
 	if isOwnershipWorkaroundNecessary(objectID) {
+		originalAcl := make([]AccessControlChange, len(objectACL.AccessControlList))
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -244,11 +245,22 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 				return err
 			}
 			// add owner if it's missing, otherwise automated planning might be difficult
+			_ = copy(originalAcl, objectACL.AccessControlList)
 			objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 				UserName:        me.UserName,
 				PermissionLevel: "IS_OWNER",
 			})
 		}
+		err := a.put(objectID, objectACL)
+		if err != nil {
+			if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
+				// workaround for warehouse without owner
+				objectACL.AccessControlList = originalAcl
+				return a.put(objectID, objectACL)
+			}
+			return err
+		}
+		return nil
 	}
 	return a.put(objectID, objectACL)
 }

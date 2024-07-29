@@ -31,7 +31,6 @@ func ResourceMwsPermissionAssignment() common.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			}
-			common.MustSchemaPath(m, "permissions").Type = schema.TypeSet
 			return m
 		})
 	pair := common.NewPairID("workspace_id", "principal_id").Schema(
@@ -47,8 +46,8 @@ func ResourceMwsPermissionAssignment() common.Resource {
 			}
 			var assignment iam.UpdateWorkspaceAssignments
 			common.DataToStructPointer(d, s, &assignment)
-			assignment.PrincipalId = d.GetInt64("principal_id")
-			assignment.WorkspaceId = d.GetInt64("workspace_id")
+			assignment.PrincipalId = common.GetInt64(d, "principal_id")
+			assignment.WorkspaceId = common.GetInt64(d, "workspace_id")
 			_, err = acc.WorkspaceAssignment.Update(ctx, assignment)
 			if err != nil {
 				return err

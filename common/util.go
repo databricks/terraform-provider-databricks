@@ -49,6 +49,12 @@ func MustInt64(s string) int64 {
 	return n
 }
 
+// GetInt64 returns the data for the given key and cast it to int64, or nil if the key doesn't exist
+// in the schema.
+func GetInt64(d *schema.ResourceData, key string) int64 {
+	return int64(d.Get(key).(int))
+}
+
 // Reads the file content from a given path
 func ReadFileContent(source string) ([]byte, error) {
 	log.Printf("[INFO] Reading %s", source)

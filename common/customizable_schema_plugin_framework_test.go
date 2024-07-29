@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/stretchr/testify/assert"
 )
@@ -46,7 +46,7 @@ func (v stringLengthBetweenValidator) ValidateString(ctx context.Context, req va
 }
 
 func TestCustomizeSchema(t *testing.T) {
-	scm := pluginFrameworkStructToSchema(DummyTfSdk{}, func(c CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework {
+	scm := PluginFrameworkResourceStructToSchema(DummyTfSdk{}, func(c CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework {
 		c.AddNewField("new_field", schema.StringAttribute{Required: true})
 		c.AddNewField("new_field", schema.StringAttribute{Required: true}, "nested")
 		c.AddNewField("to_be_removed", schema.StringAttribute{Required: true}, "nested")

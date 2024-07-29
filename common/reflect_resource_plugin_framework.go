@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -297,7 +297,7 @@ func checkTheStringInForceSendFields(fieldName string, forceSendFields []string)
 	return false
 }
 
-func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
+func pluginFrameworkResourceTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 	scm := map[string]schema.Attribute{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
@@ -320,7 +320,7 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 		if kind == reflect.Ptr {
 			elem := typeField.Type.Elem()
 			sv := reflect.New(elem).Elem()
-			nestedScm := pluginFrameworkTypeToSchema(sv)
+			nestedScm := pluginFrameworkResourceTypeToSchema(sv)
 			scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}
 		} else if kind == reflect.Slice {
 			elem := typeField.Type.Elem()
@@ -341,7 +341,7 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 				scm[fieldName] = schema.ListAttribute{ElementType: types.StringType, Optional: isOptional, Required: !isOptional}
 			default:
 				// Nested struct
-				nestedScm := pluginFrameworkTypeToSchema(reflect.New(elem).Elem())
+				nestedScm := pluginFrameworkResourceTypeToSchema(reflect.New(elem).Elem())
 				scm[fieldName] = schema.ListNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: isOptional, Required: !isOptional}
 			}
 		} else if kind == reflect.Map {
@@ -363,7 +363,7 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 				scm[fieldName] = schema.MapAttribute{ElementType: types.StringType, Optional: isOptional, Required: !isOptional}
 			default:
 				// Nested struct
-				nestedScm := pluginFrameworkTypeToSchema(reflect.New(elem).Elem())
+				nestedScm := pluginFrameworkResourceTypeToSchema(reflect.New(elem).Elem())
 				scm[fieldName] = schema.MapNestedAttribute{NestedObject: schema.NestedAttributeObject{Attributes: nestedScm}, Optional: isOptional, Required: !isOptional}
 			}
 		} else if kind == reflect.Struct {
@@ -384,7 +384,7 @@ func pluginFrameworkTypeToSchema(v reflect.Value) map[string]schema.Attribute {
 				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
 				elem := typeField.Type
 				sv := reflect.New(elem)
-				nestedScm := pluginFrameworkTypeToSchema(sv)
+				nestedScm := pluginFrameworkResourceTypeToSchema(sv)
 				scm[fieldName] = schema.SingleNestedAttribute{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}
 			}
 		} else if kind == reflect.String {
@@ -402,13 +402,18 @@ func fieldIsOptional(field reflect.StructField) bool {
 	return strings.Contains(tagValue, "optional")
 }
 
-func pluginFrameworkStructToSchema(v any, customizeSchema func(CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework) schema.Schema {
-	attributes := pluginFrameworkTypeToSchema(reflect.ValueOf(v))
+func PluginFrameworkResourceStructToSchema(v any, customizeSchema func(CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework) schema.Schema {
+	attributes := PluginFrameworkResourceStructToSchemaMap(v, customizeSchema)
+	return schema.Schema{Attributes: attributes}
+}
+
+func PluginFrameworkResourceStructToSchemaMap(v any, customizeSchema func(CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework) map[string]schema.Attribute {
+	attributes := pluginFrameworkResourceTypeToSchema(reflect.ValueOf(v))
 
 	if customizeSchema != nil {
 		cs := customizeSchema(*ConstructCustomizableSchema(attributes))
-		return schema.Schema{Attributes: cs.ToAttributeMap()}
+		return cs.ToAttributeMap()
 	} else {
-		return schema.Schema{Attributes: attributes}
+		return attributes
 	}
 }

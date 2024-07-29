@@ -8,8 +8,47 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func setState(d *schema.ResourceData) {
+	d.Set("slack_url", d.Get("config.0.slack.0.url"))
+	d.Set("microsoft_teams_url", d.Get("config.0.microsoft_teams.0.url"))
+	d.Set("pagerduty_integration_key", d.Get("config.0.pagerduty.0.integration_key"))
+	d.Set("generic_webhook_url", d.Get("config.0.generic_webhook.0.url"))
+	d.Set("generic_webhook_password", d.Get("config.0.generic_webhook.0.password"))
+	d.Set("generic_webhook_username", d.Get("config.0.generic_webhook.0.username"))
+}
+
 type NDStruct struct {
+	SlackUrl                string `json:"slack_url,omitempty"`
+	MicrosoftTeamsUrl       string `json:"microsoft_teams_url,omitempty"`
+	PagerDutyIntegrationKey string `json:"pagerduty_integration_key,omitempty"`
+	GenericWebhookUrl       string `json:"generic_webhook_url,omitempty"`
+	GenericWebhookPassword  string `json:"generic_webhook_password,omitempty"`
+	GenericWebhookUsername  string `json:"generic_webhook_username,omitempty"`
 	settings.NotificationDestination
+}
+
+func customDiffSlackUrl(k, old, new string, d *schema.ResourceData) bool {
+	return d.Get("slack_url") == new
+}
+
+func customDiffMicrosoftTeamsUrl(k, old, new string, d *schema.ResourceData) bool {
+	return d.Get("microsoft_teams_url") == new
+}
+
+func customDiffPagerdutyIntegrationKey(k, old, new string, d *schema.ResourceData) bool {
+	return d.Get("pagerduty_integration_key") == new
+}
+
+func customDiffGenericWebhookUrl(k, old, new string, d *schema.ResourceData) bool {
+	return d.Get("generic_webhook_url") == new
+}
+
+func customDiffGenericWebhookUsername(k, old, new string, d *schema.ResourceData) bool {
+	return d.Get("generic_webhook_username") == new
+}
+
+func customDiffGenericWebhookPassword(k, old, new string, d *schema.ResourceData) bool {
+	return d.Get("generic_webhook_password") == new
 }
 
 func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -25,6 +64,13 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "generic_webhook", "url_set").SetComputed()
 	s.SchemaPath("config", "generic_webhook", "password_set").SetComputed()
 	s.SchemaPath("config", "generic_webhook", "username_set").SetComputed()
+
+	s.SchemaPath("slack_url").SetComputed()
+	s.SchemaPath("microsoft_teams_url").SetComputed()
+	s.SchemaPath("pagerduty_integration_key").SetComputed()
+	s.SchemaPath("generic_webhook_url").SetComputed()
+	s.SchemaPath("generic_webhook_password").SetComputed()
+	s.SchemaPath("generic_webhook_username").SetComputed()
 
 	// ForceNew fields
 	s.SchemaPath("destination_type").SetForceNew()
@@ -44,13 +90,21 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "generic_webhook").SetRequiredWith([]string{"config.0.generic_webhook.0.url"})
 	s.SchemaPath("config", "email").SetRequiredWith([]string{"config.0.email.0.addresses"})
 
+	// CustomSuppressDiff fields
+	s.SchemaPath("config", "slack", "url").SetCustomSuppressDiff(customDiffSlackUrl)
+	s.SchemaPath("config", "microsoft_teams", "url").SetCustomSuppressDiff(customDiffMicrosoftTeamsUrl)
+	s.SchemaPath("config", "pagerduty", "integration_key").SetCustomSuppressDiff(customDiffPagerdutyIntegrationKey)
+	s.SchemaPath("config", "generic_webhook", "url").SetCustomSuppressDiff(customDiffGenericWebhookUrl)
+	s.SchemaPath("config", "generic_webhook", "username").SetCustomSuppressDiff(customDiffGenericWebhookUsername)
+	s.SchemaPath("config", "generic_webhook", "password").SetCustomSuppressDiff(customDiffGenericWebhookPassword)
+
 	// Sensitive fields
-	// s.SchemaPath("config", "generic_webhook", "password").SetSensitive()
-	// s.SchemaPath("config", "generic_webhook", "username").SetSensitive()
-	// s.SchemaPath("config", "generic_webhook", "url").SetSensitive()
-	// s.SchemaPath("config", "microsoft_teams", "url").SetSensitive()
-	// s.SchemaPath("config", "pagerduty", "integration_key").SetSensitive()
-	// s.SchemaPath("config", "slack", "url").SetSensitive()
+	s.SchemaPath("config", "generic_webhook", "password").SetSensitive()
+	s.SchemaPath("config", "generic_webhook", "username").SetSensitive()
+	s.SchemaPath("config", "generic_webhook", "url").SetSensitive()
+	s.SchemaPath("config", "microsoft_teams", "url").SetSensitive()
+	s.SchemaPath("config", "pagerduty", "integration_key").SetSensitive()
+	s.SchemaPath("config", "slack", "url").SetSensitive()
 
 	return s
 }
@@ -73,6 +127,7 @@ func ResourceNotificationDestination() common.Resource {
 				return err
 			}
 			d.SetId(createdND.Id)
+			setState(d)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -80,8 +135,6 @@ func ResourceNotificationDestination() common.Resource {
 			if err != nil {
 				return err
 			}
-			var s settings.NotificationDestination
-			common.DataToStructPointer(d, ndSchema, &s)
 
 			readND, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
 				Id: d.Id(),
@@ -90,13 +143,7 @@ func ResourceNotificationDestination() common.Resource {
 				return err
 			}
 
-			err = common.StructToData(readND, ndSchema, d)
-			if err != nil {
-				return err
-			}
-			d.Set("config.0.slack.0.url", s.Config.Slack.Url)
-			// fmt.Println(d.Get("config.0.slack.0.url"))
-			return nil
+			return common.StructToData(readND, ndSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -110,6 +157,7 @@ func ResourceNotificationDestination() common.Resource {
 			if err != nil {
 				return err
 			}
+			setState(d)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

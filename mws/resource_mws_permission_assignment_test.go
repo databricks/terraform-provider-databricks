@@ -84,7 +84,7 @@ func TestPermissionAssignmentDelete(t *testing.T) {
 func TestPermissionAssignmentFuzz_NoAccountID(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceMwsPermissionAssignment(),
 		qa.CornerCaseID("123|456"),
-		qa.CornerCaseExpectError("must have `account_id` on provider"))
+		qa.CornerCaseExpectError("invalid Databricks Account configuration"))
 }
 
 func TestPermissionAssignmentFuzz_InvalidID(t *testing.T) {

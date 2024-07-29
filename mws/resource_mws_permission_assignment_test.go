@@ -45,6 +45,39 @@ func TestPermissionAssignmentCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestPermissionAssignmentRead(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
+			e := m.GetMockWorkspaceAssignmentAPI().EXPECT()
+			e.ListByWorkspaceId(mock.Anything, int64(123)).Return(&iam.PermissionAssignments{
+				PermissionAssignments: []iam.PermissionAssignment{
+					{
+						Permissions: []iam.WorkspacePermission{iam.WorkspacePermissionUser},
+						Principal: &iam.PrincipalOutput{
+							PrincipalId: 345,
+						},
+					},
+					{
+						Permissions: []iam.WorkspacePermission{iam.WorkspacePermissionUser},
+						Principal: &iam.PrincipalOutput{
+							PrincipalId: 456,
+						},
+					},
+				},
+			}, nil)
+		},
+		Resource:  ResourceMwsPermissionAssignment(),
+		Read:      true,
+		New:       true,
+		AccountID: "abc",
+		ID:        "123|456",
+	}.ApplyAndExpectData(t, map[string]any{
+		"workspace_id": 123,
+		"principal_id": 456,
+		"permissions":  []string{"USER"},
+	})
+}
+
 func TestPermissionAssignmentReadNotFound(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {

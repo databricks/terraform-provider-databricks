@@ -44,6 +44,7 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 		return err
 	}
 	var id string
+	// If dry_run is set, the pipeline is not created and the ID is the effective settings ID.
 	if d.Get("dry_run").(bool) {
 		id = createdPipeline.EffectiveSettings.Id
 		d.SetId(id)

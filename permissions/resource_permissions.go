@@ -218,6 +218,19 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
 }
 
+// safePutWithOwner is a workaround for the limitation where warehouse without owners cannot have IS_OWNER set
+func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL AccessControlChangeList, originalAcl []AccessControlChange) error {
+	err := a.put(objectID, objectACL)
+	if err != nil {
+		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
+			objectACL.AccessControlList = originalAcl
+			return a.put(objectID, objectACL)
+		}
+		return err
+	}
+	return nil
+}
+
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
 	if objectID == "/authorization/tokens" || objectID == "/registered-models/root" || objectID == "/directories/0" {
@@ -227,8 +240,9 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
+	originalAcl := make([]AccessControlChange, len(objectACL.AccessControlList))
+	_ = copy(originalAcl, objectACL.AccessControlList)
 	if isOwnershipWorkaroundNecessary(objectID) {
-		originalAcl := make([]AccessControlChange, len(objectACL.AccessControlList))
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -245,24 +259,13 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 				return err
 			}
 			// add owner if it's missing, otherwise automated planning might be difficult
-			_ = copy(originalAcl, objectACL.AccessControlList)
 			objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 				UserName:        me.UserName,
 				PermissionLevel: "IS_OWNER",
 			})
 		}
-		err := a.put(objectID, objectACL)
-		if err != nil {
-			if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
-				// workaround for warehouse without owner
-				objectACL.AccessControlList = originalAcl
-				return a.put(objectID, objectACL)
-			}
-			return err
-		}
-		return nil
 	}
-	return a.put(objectID, objectACL)
+	return a.safePutWithOwner(objectID, objectACL, originalAcl)
 }
 
 // Delete gracefully removes permissions. Technically, it's using method named SetOrDelete, but here we do more
@@ -280,6 +283,8 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			}
 		}
 	}
+	originalAcl := make([]AccessControlChange, len(accl.AccessControlList))
+	_ = copy(originalAcl, accl.AccessControlList)
 	if isOwnershipWorkaroundNecessary(objectID) {
 		creator, err := a.getObjectCreator(objectID)
 		if err != nil {
@@ -293,7 +298,7 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			PermissionLevel: "IS_OWNER",
 		})
 	}
-	return a.put(objectID, accl)
+	return a.safePutWithOwner(objectID, accl, originalAcl)
 }
 
 // Read gets all relevant permissions for the object, including inherited ones

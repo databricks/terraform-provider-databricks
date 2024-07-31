@@ -11,6 +11,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func check(t *testing.T, ctx context.Context, client *common.DatabricksClient, id, display_name string, config_type settings.DestinationType) error {
+	w, err := client.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
+		Id: id,
+	})
+	if err != nil {
+		return err
+	}
+	assert.Equal(t, config_type, ndResource.DestinationType)
+	assert.Equal(t, display_name, ndResource.DisplayName)
+	require.NoError(t, err)
+	return nil
+}
+
 func TestAccNDEmail(t *testing.T) {
 	display_name := "Email Notification Destination - " + qa.RandomName()
 	workspaceLevel(t, step{
@@ -36,20 +53,7 @@ func TestAccNDEmail(t *testing.T) {
 		}
 		`,
 		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-			assert.Equal(t, settings.DestinationType("EMAIL"), ndResource.DestinationType)
-			assert.Equal(t, display_name, ndResource.DisplayName)
-			require.NoError(t, err)
-			return nil
+			return check(t, ctx, client, id, display_name, settings.DestinationTypeEmail)
 		}),
 	})
 }
@@ -68,20 +72,7 @@ func TestAccNDSlack(t *testing.T) {
 		}
 		`,
 		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-			assert.Equal(t, settings.DestinationType("SLACK"), ndResource.DestinationType)
-			assert.Equal(t, display_name, ndResource.DisplayName)
-			require.NoError(t, err)
-			return nil
+			return check(t, ctx, client, id, display_name, settings.DestinationTypeSlack)
 		}),
 	}, step{
 		Template: `
@@ -95,20 +86,7 @@ func TestAccNDSlack(t *testing.T) {
 		}
 		`,
 		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-			assert.Equal(t, settings.DestinationType("SLACK"), ndResource.DestinationType)
-			assert.Equal(t, display_name, ndResource.DisplayName)
-			require.NoError(t, err)
-			return nil
+			return check(t, ctx, client, id, display_name, settings.DestinationTypeSlack)
 		}),
 	})
 }
@@ -138,20 +116,7 @@ func TestAccNDMicrosoftTeams(t *testing.T) {
 		}
 		`,
 		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-			assert.Equal(t, settings.DestinationType("MICROSOFT_TEAMS"), ndResource.DestinationType)
-			assert.Equal(t, display_name, ndResource.DisplayName)
-			require.NoError(t, err)
-			return nil
+			return check(t, ctx, client, id, display_name, settings.DestinationTypeMicrosoftTeams)
 		}),
 	})
 }
@@ -181,20 +146,7 @@ func TestAccNDPagerduty(t *testing.T) {
 		}
 		`,
 		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-			assert.Equal(t, settings.DestinationType("PAGERDUTY"), ndResource.DestinationType)
-			assert.Equal(t, display_name, ndResource.DisplayName)
-			require.NoError(t, err)
-			return nil
+			return check(t, ctx, client, id, display_name, settings.DestinationTypePagerduty)
 		}),
 	})
 }
@@ -226,20 +178,7 @@ func TestAccNDGenericWebhook(t *testing.T) {
 		}
 		`,
 		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-			assert.Equal(t, settings.DestinationType("WEBHOOK"), ndResource.DestinationType)
-			assert.Equal(t, display_name, ndResource.DisplayName)
-			require.NoError(t, err)
-			return nil
+			return check(t, ctx, client, id, display_name, settings.DestinationTypeWebhook)
 		}),
 	})
 }
@@ -258,20 +197,7 @@ func TestAccConfigTypeChange(t *testing.T) {
 		}
 		`,
 		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-			assert.Equal(t, settings.DestinationType("SLACK"), ndResource.DestinationType)
-			assert.Equal(t, display_name, ndResource.DisplayName)
-			require.NoError(t, err)
-			return nil
+			return check(t, ctx, client, id, display_name, settings.DestinationTypeSlack)
 		}),
 	}, step{
 		Template: `
@@ -285,20 +211,7 @@ func TestAccConfigTypeChange(t *testing.T) {
 		}
 		`,
 		Check: resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
-			w, err := client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			ndResource, err := w.NotificationDestinations.Get(ctx, settings.GetNotificationDestinationRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-			assert.Equal(t, settings.DestinationType("MICROSOFT_TEAMS"), ndResource.DestinationType)
-			assert.Equal(t, display_name, ndResource.DisplayName)
-			require.NoError(t, err)
-			return nil
+			return check(t, ctx, client, id, display_name, settings.DestinationTypeMicrosoftTeams)
 		}),
 	})
 }

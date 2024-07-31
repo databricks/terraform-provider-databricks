@@ -10,22 +10,32 @@ import (
 )
 
 func setStruct(s *settings.NotificationDestination, readND *settings.NotificationDestination) {
-	switch readND.DestinationType {
-	case settings.DestinationTypeSlack:
-		readND.Config.Slack.Url = s.Config.Slack.Url
-	case settings.DestinationTypePagerduty:
-		readND.Config.Pagerduty.IntegrationKey = s.Config.Pagerduty.IntegrationKey
-	case settings.DestinationTypeMicrosoftTeams:
-		readND.Config.MicrosoftTeams.Url = s.Config.MicrosoftTeams.Url
-	case settings.DestinationTypeWebhook:
-		if readND.Config.GenericWebhook.UrlSet {
-			readND.Config.GenericWebhook.Url = s.Config.GenericWebhook.Url
-		}
-		if readND.Config.GenericWebhook.PasswordSet {
-			readND.Config.GenericWebhook.Password = s.Config.GenericWebhook.Password
-		}
-		if readND.Config.GenericWebhook.UsernameSet {
-			readND.Config.GenericWebhook.Username = s.Config.GenericWebhook.Username
+	if readND.Config != nil && s.Config != nil {
+		switch readND.DestinationType {
+		case settings.DestinationTypeSlack:
+			if readND.Config.Slack != nil && s.Config.Slack != nil {
+				readND.Config.Slack.Url = s.Config.Slack.Url
+			}
+		case settings.DestinationTypePagerduty:
+			if readND.Config.Pagerduty != nil && s.Config.Pagerduty != nil {
+				readND.Config.Pagerduty.IntegrationKey = s.Config.Pagerduty.IntegrationKey
+			}
+		case settings.DestinationTypeMicrosoftTeams:
+			if readND.Config.MicrosoftTeams != nil && s.Config.MicrosoftTeams != nil {
+				readND.Config.MicrosoftTeams.Url = s.Config.MicrosoftTeams.Url
+			}
+		case settings.DestinationTypeWebhook:
+			if readND.Config.GenericWebhook != nil && s.Config.GenericWebhook != nil {
+				if readND.Config.GenericWebhook.UrlSet {
+					readND.Config.GenericWebhook.Url = s.Config.GenericWebhook.Url
+				}
+				if readND.Config.GenericWebhook.PasswordSet {
+					readND.Config.GenericWebhook.Password = s.Config.GenericWebhook.Password
+				}
+				if readND.Config.GenericWebhook.UsernameSet {
+					readND.Config.GenericWebhook.Username = s.Config.GenericWebhook.Username
+				}
+			}
 		}
 	}
 }
@@ -38,7 +48,6 @@ func Create(ctx context.Context, d *schema.ResourceData, w *databricks.Workspace
 		return err
 	}
 	d.SetId(createdND.Id)
-	d.Set("destination_type", createdND.DestinationType)
 	return nil
 }
 
@@ -85,11 +94,10 @@ func Update(ctx context.Context, d *schema.ResourceData, w *databricks.Workspace
 	var updateNDRequest settings.UpdateNotificationDestinationRequest
 	common.DataToStructPointer(d, ndSchema, &updateNDRequest)
 	updateNDRequest.Id = d.Id()
-	updatedND, err := w.NotificationDestinations.Update(ctx, updateNDRequest)
+	_, err := w.NotificationDestinations.Update(ctx, updateNDRequest)
 	if err != nil {
 		return err
 	}
-	d.Set("destination_type", updatedND.DestinationType)
 	return nil
 }
 

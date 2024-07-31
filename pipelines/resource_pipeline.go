@@ -38,6 +38,8 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	var createPipelineRequest createPipelineRequestStruct
 	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
 	adjustForceSendFields(&createPipelineRequest.Clusters)
+	// Force send development (as default is true)
+	createPipelineRequest.ForceSendFields = append(createPipelineRequest.ForceSendFields, "Development")
 
 	createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest.CreatePipeline)
 	if err != nil {
@@ -78,6 +80,8 @@ func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
 	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
 	adjustForceSendFields(&updatePipelineRequest.Clusters)
+	// Force send development (as default is true)
+	updatePipelineRequest.ForceSendFields = append(updatePipelineRequest.ForceSendFields, "Development")
 
 	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
@@ -247,6 +251,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	// Default values
 	s.SchemaPath("edition").SetDefault("ADVANCED")
 	s.SchemaPath("channel").SetDefault("CURRENT")
+	s.SchemaPath(("development")).SetDefault(true)
 
 	// ConflictsWith fields
 	s.SchemaPath("storage").SetConflictsWith([]string{"catalog"})

@@ -3,11 +3,13 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_widget Resource
 
-To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
+-> **Note:** Please switch to [databricks_dashboard](dashboard.md) to author new AI/BI dashboards using the latest tooling
 
-**Note:** documentation for this resource is a work in progress.
+To manage [SQL resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
-A widget is always tied to a [dashboard](sql_dashboard.md). Every dashboard may have one or more widgets.
+-> **Note:** documentation for this resource is a work in progress.
+
+A widget is always tied to a [Legacy dashboard](sql_dashboard.md). Every dashboard may have one or more widgets.
 
 ## Example Usage
 

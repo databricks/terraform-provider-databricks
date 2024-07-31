@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
@@ -29,7 +30,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -252,7 +252,7 @@ var emptyPipelines = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/pipelines?max_results=50",
-	Response:     pipelines.PipelineListResponse{},
+	Response:     pipelines.ListPipelinesResponse{},
 }
 
 var emptyClusterPolicies = qa.HTTPFixture{
@@ -1951,10 +1951,10 @@ func TestImportingDLTPipelines(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=50",
-				Response: pipelines.PipelineListResponse{
+				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
-							PipelineID: "123",
+							PipelineId: "123",
 							Name:       "Pipeline1",
 						},
 					},
@@ -2009,7 +2009,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines/123",
+				Resource: "/api/2.0/pipelines/123?",
 				Response: getJSONObject("test-data/get-dlt-pipeline.json"),
 			},
 			{
@@ -2130,14 +2130,14 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=50",
-				Response: pipelines.PipelineListResponse{
+				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
-							PipelineID: "123",
+							PipelineId: "123",
 							Name:       "Pipeline1 test",
 						},
 						{
-							PipelineID: "124",
+							PipelineId: "124",
 							Name:       "Pipeline1",
 						},
 					},
@@ -2145,7 +2145,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines/123",
+				Resource: "/api/2.0/pipelines/123?",
 				Response: getJSONObject("test-data/get-dlt-pipeline.json"),
 			},
 			{
@@ -2494,14 +2494,14 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=50",
-				Response: pipelines.PipelineListResponse{
+				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
-							PipelineID: "abc",
+							PipelineId: "abc",
 							Name:       "abc",
 						},
 						{
-							PipelineID: "def",
+							PipelineId: "def",
 							Name:       "def",
 						},
 					},
@@ -2509,18 +2509,18 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines/abc",
-				Response: pipelines.PipelineInfo{
-					PipelineID:   "abc",
+				Resource: "/api/2.0/pipelines/abc?",
+				Response: pipelines.GetPipelineResponse{
+					PipelineId:   "abc",
 					Name:         "abc",
 					LastModified: 1681466931226,
 				},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines/def",
-				Response: pipelines.PipelineInfo{
-					PipelineID:   "def",
+				Resource: "/api/2.0/pipelines/def?",
+				Response: pipelines.GetPipelineResponse{
+					PipelineId:   "def",
 					Name:         "def",
 					LastModified: 1690156900000,
 					Spec: &pipelines.PipelineSpec{

@@ -97,3 +97,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the Notification Destination.
 
+
+## Note
+* If the type of notification destination is changed, the existing notification destination will be deleted and a new notification destination will be created with the new type.

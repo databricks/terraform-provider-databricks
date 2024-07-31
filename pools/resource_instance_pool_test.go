@@ -3,7 +3,7 @@ package pools
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -60,7 +60,7 @@ func TestResourceInstancePoolCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/create",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -118,7 +118,7 @@ func TestResourceInstancePoolRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/instance-pools/get?instance_pool_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -138,7 +138,7 @@ func TestResourceInstancePoolRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/instance-pools/get?instance_pool_id=abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -207,7 +207,7 @@ func TestResourceInstancePoolUpdate_Error(t *testing.T) {
 			{ // read log output for better stub url...
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/edit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -255,7 +255,7 @@ func TestResourceInstancePoolDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/instance-pools/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -126,7 +126,7 @@ func TestResourcePipelineCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/pipelines",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -177,7 +177,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingFailedCleanup(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INTERNAL_ERROR",
 					Message:   "Internal error",
 				},
@@ -228,7 +228,7 @@ func TestResourcePipelineCreate_ErrorWhenWaitingSuccessfulCleanup(t *testing.T) 
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "No such resource",
 				},
@@ -284,7 +284,7 @@ func TestResourcePipelineRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -304,7 +304,7 @@ func TestResourcePipelineRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -392,7 +392,7 @@ func TestResourcePipelineUpdate_Error(t *testing.T) {
 			{ // read log output for better stub url...
 				Method:   "PUT",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -499,7 +499,7 @@ func TestResourcePipelineDelete(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines/abcd",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "No such resource",
 				},
@@ -520,7 +520,7 @@ func TestResourcePipelineDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/pipelines/abcd?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

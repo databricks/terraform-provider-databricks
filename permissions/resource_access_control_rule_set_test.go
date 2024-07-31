@@ -5,11 +5,11 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -231,7 +231,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_CONFLICT",
 					Message:   "Conflict with another RuleSet operation",
 				},

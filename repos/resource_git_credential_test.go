@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -41,7 +41,7 @@ func TestResourceGitCredentialRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d?", credID),
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Git credential with the given ID could not be found.",
 				},
@@ -131,7 +131,7 @@ func TestResourceGitCredentialUpdate_Error(t *testing.T) {
 					GitUsername:         user,
 					PersonalAccessToken: token,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Git credential with the given ID could not be found.",
 				},
@@ -205,7 +205,7 @@ func TestResourceGitCredentialCreate_Error(t *testing.T) {
 					GitUsername:         user,
 					PersonalAccessToken: token,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint.",
 				},
@@ -241,7 +241,7 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 					GitUsername:         user,
 					PersonalAccessToken: token,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint.",
 				},
@@ -296,7 +296,7 @@ func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
 					GitUsername:         user,
 					PersonalAccessToken: token,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint.",
 				},
@@ -305,7 +305,7 @@ func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "No such endpoint",
 				},
@@ -337,7 +337,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorEmptyList(t *testing.T) {
 					GitUsername:         user,
 					PersonalAccessToken: token,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint.",
 				},
@@ -379,7 +379,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 					GitUsername:         user,
 					PersonalAccessToken: token,
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Only one Git credential is supported at this time. If you would like to update your credential, please use the PATCH endpoint.",
 				},
@@ -395,7 +395,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.CredentialId),
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Git credential with the given ID could not be found.",
 				},

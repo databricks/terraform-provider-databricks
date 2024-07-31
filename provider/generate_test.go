@@ -59,7 +59,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				{   // read log output for correct url...
 					Method:   "GET",
 					Resource: "/api/2.0/...", 
-					Response: common.APIErrorBody{
+					Response: apierr.APIError{
 						ErrorCode: "NOT_FOUND",
 						Message:   "Item not found",
 					},
@@ -79,7 +79,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				{   // read log output for correct url...
 					Method:   "GET",
 					Resource: "/api/2.0/...", 
-					Response: common.APIErrorBody{
+					Response: apierr.APIError{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -120,7 +120,7 @@ func (stub *resourceTestStub) Creates(t *testing.T) {
 				{   // read log output for better stub url...
 					Method:   "POST",
 					Resource: "/api/2.0/...", 
-					Response: common.APIErrorBody{
+					Response: apierr.APIError{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -165,7 +165,7 @@ func (stub *resourceTestStub) Updates(t *testing.T) {
 				{   // read log output for better stub url...
 					Method:   "POST",
 					Resource: "/api/2.0/.../edit",
-					Response: common.APIErrorBody{
+					Response: apierr.APIError{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -212,7 +212,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 				{
 					Method:   "POST",
 					Resource: "/api/2.0/.../delete",
-					Response: common.APIErrorBody{
+					Response: apierr.APIError{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},

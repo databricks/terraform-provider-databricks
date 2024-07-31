@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -105,7 +105,7 @@ func TestArtifactAllowlistCreate_Error(t *testing.T) {
 				Method:          http.MethodPut,
 				Resource:        "/api/2.1/unity-catalog/artifact-allowlists/INIT_SCRIPT",
 				ExpectedRequest: setArtifact,
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -156,7 +156,7 @@ func TestResourceArtifactAllowlistRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/artifact-allowlists/INIT_SCRIPT?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -219,7 +219,7 @@ func TestArtifactAllowlistUpdate_Error(t *testing.T) {
 				Method:          http.MethodPut,
 				Resource:        "/api/2.1/unity-catalog/artifact-allowlists/INIT_SCRIPT",
 				ExpectedRequest: updateArtifact,
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -280,7 +280,7 @@ func TestArtifactAllowlistDelete_Error(t *testing.T) {
 					ArtifactType:     catalog.ArtifactTypeInitScript,
 					ArtifactMatchers: []catalog.ArtifactMatcher{},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",
 				},

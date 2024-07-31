@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -154,7 +154,7 @@ func TestVolumesCreateWithoutInitialOwner_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.1/unity-catalog/volumes",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -216,7 +216,7 @@ func TestVolumesCreateWithInitialOwner_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -279,7 +279,7 @@ func TestResourceVolumeRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -574,7 +574,7 @@ func TestVolumesUpdateRollback(t *testing.T) {
 					Name:    "testName",
 					Comment: "This is a new test comment.",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -628,7 +628,7 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 					Name:    "testName",
 					Comment: "This is a new test comment.",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   serverErrMessage,
 				},
@@ -640,7 +640,7 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
 					Owner: "testOwnerOld",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   rollbackErrMessage,
 				},
@@ -678,7 +678,7 @@ func TestVolumeUpdate_Error(t *testing.T) {
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
 					Owner: "testOwnerNew",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -727,7 +727,7 @@ func TestVolumeDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",
 				},

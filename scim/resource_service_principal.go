@@ -226,7 +226,7 @@ func ResourceServicePrincipal() common.Resource {
 				return err
 			}
 			// Handle force delete flags
-			if !isAccount && !isDisable && err == nil {
+			if !isAccount && !isDisable {
 				if isForceDeleteRepos {
 					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
 					if err != nil && !apierr.IsMissing(err) {

@@ -410,7 +410,7 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cluster does not exist",
 				},
@@ -432,7 +432,7 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -498,7 +498,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		{
 			Method:   http.MethodGet,
 			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: common.APIErrorBody{
+			Response: apierr.APIError{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
 			},
@@ -652,7 +652,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1003,7 +1003,7 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1181,7 +1181,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -450,7 +450,7 @@ func TestUpdateExternalLocationRollback(t *testing.T) {
 					Url:            "s3://foo/bar",
 					CredentialName: "xyz",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -514,7 +514,7 @@ func TestUpdateExternalLocationRollbackError(t *testing.T) {
 					Url:            "s3://foo/bar",
 					CredentialName: "xyz",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -526,7 +526,7 @@ func TestUpdateExternalLocationRollbackError(t *testing.T) {
 				ExpectedRequest: catalog.UpdateExternalLocation{
 					Owner: "administrators",
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

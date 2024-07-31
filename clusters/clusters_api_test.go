@@ -174,7 +174,7 @@ func TestWaitForClusterStatus_RetryOnNotFound(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
-			Response: common.APIErrorBody{
+			Response: apierr.APIError{
 				Message: "Nope",
 			},
 			Status: 404,
@@ -204,7 +204,7 @@ func TestWaitForClusterStatus_StopRetryingEarly(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=abc",
-			Response: common.APIErrorBody{
+			Response: apierr.APIError{
 				Message: "I am a teapot",
 			},
 			Status: 418,
@@ -643,7 +643,7 @@ func TestStartAndGetInfo_StartingError(t *testing.T) {
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
-			Response: common.APIErrorBody{
+			Response: apierr.APIError{
 				Message: "I am a teapot!",
 			},
 			Status: 418,
@@ -680,7 +680,7 @@ func TestPermanentDelete_Pinned(t *testing.T) {
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
-			Response: common.APIErrorBody{
+			Response: apierr.APIError{
 				Message: "unpin the cluster first",
 			},
 			Status: 400,

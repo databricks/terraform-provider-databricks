@@ -3,8 +3,8 @@ package secrets
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,7 +37,7 @@ func TestResourceSecretACLRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -57,7 +57,7 @@ func TestResourceSecretACLRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -142,7 +142,7 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 			{ // read log output for better stub url...
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/acls/put",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -187,7 +187,7 @@ func TestResourceSecretACLDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/acls/delete",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

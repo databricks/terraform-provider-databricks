@@ -20,6 +20,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
+	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
@@ -46,21 +47,23 @@ import (
 )
 
 var (
-	adlsGen2Regex                = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	adlsGen1Regex                = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
-	wasbsRegex                   = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
-	s3Regex                      = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
-	gsRegex                      = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
-	globalWorkspaceConfName      = "global_workspace_conf"
-	nameNormalizationRegex       = regexp.MustCompile(`\W+`)
-	fileNameNormalizationRegex   = regexp.MustCompile(`[^-_\w/.@]`)
-	jobClustersRegex             = regexp.MustCompile(`^((job_cluster|task)\.\d+\.new_cluster\.\d+\.)`)
-	dltClusterRegex              = regexp.MustCompile(`^(cluster\.\d+\.)`)
-	secretPathRegex              = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
-	sqlParentRegexp              = regexp.MustCompile(`^folders/(\d+)$`)
-	dltDefaultStorageRegex       = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
-	ignoreIdeFolderRegex         = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
-	fileExtensionLanguageMapping = map[string]string{
+	adlsGen2Regex                    = regexp.MustCompile(`^(abfss?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	adlsGen1Regex                    = regexp.MustCompile(`^(adls?)://([^.]+)\.(?:[^/]+)(/.*)?$`)
+	wasbsRegex                       = regexp.MustCompile(`^(wasbs?)://([^@]+)@([^.]+)\.(?:[^/]+)(/.*)?$`)
+	s3Regex                          = regexp.MustCompile(`^(s3a?)://([^/]+)(/.*)?$`)
+	gsRegex                          = regexp.MustCompile(`^gs://([^/]+)(/.*)?$`)
+	globalWorkspaceConfName          = "global_workspace_conf"
+	nameNormalizationRegex           = regexp.MustCompile(`\W+`)
+	fileNameNormalizationRegex       = regexp.MustCompile(`[^-_\w/.@]`)
+	jobClustersRegex                 = regexp.MustCompile(`^((job_cluster|task)\.\d+\.new_cluster\.\d+\.)`)
+	dltClusterRegex                  = regexp.MustCompile(`^(cluster\.\d+\.)`)
+	secretPathRegex                  = regexp.MustCompile(`^\{\{secrets\/([^\/]+)\/([^}]+)\}\}$`)
+	sqlParentRegexp                  = regexp.MustCompile(`^folders/(\d+)$`)
+	dltDefaultStorageRegex           = regexp.MustCompile(`^dbfs:/pipelines/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	ignoreIdeFolderRegex             = regexp.MustCompile(`^/Users/[^/]+/\.ide/.*$`)
+	servedEntityFieldExtractionRegex = regexp.MustCompile(`^config\.[0-9]+\.served_entities\.([0-9]+)\.(.*)$`)
+	uc3LevelIdRegex                  = regexp.MustCompile(`^([^.]+\.[^.]+\.[^.]+)$`)
+	fileExtensionLanguageMapping     = map[string]string{
 		"SCALA":  ".scala",
 		"PYTHON": ".py",
 		"SQL":    ".sql",
@@ -2012,11 +2015,11 @@ var resourcesMap map[string]importable = map[string]importable{
 					})
 				}
 				ic.emitInitScriptsLegacy(cluster.InitScripts)
-				ic.emitSecretsFromSecretsPath(cluster.SparkConf)
-				ic.emitSecretsFromSecretsPath(cluster.SparkEnvVars)
+				ic.emitSecretsFromSecretsPathMap(cluster.SparkConf)
+				ic.emitSecretsFromSecretsPathMap(cluster.SparkEnvVars)
 			}
 			ic.emitFilesFromMap(pipeline.Configuration)
-			ic.emitSecretsFromSecretsPath(pipeline.Configuration)
+			ic.emitSecretsFromSecretsPathMap(pipeline.Configuration)
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/pipelines/%s", r.ID),
 				"pipeline_"+ic.Importables["databricks_pipeline"].Name(ic, r.Data))
 			return nil
@@ -2145,7 +2148,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-
 			for offset, endpoint := range endpointsList {
 				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_model_serving",
@@ -2160,15 +2162,95 @@ var resourcesMap map[string]importable = map[string]importable{
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/serving-endpoints/%s", r.Data.Get("serving_endpoint_id").(string)),
 				"serving_endpoint_"+ic.Importables["databricks_model_serving"].Name(ic, r.Data))
+			s := ic.Resources["databricks_model_serving"].Schema
+			var mse serving.CreateServingEndpoint
+			common.DataToStructPointer(r.Data, s, &mse)
+			if mse.Config.ServedEntities != nil {
+				for _, se := range mse.Config.ServedEntities {
+					if se.EntityName != "" {
+						if se.EntityVersion != "" { // we have an UC model or model from model registry
+							if uc3LevelIdRegex.MatchString(se.EntityName) {
+								ic.Emit(&resource{
+									Resource: "databricks_registered_model",
+									ID:       se.EntityName,
+								})
+							}
+							// TODO: add else branch to emit databricks_model when we have support for it
+						}
+						// TODO: add else branch to emit UC function when we add support for them...
+					}
+					if se.InstanceProfileArn != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_instance_profile",
+							ID:       se.InstanceProfileArn,
+						})
+					}
+					ic.emitSecretsFromSecretsPathMap(se.EnvironmentVars)
+					if se.ExternalModel != nil {
+						if se.ExternalModel.DatabricksModelServingConfig != nil {
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.DatabricksModelServingConfig.DatabricksApiToken)
+						}
+						if se.ExternalModel.Ai21labsConfig != nil {
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.Ai21labsConfig.Ai21labsApiKey)
+						}
+						if se.ExternalModel.AnthropicConfig != nil {
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.AnthropicConfig.AnthropicApiKey)
+						}
+						if se.ExternalModel.AmazonBedrockConfig != nil {
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.AmazonBedrockConfig.AwsAccessKeyId)
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.AmazonBedrockConfig.AwsSecretAccessKey)
+						}
+						if se.ExternalModel.CohereConfig != nil {
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.CohereConfig.CohereApiKey)
+						}
+						if se.ExternalModel.OpenaiConfig != nil {
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.OpenaiConfig.OpenaiApiKey)
+						}
+						if se.ExternalModel.PalmConfig != nil {
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.PalmConfig.PalmApiKey)
+						}
+					}
+				}
+			}
+			if mse.Config.AutoCaptureConfig != nil && mse.Config.AutoCaptureConfig.CatalogName != "" &&
+				mse.Config.AutoCaptureConfig.SchemaName != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_schema",
+					ID:       mse.Config.AutoCaptureConfig.CatalogName + "." + mse.Config.AutoCaptureConfig.SchemaName,
+				})
+			}
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "config.0.traffic_config" ||
-				(strings.HasPrefix(pathString, "config.0.served_models.") &&
-					strings.HasSuffix(pathString, ".scale_to_zero_enabled")) {
+			if pathString == "config.0.traffic_config" || pathString == "config.0.auto_capture_config.0.enabled" ||
+				(pathString == "config.0.auto_capture_config.0.table_name_prefix" && d.Get(pathString).(string) != "") {
 				return false
 			}
+			if res := servedEntityFieldExtractionRegex.FindStringSubmatch(pathString); res != nil {
+				field := res[2]
+				log.Printf("[DEBUG] ShouldOmitField: extracted field from %s: '%s'", pathString, field)
+				switch field {
+				case "scale_to_zero_enabled", "name":
+					return false
+				case "workload_size", "workload_type":
+					return d.Get(pathString).(string) == ""
+				}
+			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		ShouldGenerateField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			// We need to generate some fields even if they have zero value...
+			if strings.HasSuffix(pathString, ".scale_to_zero_enabled") {
+				extModelBlockCoordinate := strings.Replace(pathString, ".scale_to_zero_enabled", ".external_model", 1)
+				return d.Get(extModelBlockCoordinate+".#").(int) == 0
+			}
+			return pathString == "config.0.auto_capture_config.0.enabled"
+		},
+		Depends: []reference{
+			{Path: "config.served_entities.entity_name", Resource: "databricks_registered_model"},
+			{Path: "config.auto_capture_config.catalog_name", Resource: "databricks_catalog"},
+			{Path: "config.auto_capture_config.schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: isMatchingCatalogAndSchemaInModelServing, SkipDirectLookup: true},
 		},
 	},
 	"databricks_mlflow_webhook": {
@@ -2413,37 +2495,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			if cat.IsolationMode == "ISOLATED" {
-				securable := "catalog"
-				bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindings(ic.Context, catalog.GetBindingsRequest{
-					SecurableName: cat.Name,
-					SecurableType: catalog.GetBindingsSecurableType(securable),
-				})
-				if err == nil {
-					for _, binding := range bindings.Bindings {
-						id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securable, cat.Name)
-						// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
-						// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now
-						// to decrease a number of API calls.
-						d := ic.Resources["databricks_catalog_workspace_binding"].Data(
-							&terraform.InstanceState{
-								ID: id,
-								Attributes: map[string]string{
-									"workspace_id":   fmt.Sprintf("%d", binding.WorkspaceId),
-									"securable_type": securable,
-									"securable_name": cat.Name,
-									"binding_type":   binding.BindingType.String(),
-								},
-							})
-						ic.Emit(&resource{
-							Resource: "databricks_catalog_workspace_binding",
-							ID:       id,
-							Name:     fmt.Sprintf("%s_%s_ws_%d", securable, cat.Name, binding.WorkspaceId),
-							Data:     d,
-						})
-					}
-				} else {
-					log.Printf("[ERROR] listing catalog bindings: %s", err.Error())
-				}
+				ic.emitWorkspaceBindings("catalog", cat.Name)
 			}
 			return nil
 		},
@@ -2534,15 +2586,24 @@ var resourcesMap map[string]importable = map[string]importable{
 							ID:        table.FullName,
 							DependsOn: dependsOn,
 						}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+					case "FOREIGN":
+						// TODO: it's better to use SecurableKind if it will be added to the Go SDK
+						switch table.DataSourceFormat {
+						case "VECTOR_INDEX_FORMAT":
+						case "MYSQL_FORMAT":
+							ic.EmitIfUpdatedAfterMillis(&resource{
+								Resource:  "databricks_online_table",
+								ID:        table.FullName,
+								DependsOn: dependsOn,
+							}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+						default:
+							log.Printf("[DEBUG] Skipping foreign table %s of format %s", table.FullName, table.DataSourceFormat)
+						}
 					default:
 						log.Printf("[DEBUG] Skipping table %s of type %s", table.FullName, table.TableType)
 					}
 				}
 			}
-			// TODO: list VectorSearch indexes
-
-			// TODO: list online tables
-
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
@@ -2603,6 +2664,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			switch pathString {
 			case "storage_location":
 				return d.Get("table_type").(string) == "MANAGED"
+			case "enable_predictive_optimization":
+				epo := d.Get(pathString).(string)
+				return epo == "" || epo == "INHERIT"
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
@@ -2684,6 +2748,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		Service:        "uc-storage-credentials",
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUCGrantsWithOwner("storage_credential/"+r.ID, r)
+			if r.Data != nil {
+				isolationMode := r.Data.Get("isolation_mode").(string)
+				if isolationMode == "ISOLATION_MODE_ISOLATED" {
+					ic.emitWorkspaceBindings("storage_credential", r.ID)
+				}
+			}
 			return nil
 		},
 		List: func(ic *importContext) error {
@@ -2699,7 +2769,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: shouldOmitForUnityCatalog,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "isolation_mode" {
+				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
+			}
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		},
 		Depends: []reference{
 			{Path: "azure_service_principal.client_secret", Variable: true},
 		},
@@ -2714,6 +2789,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_storage_credential",
 				ID:       credentialName,
 			})
+			if r.Data != nil {
+				isolationMode := r.Data.Get("isolation_mode").(string)
+				if isolationMode == "ISOLATION_MODE_ISOLATED" {
+					ic.emitWorkspaceBindings("external_location", r.ID)
+				}
+			}
 			// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "storage_credential/" + credentialName})
 			return nil
 		},
@@ -2732,7 +2813,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: shouldOmitForUnityCatalog,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "isolation_mode" {
+				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
+			}
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		},
 		// This external location is automatically created when metastore is created with the `storage_root`
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.ID == "metastore_default_location"
@@ -2778,7 +2864,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-shares",
 		List: func(ic *importContext) error {
-			shares, err := ic.workspaceClient.Shares.ListAll(ic.Context)
+			shares, err := ic.workspaceClient.Shares.ListAll(ic.Context, sharing.ListSharesRequest{})
 			if err != nil {
 				return err
 			}
@@ -2966,11 +3052,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "metastore_id", Resource: "databricks_metastore"},
 		},
 	},
-	"databricks_catalog_workspace_binding": {
+	"databricks_workspace_binding": {
 		WorkspaceLevel: true,
 		Service:        "uc-catalogs",
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "securable_name" {
+				return d.Get(pathString).(string) == ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
 		Depends: []reference{
-			{Path: "securable_name", Resource: "databricks_catalog", Match: "name"},
+			{Path: "securable_name", Resource: "databricks_catalog", Match: "name",
+				IsValidApproximation: isMatchingSecurableTypeAndName, SkipDirectLookup: true},
+			{Path: "securable_name", Resource: "databricks_storage_credential", Match: "name",
+				IsValidApproximation: isMatchingSecurableTypeAndName, SkipDirectLookup: true},
+			{Path: "securable_name", Resource: "databricks_external_location", Match: "name",
+				IsValidApproximation: isMatchingSecurableTypeAndName, SkipDirectLookup: true},
 		},
 	},
 	"databricks_file": {
@@ -3183,6 +3280,28 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parent_path", Resource: "databricks_directory"},
 			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
 			{Path: "parent_path", Resource: "databricks_service_principal"},
+		},
+	},
+	"databricks_online_table": {
+		WorkspaceLevel: true,
+		Service:        "uc-online-tables",
+		Import: func(ic *importContext, r *resource) error {
+			tableFullName := r.ID
+			ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
+			ic.Emit(&resource{
+				Resource: "databricks_sql_table",
+				ID:       r.Data.Get("spec.0.source_table_full_name").(string),
+			})
+			// TODO: emit owner? See comment in catalog resource
+			return nil
+		},
+		Ignore:          generateIgnoreObjectWithoutName("databricks_online_table"),
+		ShouldOmitField: shouldOmitForUnityCatalog,
+		Depends: []reference{
+			{Path: "catalog_name", Resource: "databricks_catalog"},
+			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
+			{Path: "spec.source_table_full_name", Resource: "databricks_sql_table"},
 		},
 	},
 }

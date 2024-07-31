@@ -103,7 +103,7 @@ func TestNDUpdate(t *testing.T) {
 			e := w.GetMockNotificationDestinationsAPI().EXPECT()
 			e.Update(mock.Anything, settings.UpdateNotificationDestinationRequest{
 				Id:          "xyz",
-				DisplayName: "Notification Destination",
+				DisplayName: "Notification Destination - 2",
 				Config: &settings.Config{
 					Email: &settings.EmailConfig{
 						Addresses: []string{"pqr@email.com"},
@@ -111,7 +111,7 @@ func TestNDUpdate(t *testing.T) {
 				},
 			}).Return(&settings.NotificationDestination{
 				Id:              "xyz",
-				DisplayName:     "Notification Destination",
+				DisplayName:     "Notification Destination - 2",
 				DestinationType: "EMAIL",
 				Config: &settings.Config{
 					Email: &settings.EmailConfig{
@@ -123,7 +123,7 @@ func TestNDUpdate(t *testing.T) {
 				Id: "xyz",
 			}).Return(&settings.NotificationDestination{
 				Id:              "xyz",
-				DisplayName:     "Notification Destination",
+				DisplayName:     "Notification Destination - 2",
 				DestinationType: "EMAIL",
 				Config: &settings.Config{
 					Email: &settings.EmailConfig{
@@ -136,7 +136,7 @@ func TestNDUpdate(t *testing.T) {
 		Update:   true,
 		ID:       "xyz",
 		HCL: `
-			display_name = "Notification Destination"
+			display_name = "Notification Destination - 2"
 			config {
 				email {
 					addresses = ["pqr@email.com"]
@@ -144,13 +144,16 @@ func TestNDUpdate(t *testing.T) {
 			}
 		`,
 		InstanceState: map[string]string{
-			"id":           "xyz",
-			"display_name": "Notification Destination",
-			"config":       `{"email":{"addresses":["abc@email.com"]}}`,
+			"id":                           "xyz",
+			"display_name":                 "Notification Destination",
+			"config.#":                     "1",
+			"config.0.email.#":             "1",
+			"config.0.email.0.addresses.#": "1",
+			"config.0.email.0.addresses.0": "abc@email.com",
 		},
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":           "xyz",
-		"display_name": "Notification Destination",
+		"display_name": "Notification Destination - 2",
 	})
 }
 

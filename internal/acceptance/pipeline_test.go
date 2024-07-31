@@ -270,7 +270,6 @@ func TestAccPipelineResourcLastModified(t *testing.T) {
 				}
 			}
 			continuous = false
-			development = false
 		}
 		` + dltNotebookResource,
 		Check: resourceCheck("databricks_pipeline.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
@@ -324,7 +323,6 @@ func TestAccPipelineResourcLastModified(t *testing.T) {
 				}
 			}
 			continuous = false
-			development = false
 			expected_last_modified = ` + fmt.Sprintf("%d", lastModified) + `
 		}
 		` + dltNotebookResource,

@@ -75,7 +75,7 @@ func TestNDRead(t *testing.T) {
 				DestinationType: "EMAIL",
 				Config: &settings.Config{
 					Email: &settings.EmailConfig{
-						Addresses: []string{"abc@gmail.com"},
+						Addresses: []string{"abc@email.com"},
 					},
 				},
 			}, nil)
@@ -87,7 +87,7 @@ func TestNDRead(t *testing.T) {
 			display_name = "Notification Destination"
 			config {
 				email {
-					addresses = ["abc@gmail.com"]
+					addresses = ["abc@email.com"]
 				}
 			}
 		`,
@@ -106,7 +106,7 @@ func TestNDUpdate(t *testing.T) {
 				DisplayName: "Notification Destination",
 				Config: &settings.Config{
 					Email: &settings.EmailConfig{
-						Addresses: []string{"pqr@gmail.com"},
+						Addresses: []string{"pqr@email.com"},
 					},
 				},
 			}).Return(&settings.NotificationDestination{
@@ -115,7 +115,7 @@ func TestNDUpdate(t *testing.T) {
 				DestinationType: "EMAIL",
 				Config: &settings.Config{
 					Email: &settings.EmailConfig{
-						Addresses: []string{"pqr@gmail.com"},
+						Addresses: []string{"pqr@email.com"},
 					},
 				},
 			}, nil)
@@ -127,7 +127,7 @@ func TestNDUpdate(t *testing.T) {
 				DestinationType: "EMAIL",
 				Config: &settings.Config{
 					Email: &settings.EmailConfig{
-						Addresses: []string{"pqr@gmail.com"},
+						Addresses: []string{"pqr@email.com"},
 					},
 				},
 			}, nil)
@@ -139,14 +139,14 @@ func TestNDUpdate(t *testing.T) {
 			display_name = "Notification Destination"
 			config {
 				email {
-					addresses = ["pqr@gmail.com"]
+					addresses = ["pqr@email.com"]
 				}
 			}
 		`,
 		InstanceState: map[string]string{
 			"id":           "xyz",
 			"display_name": "Notification Destination",
-			"config":       `{"email":{"addresses":["abc@gmail.com"]}}`,
+			"config":       `{"email":{"addresses":["abc@email.com"]}}`,
 		},
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":           "xyz",
@@ -175,37 +175,3 @@ func TestNDDelete(t *testing.T) {
 		`,
 	}.ApplyNoError(t)
 }
-
-// func TestNDConflictingFields(t *testing.T) {
-// 	qa.ResourceFixture{
-// 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-// 			e := w.GetMockNotificationDestinationsAPI().EXPECT()
-// 			e.Create(mock.Anything, settings.CreateNotificationDestinationRequest{
-// 				DisplayName: "Notification Destination",
-// 				Config: &settings.Config{
-// 					GenericWebhook: &settings.GenericWebhookConfig{
-// 						Url:      "https://webhook.site/abc",
-// 						Password: "password",
-// 					},
-// 					Email: &settings.EmailConfig{
-// 						Addresses: []string{"abc@gmail.com"},
-// 					},
-// 				},
-// 			})
-// 		},
-// 		Resource: ResourceNotificationDestination(),
-// 		Create:   true,
-// 		HCL: `
-// 			display_name = "Notification Destination"
-// 			config {
-// 				generic_webhook {
-// 					url = "https://webhook.site/abc"
-// 					password = "password"
-// 				}
-// 				email {
-// 					addresses = ["abc@gmail.com"]
-// 				}
-// 			}
-// 		`,
-// 	}.ExpectError(t, "invalid config supplied. [config.#.email] Invalid combination of arguments. [config.#.generic_webhook] Invalid combination of arguments. [config.#.microsoft_teams] Invalid combination of arguments. [config.#.pagerduty] Invalid combination of arguments. [config.#.slack] Invalid combination of ars")
-// }

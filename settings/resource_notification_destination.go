@@ -65,32 +65,7 @@ func Read(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceCl
 	return common.StructToData(readND, ndSchema, d)
 }
 
-func detectConfigTypeChange(d *schema.ResourceData) bool {
-	switch d.Get("destination_type").(string) {
-	case string(settings.DestinationTypeSlack):
-		_, ok := d.GetOk("config.0.slack")
-		return !ok
-	case string(settings.DestinationTypePagerduty):
-		_, ok := d.GetOk("config.0.pagerduty")
-		return !ok
-	case string(settings.DestinationTypeMicrosoftTeams):
-		_, ok := d.GetOk("config.0.microsoft_teams")
-		return !ok
-	case string(settings.DestinationTypeWebhook):
-		_, ok := d.GetOk("config.0.generic_webhook")
-		return !ok
-	}
-	return false
-}
-
 func Update(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient) error {
-	if detectConfigTypeChange(d) {
-		err := Delete(ctx, d, w)
-		if err != nil {
-			return err
-		}
-		return Create(ctx, d, w)
-	}
 	var updateNDRequest settings.UpdateNotificationDestinationRequest
 	common.DataToStructPointer(d, ndSchema, &updateNDRequest)
 	updateNDRequest.Id = d.Id()
@@ -124,6 +99,13 @@ func (NDStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("config", "generic_webhook", "url_set").SetComputed()
 	s.SchemaPath("config", "generic_webhook", "password_set").SetComputed()
 	s.SchemaPath("config", "generic_webhook", "username_set").SetComputed()
+
+	// ForceNew fields
+	s.SchemaPath("config", "slack").SetForceNew()
+	s.SchemaPath("config", "pagerduty").SetForceNew()
+	s.SchemaPath("config", "microsoft_teams").SetForceNew()
+	s.SchemaPath("config", "generic_webhook").SetForceNew()
+	s.SchemaPath("config", "email").SetForceNew()
 
 	// ConflictsWith fields
 	config_eoo := []string{"config.0.slack", "config.0.pagerduty", "config.0.microsoft_teams", "config.0.generic_webhook", "config.0.email"}

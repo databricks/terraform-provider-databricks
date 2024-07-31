@@ -15,7 +15,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
-	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
@@ -24,8 +23,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/permissions"
-
-	dlt_pipelines "github.com/databricks/terraform-provider-databricks/pipelines"
+	"github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -293,7 +291,7 @@ func TestRepoIgnore(t *testing.T) {
 
 func TestDLTIgnore(t *testing.T) {
 	ic := importContextForTest()
-	d := dlt_pipelines.ResourcePipeline().ToResource().TestResourceData()
+	d := pipelines.ResourcePipeline().ToResource().TestResourceData()
 	d.SetId("12345")
 	r := &resource{ID: "12345", Data: d}
 	// job without libraries
@@ -1342,14 +1340,14 @@ func TestIncrementalListDLT(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/pipelines?max_results=50",
-			Response: pipelines.ListPipelinesResponse{
+			Response: pipelines.PipelineListResponse{
 				Statuses: []pipelines.PipelineStateInfo{
 					{
-						PipelineId: "abc",
+						PipelineID: "abc",
 						Name:       "abc",
 					},
 					{
-						PipelineId: "def",
+						PipelineID: "def",
 						Name:       "def",
 					},
 				},
@@ -1357,18 +1355,18 @@ func TestIncrementalListDLT(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/abc?",
-			Response: pipelines.GetPipelineResponse{
-				PipelineId:   "abc",
+			Resource: "/api/2.0/pipelines/abc",
+			Response: pipelines.PipelineInfo{
+				PipelineID:   "abc",
 				Name:         "abc",
 				LastModified: 1681466931226,
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/def?",
-			Response: pipelines.GetPipelineResponse{
-				PipelineId:   "def",
+			Resource: "/api/2.0/pipelines/def",
+			Response: pipelines.PipelineInfo{
+				PipelineID:   "def",
 				Name:         "def",
 				LastModified: 1690156900000,
 			},

@@ -43,15 +43,7 @@ func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.Resour
 	if err != nil {
 		return err
 	}
-	var id string
-	// If dry_run is set, the pipeline is not created and the ID is the effective settings ID.
-	if d.Get("dry_run").(bool) {
-		id = createdPipeline.EffectiveSettings.Id
-		d.SetId(id)
-		return fmt.Errorf("dry run succeeded; pipeline %s was not created", id)
-	} else {
-		id = createdPipeline.PipelineId
-	}
+	id := createdPipeline.PipelineId
 	err = waitForState(w, ctx, id, timeout, pipelines.PipelineStateRunning)
 	if err != nil {
 		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
@@ -169,7 +161,6 @@ func (updatePipelineRequestStruct) CustomizeSchema(s *common.CustomizableSchema)
 type Pipeline struct {
 	pipelines.PipelineSpec
 	AllowDuplicateNames  bool                                `json:"allow_duplicate_names,omitempty"`
-	DryRun               bool                                `json:"dry_run,omitempty"`
 	Cause                string                              `json:"cause,omitempty"`
 	ClusterId            string                              `json:"cluster_id,omitempty"`
 	CreatorUserName      string                              `json:"creator_user_name,omitempty"`

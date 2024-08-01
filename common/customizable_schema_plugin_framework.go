@@ -287,6 +287,88 @@ func (s *CustomizableSchemaPluginFramework) SetDeprecated(msg string, path ...st
 	return s
 }
 
+func (s *CustomizableSchemaPluginFramework) SetComputed(path ...string) *CustomizableSchemaPluginFramework {
+	cb := func(attr schema.Attribute) schema.Attribute {
+		// Get the concrete value stored in the interface
+		v := reflect.ValueOf(attr)
+
+		// Make a new addressable value and copy the original value into it
+		newAttr := reflect.New(v.Type()).Elem()
+		newAttr.Set(v)
+		v = newAttr
+
+		field := v.FieldByName("Computed")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(true)
+			} else {
+				panic(fmt.Sprintf("Computed is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Computed field not found or cannot be set in %T", attr))
+		}
+
+		return v.Interface().(schema.Attribute)
+	}
+
+	navigateSchemaWithCallback(&s.attr, cb, path...)
+	return s
+}
+
+// SetReadOnly sets the schema to be read-only (i.e. computed, non-optional).
+// This should be used for fields that are not user-configurable but are returned
+// by the platform.
+func (s *CustomizableSchemaPluginFramework) SetReadOnly(path ...string) *CustomizableSchemaPluginFramework {
+	cb := func(attr schema.Attribute) schema.Attribute {
+		// Get the concrete value stored in the interface
+		v := reflect.ValueOf(attr)
+
+		// Make a new addressable value and copy the original value into it
+		newAttr := reflect.New(v.Type()).Elem()
+		newAttr.Set(v)
+		v = newAttr
+
+		field := v.FieldByName("Computed")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(true)
+			} else {
+				panic(fmt.Sprintf("Computed is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Computed field not found or cannot be set in %T", attr))
+		}
+
+		field = v.FieldByName("Optional")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(false)
+			} else {
+				panic(fmt.Sprintf("Optional is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Optional field not found or cannot be set in %T", attr))
+		}
+
+		field = v.FieldByName("Required")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(false)
+			} else {
+				panic(fmt.Sprintf("Required is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Required field not found or cannot be set in %T", attr))
+		}
+
+		return v.Interface().(schema.Attribute)
+	}
+
+	navigateSchemaWithCallback(&s.attr, cb, path...)
+
+	return s
+}
+
 // Given a attribute map, navigate through the given path, panics if the path is not valid.
 func MustSchemaAttributePath(attrs map[string]schema.Attribute, path ...string) schema.Attribute {
 	attr := ConstructCustomizableSchema(attrs).attr

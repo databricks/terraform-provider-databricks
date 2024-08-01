@@ -58,13 +58,12 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 			c.SetRequired("assets_dir")
 			c.SetRequired("output_schema_name")
 			c.SetRequired("table_name")
-			// TODO: Uncomment this once SetReadOnly is supported in the plugin framework
-			// c.SetReadOnly("monitor_version")
-			// c.SetReadOnly("drift_metrics_table_name")
-			// c.SetReadOnly("profile_metrics_table_name")
-			// c.SetReadOnly("status")
-			// c.SetReadOnly("dashboard_id")
-			// c.SetReadOnly("schedule", "pause_status")
+			c.SetReadOnly("monitor_version")
+			c.SetReadOnly("drift_metrics_table_name")
+			c.SetReadOnly("profile_metrics_table_name")
+			c.SetReadOnly("status")
+			c.SetReadOnly("dashboard_id")
+			c.SetReadOnly("schedule", "pause_status")
 			return c
 		}),
 	}

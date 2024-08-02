@@ -301,6 +301,7 @@ func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 	p, _ := filepath.Abs("./testdata")
 	t.Setenv("PATH", p+":/bin")
 	t.Setenv("FAIL", "yes")
+	t.Setenv("ARM_TENANT_ID", "tenant-id")
 
 	client := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{

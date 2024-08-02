@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
@@ -23,7 +24,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/permissions"
-	"github.com/databricks/terraform-provider-databricks/pipelines"
+
+	dlt_pipelines "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
 	"github.com/databricks/terraform-provider-databricks/provider"
@@ -291,7 +293,7 @@ func TestRepoIgnore(t *testing.T) {
 
 func TestDLTIgnore(t *testing.T) {
 	ic := importContextForTest()
-	d := pipelines.ResourcePipeline().ToResource().TestResourceData()
+	d := dlt_pipelines.ResourcePipeline().ToResource().TestResourceData()
 	d.SetId("12345")
 	r := &resource{ID: "12345", Data: d}
 	// job without libraries
@@ -1340,14 +1342,14 @@ func TestIncrementalListDLT(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/pipelines?max_results=50",
-			Response: pipelines.PipelineListResponse{
+			Response: pipelines.ListPipelinesResponse{
 				Statuses: []pipelines.PipelineStateInfo{
 					{
-						PipelineID: "abc",
+						PipelineId: "abc",
 						Name:       "abc",
 					},
 					{
-						PipelineID: "def",
+						PipelineId: "def",
 						Name:       "def",
 					},
 				},
@@ -1355,18 +1357,18 @@ func TestIncrementalListDLT(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/abc",
-			Response: pipelines.PipelineInfo{
-				PipelineID:   "abc",
+			Resource: "/api/2.0/pipelines/abc?",
+			Response: pipelines.GetPipelineResponse{
+				PipelineId:   "abc",
 				Name:         "abc",
 				LastModified: 1681466931226,
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines/def",
-			Response: pipelines.PipelineInfo{
-				PipelineID:   "def",
+			Resource: "/api/2.0/pipelines/def?",
+			Response: pipelines.GetPipelineResponse{
+				PipelineId:   "def",
 				Name:         "def",
 				LastModified: 1690156900000,
 			},
@@ -1726,7 +1728,7 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 		assert.NoError(t, err)
 		require.Equal(t, 2, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/ctest)"])
-		assert.True(t, ic.testEmits["databricks_catalog_workspace_binding[catalog_ctest_ws_1234] (id: 1234|catalog|ctest)"])
+		assert.True(t, ic.testEmits["databricks_workspace_binding[catalog_ctest_ws_1234] (id: 1234|catalog|ctest)"])
 	})
 }
 
@@ -2066,7 +2068,7 @@ func TestListShares(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/shares",
+			Resource:     "/api/2.1/unity-catalog/shares?",
 			Response: sharing.ListSharesResponse{
 				Shares: []sharing.ShareInfo{
 					{
@@ -2235,4 +2237,40 @@ func TestImportGrants(t *testing.T) {
 	d.Set("model", "test")
 	err = resourcesMap["databricks_grants"].Import(ic, r)
 	assert.NoError(t, err)
+}
+
+func TestImportUcOnlineTable(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+		os.Mkdir(tmpDir, 0700)
+		ic.Directory = tmpDir
+		ic.enableServices("uc-tables,uc-grants")
+		ic.currentMetastore = currentMetastoreResponse
+
+		otTableName := "main.tmp.tbl_ot"
+		d := tfcatalog.ResourceOnlineTable().ToResource().TestResourceData()
+		ot := catalog.OnlineTable{
+			Name: otTableName,
+			Spec: &catalog.OnlineTableSpec{
+				SourceTableFullName: "main.tmp.tbl",
+				PrimaryKeyColumns:   []string{"id"},
+			},
+		}
+		d.SetId(otTableName)
+		d.MarkNewResource()
+		scm := tfcatalog.ResourceOnlineTable().Schema
+		err := common.StructToData(ot, scm, d)
+		require.NoError(t, err)
+
+		err = resourcesMap["databricks_online_table"].Import(ic, &resource{
+			ID:   otTableName,
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: main.tmp.tbl)"])
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: table/main.tmp.tbl_ot)"])
+	})
 }

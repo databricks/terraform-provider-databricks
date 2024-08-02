@@ -25,6 +25,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/dashboards"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	tflogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
@@ -100,6 +101,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_notebook":                             workspace.DataSourceNotebook().ToResource(),
 			"databricks_notebook_paths":                       workspace.DataSourceNotebookPaths().ToResource(),
 			"databricks_pipelines":                            pipelines.DataSourcePipelines().ToResource(),
+			"databricks_schema":                               catalog.DataSourceSchema().ToResource(),
 			"databricks_schemas":                              catalog.DataSourceSchemas().ToResource(),
 			"databricks_service_principal":                    scim.DataSourceServicePrincipal().ToResource(),
 			"databricks_service_principals":                   scim.DataSourceServicePrincipals().ToResource(),
@@ -130,6 +132,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_connection":                      catalog.ResourceConnection().ToResource(),
 			"databricks_cluster":                         clusters.ResourceCluster().ToResource(),
 			"databricks_cluster_policy":                  policies.ResourceClusterPolicy().ToResource(),
+			"databricks_dashboard":                       dashboards.ResourceDashboard().ToResource(),
 			"databricks_dbfs_file":                       storage.ResourceDbfsFile().ToResource(),
 			"databricks_directory":                       workspace.ResourceDirectory().ToResource(),
 			"databricks_entitlements":                    scim.ResourceEntitlements().ToResource(),
@@ -170,6 +173,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_vpc_endpoint":                mws.ResourceMwsVpcEndpoint().ToResource(),
 			"databricks_mws_workspaces":                  mws.ResourceMwsWorkspaces().ToResource(),
 			"databricks_notebook":                        workspace.ResourceNotebook().ToResource(),
+			"databricks_notification_destination":        settings.ResourceNotificationDestination().ToResource(),
 			"databricks_obo_token":                       tokens.ResourceOboToken().ToResource(),
 			"databricks_online_table":                    catalog.ResourceOnlineTable().ToResource(),
 			"databricks_permission_assignment":           access.ResourcePermissionAssignment().ToResource(),
@@ -221,7 +225,7 @@ func DatabricksProvider() *schema.Provider {
 			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 		}
 		tflogger.SetLogger()
-		return configureDatabricksClient(ctx, d)
+		return ConfigureDatabricksClient(ctx, d)
 	}
 	common.AddContextToAllResources(p, "databricks")
 	return p
@@ -252,7 +256,7 @@ func providerSchema() map[string]*schema.Schema {
 	return ps
 }
 
-func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}

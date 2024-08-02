@@ -23,6 +23,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 
@@ -30,6 +31,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // Remove this once databricks_pipeline and databricks_job resources are migrated to Go SDK
@@ -62,6 +64,7 @@ func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
 		}
 		if is.Volumes != nil {
+			// TODO: we should emit allow list for init scripts as well
 			ic.emitIfVolumeFile(is.Volumes.Destination)
 		}
 	}
@@ -115,8 +118,8 @@ func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
 		})
 	}
 	ic.emitInitScriptsLegacy(c.InitScripts)
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
+	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
@@ -150,19 +153,23 @@ func (ic *importContext) importCluster(c *compute.ClusterSpec) {
 		})
 	}
 	ic.emitInitScripts(c.InitScripts)
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
+	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
-func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
+func (ic *importContext) emitSecretsFromSecretPathString(v string) {
+	if res := secretPathRegex.FindStringSubmatch(v); res != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_secret_scope",
+			ID:       res[1],
+		})
+	}
+}
+
+func (ic *importContext) emitSecretsFromSecretsPathMap(m map[string]string) {
 	for _, v := range m {
-		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_secret_scope",
-				ID:       res[1],
-			})
-		}
+		ic.emitSecretsFromSecretPathString(v)
 	}
 }
 
@@ -410,11 +417,13 @@ func (ic *importContext) emitLibraries(libs []compute.Library) {
 		ic.emitIfWsfsFile(lib.Whl)
 		ic.emitIfWsfsFile(lib.Jar)
 		ic.emitIfWsfsFile(lib.Egg)
+		ic.emitIfWsfsFile(lib.Requirements)
 		// Files on UC Volumes
 		ic.emitIfVolumeFile(lib.Whl)
+		// TODO: we should emit UC allow list as well
 		ic.emitIfVolumeFile(lib.Jar)
+		ic.emitIfVolumeFile(lib.Requirements)
 	}
-
 }
 
 func (ic *importContext) importLibraries(d *schema.ResourceData, s map[string]*schema.Schema) error {
@@ -449,32 +458,48 @@ func (ic *importContext) cacheGroups() error {
 	defer ic.groupsMutex.Unlock()
 	if ic.allGroups == nil {
 		log.Printf("[INFO] Caching groups in memory ...")
-		var groups []iam.Group
+		var groups *[]iam.Group
 		var err error
-		if ic.accountLevel {
-			groups, err = ic.accountClient.Groups.ListAll(ic.Context, iam.ListAccountGroupsRequest{
-				Attributes: "id",
-			})
-		} else {
-			groups, err = ic.workspaceClient.Groups.ListAll(ic.Context, iam.ListGroupsRequest{
-				Attributes: "id",
-			})
-		}
+		err = runWithRetries(func() error {
+			var grps []iam.Group
+			var err error
+			if ic.accountLevel {
+				grps, err = ic.accountClient.Groups.ListAll(ic.Context, iam.ListAccountGroupsRequest{
+					Attributes: "id",
+				})
+			} else {
+				grps, err = ic.workspaceClient.Groups.ListAll(ic.Context, iam.ListGroupsRequest{
+					Attributes: "id",
+				})
+			}
+			if err != nil {
+				return err
+			}
+			groups = &grps
+			return nil
+		}, "error fetching full list of groups")
 		if err != nil {
-			log.Printf("[ERROR] can't fetch list of groups")
+			log.Printf("[ERROR] can't fetch list of groups. Error: %v", err)
 			return err
 		}
 		api := scim.NewGroupsAPI(ic.Context, ic.Client)
-		ic.allGroups = make([]scim.Group, 0, len(groups))
-		for i, g := range groups {
-			group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members")
+		groupsCount := len(*groups)
+		ic.allGroups = make([]scim.Group, 0, groupsCount)
+		for i, g := range *groups {
+			err = runWithRetries(func() error {
+				group, err := api.Read(g.Id, "id,displayName,active,externalId,entitlements,groups,roles,members")
+				if err != nil {
+					return err
+				}
+				ic.allGroups = append(ic.allGroups, group)
+				return nil
+			}, "error reading group with ID "+g.Id)
 			if err != nil {
-				log.Printf("[ERROR] Error reading group with ID %s", g.Id)
+				log.Printf("[ERROR] Error reading group with ID %s: %v", g.Id, err)
 				continue
 			}
-			ic.allGroups = append(ic.allGroups, group)
 			if (i+1)%10 == 0 {
-				log.Printf("[DEBUG] Read %d out of %d groups", i+1, len(groups))
+				log.Printf("[DEBUG] Read %d out of %d groups", i+1, groupsCount)
 			}
 		}
 		log.Printf("[INFO] Cached %d groups", len(ic.allGroups))
@@ -503,30 +528,34 @@ func (ic *importContext) getUsersMapping() {
 			return
 		}
 		ic.allUsersMapping = make(map[string]string)
-		var users []iam.User
-		var err error
-		if ic.accountLevel {
-			users, err = ic.accountClient.Users.ListAll(ic.Context, iam.ListAccountUsersRequest{
-				Attributes: "id,userName",
-			})
-		} else {
-			users, err = ic.workspaceClient.Users.ListAll(ic.Context, iam.ListUsersRequest{
-				Attributes: "id,userName",
-			})
-		}
+		err := runWithRetries(func() error {
+			var users []iam.User
+			var err error
+			if ic.accountLevel {
+				users, err = ic.accountClient.Users.ListAll(ic.Context, iam.ListAccountUsersRequest{
+					Attributes: "id,userName",
+				})
+			} else {
+				users, err = ic.workspaceClient.Users.ListAll(ic.Context, iam.ListUsersRequest{
+					Attributes: "id,userName",
+				})
+			}
+			if err != nil {
+				return err
+			}
+			for _, user := range users {
+				ic.allUsersMapping[user.UserName] = user.Id
+			}
+			log.Printf("[DEBUG] users are copied")
+			return nil
+		}, "error fetching full list of users")
 		if err != nil {
-			log.Printf("[ERROR] can't fetch list of users")
-			return
+			log.Fatalf("[ERROR] can't fetch list of users after few retries: error=%v", err)
 		}
-		for _, user := range users {
-			// log.Printf("[DEBUG] adding user %v into the map. %d out of %d", user, i+1, len(users))
-			ic.allUsersMapping[user.UserName] = user.Id
-		}
-		log.Printf("[DEBUG] users are copied")
 	}
 }
 
-func (ic *importContext) findUserByName(name string, fastCheck bool) (u scim.User, err error) {
+func (ic *importContext) findUserByName(name string, fastCheck bool) (u *scim.User, err error) {
 	log.Printf("[DEBUG] Looking for user %s", name)
 	ic.usersMutex.RLocker().Lock()
 	user, exists := ic.allUsers[name]
@@ -537,7 +566,7 @@ func (ic *importContext) findUserByName(name string, fastCheck bool) (u scim.Use
 			err = fmt.Errorf("user %s is not found", name)
 		} else {
 			log.Printf("[DEBUG] existing user %s is found in the cache", name)
-			u = user
+			u = &user
 		}
 		return
 	}
@@ -547,21 +576,28 @@ func (ic *importContext) findUserByName(name string, fastCheck bool) (u scim.Use
 	ic.allUsersMutex.RLocker().Unlock()
 	if !exists {
 		err = fmt.Errorf("there is no user '%s'", name)
-		u = scim.User{UserName: nonExistingUserOrSp}
+		u = &scim.User{UserName: nonExistingUserOrSp}
 	} else {
 		if fastCheck {
-			return scim.User{UserName: name}, nil
+			return &scim.User{UserName: name}, nil
 		}
 		a := scim.NewUsersAPI(ic.Context, ic.Client)
-		u, err = a.Read(userId, "id,userName,displayName,active,externalId,entitlements,groups,roles")
+		err = runWithRetries(func() error {
+			usr, err := a.Read(userId, "id,userName,displayName,active,externalId,entitlements,groups,roles")
+			if err != nil {
+				return err
+			}
+			u = &usr
+			return nil
+		}, fmt.Sprintf("error reading user with name '%s', user ID: %s", name, userId))
 		if err != nil {
 			log.Printf("[WARN] error reading user with name '%s', user ID: %s", name, userId)
-			u = scim.User{UserName: nonExistingUserOrSp}
+			u = &scim.User{UserName: nonExistingUserOrSp}
 		}
 	}
 	ic.usersMutex.Lock()
 	defer ic.usersMutex.Unlock()
-	ic.allUsers[name] = u
+	ic.allUsers[name] = *u
 	return
 }
 
@@ -570,24 +606,28 @@ func (ic *importContext) getSpsMapping() {
 	defer ic.spsMutex.Unlock()
 	if ic.allSpsMapping == nil {
 		ic.allSpsMapping = make(map[string]string)
-		var sps []iam.ServicePrincipal
-		var err error
-		// Reimplement it myself
-		if ic.accountLevel {
-			sps, err = ic.accountClient.ServicePrincipals.ListAll(ic.Context, iam.ListAccountServicePrincipalsRequest{
-				Attributes: "id,userName",
-			})
-		} else {
-			sps, err = ic.workspaceClient.ServicePrincipals.ListAll(ic.Context, iam.ListServicePrincipalsRequest{
-				Attributes: "id,userName",
-			})
-		}
+		err := runWithRetries(func() error {
+			var sps []iam.ServicePrincipal
+			var err error
+			if ic.accountLevel {
+				sps, err = ic.accountClient.ServicePrincipals.ListAll(ic.Context, iam.ListAccountServicePrincipalsRequest{
+					Attributes: "id,userName",
+				})
+			} else {
+				sps, err = ic.workspaceClient.ServicePrincipals.ListAll(ic.Context, iam.ListServicePrincipalsRequest{
+					Attributes: "id,userName",
+				})
+			}
+			if err != nil {
+				return err
+			}
+			for _, sp := range sps {
+				ic.allSpsMapping[sp.ApplicationId] = sp.Id
+			}
+			return nil
+		}, "error fetching full list of service principals")
 		if err != nil {
-			log.Printf("[ERROR] can't fetch list of service principals")
-			return
-		}
-		for _, sp := range sps {
-			ic.allSpsMapping[sp.ApplicationId] = sp.Id
+			log.Fatalf("[ERROR] can't fetch list of service principals after few retries: error=%v", err)
 		}
 	}
 }
@@ -618,7 +658,7 @@ func (ic *importContext) getBuiltinPolicyFamilies() map[string]compute.PolicyFam
 	return ic.builtInPolicies
 }
 
-func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u scim.User, err error) {
+func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u *scim.User, err error) {
 	log.Printf("[DEBUG] Looking for SP %s", applicationID)
 	ic.spsMutex.RLocker().Lock()
 	sp, exists := ic.allSps[applicationID]
@@ -629,7 +669,7 @@ func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u
 			err = fmt.Errorf("service principal %s is not found", applicationID)
 		} else {
 			log.Printf("[DEBUG] existing SP %s is found in the cache", applicationID)
-			u = sp
+			u = &sp
 		}
 		return
 	}
@@ -639,21 +679,28 @@ func (ic *importContext) findSpnByAppID(applicationID string, fastCheck bool) (u
 	ic.spsMutex.RLocker().Unlock()
 	if !exists {
 		err = fmt.Errorf("there is no service principal '%s'", applicationID)
-		u = scim.User{ApplicationID: nonExistingUserOrSp}
+		u = &scim.User{ApplicationID: nonExistingUserOrSp}
 	} else {
 		if fastCheck {
-			return scim.User{ApplicationID: applicationID}, nil
+			return &scim.User{ApplicationID: applicationID}, nil
 		}
 		a := scim.NewServicePrincipalsAPI(ic.Context, ic.Client)
-		u, err = a.Read(spId, "userName,displayName,active,externalId,entitlements,groups,roles")
+		err = runWithRetries(func() error {
+			usr, err := a.Read(spId, "userName,displayName,active,externalId,entitlements,groups,roles")
+			if err != nil {
+				return err
+			}
+			u = &usr
+			return nil
+		}, fmt.Sprintf("error reading service principal with AppID '%s', SP ID: %s", applicationID, spId))
 		if err != nil {
 			log.Printf("[WARN] error reading service principal with AppID '%s', SP ID: %s", applicationID, spId)
-			u = scim.User{ApplicationID: nonExistingUserOrSp}
+			u = &scim.User{ApplicationID: nonExistingUserOrSp}
 		}
 	}
 	ic.spsMutex.Lock()
 	defer ic.spsMutex.Unlock()
-	ic.allSps[applicationID] = u
+	ic.allSps[applicationID] = *u
 
 	return
 }
@@ -1159,7 +1206,7 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
 			if object.ObjectType == workspace.Directory {
-				if !ic.incremental && object.Path != "/" && ic.isServiceEnabled("directories") {
+				if !ic.incremental && object.Path != "/" && ic.isServiceInListing("directories") {
 					objectsChannel <- object
 				}
 			} else {
@@ -1184,9 +1231,9 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
 				continue
 			}
-			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceEnabled("directories") && object.Path != "/" {
+			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceInListing("directories") && object.Path != "/" {
 				emitWorkpaceObject(ic, object)
-			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceEnabled("notebooks") {
+			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceInListing("notebooks") {
 				emitWorkpaceObject(ic, object)
 			}
 		}
@@ -1393,6 +1440,21 @@ func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceAp
 	return result
 }
 
+func isMatchingCatalogAndSchemaInModelServing(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	res_catalog_name := res.Data.Get("config.0.auto_capture_config.0.catalog_name").(string)
+	res_schema_name := res.Data.Get("config.0.auto_capture_config.0.schema_name").(string)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	return result
+}
+
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
 	shareName, ok := res.Data.GetOk("share")
 	// principal := res.Data.Get(origPath)
@@ -1514,4 +1576,44 @@ func (ic *importContext) makeGroupMemberData(id, groupId, memberId string) *sche
 	data.Set("group_id", groupId)
 	data.Set("member_id", memberId)
 	return data
+}
+
+func (ic *importContext) emitWorkspaceBindings(securableType, securableName string) {
+	bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindings(ic.Context, catalog.GetBindingsRequest{
+		SecurableName: securableName,
+		SecurableType: catalog.GetBindingsSecurableType(securableType),
+	})
+	if err != nil {
+		log.Printf("[ERROR] listing %s bindings for %s: %s", securableType, securableName, err.Error())
+		return
+	}
+	for _, binding := range bindings.Bindings {
+		id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securableType, securableName)
+		// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
+		// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now
+		// to decrease a number of API calls.
+		d := ic.Resources["databricks_workspace_binding"].Data(
+			&terraform.InstanceState{
+				ID: id,
+				Attributes: map[string]string{
+					"workspace_id":   fmt.Sprintf("%d", binding.WorkspaceId),
+					"securable_type": securableType,
+					"securable_name": securableName,
+					"binding_type":   binding.BindingType.String(),
+				},
+			})
+		ic.Emit(&resource{
+			Resource: "databricks_workspace_binding",
+			ID:       id,
+			Name:     fmt.Sprintf("%s_%s_ws_%d", securableType, securableName, binding.WorkspaceId),
+			Data:     d,
+		})
+	}
+}
+
+func isMatchingSecurableTypeAndName(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	res_securable_type := res.Data.Get("securable_type").(string)
+	res_securable_name := res.Data.Get("securable_name").(string)
+	ra_name, _ := ra.Get("name")
+	return ra.Type == ("databricks_"+res_securable_type) && ra_name.(string) == res_securable_name
 }

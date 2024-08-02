@@ -80,7 +80,7 @@ The following arguments are required:
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the storage credential.
 - `force_destroy` - (Optional) Delete storage credential regardless of its dependencies.
 - `force_update` - (Optional) Update storage credential regardless of its dependents.
-- `isolation_mode` - (Optional) Whether the storage credential is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATED` or `OPEN`. Setting the credential to `ISOLATED` will automatically allow access from the current workspace.
+- `isolation_mode` - (Optional) Whether the storage credential is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the credential to `ISOLATION_MODE_ISOLATED` will automatically allow access from the current workspace.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
@@ -95,6 +95,12 @@ The following arguments are required:
 `databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
 
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
+
+`cloudflare_api_token` optional configuration block for using a Cloudflare API Token as credential details. This requires account admin access:
+
+- `account_id` - R2 account ID
+- `access_key_id` - R2 API token access key ID
+- `secret_access_key` - R2 API token secret access key
 
 `azure_service_principal` optional configuration block to use service principal as credential details for Azure (Legacy):
 

@@ -21,11 +21,11 @@ import (
 // Test interface compliance via compile time error
 var _ Mount = (*S3IamMount)(nil)
 
-var sparkVersionsResponse = clusters.SparkVersionsList{
-	SparkVersions: []clusters.SparkVersion{
+var sparkVersionsResponse = compute.GetSparkVersionsResponse{
+	Versions: []compute.SparkVersion{
 		{
-			Version:     "7.3.x-scala2.12",
-			Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+			Key:  "7.3.x-scala2.12",
+			Name: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
 		},
 	},
 }
@@ -271,13 +271,13 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/spark-versions",
+				Resource:     "/api/2.1/clusters/spark-versions",
 				Response:     sparkVersionsResponse,
 				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				ReuseRequest: true,
 				Response:     nodeListResponse,
 			},
@@ -1480,13 +1480,13 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/spark-versions",
+				Resource:     "/api/2.1/clusters/spark-versions",
 				Response:     sparkVersionsResponse,
 				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/list-node-types",
+				Resource:     "/api/2.1/clusters/list-node-types",
 				ReuseRequest: true,
 				Response:     nodeListResponse,
 			},

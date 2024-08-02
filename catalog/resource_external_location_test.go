@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -92,7 +92,7 @@ func TestCreateIsolatedExternalLocation(t *testing.T) {
 			}, nil)
 			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
 				SecurableName: "abc",
-				SecurableType: "external-location",
+				SecurableType: "external_location",
 				Add: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(123456789101112),
@@ -450,7 +450,7 @@ func TestUpdateExternalLocationRollback(t *testing.T) {
 					Url:            "s3://foo/bar",
 					CredentialName: "xyz",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -514,7 +514,7 @@ func TestUpdateExternalLocationRollbackError(t *testing.T) {
 					Url:            "s3://foo/bar",
 					CredentialName: "xyz",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -526,7 +526,7 @@ func TestUpdateExternalLocationRollbackError(t *testing.T) {
 				ExpectedRequest: catalog.UpdateExternalLocation{
 					Owner: "administrators",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

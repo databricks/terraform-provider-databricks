@@ -2303,8 +2303,9 @@ func TestImportingModelServing(t *testing.T) {
 				},
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/serving-endpoints/abc?",
+				Method:       "GET",
+				Resource:     "/api/2.0/serving-endpoints/abc?",
+				ReuseRequest: true,
 				Response: serving.ServingEndpointDetailed{
 					Name: "abc",
 					Id:   "1234",

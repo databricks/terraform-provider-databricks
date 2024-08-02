@@ -2156,6 +2156,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for offset, endpoint := range endpointsList {
+				if endpoint.Config != nil && endpoint.Config.ServedEntities != nil && len(endpoint.Config.ServedEntities) > 0 {
+					if endpoint.Config.ServedEntities[0].FoundationModel != nil {
+						log.Printf("[INFO] skipping endpoint %s that is foundation model", endpoint.Name)
+						continue
+					}
+				}
 				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_model_serving",
 					ID:       endpoint.Name,
@@ -2227,6 +2233,18 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return nil
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			// We need to ignore endpoints that are foundation models
+			endpoint, err := ic.workspaceClient.ServingEndpoints.GetByName(ic.Context, r.ID)
+			if err != nil {
+				log.Printf("[WARN] Can't get endpoint by name %s: %s", r.ID, err)
+				return false
+			}
+			res := (endpoint.Config != nil && endpoint.Config.ServedEntities != nil &&
+				len(endpoint.Config.ServedEntities) > 0 && endpoint.Config.ServedEntities[0].FoundationModel != nil)
+			log.Printf("[DEBUG] Ignore serving endpoint %s? %t", r.ID, res)
+			return res
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 			if pathString == "config.0.traffic_config" || pathString == "config.0.auto_capture_config.0.enabled" ||

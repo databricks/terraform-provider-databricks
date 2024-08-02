@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -89,6 +90,52 @@ func updateWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.
 	return nil
 }
 
+func deleteWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	config := d.Get("custom_config").(map[string]any)
+	// Delete keys one at a time to reset as many configuration values as possible to their original state.
+	// Delete in alphabetical order by key to ensure deterministic behavior.
+	keys := make([]string, 0, len(config))
+	for k := range config {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		v := config[k]
+		patch := settings.WorkspaceConf{}
+		// The default value for all configurations is assumed to be "false" for boolean
+		// configurations and an empty string for string configurations.
+		switch r := v.(type) {
+		default:
+			patch[k] = ""
+		case string:
+			_, err := strconv.ParseBool(strings.ToLower(r))
+			if err != nil {
+				patch[k] = ""
+			} else {
+				patch[k] = "false"
+			}
+		case bool:
+			patch[k] = "false"
+		}
+		err = w.WorkspaceConf.SetStatus(ctx, patch)
+		// Tolerate errors like the following on deletion:
+		// cannot delete workspace conf: Some values are not allowed: {"enableGp3":"","enableIpAccessLists":""}
+		// The API for workspace conf is quite limited and doesn't support a generic "reset to original state"
+		// operation. So if our attempted reset fails, don't fail resource deletion.
+		var apiErr *apierr.APIError
+		if errors.As(err, &apiErr) && strings.HasPrefix(apiErr.Message, "Some values are not allowed") {
+			tflog.Warn(ctx, fmt.Sprintf("Encountered error while deleting databricks_workspace_conf: %s. The workspace configuration may not be fully restored to its original state. For more information, see %s", apiErr.Message, docs.ResourceDocumentationUrl("workspace_conf")))
+		} else if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ResourceWorkspaceConf maintains workspace configuration for specified keys
 func ResourceWorkspaceConf() common.Resource {
 	return common.Resource{
@@ -120,40 +167,7 @@ func ResourceWorkspaceConf() common.Resource {
 			log.Printf("[DEBUG] Setting new config to state: %v", config)
 			return d.Set("custom_config", config)
 		},
-		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			patch := settings.WorkspaceConf{}
-			config := d.Get("custom_config").(map[string]any)
-			for k, v := range config {
-				switch r := v.(type) {
-				default:
-					patch[k] = ""
-				case string:
-					_, err := strconv.ParseBool(strings.ToLower(r))
-					if err != nil {
-						patch[k] = ""
-					} else {
-						patch[k] = "false"
-					}
-				case bool:
-					patch[k] = "false"
-				}
-			}
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			err = w.WorkspaceConf.SetStatus(ctx, patch)
-			// Tolerate errors like the following on deletion:
-			// cannot delete workspace conf: Some values are not allowed: {"enableGp3":"","enableIpAccessLists":""}
-			// The API for workspace conf is quite limited and doesn't support a generic "reset to original state"
-			// operation. So if our attempted reset fails, don't fail resource deletion.
-			var apiErr *apierr.APIError
-			if errors.As(err, &apiErr) && strings.HasPrefix(apiErr.Message, "Some values are not allowed") {
-				tflog.Warn(ctx, fmt.Sprintf("Failed to delete databricks_workspace_conf: %s. The workspace configuration may not be fully restored to its original state. For more information, see %s", apiErr.Message, docs.ResourceDocumentationUrl("workspace_conf")))
-				return nil
-			}
-			return err
-		},
+		Delete: deleteWorkspaceConf,
 		Schema: map[string]*schema.Schema{
 			"custom_config": {
 				Type:     schema.TypeMap,

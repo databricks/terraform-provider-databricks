@@ -253,16 +253,31 @@ func TestWorkspaceConfDelete_SomeValuesAreNotAllowed(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
-				Response: apierr.APIErrorBody{
+				ExpectedRequest: map[string]string{
+					"enableGp3": "",
+				},
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
-					Message:   `Some values are not allowed: {"enableGp3":"","enableIpAccessLists":""}`,
+					Message:   `Some values are not allowed: {"enableGp3":""}`,
 				},
 				Status: 400,
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"enableTokens": "false",
+				},
+				Status: 200,
 			},
 		},
 		Resource: ResourceWorkspaceConf(),
 		Delete:   true,
-		ID:       "_",
+		HCL: ` custom_config {
+		    enableGp3 = ""
+			enableTokens = "true"
+		}`,
+		ID: "_",
 	}.ApplyNoError(t)
 }
 

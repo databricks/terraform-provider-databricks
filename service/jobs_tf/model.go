@@ -118,7 +118,7 @@ type BaseRun struct {
 	// :method:jobs/submit.
 	//
 	// [dbutils.notebook.run]: https://docs.databricks.com/dev-tools/databricks-utils.html#dbutils-workflow
-	RunType RunType `tfsdk:"run_type" tf:"optional"`
+	RunType types.String `tfsdk:"run_type" tf:"optional"`
 	// The cron schedule that triggered this run if it was triggered by the
 	// periodic scheduler.
 	Schedule *CronSchedule `tfsdk:"schedule" tf:"optional"`
@@ -150,7 +150,7 @@ type BaseRun struct {
 	// failures. * `RUN_JOB_TASK`: Indicates a run that is triggered using a Run
 	// Job task. * `FILE_ARRIVAL`: Indicates a run that is triggered by a file
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
-	Trigger TriggerType `tfsdk:"trigger" tf:"optional"`
+	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 	// Additional details about what triggered the run
 	TriggerInfo *TriggerInfo `tfsdk:"trigger_info" tf:"optional"`
 }
@@ -253,7 +253,7 @@ type ConditionTask struct {
 	// The boolean comparison to task values can be implemented with operators
 	// `EQUAL_TO`, `NOT_EQUAL`. If a task value was set to a boolean value, it
 	// will be serialized to `“true”` or `“false”` for the comparison.
-	Op ConditionTaskOp `tfsdk:"op" tf:""`
+	Op types.String `tfsdk:"op" tf:""`
 	// The right operand of the condition task. Can be either a string value or
 	// a job state or parameter reference.
 	Right types.String `tfsdk:"right" tf:""`
@@ -307,7 +307,7 @@ func (f *ConditionTaskOp) Type() string {
 type Continuous struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
-	PauseStatus PauseStatus `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 }
 
 type CreateJob struct {
@@ -326,7 +326,7 @@ type CreateJob struct {
 	//
 	// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
 	// `EDITABLE`: The job is in an editable state and can be modified.
-	EditMode JobEditMode `tfsdk:"edit_mode" tf:"optional"`
+	EditMode types.String `tfsdk:"edit_mode" tf:"optional"`
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
@@ -336,7 +336,7 @@ type CreateJob struct {
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
 	// always set to `"MULTI_TASK"`.
-	Format Format `tfsdk:"format" tf:"optional"`
+	Format types.String `tfsdk:"format" tf:"optional"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks.
@@ -415,7 +415,7 @@ type CreateResponse struct {
 
 type CronSchedule struct {
 	// Indicate whether this schedule is paused or not.
-	PauseStatus PauseStatus `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 	// A Cron expression using Quartz syntax that describes the schedule for a
 	// job. See [Cron Trigger] for details. This field is required.
 	//
@@ -467,7 +467,7 @@ type DbtTask struct {
 	//
 	// * `WORKSPACE`: Project is located in Databricks workspace. * `GIT`:
 	// Project is located in cloud Git provider.
-	Source Source `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source" tf:"optional"`
 	// ID of the SQL warehouse to connect to. If provided, we automatically
 	// generate and provide the profile and connection details to dbt. It can be
 	// overridden on a per-command basis by using the `--profiles-dir` command
@@ -506,7 +506,7 @@ type ExportRunRequest struct {
 	// The canonical identifier for the run. This field is required.
 	RunId types.Int64 `tfsdk:"-" url:"run_id"`
 	// Which views to export (CODE, DASHBOARDS, or ALL). Defaults to CODE.
-	ViewsToExport ViewsToExport `tfsdk:"-" url:"views_to_export,omitempty"`
+	ViewsToExport types.String `tfsdk:"-" url:"views_to_export,omitempty"`
 }
 
 type FileArrivalTriggerConfiguration struct {
@@ -703,7 +703,7 @@ type GitSource struct {
 	GitCommit types.String `tfsdk:"git_commit" tf:"optional"`
 	// Unique identifier of the service used to host the Git repository. The
 	// value is case insensitive.
-	GitProvider GitProvider `tfsdk:"git_provider" tf:""`
+	GitProvider types.String `tfsdk:"git_provider" tf:""`
 	// Read-only state of the remote repository at the time the job was run.
 	// This field is only included on job runs.
 	GitSnapshot *GitSnapshot `tfsdk:"git_snapshot" tf:"optional"`
@@ -744,7 +744,7 @@ type JobAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel JobPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -777,7 +777,7 @@ type JobDeployment struct {
 	// The kind of deployment that manages the job.
 	//
 	// * `BUNDLE`: The job is managed by Databricks Asset Bundle.
-	Kind JobDeploymentKind `tfsdk:"kind" tf:""`
+	Kind types.String `tfsdk:"kind" tf:""`
 	// Path of the file that contains deployment metadata.
 	MetadataFilePath types.String `tfsdk:"metadata_file_path" tf:"optional"`
 }
@@ -917,7 +917,7 @@ type JobPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel JobPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -963,7 +963,7 @@ type JobPermissions struct {
 type JobPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel JobPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type JobPermissionsRequest struct {
@@ -1001,7 +1001,7 @@ type JobSettings struct {
 	//
 	// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
 	// `EDITABLE`: The job is in an editable state and can be modified.
-	EditMode JobEditMode `tfsdk:"edit_mode" tf:"optional"`
+	EditMode types.String `tfsdk:"edit_mode" tf:"optional"`
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
@@ -1011,7 +1011,7 @@ type JobSettings struct {
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
 	// always set to `"MULTI_TASK"`.
-	Format Format `tfsdk:"format" tf:"optional"`
+	Format types.String `tfsdk:"format" tf:"optional"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks.
@@ -1094,7 +1094,7 @@ type JobSource struct {
 	// disconnected from the remote job specification and is allowed for live
 	// edit. Import the remote job specification again from UI to make the job
 	// fully synced.
-	DirtyState JobSourceDirtyState `tfsdk:"dirty_state" tf:"optional"`
+	DirtyState types.String `tfsdk:"dirty_state" tf:"optional"`
 	// Name of the branch which the job is imported from.
 	ImportFromGitBranch types.String `tfsdk:"import_from_git_branch" tf:""`
 	// Path of the job YAML file that contains the job specification.
@@ -1235,10 +1235,10 @@ type JobsHealthRule struct {
 	// across all streams. This metric is in Private Preview. *
 	// `STREAMING_BACKLOG_FILES`: An estimate of the maximum number of
 	// outstanding files across all streams. This metric is in Private Preview.
-	Metric JobsHealthMetric `tfsdk:"metric" tf:""`
+	Metric types.String `tfsdk:"metric" tf:""`
 	// Specifies the operator used to compare the health metric value with the
 	// specified threshold.
-	Op JobsHealthOperator `tfsdk:"op" tf:""`
+	Op types.String `tfsdk:"op" tf:""`
 	// Specifies the threshold value that the health metric should obey to
 	// satisfy the health rule.
 	Value types.Int64 `tfsdk:"value" tf:""`
@@ -1311,7 +1311,7 @@ type ListRunsRequest struct {
 	PageToken types.String `tfsdk:"-" url:"page_token,omitempty"`
 	// The type of runs to return. For a description of run types, see
 	// :method:jobs/getRun.
-	RunType RunType `tfsdk:"-" url:"run_type,omitempty"`
+	RunType types.String `tfsdk:"-" url:"run_type,omitempty"`
 	// Show runs that started _at or after_ this value. The value must be a UTC
 	// timestamp in milliseconds. Can be combined with _start_time_to_ to filter
 	// by a time range.
@@ -1380,7 +1380,7 @@ type NotebookTask struct {
 	// `git_source` is defined and `WORKSPACE` otherwise. * `WORKSPACE`:
 	// Notebook is located in Databricks workspace. * `GIT`: Notebook is located
 	// in cloud Git provider.
-	Source Source `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source" tf:"optional"`
 	// Optional `warehouse_id` to run the notebook on a SQL warehouse. Classic
 	// SQL warehouses are NOT supported, please use serverless or pro SQL
 	// warehouses.
@@ -1421,7 +1421,7 @@ type PeriodicTriggerConfiguration struct {
 	// The interval at which the trigger should run.
 	Interval types.Int64 `tfsdk:"interval" tf:""`
 	// The unit of time for the interval.
-	Unit PeriodicTriggerConfigurationTimeUnit `tfsdk:"unit" tf:""`
+	Unit types.String `tfsdk:"unit" tf:""`
 }
 
 type PeriodicTriggerConfigurationTimeUnit string
@@ -1503,7 +1503,7 @@ type RepairHistoryItem struct {
 	TaskRunIds []types.Int64 `tfsdk:"task_run_ids" tf:"optional"`
 	// The repair history item type. Indicates whether a run is the original run
 	// or a repair run.
-	Type RepairHistoryItemType `tfsdk:"type" tf:"optional"`
+	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
 // The repair history item type. Indicates whether a run is the original run or
@@ -1800,7 +1800,7 @@ type Run struct {
 	// :method:jobs/submit.
 	//
 	// [dbutils.notebook.run]: https://docs.databricks.com/dev-tools/databricks-utils.html#dbutils-workflow
-	RunType RunType `tfsdk:"run_type" tf:"optional"`
+	RunType types.String `tfsdk:"run_type" tf:"optional"`
 	// The cron schedule that triggered this run if it was triggered by the
 	// periodic scheduler.
 	Schedule *CronSchedule `tfsdk:"schedule" tf:"optional"`
@@ -1832,7 +1832,7 @@ type Run struct {
 	// failures. * `RUN_JOB_TASK`: Indicates a run that is triggered using a Run
 	// Job task. * `FILE_ARRIVAL`: Indicates a run that is triggered by a file
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
-	Trigger TriggerType `tfsdk:"trigger" tf:"optional"`
+	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 	// Additional details about what triggered the run
 	TriggerInfo *TriggerInfo `tfsdk:"trigger_info" tf:"optional"`
 }
@@ -1851,7 +1851,7 @@ type RunConditionTask struct {
 	// The boolean comparison to task values can be implemented with operators
 	// `EQUAL_TO`, `NOT_EQUAL`. If a task value was set to a boolean value, it
 	// will be serialized to `“true”` or `“false”` for the comparison.
-	Op ConditionTaskOp `tfsdk:"op" tf:""`
+	Op types.String `tfsdk:"op" tf:""`
 	// The condition expression evaluation result. Filled in if the task was
 	// successfully completed. Can be `"true"` or `"false"`
 	Outcome types.String `tfsdk:"outcome" tf:"optional"`
@@ -2391,12 +2391,12 @@ func (f *RunResultState) Type() string {
 type RunState struct {
 	// A value indicating the run's current lifecycle state. This field is
 	// always available in the response.
-	LifeCycleState RunLifeCycleState `tfsdk:"life_cycle_state" tf:"optional"`
+	LifeCycleState types.String `tfsdk:"life_cycle_state" tf:"optional"`
 	// The reason indicating why the run was queued.
 	QueueReason types.String `tfsdk:"queue_reason" tf:"optional"`
 	// A value indicating the run's result. This field is only available for
 	// terminal lifecycle states.
-	ResultState RunResultState `tfsdk:"result_state" tf:"optional"`
+	ResultState types.String `tfsdk:"result_state" tf:"optional"`
 	// A descriptive message for the current state. This field is unstructured,
 	// and its exact format is subject to change.
 	StateMessage types.String `tfsdk:"state_message" tf:"optional"`
@@ -2508,7 +2508,7 @@ type RunTask struct {
 	// task should be run once its dependencies have been completed. When
 	// omitted, defaults to `ALL_SUCCESS`. See :method:jobs/create for a list of
 	// possible values.
-	RunIf RunIf `tfsdk:"run_if" tf:"optional"`
+	RunIf types.String `tfsdk:"run_if" tf:"optional"`
 	// If run_job_task, indicates that this task must execute another job.
 	RunJobTask *RunJobTask `tfsdk:"run_job_task" tf:"optional"`
 
@@ -2685,7 +2685,7 @@ type SparkPythonTask struct {
 	// * `WORKSPACE`: The Python file is located in a Databricks workspace or at
 	// a cloud filesystem URI. * `GIT`: The Python file is located in a remote
 	// Git repository.
-	Source Source `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source" tf:"optional"`
 }
 
 type SparkSubmitTask struct {
@@ -2704,7 +2704,7 @@ type SqlAlertOutput struct {
 	// * UNKNOWN: alert yet to be evaluated * OK: alert evaluated and did not
 	// fulfill trigger conditions * TRIGGERED: alert evaluated and fulfilled
 	// trigger conditions
-	AlertState SqlAlertState `tfsdk:"alert_state" tf:"optional"`
+	AlertState types.String `tfsdk:"alert_state" tf:"optional"`
 	// The link to find the output results.
 	OutputLink types.String `tfsdk:"output_link" tf:"optional"`
 	// The text of the SQL query. Can Run permission of the SQL query associated
@@ -2767,7 +2767,7 @@ type SqlDashboardWidgetOutput struct {
 	// Time (in epoch milliseconds) when execution of the SQL widget starts.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// The execution status of the SQL widget.
-	Status SqlDashboardWidgetOutputStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// The canonical identifier of the SQL widget.
 	WidgetId types.String `tfsdk:"widget_id" tf:"optional"`
 	// The title of the SQL widget.
@@ -2892,7 +2892,7 @@ type SqlTaskFile struct {
 	//
 	// * `WORKSPACE`: SQL file is located in Databricks workspace. * `GIT`: SQL
 	// file is located in cloud Git provider.
-	Source Source `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source" tf:"optional"`
 }
 
 type SqlTaskQuery struct {
@@ -3031,7 +3031,7 @@ type SubmitTask struct {
 	// task should be run once its dependencies have been completed. When
 	// omitted, defaults to `ALL_SUCCESS`. See :method:jobs/create for a list of
 	// possible values.
-	RunIf RunIf `tfsdk:"run_if" tf:"optional"`
+	RunIf types.String `tfsdk:"run_if" tf:"optional"`
 	// If run_job_task, indicates that this task must execute another job.
 	RunJobTask *RunJobTask `tfsdk:"run_job_task" tf:"optional"`
 	// If spark_jar_task, indicates that this task must run a JAR.
@@ -3074,7 +3074,7 @@ type SubmitTask struct {
 
 type TableUpdateTriggerConfiguration struct {
 	// The table(s) condition based on which to trigger a job run.
-	Condition Condition `tfsdk:"condition" tf:"optional"`
+	Condition types.String `tfsdk:"condition" tf:"optional"`
 	// If set, the trigger starts a run only after the specified amount of time
 	// has passed since the last time the trigger fired. The minimum allowed
 	// value is 60 seconds.
@@ -3166,7 +3166,7 @@ type Task struct {
 	// executed * `ALL_DONE`: All dependencies have been completed *
 	// `AT_LEAST_ONE_FAILED`: At least one dependency failed * `ALL_FAILED`: ALl
 	// dependencies have failed
-	RunIf RunIf `tfsdk:"run_if" tf:"optional"`
+	RunIf types.String `tfsdk:"run_if" tf:"optional"`
 	// If run_job_task, indicates that this task must execute another job.
 	RunJobTask *RunJobTask `tfsdk:"run_job_task" tf:"optional"`
 	// If spark_jar_task, indicates that this task must run a JAR.
@@ -3273,7 +3273,7 @@ type TriggerSettings struct {
 	// File arrival trigger settings.
 	FileArrival *FileArrivalTriggerConfiguration `tfsdk:"file_arrival" tf:"optional"`
 	// Whether this trigger is paused or not.
-	PauseStatus PauseStatus `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 	// Periodic trigger settings.
 	Periodic *PeriodicTriggerConfiguration `tfsdk:"periodic" tf:"optional"`
 	// Old table trigger settings name. Deprecated in favor of `table_update`.
@@ -3367,7 +3367,7 @@ type ViewItem struct {
 	// dashboard’s name.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Type of the view item.
-	Type ViewType `tfsdk:"type" tf:"optional"`
+	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
 // * `NOTEBOOK`: Notebook view item. * `DASHBOARD`: Dashboard view item.

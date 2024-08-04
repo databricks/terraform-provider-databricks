@@ -24,9 +24,14 @@ import (
 	dbproviderlogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	terraform_sdk_v2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func init() {
@@ -138,7 +143,38 @@ func run(t *testing.T, steps []step) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
-	provider := provider.DatabricksProvider()
+	sdkPluginProvider := provider.DatabricksProvider()
+
+	protoV6ProviderFactories := map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			ctx := context.Background()
+
+			upgradedSdkServer, err := tf5to6server.UpgradeServer(
+				context.Background(),
+				sdkPluginProvider.GRPCProvider,
+			)
+
+			if err != nil {
+				return nil, err
+			}
+
+			providers := []func() tfprotov6.ProviderServer{
+				providerserver.NewProtocol6(provider.GetDatabricksProviderPluginFramework()), // Example terraform-plugin-framework provider
+				func() tfprotov6.ProviderServer {
+					return upgradedSdkServer
+				},
+			}
+
+			muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+
+			if err != nil {
+				return nil, err
+			}
+
+			return muxServer.ProviderServer(), nil
+		},
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Skip(err.Error())
@@ -164,13 +200,11 @@ func run(t *testing.T, steps []step) {
 		thisStep := s
 		stepCheck := thisStep.Check
 		stepPreConfig := s.PreConfig
-		providerFactories := map[string]func() (*schema.Provider, error){
-			"databricks": func() (*schema.Provider, error) {
-				return provider, nil
-			},
-		}
+		var providerFactories map[string]func() (*schema.Provider, error)
 		if thisStep.ProviderFactories != nil {
 			providerFactories = thisStep.ProviderFactories
+			// If there's step override, then unset the protoV6 factories.
+			protoV6ProviderFactories = nil
 		}
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
@@ -195,9 +229,10 @@ func run(t *testing.T, steps []step) {
 			ImportStateVerify:         s.ImportStateVerify,
 			ExpectError:               s.ExpectError,
 			ProviderFactories:         providerFactories,
+			ProtoV6ProviderFactories:  protoV6ProviderFactories,
 			Check: func(state *terraform.State) error {
 				// get configured client from provider
-				client := provider.Meta().(*common.DatabricksClient)
+				client := sdkPluginProvider.Meta().(*common.DatabricksClient)
 
 				// Default check for all runs. Asserts that the read operation succeeds.
 				for n, is := range state.RootModule().Resources {
@@ -207,10 +242,16 @@ func run(t *testing.T, steps []step) {
 					if p[0] == "data" {
 						continue
 					}
-					r := provider.ResourcesMap[p[0]]
-					dia := r.ReadContext(ctx, r.Data(is.Primary), client)
-					if dia != nil {
-						return fmt.Errorf("%v", dia)
+
+					// Convert InstanceState from terraform-plugin-framework to terraform-plugin-sdk v2
+					sdkInstanceState := convertToSDKInstanceState(is.Primary)
+
+					if r, ok := sdkPluginProvider.ResourcesMap[p[0]]; ok {
+						// Only checking for sdkv2 resources for now.
+						dia := r.ReadContext(ctx, r.Data(sdkInstanceState), client)
+						if dia != nil {
+							return fmt.Errorf("%v", dia)
+						}
 					}
 				}
 				if stepCheck != nil {
@@ -228,6 +269,16 @@ func run(t *testing.T, steps []step) {
 			return nil
 		},
 	})
+}
+
+// Function to convert from terraform-plugin-framework InstanceState to terraform-plugin-sdk v2 InstanceState
+func convertToSDKInstanceState(is *terraform.InstanceState) *terraform_sdk_v2.InstanceState {
+	return &terraform_sdk_v2.InstanceState{
+		ID:         is.ID,
+		Attributes: is.Attributes,
+		Meta:       is.Meta,
+		Tainted:    is.Tainted,
+	}
 }
 
 // resourceCheck calls back a function with client and resource id

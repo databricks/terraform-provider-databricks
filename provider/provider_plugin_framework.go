@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var pluginFrameworkProviderName = "databricks-tf-provider-pluginframework"
+var pluginFrameworkProviderName = "databricks"
 
 func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for

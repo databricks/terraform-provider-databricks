@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 
@@ -24,7 +25,7 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Contex
 	}
 	destVal = destVal.Elem()
 
-	if srcVal.Kind() != reflect.Struct || destVal.Kind() != reflect.Struct {
+	if srcVal.Kind() != reflect.Struct {
 		panic("input should be structs")
 	}
 
@@ -51,7 +52,8 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Contex
 func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendFieldsField *reflect.Value, ctx context.Context) error {
 
 	if !destField.IsValid() {
-		panic(fmt.Errorf("destination field is not valid: %s", destField.Type().Name()))
+		// Skip field that destination struct does not have.
+		return nil
 	}
 
 	if !destField.CanSet() {
@@ -62,6 +64,10 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 	if srcFieldValue == nil {
 		return nil
 	} else if srcField.Kind() == reflect.Ptr {
+		if srcField.IsNil() {
+			// Skip nils
+			return nil
+		}
 		// Allocate new memory for the destination field
 		destField.Set(reflect.New(destField.Type().Elem()))
 
@@ -96,12 +102,20 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 		case types.Map:
 			panic("types.Map should never be used, use go native maps instead")
 		default:
+			if srcField.IsNil() {
+				// Skip nils
+				return nil
+			}
 			// If it is a real stuct instead of a tfsdk type, recursively resolve it.
 			if err := TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx); err != nil {
 				return err
 			}
 		}
 	} else if srcField.Kind() == reflect.Slice {
+		if srcField.IsNil() {
+			// Skip nils
+			return nil
+		}
 		destSlice := reflect.MakeSlice(destField.Type(), srcField.Len(), srcField.Cap())
 		for j := 0; j < srcField.Len(); j++ {
 			nestedSrcField := srcField.Index(j)
@@ -116,6 +130,10 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 		}
 		destField.Set(destSlice)
 	} else if srcField.Kind() == reflect.Map {
+		if srcField.IsNil() {
+			// Skip nils
+			return nil
+		}
 		destMap := reflect.MakeMap(destField.Type())
 		for _, key := range srcField.MapKeys() {
 			srcMapValue := srcField.MapIndex(key)
@@ -127,9 +145,6 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			destMap.SetMapIndex(destMapKey, destMapValue)
 		}
 		destField.Set(destMap)
-	} else if srcField.Kind() == reflect.String {
-		// This case is only for the Enum types.
-		destField.SetString(srcField.String())
 	} else {
 		panic(fmt.Errorf("unknown type for field: %s", srcField.Type().Name()))
 	}
@@ -155,16 +170,21 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 		panic(fmt.Errorf("input should be structs %s, %s", srcVal.Type().Name(), destVal.Type().Name()))
 	}
 
+	var forceSendFieldVal []string
+
 	forceSendField := srcVal.FieldByName("ForceSendFields")
 	if !forceSendField.IsValid() {
-		panic(fmt.Errorf("go sdk struct does not have valid ForceSendField %s", srcVal.Type().Name()))
+		// If no forceSendField, just use an empty list.
+		forceSendFieldVal = []string{}
+	} else {
+		switch forceSendField.Interface().(type) {
+		case []string:
+		default:
+			panic(fmt.Errorf("ForceSendField is not of type []string"))
+		}
+		forceSendFieldVal = forceSendField.Interface().([]string)
 	}
-	switch forceSendField.Interface().(type) {
-	case []string:
-	default:
-		panic(fmt.Errorf("ForceSendField is not of type []string"))
-	}
-	forceSendFieldVal := forceSendField.Interface().([]string)
+
 	srcType := srcVal.Type()
 	for i := 0; i < srcVal.NumField(); i++ {
 		srcField := srcVal.Field(i)
@@ -183,7 +203,8 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendField []string, alwaysAdd bool, ctx context.Context) error {
 
 	if !destField.IsValid() {
-		panic(fmt.Errorf("destination field is not valid: %s", destField.Type().Name()))
+		// Skip field that destination struct does not have.
+		return nil
 	}
 
 	if !destField.CanSet() {
@@ -195,8 +216,13 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 	if srcFieldValue == nil {
 		return nil
 	}
+
 	switch srcField.Kind() {
 	case reflect.Ptr:
+		if srcField.IsNil() {
+			// Skip nils
+			return nil
+		}
 		destField.Set(reflect.New(destField.Type().Elem()))
 
 		// Recursively populate the nested struct.
@@ -230,24 +256,45 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			destField.Set(reflect.ValueOf(types.Float64Null()))
 		}
 	case reflect.String:
+		var strVal string
 		if srcField.Type().Name() != "string" {
 			// This case is for Enum Types.
-			destField.Set(reflect.ValueOf(srcFieldValue))
-		} else {
-			strVal := srcFieldValue.(string)
-			// check if alwaysAdd is false or the value is zero or if the field is in the forceSendFields list
-			if alwaysAdd || !(strVal == "" && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
-				destField.Set(reflect.ValueOf(types.StringValue(strVal)))
+			stringMethod := srcField.Addr().MethodByName("String")
+			if stringMethod.IsValid() {
+				stringResult := stringMethod.Call(nil)
+				if len(stringResult) == 1 {
+					strVal = stringResult[0].Interface().(string)
+				} else {
+					log.Printf("[DEBUG] Enum get string has more than one result")
+					strVal = ""
+				}
 			} else {
-				destField.Set(reflect.ValueOf(types.StringNull()))
+				log.Printf("[DEBUG] Enum does not have valid .String() method")
+				strVal = ""
 			}
+		} else {
+			strVal = srcFieldValue.(string)
+		}
+		// check if alwaysAdd is false or the value is zero or if the field is in the forceSendFields list
+		if alwaysAdd || !(strVal == "" && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+			destField.Set(reflect.ValueOf(types.StringValue(strVal)))
+		} else {
+			destField.Set(reflect.ValueOf(types.StringNull()))
 		}
 	case reflect.Struct:
+		if srcField.IsNil() {
+			// Skip nils
+			return nil
+		}
 		// resolve the nested struct by recursively calling the function
 		if err := GoSdkToTfSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx); err != nil {
 			return err
 		}
 	case reflect.Slice:
+		if srcField.IsNil() {
+			// Skip nils
+			return nil
+		}
 		destSlice := reflect.MakeSlice(destField.Type(), srcField.Len(), srcField.Cap())
 		for j := 0; j < srcField.Len(); j++ {
 			nestedSrcField := srcField.Index(j)
@@ -262,6 +309,10 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 		}
 		destField.Set(destSlice)
 	case reflect.Map:
+		if srcField.IsNil() {
+			// Skip nils
+			return nil
+		}
 		destMap := reflect.MakeMap(destField.Type())
 		for _, key := range srcField.MapKeys() {
 			srcMapValue := srcField.MapIndex(key)
@@ -280,8 +331,15 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 }
 
 func addToForceSendFields(fieldName string, forceSendFieldsField *reflect.Value) {
-	if forceSendFieldsField == nil {
+	if forceSendFieldsField == nil || !forceSendFieldsField.IsValid() || !forceSendFieldsField.CanSet() {
+		log.Printf("[Debug] forceSendFieldsField is nil, invalid or not settable for %s", fieldName)
 		return
+	}
+	// Initialize forceSendFields if it is a zero Value
+	if forceSendFieldsField.IsZero() {
+		// Create a new slice of strings
+		newSlice := []string{}
+		forceSendFieldsField.Set(reflect.ValueOf(&newSlice).Elem())
 	}
 	forceSendFields := forceSendFieldsField.Interface().([]string)
 	forceSendFields = append(forceSendFields, fieldName)

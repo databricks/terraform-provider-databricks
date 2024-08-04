@@ -271,7 +271,7 @@ type GetPipelineResponse struct {
 	// The username of the pipeline creator.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
 	// The health of a pipeline.
-	Health GetPipelineResponseHealth `tfsdk:"health" tf:"optional"`
+	Health types.String `tfsdk:"health" tf:"optional"`
 	// The last time the pipeline settings were modified or created.
 	LastModified types.Int64 `tfsdk:"last_modified" tf:"optional"`
 	// Status of the latest updates for the pipeline. Ordered with the newest
@@ -287,7 +287,7 @@ type GetPipelineResponse struct {
 	// `ListPipelines`.
 	Spec *PipelineSpec `tfsdk:"spec" tf:"optional"`
 	// The pipeline state.
-	State PipelineState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 // The health of a pipeline.
@@ -556,7 +556,7 @@ type PipelineAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel PipelinePermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -684,7 +684,7 @@ type PipelineClusterAutoscale struct {
 	// minimal impact to the data processing latency of your pipelines. Enhanced
 	// Autoscaling is available for `updates` clusters only. The legacy
 	// autoscaling feature is used for `maintenance` clusters.
-	Mode PipelineClusterAutoscaleMode `tfsdk:"mode" tf:"optional"`
+	Mode types.String `tfsdk:"mode" tf:"optional"`
 }
 
 // Databricks Enhanced Autoscaling optimizes cluster utilization by
@@ -721,7 +721,7 @@ func (f *PipelineClusterAutoscaleMode) Type() string {
 
 type PipelineDeployment struct {
 	// The deployment method that manages the pipeline.
-	Kind DeploymentKind `tfsdk:"kind" tf:"optional"`
+	Kind types.String `tfsdk:"kind" tf:"optional"`
 	// The path to the file containing metadata about the deployment.
 	MetadataFilePath types.String `tfsdk:"metadata_file_path" tf:"optional"`
 }
@@ -734,9 +734,9 @@ type PipelineEvent struct {
 	// A time-based, globally unique id.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The severity level of the event.
-	Level EventLevel `tfsdk:"level" tf:"optional"`
+	Level types.String `tfsdk:"level" tf:"optional"`
 	// Maturity level for event_type.
-	MaturityLevel MaturityLevel `tfsdk:"maturity_level" tf:"optional"`
+	MaturityLevel types.String `tfsdk:"maturity_level" tf:"optional"`
 	// The display message associated with the event.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Describes where the event originates from.
@@ -765,7 +765,7 @@ type PipelinePermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel PipelinePermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -811,7 +811,7 @@ type PipelinePermissions struct {
 type PipelinePermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel PipelinePermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PipelinePermissionsRequest struct {
@@ -928,7 +928,7 @@ type PipelineStateInfo struct {
 	// from the pipeline owner.
 	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
 	// The pipeline state.
-	State PipelineState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 type PipelineTrigger struct {
@@ -984,7 +984,7 @@ type StackFrame struct {
 }
 
 type StartUpdate struct {
-	Cause StartUpdateCause `tfsdk:"cause" tf:"optional"`
+	Cause types.String `tfsdk:"cause" tf:"optional"`
 	// If true, this update will reset all tables before running.
 	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
 	// A list of tables to update with fullRefresh. If both refresh_selection
@@ -1079,7 +1079,7 @@ type TableSpecificConfig struct {
 	// ingestion. This setting is only valid for the Salesforce connector
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields" tf:"optional"`
 	// The SCD type to use to ingest the table.
-	ScdType TableSpecificConfigScdType `tfsdk:"scd_type" tf:"optional"`
+	ScdType types.String `tfsdk:"scd_type" tf:"optional"`
 }
 
 // The SCD type to use to ingest the table.
@@ -1112,7 +1112,7 @@ func (f *TableSpecificConfigScdType) Type() string {
 
 type UpdateInfo struct {
 	// What triggered this update.
-	Cause UpdateInfoCause `tfsdk:"cause" tf:"optional"`
+	Cause types.String `tfsdk:"cause" tf:"optional"`
 	// The ID of the cluster that the update is running on.
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// The pipeline configuration with system defaults applied where unspecified
@@ -1135,7 +1135,7 @@ type UpdateInfo struct {
 	// before the refresh.
 	RefreshSelection []types.String `tfsdk:"refresh_selection" tf:"optional"`
 	// The update state.
-	State UpdateInfoState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 	// The ID of this update.
 	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
 	// If true, this update only validates the correctness of pipeline source
@@ -1228,7 +1228,7 @@ func (f *UpdateInfoState) Type() string {
 type UpdateStateInfo struct {
 	CreationTime types.String `tfsdk:"creation_time" tf:"optional"`
 
-	State UpdateStateInfoState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 
 	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
 }

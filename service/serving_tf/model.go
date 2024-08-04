@@ -35,7 +35,7 @@ type AmazonBedrockConfig struct {
 	AwsSecretAccessKey types.String `tfsdk:"aws_secret_access_key" tf:""`
 	// The underlying provider in Amazon Bedrock. Supported values (case
 	// insensitive) include: Anthropic, Cohere, AI21Labs, Amazon.
-	BedrockProvider AmazonBedrockConfigBedrockProvider `tfsdk:"bedrock_provider" tf:""`
+	BedrockProvider types.String `tfsdk:"bedrock_provider" tf:""`
 }
 
 // The underlying provider in Amazon Bedrock. Supported values (case
@@ -114,7 +114,7 @@ type AppDeployment struct {
 	// The unique id of the deployment.
 	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
 	// The mode of which the deployment will manage the source code.
-	Mode AppDeploymentMode `tfsdk:"mode" tf:""`
+	Mode types.String `tfsdk:"mode" tf:""`
 	// The workspace file system path of the source code used to create the app
 	// deployment. This is different from
 	// `deployment_artifacts.source_code_path`, which is the path used by the
@@ -201,7 +201,7 @@ type AppDeploymentStatus struct {
 	// Message corresponding with the deployment state.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// State of the deployment.
-	State AppDeploymentState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 type AppEnvironment struct {
@@ -251,7 +251,7 @@ type AppStatus struct {
 	// Message corresponding with the app state.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// State of the app.
-	State AppState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 type AutoCaptureConfigInput struct {
@@ -304,7 +304,7 @@ type ChatMessage struct {
 	// The content of the message.
 	Content types.String `tfsdk:"content" tf:"optional"`
 	// The role of the message. One of [system, user, assistant].
-	Role ChatMessageRole `tfsdk:"role" tf:"optional"`
+	Role types.String `tfsdk:"role" tf:"optional"`
 }
 
 // The role of the message. One of [system, user, assistant].
@@ -346,7 +346,7 @@ type CreateAppDeploymentRequest struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-" url:"-"`
 	// The mode of which the deployment will manage the source code.
-	Mode AppDeploymentMode `tfsdk:"mode" tf:""`
+	Mode types.String `tfsdk:"mode" tf:""`
 	// The workspace file system path of the source code used to create the app
 	// deployment. This is different from
 	// `deployment_artifacts.source_code_path`, which is the path used by the
@@ -420,7 +420,7 @@ type EmbeddingsV1ResponseEmbeddingElement struct {
 	// The index of the embedding in the response.
 	Index types.Int64 `tfsdk:"index" tf:"optional"`
 	// This will always be 'embedding'.
-	Object EmbeddingsV1ResponseEmbeddingElementObject `tfsdk:"object" tf:"optional"`
+	Object types.String `tfsdk:"object" tf:"optional"`
 }
 
 // This will always be 'embedding'.
@@ -514,12 +514,12 @@ type EndpointState struct {
 	// update in progress. Note that if the endpoint's config_update state value
 	// is IN_PROGRESS, another update can not be made until the update completes
 	// or fails."
-	ConfigUpdate EndpointStateConfigUpdate `tfsdk:"config_update" tf:"optional"`
+	ConfigUpdate types.String `tfsdk:"config_update" tf:"optional"`
 	// The state of an endpoint, indicating whether or not the endpoint is
 	// queryable. An endpoint is READY if all of the served entities in its
 	// active configuration are ready. If any of the actively served entities
 	// are in a non-ready state, the endpoint state will be NOT_READY.
-	Ready EndpointStateReady `tfsdk:"ready" tf:"optional"`
+	Ready types.String `tfsdk:"ready" tf:"optional"`
 }
 
 // The state of an endpoint's config update. This informs the user if the
@@ -634,7 +634,7 @@ type ExternalModel struct {
 	// The name of the provider for the external model. Currently, the supported
 	// providers are 'ai21labs', 'anthropic', 'amazon-bedrock', 'cohere',
 	// 'databricks-model-serving', 'openai', and 'palm'.",
-	Provider ExternalModelProvider `tfsdk:"provider" tf:""`
+	Provider types.String `tfsdk:"provider" tf:""`
 	// The task type of the external model.
 	Task types.String `tfsdk:"task" tf:""`
 }
@@ -951,7 +951,7 @@ type QueryEndpointResponse struct {
 	// The type of object returned by the __external/foundation model__ serving
 	// endpoint, one of [text_completion, chat.completion, list (of
 	// embeddings)].
-	Object QueryEndpointResponseObject `tfsdk:"object" tf:"optional"`
+	Object types.String `tfsdk:"object" tf:"optional"`
 	// The predictions returned by the serving endpoint.
 	Predictions []any `tfsdk:"predictions" tf:"optional"`
 	// The name of the served model that served the request. This is useful when
@@ -1001,10 +1001,10 @@ type RateLimit struct {
 	// Key field for a serving endpoint rate limit. Currently, only 'user' and
 	// 'endpoint' are supported, with 'endpoint' being the default if not
 	// specified.
-	Key RateLimitKey `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional"`
 	// Renewal period field for a serving endpoint rate limit. Currently, only
 	// 'minute' is supported.
-	RenewalPeriod RateLimitRenewalPeriod `tfsdk:"renewal_period" tf:""`
+	RenewalPeriod types.String `tfsdk:"renewal_period" tf:""`
 }
 
 // Key field for a serving endpoint rate limit. Currently, only 'user' and
@@ -1251,7 +1251,7 @@ type ServedModelInput struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size will be 0.
-	WorkloadSize ServedModelInputWorkloadSize `tfsdk:"workload_size" tf:""`
+	WorkloadSize types.String `tfsdk:"workload_size" tf:""`
 	// The workload type of the served model. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -1259,7 +1259,7 @@ type ServedModelInput struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType ServedModelInputWorkloadType `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
 }
 
 // The workload size of the served model. The workload size corresponds to a
@@ -1408,7 +1408,7 @@ type ServedModelState struct {
 	// etc.) DEPLOYMENT_ABORTED indicates that the deployment was terminated
 	// likely due to a failure in bringing up another served entity under the
 	// same endpoint and config version.
-	Deployment ServedModelStateDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment types.String `tfsdk:"deployment" tf:"optional"`
 	// More information about the state of the served entity, if available.
 	DeploymentStateMessage types.String `tfsdk:"deployment_state_message" tf:"optional"`
 }
@@ -1489,7 +1489,7 @@ type ServingEndpointAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -1530,7 +1530,7 @@ type ServingEndpointDetailed struct {
 	// The config that the endpoint is attempting to update to.
 	PendingConfig *EndpointPendingConfig `tfsdk:"pending_config" tf:"optional"`
 	// The permission level of the principal making the request.
-	PermissionLevel ServingEndpointDetailedPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// Boolean representing if route optimization has been enabled for the
 	// endpoint
 	RouteOptimized types.Bool `tfsdk:"route_optimized" tf:"optional"`
@@ -1577,7 +1577,7 @@ type ServingEndpointPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -1621,7 +1621,7 @@ type ServingEndpointPermissions struct {
 type ServingEndpointPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel ServingEndpointPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type ServingEndpointPermissionsRequest struct {

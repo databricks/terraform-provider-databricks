@@ -32,7 +32,7 @@ type Activity struct {
 	//
 	// * `SYSTEM_TRANSITION`: For events performed as a side effect, such as
 	// archiving existing model versions in a stage.
-	ActivityType ActivityType `tfsdk:"activity_type" tf:"optional"`
+	ActivityType types.String `tfsdk:"activity_type" tf:"optional"`
 	// User-provided comment associated with the activity.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
@@ -47,7 +47,7 @@ type Activity struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	FromStage Stage `tfsdk:"from_stage" tf:"optional"`
+	FromStage types.String `tfsdk:"from_stage" tf:"optional"`
 	// Unique identifier for the object.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
@@ -67,7 +67,7 @@ type Activity struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	ToStage Stage `tfsdk:"to_stage" tf:"optional"`
+	ToStage types.String `tfsdk:"to_stage" tf:"optional"`
 	// The username of the user that created the object.
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
@@ -185,7 +185,7 @@ type ApproveTransitionRequest struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage Stage `tfsdk:"stage" tf:""`
+	Stage types.String `tfsdk:"stage" tf:""`
 	// Version of the model.
 	Version types.String `tfsdk:"version" tf:""`
 }
@@ -231,7 +231,7 @@ func (f *CommentActivityAction) Type() string {
 // Comment details.
 type CommentObject struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions []CommentActivityAction `tfsdk:"available_actions" tf:"optional"`
+	AvailableActions []types.String `tfsdk:"available_actions" tf:"optional"`
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
@@ -348,7 +348,7 @@ type CreateRegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events []RegistryWebhookEvent `tfsdk:"events" tf:""`
+	Events []types.String `tfsdk:"events" tf:""`
 
 	HttpUrlSpec *HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
 
@@ -363,7 +363,7 @@ type CreateRegistryWebhook struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status RegistryWebhookStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 type CreateRun struct {
@@ -398,7 +398,7 @@ type CreateTransitionRequest struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage Stage `tfsdk:"stage" tf:""`
+	Stage types.String `tfsdk:"stage" tf:""`
 	// Version of the model.
 	Version types.String `tfsdk:"version" tf:""`
 }
@@ -559,7 +559,7 @@ type DeleteTransitionRequestRequest struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage DeleteTransitionRequestStage `tfsdk:"-" url:"stage"`
+	Stage types.String `tfsdk:"-" url:"stage"`
 	// Version of the model.
 	Version types.String `tfsdk:"-" url:"version"`
 }
@@ -629,7 +629,7 @@ type ExperimentAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel ExperimentPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -654,7 +654,7 @@ type ExperimentPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel ExperimentPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -698,7 +698,7 @@ type ExperimentPermissions struct {
 type ExperimentPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel ExperimentPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type ExperimentPermissionsRequest struct {
@@ -1012,7 +1012,7 @@ type ListWebhooksRequest struct {
 	// If `events` is specified, any webhook with one or more of the specified
 	// trigger events is included in the output. If `events` is not specified,
 	// webhooks of all event types are included in the output.
-	Events []RegistryWebhookEvent `tfsdk:"-" url:"events,omitempty"`
+	Events []types.String `tfsdk:"-" url:"events,omitempty"`
 	// If not specified, all webhooks associated with the specified events are
 	// listed, regardless of their associated model.
 	ModelName types.String `tfsdk:"-" url:"model_name,omitempty"`
@@ -1136,7 +1136,7 @@ type ModelDatabricks struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Permission level of the requesting user on the object. For what is
 	// allowed at each level, see [MLflow Model permissions](..).
-	PermissionLevel PermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// Array of tags associated with the model.
 	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
 	// The username of the user that created the object.
@@ -1171,7 +1171,7 @@ type ModelVersion struct {
 	// creating `model_version`
 	Source types.String `tfsdk:"source" tf:"optional"`
 	// Current status of `model_version`
-	Status ModelVersionStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// Details on current `status`, if it is pending or failed.
 	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
 	// Tags: Additional metadata key-value pairs for this `model_version`.
@@ -1194,7 +1194,7 @@ type ModelVersionDatabricks struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	CurrentStage Stage `tfsdk:"current_stage" tf:"optional"`
+	CurrentStage types.String `tfsdk:"current_stage" tf:"optional"`
 	// User-specified description for the object.
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
@@ -1203,7 +1203,7 @@ type ModelVersionDatabricks struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Permission level of the requesting user on the object. For what is
 	// allowed at each level, see [MLflow Model permissions](..).
-	PermissionLevel PermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// Unique identifier for the MLflow tracking run associated with the source
 	// model artifacts.
 	RunId types.String `tfsdk:"run_id" tf:"optional"`
@@ -1222,7 +1222,7 @@ type ModelVersionDatabricks struct {
 	// failed.
 	//
 	// * `READY`: Model version is ready for use.
-	Status Status `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// Details on the current status, for example why registration failed.
 	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
 	// Array of tags that are associated with the model version.
@@ -1316,7 +1316,7 @@ type RegisteredModelAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel RegisteredModelPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -1341,7 +1341,7 @@ type RegisteredModelPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel RegisteredModelPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -1389,7 +1389,7 @@ type RegisteredModelPermissions struct {
 type RegisteredModelPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel RegisteredModelPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type RegisteredModelPermissionsRequest struct {
@@ -1436,7 +1436,7 @@ type RegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events []RegistryWebhookEvent `tfsdk:"events" tf:"optional"`
+	Events []types.String `tfsdk:"events" tf:"optional"`
 
 	HttpUrlSpec *HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec" tf:"optional"`
 	// Webhook ID
@@ -1455,7 +1455,7 @@ type RegistryWebhook struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status RegistryWebhookStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 type RegistryWebhookEvent string
@@ -1560,7 +1560,7 @@ type RejectTransitionRequest struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage Stage `tfsdk:"stage" tf:""`
+	Stage types.String `tfsdk:"stage" tf:""`
 	// Version of the model.
 	Version types.String `tfsdk:"version" tf:""`
 }
@@ -1652,7 +1652,7 @@ type RunInfo struct {
 	// Unix timestamp of when the run started in milliseconds.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// Current status of the run.
-	Status RunInfoStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// User who initiated the run. This field is deprecated as of MLflow 1.0,
 	// and will be removed in a future MLflow release. Use 'mlflow.user' tag
 	// instead.
@@ -1720,7 +1720,7 @@ type SearchExperiments struct {
 	PageToken types.String `tfsdk:"page_token" tf:"optional"`
 	// Qualifier for type of experiments to be returned. If unspecified, return
 	// only active experiments.
-	ViewType SearchExperimentsViewType `tfsdk:"view_type" tf:"optional"`
+	ViewType types.String `tfsdk:"view_type" tf:"optional"`
 }
 
 type SearchExperimentsResponse struct {
@@ -1838,7 +1838,7 @@ type SearchRuns struct {
 	PageToken types.String `tfsdk:"page_token" tf:"optional"`
 	// Whether to display only active, only deleted, or all runs. Defaults to
 	// only active runs.
-	RunViewType SearchRunsRunViewType `tfsdk:"run_view_type" tf:"optional"`
+	RunViewType types.String `tfsdk:"run_view_type" tf:"optional"`
 }
 
 type SearchRunsResponse struct {
@@ -2044,7 +2044,7 @@ type TestRegistryWebhookRequest struct {
 	// If `event` is specified, the test trigger uses the specified event. If
 	// `event` is not specified, the test trigger uses a randomly chosen event
 	// associated with the webhook.
-	Event RegistryWebhookEvent `tfsdk:"event" tf:"optional"`
+	Event types.String `tfsdk:"event" tf:"optional"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:""`
 }
@@ -2071,7 +2071,7 @@ type TransitionModelVersionStageDatabricks struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage Stage `tfsdk:"stage" tf:""`
+	Stage types.String `tfsdk:"stage" tf:""`
 	// Version of the model.
 	Version types.String `tfsdk:"version" tf:""`
 }
@@ -2079,7 +2079,7 @@ type TransitionModelVersionStageDatabricks struct {
 // Transition request details.
 type TransitionRequest struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions []ActivityAction `tfsdk:"available_actions" tf:"optional"`
+	AvailableActions []types.String `tfsdk:"available_actions" tf:"optional"`
 	// User-provided comment associated with the transition request.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
@@ -2094,7 +2094,7 @@ type TransitionRequest struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	ToStage Stage `tfsdk:"to_stage" tf:"optional"`
+	ToStage types.String `tfsdk:"to_stage" tf:"optional"`
 	// The username of the user that created the object.
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
@@ -2184,7 +2184,7 @@ type UpdateRegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events []RegistryWebhookEvent `tfsdk:"events" tf:"optional"`
+	Events []types.String `tfsdk:"events" tf:"optional"`
 
 	HttpUrlSpec *HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
 	// Webhook ID
@@ -2199,7 +2199,7 @@ type UpdateRegistryWebhook struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status RegistryWebhookStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 type UpdateRun struct {
@@ -2211,7 +2211,7 @@ type UpdateRun struct {
 	// will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
 	// Updated status of the run.
-	Status UpdateRunStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 type UpdateRunResponse struct {

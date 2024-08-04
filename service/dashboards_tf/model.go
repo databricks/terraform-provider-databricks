@@ -37,7 +37,7 @@ type CreateScheduleRequest struct {
 	// The display name for schedule.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// The status indicates whether this schedule is paused or not.
-	PauseStatus SchedulePauseStatus `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 }
 
 type CreateSubscriptionRequest struct {
@@ -74,7 +74,7 @@ type Dashboard struct {
 	// ensure that the dashboard has not been modified since the last read.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 	// The state of the dashboard resource. Used for tracking trashed status.
-	LifecycleState LifecycleState `tfsdk:"lifecycle_state" tf:"optional"`
+	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
 	// The workspace path of the folder containing the dashboard. Includes
 	// leading slash and no trailing slash.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
@@ -215,7 +215,7 @@ type ListDashboardsRequest struct {
 	// Indicates whether to include all metadata from the dashboard in the
 	// response. If unset, the response defaults to `DASHBOARD_VIEW_BASIC` which
 	// only includes summary metadata from the dashboard.
-	View DashboardView `tfsdk:"-" url:"view,omitempty"`
+	View types.String `tfsdk:"-" url:"view,omitempty"`
 }
 
 type ListDashboardsResponse struct {
@@ -315,7 +315,7 @@ type Schedule struct {
 	// last read, and can be optionally provided on delete.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 	// The status indicates whether this schedule is paused or not.
-	PauseStatus SchedulePauseStatus `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"schedule_id" tf:"optional"`
 	// A timestamp indicating when the schedule was last updated.
@@ -437,7 +437,7 @@ type UpdateScheduleRequest struct {
 	// last read, and can be optionally provided on delete.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 	// The status indicates whether this schedule is paused or not.
-	PauseStatus SchedulePauseStatus `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-" url:"-"`
 }

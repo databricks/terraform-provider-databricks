@@ -79,7 +79,7 @@ func (f *{{.PascalName}}) Type() string {
 	{{- else if .ArrayValue }}[]{{template "type" .ArrayValue}}
 	{{- else if .MapValue }}map[string]{{template "type" .MapValue}}
 	{{- else if .IsObject }}{{.PascalName}}
-	{{- else if .Enum }}{{.PascalName}}
+	{{- else if .Enum }}types.String
 	{{- else}}any /* MISSING TYPE */
 	{{- end -}}
 {{- end -}}

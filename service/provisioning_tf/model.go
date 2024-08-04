@@ -80,7 +80,7 @@ type CreateCustomerManagedKeyRequest struct {
 
 	GcpKeyInfo *CreateGcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional"`
 	// The cases that the key can be used for.
-	UseCases []KeyUseCase `tfsdk:"use_cases" tf:""`
+	UseCases []types.String `tfsdk:"use_cases" tf:""`
 }
 
 type CreateGcpKeyInfo struct {
@@ -216,7 +216,7 @@ type CreateWorkspaceRequest struct {
 	// Pricing].
 	//
 	// [AWS Pricing]: https://databricks.com/product/aws-pricing
-	PricingTier PricingTier `tfsdk:"pricing_tier" tf:"optional"`
+	PricingTier types.String `tfsdk:"pricing_tier" tf:"optional"`
 	// ID of the workspace's private access settings object. Only used for
 	// PrivateLink. This ID must be specified for customers using [AWS
 	// PrivateLink] for either front-end (user-to-workspace connection),
@@ -278,7 +278,7 @@ type CustomerManagedKey struct {
 
 	GcpKeyInfo *GcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional"`
 	// The cases that the key can be used for.
-	UseCases []KeyUseCase `tfsdk:"use_cases" tf:"optional"`
+	UseCases []types.String `tfsdk:"use_cases" tf:"optional"`
 }
 
 // Delete credential configuration
@@ -523,7 +523,7 @@ type GkeConfig struct {
 	//
 	// Set to `PUBLIC_NODE_PUBLIC_MASTER` for a public GKE cluster. The nodes of
 	// a public GKE cluster have public IP addresses.
-	ConnectivityType GkeConfigConnectivityType `tfsdk:"connectivity_type" tf:"optional"`
+	ConnectivityType types.String `tfsdk:"connectivity_type" tf:"optional"`
 	// The IP range from which to allocate GKE cluster master resources. This
 	// field will be ignored if GKE private cluster is not enabled.
 	//
@@ -628,7 +628,7 @@ type Network struct {
 	// The status of this network configuration object in terms of its use in a
 	// workspace: * `UNATTACHED`: Unattached. * `VALID`: Valid. * `BROKEN`:
 	// Broken. * `WARNED`: Warned.
-	VpcStatus VpcStatus `tfsdk:"vpc_status" tf:"optional"`
+	VpcStatus types.String `tfsdk:"vpc_status" tf:"optional"`
 	// Array of warning messages about the network configuration.
 	WarningMessages []NetworkWarning `tfsdk:"warning_messages" tf:"optional"`
 	// Workspace ID associated with this network configuration.
@@ -640,7 +640,7 @@ type NetworkHealth struct {
 	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
 	// The AWS resource associated with this error: credentials, VPC, subnet,
 	// security group, or network ACL.
-	ErrorType ErrorType `tfsdk:"error_type" tf:"optional"`
+	ErrorType types.String `tfsdk:"error_type" tf:"optional"`
 }
 
 // If specified, contains the VPC endpoints used to allow cluster communication
@@ -661,7 +661,7 @@ type NetworkWarning struct {
 	WarningMessage types.String `tfsdk:"warning_message" tf:"optional"`
 	// The AWS resource associated with this warning: a subnet or a security
 	// group.
-	WarningType WarningType `tfsdk:"warning_type" tf:"optional"`
+	WarningType types.String `tfsdk:"warning_type" tf:"optional"`
 }
 
 // The pricing tier of the workspace. For pricing tier information, see [AWS
@@ -747,7 +747,7 @@ type PrivateAccessSettings struct {
 	// that are registered in your Databricks account connect to your workspace.
 	// * `ENDPOINT` level access allows only specified VPC endpoints connect to
 	// your workspace. For details, see `allowed_vpc_endpoint_ids`.
-	PrivateAccessLevel PrivateAccessLevel `tfsdk:"private_access_level" tf:"optional"`
+	PrivateAccessLevel types.String `tfsdk:"private_access_level" tf:"optional"`
 	// Databricks private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"private_access_settings_id" tf:"optional"`
 	// The human-readable name of the private access settings object.
@@ -850,7 +850,7 @@ type UpsertPrivateAccessSettingsRequest struct {
 	// that are registered in your Databricks account connect to your workspace.
 	// * `ENDPOINT` level access allows only specified VPC endpoints connect to
 	// your workspace. For details, see `allowed_vpc_endpoint_ids`.
-	PrivateAccessLevel PrivateAccessLevel `tfsdk:"private_access_level" tf:"optional"`
+	PrivateAccessLevel types.String `tfsdk:"private_access_level" tf:"optional"`
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-" url:"-"`
 	// The human-readable name of the private access settings object.
@@ -895,7 +895,7 @@ type VpcEndpoint struct {
 	// that was used when creating this VPC endpoint.
 	//
 	// [endpoint service]: https://docs.aws.amazon.com/vpc/latest/privatelink/endpoint-service.html
-	UseCase EndpointUseCase `tfsdk:"use_case" tf:"optional"`
+	UseCase types.String `tfsdk:"use_case" tf:"optional"`
 	// Databricks VPC endpoint ID. This is the Databricks-specific name of the
 	// VPC endpoint. Do not confuse this with the `aws_vpc_endpoint_id`, which
 	// is the ID within AWS of the VPC endpoint.
@@ -1036,7 +1036,7 @@ type Workspace struct {
 	// Pricing].
 	//
 	// [AWS Pricing]: https://databricks.com/product/aws-pricing
-	PricingTier PricingTier `tfsdk:"pricing_tier" tf:"optional"`
+	PricingTier types.String `tfsdk:"pricing_tier" tf:"optional"`
 	// ID of the workspace's private access settings object. Only used for
 	// PrivateLink. You must specify this ID if you are using [AWS PrivateLink]
 	// for either front-end (user-to-workspace connection), back-end (data plane
@@ -1059,7 +1059,7 @@ type Workspace struct {
 	// The status of the workspace. For workspace creation, usually it is set to
 	// `PROVISIONING` initially. Continue to check the status until the status
 	// is `RUNNING`.
-	WorkspaceStatus WorkspaceStatus `tfsdk:"workspace_status" tf:"optional"`
+	WorkspaceStatus types.String `tfsdk:"workspace_status" tf:"optional"`
 	// Message describing the current workspace status.
 	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message" tf:"optional"`
 }

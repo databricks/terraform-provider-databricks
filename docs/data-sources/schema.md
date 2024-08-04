@@ -15,8 +15,8 @@ data "databricks_schemas" "all" {
   catalog_name = "sandbox"
 }
 
-data "databricks_schema" {
-  for_each = data.datatbricks_schemas.all.ids
+data "databricks_schema" "this" {
+  for_each = data.databricks_schemas.all.ids
   name     = each.value
 }
 ```

@@ -181,10 +181,28 @@ func TestWorkspaceConfDelete(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
-					"enableFancyThing":     "false",
-					"enableSomething":      "false",
+					"enableFancyThing": "false",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"enableSomething": "false",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
 					"enforceSomethingElse": "false",
-					"someProperty":         "",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"someProperty": "",
 				},
 			},
 		},

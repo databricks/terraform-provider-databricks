@@ -8,7 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/databricks/databricks-sdk-go"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

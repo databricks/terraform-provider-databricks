@@ -8,8 +8,8 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // NewVPCEndpointAPI creates VPCEndpointAPI instance from provider meta

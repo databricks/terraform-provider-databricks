@@ -13,8 +13,8 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/iam"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // https://github.com/databricks/terraform-provider-databricks/issues/1097

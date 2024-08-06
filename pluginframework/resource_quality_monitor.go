@@ -112,7 +112,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	}
 	endpoint, err := w.QualityMonitors.Create(ctx, createMonitorGoSDK)
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to get create monitor", err.Error())
+		resp.Diagnostics.AddError("Failed to get created monitor", err.Error())
 		return
 	}
 	err = WaitForMonitor(w, ctx, endpoint.TableName)

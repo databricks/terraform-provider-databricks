@@ -31,14 +31,14 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Contex
 
 	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
 
-	srcType := srcVal.Type()
-	for i := 0; i < srcVal.NumField(); i++ {
-		srcField := srcVal.Field(i)
-		srcFieldName := srcType.Field(i).Name
+	allFields := listAllFields(srcVal)
+	for _, field := range allFields {
+		srcField := field.v
+		srcFieldName := field.sf.Name
 
 		destField := destVal.FieldByName(srcFieldName)
 
-		srcFieldTag := srcType.Field(i).Tag.Get("tfsdk")
+		srcFieldTag := field.sf.Tag.Get("tfsdk")
 		if srcFieldTag == "-" {
 			continue
 		}
@@ -93,9 +93,32 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 				addToForceSendFields(srcFieldName, forceSendFieldsField)
 			}
 		case types.String:
-			destField.SetString(v.ValueString())
-			if !v.IsNull() {
-				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			if destField.Type().Name() != "string" {
+				// This is the case for enum.
+
+				// Find the Set method
+				destVal := reflect.New(destField.Type())
+				setMethod := destVal.MethodByName("Set")
+				if !setMethod.IsValid() {
+					panic(fmt.Sprintf("set method not found on enum type: %s", destField.Type().Name()))
+				}
+
+				// Prepare the argument for the Set method
+				arg := reflect.ValueOf(v.ValueString())
+
+				// Call the Set method
+				result := setMethod.Call([]reflect.Value{arg})
+				if len(result) != 0 {
+					if err, ok := result[0].Interface().(error); ok && err != nil {
+						panic(err)
+					}
+				}
+				destField.Set(destVal.Elem())
+			} else {
+				destField.SetString(v.ValueString())
+				if !v.IsNull() {
+					addToForceSendFields(srcFieldName, forceSendFieldsField)
+				}
 			}
 		case types.List:
 			panic("types.List should never be used, use go native slices instead")
@@ -185,13 +208,12 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 		forceSendFieldVal = forceSendField.Interface().([]string)
 	}
 
-	srcType := srcVal.Type()
-	for i := 0; i < srcVal.NumField(); i++ {
-		srcField := srcVal.Field(i)
-		srcFieldName := srcVal.Type().Field(i).Name
+	for _, field := range listAllFields(srcVal) {
+		srcField := field.v
+		srcFieldName := field.sf.Name
 
 		destField := destVal.FieldByName(srcFieldName)
-		srcFieldTag := srcType.Field(i).Tag.Get("json")
+		srcFieldTag := field.sf.Tag.Get("json")
 		if srcFieldTag == "-" {
 			continue
 		}
@@ -259,18 +281,24 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 		var strVal string
 		if srcField.Type().Name() != "string" {
 			// This case is for Enum Types.
-			stringMethod := srcField.Addr().MethodByName("String")
+			var stringMethod reflect.Value
+			if srcField.CanAddr() {
+				stringMethod = srcField.Addr().MethodByName("String")
+			} else {
+				// Create a new addressable variable to call the String method
+				addr := reflect.New(srcField.Type()).Elem()
+				addr.Set(srcField)
+				stringMethod = addr.Addr().MethodByName("String")
+			}
 			if stringMethod.IsValid() {
 				stringResult := stringMethod.Call(nil)
 				if len(stringResult) == 1 {
 					strVal = stringResult[0].Interface().(string)
 				} else {
-					log.Printf("[DEBUG] Enum get string has more than one result")
-					strVal = ""
+					panic("num get string has more than one result")
 				}
 			} else {
-				log.Printf("[DEBUG] Enum does not have valid .String() method")
-				strVal = ""
+				panic("enum does not have valid .String() method")
 			}
 		} else {
 			strVal = srcFieldValue.(string)

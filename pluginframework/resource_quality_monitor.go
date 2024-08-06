@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -42,6 +44,13 @@ func ResourceQualityMonitor() func() resource.Resource {
 	}
 }
 
+type MonitorInfoExtended struct {
+	catalog_tf.MonitorInfo
+	// Adding new fields.
+	WarehouseId          types.String `tfsdk:"warehouse_id" tf:"optional"`
+	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard" tf:"optional"`
+}
+
 type QualityMonitorResource struct {
 	Client *common.DatabricksClient
 }
@@ -53,11 +62,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Lakehouse Monitor. MonitorInfo struct is used to create the schema",
-		Attributes: common.PluginFrameworkResourceStructToSchemaMap(catalog_tf.MonitorInfo{}, func(c common.CustomizableSchemaPluginFramework) common.CustomizableSchemaPluginFramework {
-			// TODO: Re-enable these customizations after we make a decision about how to handle them.
-			// NOTE: Currently these cannot be done directly since req.Plan.Get() will panic due to object an struct mismatch.
-			// c.AddNewField("skip_builtin_dashboard", schema.BoolAttribute{Optional: true, Required: false})
-			// c.AddNewField("warehouse_id", schema.StringAttribute{Optional: true, Required: false})
+		Attributes: common.PluginFrameworkResourceStructToSchemaMap(MonitorInfoExtended{}, func(c common.CustomizableSchemaPluginFramework) common.CustomizableSchemaPluginFramework {
 			c.SetRequired("assets_dir")
 			c.SetRequired("output_schema_name")
 			c.SetRequired("table_name")
@@ -93,7 +98,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return
 	}
-	var monitorInfoTfSDK catalog_tf.MonitorInfo
+	var monitorInfoTfSDK MonitorInfoExtended
 	diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -108,7 +113,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	}
 	endpoint, err := w.QualityMonitors.Create(ctx, createMonitorGoSDK)
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to get create monitor", err.Error())
+		resp.Diagnostics.AddError("Failed to get created monitor", err.Error())
 		return
 	}
 	err = WaitForMonitor(w, ctx, endpoint.TableName)
@@ -124,7 +129,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	var newMonitorInfoTfSDK catalog_tf.MonitorInfo
+	var newMonitorInfoTfSDK MonitorInfoExtended
 	err = common.GoSdkToTfSdkStruct(new_endpoint, &newMonitorInfoTfSDK, ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert Go SDK struct to TF SDK struct", err.Error())
@@ -150,7 +155,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		resp.Diagnostics.AddError("Failed to get monitor", err.Error())
 		return
 	}
-	var monitorInfoTfSDK catalog_tf.MonitorInfo
+	var monitorInfoTfSDK MonitorInfoExtended
 	err = common.GoSdkToTfSdkStruct(endpoint, &monitorInfoTfSDK, ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert Go SDK struct to TF SDK struct", err.Error())
@@ -168,7 +173,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
 		return
 	}
-	var monitorInfoTfSDK catalog_tf.MonitorInfo
+	var monitorInfoTfSDK MonitorInfoExtended
 	diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -205,7 +210,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	var newMonitorInfoTfSDK catalog_tf.MonitorInfo
+	var newMonitorInfoTfSDK MonitorInfoExtended
 	err = common.GoSdkToTfSdkStruct(new_endpoint, &newMonitorInfoTfSDK, ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert Go SDK struct to TF SDK struct", err.Error())

@@ -236,21 +236,20 @@ func TestUcAccUpdateQualityMonitorPluginFramework(t *testing.T) {
 				}
 			}
 		`,
-	},
-		step{
-			Template: commonPartQualityMonitoring + `
-			resource "databricks_lakehouse_monitor_pluginframework" "testMonitorInference" {
-				table_name = databricks_sql_table.myInferenceTable.id
-				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
-				output_schema_name = databricks_schema.things.id
-				inference_log = {
-					granularities = ["1 hour"]
-					timestamp_col = "timestamp"
-					prediction_col = "prediction"
-					model_id_col = "model_id"
-					problem_type = "PROBLEM_TYPE_REGRESSION"
-				}
+	}, step{
+		Template: commonPartQualityMonitoring + `
+		resource "databricks_lakehouse_monitor_pluginframework" "testMonitorInference" {
+			table_name = databricks_sql_table.myInferenceTable.id
+			assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
+			output_schema_name = databricks_schema.things.id
+			inference_log = {
+				granularities = ["1 hour"]
+				timestamp_col = "timestamp"
+				prediction_col = "prediction"
+				model_id_col = "model_id"
+				problem_type = "PROBLEM_TYPE_REGRESSION"
 			}
-			`,
-		})
+		}
+		`,
+	})
 }

@@ -31,14 +31,14 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Contex
 
 	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
 
-	srcType := srcVal.Type()
-	for i := 0; i < srcVal.NumField(); i++ {
-		srcField := srcVal.Field(i)
-		srcFieldName := srcType.Field(i).Name
+	allFields := listAllFields(srcVal)
+	for _, field := range allFields {
+		srcField := field.v
+		srcFieldName := field.sf.Name
 
 		destField := destVal.FieldByName(srcFieldName)
 
-		srcFieldTag := srcType.Field(i).Tag.Get("tfsdk")
+		srcFieldTag := field.sf.Tag.Get("tfsdk")
 		if srcFieldTag == "-" {
 			continue
 		}
@@ -208,13 +208,12 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 		forceSendFieldVal = forceSendField.Interface().([]string)
 	}
 
-	srcType := srcVal.Type()
-	for i := 0; i < srcVal.NumField(); i++ {
-		srcField := srcVal.Field(i)
-		srcFieldName := srcVal.Type().Field(i).Name
+	for _, field := range listAllFields(srcVal) {
+		srcField := field.v
+		srcFieldName := field.sf.Name
 
 		destField := destVal.FieldByName(srcFieldName)
-		srcFieldTag := srcType.Field(i).Tag.Get("json")
+		srcFieldTag := field.sf.Tag.Get("json")
 		if srcFieldTag == "-" {
 			continue
 		}

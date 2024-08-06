@@ -3,7 +3,6 @@ package pluginframework
 import (
 	"context"
 	"fmt"
-	"go/types"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 

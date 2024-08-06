@@ -23,7 +23,7 @@ type ColumnInfo struct {
 
 type CreateEndpoint struct {
 	// Type of endpoint.
-	EndpointType EndpointType `tfsdk:"endpoint_type" tf:""`
+	EndpointType types.String `tfsdk:"endpoint_type" tf:""`
 	// Name of endpoint
 	Name types.String `tfsdk:"name" tf:""`
 }
@@ -44,7 +44,7 @@ type CreateVectorIndexRequest struct {
 	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
 	// that supports direct read and write of vectors and metadata through our
 	// REST and SDK APIs. With this model, the user manages index updates.
-	IndexType VectorIndexType `tfsdk:"index_type" tf:""`
+	IndexType types.String `tfsdk:"index_type" tf:""`
 	// Name of the index
 	Name types.String `tfsdk:"name" tf:""`
 	// Primary key of the index
@@ -107,7 +107,7 @@ type DeleteDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
 	Result *DeleteDataResult `tfsdk:"result" tf:"optional"`
 	// Status of the delete operation.
-	Status DeleteDataStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 // Delete an endpoint
@@ -146,7 +146,7 @@ type DeltaSyncVectorIndexSpecRequest struct {
 	// available when the update started. - `CONTINUOUS`: If the pipeline uses
 	// continuous execution, the pipeline processes new data as it arrives in
 	// the source table to keep vector index fresh.
-	PipelineType PipelineType `tfsdk:"pipeline_type" tf:"optional"`
+	PipelineType types.String `tfsdk:"pipeline_type" tf:"optional"`
 	// The name of the source table.
 	SourceTable types.String `tfsdk:"source_table" tf:"optional"`
 }
@@ -169,7 +169,7 @@ type DeltaSyncVectorIndexSpecResponse struct {
 	// available when the update started. - `CONTINUOUS`: If the pipeline uses
 	// continuous execution, the pipeline processes new data as it arrives in
 	// the source table to keep vector index fresh.
-	PipelineType PipelineType `tfsdk:"pipeline_type" tf:"optional"`
+	PipelineType types.String `tfsdk:"pipeline_type" tf:"optional"`
 	// The name of the source table.
 	SourceTable types.String `tfsdk:"source_table" tf:"optional"`
 }
@@ -210,7 +210,7 @@ type EndpointInfo struct {
 	// Current status of the endpoint
 	EndpointStatus *EndpointStatus `tfsdk:"endpoint_status" tf:"optional"`
 	// Type of endpoint.
-	EndpointType EndpointType `tfsdk:"endpoint_type" tf:"optional"`
+	EndpointType types.String `tfsdk:"endpoint_type" tf:"optional"`
 	// Unique identifier of the endpoint
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Timestamp of last update to the endpoint
@@ -228,7 +228,7 @@ type EndpointStatus struct {
 	// Additional status message
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Current state of the endpoint
-	State EndpointStatusState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 // Current state of the endpoint
@@ -353,7 +353,7 @@ type MiniVectorIndex struct {
 	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
 	// that supports direct read and write of vectors and metadata through our
 	// REST and SDK APIs. With this model, the user manages index updates.
-	IndexType VectorIndexType `tfsdk:"index_type" tf:"optional"`
+	IndexType types.String `tfsdk:"index_type" tf:"optional"`
 	// Name of the index
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Primary key of the index
@@ -548,7 +548,7 @@ type UpsertDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
 	Result *UpsertDataResult `tfsdk:"result" tf:"optional"`
 	// Status of the upsert operation.
-	Status UpsertDataStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 type Value struct {
@@ -581,7 +581,7 @@ type VectorIndex struct {
 	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
 	// that supports direct read and write of vectors and metadata through our
 	// REST and SDK APIs. With this model, the user manages index updates.
-	IndexType VectorIndexType `tfsdk:"index_type" tf:"optional"`
+	IndexType types.String `tfsdk:"index_type" tf:"optional"`
 	// Name of the index
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Primary key of the index

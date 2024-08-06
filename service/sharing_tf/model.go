@@ -159,7 +159,7 @@ type ColumnInfo struct {
 	// Full data type specification, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json" tf:"optional"`
 	// Name of type (INT, STRUCT, MAP, etc.).
-	TypeName ColumnTypeName `tfsdk:"type_name" tf:"optional"`
+	TypeName types.String `tfsdk:"type_name" tf:"optional"`
 	// Digits of precision; required for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
 	// Digits to right of decimal; Required for DecimalTypes.
@@ -255,7 +255,7 @@ type CreateCleanRoom struct {
 
 type CreateProvider struct {
 	// The delta sharing authentication type.
-	AuthenticationType AuthenticationType `tfsdk:"authentication_type" tf:""`
+	AuthenticationType types.String `tfsdk:"authentication_type" tf:""`
 	// Description about the provider.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The name of the Provider.
@@ -267,7 +267,7 @@ type CreateProvider struct {
 
 type CreateRecipient struct {
 	// The delta sharing authentication type.
-	AuthenticationType AuthenticationType `tfsdk:"authentication_type" tf:""`
+	AuthenticationType types.String `tfsdk:"authentication_type" tf:""`
 	// Description about the recipient.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The global Unity Catalog metastore id provided by the data recipient.
@@ -442,7 +442,7 @@ type PartitionValue struct {
 	// The name of the partition column.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// The operator to apply for the value.
-	Op PartitionValueOp `tfsdk:"op" tf:"optional"`
+	Op types.String `tfsdk:"op" tf:"optional"`
 	// The key of a Delta Sharing recipient's property. For example
 	// `databricks-account-id`. When this field is set, field `value` can not be
 	// set.
@@ -594,12 +594,12 @@ type PrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal" tf:"optional"`
 	// The privileges assigned to the principal.
-	Privileges []Privilege `tfsdk:"privileges" tf:"optional"`
+	Privileges []types.String `tfsdk:"privileges" tf:"optional"`
 }
 
 type ProviderInfo struct {
 	// The delta sharing authentication type.
-	AuthenticationType AuthenticationType `tfsdk:"authentication_type" tf:"optional"`
+	AuthenticationType types.String `tfsdk:"authentication_type" tf:"optional"`
 	// Cloud vendor of the provider's UC metastore. This field is only present
 	// when the __authentication_type__ is **DATABRICKS**.
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
@@ -648,7 +648,7 @@ type RecipientInfo struct {
 	// token is already retrieved.
 	ActivationUrl types.String `tfsdk:"activation_url" tf:"optional"`
 	// The delta sharing authentication type.
-	AuthenticationType AuthenticationType `tfsdk:"authentication_type" tf:"optional"`
+	AuthenticationType types.String `tfsdk:"authentication_type" tf:"optional"`
 	// Cloud vendor of the recipient's Unity Catalog Metstore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**`.
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
@@ -804,10 +804,10 @@ type SharedDataObject struct {
 	// NOTEBOOK_FILE, optional for updating, ignored for other types.
 	Content types.String `tfsdk:"content" tf:"optional"`
 	// The type of the data object.
-	DataObjectType SharedDataObjectDataObjectType `tfsdk:"data_object_type" tf:"optional"`
+	DataObjectType types.String `tfsdk:"data_object_type" tf:"optional"`
 	// Whether to enable or disable sharing of data history. If not specified,
 	// the default is **DISABLED**.
-	HistoryDataSharingStatus SharedDataObjectHistoryDataSharingStatus `tfsdk:"history_data_sharing_status" tf:"optional"`
+	HistoryDataSharingStatus types.String `tfsdk:"history_data_sharing_status" tf:"optional"`
 	// A fully qualified name that uniquely identifies a data object.
 	//
 	// For example, a table's fully qualified name is in the format of
@@ -829,7 +829,7 @@ type SharedDataObject struct {
 	// NOTE: The start_version should be <= the `current` version of the object.
 	StartVersion types.Int64 `tfsdk:"start_version" tf:"optional"`
 	// One of: **ACTIVE**, **PERMISSION_DENIED**.
-	Status SharedDataObjectStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// A user-provided new name for the data object within the share. If this
 	// new name is not provided, the object's original name will be used as the
 	// `string_shared_as` name. The `string_shared_as` name must be unique
@@ -935,7 +935,7 @@ func (f *SharedDataObjectStatus) Type() string {
 
 type SharedDataObjectUpdate struct {
 	// One of: **ADD**, **REMOVE**, **UPDATE**.
-	Action SharedDataObjectUpdateAction `tfsdk:"action" tf:"optional"`
+	Action types.String `tfsdk:"action" tf:"optional"`
 	// The data object that is being added, removed, or updated.
 	DataObject *SharedDataObject `tfsdk:"data_object" tf:"optional"`
 }

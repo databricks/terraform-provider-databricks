@@ -125,6 +125,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `pools` - **listing** [instance pools](../resources/instance_pool.md).
 * `repos` - **listing** [databricks_repo](../resources/repo.md)
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md).
+* `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md).
 * `sql-alerts` - **listing** [databricks_sql_alert](../resources/sql_alert.md).
 * `sql-dashboards` - **listing** [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
 * `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
@@ -177,7 +178,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |
 | [databricks_file](../resources/file.md) | Yes | No | Yes | No |
-| [databricks_global_init_script](../resources/global_init_script.md) | Yes | Yes | Yes | No |
+| [databricks_global_init_script](../resources/global_init_script.md) | Yes | Yes | Yes\*\* | No |
 | [databricks_grants](../resources/grants.md) | Yes | No | Yes | No |
 | [databricks_group](../resources/group.md) | Yes | No | Yes | Yes |
 | [databricks_group_instance_profile](../resources/group_instance_profile.md) | Yes | No | Yes | No |
@@ -185,7 +186,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_group_role](../resources/group_role.md) | Yes | No | Yes | Yes |
 | [databricks_instance_pool](../resources/instance_pool.md) | Yes | No | Yes | No |
 | [databricks_instance_profile](../resources/instance_profile.md) | Yes | No | Yes | No |
-| [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes | Yes | No |
+| [databricks_ip_access_list](../resources/ip_access_list.md) | Yes | Yes | Yes\*\* | No |
 | [databricks_job](../resources/job.md) | Yes | No | Yes | No |
 | [databricks_library](../resources/library.md) | Yes\* | No | Yes | No |
 | [databricks_metastore](../resources/metastore.md) | Yes | Yes | No | Yes |
@@ -196,6 +197,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes | Yes | No |
 | [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) | Yes | No | No | Yes |
 | [databricks_notebook](../resources/notebook.md) | Yes | Yes | Yes | No |
+| [databricks_notification_destination](../resources/notification_destination.md) | Yes | No | Yes\*\* | No |
 | [databricks_obo_token](../resources/obo_token.md) | Not Applicable | No | No | No |
 | [databricks_online_table](../resources/online_table.md) | Yes | Yes | Yes | No |
 | [databricks_permissions](../resources/permissions.md) | Yes | No | Yes | No |
@@ -227,9 +229,10 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_user_role](../resources/user_role.md) | Yes | No | Yes | Yes |
 | [databricks_volume](../resources/volume.md) | Yes | Yes | Yes | No |
 | [databricks_workspace_binding](../resources/workspace_binding.md) | Yes | No | Yes | No |
-| [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No | Yes | No |
+| [databricks_workspace_conf](../resources/workspace_conf.md) | Yes (partial) | No | Yes\*\* | No |
 | [databricks_workspace_file](../resources/workspace_file.md) | Yes | Yes | Yes | No |
 
 Notes:
 
 * \* - libraries are exported as blocks inside the cluster definition instead of generating `databricks_library` resources.  This is done to decrease the number of generated resources.
+* \*\* - requires workspace admin permission.

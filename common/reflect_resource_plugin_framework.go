@@ -126,7 +126,7 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			panic("types.Map should never be used, use go native maps instead")
 		default:
 			if srcField.IsZero() {
-				// Skip nils
+				// Skip zeros
 				return nil
 			}
 			// If it is a real stuct instead of a tfsdk type, recursively resolve it.
@@ -311,7 +311,7 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 		}
 	case reflect.Struct:
 		if srcField.IsZero() {
-			// Skip nils
+			// Skip zeros
 			return nil
 		}
 		// resolve the nested struct by recursively calling the function

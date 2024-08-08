@@ -226,6 +226,7 @@ func (a PermissionsAPI) Delete(objectID string, d *schema.ResourceData) error {
 						// we can not remove user's own home CAN_MANAGE
 						if change, direct := acl.toAccessControlChange(); direct {
 							accl.AccessControlList = append(accl.AccessControlList, change)
+							break
 						}
 					}
 				}

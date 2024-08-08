@@ -84,7 +84,7 @@ type ArtifactMatcher struct {
 	// The artifact path or maven coordinate
 	Artifact types.String `tfsdk:"artifact" tf:""`
 	// The pattern matching type of the artifact
-	MatchType MatchType `tfsdk:"match_type" tf:""`
+	MatchType types.String `tfsdk:"match_type" tf:""`
 }
 
 // The artifact type
@@ -194,7 +194,7 @@ type CatalogInfo struct {
 	// enabled in the request.
 	BrowseOnly types.Bool `tfsdk:"browse_only" tf:"optional"`
 	// The type of the catalog.
-	CatalogType CatalogType `tfsdk:"catalog_type" tf:"optional"`
+	CatalogType types.String `tfsdk:"catalog_type" tf:"optional"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The name of the connection to an external data source.
@@ -207,12 +207,12 @@ type CatalogInfo struct {
 	EffectivePredictiveOptimizationFlag *EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
-	EnablePredictiveOptimization EnablePredictiveOptimization `tfsdk:"enable_predictive_optimization" tf:"optional"`
+	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
 	// The full name of the catalog. Corresponds with the name field.
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
-	IsolationMode CatalogIsolationMode `tfsdk:"isolation_mode" tf:"optional"`
+	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
 	// Name of catalog.
@@ -231,7 +231,7 @@ type CatalogInfo struct {
 	// Status of an asynchronously provisioned resource.
 	ProvisioningInfo *ProvisioningInfo `tfsdk:"provisioning_info" tf:"optional"`
 	// Kind of catalog securable.
-	SecurableKind CatalogInfoSecurableKind `tfsdk:"securable_kind" tf:"optional"`
+	SecurableKind types.String `tfsdk:"securable_kind" tf:"optional"`
 
 	SecurableType types.String `tfsdk:"securable_type" tf:"optional"`
 	// The name of the share under the share provider.
@@ -382,7 +382,7 @@ type ColumnInfo struct {
 	// Full data type specification, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json" tf:"optional"`
 	// Name of type (INT, STRUCT, MAP, etc.).
-	TypeName ColumnTypeName `tfsdk:"type_name" tf:"optional"`
+	TypeName types.String `tfsdk:"type_name" tf:"optional"`
 	// Digits of precision; required for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
 	// Digits to right of decimal; Required for DecimalTypes.
@@ -473,13 +473,13 @@ type ConnectionInfo struct {
 	// Unique identifier of the Connection.
 	ConnectionId types.String `tfsdk:"connection_id" tf:"optional"`
 	// The type of connection.
-	ConnectionType ConnectionType `tfsdk:"connection_type" tf:"optional"`
+	ConnectionType types.String `tfsdk:"connection_type" tf:"optional"`
 	// Time at which this connection was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 	// Username of connection creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 	// The type of credential.
-	CredentialType CredentialType `tfsdk:"credential_type" tf:"optional"`
+	CredentialType types.String `tfsdk:"credential_type" tf:"optional"`
 	// Full name of connection.
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// Unique identifier of parent metastore.
@@ -498,7 +498,7 @@ type ConnectionInfo struct {
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only" tf:"optional"`
 	// Kind of connection securable.
-	SecurableKind ConnectionInfoSecurableKind `tfsdk:"securable_kind" tf:"optional"`
+	SecurableKind types.String `tfsdk:"securable_kind" tf:"optional"`
 
 	SecurableType types.String `tfsdk:"securable_type" tf:"optional"`
 	// Time at which this connection was updated, in epoch milliseconds.
@@ -631,7 +631,7 @@ type CreateConnection struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The type of connection.
-	ConnectionType ConnectionType `tfsdk:"connection_type" tf:""`
+	ConnectionType types.String `tfsdk:"connection_type" tf:""`
 	// Name of the connection.
 	Name types.String `tfsdk:"name" tf:""`
 	// A map of key-value properties attached to the securable.
@@ -669,7 +669,7 @@ type CreateFunction struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Scalar function return data type.
-	DataType ColumnTypeName `tfsdk:"data_type" tf:""`
+	DataType types.String `tfsdk:"data_type" tf:""`
 	// External function language.
 	ExternalLanguage types.String `tfsdk:"external_language" tf:"optional"`
 	// External function name.
@@ -685,7 +685,7 @@ type CreateFunction struct {
 	// Name of function, relative to parent schema.
 	Name types.String `tfsdk:"name" tf:""`
 	// Function parameter style. **S** is the value for SQL.
-	ParameterStyle CreateFunctionParameterStyle `tfsdk:"parameter_style" tf:""`
+	ParameterStyle types.String `tfsdk:"parameter_style" tf:""`
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties" tf:"optional"`
 	// Table function return parameters.
@@ -695,7 +695,7 @@ type CreateFunction struct {
 	// __return_params__ of the function cannot be used (as **TABLE** return
 	// type is not supported), and the __sql_data_access__ field must be
 	// **NO_SQL**.
-	RoutineBody CreateFunctionRoutineBody `tfsdk:"routine_body" tf:""`
+	RoutineBody types.String `tfsdk:"routine_body" tf:""`
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition" tf:""`
 	// Function dependencies.
@@ -703,11 +703,11 @@ type CreateFunction struct {
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:""`
 	// Function security type.
-	SecurityType CreateFunctionSecurityType `tfsdk:"security_type" tf:""`
+	SecurityType types.String `tfsdk:"security_type" tf:""`
 	// Specific name of the function; Reserved for future use.
 	SpecificName types.String `tfsdk:"specific_name" tf:""`
 	// Function SQL data access.
-	SqlDataAccess CreateFunctionSqlDataAccess `tfsdk:"sql_data_access" tf:""`
+	SqlDataAccess types.String `tfsdk:"sql_data_access" tf:""`
 	// List of schemes whose objects can be referenced without qualification.
 	SqlPath types.String `tfsdk:"sql_path" tf:"optional"`
 }
@@ -973,7 +973,7 @@ type CreateVolumeRequestContent struct {
 	// The storage location on the cloud
 	StorageLocation types.String `tfsdk:"storage_location" tf:"optional"`
 
-	VolumeType VolumeType `tfsdk:"volume_type" tf:""`
+	VolumeType types.String `tfsdk:"volume_type" tf:""`
 }
 
 // The type of credential.
@@ -1280,10 +1280,10 @@ type EffectivePredictiveOptimizationFlag struct {
 	InheritedFromName types.String `tfsdk:"inherited_from_name" tf:"optional"`
 	// The type of the object from which the flag was inherited. If there was no
 	// inheritance, this field is left blank.
-	InheritedFromType EffectivePredictiveOptimizationFlagInheritedFromType `tfsdk:"inherited_from_type" tf:"optional"`
+	InheritedFromType types.String `tfsdk:"inherited_from_type" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
-	Value EnablePredictiveOptimization `tfsdk:"value" tf:""`
+	Value types.String `tfsdk:"value" tf:""`
 }
 
 // The type of the object from which the flag was inherited. If there was no
@@ -1323,9 +1323,9 @@ type EffectivePrivilege struct {
 	// The type of the object that conveys this privilege via inheritance. This
 	// field is omitted when privilege is not inherited (it's assigned to the
 	// securable itself).
-	InheritedFromType SecurableType `tfsdk:"inherited_from_type" tf:"optional"`
+	InheritedFromType types.String `tfsdk:"inherited_from_type" tf:"optional"`
 	// The privilege assigned to the principal.
-	Privilege Privilege `tfsdk:"privilege" tf:"optional"`
+	Privilege types.String `tfsdk:"privilege" tf:"optional"`
 }
 
 type EffectivePrivilegeAssignment struct {
@@ -1411,7 +1411,7 @@ type ExternalLocationInfo struct {
 	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
-	IsolationMode IsolationMode `tfsdk:"isolation_mode" tf:"optional"`
+	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Unique identifier of metastore hosting the external location.
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
 	// Name of the external location.
@@ -1475,7 +1475,7 @@ type FunctionInfo struct {
 	// Username of function creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 	// Scalar function return data type.
-	DataType ColumnTypeName `tfsdk:"data_type" tf:"optional"`
+	DataType types.String `tfsdk:"data_type" tf:"optional"`
 	// External function language.
 	ExternalLanguage types.String `tfsdk:"external_language" tf:"optional"`
 	// External function name.
@@ -1500,7 +1500,7 @@ type FunctionInfo struct {
 	// Username of current owner of function.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Function parameter style. **S** is the value for SQL.
-	ParameterStyle FunctionInfoParameterStyle `tfsdk:"parameter_style" tf:"optional"`
+	ParameterStyle types.String `tfsdk:"parameter_style" tf:"optional"`
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties" tf:"optional"`
 	// Table function return parameters.
@@ -1510,7 +1510,7 @@ type FunctionInfo struct {
 	// __return_params__ of the function cannot be used (as **TABLE** return
 	// type is not supported), and the __sql_data_access__ field must be
 	// **NO_SQL**.
-	RoutineBody FunctionInfoRoutineBody `tfsdk:"routine_body" tf:"optional"`
+	RoutineBody types.String `tfsdk:"routine_body" tf:"optional"`
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition" tf:"optional"`
 	// Function dependencies.
@@ -1518,11 +1518,11 @@ type FunctionInfo struct {
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
 	// Function security type.
-	SecurityType FunctionInfoSecurityType `tfsdk:"security_type" tf:"optional"`
+	SecurityType types.String `tfsdk:"security_type" tf:"optional"`
 	// Specific name of the function; Reserved for future use.
 	SpecificName types.String `tfsdk:"specific_name" tf:"optional"`
 	// Function SQL data access.
-	SqlDataAccess FunctionInfoSqlDataAccess `tfsdk:"sql_data_access" tf:"optional"`
+	SqlDataAccess types.String `tfsdk:"sql_data_access" tf:"optional"`
 	// List of schemes whose objects can be referenced without qualification.
 	SqlPath types.String `tfsdk:"sql_path" tf:"optional"`
 	// Time at which this function was created, in epoch milliseconds.
@@ -1652,9 +1652,9 @@ type FunctionParameterInfo struct {
 	// Default value of the parameter.
 	ParameterDefault types.String `tfsdk:"parameter_default" tf:"optional"`
 	// The mode of the function parameter.
-	ParameterMode FunctionParameterMode `tfsdk:"parameter_mode" tf:"optional"`
+	ParameterMode types.String `tfsdk:"parameter_mode" tf:"optional"`
 	// The type of function parameter.
-	ParameterType FunctionParameterType `tfsdk:"parameter_type" tf:"optional"`
+	ParameterType types.String `tfsdk:"parameter_type" tf:"optional"`
 	// Ordinal position of column (starting at position 0).
 	Position types.Int64 `tfsdk:"position" tf:""`
 	// Format of IntervalType.
@@ -1662,7 +1662,7 @@ type FunctionParameterInfo struct {
 	// Full data type spec, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json" tf:"optional"`
 	// Name of type (INT, STRUCT, MAP, etc.).
-	TypeName ColumnTypeName `tfsdk:"type_name" tf:""`
+	TypeName types.String `tfsdk:"type_name" tf:""`
 	// Digits of precision; required on Create for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
 	// Digits to right of decimal; Required on Create for DecimalTypes.
@@ -1754,7 +1754,7 @@ type GetAccountStorageCredentialRequest struct {
 // Get an artifact allowlist
 type GetArtifactAllowlistRequest struct {
 	// The artifact type of the allowlist.
-	ArtifactType ArtifactType `tfsdk:"-" url:"-"`
+	ArtifactType types.String `tfsdk:"-" url:"-"`
 }
 
 // Get securable workspace bindings
@@ -1796,7 +1796,7 @@ type GetEffectiveRequest struct {
 	// (user or group) are returned.
 	Principal types.String `tfsdk:"-" url:"principal,omitempty"`
 	// Type of securable.
-	SecurableType SecurableType `tfsdk:"-" url:"-"`
+	SecurableType types.String `tfsdk:"-" url:"-"`
 }
 
 // Get an external location
@@ -1826,7 +1826,7 @@ type GetGrantRequest struct {
 	// group) are returned.
 	Principal types.String `tfsdk:"-" url:"principal,omitempty"`
 	// Type of securable.
-	SecurableType SecurableType `tfsdk:"-" url:"-"`
+	SecurableType types.String `tfsdk:"-" url:"-"`
 }
 
 // Get a metastore
@@ -1850,7 +1850,7 @@ type GetMetastoreSummaryResponse struct {
 	// The lifetime of delta sharing recipient token in seconds.
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds" tf:"optional"`
 	// The scope of Delta Sharing enabled for the metastore.
-	DeltaSharingScope GetMetastoreSummaryResponseDeltaSharingScope `tfsdk:"delta_sharing_scope" tf:"optional"`
+	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope" tf:"optional"`
 	// Globally unique metastore ID across clouds and regions, of the form
 	// `cloud:region:metastore_id`.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
@@ -2424,7 +2424,7 @@ type MetastoreInfo struct {
 	// The lifetime of delta sharing recipient token in seconds.
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds" tf:"optional"`
 	// The scope of Delta Sharing enabled for the metastore.
-	DeltaSharingScope MetastoreInfoDeltaSharingScope `tfsdk:"delta_sharing_scope" tf:"optional"`
+	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope" tf:"optional"`
 	// Globally unique metastore ID across clouds and regions, of the form
 	// `cloud:region:metastore_id`.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
@@ -2517,7 +2517,7 @@ type ModelVersionInfo struct {
 	// in PENDING_REGISTRATION status, then move to READY status once the model
 	// version files are uploaded and the model version is finalized. Only model
 	// versions in READY status can be loaded for inference or served.
-	Status ModelVersionInfoStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// The storage location on the cloud under which model version data files
 	// are stored
 	StorageLocation types.String `tfsdk:"storage_location" tf:"optional"`
@@ -2565,7 +2565,7 @@ func (f *ModelVersionInfoStatus) Type() string {
 
 type MonitorCronSchedule struct {
 	// Read only field that indicates whether a schedule is paused or not.
-	PauseStatus MonitorCronSchedulePauseStatus `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 	// The expression that determines when to run the monitor. See [examples].
 	//
 	// [examples]: https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
@@ -2635,7 +2635,7 @@ type MonitorInferenceLog struct {
 	PredictionProbaCol types.String `tfsdk:"prediction_proba_col" tf:"optional"`
 	// Problem type the model aims to solve. Determines the type of
 	// model-quality metrics that will be computed.
-	ProblemType MonitorInferenceLogProblemType `tfsdk:"problem_type" tf:""`
+	ProblemType types.String `tfsdk:"problem_type" tf:""`
 	// Column that contains the timestamps of requests. The column must be one
 	// of the following: - A ``TimestampType`` column - A column whose values
 	// can be converted to timestamps through the pyspark ``to_timestamp``
@@ -2718,7 +2718,7 @@ type MonitorInfo struct {
 	// Configuration for monitoring snapshot tables.
 	Snapshot *MonitorSnapshot `tfsdk:"snapshot" tf:"optional"`
 	// The status of the monitor.
-	Status MonitorInfoStatus `tfsdk:"status" tf:""`
+	Status types.String `tfsdk:"status" tf:""`
 	// The full name of the table to monitor. Format:
 	// __catalog_name__.__schema_name__.__table_name__.
 	TableName types.String `tfsdk:"table_name" tf:""`
@@ -2784,7 +2784,7 @@ type MonitorMetric struct {
 	// table - CUSTOM_METRIC_TYPE_DERIVED: depend on previously computed
 	// aggregate metrics - CUSTOM_METRIC_TYPE_DRIFT: depend on previously
 	// computed aggregate or derived metrics
-	Type MonitorMetricType `tfsdk:"type" tf:""`
+	Type types.String `tfsdk:"type" tf:""`
 }
 
 // Can only be one of “"CUSTOM_METRIC_TYPE_AGGREGATE"“,
@@ -2847,9 +2847,9 @@ type MonitorRefreshInfo struct {
 	// 1/1/1970 UTC).
 	StartTimeMs types.Int64 `tfsdk:"start_time_ms" tf:""`
 	// The current state of the refresh.
-	State MonitorRefreshInfoState `tfsdk:"state" tf:""`
+	State types.String `tfsdk:"state" tf:""`
 	// The method by which the refresh was triggered.
-	Trigger MonitorRefreshInfoTrigger `tfsdk:"trigger" tf:"optional"`
+	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 }
 
 // The current state of the refresh.
@@ -3041,7 +3041,7 @@ type OnlineTableStatus struct {
 	// ONLINE_CONTINUOUS_UPDATE or the ONLINE_UPDATING_PIPELINE_RESOURCES state.
 	ContinuousUpdateStatus *ContinuousUpdateStatus `tfsdk:"continuous_update_status" tf:"optional"`
 	// The state of the online table.
-	DetailedState OnlineTableState `tfsdk:"detailed_state" tf:"optional"`
+	DetailedState types.String `tfsdk:"detailed_state" tf:"optional"`
 	// Detailed status of an online table. Shown if the online table is in the
 	// OFFLINE_FAILED or the ONLINE_PIPELINE_FAILED state.
 	FailedStatus *FailedStatus `tfsdk:"failed_status" tf:"optional"`
@@ -3058,11 +3058,11 @@ type OnlineTableStatus struct {
 
 type PermissionsChange struct {
 	// The set of privileges to add.
-	Add []Privilege `tfsdk:"add" tf:"optional"`
+	Add []types.String `tfsdk:"add" tf:"optional"`
 	// The principal whose privileges we are changing.
 	Principal types.String `tfsdk:"principal" tf:"optional"`
 	// The set of privileges to remove.
-	Remove []Privilege `tfsdk:"remove" tf:"optional"`
+	Remove []types.String `tfsdk:"remove" tf:"optional"`
 }
 
 type PermissionsList struct {
@@ -3206,7 +3206,7 @@ type PrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal" tf:"optional"`
 	// The privileges assigned to the principal.
-	Privileges []Privilege `tfsdk:"privileges" tf:"optional"`
+	Privileges []types.String `tfsdk:"privileges" tf:"optional"`
 }
 
 // An object containing map of key-value properties attached to the connection.
@@ -3214,7 +3214,7 @@ type PropertiesKvPairs map[string]types.String
 
 // Status of an asynchronously provisioned resource.
 type ProvisioningInfo struct {
-	State ProvisioningInfoState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 type ProvisioningInfoState string
@@ -3336,7 +3336,7 @@ type SchemaInfo struct {
 	EffectivePredictiveOptimizationFlag *EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
-	EnablePredictiveOptimization EnablePredictiveOptimization `tfsdk:"enable_predictive_optimization" tf:"optional"`
+	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
 	// Full name of schema, in form of __catalog_name__.__schema_name__.
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// Unique identifier of parent metastore.
@@ -3419,7 +3419,7 @@ type SetArtifactAllowlist struct {
 	// A list of allowed artifact match patterns.
 	ArtifactMatchers []ArtifactMatcher `tfsdk:"artifact_matchers" tf:""`
 	// The artifact type of the allowlist.
-	ArtifactType ArtifactType `tfsdk:"-" url:"-"`
+	ArtifactType types.String `tfsdk:"-" url:"-"`
 }
 
 type SetRegisteredModelAliasRequest struct {
@@ -3434,7 +3434,7 @@ type SetRegisteredModelAliasRequest struct {
 // Server-Side Encryption properties for clients communicating with AWS s3.
 type SseEncryptionDetails struct {
 	// The type of key encryption to use (affects headers from s3 client).
-	Algorithm SseEncryptionDetailsAlgorithm `tfsdk:"algorithm" tf:"optional"`
+	Algorithm types.String `tfsdk:"algorithm" tf:"optional"`
 	// When algorithm is **AWS_SSE_KMS** this field specifies the ARN of the SSE
 	// key to use.
 	AwsKmsKeyArn types.String `tfsdk:"aws_kms_key_arn" tf:"optional"`
@@ -3489,7 +3489,7 @@ type StorageCredentialInfo struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
-	IsolationMode IsolationMode `tfsdk:"isolation_mode" tf:"optional"`
+	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
 	// The credential name. The name must be unique within the metastore.
@@ -3512,7 +3512,7 @@ type SystemSchemaInfo struct {
 	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// The current state of enablement for the system schema. An empty string
 	// means the system schema is available and ready for opt-in.
-	State SystemSchemaInfoState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 // The current state of enablement for the system schema. An empty string means
@@ -3593,7 +3593,7 @@ type TableInfo struct {
 	// Unique ID of the Data Access Configuration to use with the table data.
 	DataAccessConfigurationId types.String `tfsdk:"data_access_configuration_id" tf:"optional"`
 	// Data source format
-	DataSourceFormat DataSourceFormat `tfsdk:"data_source_format" tf:"optional"`
+	DataSourceFormat types.String `tfsdk:"data_source_format" tf:"optional"`
 	// Time at which this table was deleted, in epoch milliseconds. Field is
 	// omitted if table is not deleted.
 	DeletedAt types.Int64 `tfsdk:"deleted_at" tf:"optional"`
@@ -3603,7 +3603,7 @@ type TableInfo struct {
 	EffectivePredictiveOptimizationFlag *EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
-	EnablePredictiveOptimization EnablePredictiveOptimization `tfsdk:"enable_predictive_optimization" tf:"optional"`
+	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
 	// Full name of table, in form of
@@ -3637,7 +3637,7 @@ type TableInfo struct {
 	// The unique identifier of the table.
 	TableId types.String `tfsdk:"table_id" tf:"optional"`
 
-	TableType TableType `tfsdk:"table_type" tf:"optional"`
+	TableType types.String `tfsdk:"table_type" tf:"optional"`
 	// Time at which this table was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 	// Username of user who last modified the table.
@@ -3666,7 +3666,7 @@ type TableSummary struct {
 	// The full name of the table.
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 
-	TableType TableType `tfsdk:"table_type" tf:"optional"`
+	TableType types.String `tfsdk:"table_type" tf:"optional"`
 }
 
 type TableType string
@@ -3741,10 +3741,10 @@ type UpdateCatalog struct {
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
-	EnablePredictiveOptimization EnablePredictiveOptimization `tfsdk:"enable_predictive_optimization" tf:"optional"`
+	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
-	IsolationMode CatalogIsolationMode `tfsdk:"isolation_mode" tf:"optional"`
+	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-" url:"-"`
 	// New name for the catalog.
@@ -3780,7 +3780,7 @@ type UpdateExternalLocation struct {
 	Force types.Bool `tfsdk:"force" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
-	IsolationMode IsolationMode `tfsdk:"isolation_mode" tf:"optional"`
+	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Name of the external location.
 	Name types.String `tfsdk:"-" url:"-"`
 	// New name for the external location.
@@ -3811,7 +3811,7 @@ type UpdateMetastore struct {
 	// The lifetime of delta sharing recipient token in seconds.
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds" tf:"optional"`
 	// The scope of Delta Sharing enabled for the metastore.
-	DeltaSharingScope UpdateMetastoreDeltaSharingScope `tfsdk:"delta_sharing_scope" tf:"optional"`
+	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope" tf:"optional"`
 	// Unique ID of the metastore.
 	Id types.String `tfsdk:"-" url:"-"`
 	// New name for the metastore.
@@ -3913,7 +3913,7 @@ type UpdatePermissions struct {
 	// Full name of securable.
 	FullName types.String `tfsdk:"-" url:"-"`
 	// Type of securable.
-	SecurableType SecurableType `tfsdk:"-" url:"-"`
+	SecurableType types.String `tfsdk:"-" url:"-"`
 }
 
 type UpdateRegisteredModelRequest struct {
@@ -3935,7 +3935,7 @@ type UpdateSchema struct {
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
-	EnablePredictiveOptimization EnablePredictiveOptimization `tfsdk:"enable_predictive_optimization" tf:"optional"`
+	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
 	// Full name of the schema.
 	FullName types.String `tfsdk:"-" url:"-"`
 	// New name for the schema.
@@ -3964,7 +3964,7 @@ type UpdateStorageCredential struct {
 	Force types.Bool `tfsdk:"force" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
-	IsolationMode IsolationMode `tfsdk:"isolation_mode" tf:"optional"`
+	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-" url:"-"`
 	// New name for the storage credential.
@@ -4049,9 +4049,9 @@ type ValidationResult struct {
 	// Error message would exist when the result does not equal to **PASS**.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// The operation tested.
-	Operation ValidationResultOperation `tfsdk:"operation" tf:"optional"`
+	Operation types.String `tfsdk:"operation" tf:"optional"`
 	// The results of the tested operation.
-	Result ValidationResultResult `tfsdk:"result" tf:"optional"`
+	Result types.String `tfsdk:"result" tf:"optional"`
 }
 
 // The operation tested.
@@ -4154,7 +4154,7 @@ type VolumeInfo struct {
 	// The unique identifier of the volume
 	VolumeId types.String `tfsdk:"volume_id" tf:"optional"`
 
-	VolumeType VolumeType `tfsdk:"volume_type" tf:"optional"`
+	VolumeType types.String `tfsdk:"volume_type" tf:"optional"`
 }
 
 type VolumeType string
@@ -4185,7 +4185,7 @@ func (f *VolumeType) Type() string {
 }
 
 type WorkspaceBinding struct {
-	BindingType WorkspaceBindingBindingType `tfsdk:"binding_type" tf:"optional"`
+	BindingType types.String `tfsdk:"binding_type" tf:"optional"`
 
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
 }

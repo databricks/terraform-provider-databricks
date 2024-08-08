@@ -20,7 +20,7 @@ type AccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel PermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -136,7 +136,7 @@ type GetAccountUserRequest struct {
 	// example, `userName`, `name.givenName`, and `emails`.
 	SortBy types.String `tfsdk:"-" url:"sortBy,omitempty"`
 	// The order to sort the results.
-	SortOrder GetSortOrder `tfsdk:"-" url:"sortOrder,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sortOrder,omitempty"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-" url:"startIndex,omitempty"`
 }
@@ -256,7 +256,7 @@ type GetUserRequest struct {
 	// example, `userName`, `name.givenName`, and `emails`.
 	SortBy types.String `tfsdk:"-" url:"sortBy,omitempty"`
 	// The order to sort the results.
-	SortOrder GetSortOrder `tfsdk:"-" url:"sortOrder,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sortOrder,omitempty"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-" url:"startIndex,omitempty"`
 }
@@ -295,7 +295,7 @@ type Group struct {
 	// Corresponds to AWS instance profile/arn role.
 	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
 	// The schema of the group.
-	Schemas []GroupSchema `tfsdk:"schemas" tf:"optional"`
+	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 }
 
 type GroupSchema string
@@ -342,7 +342,7 @@ type ListAccountGroupsRequest struct {
 	// Attribute to sort the results.
 	SortBy types.String `tfsdk:"-" url:"sortBy,omitempty"`
 	// The order to sort the results.
-	SortOrder ListSortOrder `tfsdk:"-" url:"sortOrder,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sortOrder,omitempty"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-" url:"startIndex,omitempty"`
 }
@@ -366,7 +366,7 @@ type ListAccountServicePrincipalsRequest struct {
 	// Attribute to sort the results.
 	SortBy types.String `tfsdk:"-" url:"sortBy,omitempty"`
 	// The order to sort the results.
-	SortOrder ListSortOrder `tfsdk:"-" url:"sortOrder,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sortOrder,omitempty"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-" url:"startIndex,omitempty"`
 }
@@ -391,7 +391,7 @@ type ListAccountUsersRequest struct {
 	// example, `userName`, `name.givenName`, and `emails`.
 	SortBy types.String `tfsdk:"-" url:"sortBy,omitempty"`
 	// The order to sort the results.
-	SortOrder ListSortOrder `tfsdk:"-" url:"sortOrder,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sortOrder,omitempty"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-" url:"startIndex,omitempty"`
 }
@@ -415,7 +415,7 @@ type ListGroupsRequest struct {
 	// Attribute to sort the results.
 	SortBy types.String `tfsdk:"-" url:"sortBy,omitempty"`
 	// The order to sort the results.
-	SortOrder ListSortOrder `tfsdk:"-" url:"sortOrder,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sortOrder,omitempty"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-" url:"startIndex,omitempty"`
 }
@@ -426,7 +426,7 @@ type ListGroupsResponse struct {
 	// User objects returned in the response.
 	Resources []Group `tfsdk:"Resources" tf:"optional"`
 	// The schema of the service principal.
-	Schemas []ListResponseSchema `tfsdk:"schemas" tf:"optional"`
+	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
 	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
@@ -465,7 +465,7 @@ type ListServicePrincipalResponse struct {
 	// User objects returned in the response.
 	Resources []ServicePrincipal `tfsdk:"Resources" tf:"optional"`
 	// The schema of the List response.
-	Schemas []ListResponseSchema `tfsdk:"schemas" tf:"optional"`
+	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
 	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
@@ -492,7 +492,7 @@ type ListServicePrincipalsRequest struct {
 	// Attribute to sort the results.
 	SortBy types.String `tfsdk:"-" url:"sortBy,omitempty"`
 	// The order to sort the results.
-	SortOrder ListSortOrder `tfsdk:"-" url:"sortOrder,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sortOrder,omitempty"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-" url:"startIndex,omitempty"`
 }
@@ -544,7 +544,7 @@ type ListUsersRequest struct {
 	// example, `userName`, `name.givenName`, and `emails`.
 	SortBy types.String `tfsdk:"-" url:"sortBy,omitempty"`
 	// The order to sort the results.
-	SortOrder ListSortOrder `tfsdk:"-" url:"sortOrder,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sortOrder,omitempty"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-" url:"startIndex,omitempty"`
 }
@@ -555,7 +555,7 @@ type ListUsersResponse struct {
 	// User objects returned in the response.
 	Resources []User `tfsdk:"Resources" tf:"optional"`
 	// The schema of the List response.
-	Schemas []ListResponseSchema `tfsdk:"schemas" tf:"optional"`
+	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
 	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
@@ -591,14 +591,14 @@ type PartialUpdate struct {
 	Operations []Patch `tfsdk:"Operations" tf:"optional"`
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
-	Schemas []PatchSchema `tfsdk:"schemas" tf:"optional"`
+	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 }
 
 type PasswordAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -623,7 +623,7 @@ type PasswordPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -663,7 +663,7 @@ type PasswordPermissions struct {
 type PasswordPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel PasswordPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PasswordPermissionsRequest struct {
@@ -672,7 +672,7 @@ type PasswordPermissionsRequest struct {
 
 type Patch struct {
 	// Type of patch operation.
-	Op PatchOp `tfsdk:"op" tf:"optional"`
+	Op types.String `tfsdk:"op" tf:"optional"`
 	// Selection of patch operation
 	Path types.String `tfsdk:"path" tf:"optional"`
 	// Value to modify
@@ -742,14 +742,14 @@ type Permission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel PermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PermissionAssignment struct {
 	// Error response associated with a workspace permission assignment, if any.
 	Error types.String `tfsdk:"error" tf:"optional"`
 	// The permissions level of the principal.
-	Permissions []WorkspacePermission `tfsdk:"permissions" tf:"optional"`
+	Permissions []types.String `tfsdk:"permissions" tf:"optional"`
 	// Information about the principal assigned to the workspace.
 	Principal *PrincipalOutput `tfsdk:"principal" tf:"optional"`
 }
@@ -837,13 +837,13 @@ type PermissionOutput struct {
 	// The results of a permissions query.
 	Description types.String `tfsdk:"description" tf:"optional"`
 
-	PermissionLevel WorkspacePermission `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel PermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type PermissionsRequest struct {
@@ -923,7 +923,7 @@ type ServicePrincipal struct {
 	// Corresponds to AWS instance profile/arn role.
 	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
 	// The schema of the List response.
-	Schemas []ServicePrincipalSchema `tfsdk:"schemas" tf:"optional"`
+	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 }
 
 type ServicePrincipalSchema string
@@ -965,7 +965,7 @@ type UpdateWorkspaceAssignments struct {
 	// Array of permissions assignments to update on the workspace. Note that
 	// excluding this field will have the same effect as providing an empty list
 	// which will result in the deletion of all permissions for the principal.
-	Permissions []WorkspacePermission `tfsdk:"permissions" tf:""`
+	Permissions []types.String `tfsdk:"permissions" tf:""`
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-" url:"-"`
 	// The workspace ID.
@@ -995,13 +995,13 @@ type User struct {
 	Groups []ComplexValue `tfsdk:"groups" tf:"optional"`
 	// Databricks user ID. This is automatically set by Databricks. Any value
 	// provided by the client will be ignored.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id" tf:"optional" url:"-"`
 
 	Name *Name `tfsdk:"name" tf:"optional"`
 	// Corresponds to AWS instance profile/arn role.
 	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
 	// The schema of the user.
-	Schemas []UserSchema `tfsdk:"schemas" tf:"optional"`
+	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 	// Email address of the Databricks user.
 	UserName types.String `tfsdk:"userName" tf:"optional"`
 }

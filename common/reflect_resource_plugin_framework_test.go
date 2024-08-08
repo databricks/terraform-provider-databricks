@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -24,7 +25,9 @@ type DummyTfSdk struct {
 	NestedMap         map[string]DummyNestedTfSdk `tfsdk:"nested_map" tf:"optional"`
 	Repeated          []types.Int64               `tfsdk:"repeated" tf:"optional"`
 	Attributes        map[string]types.String     `tfsdk:"attributes" tf:"optional"`
-	EnumField         TestEnum                    `tfsdk:"enum_field" tf:"optional"`
+	EnumField         types.String                `tfsdk:"enum_field" tf:"optional"`
+	AdditionalField   types.String                `tfsdk:"additional_field" tf:"optional"`
+	DistinctField     types.String                `tfsdk:"distinct_field" tf:"optional"` // distinct field that the gosdk struct doesn't have
 	Irrelevant        types.String                `tfsdk:"-"`
 }
 
@@ -35,6 +38,25 @@ const TestEnumA TestEnum = `TEST_ENUM_A`
 const TestEnumB TestEnum = `TEST_ENUM_B`
 
 const TestEnumC TestEnum = `TEST_ENUM_C`
+
+func (f *TestEnum) String() string {
+	return string(*f)
+}
+
+// Set raw string value and validate it against allowed values
+func (f *TestEnum) Set(v string) error {
+	switch v {
+	case `TEST_ENUM_A`, `TEST_ENUM_B`, `TEST_ENUM_C`:
+		*f = TestEnum(v)
+		return nil
+	default:
+		return fmt.Errorf(`value "%s" is not one of "TEST_ENUM_A", "TEST_ENUM_B", "TEST_ENUM_C"`, v)
+	}
+}
+
+func (f *TestEnum) Type() string {
+	return "MonitorInfoStatus"
+}
 
 type DummyNestedTfSdk struct {
 	Name    types.String `tfsdk:"name" tf:"optional"`
@@ -56,6 +78,8 @@ type DummyGoSdk struct {
 	Repeated          []int64                     `json:"repeated"`
 	Attributes        map[string]string           `json:"attributes"`
 	EnumField         TestEnum                    `json:"enum_field"`
+	AdditionalField   string                      `json:"additional_field"`
+	DistinctField     string                      `json:"distinct_field"` // distinct field that the tfsdk struct doesn't have
 	ForceSendFields   []string                    `json:"-"`
 }
 
@@ -134,7 +158,7 @@ var tfSdkStruct = DummyTfSdk{
 		},
 	},
 	Attributes: map[string]types.String{"key": types.StringValue("value")},
-	EnumField:  TestEnumA,
+	EnumField:  types.StringValue("TEST_ENUM_A"),
 	Repeated:   []types.Int64{types.Int64Value(12), types.Int64Value(34)},
 }
 

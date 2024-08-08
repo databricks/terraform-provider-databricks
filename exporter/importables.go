@@ -34,6 +34,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 	"github.com/databricks/terraform-provider-databricks/repos"
+	tfsettings "github.com/databricks/terraform-provider-databricks/settings"
 	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
@@ -434,12 +435,31 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_sql_query"},
 			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "task.webhook_notifications.on_duration_warning_threshold_exceeded.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
+			{Path: "task.email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
+				Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_start", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_streaming_backlog_exceeded", Resource: "databricks_user",
+				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "webhook_notifications.on_duration_warning_threshold_exceeded.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
 			{Path: "email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "email_notifications.on_streaming_backlog_exceeded", Resource: "databricks_user",
+				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "task.library.whl", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
@@ -581,6 +601,21 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       task.ExistingClusterId,
 				})
 				ic.emitLibraries(task.Libraries)
+
+				if task.WebhookNotifications != nil {
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnFailure)
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnSuccess)
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnDurationWarningThresholdExceeded)
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnStart)
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnStreamingBacklogExceeded)
+				}
+				if task.EmailNotifications != nil {
+					ic.emitListOfUsers(task.EmailNotifications.OnDurationWarningThresholdExceeded)
+					ic.emitListOfUsers(task.EmailNotifications.OnFailure)
+					ic.emitListOfUsers(task.EmailNotifications.OnStart)
+					ic.emitListOfUsers(task.EmailNotifications.OnSuccess)
+					ic.emitListOfUsers(task.EmailNotifications.OnStreamingBacklogExceeded)
+				}
 			}
 			for _, jc := range job.JobClusters {
 				ic.importCluster(&jc.NewCluster)
@@ -606,6 +641,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.emitListOfUsers(job.EmailNotifications.OnFailure)
 				ic.emitListOfUsers(job.EmailNotifications.OnStart)
 				ic.emitListOfUsers(job.EmailNotifications.OnSuccess)
+				ic.emitListOfUsers(job.EmailNotifications.OnStreamingBacklogExceeded)
+			}
+			if job.WebhookNotifications != nil {
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnFailure)
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnSuccess)
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnDurationWarningThresholdExceeded)
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnStart)
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnStreamingBacklogExceeded)
 			}
 
 			return ic.importLibraries(r.Data, s)
@@ -3310,6 +3353,91 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parent_path", Resource: "databricks_directory"},
 			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
 			{Path: "parent_path", Resource: "databricks_service_principal"},
+		},
+	},
+	"databricks_notification_destination": {
+		WorkspaceLevel: true,
+		Service:        "settings",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("display_name").(string)
+			if name != "" {
+				name += "_"
+			}
+			id := d.Id()
+			if len(id) >= 8 {
+				id = id[:8]
+			}
+			return nameNormalizationRegex.ReplaceAllString(fmt.Sprintf("%s_%s", name, id), "_")
+		},
+		List: func(ic *importContext) error {
+			if !ic.meAdmin {
+				return fmt.Errorf("notifications can be imported only by admin")
+			}
+			notifications, err := ic.workspaceClient.NotificationDestinations.ListAll(ic.Context, settings.ListNotificationDestinationsRequest{})
+			if err != nil {
+				return err
+			}
+			for _, n := range notifications {
+				ic.Emit(&resource{
+					Resource: "databricks_notification_destination",
+					ID:       n.Id,
+				})
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			var notificationDestination tfsettings.NDStruct
+			s := ic.Resources["databricks_notification_destination"].Schema
+			common.DataToStructPointer(r.Data, s, &notificationDestination)
+			if notificationDestination.DestinationType == "EMAIL" && notificationDestination.Config != nil &&
+				notificationDestination.Config.Email != nil {
+				for _, email := range notificationDestination.Config.Email.Addresses {
+					ic.emitUserOrServicePrincipal(email)
+				}
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			var notificationDestination tfsettings.NDStruct
+			s := ic.Resources["databricks_notification_destination"].Schema
+			common.DataToStructPointer(d, s, &notificationDestination)
+			if notificationDestination.Config != nil {
+				switch notificationDestination.DestinationType {
+				case "WEBHOOK":
+					if notificationDestination.Config.GenericWebhook != nil {
+						switch pathString {
+						case "config.0.generic_webhook.0.url":
+							return !notificationDestination.Config.GenericWebhook.UrlSet
+						case "config.0.generic_webhook.0.username":
+							return !notificationDestination.Config.GenericWebhook.UsernameSet
+						case "config.0.generic_webhook.0.password":
+							return !notificationDestination.Config.GenericWebhook.PasswordSet
+						}
+					}
+				case "SLACK":
+					if notificationDestination.Config.Slack != nil && pathString == "config.0.slack.0.url" {
+						return !notificationDestination.Config.Slack.UrlSet
+					}
+				case "PAGERDUTY":
+					if notificationDestination.Config.Pagerduty != nil && pathString == "config.0.pagerduty.0.integration_key" {
+						return !notificationDestination.Config.Pagerduty.IntegrationKeySet
+					}
+				case "MICROSOFT_TEAMS":
+					if notificationDestination.Config.MicrosoftTeams != nil && pathString == "config.0.microsoft_teams.0.url" {
+						return !notificationDestination.Config.MicrosoftTeams.UrlSet
+					}
+				}
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "config.email.addresses", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "config.microsoft_teams.url", Variable: true},
+			{Path: "config.pagerduty.integration_key", Variable: true},
+			{Path: "config.generic_webhook.url", Variable: true},
+			{Path: "config.generic_webhook.username", Variable: true},
+			{Path: "config.generic_webhook.password", Variable: true},
+			{Path: "config.slack.url", Variable: true},
 		},
 	},
 	"databricks_online_table": {

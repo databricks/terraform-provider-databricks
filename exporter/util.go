@@ -26,6 +26,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 
 	"golang.org/x/exp/slices"
 
@@ -1561,4 +1562,13 @@ func isMatchingSecurableTypeAndName(ic *importContext, res *resource, ra *resour
 	res_securable_name := res.Data.Get("securable_name").(string)
 	ra_name, _ := ra.Get("name")
 	return ra.Type == ("databricks_"+res_securable_type) && ra_name.(string) == res_securable_name
+}
+
+func (ic *importContext) emitJobsDestinationNotifications(notifications []sdk_jobs.Webhook) {
+	for _, notification := range notifications {
+		ic.Emit(&resource{
+			Resource: "databricks_notification_destination",
+			ID:       notification.Id,
+		})
+	}
 }

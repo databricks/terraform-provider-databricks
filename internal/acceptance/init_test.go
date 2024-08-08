@@ -24,9 +24,7 @@ import (
 	dbproviderlogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	terraform_sdk_v2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -149,21 +147,7 @@ func run(t *testing.T, steps []step) {
 		"databricks": func() (tfprotov6.ProviderServer, error) {
 			ctx := context.Background()
 
-			upgradedSdkServer, err := tf5to6server.UpgradeServer(
-				context.Background(),
-				sdkPluginProvider.GRPCProvider,
-			)
-
-			if err != nil {
-				return nil, err
-			}
-
-			providers := []func() tfprotov6.ProviderServer{
-				providerserver.NewProtocol6(provider.GetDatabricksProviderPluginFramework()), // Example terraform-plugin-framework provider
-				func() tfprotov6.ProviderServer {
-					return upgradedSdkServer
-				},
-			}
+			providers := provider.GetProviderServer()
 
 			muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,6 +32,7 @@ func DataAwsAssumeRolePolicy() common.Resource {
 	return common.Resource{
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			externalID := d.Get("external_id").(string)
+			predictedRoleArn := d.Get("predicted_role_arn").(string)
 			policy := awsIamPolicy{
 				Version: "2012-10-17",
 				Statements: []*awsIamPolicyStatement{
@@ -47,6 +49,23 @@ func DataAwsAssumeRolePolicy() common.Resource {
 						},
 					},
 				},
+			}
+			if (len(predictedRoleArn) > 0) {
+				rootArn := predictedRoleArn[:strings.IndexByte(predictedRoleArn, '/')] + "/root";
+				elementToAdd := awsIamPolicyStatement{
+					Sid: "ExplicitSelfRoleAssumption",
+					Effect:  "Allow",
+					Actions: "sts:AssumeRole",
+					Condition: map[string]map[string]string{
+						"ArnLike": {
+							"aws:PrincipalArn": predictedRoleArn,
+						},
+					},
+					Principal: map[string]string{
+						"AWS": rootArn,
+					},
+				};
+				policy.Statements = append(policy.Statements, &elementToAdd);
 			}
 			if v, ok := d.GetOk("for_log_delivery"); ok {
 				if v.(bool) {
@@ -79,6 +98,12 @@ func DataAwsAssumeRolePolicy() common.Resource {
 			"external_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"predicted_role_arn": {
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+				Default:  "",
 			},
 			"json": {
 				Type:     schema.TypeString,

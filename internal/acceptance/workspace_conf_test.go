@@ -60,10 +60,12 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 		// Assert on server side error returned
 		ExpectError: regexp.MustCompile(`cannot update workspace conf: Invalid keys`),
 	}, step{
-		// Set enableIpAccessLists to true
+		// Set enableIpAccessLists to true with strange case and maxTokenLifetimeDays to verify
+		// failed deletion case
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
-					"enableIpAccessLists": "true"
+					"enableIpAccessLists": "TRue",
+					"maxTokenLifetimeDays": 90
 				}
 			}`,
 		Check: func(s *terraform.State) error {

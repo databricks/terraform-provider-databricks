@@ -1,6 +1,8 @@
 {
   "created_time":1700654567867,
   "job_id":1047501313827425,
+  "run_as_user_name": "user@domain.com",
+  "run_as_owner": false,
   "settings": {
     "format":"MULTI_TASK",
     "max_concurrent_runs":1,

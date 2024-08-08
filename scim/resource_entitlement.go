@@ -49,6 +49,7 @@ func ResourceEntitlements() common.Resource {
 				if err != nil {
 					return err
 				}
+				d.Set("group_id", split[1])
 				group.Entitlements.generateEmpty(d)
 				return group.Entitlements.readIntoData(d)
 			case "user":
@@ -56,6 +57,7 @@ func ResourceEntitlements() common.Resource {
 				if err != nil {
 					return err
 				}
+				d.Set("user_id", split[1])
 				user.Entitlements.generateEmpty(d)
 				return user.Entitlements.readIntoData(d)
 			case "spn":
@@ -63,6 +65,7 @@ func ResourceEntitlements() common.Resource {
 				if err != nil {
 					return err
 				}
+				d.Set("service_principal_id", split[1])
 				spn.Entitlements.generateEmpty(d)
 				return spn.Entitlements.readIntoData(d)
 			}

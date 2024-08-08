@@ -64,7 +64,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Access control
 
-* [databricks_permissions](permissions.md#Job-Endpoint-usage) can control which groups or individual users can *Can Use* or *Can Manage* SQL warehouses.
+* [databricks_permissions](permissions.md#job-usage) can control which groups or individual users can *Can Use* or *Can Manage* SQL warehouses.
 * `databricks_sql_access` on [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
 ## Timeouts

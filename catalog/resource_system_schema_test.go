@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -72,7 +72,7 @@ func TestSystemSchemaCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -157,7 +157,7 @@ func TestSystemSchemaUpdate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -224,7 +224,7 @@ func TestSystemSchemaRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -282,7 +282,7 @@ func TestSystemSchemaDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

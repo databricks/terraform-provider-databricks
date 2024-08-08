@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/serving"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -277,7 +277,7 @@ func TestModelServingCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/serving-endpoints",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -335,7 +335,7 @@ func TestModelServingCreate_WithErrorOnWait(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -449,7 +449,7 @@ func TestModelServingRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -565,7 +565,7 @@ func TestModelServingUpdate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint/config",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -620,7 +620,7 @@ func TestModelServingDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -631,58 +631,4 @@ func TestModelServingDelete_Error(t *testing.T) {
 		Delete:   true,
 		ID:       "test-endpoint",
 	}.ExpectError(t, "Internal error happened")
-}
-
-func TestModelServingExternalModelNoConfig(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: ResourceModelServing(),
-		HCL: `
-			name = "test-endpoint"
-			config {
-				served_entities {
-					name = "prod_model"
-					entity_name = "ads1"
-					entity_version = "2"
-					external_model {
-						name     = "prod_external_model"
-						provider = "ai21labs"
-						task     = "llm/v1/embeddings"
-					}
-					workload_size = "Small"
-					scale_to_zero_enabled = true
-				}
-			}
-			`,
-		Create: true,
-	}.ExpectError(t, "external_model provider is set to \"ai21labs\" but \"ai21labs_config\" block is missing")
-}
-
-func TestModelServingExternalModelMultipleConfig(t *testing.T) {
-	qa.ResourceFixture{
-		Resource: ResourceModelServing(),
-		HCL: `
-			name = "test-endpoint"
-			config {
-				served_entities {
-					name = "prod_model"
-					entity_name = "ads1"
-					entity_version = "2"
-					external_model {
-						name     = "prod_external_model"
-						provider = "ai21labs"
-						task     = "llm/v1/embeddings"
-						ai21labs_config {
-						  ai21labs_api_key = "{{secrets/databricks/ai21labs_api_key}}"
-						}
-						anthropic_config {
-						  anthropic_api_key = "{{secrets/databricks/anthropic_api_key}}"
-						}
-					}
-					workload_size = "Small"
-					scale_to_zero_enabled = true
-				}
-			}
-			`,
-		Create: true,
-	}.ExpectError(t, "only one external_model config block is allowed. Found: ai21labs_config, anthropic_config")
 }

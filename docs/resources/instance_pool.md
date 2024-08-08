@@ -45,7 +45,7 @@ The following arguments are supported:
 * `node_type_id` - (Required) (String) The node type for the instances in the pool. All clusters attached to the pool inherit this node type and the pool’s idle instances are allocated based on this type. You can retrieve a list of available node types by using the [List Node Types API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistnodetypes) call.
 * `custom_tags` - (Optional) (Map) Additional tags for instance pool resources. Databricks tags all pool resources (e.g. AWS & Azure instances and Disk volumes). The tags of the instance pool will propagate to the clusters using the pool (see the [official documentation](https://docs.databricks.com/administration-guide/account-settings/usage-detail-tags-aws.html#tag-propagation)). Attempting to set the same tags in both cluster and instance pool will raise an error. *Databricks allows at most 43 custom tags.*
 * `enable_elastic_disk` - (Optional) (Bool) Autoscaling Local Storage: when enabled, the instances in the pool dynamically acquire additional disk space when they are running low on disk space.
-* `preloaded_spark_versions` - (Optional) (List) A list with at most one runtime version the pool installs on each instance. Pool clusters that use a preloaded runtime version start faster as they do not have to wait for the image to download. You can retrieve them via [databricks_spark_version](../data-sources/spark-version.md) data source or via  [Runtime Versions API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistsparkversions) call.
+* `preloaded_spark_versions` - (Optional) (List) A list with at most one runtime version the pool installs on each instance. Pool clusters that use a preloaded runtime version start faster as they do not have to wait for the image to download. You can retrieve them via [databricks_spark_version](../data-sources/spark_version.md) data source or via  [Runtime Versions API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistsparkversions) call.
 
 ### aws_attributes Configuration Block
 
@@ -62,7 +62,7 @@ The following options are [available](https://docs.databricks.com/dev-tools/api/
 The following options are [available](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes):
 
 * `availability` - (Optional) Availability type used for all nodes. Valid values are `SPOT_AZURE` and `ON_DEMAND_AZURE`.
-* `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify the lowest price.
+* `spot_bid_max_price` - (Optional) The max bid price used for Azure spot instances. You can set this to greater than or equal to the current spot price. You can also set this to `-1`, which specifies that the instance cannot be evicted on the basis of price. The price for the instance will be the current price for spot instances or the price for a standard instance.
 
 ### gcp_attributes Configuration Block
 

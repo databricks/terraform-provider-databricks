@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 
@@ -574,6 +575,19 @@ type ClustersAPI struct {
 	context context.Context
 }
 
+// Temporary function to be used until all resources are migrated to Go SDK
+// Create a workspace client
+func (a ClustersAPI) WorkspaceClient() *databricks.WorkspaceClient {
+	client, _ := a.client.WorkspaceClient()
+	return client
+}
+
+// Temporary function to be used until all resources are migrated to Go SDK
+// Return a context
+func (a ClustersAPI) Context() context.Context {
+	return a.context
+}
+
 // Create creates a new Spark cluster and waits till it's running
 func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 	var ci ClusterID
@@ -903,7 +917,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	r := Cluster{
 		NumWorkers:  1,
 		ClusterName: name,
-		SparkVersion: a.LatestSparkVersionOrDefault(SparkVersionRequest{
+		SparkVersion: LatestSparkVersionOrDefault(a.Context(), a.WorkspaceClient(), compute.SparkVersionRequest{
 			Latest:          true,
 			LongTermSupport: true,
 		}),

@@ -12,11 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -383,12 +385,28 @@ func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 	tokensAPI := tokens.NewTokensAPI(workspacesAPI.context, client)
 	lifetime := time.Duration(wsToken.Token.LifetimeSeconds) * time.Second
 	token, err := tokensAPI.Create(lifetime, wsToken.Token.Comment)
+	if isInvalidClient(err) {
+		return fmt.Errorf("cannot create token: the principal used by Databricks (client ID %s) is not authorized to create a token in this workspace. "+
+			"If this is a UC-enabled workspace, add this client to the workspace, either using databricks_mws_permission_assignment or manually (see https://docs.databricks.com/en/admin/users-groups/service-principals.html#assign-a-service-principal-to-a-workspace-using-the-account-console for instructions). "+
+			"If this is not a UC-enabled workspace, remove the token block from this configuration and create a workspace-level service principal to configure resources in the workspace (see https://docs.databricks.com/en/admin/users-groups/service-principals.html#add-a-service-principal-to-a-workspace-using-the-workspace-admin-settings for instructions)", client.Config.ClientID)
+	}
 	if err != nil {
 		return fmt.Errorf("cannot create token: %w", err)
 	}
 	wsToken.Token.TokenID = token.TokenInfo.TokenID
 	wsToken.Token.TokenValue = SensitiveString(token.TokenValue)
 	return common.StructToData(wsToken, workspaceSchema, d)
+}
+
+// isInvalidClient checks whether the API request failed due to the client being invalid.
+// This can happen if the provided client does not belong to the workspace. For UC workspaces,
+// it is possible for an admin to add the user/service principal used by Terraform to the
+// workspace so that Terraform is able to create a token. For non-UC workspaces, it is not
+// possible to add account-level users/service principals to the workspace, so customers
+// need to manually create a workspace-level service principal and use it to authenticate to
+// the workspace.
+func isInvalidClient(err error) bool {
+	return errors.Is(err, databricks.ErrUnauthenticated)
 }
 
 func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
@@ -404,6 +422,13 @@ func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 	}
 	tokensAPI := tokens.NewTokensAPI(a.context, client)
 	_, err = tokensAPI.Read(wsToken.Token.TokenID)
+	// If we cannot authenticate to the workspace and we're using an in-house OAuth principal,
+	// log a warning but do not fail. This can happen if the provider is authenticated with a
+	// different principal than was used to create the workspace.
+	if isInvalidClient(err) {
+		tflog.Debug(a.context, fmt.Sprintf("unable to fetch token with ID %s from workspace using the provided service principal, continuing", wsToken.Token.TokenID))
+		return nil
+	}
 	if apierr.IsMissing(err) {
 		return CreateTokenIfNeeded(a, workspaceSchema, d)
 	}
@@ -413,14 +438,17 @@ func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
 	return nil
 }
 
-func removeTokenIfNeeded(a WorkspacesAPI,
-	workspaceSchema map[string]*schema.Schema, tokenID string, d *schema.ResourceData) error {
+func removeTokenIfNeeded(a WorkspacesAPI, tokenID string, d *schema.ResourceData) error {
 	client, err := a.client.ClientForHost(a.context, d.Get("workspace_url").(string))
 	if err != nil {
 		return err
 	}
 	tokensAPI := tokens.NewTokensAPI(a.context, client)
 	err = tokensAPI.Delete(tokenID)
+	if isInvalidClient(err) {
+		tflog.Debug(a.context, fmt.Sprintf("unable to delete token with ID %s from workspace using the provided service principal, continuing", tokenID))
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("cannot remove token: %w", err)
 	}
@@ -437,12 +465,12 @@ func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
 			return CreateTokenIfNeeded(workspacesAPI, workspaceSchema, d)
 		case len(old) > 0 && len(new) == 0: // delete
 			raw := old[0].(map[string]any)
-			return removeTokenIfNeeded(workspacesAPI, workspaceSchema,
-				raw["token_id"].(string), d)
+			id := raw["token_id"].(string)
+			return removeTokenIfNeeded(workspacesAPI, id, d)
 		case len(old) > 0 && len(new) > 0: // delete & create
 			rawOld := old[0].(map[string]any)
-			err := removeTokenIfNeeded(workspacesAPI, workspaceSchema,
-				rawOld["token_id"].(string), d)
+			id := rawOld["token_id"].(string)
+			err := removeTokenIfNeeded(workspacesAPI, id, d)
 			if err != nil {
 				return err
 			}

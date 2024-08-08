@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -56,7 +56,7 @@ func TestResourceGroupInstanceProfileCreate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -80,7 +80,7 @@ func TestResourceGroupInstanceProfileCreate_Error_InvalidARN(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -103,7 +103,7 @@ func TestResourceGroupInstanceProfileCreate_Error_OtherARN(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -152,7 +152,7 @@ func TestResourceGroupInstanceProfileRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=roles",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -192,7 +192,7 @@ func TestResourceGroupInstanceProfileRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=roles",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -232,7 +232,7 @@ func TestResourceGroupInstanceProfileDelete_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

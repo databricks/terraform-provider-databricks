@@ -11,7 +11,7 @@ func TestSharesData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/shares",
+				Resource: "/api/2.1/unity-catalog/shares?",
 				Response: Shares{
 					Shares: []ShareInfo{
 						{

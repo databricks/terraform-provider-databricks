@@ -37,13 +37,13 @@ resource "databricks_group_member" "my_member_spn" {
 
 Data source allows you to pick service principals by the following attributes
 
-- `display_name_contains` - (Optional) Only return [databricks_service_principal](databricks_service_principal.md) display name that match the given name string
+- `display_name_contains` - (Optional) Only return [databricks_service_principal](service_principal.md) display name that match the given name string
 
 ## Attribute Reference
 
 Data source exposes the following attributes:
 
-- `application_ids` - List of `application_ids` of service principals Individual service principal can be retrieved using [databricks_service_principal](databricks_service_principal.md) data source
+- `application_ids` - List of `application_ids` of service principals Individual service principal can be retrieved using [databricks_service_principal](service_principal.md) data source
 
 ## Related Resources
 

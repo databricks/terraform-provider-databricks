@@ -19,7 +19,7 @@ variable "prefix" {}
 
 resource "databricks_mws_network_connectivity_config" "ncc" {
   provider = databricks.account
-  name     = "Network Connectivity Config for ${var.prefix}"
+  name     = "ncc-for-${var.prefix}"
   region   = var.region
 }
 

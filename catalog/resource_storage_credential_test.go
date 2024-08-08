@@ -3,9 +3,11 @@ package catalog
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestStorageCredentialsCornerCases(t *testing.T) {
@@ -57,6 +59,96 @@ func TestCreateStorageCredentials(t *testing.T) {
 		"aws_iam_role.0.role_arn":    "def",
 		"name":                       "a",
 		"storage_credential_id":      "1234-5678",
+	})
+}
+
+func TestCreateIsolatedStorageCredential(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockStorageCredentialsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateStorageCredential{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleRequest{
+					RoleArn: "def",
+				},
+				Comment: "c",
+			}).Return(&catalog.StorageCredentialInfo{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleResponse{
+					RoleArn:    "def",
+					ExternalId: "123",
+				},
+				MetastoreId: "d",
+				Id:          "1234-5678",
+				Owner:       "f",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateStorageCredential{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleRequest{
+					RoleArn: "def",
+				},
+				Comment:       "c",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
+			}).Return(&catalog.StorageCredentialInfo{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleResponse{
+					RoleArn:    "def",
+					ExternalId: "123",
+				},
+				MetastoreId:   "d",
+				Id:            "1234-5678",
+				Owner:         "f",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
+			}, nil)
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "e",
+				WorkspaceId: 123456789101112,
+			}, nil)
+			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: "a",
+				SecurableType: "storage_credential",
+				Add: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}).Return(&catalog.WorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}, nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.StorageCredentialInfo{
+				Name: "a",
+				AwsIamRole: &catalog.AwsIamRoleResponse{
+					RoleArn:    "def",
+					ExternalId: "123",
+				},
+				MetastoreId:   "d",
+				Id:            "1234-5678",
+				Owner:         "f",
+				IsolationMode: "ISOLATION_MODE_ISOLATED",
+			}, nil)
+		},
+		Resource: ResourceStorageCredential(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		aws_iam_role {
+			role_arn = "def"
+		}
+		comment = "c"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"aws_iam_role.0.external_id": "123",
+		"aws_iam_role.0.role_arn":    "def",
+		"name":                       "a",
+		"storage_credential_id":      "1234-5678",
+		"isolation_mode":             "ISOLATION_MODE_ISOLATED",
 	})
 }
 
@@ -244,6 +336,59 @@ func TestCreateStorageCredentialsReadOnly(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateStorageCredentialCloudflare(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: catalog.CreateStorageCredential{
+					Name: "a",
+					CloudflareApiToken: &catalog.CloudflareApiToken{
+						AccountId:       "1234",
+						AccessKeyId:     "1234",
+						SecretAccessKey: "1234",
+					},
+					Comment: "c",
+				},
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+					CloudflareApiToken: &catalog.CloudflareApiToken{
+						AccountId:   "1234",
+						AccessKeyId: "1234",
+					},
+					MetastoreId: "d",
+					Id:          "1234-5678",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		cloudflare_api_token {
+			account_id = "1234"
+			access_key_id = "1234"
+			secret_access_key = "1234"
+		}
+		comment = "c"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"cloudflare_api_token.0.secret_access_key": "1234",
+		"cloudflare_api_token.0.access_key_id":     "1234",
+		"cloudflare_api_token.0.account_id":        "1234",
+		"name":                                     "a",
+		"storage_credential_id":                    "1234-5678",
+	})
+}
+
 func TestUpdateStorageCredentials(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -414,7 +559,7 @@ func TestUpdateStorageCredentialsRollback(t *testing.T) {
 						RoleArn: "CHANGED",
 					},
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},

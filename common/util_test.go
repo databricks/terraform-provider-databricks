@@ -2,6 +2,10 @@ package common
 
 import (
 	"context"
+	"crypto/md5"
+	"fmt"
+	"math/rand"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,4 +37,33 @@ func TestSuppressDiffWhitespaceChange(t *testing.T) {
 
 func TestMustInt64(t *testing.T) {
 	assert.Equal(t, int64(123), MustInt64("123"))
+}
+
+func TestReadFileContent(t *testing.T) {
+	tmpDir := fmt.Sprintf("/tmp/Dashboard-%f", rand.Float64())
+	fileName := tmpDir + "/Dashboard.json"
+	os.Mkdir(tmpDir, 0755)
+	os.WriteFile(fileName, []byte("hello"), 0644)
+	content, err := ReadFileContent(fileName)
+	assert.Equal(t, []byte("hello"), content)
+	assert.NoError(t, err)
+}
+
+func TestCalculateMd5Hash(t *testing.T) {
+	hash := CalculateMd5Hash([]byte("hello"))
+	assert.Equal(t, fmt.Sprintf("%x", md5.Sum([]byte("hello"))), hash)
+}
+
+func TestReadSerializedJsonContent(t *testing.T) {
+	_, md5Hash, err := ReadSerializedJsonContent("hello", "")
+	assert.Equal(t, fmt.Sprintf("%x", md5.Sum([]byte("hello"))), md5Hash)
+	assert.NoError(t, err)
+
+	tmpDir := fmt.Sprintf("/tmp/Dashboard-%f", rand.Float64())
+	fileName := tmpDir + "/Dashboard.json"
+	os.Mkdir(tmpDir, 0755)
+	os.WriteFile(fileName, []byte("hello"), 0644)
+	_, md5Hash, err = ReadSerializedJsonContent("", fileName)
+	assert.Equal(t, fmt.Sprintf("%x", md5.Sum([]byte("hello"))), md5Hash)
+	assert.NoError(t, err)
 }

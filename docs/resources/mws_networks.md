@@ -82,7 +82,7 @@ resource "databricks_mws_networks" "this" {
 }
 ```
 
-In order to create a VPC [that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) you would need to add the `vpc_endpoint_id` Attributes from [mws_vpc_endpoint](mws_vpc_endpoint.md) resources into the [databricks_mws_networks](databricks_mws_networks.md) resource. For example:
+In order to create a VPC [that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) you would need to add the `vpc_endpoint_id` Attributes from [mws_vpc_endpoint](mws_vpc_endpoint.md) resources into the [databricks_mws_networks](mws_networks.md) resource. For example:
 
 ```hcl
 resource "databricks_mws_networks" "this" {
@@ -157,7 +157,7 @@ resource "databricks_mws_networks" "this" {
 }
 ```
 
-In order to create a VPC [that leverages GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) you would need to add the `vpc_endpoint_id` Attributes from [mws_vpc_endpoint](mws_vpc_endpoint.md) resources into the [databricks_mws_networks](databricks_mws_networks.md) resource. For example:
+In order to create a VPC [that leverages GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) you would need to add the `vpc_endpoint_id` Attributes from [mws_vpc_endpoint](mws_vpc_endpoint.md) resources into the [databricks_mws_networks](mws_networks.md) resource. For example:
 
 ```hcl
 resource "databricks_mws_networks" "this" {

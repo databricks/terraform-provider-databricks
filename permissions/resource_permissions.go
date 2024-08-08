@@ -220,10 +220,14 @@ func (a PermissionsAPI) Delete(objectID string, d *schema.ResourceData) error {
 
 		// handle special case when we add extra permission to a user home dir
 		if v, ok := d.GetOk("directory_path"); ok {
-			if v.(string) == fmt.Sprintf("/Users/%s", acl.UserName) && acl.AllPermissions[0].PermissionLevel == "CAN_MANAGE" {
-				// we can not remove user's own home CAN_MANAGE
-				if change, direct := acl.toAccessControlChange(); direct {
-					accl.AccessControlList = append(accl.AccessControlList, change)
+			if v.(string) == fmt.Sprintf("/Users/%s", acl.UserName) {
+				for _, perm := range acl.AllPermissions {
+					if perm.PermissionLevel == "CAN_MANAGE" {
+						// we can not remove user's own home CAN_MANAGE
+						if change, direct := acl.toAccessControlChange(); direct {
+							accl.AccessControlList = append(accl.AccessControlList, change)
+						}
+					}
 				}
 			}
 		}

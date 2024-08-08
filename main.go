@@ -9,8 +9,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/exporter"
 	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
-	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 )
 
 const startMessageFormat = `Databricks Terraform Provider
@@ -37,11 +37,8 @@ func main() {
 
 	log.Printf(startMessageFormat, common.Version())
 
-	providers := provider.GetProviderServer()
-
 	ctx := context.Background()
-	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
-
+	providerServer, err := provider.GetProviderServer(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,7 +50,7 @@ func main() {
 
 	err = tf6server.Serve(
 		"registry.terraform.io/databricks/databricks",
-		muxServer.ProviderServer,
+		func() tfprotov6.ProviderServer { return providerServer },
 		serveOpts...,
 	)
 

@@ -7,9 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 )
 
-func GetProviderServer() []func() tfprotov6.ProviderServer {
+func GetProviderServer(ctx context.Context) (tfprotov6.ProviderServer, error) {
 	sdkPluginProvider := DatabricksProvider()
 
 	upgradedSdkPluginProvider, err := tf5to6server.UpgradeServer(
@@ -29,5 +30,11 @@ func GetProviderServer() []func() tfprotov6.ProviderServer {
 		providerserver.NewProtocol6(pluginFrameworkProvider),
 	}
 
-	return providers
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return muxServer.ProviderServer(), nil
 }

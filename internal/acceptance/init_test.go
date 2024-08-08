@@ -25,7 +25,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	terraform_sdk_v2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -147,15 +146,13 @@ func run(t *testing.T, steps []step) {
 		"databricks": func() (tfprotov6.ProviderServer, error) {
 			ctx := context.Background()
 
-			providers := provider.GetProviderServer()
-
-			muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+			providerServer, err := provider.GetProviderServer(ctx)
 
 			if err != nil {
 				return nil, err
 			}
 
-			return muxServer.ProviderServer(), nil
+			return providerServer, nil
 		},
 	}
 

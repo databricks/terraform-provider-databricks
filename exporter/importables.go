@@ -33,6 +33,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
+	tfpipelines "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	tfsettings "github.com/databricks/terraform-provider-databricks/settings"
 	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
@@ -2020,7 +2021,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var pipeline pipelines.PipelineSpec
+			var pipeline tfpipelines.Pipeline
 			s := ic.Resources["databricks_pipeline"].Schema
 			common.DataToStructPointer(r.Data, s, &pipeline)
 			if pipeline.Catalog != "" && pipeline.Target != "" {
@@ -2029,15 +2030,17 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       pipeline.Catalog + "." + pipeline.Target,
 				})
 			}
-			for _, lib := range pipeline.Libraries {
-				if lib.Notebook != nil {
-					ic.emitNotebookOrRepo(lib.Notebook.Path)
+			if pipeline.Deployment == nil || pipeline.Deployment.Kind == "BUNDLE" {
+				for _, lib := range pipeline.Libraries {
+					if lib.Notebook != nil {
+						ic.emitNotebookOrRepo(lib.Notebook.Path)
+					}
+					if lib.File != nil {
+						ic.emitNotebookOrRepo(lib.File.Path)
+					}
+					ic.emitIfDbfsFile(lib.Jar)
+					ic.emitIfDbfsFile(lib.Whl)
 				}
-				if lib.File != nil {
-					ic.emitNotebookOrRepo(lib.File.Path)
-				}
-				ic.emitIfDbfsFile(lib.Jar)
-				ic.emitIfDbfsFile(lib.Whl)
 			}
 			// Emit clusters
 			for _, cluster := range pipeline.Clusters {
@@ -2090,9 +2093,17 @@ var resourcesMap map[string]importable = map[string]importable{
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
-			numLibraries := r.Data.Get("library.#").(int)
+			var pipeline tfpipelines.Pipeline
+			s := ic.Resources["databricks_pipeline"].Schema
+			common.DataToStructPointer(r.Data, s, &pipeline)
+			if pipeline.Deployment != nil && pipeline.Deployment.Kind == "BUNDLE" {
+				log.Printf("[WARN] Ignoring DLT Pipeline with ID %s as deployed with DABs", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_pipeline. id=%s", r.ID))
+				return true
+			}
+			numLibraries := len(pipeline.Libraries)
 			if numLibraries == 0 {
-				log.Printf("[WARN] Ignoring DLT Pipeline with ID %s", r.ID)
+				log.Printf("[WARN] Ignoring DLT Pipeline with ID %s due to the lack of libraries", r.ID)
 				ic.addIgnoredResource(fmt.Sprintf("databricks_pipeline. id=%s", r.ID))
 			}
 			return numLibraries == 0

@@ -296,9 +296,30 @@ func TestRepoIgnore(t *testing.T) {
 func TestDLTIgnore(t *testing.T) {
 	ic := importContextForTest()
 	d := dlt_pipelines.ResourcePipeline().ToResource().TestResourceData()
+	scm := dlt_pipelines.ResourcePipeline().Schema
+
 	d.SetId("12345")
 	r := &resource{ID: "12345", Data: d}
 	// job without libraries
+	assert.True(t, resourcesMap["databricks_pipeline"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+
+	// job deployed by DABs
+	d.MarkNewResource()
+	pipeline := dlt_pipelines.Pipeline{
+		PipelineSpec: pipelines.PipelineSpec{
+			Deployment: &pipelines.PipelineDeployment{
+				Kind: "BUNDLE",
+			},
+		},
+	}
+	err := common.StructToData(pipeline, scm, d)
+	require.NoError(t, err)
+
+	r = &resource{ID: "12345", Data: d}
+	for k := range ic.ignoredResources {
+		delete(ic.ignoredResources, k)
+	}
 	assert.True(t, resourcesMap["databricks_pipeline"].Ignore(ic, r))
 	assert.Equal(t, 1, len(ic.ignoredResources))
 }

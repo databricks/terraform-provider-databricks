@@ -371,9 +371,13 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 
 		// handle special case when we add extra permission to a user home dir
 		if v, ok := d.GetOk("directory_path"); ok {
-			if v.(string) == fmt.Sprintf("/Users/%s", accessControl.UserName) && accessControl.AllPermissions[0].PermissionLevel == "CAN_MANAGE" {
-				// not possible to remove user's own home CAN_MANAGE
-				continue
+			if v.(string) == fmt.Sprintf("/Users/%s", accessControl.UserName) {
+				for _, perm := range accessControl.AllPermissions {
+					if perm.PermissionLevel == "CAN_MANAGE" {
+						// not possible to remove user's own home CAN_MANAGE
+						continue
+					}
+				}
 			}
 		}
 		if change, direct := accessControl.toAccessControlChange(); direct {

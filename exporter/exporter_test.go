@@ -24,6 +24,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -305,6 +306,13 @@ var emptyRepos = qa.HTTPFixture{
 	Response:     repos.ReposListResponse{},
 }
 
+var emptyVectorSearch = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/vector-search/endpoints?",
+	Response:     sdk_vs.ListEndpointResponse{},
+}
+
 var emptyShares = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -484,6 +492,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlEndpoints,
 			emptySqlQueries,
 			emptySqlAlerts,
+			emptyVectorSearch,
 			emptyPipelines,
 			emptyClusterPolicies,
 			emptyPolicyFamilies,
@@ -757,6 +766,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyIpAccessLIst,
 			emptyWorkspace,
 			emptySqlEndpoints,
+			emptyVectorSearch,
 			emptySqlQueries,
 			emptySqlDashboards,
 			emptySqlAlerts,

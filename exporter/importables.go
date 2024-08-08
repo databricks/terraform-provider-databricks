@@ -25,6 +25,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -2615,6 +2616,10 @@ var resourcesMap map[string]importable = map[string]importable{
 						// TODO: it's better to use SecurableKind if it will be added to the Go SDK
 						switch table.DataSourceFormat {
 						case "VECTOR_INDEX_FORMAT":
+							ic.Emit(&resource{
+								Resource: "databricks_vector_search_index",
+								ID:       table.FullName,
+							})
 						case "MYSQL_FORMAT":
 							ic.EmitIfUpdatedAfterMillis(&resource{
 								Resource:  "databricks_online_table",
@@ -3311,8 +3316,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-online-tables",
 		Import: func(ic *importContext, r *resource) error {
-			tableFullName := r.ID
-			ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
+			ic.emitUCGrantsWithOwner("table/"+r.ID, r)
 			ic.Emit(&resource{
 				Resource: "databricks_sql_table",
 				ID:       r.Data.Get("spec.0.source_table_full_name").(string),
@@ -3327,6 +3331,94 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
 			{Path: "spec.source_table_full_name", Resource: "databricks_sql_table"},
+		},
+	},
+	"databricks_vector_search_endpoint": {
+		WorkspaceLevel: true,
+		Service:        "vector-search",
+		List: func(ic *importContext) error {
+			endpoints, err := ic.workspaceClient.VectorSearchEndpoints.ListEndpointsAll(ic.Context, vectorsearch.ListEndpointsRequest{})
+			if err != nil {
+				log.Printf("[ERROR] listing vector search endpoints: %s", err.Error())
+				return err
+			}
+			for _, ep := range endpoints {
+				ic.EmitIfUpdatedAfterMillis(&resource{
+					Resource: "databricks_vector_search_endpoint",
+					ID:       ep.Name,
+				}, ep.LastUpdatedTimestamp, fmt.Sprintf("vector search endpoint '%s'", ep.Name))
+
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			indexes, err := ic.workspaceClient.VectorSearchIndexes.ListIndexesAll(ic.Context, vectorsearch.ListIndexesRequest{
+				EndpointName: r.ID,
+			})
+			if err != nil {
+				log.Printf("[ERROR] listing vector search indexes for endpoint %s: %s", r.ID, err.Error())
+				return err
+			}
+			for _, idx := range indexes {
+				ic.Emit(&resource{
+					Resource: "databricks_vector_search_index",
+					ID:       idx.Name,
+				})
+			}
+			return nil
+		},
+	},
+	"databricks_vector_search_index": {
+		WorkspaceLevel: true,
+		Service:        "vector-search",
+		Import: func(ic *importContext, r *resource) error {
+			ic.emitUCGrantsWithOwner("table/"+r.ID, r)
+			s := ic.Resources["databricks_vector_search_index"].Schema
+			var vsi vectorsearch.VectorIndex
+			common.DataToStructPointer(r.Data, s, &vsi)
+			if vsi.EndpointName != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_vector_search_endpoint",
+					ID:       vsi.EndpointName,
+				})
+			}
+			if vsi.DeltaSyncIndexSpec != nil {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_table",
+					ID:       vsi.DeltaSyncIndexSpec.SourceTable,
+				})
+				if vsi.DeltaSyncIndexSpec.EmbeddingWritebackTable != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_sql_table",
+						ID:       vsi.DeltaSyncIndexSpec.EmbeddingWritebackTable,
+					})
+				}
+				for _, col := range vsi.DeltaSyncIndexSpec.EmbeddingSourceColumns {
+					if col.EmbeddingModelEndpointName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_model_serving",
+							ID:       col.EmbeddingModelEndpointName,
+						})
+					}
+				}
+			}
+			if vsi.DirectAccessIndexSpec != nil {
+				for _, col := range vsi.DirectAccessIndexSpec.EmbeddingSourceColumns {
+					if col.EmbeddingModelEndpointName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_model_serving",
+							ID:       col.EmbeddingModelEndpointName,
+						})
+					}
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "delta_sync_index_spec.source_table", Resource: "databricks_sql_table"},
+			{Path: "endpoint_name", Resource: "databricks_vector_search_endpoint"},
+			{Path: "delta_sync_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
+			{Path: "direct_access_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
 		},
 	},
 }

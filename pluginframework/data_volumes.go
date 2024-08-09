@@ -7,7 +7,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -34,22 +33,10 @@ func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.Metadat
 }
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		// TODO: Use StructToSchemaMap to generate the schema once it supports schema for data sources
-		Attributes: map[string]schema.Attribute{
-			"catalog_name": schema.StringAttribute{
-				Required: true,
-			},
-			"schema_name": schema.StringAttribute{
-				Required: true,
-			},
-			"ids": schema.ListAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
-			},
-		},
-	}
+	resp.Schema = common.PluginFrameworkDataSourceStructToSchema(VolumesList{}, func(c common.CustomizableSchemaPluginFrameworkDataSource) common.CustomizableSchemaPluginFrameworkDataSource {
+		c.SetComputed("ids")
+		return c
+	})
 }
 
 func (d *VolumesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {

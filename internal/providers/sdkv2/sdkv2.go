@@ -100,6 +100,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_metastores":                           catalog.DataSourceMetastores().ToResource(),
 			"databricks_mlflow_experiment":                    mlflow.DataSourceExperiment().ToResource(),
 			"databricks_mlflow_model":                         mlflow.DataSourceModel().ToResource(),
+			"databricks_mlflow_models":                        mlflow.DataSourceModels().ToResource(),
 			"databricks_mws_credentials":                      mws.DataSourceMwsCredentials().ToResource(),
 			"databricks_mws_workspaces":                       mws.DataSourceMwsWorkspaces().ToResource(),
 			"databricks_node_type":                            clusters.DataSourceNodeType().ToResource(),

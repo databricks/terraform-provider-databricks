@@ -16,6 +16,16 @@ func TestUcAccStorageCredential(t *testing.T) {
 					}
 					skip_validation = true
 					comment = "Managed by TF"
+				}
+				resource "databricks_storage_credential" "r2" {
+					name = "r2-{var.RANDOM}"
+					cloudflare_api_token {
+						account_id = "1234"
+						access_key_id = "1234"
+						secret_access_key = "1234"
+					}
+					skip_validation = true
+					comment = "Managed by TF"
 				}`,
 		})
 	} else if isGcp(t) {

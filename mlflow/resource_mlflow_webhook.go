@@ -38,6 +38,8 @@ func ResourceMlflowWebhook() common.Resource {
 			m["http_url_spec"].ConflictsWith = []string{"job_spec"}
 			m["job_spec"].ConflictsWith = []string{"http_url_spec"}
 			common.MustSchemaPath(m, "http_url_spec", "enable_ssl_verification").Default = true
+			common.MustSchemaPath(m, "http_url_spec", "secret").Sensitive = true
+			common.MustSchemaPath(m, "job_spec", "access_token").Sensitive = true
 
 			return m
 		})

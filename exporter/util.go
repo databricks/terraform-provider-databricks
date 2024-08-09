@@ -26,6 +26,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 
 	"golang.org/x/exp/slices"
 
@@ -33,24 +34,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
-// Remove this once databricks_pipeline and databricks_job resources are migrated to Go SDK
-func (ic *importContext) emitInitScriptsLegacy(initScripts []clusters.InitScriptStorageInfo) {
-	for _, is := range initScripts {
-		if is.Dbfs != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_dbfs_file",
-				ID:       is.Dbfs.Destination,
-			})
-		}
-		if is.Workspace != nil {
-			ic.emitWorkspaceFileOrRepo(is.Workspace.Destination)
-		}
-		if is.Volumes != nil {
-			ic.emitIfVolumeFile(is.Volumes.Destination)
-		}
-	}
-}
 
 func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 	for _, is := range initScripts {
@@ -86,48 +69,11 @@ func (ic *importContext) emitFilesFromMap(m map[string]string) {
 	}
 }
 
-// Remove this when databricks_job resource is migrated
-// Usage: ic.importCluster(job.NewCluster)
-func (ic *importContext) importClusterLegacy(c *clusters.Cluster) {
-	if c == nil {
-		return
-	}
-	if c.AwsAttributes != nil {
-		ic.Emit(&resource{
-			Resource: "databricks_instance_profile",
-			ID:       c.AwsAttributes.InstanceProfileArn,
-		})
-	}
-	if c.InstancePoolID != "" {
-		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
-		ic.Emit(&resource{
-			Resource: "databricks_instance_pool",
-			ID:       c.InstancePoolID,
-		})
-	}
-	if c.DriverInstancePoolID != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_instance_pool",
-			ID:       c.DriverInstancePoolID,
-		})
-	}
-	if c.PolicyID != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_cluster_policy",
-			ID:       c.PolicyID,
-		})
-	}
-	ic.emitInitScriptsLegacy(c.InitScripts)
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
-	ic.emitUserOrServicePrincipal(c.SingleUserName)
-}
-
 func (ic *importContext) importCluster(c *compute.ClusterSpec) {
 	if c == nil {
 		return
 	}
-	if c.AwsAttributes != nil {
+	if c.AwsAttributes != nil && c.AwsAttributes.InstanceProfileArn != "" {
 		ic.Emit(&resource{
 			Resource: "databricks_instance_profile",
 			ID:       c.AwsAttributes.InstanceProfileArn,
@@ -153,19 +99,23 @@ func (ic *importContext) importCluster(c *compute.ClusterSpec) {
 		})
 	}
 	ic.emitInitScripts(c.InitScripts)
-	ic.emitSecretsFromSecretsPath(c.SparkConf)
-	ic.emitSecretsFromSecretsPath(c.SparkEnvVars)
+	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
+	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
-func (ic *importContext) emitSecretsFromSecretsPath(m map[string]string) {
+func (ic *importContext) emitSecretsFromSecretPathString(v string) {
+	if res := secretPathRegex.FindStringSubmatch(v); res != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_secret_scope",
+			ID:       res[1],
+		})
+	}
+}
+
+func (ic *importContext) emitSecretsFromSecretsPathMap(m map[string]string) {
 	for _, v := range m {
-		if res := secretPathRegex.FindStringSubmatch(v); res != nil {
-			ic.Emit(&resource{
-				Resource: "databricks_secret_scope",
-				ID:       res[1],
-			})
-		}
+		ic.emitSecretsFromSecretPathString(v)
 	}
 }
 
@@ -1436,6 +1386,21 @@ func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceAp
 	return result
 }
 
+func isMatchingCatalogAndSchemaInModelServing(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	res_catalog_name := res.Data.Get("config.0.auto_capture_config.0.catalog_name").(string)
+	res_schema_name := res.Data.Get("config.0.auto_capture_config.0.schema_name").(string)
+	ra_catalog_name, cat_found := ra.Get("catalog_name")
+	ra_schema_name, schema_found := ra.Get("name")
+	if !cat_found || !schema_found {
+		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+		return true
+	}
+
+	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+	return result
+}
+
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
 	shareName, ok := res.Data.GetOk("share")
 	// principal := res.Data.Get(origPath)
@@ -1597,4 +1562,13 @@ func isMatchingSecurableTypeAndName(ic *importContext, res *resource, ra *resour
 	res_securable_name := res.Data.Get("securable_name").(string)
 	ra_name, _ := ra.Get("name")
 	return ra.Type == ("databricks_"+res_securable_type) && ra_name.(string) == res_securable_name
+}
+
+func (ic *importContext) emitJobsDestinationNotifications(notifications []sdk_jobs.Webhook) {
+	for _, notification := range notifications {
+		ic.Emit(&resource{
+			Resource: "databricks_notification_destination",
+			ID:       notification.Id,
+		})
+	}
 }

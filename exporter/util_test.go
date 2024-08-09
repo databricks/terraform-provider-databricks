@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
-	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -19,10 +19,10 @@ import (
 func TestImportClusterEmitsInitScripts(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("storage")
-	ic.importClusterLegacy(&clusters.Cluster{
-		InitScripts: []clusters.InitScriptStorageInfo{
+	ic.importCluster(&compute.ClusterSpec{
+		InitScripts: []compute.InitScriptInfo{
 			{
-				Dbfs: &clusters.DbfsStorageInfo{
+				Dbfs: &compute.DbfsStorageInfo{
 					Destination: "/mnt/abc/test.sh",
 				},
 			},

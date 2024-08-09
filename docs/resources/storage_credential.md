@@ -96,6 +96,12 @@ The following arguments are required:
 
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
 
+`cloudflare_api_token` optional configuration block for using a Cloudflare API Token as credential details. This requires account admin access:
+
+- `account_id` - R2 account ID
+- `access_key_id` - R2 API token access key ID
+- `secret_access_key` - R2 API token secret access key
+
 `azure_service_principal` optional configuration block to use service principal as credential details for Azure (Legacy):
 
 - `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application

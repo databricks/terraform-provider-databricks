@@ -263,21 +263,9 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	if err != nil {
 		return nil, fmt.Errorf("cannot authenticate parent client: %w", err)
 	}
-	cfg := &config.Config{
-		Host:                 url,
-		Username:             c.Config.Username,
-		Password:             c.Config.Password,
-		AuthType:             c.Config.AuthType,
-		Token:                c.Config.Token,
-		ClientID:             c.Config.ClientID,
-		ClientSecret:         c.Config.ClientSecret,
-		GoogleServiceAccount: c.Config.GoogleServiceAccount,
-		GoogleCredentials:    c.Config.GoogleCredentials,
-		InsecureSkipVerify:   c.Config.InsecureSkipVerify,
-		HTTPTimeoutSeconds:   c.Config.HTTPTimeoutSeconds,
-		DebugTruncateBytes:   c.Config.DebugTruncateBytes,
-		DebugHeaders:         c.Config.DebugHeaders,
-		RateLimitPerSecond:   c.Config.RateLimitPerSecond,
+	cfg, err := c.DatabricksClient.Config.NewWithWorkspaceHost(url)
+	if err != nil {
+		return nil, fmt.Errorf("cannot configure new client: %w", err)
 	}
 	client, err := client.New(cfg)
 	if err != nil {

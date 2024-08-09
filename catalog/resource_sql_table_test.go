@@ -126,7 +126,7 @@ func TestResourceSqlTableCreateStatement_Liquid(t *testing.T) {
 	assert.Contains(t, stmt, "USING DELTA")
 	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
-	assert.Contains(t, stmt, "CLUSTER BY (baz, bazz)")
+	assert.Contains(t, stmt, "CLUSTER BY (`baz`,`bazz`)")
 }
 
 func TestResourceSqlTableSerializeProperties(t *testing.T) {
@@ -509,6 +509,95 @@ func TestResourceSqlTableUpdateTableAndOwner(t *testing.T) {
 				ExpectedRequest: catalog.UpdateTableRequest{
 					Owner: "new groups",
 				},
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", d.Get("name"))
+}
+
+func TestResourceSqlTableUpdateTableClusterKeys(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			assert.Equal(t, "ALTER TABLE `main`.`foo`.`bar` CLUSTER BY (`one`)", commandStr)
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "EXTERNAL"
+		data_source_format = "DELTA"
+		cluster_id         = "gone"
+		column {
+			name      = "one"
+			type      = "string"
+			comment   = "managed comment"
+			nullable  = false
+		}
+		column {
+			name      = "two"
+			type      = "string"
+			nullable  = false
+		}
+		cluster_keys = ["one"]
+		`,
+		InstanceState: map[string]string{
+			"name":               "bar",
+			"catalog_name":       "main",
+			"schema_name":        "foo",
+			"table_type":         "EXTERNAL",
+			"data_source_format": "DELTA",
+			"column.#":           "2",
+			"column.0.name":      "one",
+			"column.0.type":      "string",
+			"column.0.comment":   "old comment",
+			"column.0.nullable":  "false",
+			"column.1.name":      "two",
+			"column.1.type":      "string",
+			"column.1.nullable":  "false",
+		},
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ReuseRequest: true,
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageCredentialName: "somecred",
+					ColumnInfos: []SqlColumnInfo{
+						{
+							Name:     "one",
+							Type:     "string",
+							Comment:  "managed comment",
+							Nullable: false,
+						},
+						{
+							Name:     "two",
+							Type:     "string",
+							Nullable: false,
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "gone",
+				},
+				Status: 404,
 			},
 		}, createClusterForSql...),
 		Resource: ResourceSqlTable(),

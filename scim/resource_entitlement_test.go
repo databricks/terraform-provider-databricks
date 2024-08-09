@@ -148,6 +148,25 @@ func TestResourceEntitlementsGroupRead(t *testing.T) {
 	})
 }
 
+func TestResourceEntitlementsGroupImport(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=entitlements",
+				Response: oldGroup,
+			},
+		},
+		Resource: ResourceEntitlements(),
+		New:      true,
+		Read:     true,
+		ID:       "group/abc",
+	}.ApplyAndExpectData(t, map[string]any{
+		"group_id":             "abc",
+		"allow_cluster_create": true,
+	})
+}
+
 func TestResourceEntitlementsGroupReadEmpty(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

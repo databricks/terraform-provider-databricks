@@ -410,7 +410,7 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Cluster does not exist",
 				},
@@ -432,7 +432,7 @@ func TestResourcePermissionsRead_some_error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -498,7 +498,7 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		{
 			Method:   http.MethodGet,
 			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: common.APIErrorBody{
+			Response: apierr.APIError{
 				ErrorCode: "INVALID_REQUEST",
 				Message:   "Internal error happened",
 			},
@@ -652,7 +652,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 						},
 					},
 				},
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -862,6 +862,10 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						},
 						{
 							UserName:        TestingAdminUser,
+							PermissionLevel: "IS_OWNER",
+						},
+						{
+							UserName:        TestingAdminUser,
 							PermissionLevel: "CAN_MANAGE",
 						},
 					},
@@ -877,6 +881,98 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "IS_OWNER",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"sql_endpoint_id": "abc",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_USE",
+				},
+			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			me,
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "IS_OWNER",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+				Response: apierr.APIError{
+					ErrorCode: "INVALID_PARAMETER_VALUE",
+					Message:   "PUT requests for warehouse *** with no existing owner must provide a new owner.",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "PUT",
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
+				ExpectedRequest: AccessControlChangeList{
+					AccessControlList: []AccessControlChange{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "CAN_MANAGE",
+						},
+					},
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/permissions/sql/warehouses/abc",
+				Response: ObjectACL{
+					ObjectID:   "dashboards/abc",
+					ObjectType: "dashboard",
+					AccessControlList: []AccessControl{
+						{
+							UserName:        TestingUser,
+							PermissionLevel: "CAN_USE",
+						},
+						{
+							UserName:        TestingAdminUser,
+							PermissionLevel: "IS_OWNER",
 						},
 						{
 							UserName:        TestingAdminUser,
@@ -1003,7 +1099,7 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -1181,7 +1277,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: common.APIErrorBody{
+				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

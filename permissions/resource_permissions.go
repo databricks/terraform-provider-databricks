@@ -133,6 +133,56 @@ func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(object
 	return isDbsqlPermissionsWorkaroundNecessary(objectID)
 }
 
+func isOwnershipWorkaroundNecessary(objectID string) bool {
+	return strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/sql/warehouses")
+}
+
+// Suppress the error if it is 404
+func ignoreNotFound(err error) error {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
+		return err
+	}
+	if apiErr.StatusCode == 404 {
+		return nil
+	}
+	if strings.Contains(apiErr.Message, "does not exist.") {
+		return nil
+	}
+	return err
+}
+
+func (a PermissionsAPI) getObjectCreator(objectID string) (string, error) {
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return "", err
+	}
+	if strings.HasPrefix(objectID, "/jobs") {
+		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
+		if err != nil {
+			return "", err
+		}
+		job, err := w.Jobs.GetByJobId(a.context, jobId)
+		if err != nil {
+			return "", ignoreNotFound(err)
+		}
+		return job.CreatorUserName, nil
+	} else if strings.HasPrefix(objectID, "/pipelines") {
+		pipeline, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
+		if err != nil {
+			return "", ignoreNotFound(err)
+		}
+		return pipeline.CreatorUserName, nil
+	} else if strings.HasPrefix(objectID, "/sql/warehouses") {
+		warehouse, err := w.Warehouses.GetById(a.context, strings.ReplaceAll(objectID, "/sql/warehouses/", ""))
+		if err != nil {
+			return "", ignoreNotFound(err)
+		}
+		return warehouse.CreatorName, nil
+	}
+	return "", nil
+}
+
 func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
 	if !a.shouldExplicitlyGrantCallingUserManagePermissions(objectID) {
 		return objectACL, nil
@@ -168,6 +218,19 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 	return a.client.Put(a.context, urlPathForObjectID(objectID), objectACL)
 }
 
+// safePutWithOwner is a workaround for the limitation where warehouse without owners cannot have IS_OWNER set
+func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL AccessControlChangeList, originalAcl []AccessControlChange) error {
+	err := a.put(objectID, objectACL)
+	if err != nil {
+		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
+			objectACL.AccessControlList = originalAcl
+			return a.put(objectID, objectACL)
+		}
+		return err
+	}
+	return nil
+}
+
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
 func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
 	if objectID == "/authorization/tokens" || objectID == "/registered-models/root" || objectID == "/directories/0" {
@@ -177,7 +240,9 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	if strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") {
+	originalAcl := make([]AccessControlChange, len(objectACL.AccessControlList))
+	_ = copy(originalAcl, objectACL.AccessControlList)
+	if isOwnershipWorkaroundNecessary(objectID) {
 		owners := 0
 		for _, acl := range objectACL.AccessControlList {
 			if acl.PermissionLevel == "IS_OWNER" {
@@ -200,7 +265,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 			})
 		}
 	}
-	return a.put(objectID, objectACL)
+	return a.safePutWithOwner(objectID, objectACL, originalAcl)
 }
 
 // Delete gracefully removes permissions. Technically, it's using method named SetOrDelete, but here we do more
@@ -218,37 +283,22 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			}
 		}
 	}
-	w, err := a.client.WorkspaceClient()
-	if err != nil {
-		return err
-	}
-	if strings.HasPrefix(objectID, "/jobs") {
-		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
+	originalAcl := make([]AccessControlChange, len(accl.AccessControlList))
+	_ = copy(originalAcl, accl.AccessControlList)
+	if isOwnershipWorkaroundNecessary(objectID) {
+		creator, err := a.getObjectCreator(objectID)
 		if err != nil {
 			return err
 		}
-		job, err := w.Jobs.GetByJobId(a.context, jobId)
-		if err != nil {
-			if strings.HasSuffix(err.Error(), " does not exist.") {
-				return nil
-			}
-			return err
+		if creator == "" {
+			return nil
 		}
 		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
-			UserName:        job.CreatorUserName,
-			PermissionLevel: "IS_OWNER",
-		})
-	} else if strings.HasPrefix(objectID, "/pipelines") {
-		job, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
-		if err != nil {
-			return err
-		}
-		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
-			UserName:        job.CreatorUserName,
+			UserName:        creator,
 			PermissionLevel: "IS_OWNER",
 		})
 	}
-	return a.put(objectID, accl)
+	return a.safePutWithOwner(objectID, accl, originalAcl)
 }
 
 // Read gets all relevant permissions for the object, including inherited ones

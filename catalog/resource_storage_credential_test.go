@@ -336,6 +336,59 @@ func TestCreateStorageCredentialsReadOnly(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestCreateStorageCredentialCloudflare(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/storage-credentials",
+				ExpectedRequest: catalog.CreateStorageCredential{
+					Name: "a",
+					CloudflareApiToken: &catalog.CloudflareApiToken{
+						AccountId:       "1234",
+						AccessKeyId:     "1234",
+						SecretAccessKey: "1234",
+					},
+					Comment: "c",
+				},
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+					CloudflareApiToken: &catalog.CloudflareApiToken{
+						AccountId:   "1234",
+						AccessKeyId: "1234",
+					},
+					MetastoreId: "d",
+					Id:          "1234-5678",
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Create:   true,
+		HCL: `
+		name = "a"
+		cloudflare_api_token {
+			account_id = "1234"
+			access_key_id = "1234"
+			secret_access_key = "1234"
+		}
+		comment = "c"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"cloudflare_api_token.0.secret_access_key": "1234",
+		"cloudflare_api_token.0.access_key_id":     "1234",
+		"cloudflare_api_token.0.account_id":        "1234",
+		"name":                                     "a",
+		"storage_credential_id":                    "1234-5678",
+	})
+}
+
 func TestUpdateStorageCredentials(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

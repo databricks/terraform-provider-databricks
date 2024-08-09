@@ -129,7 +129,11 @@ The following arguments are required:
 - `force_update` - (Optional) Update external location regardless of its dependents.
 - `access_point` - (Optional) The ARN of the s3 access point to use with the external location (AWS).
 - `encryption_details` - (Optional) The options for Server-Side Encryption to be used by each Databricks s3 client when connecting to S3 cloud storage (AWS).
+<<<<<<< HEAD
 - `isolation_mode` - (Optional) Whether the external location is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATED` or `OPEN`. Setting the external location to `ISOLATED` will automatically allow access from the current workspace.
+=======
+- `isolation_mode` - (Optional) Whether the external location is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the external location to `ISOLATION_MODE_ISOLATED` will automatically allow access from the current workspace.
+>>>>>>> 1a309c8195c9779dadd9a337e1dbd3496815833a
 
 ## Attribute Reference
 

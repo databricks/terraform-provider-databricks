@@ -28,7 +28,9 @@ func NewUnityCatalogPermissionsAPI(ctx context.Context, m any) UnityCatalogPermi
 
 func (a UnityCatalogPermissionsAPI) GetPermissions(securable catalog.SecurableType, name string) (list *catalog.PermissionsList, err error) {
 	if securable.String() == "share" {
-		list, err = a.client.Shares.SharePermissions(a.context, sharing.SharePermissionsRequest{name})
+		list, err = a.client.Shares.SharePermissions(a.context, sharing.SharePermissionsRequest{
+			Name: name,
+		})
 		return
 	}
 	list, err = a.client.Grants.GetBySecurableTypeAndFullName(a.context, securable, name)

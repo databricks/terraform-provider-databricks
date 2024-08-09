@@ -41,6 +41,22 @@ func TestAccDashboard(t *testing.T) {
 			}
 		}
 
+        resource "databricks_permissions" "sql_dashboard_usage" {
+            sql_dashboard_id = databricks_sql_dashboard.d1.id
+            access_control {
+              group_name       = "users"
+              permission_level = "CAN_RUN"
+            }
+        }
+
+        resource "databricks_permissions" "query_usage" {
+            sql_query_id = databricks_sql_query.q1.id
+            access_control {
+              group_name       = "users"
+              permission_level = "CAN_RUN"
+            }
+        }
+
 		resource "databricks_sql_query" "q1" {
 			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
 			name = "tf-{var.RANDOM}-query"

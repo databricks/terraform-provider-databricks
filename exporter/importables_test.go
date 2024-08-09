@@ -1726,7 +1726,7 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 		assert.NoError(t, err)
 		require.Equal(t, 2, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: catalog/ctest)"])
-		assert.True(t, ic.testEmits["databricks_catalog_workspace_binding[catalog_ctest_ws_1234] (id: 1234|catalog|ctest)"])
+		assert.True(t, ic.testEmits["databricks_workspace_binding[catalog_ctest_ws_1234] (id: 1234|catalog|ctest)"])
 	})
 }
 
@@ -2066,7 +2066,7 @@ func TestListShares(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.1/unity-catalog/shares",
+			Resource:     "/api/2.1/unity-catalog/shares?",
 			Response: sharing.ListSharesResponse{
 				Shares: []sharing.ShareInfo{
 					{
@@ -2235,4 +2235,40 @@ func TestImportGrants(t *testing.T) {
 	d.Set("model", "test")
 	err = resourcesMap["databricks_grants"].Import(ic, r)
 	assert.NoError(t, err)
+}
+
+func TestImportUcOnlineTable(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+		os.Mkdir(tmpDir, 0700)
+		ic.Directory = tmpDir
+		ic.enableServices("uc-tables,uc-grants")
+		ic.currentMetastore = currentMetastoreResponse
+
+		otTableName := "main.tmp.tbl_ot"
+		d := tfcatalog.ResourceOnlineTable().ToResource().TestResourceData()
+		ot := catalog.OnlineTable{
+			Name: otTableName,
+			Spec: &catalog.OnlineTableSpec{
+				SourceTableFullName: "main.tmp.tbl",
+				PrimaryKeyColumns:   []string{"id"},
+			},
+		}
+		d.SetId(otTableName)
+		d.MarkNewResource()
+		scm := tfcatalog.ResourceOnlineTable().Schema
+		err := common.StructToData(ot, scm, d)
+		require.NoError(t, err)
+
+		err = resourcesMap["databricks_online_table"].Import(ic, &resource{
+			ID:   otTableName,
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: main.tmp.tbl)"])
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: table/main.tmp.tbl_ot)"])
+	})
 }

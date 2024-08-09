@@ -22,6 +22,7 @@ func TestDataSourceUser(t *testing.T) {
 						{
 							ID:       "123",
 							UserName: "mr.test@example.com",
+							Active:   true,
 						},
 					},
 				},
@@ -41,6 +42,7 @@ func TestDataSourceUser(t *testing.T) {
 	assert.Equal(t, d.Get("home"), "/Users/mr.test@example.com")
 	assert.Equal(t, d.Get("acl_principal_id"), "users/mr.test@example.com")
 	assert.Equal(t, d.Get("alphanumeric"), "mr_test")
+	assert.Equal(t, d.Get("active"), true)
 }
 
 func TestDataSourceUserGerUser(t *testing.T) {

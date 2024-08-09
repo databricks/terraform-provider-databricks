@@ -17,7 +17,7 @@ func TestLibraryCreate(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: ClusterInfo{
 					State: ClusterStateRunning,
@@ -65,7 +65,7 @@ func TestLibraryDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				ReuseRequest: true,
 				Response: ClusterInfo{
 					State: ClusterStateRunning,

@@ -45,6 +45,7 @@ Data source exposes the following attributes:
 - `home` - Home folder of the [user](../resources/user.md), e.g. `/Users/mr.foo@example.com`.
 - `repos` - Personal Repos location of the [user](../resources/user.md), e.g. `/Repos/mr.foo@example.com`.
 - `alphanumeric` - Alphanumeric representation of user local name. e.g. `mr_foo`.
+- `active` - Whether the [user](../resources/user.md) is active.
 
 * `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](../resources/access_control_rule_set.md), e.g. `users/mr.foo@example.com`.
 

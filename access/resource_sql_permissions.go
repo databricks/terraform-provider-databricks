@@ -272,7 +272,7 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 }
 
 func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (string, error) {
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
+	sparkVersion := clusters.LatestSparkVersionOrDefault(clustersAPI.Context(), clustersAPI.WorkspaceClient(), compute.SparkVersionRequest{
 		Latest: true,
 	})
 	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})

@@ -235,9 +235,10 @@ func TestConfig_AzureCliHost(t *testing.T) {
 			"PATH": p,
 			"HOME": p,
 		},
-		assertAzure: true,
-		assertHost:  "https://x",
-		assertAuth:  "azure-cli",
+		assertAzure:   true,
+		assertHost:    "https://x",
+		assertAuth:    "azure-cli",
+		azureTenantID: "tenant-id",
 	}.apply(t)
 }
 
@@ -292,9 +293,10 @@ func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 			"PATH": p,
 			"HOME": p,
 		},
-		assertAzure: true,
-		assertHost:  "https://x",
-		assertAuth:  "azure-cli",
+		assertAzure:   true,
+		azureTenantID: "tenant-id",
+		assertHost:    "https://x",
+		assertAuth:    "azure-cli",
 	}.apply(t)
 }
 
@@ -331,7 +333,7 @@ func shortLivedOAuthHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"access_token": "x", "token_type": "Bearer", "expires_in": 3}`)
 		return
-	} else if r.RequestURI == "/api/2.0/clusters/get?cluster_id=123" {
+	} else if r.RequestURI == "/api/2.1/clusters/get?cluster_id=123" {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"cluster_id": "123"}`)
 		return

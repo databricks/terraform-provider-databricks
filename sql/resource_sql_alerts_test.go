@@ -14,7 +14,7 @@ func TestSqlAlertReadStringValue(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/alerts/xyz?",
-				Response: sql.Alert{
+				Response: sql.LegacyAlert{
 					CreatedAt: "2020-01-01T00:00:00.000Z",
 					Id:        "xyz",
 					Parent:    "abc",
@@ -45,7 +45,7 @@ func TestSqlAlertReadNumberValue(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/alerts/xyz?",
-				Response: sql.Alert{
+				Response: sql.LegacyAlert{
 					CreatedAt: "2020-01-01T00:00:00.000Z",
 					Id:        "xyz",
 					Parent:    "abc",
@@ -76,7 +76,7 @@ func TestSqlAlertReadBoolValue(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/alerts/xyz?",
-				Response: sql.Alert{
+				Response: sql.LegacyAlert{
 					CreatedAt: "2020-01-01T00:00:00.000Z",
 					Id:        "xyz",
 					Parent:    "abc",

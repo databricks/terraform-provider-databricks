@@ -43,6 +43,29 @@ func TestMetastoreAssignment_Create(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestMetastoreAssignment_Import(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/current-metastore-assignment",
+				Response: catalog.MetastoreAssignment{
+					MetastoreId:        "a",
+					WorkspaceId:        123,
+					DefaultCatalogName: "test_metastore",
+				},
+			},
+		},
+		Resource: ResourceMetastoreAssignment(),
+		Read:     true,
+		ID:       "123|a",
+	}.ApplyAndExpectData(t, map[string]any{
+		"workspace_id":         123,
+		"metastore_id":         "a",
+		"default_catalog_name": "test_metastore",
+	})
+}
+
 func TestMetastoreAssignmentAccount_Create(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

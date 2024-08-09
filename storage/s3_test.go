@@ -47,12 +47,12 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/clusters/spark-versions",
+			Resource:     "/api/2.1/clusters/spark-versions",
 		},
 		{
 			ReuseRequest: true,
 			Method:       "GET",
-			Resource:     "/api/2.0/clusters/list-node-types",
+			Resource:     "/api/2.1/clusters/list-node-types",
 		},
 		{
 			Method:   "POST",
@@ -62,7 +62,7 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 					"ResourceClass": "SingleNode",
 				},
 				ClusterName:  "terraform-mount-s3-access",
-				SparkVersion: "7.3.x-scala2.12",
+				SparkVersion: "11.3.x-scala2.12",
 				NumWorkers:   0,
 				NodeTypeID:   "i3.xlarge",
 				AwsAttributes: &clusters.AwsAttributes{

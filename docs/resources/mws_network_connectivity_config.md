@@ -17,7 +17,7 @@ variable "prefix" {}
 
 resource "databricks_mws_network_connectivity_config" "ncc" {
   provider = databricks.account
-  name     = "Network Connectivity Config for ${var.prefix}"
+  name     = "ncc-for-${var.prefix}"
   region   = var.region
 }
 
@@ -39,8 +39,19 @@ The following arguments are available:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - combination of `account_id` and `network_connectivity_config_id` separated by `/` character
 * `network_connectivity_config_id` - Canonical unique identifier of Network Connectivity Config in Databricks Account
-* `default_rules.azure_service_endpoint_rule` - This provides a list of subnets. These subnets need to be allowed in your Azure resources in order for Databricks to access. See `default_rules.azure_service_endpoint_rule.target_services` for the supported Azure services.
+* `egress_conf` - block containing information about network connectivity rules that apply to network traffic from your serverless compute resources. Consists of the following fields:
+  * `default_rules` - block describing network connectivity rules that are applied by default without resource specific configurations.  Consists of the following fields:
+    * `aws_stable_ip_rule` (AWS only) - block with information about stable AWS IP CIDR blocks. You can use these to configure the firewall of your resources to allow traffic from your Databricks workspace.  Consists of the following fields:
+      * `cidr_blocks` - list of IP CIDR blocks.
+    * `azure_service_endpoint_rule` (Azure only) - block with information about stable Azure service endpoints. You can configure the firewall of your Azure resources to allow traffic from your Databricks serverless compute resources.  Consists of the following fields:
+      * `subnets` - list of subnets from which Databricks network traffic originates when accessing your Azure resources.
+      * `target_region` - the Azure region in which this service endpoint rule applies.
+      * `target_services` - the Azure services to which this service endpoint rule applies to.
+  * `target_rules` - block describing network connectivity rules that configured for each destinations. These rules override default rules.  Consists of the following fields:
+    * `azure_private_endpoint_rules` (Azure only) - list containing information about configure Azure Private Endpoints.
+
 
 ## Import
 

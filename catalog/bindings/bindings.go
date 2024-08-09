@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func AddCurrentWorkspaceBindings(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient, securableName string, securableType string) error {
+func AddCurrentWorkspaceBindings(ctx context.Context, d *schema.ResourceData, w *databricks.WorkspaceClient, securableName string, securableType catalog.UpdateBindingsSecurableType) error {
 	if d.Get("isolation_mode") != "ISOLATED" && d.Get("isolation_mode") != "ISOLATION_MODE_ISOLATED" {
 		return nil
 	}

@@ -75,7 +75,7 @@ func ResourceExternalLocation() common.Resource {
 			}
 
 			// Bind the current workspace if the external location is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, el.Name, "external-location")
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, el.Name, catalog.UpdateBindingsSecurableTypeExternalLocation)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -134,7 +134,7 @@ func ResourceExternalLocation() common.Resource {
 				return err
 			}
 			// Bind the current workspace if the external location is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateExternalLocationRequest.Name, "external-location")
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateExternalLocationRequest.Name, catalog.UpdateBindingsSecurableTypeExternalLocation)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)

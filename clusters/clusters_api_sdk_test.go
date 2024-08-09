@@ -14,7 +14,7 @@ func TestStartClusterAndGetInfo_Pending(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Resource: "/api/2.1/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
 				State:     ClusterStatePending,
 				ClusterID: "abc",
@@ -22,7 +22,7 @@ func TestStartClusterAndGetInfo_Pending(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Resource: "/api/2.1/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
 				State:     ClusterStateRunning,
 				ClusterID: "abc",
@@ -46,7 +46,7 @@ func TestStartClusterAndGetInfo_Terminating(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Resource: "/api/2.1/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
 				State:     ClusterStateTerminating,
 				ClusterID: "abc",
@@ -54,7 +54,7 @@ func TestStartClusterAndGetInfo_Terminating(t *testing.T) {
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Resource: "/api/2.1/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
 				State:     ClusterStateTerminated,
 				ClusterID: "abc",
@@ -62,14 +62,14 @@ func TestStartClusterAndGetInfo_Terminating(t *testing.T) {
 		},
 		{
 			Method:   "POST",
-			Resource: "/api/2.0/clusters/start",
+			Resource: "/api/2.1/clusters/start",
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Resource: "/api/2.1/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
 				State:     ClusterStateRunning,
 				ClusterID: "abc",
@@ -93,7 +93,7 @@ func TestStartClusterAndGetInfo_Error(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Resource: "/api/2.1/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
 				State:        ClusterStateError,
 				StateMessage: "I am a teapot",
@@ -101,14 +101,14 @@ func TestStartClusterAndGetInfo_Error(t *testing.T) {
 		},
 		{
 			Method:   "POST",
-			Resource: "/api/2.0/clusters/start",
+			Resource: "/api/2.1/clusters/start",
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},
 		},
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Resource: "/api/2.1/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
 				State:     ClusterStateRunning,
 				ClusterID: "abc",
@@ -132,7 +132,7 @@ func TestStartClusterAndGetInfo_StartingError(t *testing.T) {
 	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/get?cluster_id=abc",
+			Resource: "/api/2.1/clusters/get?cluster_id=abc",
 			Response: ClusterInfo{
 				State:        ClusterStateError,
 				StateMessage: "I am a teapot",
@@ -140,7 +140,7 @@ func TestStartClusterAndGetInfo_StartingError(t *testing.T) {
 		},
 		{
 			Method:   "POST",
-			Resource: "/api/2.0/clusters/start",
+			Resource: "/api/2.1/clusters/start",
 			ExpectedRequest: ClusterID{
 				ClusterID: "abc",
 			},

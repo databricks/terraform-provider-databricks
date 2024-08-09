@@ -47,6 +47,7 @@ func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			"ids": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}

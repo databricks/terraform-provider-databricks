@@ -59,6 +59,16 @@ func TestUcAccDataSourceVolumes(t *testing.T) {
 	})
 }
 
+func checkDataSourceVolumesPluginFrameworkPopulated(t *testing.T) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		_, ok := s.Modules[0].Resources["data.databricks_volumes_pluginframework.this"]
+		require.True(t, ok, "data.databricks_volumes_pluginframework.this has to be there")
+		num_volumes, _ := strconv.Atoi(s.Modules[0].Outputs["volumes"].Value.(string))
+		assert.GreaterOrEqual(t, num_volumes, 1)
+		return nil
+	}
+}
+
 func TestUcAccDataSourceVolumesPluginFramework(t *testing.T) {
 	unityWorkspaceLevel(t, step{
 		Template: `
@@ -96,6 +106,6 @@ func TestUcAccDataSourceVolumesPluginFramework(t *testing.T) {
 			value = length(data.databricks_volumes_pluginframework.this.ids)
 		}
 		`,
-		// Check: checkDataSourceVolumesPopulated(t),
+		Check: checkDataSourceVolumesPluginFrameworkPopulated(t),
 	})
 }

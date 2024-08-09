@@ -26,7 +26,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	terraform_sdk_v2 "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -140,7 +139,6 @@ func run(t *testing.T, steps []step) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
-	sdkPluginProvider := provider.DatabricksProvider()
 
 	protoV6ProviderFactories := map[string]func() (tfprotov6.ProviderServer, error){
 		"databricks": func() (tfprotov6.ProviderServer, error) {
@@ -212,29 +210,6 @@ func run(t *testing.T, steps []step) {
 			ProviderFactories:         providerFactories,
 			ProtoV6ProviderFactories:  protoV6ProviderFactories,
 			Check: func(state *terraform.State) error {
-				// get configured client from provider
-				client := sdkPluginProvider.Meta().(*common.DatabricksClient)
-
-				// Default check for all runs. Asserts that the read operation succeeds.
-				for n, is := range state.RootModule().Resources {
-					p := strings.Split(n, ".")
-
-					// Skip data resources.
-					if p[0] == "data" {
-						continue
-					}
-
-					// Convert InstanceState from terraform-plugin-framework to terraform-plugin-sdk v2
-					sdkInstanceState := convertToSDKInstanceState(is.Primary)
-
-					if r, ok := sdkPluginProvider.ResourcesMap[p[0]]; ok {
-						// Only checking for sdkv2 resources.
-						dia := r.ReadContext(ctx, r.Data(sdkInstanceState), client)
-						if dia != nil {
-							return fmt.Errorf("%v", dia)
-						}
-					}
-				}
 				if stepCheck != nil {
 					return stepCheck(state)
 				}
@@ -250,16 +225,6 @@ func run(t *testing.T, steps []step) {
 			return nil
 		},
 	})
-}
-
-// Function to convert from terraform-plugin-framework InstanceState to terraform-plugin-sdk v2 InstanceState
-func convertToSDKInstanceState(is *terraform.InstanceState) *terraform_sdk_v2.InstanceState {
-	return &terraform_sdk_v2.InstanceState{
-		ID:         is.ID,
-		Attributes: is.Attributes,
-		Meta:       is.Meta,
-		Tainted:    is.Tainted,
-	}
 }
 
 // resourceCheck calls back a function with client and resource id

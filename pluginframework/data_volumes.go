@@ -3,6 +3,7 @@ package pluginframework
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -67,6 +68,7 @@ func (d *VolumesDataSource) Configure(ctx context.Context, req datasource.Config
 }
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	log.Printf("[DEBUG] In Read!")
 	client := d.Client
 	w, err := client.WorkspaceClient()
 	if err != nil {

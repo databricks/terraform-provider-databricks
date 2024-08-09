@@ -3,33 +3,36 @@ package mws
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestPermissionAssignmentCreate(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PUT",
-				Resource: "/api/2.0/accounts/abc/workspaces/123/permissionassignments/principals/345",
-				ExpectedRequest: Permissions{
-					Permissions: []string{"USER"},
+		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
+			e := m.GetMockWorkspaceAssignmentAPI().EXPECT()
+			e.Update(mock.Anything, iam.UpdateWorkspaceAssignments{
+				Permissions: []iam.WorkspacePermission{iam.WorkspacePermissionUser},
+				PrincipalId: 345,
+				WorkspaceId: 123,
+			}).Return(&iam.PermissionAssignment{
+				Permissions: []iam.WorkspacePermission{iam.WorkspacePermissionUser},
+				Principal: &iam.PrincipalOutput{
+					PrincipalId: 345,
 				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/workspaces/123/permissionassignments",
-				Response: PermissionAssignmentList{
-					PermissionAssignments: []PermissionAssignment{
-						{
-							Permissions: []string{"USER"},
-							Principal: Principal{
-								PrincipalID: 345,
-							},
+			}, nil)
+			e.ListByWorkspaceId(mock.Anything, int64(123)).Return(&iam.PermissionAssignments{
+				PermissionAssignments: []iam.PermissionAssignment{
+					{
+						Permissions: []iam.WorkspacePermission{iam.WorkspacePermissionUser},
+						Principal: &iam.PrincipalOutput{
+							PrincipalId: 345,
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource:  ResourceMwsPermissionAssignment(),
 		Create:    true,
@@ -42,23 +45,53 @@ func TestPermissionAssignmentCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestPermissionAssignmentReadNotFound(t *testing.T) {
+func TestPermissionAssignmentRead(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/abc/workspaces/123/permissionassignments",
-				Response: PermissionAssignmentList{
-					PermissionAssignments: []PermissionAssignment{
-						{
-							Permissions: []string{"USER"},
-							Principal: Principal{
-								PrincipalID: 345,
-							},
+		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
+			e := m.GetMockWorkspaceAssignmentAPI().EXPECT()
+			e.ListByWorkspaceId(mock.Anything, int64(123)).Return(&iam.PermissionAssignments{
+				PermissionAssignments: []iam.PermissionAssignment{
+					{
+						Permissions: []iam.WorkspacePermission{iam.WorkspacePermissionUser},
+						Principal: &iam.PrincipalOutput{
+							PrincipalId: 345,
+						},
+					},
+					{
+						Permissions: []iam.WorkspacePermission{iam.WorkspacePermissionUser},
+						Principal: &iam.PrincipalOutput{
+							PrincipalId: 456,
 						},
 					},
 				},
-			},
+			}, nil)
+		},
+		Resource:  ResourceMwsPermissionAssignment(),
+		Read:      true,
+		New:       true,
+		AccountID: "abc",
+		ID:        "123|456",
+	}.ApplyAndExpectData(t, map[string]any{
+		"workspace_id": 123,
+		"principal_id": 456,
+		"permissions":  []string{"USER"},
+	})
+}
+
+func TestPermissionAssignmentReadNotFound(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
+			e := m.GetMockWorkspaceAssignmentAPI().EXPECT()
+			e.ListByWorkspaceId(mock.Anything, int64(123)).Return(&iam.PermissionAssignments{
+				PermissionAssignments: []iam.PermissionAssignment{
+					{
+						Permissions: []iam.WorkspacePermission{iam.WorkspacePermissionUser},
+						Principal: &iam.PrincipalOutput{
+							PrincipalId: 345,
+						},
+					},
+				},
+			}, nil)
 		},
 		Resource:  ResourceMwsPermissionAssignment(),
 		Read:      true,
@@ -70,11 +103,9 @@ func TestPermissionAssignmentReadNotFound(t *testing.T) {
 
 func TestPermissionAssignmentDelete(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.0/accounts/abc/workspaces/123/permissionassignments/principals/456",
-			},
+		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
+			e := m.GetMockWorkspaceAssignmentAPI().EXPECT()
+			e.DeleteByWorkspaceIdAndPrincipalId(mock.Anything, int64(123), int64(456)).Return(nil)
 		},
 		Resource:  ResourceMwsPermissionAssignment(),
 		Delete:    true,
@@ -86,7 +117,7 @@ func TestPermissionAssignmentDelete(t *testing.T) {
 func TestPermissionAssignmentFuzz_NoAccountID(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceMwsPermissionAssignment(),
 		qa.CornerCaseID("123|456"),
-		qa.CornerCaseExpectError("must have `account_id` on provider"))
+		qa.CornerCaseExpectError("invalid Databricks Account configuration"))
 }
 
 func TestPermissionAssignmentFuzz_InvalidID(t *testing.T) {

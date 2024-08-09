@@ -120,10 +120,11 @@ func TestResourcePipelineCreate(t *testing.T) {
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
 				PipelineId: "abcd",
 			}).Return(&pipelines.GetPipelineResponse{
-				PipelineId: "abcd",
-				Name:       "test-pipeline",
-				State:      pipelines.PipelineStateRunning,
-				Spec:       &basicPipelineSpec,
+				PipelineId:   "abcd",
+				Name:         "test-pipeline",
+				State:        pipelines.PipelineStateRunning,
+				LastModified: 123456,
+				Spec:         &basicPipelineSpec,
 			}, nil).Once()
 
 		},
@@ -158,7 +159,9 @@ func TestResourcePipelineCreate(t *testing.T) {
 			}
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id": "abcd",
+		"id":            "abcd",
+		"last_modified": 123456,
+		"state":         "RUNNING",
 	})
 }
 

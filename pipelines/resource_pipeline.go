@@ -294,7 +294,10 @@ func ResourcePipeline() common.Resource {
 			if readPipeline.Spec == nil {
 				return fmt.Errorf("pipeline spec is nil for '%v'", readPipeline.PipelineId)
 			}
-			return common.StructToData(readPipeline.Spec, pipelineSchema, d)
+			if err = common.StructToData(readPipeline.Spec, pipelineSchema, d); err != nil {
+				return err
+			}
+			return common.StructToData(readPipeline, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

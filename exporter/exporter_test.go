@@ -1029,6 +1029,22 @@ func TestImportingClusters(t *testing.T) {
 			err := ic.Run()
 			os.Unsetenv("EXPORTER_PARALLELISM_default")
 			assert.NoError(t, err)
+			content, err := os.ReadFile(tmpDir + "/compute.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_cluster" "test1_test1"`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_cluster" "test_cluster_policy_test2"`))
+			assert.True(t, strings.Contains(contentStr, `policy_id                    = databricks_cluster_policy.users_cluster_policy.id`))
+			assert.True(t, strings.Contains(contentStr, `autotermination_minutes = 0`))
+			assert.True(t, strings.Contains(contentStr, `autotermination_minutes = 120`))
+			assert.True(t, strings.Contains(contentStr, `library {
+    jar = databricks_dbfs_file._0eee4efe7411a5bdca65d7b79188026c_test_jar.dbfs_path
+  }`))
+			assert.True(t, strings.Contains(contentStr, `init_scripts {
+    dbfs {
+      destination = databricks_dbfs_file._0eee4efe7411a5bdca65d7b79188026c_test_jar.dbfs_path
+    }
+  }`))
 		})
 }
 
@@ -2898,7 +2914,6 @@ func TestNotificationDestinationExport(t *testing.T) {
 		content, err := os.ReadFile(tmpDir + "/settings.tf")
 		assert.NoError(t, err)
 		contentStr := string(content)
-		log.Printf("[DEBUG] contentStr: %s", contentStr)
 		assert.True(t, strings.Contains(contentStr, `resource "databricks_notification_destination" "pagerdruty_456"`))
 		assert.True(t, strings.Contains(contentStr, `resource "databricks_notification_destination" "teams_345"`))
 		assert.True(t, strings.Contains(contentStr, `resource "databricks_notification_destination" "email_123" {

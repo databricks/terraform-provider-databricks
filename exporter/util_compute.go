@@ -3,7 +3,6 @@ package exporter
 import (
 	"fmt"
 	"log"
-	"reflect"
 	"regexp"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -188,12 +187,6 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 			}
 		}
 		raw := d.Get(pathString)
-		if raw != nil {
-			v := reflect.ValueOf(raw)
-			if as.Optional && v.IsZero() {
-				return true
-			}
-		}
 		workerInstPoolID := d.Get(prefix + "instance_pool_id").(string)
 		switch pathString {
 		case prefix + "node_type_id":

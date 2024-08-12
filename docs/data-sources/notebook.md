@@ -29,3 +29,4 @@ This data source exports the following attributes:
 * `language` - notebook language
 * `object_id` - notebook object ID
 * `object_type` - notebook object type
+* `workspace_path` - path on Workspace File System (WSFS) in form of `/Workspace` + `path`

@@ -46,6 +46,10 @@ func DataSourceNotebook() common.Resource {
 			Optional: true,
 			Computed: true,
 		},
+		"workspace_path": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 	}
 	return common.Resource{
 		Schema: s,
@@ -74,6 +78,7 @@ func DataSourceNotebook() common.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("workspace_path", "/Workspace"+objectStatus.Path)
 			return nil
 		},
 	}

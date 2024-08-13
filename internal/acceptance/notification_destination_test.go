@@ -7,12 +7,12 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func checkND(t *testing.T, display_name string, config_type settings.DestinationType) resource.TestCheckFunc {
+func checkND(t *testing.T, display_name string, config_type settings.DestinationType) func(*terraform.State) error {
 	return resourceCheck("databricks_notification_destination.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 		w, err := client.WorkspaceClient()
 		if err != nil {

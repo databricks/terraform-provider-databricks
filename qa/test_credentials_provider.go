@@ -9,17 +9,17 @@ import (
 	"github.com/databricks/databricks-sdk-go/credentials"
 )
 
-type testCredentialsProvider struct {
-	token string
+type TestCredentialsProvider struct {
+	Token string
 }
 
-func (testCredentialsProvider) Name() string {
+func (TestCredentialsProvider) Name() string {
 	return "test"
 }
 
-func (t testCredentialsProvider) Configure(ctx context.Context, cfg *config.Config) (credentials.CredentialsProvider, error) {
+func (t TestCredentialsProvider) Configure(ctx context.Context, cfg *config.Config) (credentials.CredentialsProvider, error) {
 	fun := func(r *http.Request) error {
-		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", t.token))
+		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", t.Token))
 		return nil
 	}
 	return credentials.NewCredentialsProvider(fun), nil

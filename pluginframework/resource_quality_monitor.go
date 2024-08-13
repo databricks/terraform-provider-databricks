@@ -98,6 +98,8 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 	var monitorInfoTfSDK MonitorInfoExtended
+
+	// "mismatch between struct and object: Struct defines fields not found in object: baseline_table_name, time_series, monitor_version, status, warehouse_id, dashboard_id, data_classification_config, drift_metrics_table_name, snapshot, skip_builtin_dashboard, notifications, schedule, table_name, custom_metrics, latest_monitor_failure_msg, inference_log, profile_metrics_table_name, and slicing_exprs."
 	diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

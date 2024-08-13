@@ -144,7 +144,7 @@ type CreateLogDeliveryConfigurationParams struct {
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
 	// [audit log delivery]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [billable usage log delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
-	LogType LogType `tfsdk:"log_type" tf:""`
+	LogType types.String `tfsdk:"log_type" tf:""`
 	// The file type of log delivery.
 	//
 	// * If `log_type` is `BILLABLE_USAGE`, this value must be `CSV`. Only the
@@ -155,13 +155,13 @@ type CreateLogDeliveryConfigurationParams struct {
 	//
 	// [Configuring audit logs]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
-	OutputFormat OutputFormat `tfsdk:"output_format" tf:""`
+	OutputFormat types.String `tfsdk:"output_format" tf:""`
 	// Status of log delivery configuration. Set to `ENABLED` (enabled) or
 	// `DISABLED` (disabled). Defaults to `ENABLED`. You can [enable or disable
 	// the configuration](#operation/patch-log-delivery-config-status) later.
 	// Deletion of a configuration is not supported, so disable a log delivery
 	// configuration that is no longer needed.
-	Status LogDeliveryConfigStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// The ID for a method:storage/create that represents the S3 bucket with
 	// bucket policy as described in the main billable usage documentation page.
 	// See [Configure billable usage delivery].
@@ -278,7 +278,7 @@ type ListLogDeliveryRequest struct {
 	// Filter by credential configuration ID.
 	CredentialsId types.String `tfsdk:"-" url:"credentials_id,omitempty"`
 	// Filter by status `ENABLED` or `DISABLED`.
-	Status LogDeliveryConfigStatus `tfsdk:"-" url:"status,omitempty"`
+	Status types.String `tfsdk:"-" url:"status,omitempty"`
 	// Filter by storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-" url:"storage_configuration_id,omitempty"`
 }
@@ -356,7 +356,7 @@ type LogDeliveryConfiguration struct {
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
 	// [audit log delivery]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [billable usage log delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
-	LogType LogType `tfsdk:"log_type" tf:"optional"`
+	LogType types.String `tfsdk:"log_type" tf:"optional"`
 	// The file type of log delivery.
 	//
 	// * If `log_type` is `BILLABLE_USAGE`, this value must be `CSV`. Only the
@@ -367,13 +367,13 @@ type LogDeliveryConfiguration struct {
 	//
 	// [Configuring audit logs]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
-	OutputFormat OutputFormat `tfsdk:"output_format" tf:"optional"`
+	OutputFormat types.String `tfsdk:"output_format" tf:"optional"`
 	// Status of log delivery configuration. Set to `ENABLED` (enabled) or
 	// `DISABLED` (disabled). Defaults to `ENABLED`. You can [enable or disable
 	// the configuration](#operation/patch-log-delivery-config-status) later.
 	// Deletion of a configuration is not supported, so disable a log delivery
 	// configuration that is no longer needed.
-	Status LogDeliveryConfigStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// The ID for a method:storage/create that represents the S3 bucket with
 	// bucket policy as described in the main billable usage documentation page.
 	// See [Configure billable usage delivery].
@@ -419,7 +419,7 @@ type LogDeliveryStatus struct {
 	// `NOT_FOUND`: The log delivery status as the configuration has been
 	// disabled since the release of this feature or there are no workspaces in
 	// the account.
-	Status DeliveryStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 // Log delivery type. Supported values are:
@@ -509,7 +509,7 @@ type UpdateLogDeliveryConfigurationStatusRequest struct {
 	// the configuration](#operation/patch-log-delivery-config-status) later.
 	// Deletion of a configuration is not supported, so disable a log delivery
 	// configuration that is no longer needed.
-	Status LogDeliveryConfigStatus `tfsdk:"status" tf:""`
+	Status types.String `tfsdk:"status" tf:""`
 }
 
 type UpdateResponse struct {

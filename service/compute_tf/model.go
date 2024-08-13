@@ -71,7 +71,7 @@ type AwsAttributes struct {
 	//
 	// Note: If `first_on_demand` is zero, this availability type will be used
 	// for the entire cluster.
-	Availability AwsAvailability `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability" tf:"optional"`
 	// The number of volumes launched for each instance. Users can choose up to
 	// 10 volumes. This feature is only enabled for supported node types. Legacy
 	// node types cannot specify custom EBS volumes. For node types with no
@@ -102,7 +102,7 @@ type AwsAttributes struct {
 	// will be used.
 	EbsVolumeThroughput types.Int64 `tfsdk:"ebs_volume_throughput" tf:"optional"`
 	// The type of EBS volumes that will be launched with this cluster.
-	EbsVolumeType EbsVolumeType `tfsdk:"ebs_volume_type" tf:"optional"`
+	EbsVolumeType types.String `tfsdk:"ebs_volume_type" tf:"optional"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. If this value is greater than 0, the cluster driver
 	// node in particular will be placed on an on-demand instance. If this value
@@ -190,7 +190,7 @@ type AzureAttributes struct {
 	// `first_on_demand` ones. Note: If `first_on_demand` is zero (which only
 	// happens on pool clusters), this availability type will be used for the
 	// entire cluster.
-	Availability AzureAvailability `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability" tf:"optional"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. This value should be greater than 0, to make sure
 	// the cluster driver node is placed on an on-demand instance. If this value
@@ -277,7 +277,7 @@ type CloneCluster struct {
 }
 
 type CloudProviderNodeInfo struct {
-	Status []CloudProviderNodeStatus `tfsdk:"status" tf:"optional"`
+	Status []types.String `tfsdk:"status" tf:"optional"`
 }
 
 type CloudProviderNodeStatus string
@@ -311,7 +311,7 @@ type ClusterAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel ClusterPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -385,7 +385,7 @@ type ClusterAttributes struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode DataSecurityMode `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
 	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
@@ -423,7 +423,7 @@ type ClusterAttributes struct {
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
 	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
 	// unspecified, the runtime engine is inferred from spark_version.
-	RuntimeEngine RuntimeEngine `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
 	// An object containing a set of optional, user-specified Spark
@@ -499,7 +499,7 @@ type ClusterDetails struct {
 	// Determines whether the cluster was created by a user through the UI,
 	// created by the Databricks Jobs Scheduler, or through an API request. This
 	// is the same as cluster_creator, but read only.
-	ClusterSource ClusterSource `tfsdk:"cluster_source" tf:"optional"`
+	ClusterSource types.String `tfsdk:"cluster_source" tf:"optional"`
 	// Creator user name. The field won't be included in the response if the
 	// user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
@@ -534,7 +534,7 @@ type ClusterDetails struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode DataSecurityMode `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
 	//
@@ -610,7 +610,7 @@ type ClusterDetails struct {
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
 	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
 	// unspecified, the runtime engine is inferred from spark_version.
-	RuntimeEngine RuntimeEngine `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
 	// An object containing a set of optional, user-specified Spark
@@ -654,7 +654,7 @@ type ClusterDetails struct {
 	// received (when the cluster entered a `PENDING` state).
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// Current state of the cluster.
-	State State `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 	// A message associated with the most recent state transition (e.g., the
 	// reason why the cluster entered a `TERMINATED` state).
 	StateMessage types.String `tfsdk:"state_message" tf:"optional"`
@@ -680,7 +680,7 @@ type ClusterEvent struct {
 	// by the Timeline service.
 	Timestamp types.Int64 `tfsdk:"timestamp" tf:"optional"`
 
-	Type EventType `tfsdk:"type" tf:"optional"`
+	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
 type ClusterLibraryStatuses struct {
@@ -707,7 +707,7 @@ type ClusterPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel ClusterPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -751,7 +751,7 @@ type ClusterPermissions struct {
 type ClusterPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel ClusterPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type ClusterPermissionsRequest struct {
@@ -764,7 +764,7 @@ type ClusterPolicyAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel ClusterPolicyPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -789,7 +789,7 @@ type ClusterPolicyPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel ClusterPolicyPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -829,7 +829,7 @@ type ClusterPolicyPermissions struct {
 type ClusterPolicyPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel ClusterPolicyPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type ClusterPolicyPermissionsRequest struct {
@@ -958,7 +958,7 @@ type ClusterSpec struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode DataSecurityMode `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
 	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
@@ -1007,7 +1007,7 @@ type ClusterSpec struct {
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
 	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
 	// unspecified, the runtime engine is inferred from spark_version.
-	RuntimeEngine RuntimeEngine `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
 	// An object containing a set of optional, user-specified Spark
@@ -1056,7 +1056,7 @@ type Command struct {
 	// Running context id
 	ContextId types.String `tfsdk:"contextId" tf:"optional"`
 
-	Language Language `tfsdk:"language" tf:"optional"`
+	Language types.String `tfsdk:"language" tf:"optional"`
 }
 
 type CommandStatus string
@@ -1108,7 +1108,7 @@ type CommandStatusResponse struct {
 
 	Results *Results `tfsdk:"results" tf:"optional"`
 
-	Status CommandStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 type ContextStatus string
@@ -1150,7 +1150,7 @@ type ContextStatusRequest struct {
 type ContextStatusResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Status ContextStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 type CreateCluster struct {
@@ -1218,7 +1218,7 @@ type CreateCluster struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode DataSecurityMode `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
 	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
@@ -1267,7 +1267,7 @@ type CreateCluster struct {
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
 	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
 	// unspecified, the runtime engine is inferred from spark_version.
-	RuntimeEngine RuntimeEngine `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
 	// An object containing a set of optional, user-specified Spark
@@ -1310,7 +1310,7 @@ type CreateContext struct {
 	// Running cluster id
 	ClusterId types.String `tfsdk:"clusterId" tf:"optional"`
 
-	Language Language `tfsdk:"language" tf:"optional"`
+	Language types.String `tfsdk:"language" tf:"optional"`
 }
 
 type CreateInstancePool struct {
@@ -1427,7 +1427,7 @@ type Created struct {
 
 type DataPlaneEventDetails struct {
 	// <needs content added>
-	EventType DataPlaneEventDetailsEventType `tfsdk:"event_type" tf:"optional"`
+	EventType types.String `tfsdk:"event_type" tf:"optional"`
 	// <needs content added>
 	ExecutorFailures types.Int64 `tfsdk:"executor_failures" tf:"optional"`
 	// <needs content added>
@@ -1621,9 +1621,9 @@ type DiskSpec struct {
 }
 
 type DiskType struct {
-	AzureDiskVolumeType DiskTypeAzureDiskVolumeType `tfsdk:"azure_disk_volume_type" tf:"optional"`
+	AzureDiskVolumeType types.String `tfsdk:"azure_disk_volume_type" tf:"optional"`
 
-	EbsVolumeType DiskTypeEbsVolumeType `tfsdk:"ebs_volume_type" tf:"optional"`
+	EbsVolumeType types.String `tfsdk:"ebs_volume_type" tf:"optional"`
 }
 
 type DiskTypeAzureDiskVolumeType string
@@ -1785,7 +1785,7 @@ type EditCluster struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode DataSecurityMode `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
 	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
@@ -1834,7 +1834,7 @@ type EditCluster struct {
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
 	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
 	// unspecified, the runtime engine is inferred from spark_version.
-	RuntimeEngine RuntimeEngine `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
 	// An object containing a set of optional, user-specified Spark
@@ -1976,7 +1976,7 @@ type EventDetails struct {
 	// clusters, the new attributes of the cluster.
 	Attributes *ClusterAttributes `tfsdk:"attributes" tf:"optional"`
 	// The cause of a change in target size.
-	Cause EventDetailsCause `tfsdk:"cause" tf:"optional"`
+	Cause types.String `tfsdk:"cause" tf:"optional"`
 	// The actual cluster size that was set in the cluster creation or edit.
 	ClusterSize *ClusterSize `tfsdk:"cluster_size" tf:"optional"`
 	// The current number of vCPUs in the cluster.
@@ -2131,7 +2131,7 @@ type GcpAttributes struct {
 	// This field determines whether the instance pool will contain preemptible
 	// VMs, on-demand VMs, or preemptible VMs with a fallback to on-demand VMs
 	// if the former is unavailable.
-	Availability GcpAvailability `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability" tf:"optional"`
 	// boot disk size in GB
 	BootDiskSize types.Int64 `tfsdk:"boot_disk_size" tf:"optional"`
 	// If provided, the cluster will impersonate the google service account when
@@ -2252,7 +2252,7 @@ type GetEvents struct {
 	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
 	// An optional set of event types to filter on. If empty, all event types
 	// are returned.
-	EventTypes []EventType `tfsdk:"event_types" tf:"optional"`
+	EventTypes []types.String `tfsdk:"event_types" tf:"optional"`
 	// The maximum number of events to include in a page of events. Defaults to
 	// 50, and maximum allowed value is 500.
 	Limit types.Int64 `tfsdk:"limit" tf:"optional"`
@@ -2261,7 +2261,7 @@ type GetEvents struct {
 	// end_time field is required.
 	Offset types.Int64 `tfsdk:"offset" tf:"optional"`
 	// The order to list events in; either "ASC" or "DESC". Defaults to "DESC".
-	Order GetEventsOrder `tfsdk:"order" tf:"optional"`
+	Order types.String `tfsdk:"order" tf:"optional"`
 	// The start time in epoch milliseconds. If empty, returns events starting
 	// from the beginning of time.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
@@ -2381,7 +2381,7 @@ type GetInstancePool struct {
 	// :method:clusters/sparkVersions API call.
 	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions" tf:"optional"`
 	// Current state of the instance pool.
-	State InstancePoolState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 	// Usage statistics about the instance pool.
 	Stats *InstancePoolStats `tfsdk:"stats" tf:"optional"`
 	// Status of failed pending instances in the pool.
@@ -2527,7 +2527,7 @@ type InitScriptExecutionDetails struct {
 	// The duration of the script execution in seconds.
 	ExecutionDurationSeconds types.Int64 `tfsdk:"execution_duration_seconds" tf:"optional"`
 	// The current status of the script
-	Status InitScriptExecutionDetailsStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 // The current status of the script
@@ -2615,7 +2615,7 @@ type InstancePoolAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel InstancePoolPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -2704,7 +2704,7 @@ type InstancePoolAndStats struct {
 	// :method:clusters/sparkVersions API call.
 	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions" tf:"optional"`
 	// Current state of the instance pool.
-	State InstancePoolState `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional"`
 	// Usage statistics about the instance pool.
 	Stats *InstancePoolStats `tfsdk:"stats" tf:"optional"`
 	// Status of failed pending instances in the pool.
@@ -2716,7 +2716,7 @@ type InstancePoolAwsAttributes struct {
 	//
 	// The default value is defined by
 	// InstancePoolConf.instancePoolDefaultAwsAvailability
-	Availability InstancePoolAwsAttributesAvailability `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability" tf:"optional"`
 	// Calculates the bid price for AWS spot instances, as a percentage of the
 	// corresponding instance type's on-demand price. For example, if this field
 	// is set to 50, and the cluster needs a new `r3.xlarge` spot instance, then
@@ -2779,7 +2779,7 @@ type InstancePoolAzureAttributes struct {
 	//
 	// The default value is defined by
 	// InstancePoolConf.instancePoolDefaultAzureAvailability
-	Availability InstancePoolAzureAttributesAvailability `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability" tf:"optional"`
 	// The default value and documentation here should be kept consistent with
 	// CommonConf.defaultSpotBidMaxPrice.
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price" tf:"optional"`
@@ -2820,7 +2820,7 @@ type InstancePoolGcpAttributes struct {
 	// This field determines whether the instance pool will contain preemptible
 	// VMs, on-demand VMs, or preemptible VMs with a fallback to on-demand VMs
 	// if the former is unavailable.
-	GcpAvailability GcpAvailability `tfsdk:"gcp_availability" tf:"optional"`
+	GcpAvailability types.String `tfsdk:"gcp_availability" tf:"optional"`
 	// If provided, each node in the instance pool will have this number of
 	// local SSDs attached. Each local SSD is 375GB in size. Refer to [GCP
 	// documentation] for the supported number of local SSDs for each instance
@@ -2852,7 +2852,7 @@ type InstancePoolPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel InstancePoolPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -2894,7 +2894,7 @@ type InstancePoolPermissions struct {
 type InstancePoolPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel InstancePoolPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type InstancePoolPermissionsRequest struct {
@@ -3053,7 +3053,7 @@ type LibraryFullStatus struct {
 	// library.
 	Messages []types.String `tfsdk:"messages" tf:"optional"`
 	// Status of installing the library on the cluster.
-	Status LibraryInstallStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
 // The status of a library on a specific cluster.
@@ -3114,10 +3114,10 @@ type ListClusterPoliciesRequest struct {
 	// The cluster policy attribute to sort by. * `POLICY_CREATION_TIME` - Sort
 	// result list by policy creation time. * `POLICY_NAME` - Sort result list
 	// by policy name.
-	SortColumn ListSortColumn `tfsdk:"-" url:"sort_column,omitempty"`
+	SortColumn types.String `tfsdk:"-" url:"sort_column,omitempty"`
 	// The order in which the policies get listed. * `DESC` - Sort result list
 	// in descending order. * `ASC` - Sort result list in ascending order.
-	SortOrder ListSortOrder `tfsdk:"-" url:"sort_order,omitempty"`
+	SortOrder types.String `tfsdk:"-" url:"sort_order,omitempty"`
 }
 
 // List all clusters
@@ -3509,7 +3509,7 @@ type Results struct {
 	// internal field used by SDK
 	Pos types.Int64 `tfsdk:"pos" tf:"optional"`
 
-	ResultType ResultType `tfsdk:"resultType" tf:"optional"`
+	ResultType types.String `tfsdk:"resultType" tf:"optional"`
 	// The table schema
 	Schema []map[string]any `tfsdk:"schema" tf:"optional"`
 	// The summary of the error
@@ -3676,12 +3676,12 @@ func (f *State) Type() string {
 
 type TerminationReason struct {
 	// status code indicating why the cluster was terminated
-	Code TerminationReasonCode `tfsdk:"code" tf:"optional"`
+	Code types.String `tfsdk:"code" tf:"optional"`
 	// list of parameters that provide additional information about why the
 	// cluster was terminated
 	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
 	// type of the termination
-	Type TerminationReasonType `tfsdk:"type" tf:"optional"`
+	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
 // status code indicating why the cluster was terminated

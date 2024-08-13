@@ -24,9 +24,10 @@ import (
 	dbproviderlogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func init() {
@@ -138,7 +139,21 @@ func run(t *testing.T, steps []step) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
-	provider := provider.DatabricksProvider()
+
+	protoV6ProviderFactories := map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			ctx := context.Background()
+
+			providerServer, err := provider.GetProviderServer(ctx)
+
+			if err != nil {
+				return nil, err
+			}
+
+			return providerServer, nil
+		},
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Skip(err.Error())
@@ -164,13 +179,11 @@ func run(t *testing.T, steps []step) {
 		thisStep := s
 		stepCheck := thisStep.Check
 		stepPreConfig := s.PreConfig
-		providerFactories := map[string]func() (*schema.Provider, error){
-			"databricks": func() (*schema.Provider, error) {
-				return provider, nil
-			},
-		}
+		var providerFactories map[string]func() (*schema.Provider, error)
 		if thisStep.ProviderFactories != nil {
 			providerFactories = thisStep.ProviderFactories
+			// If there's step override, then unset the protoV6 factories.
+			protoV6ProviderFactories = nil
 		}
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
@@ -195,24 +208,8 @@ func run(t *testing.T, steps []step) {
 			ImportStateVerify:         s.ImportStateVerify,
 			ExpectError:               s.ExpectError,
 			ProviderFactories:         providerFactories,
+			ProtoV6ProviderFactories:  protoV6ProviderFactories,
 			Check: func(state *terraform.State) error {
-				// get configured client from provider
-				client := provider.Meta().(*common.DatabricksClient)
-
-				// Default check for all runs. Asserts that the read operation succeeds.
-				for n, is := range state.RootModule().Resources {
-					p := strings.Split(n, ".")
-
-					// Skip data resources.
-					if p[0] == "data" {
-						continue
-					}
-					r := provider.ResourcesMap[p[0]]
-					dia := r.ReadContext(ctx, r.Data(is.Primary), client)
-					if dia != nil {
-						return fmt.Errorf("%v", dia)
-					}
-				}
 				if stepCheck != nil {
 					return stepCheck(state)
 				}

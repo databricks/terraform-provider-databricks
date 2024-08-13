@@ -210,7 +210,7 @@ type CreateFileRequest struct {
 
 	FileParent FileParent `tfsdk:"file_parent" tf:""`
 
-	MarketplaceFileType MarketplaceFileType `tfsdk:"marketplace_file_type" tf:""`
+	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:""`
 
 	MimeType types.String `tfsdk:"mime_type" tf:""`
 }
@@ -228,7 +228,7 @@ type CreateInstallationRequest struct {
 
 	ListingId types.String `tfsdk:"-" url:"-"`
 
-	RecipientType DeltaSharingRecipientType `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 	// for git repo installations
 	RepoDetail *RepoInstallation `tfsdk:"repo_detail" tf:"optional"`
 
@@ -261,7 +261,7 @@ type CreatePersonalizationRequest struct {
 
 	ListingId types.String `tfsdk:"-" url:"-"`
 
-	RecipientType DeltaSharingRecipientType `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 }
 
 type CreatePersonalizationRequestResponse struct {
@@ -320,7 +320,7 @@ func (f *DataRefresh) Type() string {
 type DataRefreshInfo struct {
 	Interval types.Int64 `tfsdk:"interval" tf:""`
 
-	Unit DataRefresh `tfsdk:"unit" tf:""`
+	Unit types.String `tfsdk:"unit" tf:""`
 }
 
 // Delete an exchange filter
@@ -427,7 +427,7 @@ type ExchangeFilter struct {
 
 	ExchangeId types.String `tfsdk:"exchange_id" tf:""`
 
-	FilterType ExchangeFilterType `tfsdk:"filter_type" tf:""`
+	FilterType types.String `tfsdk:"filter_type" tf:""`
 
 	FilterValue types.String `tfsdk:"filter_value" tf:""`
 
@@ -492,11 +492,11 @@ type FileInfo struct {
 
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	MarketplaceFileType MarketplaceFileType `tfsdk:"marketplace_file_type" tf:"optional"`
+	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:"optional"`
 
 	MimeType types.String `tfsdk:"mime_type" tf:"optional"`
 
-	Status FileStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 	// Populated if status is in a failed state with more information on reason
 	// for the failure.
 	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
@@ -505,7 +505,7 @@ type FileInfo struct {
 }
 
 type FileParent struct {
-	FileParentType FileParentType `tfsdk:"file_parent_type" tf:"optional"`
+	FileParentType types.String `tfsdk:"file_parent_type" tf:"optional"`
 	// TODO make the following fields required
 	ParentId types.String `tfsdk:"parent_id" tf:"optional"`
 }
@@ -715,7 +715,7 @@ type InstallationDetail struct {
 
 	ListingName types.String `tfsdk:"listing_name" tf:"optional"`
 
-	RecipientType DeltaSharingRecipientType `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
 	RepoName types.String `tfsdk:"repo_name" tf:"optional"`
 
@@ -723,7 +723,7 @@ type InstallationDetail struct {
 
 	ShareName types.String `tfsdk:"share_name" tf:"optional"`
 
-	Status InstallationStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 
 	TokenDetail *TokenDetail `tfsdk:"token_detail" tf:"optional"`
 
@@ -889,9 +889,9 @@ type ListListingsForExchangeResponse struct {
 // List listings
 type ListListingsRequest struct {
 	// Matches any of the following asset types
-	Assets []AssetType `tfsdk:"-" url:"assets,omitempty"`
+	Assets []types.String `tfsdk:"-" url:"assets,omitempty"`
 	// Matches any of the following categories
-	Categories []Category `tfsdk:"-" url:"categories,omitempty"`
+	Categories []types.String `tfsdk:"-" url:"categories,omitempty"`
 
 	IsAscending types.Bool `tfsdk:"-" url:"is_ascending,omitempty"`
 	// Filters each listing based on if it is free.
@@ -907,7 +907,7 @@ type ListListingsRequest struct {
 	// Matches any of the following provider ids
 	ProviderIds []types.String `tfsdk:"-" url:"provider_ids,omitempty"`
 	// Criteria for sorting the resulting set of listings.
-	SortBy SortBy `tfsdk:"-" url:"sort_by,omitempty"`
+	SortBy types.String `tfsdk:"-" url:"sort_by,omitempty"`
 	// Matches any of the following tags
 	Tags []ListingTag `tfsdk:"-" url:"tags,omitempty"`
 }
@@ -956,7 +956,7 @@ type Listing struct {
 type ListingDetail struct {
 	// Type of assets included in the listing. eg. GIT_REPO, DATA_TABLE, MODEL,
 	// NOTEBOOK
-	Assets []AssetType `tfsdk:"assets" tf:"optional"`
+	Assets []types.String `tfsdk:"assets" tf:"optional"`
 	// The ending date timestamp for when the data spans
 	CollectionDateEnd types.Int64 `tfsdk:"collection_date_end" tf:"optional"`
 	// The starting date timestamp for when the data spans
@@ -964,7 +964,7 @@ type ListingDetail struct {
 	// Smallest unit of time in the dataset
 	CollectionGranularity *DataRefreshInfo `tfsdk:"collection_granularity" tf:"optional"`
 	// Whether the dataset is free or paid
-	Cost Cost `tfsdk:"cost" tf:"optional"`
+	Cost types.String `tfsdk:"cost" tf:"optional"`
 	// Where/how the data is sourced
 	DataSource types.String `tfsdk:"data_source" tf:"optional"`
 
@@ -1005,11 +1005,11 @@ type ListingDetail struct {
 }
 
 type ListingFulfillment struct {
-	FulfillmentType FulfillmentType `tfsdk:"fulfillment_type" tf:"optional"`
+	FulfillmentType types.String `tfsdk:"fulfillment_type" tf:"optional"`
 
 	ListingId types.String `tfsdk:"listing_id" tf:""`
 
-	RecipientType DeltaSharingRecipientType `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
 	RepoInfo *RepoInfo `tfsdk:"repo_info" tf:"optional"`
 
@@ -1020,7 +1020,7 @@ type ListingSetting struct {
 	// filters are joined with `or` conjunction.
 	Filters []VisibilityFilter `tfsdk:"filters" tf:"optional"`
 
-	Visibility Visibility `tfsdk:"visibility" tf:"optional"`
+	Visibility types.String `tfsdk:"visibility" tf:"optional"`
 }
 
 type ListingShareType string
@@ -1084,7 +1084,7 @@ func (f *ListingStatus) Type() string {
 
 // Next Number: 26
 type ListingSummary struct {
-	Categories []Category `tfsdk:"categories" tf:"optional"`
+	Categories []types.String `tfsdk:"categories" tf:"optional"`
 
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -1097,7 +1097,7 @@ type ListingSummary struct {
 	// field as opposed to a share
 	GitRepo *RepoInfo `tfsdk:"git_repo" tf:"optional"`
 
-	ListingType ListingType `tfsdk:"listingType" tf:""`
+	ListingType types.String `tfsdk:"listingType" tf:""`
 
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
 
@@ -1115,7 +1115,7 @@ type ListingSummary struct {
 
 	Share *ShareInfo `tfsdk:"share" tf:"optional"`
 	// Enums
-	Status ListingStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 
 	Subtitle types.String `tfsdk:"subtitle" tf:"optional"`
 
@@ -1128,7 +1128,7 @@ type ListingSummary struct {
 
 type ListingTag struct {
 	// Tag name (enum)
-	TagName ListingTagType `tfsdk:"tag_name" tf:"optional"`
+	TagName types.String `tfsdk:"tag_name" tf:"optional"`
 	// String representation of the tag value. Values should be string literals
 	// (no complex types)
 	TagValues []types.String `tfsdk:"tag_values" tf:"optional"`
@@ -1241,11 +1241,11 @@ type PersonalizationRequest struct {
 
 	ProviderId types.String `tfsdk:"provider_id" tf:"optional"`
 
-	RecipientType DeltaSharingRecipientType `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
 	Share *ShareInfo `tfsdk:"share" tf:"optional"`
 
-	Status PersonalizationRequestStatus `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional"`
 
 	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
 
@@ -1292,7 +1292,7 @@ type ProviderIconFile struct {
 
 	IconFilePath types.String `tfsdk:"icon_file_path" tf:"optional"`
 
-	IconType ProviderIconType `tfsdk:"icon_type" tf:"optional"`
+	IconType types.String `tfsdk:"icon_type" tf:"optional"`
 }
 
 type ProviderIconType string
@@ -1395,9 +1395,9 @@ type RepoInstallation struct {
 // Search listings
 type SearchListingsRequest struct {
 	// Matches any of the following asset types
-	Assets []AssetType `tfsdk:"-" url:"assets,omitempty"`
+	Assets []types.String `tfsdk:"-" url:"assets,omitempty"`
 	// Matches any of the following categories
-	Categories []Category `tfsdk:"-" url:"categories,omitempty"`
+	Categories []types.String `tfsdk:"-" url:"categories,omitempty"`
 
 	IsAscending types.Bool `tfsdk:"-" url:"is_ascending,omitempty"`
 
@@ -1413,7 +1413,7 @@ type SearchListingsRequest struct {
 	// Fuzzy matches query
 	Query types.String `tfsdk:"-" url:"query"`
 
-	SortBy SortBy `tfsdk:"-" url:"sort_by,omitempty"`
+	SortBy types.String `tfsdk:"-" url:"sort_by,omitempty"`
 }
 
 type SearchListingsResponse struct {
@@ -1425,7 +1425,7 @@ type SearchListingsResponse struct {
 type ShareInfo struct {
 	Name types.String `tfsdk:"name" tf:""`
 
-	Type ListingShareType `tfsdk:"type" tf:""`
+	Type types.String `tfsdk:"type" tf:""`
 }
 
 type SharedDataObject struct {
@@ -1550,7 +1550,7 @@ type UpdatePersonalizationRequestRequest struct {
 
 	Share *ShareInfo `tfsdk:"share" tf:"optional"`
 
-	Status PersonalizationRequestStatus `tfsdk:"status" tf:""`
+	Status types.String `tfsdk:"status" tf:""`
 }
 
 type UpdatePersonalizationRequestResponse struct {
@@ -1613,7 +1613,7 @@ func (f *Visibility) Type() string {
 }
 
 type VisibilityFilter struct {
-	FilterType FilterType `tfsdk:"filterType" tf:"optional"`
+	FilterType types.String `tfsdk:"filterType" tf:"optional"`
 
 	FilterValue types.String `tfsdk:"filterValue" tf:"optional"`
 }

@@ -111,9 +111,9 @@ func (f *ClusterAutoRestartMessageMaintenanceWindowDayOfWeek) Type() string {
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule struct {
-	DayOfWeek ClusterAutoRestartMessageMaintenanceWindowDayOfWeek `tfsdk:"day_of_week" tf:"optional"`
+	DayOfWeek types.String `tfsdk:"day_of_week" tf:"optional"`
 
-	Frequency ClusterAutoRestartMessageMaintenanceWindowWeekDayFrequency `tfsdk:"frequency" tf:"optional"`
+	Frequency types.String `tfsdk:"frequency" tf:"optional"`
 
 	WindowStartTime *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime `tfsdk:"window_start_time" tf:"optional"`
 }
@@ -166,7 +166,7 @@ type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime struct {
 // SHIELD feature: CSP
 type ComplianceSecurityProfile struct {
 	// Set by customers when they request Compliance Security Profile (CSP)
-	ComplianceStandards []ComplianceStandard `tfsdk:"compliance_standards" tf:"optional"`
+	ComplianceStandards []types.String `tfsdk:"compliance_standards" tf:"optional"`
 
 	IsEnabled types.Bool `tfsdk:"is_enabled" tf:"optional"`
 }
@@ -245,7 +245,7 @@ type CreateIpAccessList struct {
 	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
-	ListType ListType `tfsdk:"list_type" tf:""`
+	ListType types.String `tfsdk:"list_type" tf:""`
 }
 
 // An IP access list was successfully created.
@@ -287,7 +287,7 @@ type CreatePrivateEndpointRuleRequest struct {
 	// The sub-resource type (group ID) of the target resource. Note that to
 	// connect to workspace root storage (root DBFS), you need two endpoints,
 	// one for `blob` and one for `dfs`.
-	GroupId CreatePrivateEndpointRuleRequestGroupId `tfsdk:"group_id" tf:""`
+	GroupId types.String `tfsdk:"group_id" tf:""`
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-" url:"-"`
 	// The Azure resource ID of the target resource.
@@ -348,7 +348,7 @@ type CreateTokenResponse struct {
 type CspEnablementAccount struct {
 	// Set by customers when they request Compliance Security Profile (CSP)
 	// Invariants are enforced in Settings policy.
-	ComplianceStandards []ComplianceStandard `tfsdk:"compliance_standards" tf:"optional"`
+	ComplianceStandards []types.String `tfsdk:"compliance_standards" tf:"optional"`
 	// Enforced = it cannot be overriden at workspace level.
 	IsEnforced types.Bool `tfsdk:"is_enforced" tf:"optional"`
 }
@@ -570,7 +570,7 @@ type ExchangeToken struct {
 	// The scopes of access granted in the token.
 	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
 	// The type of this exchange token
-	TokenType TokenType `tfsdk:"tokenType" tf:"optional"`
+	TokenType types.String `tfsdk:"tokenType" tf:"optional"`
 }
 
 // Exchange a token with the IdP
@@ -580,7 +580,7 @@ type ExchangeTokenRequest struct {
 	// Array of scopes for the token request.
 	Scopes []types.String `tfsdk:"scopes" tf:""`
 	// A list of token types being requested
-	TokenType []TokenType `tfsdk:"tokenType" tf:""`
+	TokenType []types.String `tfsdk:"tokenType" tf:""`
 }
 
 // Exhanged tokens were successfully returned.
@@ -769,7 +769,7 @@ type IpAccessListInfo struct {
 	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
-	ListType ListType `tfsdk:"list_type" tf:"optional"`
+	ListType types.String `tfsdk:"list_type" tf:"optional"`
 	// Update timestamp in milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 	// User ID of the user who updated this list.
@@ -885,7 +885,7 @@ type NccAzurePrivateEndpointRule struct {
 	// DISCONNECTED: Connection was removed by the private link resource owner,
 	// the private endpoint becomes informative and should be deleted for
 	// clean-up.
-	ConnectionState NccAzurePrivateEndpointRuleConnectionState `tfsdk:"connection_state" tf:"optional"`
+	ConnectionState types.String `tfsdk:"connection_state" tf:"optional"`
 	// Time in epoch milliseconds when this object was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// Whether this private endpoint is deactivated.
@@ -897,7 +897,7 @@ type NccAzurePrivateEndpointRule struct {
 	// The sub-resource type (group ID) of the target resource. Note that to
 	// connect to workspace root storage (root DBFS), you need two endpoints,
 	// one for `blob` and one for `dfs`.
-	GroupId NccAzurePrivateEndpointRuleGroupId `tfsdk:"group_id" tf:"optional"`
+	GroupId types.String `tfsdk:"group_id" tf:"optional"`
 	// The ID of a network connectivity configuration, which is the parent
 	// resource of this private endpoint rule object.
 	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id" tf:"optional"`
@@ -1070,7 +1070,7 @@ type PersonalComputeMessage struct {
 	// users or groups to be added to the ACLs of that workspace’s Personal
 	// Compute default policy before they will be able to create compute
 	// resources through that policy.
-	Value PersonalComputeMessageEnum `tfsdk:"value" tf:""`
+	Value types.String `tfsdk:"value" tf:""`
 }
 
 // ON: Grants all users in all workspaces access to the Personal Compute default
@@ -1153,14 +1153,14 @@ type ReplaceIpAccessList struct {
 	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
-	ListType ListType `tfsdk:"list_type" tf:""`
+	ListType types.String `tfsdk:"list_type" tf:""`
 }
 
 type ReplaceResponse struct {
 }
 
 type RestrictWorkspaceAdminsMessage struct {
-	Status RestrictWorkspaceAdminsMessageStatus `tfsdk:"status" tf:""`
+	Status types.String `tfsdk:"status" tf:""`
 }
 
 type RestrictWorkspaceAdminsMessageStatus string
@@ -1231,7 +1231,7 @@ type TokenAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel TokenPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -1274,7 +1274,7 @@ type TokenPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel TokenPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -1314,7 +1314,7 @@ type TokenPermissions struct {
 type TokenPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel TokenPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type TokenPermissionsRequest struct {
@@ -1456,7 +1456,7 @@ type UpdateIpAccessList struct {
 	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
-	ListType ListType `tfsdk:"list_type" tf:"optional"`
+	ListType types.String `tfsdk:"list_type" tf:"optional"`
 }
 
 // Details required to update a setting.

@@ -37,80 +37,6 @@ func attributeToMap(attr *schema.Attribute) map[string]schema.Attribute {
 	return m
 }
 
-func (s *CustomizableSchemaPluginFramework) AddNewField(key string, newField schema.Attribute, path ...string) *CustomizableSchemaPluginFramework {
-	cb := func(a schema.Attribute) schema.Attribute {
-		switch attr := a.(type) {
-		case schema.SingleNestedAttribute:
-			_, exists := attr.Attributes[key]
-			if exists {
-				panic("Cannot add new field, " + key + " already exists in the schema")
-			}
-			attr.Attributes[key] = newField
-			return attr
-		case schema.ListNestedAttribute:
-			_, exists := attr.NestedObject.Attributes[key]
-			if exists {
-				panic("Cannot add new field, " + key + " already exists in the schema")
-			}
-			attr.NestedObject.Attributes[key] = newField
-			return attr
-		case schema.MapNestedAttribute:
-			_, exists := attr.NestedObject.Attributes[key]
-			if exists {
-				panic("Cannot add new field, " + key + " already exists in the schema")
-			}
-			attr.NestedObject.Attributes[key] = newField
-			return attr
-		default:
-			panic("attribute is not nested, cannot add field")
-		}
-	}
-
-	if len(path) == 0 {
-		s.attr = cb(s.attr)
-	} else {
-		navigateSchemaWithCallback(&s.attr, cb, path...)
-	}
-	return s
-}
-
-func (s *CustomizableSchemaPluginFramework) RemoveField(key string, path ...string) *CustomizableSchemaPluginFramework {
-	cb := func(a schema.Attribute) schema.Attribute {
-		switch attr := a.(type) {
-		case schema.SingleNestedAttribute:
-			_, exists := attr.Attributes[key]
-			if !exists {
-				panic("Cannot remove field, " + key + " does not exist in the schema")
-			}
-			delete(attr.Attributes, key)
-			return attr
-		case schema.ListNestedAttribute:
-			_, exists := attr.NestedObject.Attributes[key]
-			if !exists {
-				panic("Cannot remove field, " + key + " does not exist in the schema")
-			}
-			delete(attr.NestedObject.Attributes, key)
-			return attr
-		case schema.MapNestedAttribute:
-			_, exists := attr.NestedObject.Attributes[key]
-			if !exists {
-				panic("Cannot remove field, " + key + " does not exist in the schema")
-			}
-			delete(attr.NestedObject.Attributes, key)
-			return attr
-		default:
-			panic("attribute is not nested, cannot add field")
-		}
-	}
-
-	if len(path) == 0 {
-		s.attr = cb(s.attr)
-	} else {
-		navigateSchemaWithCallback(&s.attr, cb, path...)
-	}
-	return s
-}
-
 func (s *CustomizableSchemaPluginFramework) AddValidator(v any, path ...string) *CustomizableSchemaPluginFramework {
 	cb := func(attr schema.Attribute) schema.Attribute {
 		val := reflect.ValueOf(attr)
@@ -277,6 +203,88 @@ func (s *CustomizableSchemaPluginFramework) SetDeprecated(msg string, path ...st
 			}
 		} else {
 			panic(fmt.Sprintf("DeprecationMessage field not found or cannot be set in %T", attr))
+		}
+
+		return v.Interface().(schema.Attribute)
+	}
+
+	navigateSchemaWithCallback(&s.attr, cb, path...)
+
+	return s
+}
+
+func (s *CustomizableSchemaPluginFramework) SetComputed(path ...string) *CustomizableSchemaPluginFramework {
+	cb := func(attr schema.Attribute) schema.Attribute {
+		// Get the concrete value stored in the interface
+		v := reflect.ValueOf(attr)
+
+		// Make a new addressable value and copy the original value into it
+		newAttr := reflect.New(v.Type()).Elem()
+		newAttr.Set(v)
+		v = newAttr
+
+		field := v.FieldByName("Computed")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(true)
+			} else {
+				panic(fmt.Sprintf("Computed is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Computed field not found or cannot be set in %T", attr))
+		}
+
+		return v.Interface().(schema.Attribute)
+	}
+
+	navigateSchemaWithCallback(&s.attr, cb, path...)
+	return s
+}
+
+// SetReadOnly sets the schema to be read-only (i.e. computed, non-optional).
+// This should be used for fields that are not user-configurable but are returned
+// by the platform.
+func (s *CustomizableSchemaPluginFramework) SetReadOnly(path ...string) *CustomizableSchemaPluginFramework {
+	cb := func(attr schema.Attribute) schema.Attribute {
+		// Get the concrete value stored in the interface
+		v := reflect.ValueOf(attr)
+
+		// Make a new addressable value and copy the original value into it
+		newAttr := reflect.New(v.Type()).Elem()
+		newAttr.Set(v)
+		v = newAttr
+
+		field := v.FieldByName("Computed")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(true)
+			} else {
+				panic(fmt.Sprintf("Computed is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Computed field not found or cannot be set in %T", attr))
+		}
+
+		field = v.FieldByName("Optional")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(false)
+			} else {
+				panic(fmt.Sprintf("Optional is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Optional field not found or cannot be set in %T", attr))
+		}
+
+		field = v.FieldByName("Required")
+		if field.IsValid() && field.CanSet() {
+			if field.Kind() == reflect.Bool {
+				field.SetBool(false)
+			} else {
+				panic(fmt.Sprintf("Required is not a bool field in %T", attr))
+			}
+		} else {
+			panic(fmt.Sprintf("Required field not found or cannot be set in %T", attr))
 		}
 
 		return v.Interface().(schema.Attribute)

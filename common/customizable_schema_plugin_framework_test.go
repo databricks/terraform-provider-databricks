@@ -47,25 +47,20 @@ func (v stringLengthBetweenValidator) ValidateString(ctx context.Context, req va
 
 func TestCustomizeSchema(t *testing.T) {
 	scm := PluginFrameworkResourceStructToSchema(DummyTfSdk{}, func(c CustomizableSchemaPluginFramework) CustomizableSchemaPluginFramework {
-		c.AddNewField("new_field", schema.StringAttribute{Required: true})
-		c.AddNewField("new_field", schema.StringAttribute{Required: true}, "nested")
-		c.AddNewField("to_be_removed", schema.StringAttribute{Required: true}, "nested")
-		c.RemoveField("to_be_removed", "nested")
 		c.SetRequired("nested", "enabled")
 		c.SetOptional("description")
 		c.SetSensitive("nested", "name")
 		c.SetDeprecated("deprecated", "map")
+		c.SetReadOnly("map")
 		c.AddValidator(stringLengthBetweenValidator{}, "description")
 		return c
 	})
-	assert.True(t, scm.Attributes["new_field"].IsRequired())
-	assert.True(t, MustSchemaAttributePath(scm.Attributes, "nested", "new_field").IsRequired())
 	assert.True(t, MustSchemaAttributePath(scm.Attributes, "nested", "enabled").IsRequired())
 	assert.True(t, MustSchemaAttributePath(scm.Attributes, "nested", "name").IsSensitive())
 	assert.True(t, MustSchemaAttributePath(scm.Attributes, "map").GetDeprecationMessage() == "deprecated")
 	assert.True(t, scm.Attributes["description"].IsOptional())
-	attr := MustSchemaAttributePath(scm.Attributes, "nested").(schema.SingleNestedAttribute).Attributes
-	_, ok := attr["to_be_removed"]
+	assert.True(t, !scm.Attributes["map"].IsOptional())
+	assert.True(t, !scm.Attributes["map"].IsRequired())
+	assert.True(t, scm.Attributes["map"].IsComputed())
 	assert.True(t, len(MustSchemaAttributePath(scm.Attributes, "description").(schema.StringAttribute).Validators) == 1)
-	assert.True(t, !ok)
 }

@@ -18,7 +18,7 @@ import (
 
 type AclItem struct {
 	// The permission level applied to the principal.
-	Permission AclPermission `tfsdk:"permission" tf:""`
+	Permission types.String `tfsdk:"permission" tf:""`
 	// The principal in which the permission is applied.
 	Principal types.String `tfsdk:"principal" tf:""`
 }
@@ -128,7 +128,7 @@ type CreateScope struct {
 	Scope types.String `tfsdk:"scope" tf:""`
 	// The backend type the scope will be created with. If not specified, will
 	// default to `DATABRICKS`
-	ScopeBackendType ScopeBackendType `tfsdk:"scope_backend_type" tf:"optional"`
+	ScopeBackendType types.String `tfsdk:"scope_backend_type" tf:"optional"`
 }
 
 type CreateScopeResponse struct {
@@ -256,7 +256,7 @@ type ExportRequest struct {
 	// Markdown format. - `AUTO`: The object or directory is exported depending
 	// on the objects type. Directory exports will include notebooks and
 	// workspace files.
-	Format ExportFormat `tfsdk:"-" url:"format,omitempty"`
+	Format types.String `tfsdk:"-" url:"format,omitempty"`
 	// The absolute path of the object or directory. Exporting a directory is
 	// only supported for the `DBC`, `SOURCE`, and `AUTO` format.
 	Path types.String `tfsdk:"-" url:"path"`
@@ -373,10 +373,10 @@ type Import struct {
 	// notebook is imported in Databricks archive format. Required for
 	// directories. - `R_MARKDOWN`: The notebook is imported from R Markdown
 	// format.
-	Format ImportFormat `tfsdk:"format" tf:"optional"`
+	Format types.String `tfsdk:"format" tf:"optional"`
 	// The language of the object. This value is set only if the object type is
 	// `NOTEBOOK`.
-	Language Language `tfsdk:"language" tf:"optional"`
+	Language types.String `tfsdk:"language" tf:"optional"`
 	// The flag that specifies whether to overwrite existing object. It is
 	// `false` by default. For `DBC` format, `overwrite` is not supported since
 	// it may contain a directory.
@@ -550,7 +550,7 @@ type ObjectInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 	// The language of the object. This value is set only if the object type is
 	// `NOTEBOOK`.
-	Language Language `tfsdk:"language" tf:"optional"`
+	Language types.String `tfsdk:"language" tf:"optional"`
 	// Only applicable to files, the last modified UTC timestamp.
 	ModifiedAt types.Int64 `tfsdk:"modified_at" tf:"optional"`
 	// Unique identifier for the object.
@@ -560,7 +560,7 @@ type ObjectInfo struct {
 	// - `NOTEBOOK`: document that contains runnable code, visualizations, and
 	// explanatory text. - `DIRECTORY`: directory - `LIBRARY`: library - `FILE`:
 	// file - `REPO`: repository - `DASHBOARD`: Lakeview dashboard
-	ObjectType ObjectType `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 	// The absolute path of the object.
 	Path types.String `tfsdk:"path" tf:"optional"`
 	// A unique identifier for the object that is consistent across all
@@ -618,7 +618,7 @@ func (f *ObjectType) Type() string {
 
 type PutAcl struct {
 	// The permission level applied to the principal.
-	Permission AclPermission `tfsdk:"permission" tf:""`
+	Permission types.String `tfsdk:"permission" tf:""`
 	// The principal in which the permission is applied.
 	Principal types.String `tfsdk:"principal" tf:""`
 	// The name of the scope to apply permissions to.
@@ -646,7 +646,7 @@ type RepoAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel RepoPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -693,7 +693,7 @@ type RepoPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel RepoPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -739,7 +739,7 @@ type RepoPermissions struct {
 type RepoPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel RepoPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type RepoPermissionsRequest struct {
@@ -784,7 +784,7 @@ type SecretMetadata struct {
 
 type SecretScope struct {
 	// The type of secret scope backend.
-	BackendType ScopeBackendType `tfsdk:"backend_type" tf:"optional"`
+	BackendType types.String `tfsdk:"backend_type" tf:"optional"`
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
 	KeyvaultMetadata *AzureKeyVaultSecretScopeMetadata `tfsdk:"keyvault_metadata" tf:"optional"`
 	// A unique name to identify the secret scope.
@@ -848,7 +848,7 @@ type WorkspaceObjectAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
 	// Permission level
-	PermissionLevel WorkspaceObjectPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// application ID of a service principal
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
@@ -873,7 +873,7 @@ type WorkspaceObjectPermission struct {
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
-	PermissionLevel WorkspaceObjectPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 // Permission level
@@ -919,7 +919,7 @@ type WorkspaceObjectPermissions struct {
 type WorkspaceObjectPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
-	PermissionLevel WorkspaceObjectPermissionLevel `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
 type WorkspaceObjectPermissionsRequest struct {

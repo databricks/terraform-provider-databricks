@@ -181,10 +181,28 @@ func TestWorkspaceConfDelete(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.0/workspace-conf",
 				ExpectedRequest: map[string]string{
-					"enableFancyThing":     "false",
-					"enableSomething":      "false",
+					"enableFancyThing": "false",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"enableSomething": "false",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
 					"enforceSomethingElse": "false",
-					"someProperty":         "",
+				},
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"someProperty": "",
 				},
 			},
 		},
@@ -221,6 +239,64 @@ func TestWorkspaceConfDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "_", d.Id())
+}
+
+func TestWorkspaceConfDelete_MixedCaseBooleanValue(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"enableIpAccessLists": "false",
+				},
+				Response: map[string]string{
+					"enableIpAccessLists": "false",
+				},
+				Status: 200,
+			},
+		},
+		Resource: ResourceWorkspaceConf(),
+		Delete:   true,
+		HCL: `custom_config {
+			enableIpAccessLists = "TRue"
+		}`,
+		ID: "_",
+	}.ApplyNoError(t)
+}
+
+func TestWorkspaceConfDelete_SomeValuesAreNotAllowed(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"enableGp3": "",
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   `Some values are not allowed: {"enableGp3":""}`,
+				},
+				Status: 400,
+			},
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/workspace-conf",
+				ExpectedRequest: map[string]string{
+					"enableTokens": "false",
+				},
+				Status: 200,
+			},
+		},
+		Resource: ResourceWorkspaceConf(),
+		Delete:   true,
+		HCL: ` custom_config {
+		    enableGp3 = ""
+			enableTokens = "true"
+		}`,
+		ID: "_",
+	}.ApplyNoError(t)
 }
 
 func TestWorkspaceConfUpdateOnInvalidConf(t *testing.T) {

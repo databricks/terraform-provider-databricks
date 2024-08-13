@@ -30,13 +30,13 @@ The following arguments are required:
 
 * `metastore_id` - Unique identifier of the parent Metastore
 * `workspace_id` - id of the workspace for the assignment
-* `default_catalog_name` - (Optional) Default catalog used for this assignment, default to `hive_metastore`
+* `default_catalog_name` - (Deprecated) Default catalog used for this assignment. Please use [databricks_default_namespace_setting](default_namespace_setting.md) instead.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - ID of this metastore assignment in form of `<metastore_id>|<metastore_id>`.
+* `id` - ID of this metastore assignment in form of `<workspace_id>|<metastore_id>`.
 
 ## Import
 

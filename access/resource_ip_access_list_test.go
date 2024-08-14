@@ -3,7 +3,6 @@ package access
 // REST API: https://docs.databricks.com/dev-tools/api/latest/ip-access-list.html#operation/create-list
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -13,7 +12,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -310,27 +308,4 @@ func TestIPACLDelete_Error(t *testing.T) {
 		Removed:  true,
 		ID:       TestingId,
 	}.ExpectError(t, "Something went wrong")
-}
-
-func TestListIpAccessLists(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/ip-access-lists",
-			Response: map[string]any{},
-		},
-	})
-	require.NoError(t, err)
-
-	w, err := client.WorkspaceClient()
-	require.NoError(t, err)
-
-	defer server.Close()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	ipLists, err := w.IpAccessLists.Impl().List(ctx)
-
-	require.NoError(t, err)
-	assert.Equal(t, 0, len(ipLists.IpAccessLists))
 }

@@ -1,7 +1,6 @@
 package catalog
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -10,7 +9,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestVolumesCornerCases(t *testing.T) {
@@ -739,27 +737,4 @@ func TestVolumeDelete_Error(t *testing.T) {
 		Removed:  true,
 		ID:       "testCatalogName.testSchemaName.testName",
 	}.ExpectError(t, "Something went wrong")
-}
-
-func TestVolumesList(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   http.MethodGet,
-			Resource: "/api/2.1/unity-catalog/volumes?catalog_name=&schema_name=",
-			Response: map[string]any{},
-		},
-	})
-	require.NoError(t, err)
-
-	w, err := client.WorkspaceClient()
-	require.NoError(t, err)
-
-	defer server.Close()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	vLists, err := w.Volumes.Impl().List(ctx, catalog.ListVolumesRequest{})
-
-	require.NoError(t, err)
-	assert.Equal(t, 0, len(vLists.Volumes))
 }

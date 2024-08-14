@@ -60,10 +60,7 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	if err != nil {
 		return nil, err
 	}
-	internalImpl := w.CurrentUser.Impl()
-	w.CurrentUser.WithImpl(&cachedMe{
-		internalImpl: internalImpl,
-	})
+	w.CurrentUser = &cachedMe{internalImpl: w.CurrentUser}
 	c.cachedWorkspaceClient = w
 	return w, nil
 }

@@ -556,7 +556,7 @@ func dltIsMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourc
 }
 
 func (ic *importContext) emitWorkspaceBindings(securableType, securableName string) {
-	bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindings(ic.Context, catalog.GetBindingsRequest{
+	bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindingsAll(ic.Context, catalog.GetBindingsRequest{
 		SecurableName: securableName,
 		SecurableType: catalog.GetBindingsSecurableType(securableType),
 	})
@@ -564,7 +564,7 @@ func (ic *importContext) emitWorkspaceBindings(securableType, securableName stri
 		log.Printf("[ERROR] listing %s bindings for %s: %s", securableType, securableName, err.Error())
 		return
 	}
-	for _, binding := range bindings.Bindings {
+	for _, binding := range bindings {
 		id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securableType, securableName)
 		// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
 		// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now

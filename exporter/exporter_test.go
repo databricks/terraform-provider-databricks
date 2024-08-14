@@ -1160,7 +1160,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 							},
 						},
 						NotebookTask: &jobs.NotebookTask{
-							NotebookPath: "/Test",
+							NotebookPath: "/Workspace/Test",
 						},
 						PipelineTask: &jobs.PipelineTask{
 							PipelineID: "123",
@@ -1289,6 +1289,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
+			noCurrentMetastoreAttached,
 			emptyRepos,
 			{
 				Method:   "GET",
@@ -1523,20 +1524,35 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 			ic.Directory = tmpDir
 
-			err := ic.Importables["databricks_job"].List(ic)
+			err := ic.Run()
 			assert.NoError(t, err)
 
-			resources := ic.Scope.Sorted()
-			for _, res := range resources {
-				if res.Resource != "databricks_job" {
-					continue
-				}
-				// simulate complex HCL write
-				err = ic.dataToHcl(ic.Importables["databricks_job"], []string{}, ic.Resources["databricks_job"],
-					res, hclwrite.NewEmptyFile().Body())
-
-				assert.NoError(t, err)
-			}
+			content, err := os.ReadFile(tmpDir + "/jobs.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_job" "dummy_14"`))
+			assert.True(t, strings.Contains(contentStr, `spark_jar_task {
+      main_class_name = "com.databricks.examples.ProjectDriver"
+      jar_uri         = databricks_dbfs_file._0eee4efe7411a5bdca65d7b79188026c_test_jar.dbfs_path
+    }`))
+			assert.True(t, strings.Contains(contentStr, `run_job_task {
+      job_id = databricks_job.dummy_14.id
+    }`))
+			assert.True(t, strings.Contains(contentStr, `notebook_task {
+      notebook_path = "/Test"
+    }`))
+			assert.True(t, strings.Contains(contentStr, `library {
+      jar = databricks_dbfs_file._0eee4efe7411a5bdca65d7b79188026c_test_jar.dbfs_path
+    }`))
+			assert.True(t, strings.Contains(contentStr, `job_cluster {
+    new_cluster {
+      spark_version    = "6.4.x-scala2.11"
+      policy_id        = "123"
+      num_workers      = 2
+      instance_pool_id = databricks_instance_pool.pool_1.id
+    }
+    job_cluster_key = "shared"
+  }`))
 		})
 }
 

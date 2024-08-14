@@ -390,7 +390,7 @@ func getEnvAsInt(envName string, defaultValue int) int {
 var (
 	maxRetries        = 5
 	retryDelaySeconds = 2
-	retriableErrors   = []string{"deadline exceeded", "Error handling request", "Timed out after "}
+	retriableErrors   = []string{"deadline exceeded", "Error handling request", "Timed out after ", "Operation timed out"}
 )
 
 func isRetryableError(err string, i int) bool {

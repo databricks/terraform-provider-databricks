@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
+// Common interface for all attributes, we need this because in terraform plugin framework, the datasource schema and resource
+// schema are in two separate packages. This common interface prevents us from keeping two copies of StructToSchema and CustomizableSchema.
 type Attribute interface {
 	ToDataSourceAttribute() dataschema.Attribute
 	ToResourceAttribute() schema.Attribute

@@ -5,7 +5,6 @@ import (
 )
 
 func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "account")
 	if isAzure(t) {
 		accountLevel(t, step{
 			Template: `

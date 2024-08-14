@@ -120,10 +120,11 @@ func TestResourcePipelineCreate(t *testing.T) {
 			e.Get(mock.Anything, pipelines.GetPipelineRequest{
 				PipelineId: "abcd",
 			}).Return(&pipelines.GetPipelineResponse{
-				PipelineId: "abcd",
-				Name:       "test-pipeline",
-				State:      pipelines.PipelineStateRunning,
-				Spec:       &basicPipelineSpec,
+				PipelineId:   "abcd",
+				Name:         "test-pipeline",
+				State:        pipelines.PipelineStateRunning,
+				LastModified: 123456,
+				Spec:         &basicPipelineSpec,
 			}, nil).Once()
 
 		},
@@ -158,7 +159,9 @@ func TestResourcePipelineCreate(t *testing.T) {
 			}
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id": "abcd",
+		"id":            "abcd",
+		"last_modified": 123456,
+		"state":         "RUNNING",
 	})
 }
 
@@ -285,8 +288,59 @@ func TestResourcePipelineRead(t *testing.T) {
 			"key1": "value1",
 			"key2": "value2",
 		},
-		"filters.0.include.0": "com.databricks.include",
-		"continuous":          false,
+		"cluster": []any{
+			map[string]any{
+				"apply_policy_default_values":  false,
+				"autoscale":                    []any{},
+				"aws_attributes":               []any{},
+				"azure_attributes":             []any{},
+				"cluster_log_conf":             []any{},
+				"driver_instance_pool_id":      "",
+				"driver_node_type_id":          "",
+				"enable_local_disk_encryption": false,
+				"gcp_attributes":               []any{},
+				"init_scripts":                 []any{},
+				"instance_pool_id":             "",
+				"node_type_id":                 "",
+				"num_workers":                  0,
+				"policy_id":                    "",
+				"spark_conf":                   map[string]any{},
+				"spark_env_vars":               map[string]any{},
+				"ssh_public_keys":              []any{},
+				"label":                        "default",
+				"custom_tags": map[string]any{
+					"cluster_tag1": "cluster_value1",
+				},
+			},
+		},
+		"library": []any{
+			map[string]any{
+				"file":  []any{},
+				"maven": []any{},
+				"jar":   "",
+				"whl":   "",
+				"notebook": []any{
+					map[string]any{
+						"path": "/Test",
+					},
+				},
+			},
+		},
+		"filters": []any{
+			map[string]any{
+				"include": []any{"com.databricks.include"},
+				"exclude": []any{"com.databricks.exclude"},
+			},
+		},
+		"deployment": []any{
+			map[string]any{
+				"kind":               "BUNDLE",
+				"metadata_file_path": "/foo/bar",
+			},
+		},
+		"edition":    "ADVANCED",
+		"channel":    "CURRENT",
+		"continuous": false,
 	})
 }
 

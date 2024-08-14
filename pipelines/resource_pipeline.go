@@ -176,7 +176,8 @@ type Pipeline struct {
 
 func (Pipeline) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"pipelines.Pipeline": aliasMap,
+		"pipelines.Pipeline":     aliasMap,
+		"pipelines.PipelineSpec": aliasMap,
 	}
 
 }
@@ -217,6 +218,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("cause").SetComputed()
 	s.SchemaPath("cluster_id").SetComputed()
 	s.SchemaPath("creator_user_name").SetComputed()
+	s.SchemaPath("run_as_user_name").SetComputed()
 
 	// SuppressDiff fields
 	s.SchemaPath("edition").SetSuppressDiff()
@@ -274,12 +276,7 @@ func ResourcePipeline() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = Create(w, ctx, d, d.Timeout(schema.TimeoutCreate))
-			if err != nil {
-				return err
-			}
-			d.Set("url", c.FormatURL("#joblist/pipelines/", d.Id()))
-			return nil
+			return Create(w, ctx, d, d.Timeout(schema.TimeoutCreate))
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -294,7 +291,20 @@ func ResourcePipeline() common.Resource {
 			if readPipeline.Spec == nil {
 				return fmt.Errorf("pipeline spec is nil for '%v'", readPipeline.PipelineId)
 			}
-			return common.StructToData(readPipeline.Spec, pipelineSchema, d)
+			p := Pipeline{
+				PipelineSpec:    *readPipeline.Spec,
+				Cause:           readPipeline.Cause,
+				ClusterId:       readPipeline.ClusterId,
+				CreatorUserName: readPipeline.CreatorUserName,
+				Health:          readPipeline.Health,
+				LastModified:    readPipeline.LastModified,
+				LatestUpdates:   readPipeline.LatestUpdates,
+				RunAsUserName:   readPipeline.RunAsUserName,
+				State:           readPipeline.State,
+				// Provides the URL to the pipeline in the Databricks UI.
+				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
+			}
+			return common.StructToData(p, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

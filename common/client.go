@@ -22,6 +22,12 @@ type cachedMe struct {
 	mu           sync.Mutex
 }
 
+func newCachedMe(inner iam.CurrentUserService) *cachedMe {
+	return &cachedMe{
+		internalImpl: inner,
+	}
+}
+
 func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -60,7 +66,7 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	if err != nil {
 		return nil, err
 	}
-	w.CurrentUser = &cachedMe{internalImpl: w.CurrentUser}
+	w.CurrentUser = newCachedMe(w.CurrentUser)
 	c.cachedWorkspaceClient = w
 	return w, nil
 }

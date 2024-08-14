@@ -21,7 +21,7 @@ func TestAccSQLEndpoint(t *testing.T) {
 			tags {
 				custom_tags {
 					key   = "Owner"
-					value = "eng-dev-ecosystem-team@databricks.com"
+					value = "eng-dev-ecosystem-team_at_databricks.com"
 				}
 			}
 		}`,
@@ -37,7 +37,7 @@ func TestAccSQLEndpoint(t *testing.T) {
 			tags {
 				custom_tags {
 					key   = "Owner"
-					value = "eng-dev-ecosystem-team@databricks.com"
+					value = "eng-dev-ecosystem-team_at_databricks.com"
 				}
 			}
 		}`,

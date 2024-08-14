@@ -55,12 +55,13 @@ func TestCustomizeSchema(t *testing.T) {
 		c.AddValidator(stringLengthBetweenValidator{}, "description")
 		return c
 	})
-	assert.True(t, MustSchemaAttributePath(scm.Attributes, "nested", "enabled").IsRequired())
-	assert.True(t, MustSchemaAttributePath(scm.Attributes, "nested", "name").IsSensitive())
-	assert.True(t, MustSchemaAttributePath(scm.Attributes, "map").GetDeprecationMessage() == "deprecated")
+
+	assert.True(t, scm.Attributes["nested"].(schema.SingleNestedAttribute).Attributes["enabled"].IsRequired())
+	assert.True(t, scm.Attributes["nested"].(schema.SingleNestedAttribute).Attributes["name"].IsSensitive())
+	assert.True(t, scm.Attributes["map"].GetDeprecationMessage() == "deprecated")
 	assert.True(t, scm.Attributes["description"].IsOptional())
 	assert.True(t, !scm.Attributes["map"].IsOptional())
 	assert.True(t, !scm.Attributes["map"].IsRequired())
 	assert.True(t, scm.Attributes["map"].IsComputed())
-	assert.True(t, len(MustSchemaAttributePath(scm.Attributes, "description").(schema.StringAttribute).Validators) == 1)
+	assert.True(t, len(scm.Attributes["description"].(schema.StringAttribute).Validators) == 1)
 }

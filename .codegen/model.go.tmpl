@@ -59,7 +59,7 @@ func (f *{{.PascalName}}) Type() string {
 {{end}}
 
 {{- define "field-tag" -}}
-	{{if .IsJson}}tfsdk:"{{.Name}}" tf:"{{if not .Required}}optional{{end}}"{{else}}tfsdk:"-"{{end -}}
+	{{if .IsJson}}tfsdk:"{{if and (ne .Entity.Terraform nil) (ne .Entity.Terraform.Alias "") }}{{.Entity.Terraform.Alias}}{{else}}{{.Name}}{{end}}" tf:"{{if not .Required}}optional{{end}}"{{else}}tfsdk:"-"{{end -}}
 	{{if .IsPath}} url:"-"{{end -}}
 	{{if .IsHeader}} url:"-" header:"{{.Name}}{{if not .Required}},omitempty{{end}}"{{end -}}
 	{{if .IsQuery}} url:"{{.Name}}{{if not .Required}},omitempty{{end}}"{{end -}}

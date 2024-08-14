@@ -24,6 +24,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -305,6 +306,13 @@ var emptyRepos = qa.HTTPFixture{
 	Response:     repos.ReposListResponse{},
 }
 
+var emptyVectorSearch = qa.HTTPFixture{
+	Method:       "GET",
+	ReuseRequest: true,
+	Resource:     "/api/2.0/vector-search/endpoints?",
+	Response:     sdk_vs.ListEndpointResponse{},
+}
+
 var emptyShares = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -444,6 +452,12 @@ var emptyLakeviewList = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyDestinationNotficationsList = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.0/notification-destinations?",
+	Response: settings.ListNotificationDestinationsResponse{},
+}
+
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	listSpFixtures := qa.ListServicePrincipalsFixtures([]iam.ServicePrincipal{
 		{
@@ -464,6 +478,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 	})
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
+			emptyDestinationNotficationsList,
 			noCurrentMetastoreAttached,
 			emptyLakeviewList,
 			emptyMetastoreList,
@@ -484,6 +499,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptySqlEndpoints,
 			emptySqlQueries,
 			emptySqlAlerts,
+			emptyVectorSearch,
 			emptyPipelines,
 			emptyClusterPolicies,
 			emptyPolicyFamilies,
@@ -739,6 +755,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			noCurrentMetastoreAttached,
 			emptyLakeviewList,
+			emptyDestinationNotficationsList,
 			emptyMetastoreList,
 			emptyRepos,
 			emptyExternalLocations,
@@ -757,6 +774,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyIpAccessLIst,
 			emptyWorkspace,
 			emptySqlEndpoints,
+			emptyVectorSearch,
 			emptySqlQueries,
 			emptySqlDashboards,
 			emptySqlAlerts,
@@ -1011,6 +1029,22 @@ func TestImportingClusters(t *testing.T) {
 			err := ic.Run()
 			os.Unsetenv("EXPORTER_PARALLELISM_default")
 			assert.NoError(t, err)
+			content, err := os.ReadFile(tmpDir + "/compute.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_cluster" "test1_test1"`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_cluster" "test_cluster_policy_test2"`))
+			assert.True(t, strings.Contains(contentStr, `policy_id                    = databricks_cluster_policy.users_cluster_policy.id`))
+			assert.True(t, strings.Contains(contentStr, `autotermination_minutes = 0`))
+			assert.True(t, strings.Contains(contentStr, `autotermination_minutes = 120`))
+			assert.True(t, strings.Contains(contentStr, `library {
+    jar = databricks_dbfs_file._0eee4efe7411a5bdca65d7b79188026c_test_jar.dbfs_path
+  }`))
+			assert.True(t, strings.Contains(contentStr, `init_scripts {
+    dbfs {
+      destination = databricks_dbfs_file._0eee4efe7411a5bdca65d7b79188026c_test_jar.dbfs_path
+    }
+  }`))
 		})
 }
 
@@ -1095,6 +1129,11 @@ func TestImportingJobs_JobList(t *testing.T) {
 						},
 						EmailNotifications: &sdk_jobs.JobEmailNotifications{
 							OnFailure: []string{"user@domain.com"},
+						},
+						WebhookNotifications: &sdk_jobs.WebhookNotifications{
+							OnSuccess: []sdk_jobs.Webhook{
+								{Id: "123"},
+							},
 						},
 						Libraries: []compute.Library{
 							{Jar: "dbfs:/FileStore/jars/test.jar"},
@@ -1346,6 +1385,14 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 								RunJobTask: &jobs.RunJobTask{
 									JobID: 14,
 								},
+								WebhookNotifications: &sdk_jobs.WebhookNotifications{
+									OnSuccess: []sdk_jobs.Webhook{
+										{Id: "123"},
+									},
+								},
+								EmailNotifications: &sdk_jobs.TaskEmailNotifications{
+									OnFailure: []string{"user@domain.com"},
+								},
 							},
 							{
 								TaskKey: "dummy2",
@@ -1366,6 +1413,14 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 						},
 						Name:   "Dummy",
 						Format: "MULTI_TASK",
+						WebhookNotifications: &sdk_jobs.WebhookNotifications{
+							OnSuccess: []sdk_jobs.Webhook{
+								{Id: "123"},
+							},
+						},
+						EmailNotifications: &sdk_jobs.JobEmailNotifications{
+							OnFailure: []string{"user@domain.com"},
+						},
 						JobClusters: []jobs.JobCluster{
 							{
 								JobClusterKey: "shared",
@@ -2734,4 +2789,157 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			contentStr = string(content)
 			assert.Equal(t, `{}`, contentStr)
 		})
+}
+
+func TestNotificationDestinationExport(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		meAdminFixture,
+		noCurrentMetastoreAttached,
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/notification-destinations?",
+			Response: settings.ListNotificationDestinationsResponse{
+				Results: []settings.ListNotificationDestinationsResult{
+					{
+						DisplayName:     "email",
+						Id:              "123",
+						DestinationType: "EMAIL",
+					},
+					{
+						DisplayName:     "slack",
+						Id:              "234",
+						DestinationType: "SLACK",
+					},
+					{
+						DisplayName:     "teams",
+						Id:              "345",
+						DestinationType: "MICROSOFT_TEAMS",
+					},
+					{
+						DisplayName:     "pagerdruty",
+						Id:              "456",
+						DestinationType: "PAGERDUTY",
+					},
+					{
+						DisplayName:     "webhook",
+						Id:              "8481e00d-3e55-4c6c-8462-33b60d1cdc94",
+						DestinationType: "WEBHOOK",
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/notification-destinations/123?",
+			Response: settings.NotificationDestination{
+				DisplayName:     "email",
+				Id:              "123",
+				DestinationType: "EMAIL",
+				Config: &settings.Config{
+					Email: &settings.EmailConfig{
+						Addresses: []string{"user@domain.com"},
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/notification-destinations/234?",
+			Response: settings.NotificationDestination{
+				DisplayName:     "slack",
+				Id:              "234",
+				DestinationType: "SLACK",
+				Config: &settings.Config{
+					Slack: &settings.SlackConfig{
+						UrlSet: true,
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/notification-destinations/345?",
+			Response: settings.NotificationDestination{
+				DisplayName:     "teams",
+				Id:              "345",
+				DestinationType: "MICROSOFT_TEAMS",
+				Config: &settings.Config{
+					MicrosoftTeams: &settings.MicrosoftTeamsConfig{
+						UrlSet: true,
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/notification-destinations/456?",
+			Response: settings.NotificationDestination{
+				DisplayName:     "pagerdruty",
+				Id:              "456",
+				DestinationType: "PAGERDUTY",
+				Config: &settings.Config{
+					Pagerduty: &settings.PagerdutyConfig{
+						IntegrationKeySet: true,
+					},
+				},
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/notification-destinations/8481e00d-3e55-4c6c-8462-33b60d1cdc94?",
+			Response: settings.NotificationDestination{
+				DisplayName:     "webhook",
+				Id:              "567",
+				DestinationType: "WEBHOOK",
+				Config: &settings.Config{
+					GenericWebhook: &settings.GenericWebhookConfig{
+						UrlSet:      true,
+						PasswordSet: true,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+
+		ic := newImportContext(client)
+		ic.Directory = tmpDir
+		ic.enableListing("settings")
+		ic.enableServices("settings")
+
+		err := ic.Run()
+		assert.NoError(t, err)
+
+		content, err := os.ReadFile(tmpDir + "/settings.tf")
+		assert.NoError(t, err)
+		contentStr := string(content)
+		assert.True(t, strings.Contains(contentStr, `resource "databricks_notification_destination" "pagerdruty_456"`))
+		assert.True(t, strings.Contains(contentStr, `resource "databricks_notification_destination" "teams_345"`))
+		assert.True(t, strings.Contains(contentStr, `resource "databricks_notification_destination" "email_123" {
+  display_name = "email"
+  config {
+    email {
+      addresses = ["user@domain.com"]
+    }
+  }
+}`))
+		assert.True(t, strings.Contains(contentStr, `resource "databricks_notification_destination" "webhook_8481e00d" {
+  display_name = "webhook"
+  config {
+    generic_webhook {
+      url      = var.config_webhook_8481e00d
+      password = var.config_webhook_8481e00d_1
+    }
+  }
+}`))
+		assert.True(t, strings.Contains(contentStr, `resource "databricks_notification_destination" "slack_234" {
+  display_name = "slack"
+  config {
+    slack {
+      url = var.config_slack_234
+    }
+  }
+}`))
+	})
 }

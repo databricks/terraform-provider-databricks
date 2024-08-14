@@ -17,6 +17,7 @@ import (
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
+	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -35,6 +36,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/secrets"
 	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	"github.com/databricks/terraform-provider-databricks/storage"
+	tf_vs "github.com/databricks/terraform-provider-databricks/vectorsearch"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/stretchr/testify/assert"
@@ -294,9 +296,30 @@ func TestRepoIgnore(t *testing.T) {
 func TestDLTIgnore(t *testing.T) {
 	ic := importContextForTest()
 	d := dlt_pipelines.ResourcePipeline().ToResource().TestResourceData()
+	scm := dlt_pipelines.ResourcePipeline().Schema
+
 	d.SetId("12345")
 	r := &resource{ID: "12345", Data: d}
 	// job without libraries
+	assert.True(t, resourcesMap["databricks_pipeline"].Ignore(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+
+	// job deployed by DABs
+	d.MarkNewResource()
+	pipeline := dlt_pipelines.Pipeline{
+		PipelineSpec: pipelines.PipelineSpec{
+			Deployment: &pipelines.PipelineDeployment{
+				Kind: "BUNDLE",
+			},
+		},
+	}
+	err := common.StructToData(pipeline, scm, d)
+	require.NoError(t, err)
+
+	r = &resource{ID: "12345", Data: d}
+	for k := range ic.ignoredResources {
+		delete(ic.ignoredResources, k)
+	}
 	assert.True(t, resourcesMap["databricks_pipeline"].Ignore(ic, r))
 	assert.Equal(t, 1, len(ic.ignoredResources))
 }
@@ -2272,5 +2295,140 @@ func TestImportUcOnlineTable(t *testing.T) {
 		require.Equal(t, 2, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: main.tmp.tbl)"])
 		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: table/main.tmp.tbl_ot)"])
+	})
+}
+
+func TestImportVectorSearchEndpointList(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/vector-search/endpoints?",
+			Response: sdk_vs.ListEndpointResponse{
+				Endpoints: []sdk_vs.EndpointInfo{
+					{
+						Name:                 "test",
+						LastUpdatedTimestamp: 1234567890,
+					},
+					{
+						Name:                 "test2",
+						LastUpdatedTimestamp: 2234567890,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+		os.Mkdir(tmpDir, 0700)
+		ic.Directory = tmpDir
+		ic.enableServices("vector-search")
+		ic.currentMetastore = currentMetastoreResponse
+
+		err := resourcesMap["databricks_vector_search_endpoint"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_vector_search_endpoint[<unknown>] (id: test)"])
+		assert.True(t, ic.testEmits["databricks_vector_search_endpoint[<unknown>] (id: test2)"])
+	})
+}
+
+func TestImportVectorSearchEndpoint(t *testing.T) {
+	vseName := "test"
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/vector-search/indexes?endpoint_name=test",
+			Response: sdk_vs.ListVectorIndexesResponse{
+				VectorIndexes: []sdk_vs.MiniVectorIndex{
+					{
+						Name: "idx1",
+					},
+					{
+						Name: "idx2",
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+		os.Mkdir(tmpDir, 0700)
+		ic.Directory = tmpDir
+		ic.enableServices("vector-search")
+		ic.currentMetastore = currentMetastoreResponse
+
+		d := tf_vs.ResourceVectorSearchEndpoint().ToResource().TestResourceData()
+		vse := sdk_vs.EndpointInfo{
+			Name: vseName,
+		}
+		d.SetId(vseName)
+		d.MarkNewResource()
+		scm := tf_vs.ResourceVectorSearchEndpoint().Schema
+		err := common.StructToData(vse, scm, d)
+		require.NoError(t, err)
+
+		err = resourcesMap["databricks_vector_search_endpoint"].Import(ic, &resource{
+			ID:   vseName,
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_vector_search_index[<unknown>] (id: idx1)"])
+		assert.True(t, ic.testEmits["databricks_vector_search_index[<unknown>] (id: idx2)"])
+	})
+}
+
+func TestImportVectorSearchIndex(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+		defer os.RemoveAll(tmpDir)
+		os.Mkdir(tmpDir, 0700)
+		ic.Directory = tmpDir
+		ic.enableServices("vector-search,uc-tables,uc-grants,model-serving")
+		ic.currentMetastore = currentMetastoreResponse
+
+		vsiName := "main.tmp.vsi"
+		d := tf_vs.ResourceVectorSearchIndex().ToResource().TestResourceData()
+		ot := sdk_vs.VectorIndex{
+			Name:         vsiName,
+			PrimaryKey:   "id",
+			EndpointName: "vs",
+			DeltaSyncIndexSpec: &sdk_vs.DeltaSyncVectorIndexSpecResponse{
+				SourceTable: "main.tmp.tbl",
+				EmbeddingSourceColumns: []sdk_vs.EmbeddingSourceColumn{
+					{
+						Name:                       "col1",
+						EmbeddingModelEndpointName: "test",
+					},
+				},
+			},
+			DirectAccessIndexSpec: &sdk_vs.DirectAccessVectorIndexSpec{
+				EmbeddingSourceColumns: []sdk_vs.EmbeddingSourceColumn{
+					{
+						Name:                       "col1",
+						EmbeddingModelEndpointName: "test",
+					},
+				},
+			},
+		}
+		d.SetId(vsiName)
+		d.MarkNewResource()
+		scm := tf_vs.ResourceVectorSearchIndex().Schema
+		err := common.StructToData(ot, scm, d)
+		require.NoError(t, err)
+
+		err = resourcesMap["databricks_vector_search_index"].Import(ic, &resource{
+			ID:   vsiName,
+			Data: d,
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 4, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: table/main.tmp.vsi)"])
+		assert.True(t, ic.testEmits["databricks_vector_search_endpoint[<unknown>] (id: vs)"])
+		assert.True(t, ic.testEmits["databricks_sql_table[<unknown>] (id: main.tmp.tbl)"])
+		assert.True(t, ic.testEmits["databricks_model_serving[<unknown>] (id: test)"])
 	})
 }

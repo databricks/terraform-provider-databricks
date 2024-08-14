@@ -25,6 +25,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -32,7 +33,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
+	tfpipelines "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
+	tfsettings "github.com/databricks/terraform-provider-databricks/settings"
 	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
@@ -433,12 +436,31 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_sql_query"},
 			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+			{Path: "task.webhook_notifications.on_duration_warning_threshold_exceeded.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
+			{Path: "task.email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
+				Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_start", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_streaming_backlog_exceeded", Resource: "databricks_user",
+				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "webhook_notifications.on_duration_warning_threshold_exceeded.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
 			{Path: "email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_start", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "email_notifications.on_streaming_backlog_exceeded", Resource: "databricks_user",
+				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "task.library.whl", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
@@ -580,6 +602,21 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       task.ExistingClusterId,
 				})
 				ic.emitLibraries(task.Libraries)
+
+				if task.WebhookNotifications != nil {
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnFailure)
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnSuccess)
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnDurationWarningThresholdExceeded)
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnStart)
+					ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnStreamingBacklogExceeded)
+				}
+				if task.EmailNotifications != nil {
+					ic.emitListOfUsers(task.EmailNotifications.OnDurationWarningThresholdExceeded)
+					ic.emitListOfUsers(task.EmailNotifications.OnFailure)
+					ic.emitListOfUsers(task.EmailNotifications.OnStart)
+					ic.emitListOfUsers(task.EmailNotifications.OnSuccess)
+					ic.emitListOfUsers(task.EmailNotifications.OnStreamingBacklogExceeded)
+				}
 			}
 			for _, jc := range job.JobClusters {
 				ic.importCluster(&jc.NewCluster)
@@ -605,6 +642,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.emitListOfUsers(job.EmailNotifications.OnFailure)
 				ic.emitListOfUsers(job.EmailNotifications.OnStart)
 				ic.emitListOfUsers(job.EmailNotifications.OnSuccess)
+				ic.emitListOfUsers(job.EmailNotifications.OnStreamingBacklogExceeded)
+			}
+			if job.WebhookNotifications != nil {
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnFailure)
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnSuccess)
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnDurationWarningThresholdExceeded)
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnStart)
+				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnStreamingBacklogExceeded)
 			}
 
 			return ic.importLibraries(r.Data, s)
@@ -1976,7 +2021,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var pipeline pipelines.PipelineSpec
+			var pipeline tfpipelines.Pipeline
 			s := ic.Resources["databricks_pipeline"].Schema
 			common.DataToStructPointer(r.Data, s, &pipeline)
 			if pipeline.Catalog != "" && pipeline.Target != "" {
@@ -1985,15 +2030,17 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       pipeline.Catalog + "." + pipeline.Target,
 				})
 			}
-			for _, lib := range pipeline.Libraries {
-				if lib.Notebook != nil {
-					ic.emitNotebookOrRepo(lib.Notebook.Path)
+			if pipeline.Deployment == nil || pipeline.Deployment.Kind == "BUNDLE" {
+				for _, lib := range pipeline.Libraries {
+					if lib.Notebook != nil {
+						ic.emitNotebookOrRepo(lib.Notebook.Path)
+					}
+					if lib.File != nil {
+						ic.emitNotebookOrRepo(lib.File.Path)
+					}
+					ic.emitIfDbfsFile(lib.Jar)
+					ic.emitIfDbfsFile(lib.Whl)
 				}
-				if lib.File != nil {
-					ic.emitNotebookOrRepo(lib.File.Path)
-				}
-				ic.emitIfDbfsFile(lib.Jar)
-				ic.emitIfDbfsFile(lib.Whl)
 			}
 			// Emit clusters
 			for _, cluster := range pipeline.Clusters {
@@ -2046,9 +2093,17 @@ var resourcesMap map[string]importable = map[string]importable{
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
-			numLibraries := r.Data.Get("library.#").(int)
+			var pipeline tfpipelines.Pipeline
+			s := ic.Resources["databricks_pipeline"].Schema
+			common.DataToStructPointer(r.Data, s, &pipeline)
+			if pipeline.Deployment != nil && pipeline.Deployment.Kind == "BUNDLE" {
+				log.Printf("[WARN] Ignoring DLT Pipeline with ID %s as deployed with DABs", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_pipeline. id=%s", r.ID))
+				return true
+			}
+			numLibraries := len(pipeline.Libraries)
 			if numLibraries == 0 {
-				log.Printf("[WARN] Ignoring DLT Pipeline with ID %s", r.ID)
+				log.Printf("[WARN] Ignoring DLT Pipeline with ID %s due to the lack of libraries", r.ID)
 				ic.addIgnoredResource(fmt.Sprintf("databricks_pipeline. id=%s", r.ID))
 			}
 			return numLibraries == 0
@@ -2615,6 +2670,10 @@ var resourcesMap map[string]importable = map[string]importable{
 						// TODO: it's better to use SecurableKind if it will be added to the Go SDK
 						switch table.DataSourceFormat {
 						case "VECTOR_INDEX_FORMAT":
+							ic.Emit(&resource{
+								Resource: "databricks_vector_search_index",
+								ID:       table.FullName,
+							})
 						case "MYSQL_FORMAT":
 							ic.EmitIfUpdatedAfterMillis(&resource{
 								Resource:  "databricks_online_table",
@@ -3307,12 +3366,96 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parent_path", Resource: "databricks_service_principal"},
 		},
 	},
+	"databricks_notification_destination": {
+		WorkspaceLevel: true,
+		Service:        "settings",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			name := d.Get("display_name").(string)
+			if name != "" {
+				name += "_"
+			}
+			id := d.Id()
+			if len(id) >= 8 {
+				id = id[:8]
+			}
+			return nameNormalizationRegex.ReplaceAllString(fmt.Sprintf("%s_%s", name, id), "_")
+		},
+		List: func(ic *importContext) error {
+			if !ic.meAdmin {
+				return fmt.Errorf("notifications can be imported only by admin")
+			}
+			notifications, err := ic.workspaceClient.NotificationDestinations.ListAll(ic.Context, settings.ListNotificationDestinationsRequest{})
+			if err != nil {
+				return err
+			}
+			for _, n := range notifications {
+				ic.Emit(&resource{
+					Resource: "databricks_notification_destination",
+					ID:       n.Id,
+				})
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			var notificationDestination tfsettings.NDStruct
+			s := ic.Resources["databricks_notification_destination"].Schema
+			common.DataToStructPointer(r.Data, s, &notificationDestination)
+			if notificationDestination.DestinationType == "EMAIL" && notificationDestination.Config != nil &&
+				notificationDestination.Config.Email != nil {
+				for _, email := range notificationDestination.Config.Email.Addresses {
+					ic.emitUserOrServicePrincipal(email)
+				}
+			}
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			var notificationDestination tfsettings.NDStruct
+			s := ic.Resources["databricks_notification_destination"].Schema
+			common.DataToStructPointer(d, s, &notificationDestination)
+			if notificationDestination.Config != nil {
+				switch notificationDestination.DestinationType {
+				case "WEBHOOK":
+					if notificationDestination.Config.GenericWebhook != nil {
+						switch pathString {
+						case "config.0.generic_webhook.0.url":
+							return !notificationDestination.Config.GenericWebhook.UrlSet
+						case "config.0.generic_webhook.0.username":
+							return !notificationDestination.Config.GenericWebhook.UsernameSet
+						case "config.0.generic_webhook.0.password":
+							return !notificationDestination.Config.GenericWebhook.PasswordSet
+						}
+					}
+				case "SLACK":
+					if notificationDestination.Config.Slack != nil && pathString == "config.0.slack.0.url" {
+						return !notificationDestination.Config.Slack.UrlSet
+					}
+				case "PAGERDUTY":
+					if notificationDestination.Config.Pagerduty != nil && pathString == "config.0.pagerduty.0.integration_key" {
+						return !notificationDestination.Config.Pagerduty.IntegrationKeySet
+					}
+				case "MICROSOFT_TEAMS":
+					if notificationDestination.Config.MicrosoftTeams != nil && pathString == "config.0.microsoft_teams.0.url" {
+						return !notificationDestination.Config.MicrosoftTeams.UrlSet
+					}
+				}
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "config.email.addresses", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "config.microsoft_teams.url", Variable: true},
+			{Path: "config.pagerduty.integration_key", Variable: true},
+			{Path: "config.generic_webhook.url", Variable: true},
+			{Path: "config.generic_webhook.username", Variable: true},
+			{Path: "config.generic_webhook.password", Variable: true},
+			{Path: "config.slack.url", Variable: true},
+		},
+	},
 	"databricks_online_table": {
 		WorkspaceLevel: true,
 		Service:        "uc-online-tables",
 		Import: func(ic *importContext, r *resource) error {
-			tableFullName := r.ID
-			ic.emitUCGrantsWithOwner("table/"+tableFullName, r)
+			ic.emitUCGrantsWithOwner("table/"+r.ID, r)
 			ic.Emit(&resource{
 				Resource: "databricks_sql_table",
 				ID:       r.Data.Get("spec.0.source_table_full_name").(string),
@@ -3327,6 +3470,94 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: isMatchingCatalogAndSchema, SkipDirectLookup: true},
 			{Path: "spec.source_table_full_name", Resource: "databricks_sql_table"},
+		},
+	},
+	"databricks_vector_search_endpoint": {
+		WorkspaceLevel: true,
+		Service:        "vector-search",
+		List: func(ic *importContext) error {
+			endpoints, err := ic.workspaceClient.VectorSearchEndpoints.ListEndpointsAll(ic.Context, vectorsearch.ListEndpointsRequest{})
+			if err != nil {
+				log.Printf("[ERROR] listing vector search endpoints: %s", err.Error())
+				return err
+			}
+			for _, ep := range endpoints {
+				ic.EmitIfUpdatedAfterMillis(&resource{
+					Resource: "databricks_vector_search_endpoint",
+					ID:       ep.Name,
+				}, ep.LastUpdatedTimestamp, fmt.Sprintf("vector search endpoint '%s'", ep.Name))
+
+			}
+			return nil
+		},
+		Import: func(ic *importContext, r *resource) error {
+			indexes, err := ic.workspaceClient.VectorSearchIndexes.ListIndexesAll(ic.Context, vectorsearch.ListIndexesRequest{
+				EndpointName: r.ID,
+			})
+			if err != nil {
+				log.Printf("[ERROR] listing vector search indexes for endpoint %s: %s", r.ID, err.Error())
+				return err
+			}
+			for _, idx := range indexes {
+				ic.Emit(&resource{
+					Resource: "databricks_vector_search_index",
+					ID:       idx.Name,
+				})
+			}
+			return nil
+		},
+	},
+	"databricks_vector_search_index": {
+		WorkspaceLevel: true,
+		Service:        "vector-search",
+		Import: func(ic *importContext, r *resource) error {
+			ic.emitUCGrantsWithOwner("table/"+r.ID, r)
+			s := ic.Resources["databricks_vector_search_index"].Schema
+			var vsi vectorsearch.VectorIndex
+			common.DataToStructPointer(r.Data, s, &vsi)
+			if vsi.EndpointName != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_vector_search_endpoint",
+					ID:       vsi.EndpointName,
+				})
+			}
+			if vsi.DeltaSyncIndexSpec != nil {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_table",
+					ID:       vsi.DeltaSyncIndexSpec.SourceTable,
+				})
+				if vsi.DeltaSyncIndexSpec.EmbeddingWritebackTable != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_sql_table",
+						ID:       vsi.DeltaSyncIndexSpec.EmbeddingWritebackTable,
+					})
+				}
+				for _, col := range vsi.DeltaSyncIndexSpec.EmbeddingSourceColumns {
+					if col.EmbeddingModelEndpointName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_model_serving",
+							ID:       col.EmbeddingModelEndpointName,
+						})
+					}
+				}
+			}
+			if vsi.DirectAccessIndexSpec != nil {
+				for _, col := range vsi.DirectAccessIndexSpec.EmbeddingSourceColumns {
+					if col.EmbeddingModelEndpointName != "" {
+						ic.Emit(&resource{
+							Resource: "databricks_model_serving",
+							ID:       col.EmbeddingModelEndpointName,
+						})
+					}
+				}
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "delta_sync_index_spec.source_table", Resource: "databricks_sql_table"},
+			{Path: "endpoint_name", Resource: "databricks_vector_search_endpoint"},
+			{Path: "delta_sync_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
+			{Path: "direct_access_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
 		},
 	},
 }

@@ -176,7 +176,7 @@ type Pipeline struct {
 
 func (Pipeline) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"pipelines.Pipeline": aliasMap,
+		"pipelines.PipelineSpec": aliasMap,
 	}
 
 }

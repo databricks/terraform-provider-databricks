@@ -218,6 +218,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("cause").SetComputed()
 	s.SchemaPath("cluster_id").SetComputed()
 	s.SchemaPath("creator_user_name").SetComputed()
+	s.SchemaPath("run_as_user_name").SetComputed()
 
 	// SuppressDiff fields
 	s.SchemaPath("edition").SetSuppressDiff()

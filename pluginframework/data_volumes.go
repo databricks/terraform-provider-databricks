@@ -33,7 +33,7 @@ func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.Metadat
 }
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = common.PluginFrameworkDataSourceStructToSchema(VolumesList{}, func(c common.CustomizableSchemaPluginFrameworkDataSource) common.CustomizableSchemaPluginFrameworkDataSource {
+	resp.Schema = common.PluginFrameworkDataSourceStructToSchema(VolumesList{}, func(c common.CustomizableSchemaPluginFramework) common.CustomizableSchemaPluginFramework {
 		c.SetComputed("ids")
 		return c
 	})

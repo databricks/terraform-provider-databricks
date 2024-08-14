@@ -1,5 +1,71 @@
 # Version changelog
 
+## [Release] Release v1.50.0
+
+### New Features and Improvements
+
+ * Added `databricks_notification_destination` resource ([#3820](https://github.com/databricks/terraform-provider-databricks/pull/3820)).
+ * Added support for `cloudflare_api_token` in `databricks_storage_credential` resource ([#3835](https://github.com/databricks/terraform-provider-databricks/pull/3835)).
+ * Add `active` attribute to `databricks_user` data source ([#3733](https://github.com/databricks/terraform-provider-databricks/pull/3733)).
+ * Add `workspace_path` attribute to `databricks_notebook` resource and data source ([#3885](https://github.com/databricks/terraform-provider-databricks/pull/3885)).
+ * Mark attributes as sensitive in `databricks_mlflow_webhook` ([#3825](https://github.com/databricks/terraform-provider-databricks/pull/3825)).
+
+
+### Bug Fixes
+
+ * Automatically assign `IS_OWNER` permission to sql warehouse if not specified ([#3829](https://github.com/databricks/terraform-provider-databricks/pull/3829)).
+ * Corrected kms arn format in `data_aws_unity_catalog_policy` ([#3823](https://github.com/databricks/terraform-provider-databricks/pull/3823)).
+ * Fix crash when destroying `databricks_compliance_security_profile_workspace_setting` ([#3883](https://github.com/databricks/terraform-provider-databricks/pull/3883)).
+ * Fixed read method of `databricks_entitlements` resource ([#3858](https://github.com/databricks/terraform-provider-databricks/pull/3858)).
+ * Retry cluster update on "INVALID_STATE" ([#3890](https://github.com/databricks/terraform-provider-databricks/pull/3890)).
+ * Save Pipeline resource to state in addition to spec ([#3869](https://github.com/databricks/terraform-provider-databricks/pull/3869)).
+ * Tolerate `databricks_workspace_conf` deletion failures ([#3737](https://github.com/databricks/terraform-provider-databricks/pull/3737)).
+ * Update Go SDK ([#3826](https://github.com/databricks/terraform-provider-databricks/pull/3826)).
+ * cluster key update for `databricks_sql_table` should not force new ([#3824](https://github.com/databricks/terraform-provider-databricks/pull/3824)).
+ * reading `databricks_metastore_assignment` when importing resource ([#3827](https://github.com/databricks/terraform-provider-databricks/pull/3827)).
+
+
+### Documentation
+
+ * Add troubleshooting instructions for `databricks OAuth is not supported for this host` error ([#3815](https://github.com/databricks/terraform-provider-databricks/pull/3815)).
+ * Clarify setting of permissions for workspace objects ([#3884](https://github.com/databricks/terraform-provider-databricks/pull/3884)).
+ * Document missing task attributes in `databricks_job` resource ([#3817](https://github.com/databricks/terraform-provider-databricks/pull/3817)).
+ * Fixed documentation for `databricks_schemas` data source and `databricks_metastore_assignment` resource ([#3851](https://github.com/databricks/terraform-provider-databricks/pull/3851)).
+ * clarified `spot_bid_max_price` option for `databricks_cluster` ([#3830](https://github.com/databricks/terraform-provider-databricks/pull/3830)).
+ * marked `databricks_sql_dashboard` as legacy ([#3836](https://github.com/databricks/terraform-provider-databricks/pull/3836)).
+
+
+### Internal Changes
+
+ * Refactor exporter: split huge files into smaller ones ([#3870](https://github.com/databricks/terraform-provider-databricks/pull/3870)).
+ * Refactored `client.ClientForHost` to use Go SDK method ([#3735](https://github.com/databricks/terraform-provider-databricks/pull/3735)).
+ * Revert "Rewriting DLT pipelines using SDK" ([#3838](https://github.com/databricks/terraform-provider-databricks/pull/3838)).
+ * Rewrite DLT pipelines using SDK ([#3839](https://github.com/databricks/terraform-provider-databricks/pull/3839)).
+ * Rewriting DLT pipelines using SDK ([#3792](https://github.com/databricks/terraform-provider-databricks/pull/3792)).
+ * Update Go SDK ([#3808](https://github.com/databricks/terraform-provider-databricks/pull/3808)).
+ * refactored `databricks_mws_permission_assignment` to Go SDK ([#3831](https://github.com/databricks/terraform-provider-databricks/pull/3831)).
+
+
+### Dependency Updates
+
+ * Bump databricks-sdk-go to 0.44.0 ([#3896](https://github.com/databricks/terraform-provider-databricks/pull/3896)).
+ * Bump github.com/zclconf/go-cty from 1.14.4 to 1.15.0 ([#3775](https://github.com/databricks/terraform-provider-databricks/pull/3775)).
+
+
+### Exporter
+
+ * Add retry on "Operation timed out" error ([#3897](https://github.com/databricks/terraform-provider-databricks/pull/3897)).
+ * Add support for Vector Search assets ([#3828](https://github.com/databricks/terraform-provider-databricks/pull/3828)).
+ * Add support for `databricks_notification_destination` ([#3861](https://github.com/databricks/terraform-provider-databricks/pull/3861)).
+ * Add support for `databricks_online_table` ([#3816](https://github.com/databricks/terraform-provider-databricks/pull/3816)).
+ * Don't export model serving endpoints with foundational models ([#3845](https://github.com/databricks/terraform-provider-databricks/pull/3845)).
+ * Fix generation of `autotermination_minutes = 0` ([#3881](https://github.com/databricks/terraform-provider-databricks/pull/3881)).
+ * Generate `databricks_workspace_binding` instead of legacy `databricks_catalog_workspace_binding` ([#3812](https://github.com/databricks/terraform-provider-databricks/pull/3812)).
+ * Ignore DLT pipelines deployed via DABs ([#3857](https://github.com/databricks/terraform-provider-databricks/pull/3857)).
+ * Improve exporting of `databricks_model_serving` ([#3821](https://github.com/databricks/terraform-provider-databricks/pull/3821)).
+ * Refactoring: remove legacy code ([#3864](https://github.com/databricks/terraform-provider-databricks/pull/3864)).
+
+
 ## 1.49.1
 
 ### Bug Fixes

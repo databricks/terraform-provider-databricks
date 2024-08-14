@@ -21,11 +21,7 @@ func DataSourceSparkVersion() common.Resource {
 		return nil
 	}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(s, "photon").SetDeprecated("Specify runtime_engine=\"PHOTON\" in the cluster configuration")
-		common.CustomizeSchemaPath(s).AddNewField("graviton", &schema.Schema{
-			Type:       schema.TypeBool,
-			Optional:   true,
-			Deprecated: "Not required anymore - it's automatically enabled on the Graviton-based node types",
-		})
+		common.CustomizeSchemaPath(s, "graviton").SetDeprecated("Not required anymore - it's automatically enabled on the Graviton-based node types")
 		return s
 	})
 }

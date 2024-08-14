@@ -1536,12 +1536,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("list_type").(string) + "_" + d.Get("label").(string)
 		},
 		List: func(ic *importContext) error {
-			ipListsResp, err := ic.workspaceClient.IpAccessLists.Impl().List(ic.Context)
+			ipLists, err := ic.workspaceClient.IpAccessLists.ListAll(ic.Context)
 
 			if err != nil {
 				return err
 			}
-			ipLists := ipListsResp.IpAccessLists
 			for offset, ipList := range ipLists {
 				ic.EmitIfUpdatedAfterMillis(&resource{
 					Resource: "databricks_ip_access_list",

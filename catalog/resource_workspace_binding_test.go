@@ -167,7 +167,7 @@ func TestSecurableWorkspaceBindings_CreateExtLocation(t *testing.T) {
 				},
 				},
 				SecurableName: "external_location",
-				SecurableType: "external-location",
+				SecurableType: catalog.UpdateBindingsSecurableTypeExternalLocation,
 			}).Return(&catalog.WorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
@@ -176,7 +176,7 @@ func TestSecurableWorkspaceBindings_CreateExtLocation(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, "external-location", "external_location").Return(&catalog.WorkspaceBindingsResponse{
+			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, catalog.GetBindingsSecurableTypeExternalLocation, "external_location").Return(&catalog.WorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(1234567890101112),
@@ -188,7 +188,7 @@ func TestSecurableWorkspaceBindings_CreateExtLocation(t *testing.T) {
 		Create:   true,
 		HCL: `
 		securable_name = "external_location"
-		securable_type = "external-location"
+		securable_type = "external_location"
 		workspace_id   = "1234567890101112"
 		`,
 	}.ApplyNoError(t)

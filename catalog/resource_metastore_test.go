@@ -26,11 +26,6 @@ func TestCreateMetastore(t *testing.T) {
 			}).Return(&catalog.MetastoreInfo{
 				MetastoreId: "abc",
 			}, nil)
-			e.Update(mock.Anything, catalog.UpdateMetastore{
-				Id: "abc",
-			}).Return(&catalog.MetastoreInfo{
-				Name: "a",
-			}, nil)
 			e.GetById(mock.Anything, "abc").Return(&catalog.MetastoreInfo{
 				StorageRoot: "s3://b/abc",
 				Name:        "a",

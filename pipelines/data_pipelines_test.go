@@ -3,6 +3,7 @@ package pipelines
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -22,10 +23,10 @@ func TestDataSourcePipelines(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=100",
-				Response: PipelineListResponse{
-					Statuses: []PipelineStateInfo{
+				Response: pipelines.ListPipelinesResponse{
+					Statuses: []pipelines.PipelineStateInfo{
 						{
-							PipelineID:      "123",
+							PipelineId:      "123",
 							Name:            "Pipeline1",
 							CreatorUserName: "user1",
 						},
@@ -35,10 +36,10 @@ func TestDataSourcePipelines(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=100&page_token=token1",
-				Response: PipelineListResponse{
-					Statuses: []PipelineStateInfo{
+				Response: pipelines.ListPipelinesResponse{
+					Statuses: []pipelines.PipelineStateInfo{
 						{
-							PipelineID:      "123",
+							PipelineId:      "123",
 							Name:            "Pipeline1",
 							CreatorUserName: "user1",
 						},
@@ -64,10 +65,10 @@ func TestDataSourcePipelines_Search(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?filter=name+LIKE+%27Pipeline1%27&max_results=100",
-				Response: PipelineListResponse{
-					Statuses: []PipelineStateInfo{
+				Response: pipelines.ListPipelinesResponse{
+					Statuses: []pipelines.PipelineStateInfo{
 						{
-							PipelineID:      "123",
+							PipelineId:      "123",
 							Name:            "Pipeline1",
 							CreatorUserName: "user1",
 						},
@@ -95,7 +96,7 @@ func TestDataSourcePipelines_SearchError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?filter=name+LIKE+%27Pipeline2%27&max_results=100",
-				Response: PipelineListResponse{},
+				Response: pipelines.ListPipelinesResponse{},
 			},
 		},
 		Resource:    DataSourcePipelines(),
@@ -114,7 +115,7 @@ func TestDataSourcePipelines_NoneFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/pipelines?max_results=100",
-				Response: PipelineListResponse{},
+				Response: pipelines.ListPipelinesResponse{},
 			},
 		},
 		Resource:    DataSourcePipelines(),

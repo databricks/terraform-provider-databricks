@@ -6,7 +6,7 @@ import (
 )
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `data "databricks_spark_version" "latest" {
 		}
 		resource "databricks_cluster" "this" {
@@ -71,9 +71,9 @@ func singleNodeClusterTemplate(autoTerminationMinutes string) string {
 }
 
 func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: singleNodeClusterTemplate("10"),
-	}, step{
+	}, LegacyStep{
 		Template: singleNodeClusterTemplate("20"),
 	})
 }
@@ -101,9 +101,9 @@ func awsClusterTemplate(availability string) string {
 func TestAccClusterResource_CreateAndUpdateAwsAttributes(t *testing.T) {
 	loadWorkspaceEnv(t)
 	if isAws(t) {
-		workspaceLevel(t, step{
+		workspaceLevel(t, LegacyStep{
 			Template: awsClusterTemplate("SPOT"),
-		}, step{
+		}, LegacyStep{
 			Template: awsClusterTemplate("SPOT_WITH_FALLBACK"),
 		})
 	}

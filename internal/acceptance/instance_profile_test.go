@@ -9,7 +9,7 @@ import (
 func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
 	workspaceLevel(t,
 		// Assign instance profile to group
-		step{
+		LegacyStep{
 			Template: `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.DUMMY_EC2_INSTANCE_PROFILE}"
@@ -22,7 +22,7 @@ func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
 			instance_profile_id = databricks_instance_profile.this.id
 		}`},
 		// Assign instance profile to mount
-		step{
+		LegacyStep{
 			Template: `
 			resource "databricks_instance_profile" "this" {
 				instance_profile_arn = "{env.DUMMY_EC2_INSTANCE_PROFILE}"
@@ -37,7 +37,7 @@ func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
 			}`,
 		},
 		// ServicePrincipal resource on Aws with role
-		step{
+		LegacyStep{
 			Template: `
 			resource "databricks_service_principal" "this" {
 				display_name = "SPN {var.RANDOM}"

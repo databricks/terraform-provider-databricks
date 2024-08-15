@@ -20,7 +20,7 @@ import (
 // https://github.com/databricks/terraform-provider-databricks/issues/1097
 func TestAccForceUserImport(t *testing.T) {
 	username := qa.RandomEmail()
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `data "databricks_current_user" "me" {}`,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
@@ -40,7 +40,7 @@ func TestAccForceUserImport(t *testing.T) {
 			}
 			return nil
 		},
-	}, step{
+	}, LegacyStep{
 		Template: `resource "databricks_user" "this" {
 			user_name = "` + username + `"
 			force     = true
@@ -50,13 +50,13 @@ func TestAccForceUserImport(t *testing.T) {
 
 func TestAccUserHomeDeleteHasNoEffectInAccount(t *testing.T) {
 	username := qa.RandomEmail()
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_user" "first" {
 			user_name = "` + username + `"
 			force_delete_home_dir = true
 		}`,
-	}, step{
+	}, LegacyStep{
 		Template: `
 		resource "databricks_user" "second" {
 			user_name = "{var.RANDOM}@example.com"
@@ -71,9 +71,9 @@ func TestAccUserHomeDelete(t *testing.T) {
 		user_name = "` + username + `"
 		force_delete_home_dir = true
 	}`
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: template,
-	}, step{
+	}, LegacyStep{
 		Template: template,
 		Destroy:  true,
 		Check: func(s *terraform.State) error {
@@ -115,12 +115,12 @@ func TestAccUserHomeDeleteNotDeleted(t *testing.T) {
 	resource "databricks_user" "a" {
 		user_name = "` + username + `"
 	}`
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: template,
 		Check: func(s *terraform.State) error {
 			return provisionHomeFolder(context.Background(), s, "databricks_user.a", username)
 		},
-	}, step{
+	}, LegacyStep{
 		Template: template,
 		Destroy:  true,
 		Check: func(s *terraform.State) error {
@@ -154,7 +154,7 @@ func TestAccUserResource(t *testing.T) {
 		allow_instance_pool_create = true
 	}
 	`
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: differentUsers,
 		Check: resource.ComposeTestCheckFunc(
 			resource.TestCheckResourceAttr("databricks_user.first", "allow_cluster_create", "false"),
@@ -164,7 +164,7 @@ func TestAccUserResource(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_user.third", "allow_cluster_create", "false"),
 			resource.TestCheckResourceAttr("databricks_user.third", "allow_instance_pool_create", "true"),
 		),
-	}, step{
+	}, LegacyStep{
 		Template: differentUsers,
 	})
 }
@@ -174,12 +174,12 @@ func TestAccUserResourceCaseInsensitive(t *testing.T) {
 	csUser := `resource "databricks_user" "first" {
 		user_name = "` + username + `"
 		}`
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: csUser,
 		Check: resource.ComposeTestCheckFunc(
 			resource.TestCheckResourceAttr("databricks_user.first", "user_name", strings.ToLower(username)),
 		),
-	}, step{
+	}, LegacyStep{
 		Template: csUser,
 	})
 }

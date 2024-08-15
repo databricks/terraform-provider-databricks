@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccDirectoryResource(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `resource "databricks_directory" "this" {
 			path = "/Shared/provider-test/dir_{var.RANDOM}"
 		}

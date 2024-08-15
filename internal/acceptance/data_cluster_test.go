@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccDataSourceCluster(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		data "databricks_cluster" "this" {
 			cluster_id = "{env.TEST_DEFAULT_CLUSTER_ID}"

@@ -6,7 +6,7 @@ import (
 
 func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
 	if isAzure(t) {
-		accountLevel(t, step{
+		accountLevel(t, LegacyStep{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
 				name = "tf-{var.RANDOM}"
@@ -19,7 +19,7 @@ func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
 				group_id = "blob"
 			}
 			`,
-		}, step{
+		}, LegacyStep{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
 				name = "tf-{var.RANDOM}"
@@ -35,7 +35,7 @@ func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
 		})
 	}
 	if isAws(t) {
-		accountLevel(t, step{
+		accountLevel(t, LegacyStep{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
 				account_id = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -43,7 +43,7 @@ func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
 				region = "{env.AWS_REGION}"
 			}
 			`,
-		}, step{
+		}, LegacyStep{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
 				account_id = "{env.DATABRICKS_ACCOUNT_ID}"

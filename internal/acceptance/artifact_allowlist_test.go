@@ -5,7 +5,7 @@ import (
 )
 
 func TestUcAccArtifactAllowlistResourceFullLifecycle(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_artifact_allowlist" "init" {
 			artifact_type = "INIT_SCRIPT"

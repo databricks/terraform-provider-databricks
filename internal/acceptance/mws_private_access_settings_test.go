@@ -6,7 +6,7 @@ import (
 
 func TestMwsAccPrivateAccessSettings(t *testing.T) {
 	t.SkipNow()
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_mws_private_access_settings" "this" {
 			account_id = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -19,7 +19,7 @@ func TestMwsAccPrivateAccessSettings(t *testing.T) {
 
 func TestMwsGcpAccPrivateAccessSettings(t *testing.T) {
 	t.Skipf("skipping until feature is disabled")
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_mws_private_access_settings" "this" {
 			account_id = "{env.DATABRICKS_ACCOUNT_ID}"

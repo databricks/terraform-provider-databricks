@@ -39,7 +39,7 @@ resource "databricks_mount" "my_mount" {
 
 func TestAccCreateDatabricksMount(t *testing.T) {
 	workspaceLevel(t,
-		step{
+		LegacyStep{
 			Template: mountHcl,
 		})
 }
@@ -50,7 +50,7 @@ func TestAccCreateDatabricksMountIsFineOnClusterRecreate(t *testing.T) {
 
 	workspaceLevel(t,
 		// Step 1 creates the cluster and mount.
-		step{
+		LegacyStep{
 			Template: mountHcl,
 			Check: func(s *terraform.State) error {
 				resources := s.RootModule().Resources
@@ -72,7 +72,7 @@ func TestAccCreateDatabricksMountIsFineOnClusterRecreate(t *testing.T) {
 		},
 		// Step 2: Manually delete the cluster, and then reapply the config. The mount
 		// will be recreated in this case.
-		step{
+		LegacyStep{
 			PreConfig: func() {
 				w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 				require.NoError(t, err)

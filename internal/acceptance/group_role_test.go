@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccGroupRole(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_group" "this" {
 			display_name = "tf-{var.RANDOM}"

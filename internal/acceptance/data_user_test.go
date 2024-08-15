@@ -26,14 +26,14 @@ func checkUserDataSourcePopulated(t *testing.T) func(s *terraform.State) error {
 }
 
 func TestMwsAccUserData(t *testing.T) {
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: userDataSourceTemplate,
 		Check:    checkUserDataSourcePopulated(t),
 	})
 }
 
 func TestAccUserData(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: userDataSourceTemplate,
 		Check:    checkUserDataSourcePopulated(t),
 	})

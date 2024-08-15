@@ -5,7 +5,7 @@ import (
 )
 
 func TestUcAccCreateProviderDb2Open(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_provider" "this" {
 			name = "terraform-test-provider"

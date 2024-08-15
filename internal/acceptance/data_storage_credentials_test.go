@@ -8,7 +8,7 @@ import (
 )
 
 func TestUcAccDataSourceStorageCredentials(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: `
 		data "databricks_storage_credentials" "this" {
 		}`,

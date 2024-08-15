@@ -15,7 +15,7 @@ func checkDataSourceVolume(t *testing.T) func(s *terraform.State) error {
 	}
 }
 func TestUcAccDataSourceVolume(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name         = "sandbox{var.RANDOM}"

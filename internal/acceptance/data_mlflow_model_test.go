@@ -9,7 +9,7 @@ import (
 
 func TestAccDataMlflowModel(t *testing.T) {
 	workspaceLevel(t,
-		step{
+		LegacyStep{
 			Template: `
 			resource "databricks_mlflow_model" "this" {
 			  name = "model-{var.RANDOM}"
@@ -26,7 +26,7 @@ func TestAccDataMlflowModel(t *testing.T) {
 			  }
 			}`,
 		},
-		step{
+		LegacyStep{
 			Template: `
 			resource "databricks_mlflow_model" "this" {
 			  name = "model-{var.RANDOM}"

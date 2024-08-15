@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -37,28 +38,102 @@ func init() {
 	dbproviderlogger.SetLogger()
 }
 
-func workspaceLevel(t *testing.T, steps ...step) {
+func workspaceLevel(t *testing.T, steps ...LegacyStep) {
 	loadWorkspaceEnv(t)
 	run(t, steps)
 }
 
-func accountLevel(t *testing.T, steps ...step) {
+func accountLevel(t *testing.T, steps ...LegacyStep) {
 	loadAccountEnv(t)
 	run(t, steps)
 }
 
-func unityWorkspaceLevel(t *testing.T, steps ...step) {
+func unityWorkspaceLevel(t *testing.T, steps ...LegacyStep) {
 	loadUcwsEnv(t)
 	run(t, steps)
 }
 
-func unityAccountLevel(t *testing.T, steps ...step) {
+func unityAccountLevel(t *testing.T, steps ...LegacyStep) {
 	loadUcacctEnv(t)
 	run(t, steps)
 }
 
-// A step in a terraform acceptance test
-type step struct {
+// A Step in a terraform acceptance test uisng Plugin Framework
+type Step struct {
+	// Terraform HCL for resources to materialize in this test step.
+	Template string
+
+	Fixtures                []qa.HTTPFixture
+	MockWorkspaceClientFunc func(*mocks.MockWorkspaceClient)
+	MockAccountClientFunc   func(*mocks.MockAccountClient)
+
+	Token  string
+	Client *common.DatabricksClient
+
+	// This function is called after the template is applied. Useful for making assertions
+	// or doing cleanup.
+	Check func(*terraform.State) error
+
+	// Setup function called before the template is materialized.
+	PreConfig func()
+
+	Destroy                   bool
+	ExpectNonEmptyPlan        bool
+	ExpectError               *regexp.Regexp
+	PlanOnly                  bool
+	PreventDiskCleanup        bool
+	PreventPostDestroyRefresh bool
+	ImportState               bool
+	ImportStateVerify         bool
+	ProviderFactories         map[string]func() (*schema.Provider, error)
+}
+
+func (s Step) validateMocks() error {
+	isMockConfigured := s.MockAccountClientFunc != nil || s.MockWorkspaceClientFunc != nil
+	isFixtureConfigured := s.Fixtures != nil
+	if isFixtureConfigured && isMockConfigured {
+		return fmt.Errorf("either (MockWorkspaceClientFunc, MockAccountClientFunc) or Fixtures may be set, not both")
+	}
+	return nil
+}
+
+func (s Step) setupClient(t *testing.T) (*common.DatabricksClient, qa.Server, error) {
+	token := "..."
+	if s.Token != "" {
+		token = s.Token
+	}
+	if s.Fixtures != nil {
+		client, s, err := qa.HttpFixtureClientWithToken(t, s.Fixtures, token)
+		ss := qa.Server{
+			Close: s.Close,
+			URL:   s.URL,
+		}
+		return client, ss, err
+	}
+	mw := mocks.NewMockWorkspaceClient(t)
+	ma := mocks.NewMockAccountClient(t)
+	if s.MockWorkspaceClientFunc != nil {
+		s.MockWorkspaceClientFunc(mw)
+	}
+	if s.MockAccountClientFunc != nil {
+		s.MockAccountClientFunc(ma)
+	}
+	c := &common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{},
+		},
+	}
+	c.SetWorkspaceClient(mw.WorkspaceClient)
+	c.SetAccountClient(ma.AccountClient)
+	c.Config.Credentials = qa.TestCredentialsProvider{Token: token}
+	return c, qa.Server{
+		Close: func() {},
+		URL:   "does-not-matter",
+	}, nil
+}
+
+// A step in a terraform acceptance test using SDKv2
+type LegacyStep struct {
 	// Terraform HCL for resources to materialize in this test step.
 	Template string
 
@@ -133,7 +208,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 
 // Test wrapper over terraform testing framework. Multiple steps share the same
 // terraform state context.
-func run(t *testing.T, steps []step) {
+func run(t *testing.T, steps []LegacyStep) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
@@ -225,6 +300,88 @@ func run(t *testing.T, steps []step) {
 			return nil
 		},
 	})
+}
+
+// Remove redundancy once verified that this works
+func runWithFixtureServer(t *testing.T, f ResourceFixturePluginFramework) error {
+	ts := []resource.TestStep{}
+	ctx := context.Background()
+
+	for i, s := range f.Steps {
+		stepConfig := ""
+		if s.Template != "" {
+			stepConfig = environmentTemplate(t, s.Template, map[string]string{})
+		}
+		stepNum := i
+		thisStep := s
+		stepCheck := thisStep.Check
+		stepPreConfig := s.PreConfig
+
+		err := s.validateMocks()
+		if err != nil {
+			return err
+		}
+		client, server, err := s.setupClient(t)
+		if err != nil {
+			return err
+		}
+		s.Client = client
+		defer server.Close()
+
+		protoV6ProviderFactories := map[string]func() (tfprotov6.ProviderServer, error){
+			"databricks": func() (tfprotov6.ProviderServer, error) {
+				ctx := context.Background()
+
+				providerServer, err := provider.GetProviderServerWithConfiguredMockClient(ctx, s.Client)
+
+				if err != nil {
+					return nil, err
+				}
+
+				return providerServer, nil
+			},
+		}
+
+		ts = append(ts, resource.TestStep{
+			PreConfig: func() {
+				if stepConfig == "" {
+					return
+				}
+				logger.Infof(ctx, "Test %s step %d config is:\n%s",
+					t.Name(), stepNum,
+					commands.TrimLeadingWhitespace(stepConfig))
+
+				if stepPreConfig != nil {
+					stepPreConfig()
+				}
+			},
+			Config:                    stepConfig,
+			Destroy:                   s.Destroy,
+			ExpectNonEmptyPlan:        s.ExpectNonEmptyPlan,
+			PlanOnly:                  s.PlanOnly,
+			PreventDiskCleanup:        s.PreventDiskCleanup,
+			PreventPostDestroyRefresh: s.PreventPostDestroyRefresh,
+			ImportState:               s.ImportState,
+			ImportStateVerify:         s.ImportStateVerify,
+			ExpectError:               s.ExpectError,
+			ProtoV6ProviderFactories:  protoV6ProviderFactories,
+			Check: func(state *terraform.State) error {
+				if stepCheck != nil {
+					return stepCheck(state)
+				}
+				return nil
+			},
+		})
+	}
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
+		Steps:      ts,
+		CheckDestroy: func(t *terraform.State) error {
+			// TODO: generically check if all of ID's are removed.
+			return nil
+		},
+	})
+	return nil
 }
 
 // resourceCheck calls back a function with client and resource id
@@ -370,6 +527,14 @@ func loadUcacctEnv(t *testing.T) {
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
 		skipf(t)("Skipping account test on workspace level")
 	}
+}
+
+func startServer() {
+
+}
+
+func loadFakeEnv(t *testing.T) {
+
 }
 
 func isAws(t *testing.T) bool {

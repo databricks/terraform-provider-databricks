@@ -28,21 +28,21 @@ data databricks_service_principals "this" {
 
 func TestAccDataSourceSPNsOnAWS(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: spns,
 	})
 }
 
 func TestAccDataSourceSPNsOnGCP(t *testing.T) {
 	GetEnvOrSkipTest(t, "GOOGLE_CREDENTIALS")
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: spns,
 	})
 }
 
 func TestAccDataSourceSPNsOnAzure(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: azureSpns,
 	})
 }

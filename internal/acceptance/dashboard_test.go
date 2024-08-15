@@ -89,7 +89,7 @@ func (t *templateStruct) SetAttributes(mapper map[string]string) templateStruct 
 func TestAccBasicDashboard(t *testing.T) {
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
@@ -119,7 +119,7 @@ func TestAccBasicDashboard(t *testing.T) {
 func TestAccDashboardWithSerializedJSON(t *testing.T) {
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
@@ -142,7 +142,7 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			require.NoError(t, err)
 			return nil
 		}),
-	}, step{
+	}, LegacyStep{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}`,
 			"embed_credentials":    "true",
@@ -174,7 +174,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 	fileName := tmpDir + "/Dashboard.json"
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		PreConfig: func() {
 			os.Mkdir(tmpDir, 0755)
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"), 0644)
@@ -200,7 +200,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			require.NoError(t, err)
 			return nil
 		}),
-	}, step{
+	}, LegacyStep{
 		PreConfig: func() {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
 		},
@@ -231,7 +231,7 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 	initial_update_time := ""
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
@@ -254,7 +254,7 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 			initial_update_time = dashboard.UpdateTime
 			return nil
 		}),
-	}, step{
+	}, LegacyStep{
 		Template: makeTemplate(template),
 		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
@@ -284,7 +284,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 	etag := ""
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
@@ -310,7 +310,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			etag = dashboard.Etag
 			return nil
 		}),
-	}, step{
+	}, LegacyStep{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
@@ -355,7 +355,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 	fileName := tmpDir + "/Dashboard.json"
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		PreConfig: func() {
 			os.Mkdir(tmpDir, 0755)
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page in file\"}]}"), 0644)
@@ -388,7 +388,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			require.Equal(t, publish_dash.EmbedCredentials, false)
 			return nil
 		}),
-	}, step{
+	}, LegacyStep{
 		PreConfig: func() {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
 		},
@@ -414,7 +414,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			return nil
 		}),
-	}, step{
+	}, LegacyStep{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
@@ -444,7 +444,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			require.NoError(t, err)
 			return nil
 		}),
-	}, step{
+	}, LegacyStep{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"embed_credentials": "true",
 			"parent_path":       "/Shared/Teams",
@@ -466,7 +466,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			return nil
 		}),
-	}, step{
+	}, LegacyStep{
 		PreConfig: func() {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified again\"}]}"), 0644)
 		},

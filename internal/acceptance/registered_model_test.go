@@ -6,7 +6,7 @@ import (
 
 func TestUcAccRegisteredModel(t *testing.T) {
 	unityWorkspaceLevel(t,
-		step{
+		LegacyStep{
 			Template: `
 			resource "databricks_registered_model" "model" {
 				name = "terraform-test-registered-model-{var.STICKY_RANDOM}"
@@ -24,7 +24,7 @@ func TestUcAccRegisteredModel(t *testing.T) {
 			}
 		`,
 		},
-		step{
+		LegacyStep{
 			Template: `
 			resource "databricks_registered_model" "model" {
 				name = "terraform-test-registered-model-{var.STICKY_RANDOM}"
@@ -34,7 +34,7 @@ func TestUcAccRegisteredModel(t *testing.T) {
 			}
 		`,
 		},
-		step{
+		LegacyStep{
 			Template: `
 			resource "databricks_registered_model" "model" {
 				name = "terraform-test-registered-model-update-{var.STICKY_RANDOM}"

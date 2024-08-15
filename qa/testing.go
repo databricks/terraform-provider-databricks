@@ -210,19 +210,19 @@ func (f ResourceFixture) validateMocks() error {
 	return nil
 }
 
-type server struct {
+type Server struct {
 	Close func()
 	URL   string
 }
 
-func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, server, error) {
+func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, Server, error) {
 	token := "..."
 	if f.Token != "" {
 		token = f.Token
 	}
 	if f.Fixtures != nil {
 		client, s, err := HttpFixtureClientWithToken(t, f.Fixtures, token)
-		ss := server{
+		ss := Server{
 			Close: s.Close,
 			URL:   s.URL,
 		}
@@ -243,8 +243,8 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	}
 	c.SetWorkspaceClient(mw.WorkspaceClient)
 	c.SetAccountClient(ma.AccountClient)
-	c.Config.Credentials = testCredentialsProvider{token: token}
-	return c, server{
+	c.Config.Credentials = TestCredentialsProvider{Token: token}
+	return c, Server{
 		Close: func() {},
 		URL:   "does-not-matter",
 	}, nil

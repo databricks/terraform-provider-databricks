@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccGlobalInitScriptResource_Create(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_global_init_script" "this" {
 			name = "init-{var.RANDOM}"

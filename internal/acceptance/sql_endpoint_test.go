@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccSQLEndpoint(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_sql_endpoint" "this" {
 			name = "tf-{var.RANDOM}"
@@ -25,7 +25,7 @@ func TestAccSQLEndpoint(t *testing.T) {
 				}
 			}
 		}`,
-	}, step{
+	}, LegacyStep{
 		Template: `
 		resource "databricks_sql_endpoint" "that" {
 			name = "tf-{var.RANDOM}"

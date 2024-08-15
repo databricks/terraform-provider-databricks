@@ -8,7 +8,7 @@ import (
 )
 
 func TestUcAccDataSourceCatalog(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name         = "sandbox{var.RANDOM}"

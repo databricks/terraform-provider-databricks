@@ -8,7 +8,7 @@ import (
 )
 
 func TestUcAccDataSourceExternalLocations(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: `
 		data "databricks_external_locations" "this" {
 		}`,

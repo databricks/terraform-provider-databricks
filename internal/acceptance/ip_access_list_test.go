@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccIPACLListsResourceFullLifecycle(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_ip_access_list" "this" {
 			label = "tf-{var.RANDOM}"
@@ -15,7 +15,7 @@ func TestAccIPACLListsResourceFullLifecycle(t *testing.T) {
 				"10.0.10.0/24"
 			]
 		}`,
-	}, step{
+	}, LegacyStep{
 		Template: `
 		resource "databricks_ip_access_list" "this" {
 			label = "tf-{var.RANDOM}"

@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccMLflowModel(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_mlflow_model" "m1" {
 			name = "tf-{var.RANDOM}"

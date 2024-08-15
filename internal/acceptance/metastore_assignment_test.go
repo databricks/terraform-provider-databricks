@@ -15,7 +15,7 @@ func lockForTest(t *testing.T) func() {
 }
 
 func TestUcAccMetastoreAssignment(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		PreConfig: lockForTest(t),
 		Template: `resource "databricks_metastore_assignment" "this" {
 			metastore_id = "{env.TEST_METASTORE_ID}"
@@ -25,13 +25,13 @@ func TestUcAccMetastoreAssignment(t *testing.T) {
 }
 
 func TestUcAccAccountMetastoreAssignment(t *testing.T) {
-	unityAccountLevel(t, step{
+	unityAccountLevel(t, LegacyStep{
 		PreConfig: lockForTest(t),
 		Template: `resource "databricks_metastore_assignment" "this" {
 			metastore_id = "{env.TEST_METASTORE_ID}"
 			workspace_id = {env.DUMMY_WORKSPACE_ID}
 		}`,
-	}, step{
+	}, LegacyStep{
 		Template: `resource "databricks_metastore_assignment" "this" {
 			metastore_id = "{env.TEST_METASTORE_ID}"
 			workspace_id = {env.DUMMY2_WORKSPACE_ID}

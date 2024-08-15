@@ -8,7 +8,7 @@ import (
 )
 
 func TestUcAccDataSourceMetastore(t *testing.T) {
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `
 		data "databricks_metastore" "this" {
 			metastore_id = "{env.TEST_METASTORE_ID}"

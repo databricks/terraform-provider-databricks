@@ -16,7 +16,7 @@ import (
 
 func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 	name := qa.RandomName("tfgroup")
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `resource "databricks_group" "this" {
 			display_name = "` + name + `"
 		}`,
@@ -33,7 +33,7 @@ func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 				return groupsAPI.UpdateNameAndEntitlements(
 					id, group.DisplayName, qa.RandomName("ext-id"), group.Entitlements)
 			}),
-	}, step{
+	}, LegacyStep{
 		Template: `resource "databricks_group" "this" {
 			display_name = "` + name + `"
 		}`,
@@ -43,7 +43,7 @@ func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 // https://github.com/databricks/terraform-provider-databricks/issues/1099
 func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 	name := qa.RandomName("tfgroup")
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `resource "databricks_group" "this" {
 			display_name = "` + name + `"
 			allow_cluster_create = true
@@ -63,7 +63,7 @@ func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 						id, group.DisplayName, qa.RandomName("ext-id"), group.Entitlements)
 				}),
 		),
-	}, step{
+	}, LegacyStep{
 		Template: `resource "databricks_group" "this" {
 			display_name = "` + name + `"
 			allow_cluster_create = true
@@ -74,7 +74,7 @@ func TestAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
 func TestMwsAccGroupsUpdateDisplayName(t *testing.T) {
 	nameInit := qa.RandomName("tfgroup")
 	nameUpdate := qa.RandomName("tfgroup")
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `resource "databricks_group" "this" {
 			display_name = "` + nameInit + `"
 		}`,
@@ -91,7 +91,7 @@ func TestMwsAccGroupsUpdateDisplayName(t *testing.T) {
 					return nil
 				}),
 		),
-	}, step{
+	}, LegacyStep{
 		Template: `resource "databricks_group" "this" {
 			display_name = "` + nameUpdate + `"
 		}`,
@@ -113,7 +113,7 @@ func TestMwsAccGroupsUpdateDisplayName(t *testing.T) {
 func TestAccGroupsUpdateDisplayName(t *testing.T) {
 	nameInit := qa.RandomName("tfgroup")
 	nameUpdate := qa.RandomName("tfgroup")
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `resource "databricks_group" "this" {
 			display_name = "` + nameInit + `"
 		}`,
@@ -130,7 +130,7 @@ func TestAccGroupsUpdateDisplayName(t *testing.T) {
 					return nil
 				}),
 		),
-	}, step{
+	}, LegacyStep{
 		Template: `resource "databricks_group" "this" {
 			display_name = "` + nameUpdate + `"
 		}`,

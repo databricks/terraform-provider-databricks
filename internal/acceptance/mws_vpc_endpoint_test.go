@@ -6,7 +6,7 @@ import (
 
 func TestMwsAccVpcEndpoint(t *testing.T) {
 	t.SkipNow()
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_mws_vpc_endpoint" "this" {
 			account_id = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -19,7 +19,7 @@ func TestMwsAccVpcEndpoint(t *testing.T) {
 }
 
 func TestMwsAccVpcEndpoint_GCP(t *testing.T) {
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_mws_vpc_endpoint" "this" {
 			account_id = "{env.DATABRICKS_ACCOUNT_ID}"

@@ -38,7 +38,7 @@ resource "databricks_sql_global_config" "this" {
 
 func TestAccSQLGlobalConfig(t *testing.T) {
 	loadWorkspaceEnv(t)
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		PreConfig: func() {
 			ctx := context.Background()
 			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
@@ -64,7 +64,7 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 		}
 	}
 
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		PreConfig: func() {
 			ctx := context.Background()
 			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
@@ -72,10 +72,10 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 		},
 		Template: makeSqlGlobalConfig("enable_serverless_compute = true"),
 		Check:    checkServerlessEnabled(true),
-	}, step{
+	}, LegacyStep{
 		Template: makeSqlGlobalConfig(""),
 		Check:    checkServerlessEnabled(true),
-	}, step{
+	}, LegacyStep{
 		Template: makeSqlGlobalConfig("enable_serverless_compute = false"),
 		Check:    checkServerlessEnabled(false),
 	})

@@ -24,7 +24,7 @@ func assertEnableIpAccessList(t *testing.T, expected string) {
 }
 
 func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `resource "databricks_workspace_conf" "this" {
 			custom_config = {
 				"enableIpAccessLists": true
@@ -34,7 +34,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			assertEnableIpAccessList(t, "true")
 			return nil
 		},
-	}, step{
+	}, LegacyStep{
 		// Set enableIpAccessLists to false
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
@@ -50,7 +50,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			assert.Equal(t, "false", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
 			return nil
 		},
-	}, step{
+	}, LegacyStep{
 		// Set invalid configuration
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
@@ -59,7 +59,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			}`,
 		// Assert on server side error returned
 		ExpectError: regexp.MustCompile(`cannot update workspace conf: Invalid keys`),
-	}, step{
+	}, LegacyStep{
 		// Set enableIpAccessLists to true with strange case and maxTokenLifetimeDays to verify
 		// failed deletion case
 		Template: `resource "databricks_workspace_conf" "this" {

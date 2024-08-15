@@ -21,13 +21,13 @@ func (e entitlement) String() string {
 	return fmt.Sprintf("%s = %t", e.name, e.value)
 }
 
-func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitlements []entitlement) step {
-	return func(entitlements []entitlement) step {
+func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitlements []entitlement) LegacyStep {
+	return func(entitlements []entitlement) LegacyStep {
 		entitlementsBuf := strings.Builder{}
 		for _, entitlement := range entitlements {
 			entitlementsBuf.WriteString(fmt.Sprintf("%s\n", entitlement.String()))
 		}
-		return step{
+		return LegacyStep{
 			Template: fmt.Sprintf(`
 			%s
 			resource "databricks_entitlements" "entitlements_users" {
@@ -56,10 +56,10 @@ func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitleme
 	}
 }
 
-func makeEntitlementsSteps(t *testing.T, r entitlementResource, entitlementsSteps [][]entitlement) []step {
+func makeEntitlementsSteps(t *testing.T, r entitlementResource, entitlementsSteps [][]entitlement) []LegacyStep {
 	r.setDisplayName(RandomName("entitlements-"))
 	makeEntitlementsStep := entitlementsStepBuilder(t, r)
-	steps := make([]step, len(entitlementsSteps))
+	steps := make([]LegacyStep, len(entitlementsSteps))
 	for i, entitlements := range entitlementsSteps {
 		steps[i] = makeEntitlementsStep(entitlements)
 	}

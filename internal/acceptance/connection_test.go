@@ -49,19 +49,19 @@ func connectionTemplateWithoutOwner() string {
 	`
 }
 func TestUcAccConnectionsResourceFullLifecycle(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: connectionTemplateWithOwner("test.mysql.database.azure.com", "account users"),
-	}, step{
+	}, LegacyStep{
 		Template: connectionTemplateWithOwner("test.mysql.database.aws.com", "account users"),
-	}, step{
+	}, LegacyStep{
 		Template: connectionTemplateWithOwner("test.mysql.database.azure.com", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }
 
 func TestUcAccConnectionsWithoutOwnerResourceFullLifecycle(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: connectionTemplateWithoutOwner(),
-	}, step{
+	}, LegacyStep{
 		Template: connectionTemplateWithoutOwner(),
 	})
 }

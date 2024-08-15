@@ -5,7 +5,7 @@ import (
 )
 
 func TestMwsAccLogDelivery(t *testing.T) {
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `resource "databricks_mws_credentials" "ld" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
 			credentials_name = "tf-acceptance-logdelivery-{var.RANDOM}"

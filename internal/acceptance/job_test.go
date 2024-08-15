@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccJobTasks(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		data "databricks_current_user" "me" {}
 		data "databricks_spark_version" "latest" {}
@@ -120,7 +120,7 @@ func TestAccJobTasks(t *testing.T) {
 
 func TestAccForEachTask(t *testing.T) {
 	t.Skip("Skipping this test because feature not enabled in Prod")
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		data "databricks_current_user" "me" {}
 		data "databricks_spark_version" "latest" {}
@@ -282,19 +282,19 @@ func TestAccJobControlRunState(t *testing.T) {
 	}
 	randomName1 := RandomName("notebook-")
 	randomName2 := RandomName("updated-notebook-")
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		// A new continuous job with empty block should be started automatically
 		Template: getJobTemplate(randomName1, ``),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
-	}, step{
+	}, LegacyStep{
 		// Updating the notebook should cancel the existing run
 		Template: getJobTemplate(randomName2, ``),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
-	}, step{
+	}, LegacyStep{
 		// Marking the job as paused should cancel existing run and not start a new one
 		Template: getJobTemplate(randomName2, `pause_status = "PAUSED"`),
 		Check:    resourceCheck("databricks_job.this", waitForAllRunsToEnd),
-	}, step{
+	}, LegacyStep{
 		// No pause status should be the equivalent of unpaused
 		Template: getJobTemplate(randomName2, `pause_status = "UNPAUSED"`),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
@@ -346,7 +346,7 @@ func runAsTemplate(runAs string) string {
 }
 
 func TestAccJobRunAsUser(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_user" "this" {
 			user_name = "` + qa.RandomEmail() + `"
@@ -358,7 +358,7 @@ func TestAccJobRunAsUser(t *testing.T) {
 func TestUcAccJobRunAsServicePrincipal(t *testing.T) {
 	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 	})
 }
@@ -381,15 +381,15 @@ func TestUcAccJobRunAsMutations(t *testing.T) {
 	unityWorkspaceLevel(
 		t,
 		// Provision job with service principal `run_as`
-		step{
+		LegacyStep{
 			Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 		},
 		// Update job to a user `run_as`
-		step{
+		LegacyStep{
 			Template: runAsTemplate(attribute + ` = data.databricks_current_user.me.user_name`),
 		},
 		// Update job back to a service principal `run_as`
-		step{
+		LegacyStep{
 			Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 		},
 	)
@@ -397,7 +397,7 @@ func TestUcAccJobRunAsMutations(t *testing.T) {
 
 func TestAccRemoveWebhooks(t *testing.T) {
 	skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource databricks_job test {
 			webhook_notifications {
@@ -407,7 +407,7 @@ func TestAccRemoveWebhooks(t *testing.T) {
 			}
 		}
 		`,
-	}, step{
+	}, LegacyStep{
 		Template: `
 		resource databricks_job test {}
 		`,
@@ -415,7 +415,7 @@ func TestAccRemoveWebhooks(t *testing.T) {
 }
 
 func TestAccPeriodicTrigger(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_job" "this" {
 			name = "{var.RANDOM}"

@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccQuery(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_sql_query" "q1" {
 			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"

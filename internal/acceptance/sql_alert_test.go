@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccAlert(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_sql_query" "this" {
 			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
@@ -31,7 +31,7 @@ func TestAccAlert(t *testing.T) {
 				muted = false
 			}
 		}`,
-	}, step{
+	}, LegacyStep{
 		Template: `
 		resource "databricks_sql_query" "this" {
 			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"

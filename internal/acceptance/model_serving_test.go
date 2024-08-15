@@ -15,7 +15,7 @@ func TestAccModelServing(t *testing.T) {
 
 	name := fmt.Sprintf("terraform-test-model-serving-%s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: fmt.Sprintf(`
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
@@ -57,7 +57,7 @@ func TestAccModelServing(t *testing.T) {
 			}
 		`, name),
 	},
-		step{
+		LegacyStep{
 			Template: fmt.Sprintf(`
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
@@ -90,7 +90,7 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 
 	name := fmt.Sprintf("terraform-test-model-serving-pt-%s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: fmt.Sprintf(`
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
@@ -111,7 +111,7 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 				}
 			}
 		`, name),
-	}, step{
+	}, LegacyStep{
 		Template: fmt.Sprintf(`
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
@@ -132,7 +132,7 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 				}
 			}
 		`, name),
-	}, step{
+	}, LegacyStep{
 		Template: fmt.Sprintf(`
 			resource "databricks_model_serving" "endpoint" {
 				name = "%s"
@@ -167,7 +167,7 @@ func TestAccModelServingExternalModel(t *testing.T) {
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
 	scope_name := fmt.Sprintf("terraform-test-secret-scope-%s",
 		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: fmt.Sprintf(`
 			resource "databricks_secret_scope" "scope" {
 				name = "%s"
@@ -203,7 +203,7 @@ func TestAccModelServingExternalModel(t *testing.T) {
 			}
 		`, scope_name, name),
 	},
-		step{
+		LegacyStep{
 			Template: fmt.Sprintf(`
 			resource "databricks_secret_scope" "scope" {
 				name = "%s"

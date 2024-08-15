@@ -76,5 +76,5 @@ func TestUcAccOnlineTable(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		t.Skipf("databricks_online_table resource is not available on GCP")
 	}
-	unityWorkspaceLevel(t, step{Template: onlineTableHcl})
+	unityWorkspaceLevel(t, LegacyStep{Template: onlineTableHcl})
 }

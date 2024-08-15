@@ -5,7 +5,7 @@ import (
 )
 
 func TestMwsAccAwsCustomerManagedKeys(t *testing.T) {
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `resource "databricks_mws_customer_managed_keys" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
 			aws_key_info {
@@ -18,7 +18,7 @@ func TestMwsAccAwsCustomerManagedKeys(t *testing.T) {
 }
 
 func TestMwsAccGcpCustomerManagedKeysForStorage(t *testing.T) {
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `resource "databricks_mws_customer_managed_keys" "this" {
 				account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
 				gcp_key_info {

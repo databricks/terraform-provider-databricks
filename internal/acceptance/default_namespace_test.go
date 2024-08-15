@@ -21,7 +21,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 		}
 	}
 	`
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: template,
 		Check: resourceCheckWithState("databricks_default_namespace_setting.this",
 			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
@@ -39,7 +39,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				return nil
 			}),
 	},
-		step{
+		LegacyStep{
 			Template: template,
 			Destroy:  true,
 			Check: resourceCheck("databricks_default_namespace_setting.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {

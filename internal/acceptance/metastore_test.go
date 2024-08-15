@@ -87,7 +87,7 @@ func getTemplateFromExtraAttributes(t *testing.T, extraAttributes map[string]any
 
 func runMetastoreTest(t *testing.T, extraAttributes map[string]any) {
 	template := getTemplateFromExtraAttributes(t, extraAttributes)
-	unityAccountLevel(t, step{
+	unityAccountLevel(t, LegacyStep{
 		Template: fmt.Sprintf(`resource "databricks_metastore" "this" {
 			name = "{var.RANDOM}"
 			force_destroy = true
@@ -98,21 +98,21 @@ func runMetastoreTest(t *testing.T, extraAttributes map[string]any) {
 
 func runMetastoreTestWithOwnerUpdates(t *testing.T, extraAttributes map[string]any) {
 	template := getTemplateFromExtraAttributes(t, extraAttributes)
-	unityAccountLevel(t, step{
+	unityAccountLevel(t, LegacyStep{
 		Template: fmt.Sprintf(`resource "databricks_metastore" "this" {
 			name = "{var.STICKY_RANDOM}"
 			force_destroy = true
 			owner = "account users"
 			%s
 		}`, template),
-	}, step{
+	}, LegacyStep{
 		Template: fmt.Sprintf(`resource "databricks_metastore" "this" {
 			name = "{var.STICKY_RANDOM}"
 			force_destroy = true
 			owner = "{env.TEST_DATA_ENG_GROUP}"
 			%s
 		}`, template),
-	}, step{
+	}, LegacyStep{
 		Template: fmt.Sprintf(`resource "databricks_metastore" "this" {
 			name = "{var.STICKY_RANDOM}-updated"
 			force_destroy = true

@@ -19,7 +19,7 @@ import (
 
 func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: fmt.Sprintf(`
 		resource "databricks_notebook" "this" {
 			content_base64 = base64encode("# Databricks notebook source\nprint(1)")
@@ -49,7 +49,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 					return nil
 				}),
 		),
-	}, step{
+	}, LegacyStep{
 		Template: fmt.Sprintf(`
 		resource "databricks_notebook" "this" {
 			content_base64 = base64encode("# Databricks notebook source\nprint(1)")
@@ -87,7 +87,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 
 func TestAccDatabricksReposPermissionsResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: fmt.Sprintf(`
 		resource "databricks_repo" "this" {
 			url = "https://github.com/databrickslabs/tempo.git"
@@ -200,7 +200,7 @@ func TestAccDatabricksPermissionsForSqlWarehouses(t *testing.T) {
 	}`, randomName)
 
 	workspaceLevel(t,
-		step{
+		LegacyStep{
 			Template: config1,
 			Check: resource.ComposeTestCheckFunc(
 				checkObjectType,
@@ -211,7 +211,7 @@ func TestAccDatabricksPermissionsForSqlWarehouses(t *testing.T) {
 				},
 			),
 		},
-		step{
+		LegacyStep{
 			Template: config2,
 			Check: func(s *terraform.State) error {
 				id := getPermissionId(s)

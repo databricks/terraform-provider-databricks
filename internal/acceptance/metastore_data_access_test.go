@@ -5,7 +5,7 @@ import (
 )
 
 func TestUcAccAccountMetastoreDataAccessOnAws(t *testing.T) {
-	unityAccountLevel(t, step{
+	unityAccountLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_metastore" "this" {
 			name          = "primary-{var.RANDOM}"
@@ -24,7 +24,7 @@ func TestUcAccAccountMetastoreDataAccessOnAws(t *testing.T) {
 }
 
 func TestUcAccMetastoreDataAccessOnAws(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	unityWorkspaceLevel(t, LegacyStep{
 		Template: `
 		resource "databricks_metastore_data_access" "this" {
 			metastore_id = "{env.TEST_METASTORE_ID}"

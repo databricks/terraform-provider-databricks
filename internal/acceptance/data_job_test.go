@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccDataSourceJob(t *testing.T) {
-	workspaceLevel(t, step{
+	workspaceLevel(t, LegacyStep{
 		Template: `
 		data "databricks_current_user" "me" {}
 		data "databricks_spark_version" "latest" {}

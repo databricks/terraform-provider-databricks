@@ -5,7 +5,7 @@ import (
 )
 
 func TestMwsAccCredentials(t *testing.T) {
-	accountLevel(t, step{
+	accountLevel(t, LegacyStep{
 		Template: `resource "databricks_mws_credentials" "this" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
 			credentials_name = "creds-test-{var.RANDOM}"

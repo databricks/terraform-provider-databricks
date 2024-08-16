@@ -1,6 +1,8 @@
 package mlflow
 
 import (
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/stretchr/testify/mock"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/ml"
@@ -9,22 +11,16 @@ import (
 
 func TestDataSourceModels(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/mlflow/registered-models/list?",
-				Response: ml.ListModelsResponse{
-					NextPageToken: "",
-					RegisteredModels: []ml.Model{
-						{
-							Name: "model-01",
-						},
-						{
-							Name: "model-02",
-						},
-					},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			api := w.GetMockModelRegistryAPI()
+			api.EXPECT().ListModelsAll(mock.Anything, ml.ListModelsRequest{}).Return([]ml.Model{
+				{
+					Name: "model-01",
 				},
-			},
+				{
+					Name: "model-02",
+				},
+			}, nil)
 		},
 		Read:        true,
 		NonWritable: true,

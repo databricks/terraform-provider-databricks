@@ -1,0 +1,54 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
+/* 
+These generated types are for terraform plugin framework to interact with the terraform state conveniently.
+
+These types follow the same structure as the types in go-sdk. 
+The only difference is that the primitive types are no longer using the go-native types, but with tfsdk types. 
+Plus the json tags get converted into tfsdk tags. 
+We use go-native types for lists and maps intentionally for the ease for converting these types into the go-sdk types. 
+*/
+
+package {{.Name}}_tf
+
+import (
+	{{range .ImportedPackages}}
+	"github.com/databricks/databricks-sdk-go/service/{{.}}"{{end}}
+	"github.com/databricks/databricks-sdk-go/service/{{.Name}}"
+	"io"
+	"github.com/databricks/databricks-sdk-go/marshal"
+    "github.com/hashicorp/terraform-plugin-framework/types"
+)
+{{range .Types}}
+{{- if or .Fields .IsEmpty}}
+{{.Comment "// " 80}}
+type {{.PascalName}} struct {
+    {{- range .Fields}}
+    {{.Comment "    // " 80}}
+    {{.PascalName}} {{if .IsOptionalObject}}*{{end}}{{template "type" .Entity}} `{{template "field-tag" . }}`{{end}}
+}
+
+{{end}}
+{{end}}
+
+{{- define "field-tag" -}}
+	{{if .IsJson}}tfsdk:"{{.Name}}" tf:"{{if not .Required}}optional{{end}}"{{else}}tfsdk:"-"{{end -}}
+{{- end -}}
+
+{{- define "type" -}}
+	{{- if not . }}any /* ERROR */
+	{{- else if .IsExternal }}{{.Package.Name}}.{{.PascalName}}
+	{{- else if .IsAny}}any
+	{{- else if .IsEmpty}}{{.PascalName}}
+	{{- else if .IsString}}types.String
+	{{- else if .IsBool}}types.Bool
+	{{- else if .IsInt64}}types.Int64
+	{{- else if .IsFloat64}}types.Float64
+	{{- else if .IsInt}}types.Int64
+	{{- else if .IsByteStream}}io.ReadCloser
+	{{- else if .ArrayValue }}[]{{template "type" .ArrayValue}}
+	{{- else if .MapValue }}map[string]{{template "type" .MapValue}}
+	{{- else if .IsObject }}{{.PascalName}}
+	{{- else if .Enum }}types.String
+	{{- else}}any /* MISSING TYPE */
+	{{- end -}}
+{{- end -}}

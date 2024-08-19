@@ -6,9 +6,10 @@ import (
 	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/logger"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/databricks/terraform-provider-databricks/internal/reflect_utils"
 )
 
 // Converts a gosdk struct into a tfsdk struct, with the folowing rules.
@@ -54,7 +55,7 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 		forceSendFieldVal = forceSendField.Interface().([]string)
 	}
 
-	for _, field := range common.ListAllFields(srcVal) {
+	for _, field := range reflect_utils.ListAllFields(srcVal) {
 		srcField := field.V
 		srcFieldName := field.Sf.Name
 

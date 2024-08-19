@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/internal/reflect_utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -382,28 +383,6 @@ func diffSuppressor(fieldName string, v *schema.Schema) func(k, old, new string,
 	}
 }
 
-type Field struct {
-	Sf reflect.StructField
-	V  reflect.Value
-}
-
-func ListAllFields(v reflect.Value) []Field {
-	t := v.Type()
-	fields := make([]Field, 0, v.NumField())
-	for i := 0; i < v.NumField(); i++ {
-		f := t.Field(i)
-		if f.Anonymous {
-			fields = append(fields, ListAllFields(v.Field(i))...)
-		} else {
-			fields = append(fields, Field{
-				Sf: f,
-				V:  v.Field(i),
-			})
-		}
-	}
-	return fields
-}
-
 func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trackingContext) map[string]*schema.Schema {
 	if rpStruct, ok := resourceProviderRegistry[getNonPointerType(v.Type())]; ok {
 		return resourceProviderStructToSchemaInternal(rpStruct, tc.pathCtx).GetSchemaMap()
@@ -418,7 +397,7 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trac
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
 	tc = tc.visit(v)
-	fields := ListAllFields(v)
+	fields := reflect_utils.ListAllFields(v)
 	for _, field := range fields {
 		typeField := field.Sf
 		if tc.depthExceeded(typeField) {
@@ -597,7 +576,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
 	}
 	isGoSDK := isGoSdk(rv)
-	fields := ListAllFields(rv)
+	fields := reflect_utils.ListAllFields(rv)
 	for _, field := range fields {
 		typeField := field.Sf
 		fieldName := chooseFieldNameWithAliases(typeField, rv.Type(), aliases)

@@ -22,44 +22,55 @@ func (tfLogger *TfLogger) Enabled(_ context.Context, _ logger.Level) bool {
 	return true
 }
 
-func (tfLogger *TfLogger) Tracef(_ context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Tracef(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Trace(loggerContext, fmt.Sprintf(format, v...), nil)
+		tflog.Trace(getLoggerValidContext(ctx), fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemTrace(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemTrace(getLoggerValidContext(ctx), tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func (tfLogger *TfLogger) Debugf(_ context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Debugf(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Debug(loggerContext, fmt.Sprintf(format, v...), nil)
+		tflog.Debug(getLoggerValidContext(ctx), fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemDebug(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemDebug(getLoggerValidContext(ctx), tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func (tfLogger *TfLogger) Infof(_ context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Infof(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Info(loggerContext, fmt.Sprintf(format, v...), nil)
+		tflog.Info(getLoggerValidContext(ctx), fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemInfo(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemInfo(getLoggerValidContext(ctx), tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func (tfLogger *TfLogger) Warnf(_ context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Warnf(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Warn(loggerContext, fmt.Sprintf(format, v...), nil)
+		tflog.Warn(getLoggerValidContext(ctx), fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemWarn(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemWarn(getLoggerValidContext(ctx), tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func (tfLogger *TfLogger) Errorf(_ context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Errorf(ctx context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Error(loggerContext, fmt.Sprintf(format, v...), nil)
+		tflog.Error(getLoggerValidContext(ctx), fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemError(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemError(getLoggerValidContext(ctx), tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
+}
+
+// Tflogger is called through Databricks provider and also Go SDK
+// We need a way to check if the context is correctly set for logging, if not then we use the context we define in configureContextFunc
+// We can't use the logging.GetProviderRootLogger(ctx) to check as it is internal
+func getLoggerValidContext(ctx context.Context) context.Context {
+	logger := ctx.Value("provider")
+	if logger == nil {
+		return loggerContext
+	}
+	return ctx
 }
 
 func SetLogger(ctx context.Context) {

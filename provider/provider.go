@@ -224,7 +224,7 @@ func DatabricksProvider() *schema.Provider {
 		if p.TerraformVersion != "" {
 			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 		}
-		tflogger.SetLogger()
+		tflogger.SetLogger(ctx)
 		return ConfigureDatabricksClient(ctx, d)
 	}
 	common.AddContextToAllResources(p, "databricks")

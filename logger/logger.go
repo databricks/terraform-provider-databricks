@@ -12,6 +12,8 @@ type TfLogger struct {
 	Name string
 }
 
+var loggerContext context.Context
+
 // This function is always enabled because TfLogger implements the Logger interface from Go SDK and there we check
 // if the logging is enabled based on level (which default to Info).
 // This however isn't possible here since tflog isn't enabled / disabled based on log level.
@@ -20,47 +22,48 @@ func (tfLogger *TfLogger) Enabled(_ context.Context, _ logger.Level) bool {
 	return true
 }
 
-func (tfLogger *TfLogger) Tracef(ctx context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Tracef(_ context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Trace(ctx, fmt.Sprintf(format, v...), nil)
+		tflog.Trace(loggerContext, fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemTrace(ctx, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemTrace(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func (tfLogger *TfLogger) Debugf(ctx context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Debugf(_ context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Debug(ctx, fmt.Sprintf(format, v...), nil)
+		tflog.Debug(loggerContext, fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemDebug(ctx, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemDebug(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func (tfLogger *TfLogger) Infof(ctx context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Infof(_ context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Info(ctx, fmt.Sprintf(format, v...), nil)
+		tflog.Info(loggerContext, fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemInfo(ctx, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemInfo(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func (tfLogger *TfLogger) Warnf(ctx context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Warnf(_ context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Warn(ctx, fmt.Sprintf(format, v...), nil)
+		tflog.Warn(loggerContext, fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemWarn(ctx, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemWarn(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func (tfLogger *TfLogger) Errorf(ctx context.Context, format string, v ...any) {
+func (tfLogger *TfLogger) Errorf(_ context.Context, format string, v ...any) {
 	if tfLogger == nil {
-		tflog.Error(ctx, fmt.Sprintf(format, v...), nil)
+		tflog.Error(loggerContext, fmt.Sprintf(format, v...), nil)
 	} else {
-		tflog.SubsystemError(ctx, tfLogger.Name, fmt.Sprintf(format, v...), nil)
+		tflog.SubsystemError(loggerContext, tfLogger.Name, fmt.Sprintf(format, v...), nil)
 	}
 }
 
-func SetLogger() {
+func SetLogger(ctx context.Context) {
 	var tfLogger *TfLogger
 	logger.DefaultLogger = tfLogger
+	loggerContext = ctx
 }

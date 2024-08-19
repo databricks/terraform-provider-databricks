@@ -33,7 +33,7 @@ func init() {
 	rand.Seed(time.Now().UnixMicro())
 	databricks.WithProduct("tf-integration-tests", common.Version())
 	os.Setenv("TF_LOG", "DEBUG")
-	dbproviderlogger.SetLogger()
+	dbproviderlogger.SetLogger(context.Background())
 }
 
 func workspaceLevel(t *testing.T, steps ...step) {

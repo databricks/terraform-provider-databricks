@@ -94,70 +94,7 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			panic("Error converting tfsdk to gosdk struct")
 		}
 	} else if srcField.Kind() == reflect.Struct {
-		switch v := srcFieldValue.(type) {
-		case types.Bool:
-			destField.SetBool(v.ValueBool())
-			if !v.IsNull() {
-				addToForceSendFields(srcFieldName, forceSendFieldsField)
-			}
-		case types.Int64:
-			destField.SetInt(v.ValueInt64())
-			if !v.IsNull() {
-				addToForceSendFields(srcFieldName, forceSendFieldsField)
-			}
-		case types.Float64:
-			destField.SetFloat(v.ValueFloat64())
-			if !v.IsNull() {
-				addToForceSendFields(srcFieldName, forceSendFieldsField)
-			}
-		case types.String:
-			if destField.Type().Name() != "string" {
-				// This is the case for enum.
-
-				// Skip unset value.
-				if srcField.IsZero() {
-					return nil
-				}
-
-				// Find the Set method
-				destVal := reflect.New(destField.Type())
-				setMethod := destVal.MethodByName("Set")
-				if !setMethod.IsValid() {
-					panic(fmt.Sprintf("set method not found on enum type: %s", destField.Type().Name()))
-				}
-
-				// Prepare the argument for the Set method
-				arg := reflect.ValueOf(v.ValueString())
-
-				// Call the Set method
-				result := setMethod.Call([]reflect.Value{arg})
-				if len(result) != 0 {
-					if err, ok := result[0].Interface().(error); ok && err != nil {
-						panic(err)
-					}
-				}
-				// We don't need to set ForceSendFields for enums because the value is never going to be a zero value (empty string).
-				destField.Set(destVal.Elem())
-			} else {
-				destField.SetString(v.ValueString())
-				if !v.IsNull() {
-					addToForceSendFields(srcFieldName, forceSendFieldsField)
-				}
-			}
-		case types.List:
-			panic("types.List should never be used, use go native slices instead")
-		case types.Map:
-			panic("types.Map should never be used, use go native maps instead")
-		default:
-			if srcField.IsZero() {
-				// Skip zeros
-				return nil
-			}
-			// If it is a real stuct instead of a tfsdk type, recursively resolve it.
-			if TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx).ErrorsCount() > 0 {
-				panic("Error converting tfsdk to gosdk struct")
-			}
-		}
+		tfsdkToGoSdkStructField(srcField, destField, srcFieldName, forceSendFieldsField, ctx)
 	} else if srcField.Kind() == reflect.Slice {
 		if srcField.IsNil() {
 			// Skip nils
@@ -195,6 +132,74 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 	}
 	return nil
 
+}
+
+func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendFieldsField *reflect.Value, ctx context.Context) {
+	srcFieldValue := srcField.Interface()
+	switch v := srcFieldValue.(type) {
+	case types.Bool:
+		destField.SetBool(v.ValueBool())
+		if !v.IsNull() {
+			addToForceSendFields(srcFieldName, forceSendFieldsField)
+		}
+	case types.Int64:
+		destField.SetInt(v.ValueInt64())
+		if !v.IsNull() {
+			addToForceSendFields(srcFieldName, forceSendFieldsField)
+		}
+	case types.Float64:
+		destField.SetFloat(v.ValueFloat64())
+		if !v.IsNull() {
+			addToForceSendFields(srcFieldName, forceSendFieldsField)
+		}
+	case types.String:
+		if destField.Type().Name() != "string" {
+			// This is the case for enum.
+
+			// Skip unset value.
+			if srcField.IsZero() {
+				return
+			}
+
+			// Find the Set method
+			destVal := reflect.New(destField.Type())
+			setMethod := destVal.MethodByName("Set")
+			if !setMethod.IsValid() {
+				panic(fmt.Sprintf("set method not found on enum type: %s", destField.Type().Name()))
+			}
+
+			// Prepare the argument for the Set method
+			arg := reflect.ValueOf(v.ValueString())
+
+			// Call the Set method
+			result := setMethod.Call([]reflect.Value{arg})
+			if len(result) != 0 {
+				if err, ok := result[0].Interface().(error); ok && err != nil {
+					panic(err)
+				}
+			}
+			// We don't need to set ForceSendFields for enums because the value is never going to be a zero value (empty string).
+			destField.Set(destVal.Elem())
+		} else {
+			destField.SetString(v.ValueString())
+			if !v.IsNull() {
+				addToForceSendFields(srcFieldName, forceSendFieldsField)
+			}
+		}
+	case types.List:
+		panic("types.List should never be used, use go native slices instead")
+	case types.Map:
+		panic("types.Map should never be used, use go native maps instead")
+	default:
+		if srcField.IsZero() {
+			// Skip zeros
+			return
+		}
+		// If it is a real stuct instead of a tfsdk type, recursively resolve it.
+		if TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx).ErrorsCount() > 0 {
+			panic("Error converting tfsdk to gosdk struct")
+		}
+	}
 }
 
 func addToForceSendFields(fieldName string, forceSendFieldsField *reflect.Value) {

@@ -131,25 +131,7 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, fo
 		var strVal string
 		if srcField.Type().Name() != "string" {
 			// This case is for Enum Types.
-			var stringMethod reflect.Value
-			if srcField.CanAddr() {
-				stringMethod = srcField.Addr().MethodByName("String")
-			} else {
-				// Create a new addressable variable to call the String method
-				addr := reflect.New(srcField.Type()).Elem()
-				addr.Set(srcField)
-				stringMethod = addr.Addr().MethodByName("String")
-			}
-			if stringMethod.IsValid() {
-				stringResult := stringMethod.Call(nil)
-				if len(stringResult) == 1 {
-					strVal = stringResult[0].Interface().(string)
-				} else {
-					panic("num get string has more than one result")
-				}
-			} else {
-				panic("enum does not have valid .String() method")
-			}
+			strVal = getStringFromEnum(srcField)
 		} else {
 			strVal = srcFieldValue.(string)
 		}
@@ -204,6 +186,28 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, fo
 		panic(fmt.Errorf("unknown type for field: %s", srcField.Type().Name()))
 	}
 	return nil
+}
+
+func getStringFromEnum(srcField reflect.Value) string {
+	var stringMethod reflect.Value
+	if srcField.CanAddr() {
+		stringMethod = srcField.Addr().MethodByName("String")
+	} else {
+		// Create a new addressable variable to call the String method
+		addr := reflect.New(srcField.Type()).Elem()
+		addr.Set(srcField)
+		stringMethod = addr.Addr().MethodByName("String")
+	}
+	if stringMethod.IsValid() {
+		stringResult := stringMethod.Call(nil)
+		if len(stringResult) == 1 {
+			return stringResult[0].Interface().(string)
+		} else {
+			panic("num get string has more than one result")
+		}
+	} else {
+		panic("enum does not have valid .String() method")
+	}
 }
 
 func fieldInForceSendFields(fieldName string, forceSendFields []string) bool {

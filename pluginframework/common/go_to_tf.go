@@ -189,12 +189,13 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, fo
 	return nil
 }
 
+// Get the string value of an enum by calling the .String() method on the enum object.
 func getStringFromEnum(srcField reflect.Value) string {
 	var stringMethod reflect.Value
 	if srcField.CanAddr() {
 		stringMethod = srcField.Addr().MethodByName("String")
 	} else {
-		// Create a new addressable variable to call the String method
+		// If cannot get addr, create a new addressable variable to call the String method
 		addr := reflect.New(srcField.Type()).Elem()
 		addr.Set(srcField)
 		stringMethod = addr.Addr().MethodByName("String")

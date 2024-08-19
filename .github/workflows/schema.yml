@@ -53,7 +53,7 @@ jobs:
           terraform_wrapper: false
 
       - name: "Install jd"
-        run: go install github.com/josephburnett/jd@latest
+        run: go install github.com/josephburnett/jd@v1.8.1
 
       - run: make diff-schema
         env:

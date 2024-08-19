@@ -208,11 +208,20 @@ func ResourceShare() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			si, err := NewSharesAPI(ctx, c).get(d.Id())
+			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			return common.StructToData(si, shareSchema, d)
+
+			shareInfo, err := client.Shares.Get(ctx, sharing.GetShareRequest{
+				Name:              d.Id(),
+				IncludeSharedData: true,
+			})
+			if err != nil {
+				return err
+			}
+
+			return common.StructToData(shareInfo, shareSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			beforeSi, err := NewSharesAPI(ctx, c).get(d.Id())

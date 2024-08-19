@@ -3,6 +3,7 @@ package sharing
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
@@ -14,21 +15,21 @@ func TestShareData(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/a?include_shared_data=true",
-				Response: ShareInfo{
+				Response: sharing.ShareInfo{
 					Name: "a",
-					Objects: []SharedDataObject{
+					Objects: []sharing.SharedDataObject{
 						{
 							Name:                     "a",
 							DataObjectType:           "TABLE",
 							Comment:                  "c",
-							CDFEnabled:               false,
+							CdfEnabled:               false,
 							StartVersion:             0,
 							SharedAs:                 "",
 							AddedAt:                  0,
 							AddedBy:                  "",
 							HistoryDataSharingStatus: "DISABLED",
 							Status:                   "ACTIVE",
-							Partitions:               []Partition{},
+							Partitions:               []sharing.Partition{},
 						},
 					},
 					CreatedBy: "bob",
@@ -52,14 +53,16 @@ func TestShareData(t *testing.T) {
 			"added_at":                    0,
 			"added_by":                    "",
 			"comment":                     "c",
+			"content":                     "",
 			"data_object_type":            "TABLE",
 			"name":                        "a",
 			"shared_as":                   "",
 			"start_version":               0,
+			"string_shared_as":            "",
 			"cdf_enabled":                 false,
 			"status":                      "ACTIVE",
 			"history_data_sharing_status": "DISABLED",
-			"partition":                   []interface{}{},
+			"partitions":                  []interface{}{},
 		},
 		d.Get("object").(*schema.Set).List()[0])
 }

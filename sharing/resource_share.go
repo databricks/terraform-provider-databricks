@@ -90,8 +90,6 @@ func (si *ShareInfo) suppressCDFEnabledDiff() {
 
 func (a SharesAPI) get(name string) (si ShareInfo, err error) {
 	err = a.client.Get(a.context, "/unity-catalog/shares/"+name+"?include_shared_data=true", nil, &si)
-	si.sortSharesByName()
-	si.suppressCDFEnabledDiff()
 	return
 }
 
@@ -228,6 +226,8 @@ func ResourceShare() common.Resource {
 			if err != nil {
 				return err
 			}
+			beforeSi.sortSharesByName()
+			beforeSi.suppressCDFEnabledDiff()
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
 			changes := beforeSi.Diff(afterSi)

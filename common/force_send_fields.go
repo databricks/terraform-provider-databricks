@@ -29,22 +29,22 @@ func SetForceSendFields(req any, d attributeGetter, fields []string) {
 	if !ok {
 		panic(fmt.Errorf("request argument to setForceSendFields must have ForceSendFields field of type []string (got %s)", forceSendFieldsField.Type()))
 	}
-	fs := listAllFields(rv)
+	fs := ListAllFields(rv)
 	for _, fieldName := range fields {
 		found := false
 		var structField reflect.StructField
 		for _, f := range fs {
-			fn := chooseFieldName(f.sf)
+			fn := chooseFieldName(f.Sf)
 			if fn != "-" && fn == fieldName {
 				found = true
-				structField = f.sf
+				structField = f.Sf
 				break
 			}
 		}
 		if !found {
 			allFieldNames := make([]string, 0)
 			for _, f := range fs {
-				fn := chooseFieldName(f.sf)
+				fn := chooseFieldName(f.Sf)
 				if fn == "-" || fn == "force_send_fields" {
 					continue
 				}

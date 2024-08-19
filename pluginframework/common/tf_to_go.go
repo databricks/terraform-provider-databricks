@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Converts a tfsdk struct into a go-sdk struct, with the folowing rules.
+// Converts a tfsdk struct into a gosdk struct, with the folowing rules.
 //
 //	types.String -> string
 //	types.Bool -> bool

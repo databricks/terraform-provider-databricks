@@ -11,7 +11,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Converts a go-sdk struct into a tfsdk struct.
+// Converts a gosdk struct into a tfsdk struct, with the folowing rules.
+//
+//	string -> types.String
+//	bool -> types.Bool
+//	int64 -> types.Int64
+//	float64 -> types.Float64
+//	string -> types.String
+//
+// NOTE:
+//
+//	If field name doesn't show up in ForceSendFields and the field is zero value, we set the null value on the tfsdk.
+//	types.list and types.map are not supported
+//	map keys should always be a string
+//	tfsdk structs use types.String for all enum values
+//	non-json fields will be omitted
 func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Context) diag.Diagnostics {
 
 	srcVal := reflect.ValueOf(gosdk)
@@ -37,11 +51,6 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 		// If no forceSendField, just use an empty list.
 		forceSendFieldVal = []string{}
 	} else {
-		switch forceSendField.Interface().(type) {
-		case []string:
-		default:
-			panic(fmt.Errorf("ForceSendField is not of type []string"))
-		}
 		forceSendFieldVal = forceSendField.Interface().([]string)
 	}
 
@@ -49,12 +58,18 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 		srcField := field.V
 		srcFieldName := field.Sf.Name
 
-		destField := destVal.FieldByName(srcFieldName)
 		srcFieldTag := field.Sf.Tag.Get("json")
 		if srcFieldTag == "-" {
 			continue
 		}
-		err := goSdkToTfSdkSingleField(srcField, destField, srcFieldName, forceSendFieldVal, false, ctx)
+		destField := destVal.FieldByName(srcFieldName)
+
+		if !destField.IsValid() {
+			logger.Tracef(ctx, fmt.Sprintf("field skipped in gosdk to tfsdk conversion: destination struct does not have field %s", srcFieldName))
+			continue
+		}
+
+		err := goSdkToTfSdkSingleField(srcField, destField, fieldInForceSendFields(srcFieldName, forceSendFieldVal), ctx)
 		if err != nil {
 			return diag.Diagnostics{diag.NewErrorDiagnostic(err.Error(), "gosdk to tfsdk field conversion failure")}
 		}
@@ -62,13 +77,7 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 	return nil
 }
 
-func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendField []string, alwaysAdd bool, ctx context.Context) error {
-
-	if !destField.IsValid() {
-		// Skip field that destination struct does not have.
-		logger.Tracef(ctx, fmt.Sprintf("field skipped in gosdk to tfsdk conversion: destination struct does not have field %s", srcFieldName))
-		return nil
-	}
+func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, forceSendField bool, ctx context.Context) error {
 
 	if !destField.CanSet() {
 		panic(fmt.Errorf("destination field can not be set: %s", destField.Type().Name()))
@@ -94,26 +103,26 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 		}
 	case reflect.Bool:
 		boolVal := srcFieldValue.(bool)
-		// check if alwaysAdd is false or the value is zero or if the field is in the forceSendFields list
-		if alwaysAdd || !(!boolVal && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+		// check if the value is non-zero or if the field is in the forceSendFields list
+		if boolVal || forceSendField {
 			destField.Set(reflect.ValueOf(types.BoolValue(boolVal)))
 		} else {
 			destField.Set(reflect.ValueOf(types.BoolNull()))
 		}
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Int64:
 		// convert any kind of integer to int64
 		intVal := srcField.Convert(reflect.TypeOf(int64(0))).Interface().(int64)
-		// check if alwaysAdd is true or the value is zero or if the field is in the forceSendFields list
-		if alwaysAdd || !(intVal == 0 && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+		// check if the value is non-zero or if the field is in the forceSendFields list
+		if intVal != 0 || forceSendField {
 			destField.Set(reflect.ValueOf(types.Int64Value(int64(intVal))))
 		} else {
 			destField.Set(reflect.ValueOf(types.Int64Null()))
 		}
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float64:
 		// convert any kind of float to float64
 		float64Val := srcField.Convert(reflect.TypeOf(float64(0))).Interface().(float64)
-		// check if alwaysAdd is true or the value is zero or if the field is in the forceSendFields list
-		if alwaysAdd || !(float64Val == 0 && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+		// check if the value is non-zero or if the field is in the forceSendFields list
+		if float64Val != 0 || forceSendField {
 			destField.Set(reflect.ValueOf(types.Float64Value(float64Val)))
 		} else {
 			destField.Set(reflect.ValueOf(types.Float64Null()))
@@ -144,8 +153,8 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 		} else {
 			strVal = srcFieldValue.(string)
 		}
-		// check if alwaysAdd is false or the value is zero or if the field is in the forceSendFields list
-		if alwaysAdd || !(strVal == "" && !checkTheStringInForceSendFields(srcFieldName, forceSendField)) {
+		// check if the value is non-zero or if the field is in the forceSendFields list
+		if strVal != "" || forceSendField {
 			destField.Set(reflect.ValueOf(types.StringValue(strVal)))
 		} else {
 			destField.Set(reflect.ValueOf(types.StringNull()))
@@ -170,7 +179,7 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			srcElem := srcField.Index(j)
 
 			destElem := destSlice.Index(j)
-			if err := goSdkToTfSdkSingleField(srcElem, destElem, "", nil, true, ctx); err != nil {
+			if err := goSdkToTfSdkSingleField(srcElem, destElem, true, ctx); err != nil {
 				return err
 			}
 		}
@@ -185,7 +194,7 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			srcMapValue := srcField.MapIndex(key)
 			destMapValue := reflect.New(destField.Type().Elem()).Elem()
 			destMapKey := reflect.ValueOf(key.Interface())
-			if err := goSdkToTfSdkSingleField(srcMapValue, destMapValue, "", nil, true, ctx); err != nil {
+			if err := goSdkToTfSdkSingleField(srcMapValue, destMapValue, true, ctx); err != nil {
 				return err
 			}
 			destMap.SetMapIndex(destMapKey, destMapValue)
@@ -197,7 +206,7 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 	return nil
 }
 
-func checkTheStringInForceSendFields(fieldName string, forceSendFields []string) bool {
+func fieldInForceSendFields(fieldName string, forceSendFields []string) bool {
 	for _, field := range forceSendFields {
 		if field == fieldName {
 			return true

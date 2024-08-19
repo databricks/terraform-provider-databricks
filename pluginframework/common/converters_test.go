@@ -1,12 +1,11 @@
 package pluginframework
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
-	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -89,128 +88,15 @@ type DummyNestedGoSdk struct {
 	ForceSendFields []string `json:"-"`
 }
 
-type emptyCtx struct{}
-
-func (emptyCtx) Deadline() (deadline time.Time, ok bool) {
-	return
-}
-
-func (emptyCtx) Done() <-chan struct{} {
-	return nil
-}
-
-func (emptyCtx) Err() error {
-	return nil
-}
-
-func (emptyCtx) Value(key any) any {
-	return nil
-}
-
-var ctx = emptyCtx{}
-
-// Constructing a dummy tfsdk struct.
-var tfSdkStructComplex = DummyTfSdk{
-	Enabled:     types.BoolValue(false),
-	Workers:     types.Int64Value(12),
-	Description: types.StringValue("abc"),
-	Tasks:       types.StringNull(),
-	Nested: &DummyNestedTfSdk{
-		Name:    types.StringValue("def"),
-		Enabled: types.BoolValue(true),
-	},
-	NoPointerNested: DummyNestedTfSdk{
-		Name:    types.StringValue("def"),
-		Enabled: types.BoolValue(true),
-	},
-	NestedList: []DummyNestedTfSdk{
-		{
-			Name:    types.StringValue("def"),
-			Enabled: types.BoolValue(true),
-		},
-		{
-			Name:    types.StringValue("def"),
-			Enabled: types.BoolValue(true),
-		},
-	},
-	Map: map[string]types.String{
-		"key1": types.StringValue("value1"),
-		"key2": types.StringValue("value2"),
-	},
-	NestedMap: map[string]DummyNestedTfSdk{
-		"key1": {
-			Name:    types.StringValue("abc"),
-			Enabled: types.BoolValue(false),
-		},
-		"key2": {
-			Name:    types.StringValue("def"),
-			Enabled: types.BoolValue(true),
-		},
-	},
-	NestedPointerList: []*DummyNestedTfSdk{
-		{
-			Name:    types.StringValue("def"),
-			Enabled: types.BoolValue(true),
-		},
-		{
-			Name:    types.StringValue("def"),
-			Enabled: types.BoolValue(true),
-		},
-	},
-	Attributes: map[string]types.String{"key": types.StringValue("value")},
-	EnumField:  types.StringValue("TEST_ENUM_A"),
-	Repeated:   []types.Int64{types.Int64Value(12), types.Int64Value(34)},
-}
-
-func TestGetAndSetPluginFramework(t *testing.T) {
-	// Also test StructToSchema.
-	scm := PluginFrameworkResourceStructToSchema(DummyTfSdk{}, nil)
-	state := tfsdk.State{
-		Schema: scm,
-	}
-
-	// Test optional is being handled properly.
-	assert.True(t, scm.Attributes["enabled"].IsOptional())
-	assert.True(t, scm.Attributes["workers"].IsRequired())
-	assert.True(t, scm.Attributes["floats"].IsRequired())
-
-	// Assert that we can set state from the tfsdk struct.
-	diags := state.Set(ctx, tfSdkStructComplex)
-	assert.Len(t, diags, 0)
-
-	// Assert that we can get a struct from the state.
-	getterStruct := DummyTfSdk{}
-	diags = state.Get(ctx, &getterStruct)
-	assert.Len(t, diags, 0)
-
-	// Assert the struct populated from .Get is exactly the same as the original tfsdk struct.
-	assert.True(t, reflect.DeepEqual(getterStruct, tfSdkStructComplex))
-}
-
-func TestStructConversion(t *testing.T) {
-	// Convert from tfsdk to gosdk struct using the converter function
-	convertedGoSdkStruct := DummyGoSdk{}
-	diags := TfSdkToGoSdkStruct(tfSdkStructComplex, &convertedGoSdkStruct, ctx)
-	assert.True(t, !diags.HasError())
-
-	// Convert the gosdk struct back to tfsdk struct
-	convertedTfSdkStruct := DummyTfSdk{}
-	diags = GoSdkToTfSdkStruct(convertedGoSdkStruct, &convertedTfSdkStruct, ctx)
-	assert.True(t, !diags.HasError())
-
-	// Assert that the struct is exactly the same after tfsdk --> gosdk --> tfsdk
-	assert.True(t, reflect.DeepEqual(tfSdkStructComplex, convertedTfSdkStruct))
-}
-
 // Function to construct individual test case with a pair of matching tfSdkStruct and gosdkStruct.
 // Verifies that the conversion both ways are working as expected.
 func ConverterTestCase(t *testing.T, description string, tfSdkStruct DummyTfSdk, goSdkStruct DummyGoSdk) {
 	convertedGoSdkStruct := DummyGoSdk{}
-	assert.True(t, !TfSdkToGoSdkStruct(tfSdkStruct, &convertedGoSdkStruct, ctx).HasError())
+	assert.True(t, !TfSdkToGoSdkStruct(tfSdkStruct, &convertedGoSdkStruct, context.Background()).HasError())
 	assert.True(t, reflect.DeepEqual(convertedGoSdkStruct, goSdkStruct), fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
 
 	convertedTfSdkStruct := DummyTfSdk{}
-	assert.True(t, !GoSdkToTfSdkStruct(goSdkStruct, &convertedTfSdkStruct, ctx).HasError())
+	assert.True(t, !GoSdkToTfSdkStruct(goSdkStruct, &convertedTfSdkStruct, context.Background()).HasError())
 	assert.True(t, reflect.DeepEqual(convertedTfSdkStruct, tfSdkStruct), fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
 }
 

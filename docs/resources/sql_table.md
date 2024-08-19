@@ -177,7 +177,7 @@ Currently, changing the column definitions for a table will require dropping and
 
 * `name` - User-visible name of column
 * `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
-* `identity` - (Optional) Whether field is an identity column. Can be `default`, `always` or `false`. (Default: `false`)
+* `identity` - (Optional) Whether field is an identity column. Can be `default`, `always` or ``. (Default: ``)
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 

@@ -24,7 +24,7 @@ var MaxSqlExecWaitTimeout = 50
 type SqlColumnInfo struct {
 	Name     string         `json:"name"`
 	Type     string         `json:"type_text,omitempty" tf:"alias:type,computed"`
-	Identity IdentityColumn `json:"identity,omitempty" tf:"default:false"`
+	Identity IdentityColumn `json:"identity,omitempty"`
 	Comment  string         `json:"comment,omitempty"`
 	Nullable bool           `json:"nullable,omitempty" tf:"default:true"`
 }

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/databricks/terraform-provider-databricks/internal/reflect_utils"
+	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 	"golang.org/x/exp/slices"
 )
 
@@ -30,22 +30,22 @@ func SetForceSendFields(req any, d attributeGetter, fields []string) {
 	if !ok {
 		panic(fmt.Errorf("request argument to setForceSendFields must have ForceSendFields field of type []string (got %s)", forceSendFieldsField.Type()))
 	}
-	fs := reflect_utils.ListAllFields(rv)
+	fs := tfreflect.ListAllFields(rv)
 	for _, fieldName := range fields {
 		found := false
 		var structField reflect.StructField
 		for _, f := range fs {
-			fn := chooseFieldName(f.Sf)
+			fn := chooseFieldName(f.StructField)
 			if fn != "-" && fn == fieldName {
 				found = true
-				structField = f.Sf
+				structField = f.StructField
 				break
 			}
 		}
 		if !found {
 			allFieldNames := make([]string, 0)
 			for _, f := range fs {
-				fn := chooseFieldName(f.Sf)
+				fn := chooseFieldName(f.StructField)
 				if fn == "-" || fn == "force_send_fields" {
 					continue
 				}

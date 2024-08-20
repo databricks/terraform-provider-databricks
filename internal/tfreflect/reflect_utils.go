@@ -1,12 +1,14 @@
-package reflect_utils
+package tfreflect
 
 import "reflect"
 
 type Field struct {
-	Sf reflect.StructField
-	V  reflect.Value
+	StructField reflect.StructField
+	Value       reflect.Value
 }
 
+// Given a reflect.Value of a struct, list all of the fields for both struct field and
+// the value. This function also extracts and flattens the anonymous fields nested inside.
 func ListAllFields(v reflect.Value) []Field {
 	t := v.Type()
 	fields := make([]Field, 0, v.NumField())
@@ -16,8 +18,8 @@ func ListAllFields(v reflect.Value) []Field {
 			fields = append(fields, ListAllFields(v.Field(i))...)
 		} else {
 			fields = append(fields, Field{
-				Sf: f,
-				V:  v.Field(i),
+				StructField: f,
+				Value:       v.Field(i),
 			})
 		}
 	}

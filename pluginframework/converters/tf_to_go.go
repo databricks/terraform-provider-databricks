@@ -1,16 +1,17 @@
-package pluginframework
+package converters
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/databricks/terraform-provider-databricks/internal/reflect_utils"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 )
 
 // Converts a tfsdk struct into a gosdk struct, with the folowing rules.
@@ -27,7 +28,7 @@ import (
 //	types.list and types.map are not supported
 //	map keys should always be a string
 //	tfsdk structs use types.String for all enum values
-func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Context) diag.Diagnostics {
+func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{}) diag.Diagnostics {
 	srcVal := reflect.ValueOf(tfsdk)
 	destVal := reflect.ValueOf(gosdk)
 
@@ -46,28 +47,28 @@ func TfSdkToGoSdkStruct(tfsdk interface{}, gosdk interface{}, ctx context.Contex
 
 	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
 
-	allFields := reflect_utils.ListAllFields(srcVal)
+	allFields := tfreflect.ListAllFields(srcVal)
 	for _, field := range allFields {
-		srcField := field.V
-		srcFieldName := field.Sf.Name
+		srcField := field.Value
+		srcFieldName := field.StructField.Name
 
-		srcFieldTag := field.Sf.Tag.Get("tfsdk")
+		srcFieldTag := field.StructField.Tag.Get("tfsdk")
 		if srcFieldTag == "-" {
 			continue
 		}
 
 		destField := destVal.FieldByName(srcFieldName)
 
-		err := tfSdkToGoSdkSingleField(srcField, destField, srcFieldName, &forceSendFieldsField, ctx)
+		err := tfSdkToGoSdkSingleField(ctx, srcField, destField, srcFieldName, &forceSendFieldsField)
 		if err != nil {
 			return diag.Diagnostics{diag.NewErrorDiagnostic(err.Error(), "tfsdk to gosdk field conversion failure")}
 		}
 	}
 
-	return diag.Diagnostics{}
+	return nil
 }
 
-func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendFieldsField *reflect.Value, ctx context.Context) error {
+func tfSdkToGoSdkSingleField(ctx context.Context, srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendFieldsField *reflect.Value) error {
 
 	if !destField.IsValid() {
 		// Skip field that destination struct does not have.
@@ -76,7 +77,7 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 	}
 
 	if !destField.CanSet() {
-		panic(fmt.Errorf("destination field can not be set: %s", destField.Type().Name()))
+		panic(fmt.Errorf("destination field can not be set: %s. %s", destField.Type().Name(), common.TerraformBugErrorMessage))
 	}
 	srcFieldValue := srcField.Interface()
 
@@ -91,8 +92,8 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 		destField.Set(reflect.New(destField.Type().Elem()))
 
 		// Recursively populate the nested struct.
-		if TfSdkToGoSdkStruct(srcFieldValue, destField.Interface(), ctx).ErrorsCount() > 0 {
-			panic("Error converting tfsdk to gosdk struct")
+		if TfSdkToGoSdkStruct(ctx, srcFieldValue, destField.Interface()).HasError() {
+			panic(fmt.Sprintf("Error converting tfsdk to gosdk struct. %s", common.TerraformBugErrorMessage))
 		}
 	} else if srcField.Kind() == reflect.Struct {
 		tfsdkToGoSdkStructField(srcField, destField, srcFieldName, forceSendFieldsField, ctx)
@@ -107,7 +108,7 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			srcElem := srcField.Index(j)
 
 			destElem := destSlice.Index(j)
-			if err := tfSdkToGoSdkSingleField(srcElem, destElem, "", nil, ctx); err != nil {
+			if err := tfSdkToGoSdkSingleField(ctx, srcElem, destElem, "", nil); err != nil {
 				return err
 			}
 		}
@@ -122,14 +123,14 @@ func tfSdkToGoSdkSingleField(srcField reflect.Value, destField reflect.Value, sr
 			srcMapValue := srcField.MapIndex(key)
 			destMapValue := reflect.New(destField.Type().Elem()).Elem()
 			destMapKey := reflect.ValueOf(key.Interface())
-			if err := tfSdkToGoSdkSingleField(srcMapValue, destMapValue, "", nil, ctx); err != nil {
+			if err := tfSdkToGoSdkSingleField(ctx, srcMapValue, destMapValue, "", nil); err != nil {
 				return err
 			}
 			destMap.SetMapIndex(destMapKey, destMapValue)
 		}
 		destField.Set(destMap)
 	} else {
-		panic(fmt.Errorf("unknown type for field: %s", srcField.Type().Name()))
+		panic(fmt.Errorf("unknown type for field: %s. %s", srcField.Type().Name(), common.TerraformBugErrorMessage))
 	}
 	return nil
 
@@ -141,17 +142,17 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 	case types.Bool:
 		destField.SetBool(v.ValueBool())
 		if !v.IsNull() {
-			addToForceSendFields(srcFieldName, forceSendFieldsField)
+			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.Int64:
 		destField.SetInt(v.ValueInt64())
 		if !v.IsNull() {
-			addToForceSendFields(srcFieldName, forceSendFieldsField)
+			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.Float64:
 		destField.SetFloat(v.ValueFloat64())
 		if !v.IsNull() {
-			addToForceSendFields(srcFieldName, forceSendFieldsField)
+			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.String:
 		if destField.Type().Name() != "string" {
@@ -166,7 +167,7 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 			destVal := reflect.New(destField.Type())
 			setMethod := destVal.MethodByName("Set")
 			if !setMethod.IsValid() {
-				panic(fmt.Sprintf("set method not found on enum type: %s", destField.Type().Name()))
+				panic(fmt.Sprintf("set method not found on enum type: %s. %s", destField.Type().Name(), common.TerraformBugErrorMessage))
 			}
 
 			// Prepare the argument for the Set method
@@ -176,7 +177,7 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 			result := setMethod.Call([]reflect.Value{arg})
 			if len(result) != 0 {
 				if err, ok := result[0].Interface().(error); ok && err != nil {
-					panic(err)
+					panic(fmt.Sprintf("%s. %s", err, common.TerraformBugErrorMessage))
 				}
 			}
 			// We don't need to set ForceSendFields for enums because the value is never going to be a zero value (empty string).
@@ -184,28 +185,28 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 		} else {
 			destField.SetString(v.ValueString())
 			if !v.IsNull() {
-				addToForceSendFields(srcFieldName, forceSendFieldsField)
+				addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 			}
 		}
 	case types.List:
-		panic("types.List should never be used, use go native slices instead")
+		panic(fmt.Sprintf("types.List should never be used, use go native slices instead. %s", common.TerraformBugErrorMessage))
 	case types.Map:
-		panic("types.Map should never be used, use go native maps instead")
+		panic(fmt.Sprintf("types.Map should never be used, use go native maps instead. %s", common.TerraformBugErrorMessage))
 	default:
 		if srcField.IsZero() {
 			// Skip zeros
 			return
 		}
 		// If it is a real stuct instead of a tfsdk type, recursively resolve it.
-		if TfSdkToGoSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx).ErrorsCount() > 0 {
-			panic("Error converting tfsdk to gosdk struct")
+		if TfSdkToGoSdkStruct(ctx, srcFieldValue, destField.Addr().Interface()).HasError() {
+			panic(fmt.Sprintf("Error converting tfsdk to gosdk struct. %s", common.TerraformBugErrorMessage))
 		}
 	}
 }
 
-func addToForceSendFields(fieldName string, forceSendFieldsField *reflect.Value) {
+func addToForceSendFields(ctx context.Context, fieldName string, forceSendFieldsField *reflect.Value) {
 	if forceSendFieldsField == nil || !forceSendFieldsField.IsValid() || !forceSendFieldsField.CanSet() {
-		log.Printf("[Debug] forceSendFieldsField is nil, invalid or not settable. %s", fieldName)
+		tflog.Debug(ctx, fmt.Sprintf("[Debug] forceSendFieldsField is nil, invalid or not settable. %s", fieldName))
 		return
 	}
 	// Initialize forceSendFields if it is a zero Value

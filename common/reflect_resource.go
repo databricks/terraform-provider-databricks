@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/databricks/terraform-provider-databricks/internal/reflect_utils"
+	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -397,9 +397,9 @@ func typeToSchema(v reflect.Value, aliases map[string]map[string]string, tc trac
 		panic(fmt.Errorf("Schema value of Struct is expected, but got %s: %#v", reflectKind(rk), v))
 	}
 	tc = tc.visit(v)
-	fields := reflect_utils.ListAllFields(v)
+	fields := tfreflect.ListAllFields(v)
 	for _, field := range fields {
-		typeField := field.Sf
+		typeField := field.StructField
 		if tc.depthExceeded(typeField) {
 			// Skip the field if recursion depth is over the limit.
 			log.Printf("[TRACE] over recursion limit, skipping field: %s, max depth: %d", getNameForType(typeField.Type), tc.getMaxDepthForTypeField(typeField))
@@ -576,9 +576,9 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 		return fmt.Errorf("%s: got invalid reflect value %#v", path, rv)
 	}
 	isGoSDK := isGoSdk(rv)
-	fields := reflect_utils.ListAllFields(rv)
+	fields := tfreflect.ListAllFields(rv)
 	for _, field := range fields {
-		typeField := field.Sf
+		typeField := field.StructField
 		fieldName := chooseFieldNameWithAliases(typeField, rv.Type(), aliases)
 		if fieldName == "-" {
 			continue
@@ -596,7 +596,7 @@ func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, al
 		if !isGoSDK && fieldSchema.Optional && defaultEmpty && !omitEmpty {
 			return fmt.Errorf("inconsistency: %s is optional, default is empty, but has no omitempty", fieldName)
 		}
-		valueField := field.V
+		valueField := field.Value
 		err := cb(fieldSchema, append(path, fieldName), &valueField)
 		if err != nil {
 			return fmt.Errorf("%s: %s", fieldName, err)

@@ -1,4 +1,4 @@
-package pluginframework
+package converters
 
 import (
 	"context"
@@ -12,8 +12,8 @@ import (
 
 type DummyTfSdk struct {
 	Enabled           types.Bool                  `tfsdk:"enabled" tf:"optional"`
-	Workers           types.Int64                 `tfsdk:"workers" tf:""` // Test required field
-	Floats            types.Float64               `tfsdk:"floats" tf:""`  // Test required field
+	Workers           types.Int64                 `tfsdk:"workers" tf:""`
+	Floats            types.Float64               `tfsdk:"floats" tf:""`
 	Description       types.String                `tfsdk:"description" tf:""`
 	Tasks             types.String                `tfsdk:"task" tf:"optional"`
 	Nested            *DummyNestedTfSdk           `tfsdk:"nested" tf:"optional"`
@@ -26,7 +26,7 @@ type DummyTfSdk struct {
 	Attributes        map[string]types.String     `tfsdk:"attributes" tf:"optional"`
 	EnumField         types.String                `tfsdk:"enum_field" tf:"optional"`
 	AdditionalField   types.String                `tfsdk:"additional_field" tf:"optional"`
-	DistinctField     types.String                `tfsdk:"distinct_field" tf:"optional"` // distinct field that the gosdk struct doesn't have
+	DistinctField     types.String                `tfsdk:"distinct_field" tf:"optional"`
 	Irrelevant        types.String                `tfsdk:"-"`
 }
 
@@ -90,55 +90,52 @@ type DummyNestedGoSdk struct {
 
 // Function to construct individual test case with a pair of matching tfSdkStruct and gosdkStruct.
 // Verifies that the conversion both ways are working as expected.
-func ConverterTestCase(t *testing.T, description string, tfSdkStruct DummyTfSdk, goSdkStruct DummyGoSdk) {
+func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, goSdkStruct DummyGoSdk) {
 	convertedGoSdkStruct := DummyGoSdk{}
-	assert.True(t, !TfSdkToGoSdkStruct(tfSdkStruct, &convertedGoSdkStruct, context.Background()).HasError())
+	assert.True(t, !TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, &convertedGoSdkStruct).HasError())
 	assert.True(t, reflect.DeepEqual(convertedGoSdkStruct, goSdkStruct), fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
 
 	convertedTfSdkStruct := DummyTfSdk{}
-	assert.True(t, !GoSdkToTfSdkStruct(goSdkStruct, &convertedTfSdkStruct, context.Background()).HasError())
+	assert.True(t, !GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct).HasError())
 	assert.True(t, reflect.DeepEqual(convertedTfSdkStruct, tfSdkStruct), fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
 }
 
-func TestConverter(t *testing.T) {
-	ConverterTestCase(
-		t,
+var tests = []struct {
+	name        string
+	tfSdkStruct DummyTfSdk
+	goSdkStruct DummyGoSdk
+}{
+	{
 		"string conversion",
 		DummyTfSdk{Description: types.StringValue("abc")},
 		DummyGoSdk{Description: "abc", ForceSendFields: []string{"Description"}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"bool conversion",
 		DummyTfSdk{Enabled: types.BoolValue(true)},
 		DummyGoSdk{Enabled: true, ForceSendFields: []string{"Enabled"}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"int64 conversion",
 		DummyTfSdk{Workers: types.Int64Value(123)},
 		DummyGoSdk{Workers: 123, ForceSendFields: []string{"Workers"}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"tf null value conversion",
 		DummyTfSdk{Workers: types.Int64Null()},
 		DummyGoSdk{},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"float64 conversion",
 		DummyTfSdk{Floats: types.Float64Value(1.1)},
 		DummyGoSdk{Floats: 1.1, ForceSendFields: []string{"Floats"}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"enum conversion",
 		DummyTfSdk{EnumField: types.StringValue("TEST_ENUM_A")},
 		DummyGoSdk{EnumField: TestEnumA},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"struct conversion",
 		DummyTfSdk{NoPointerNested: DummyNestedTfSdk{
 			Name:    types.StringValue("def"),
@@ -149,9 +146,8 @@ func TestConverter(t *testing.T) {
 			Enabled:         true,
 			ForceSendFields: []string{"Name", "Enabled"},
 		}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"pointer conversion",
 		DummyTfSdk{Nested: &DummyNestedTfSdk{
 			Name:    types.StringValue("def"),
@@ -162,21 +158,18 @@ func TestConverter(t *testing.T) {
 			Enabled:         true,
 			ForceSendFields: []string{"Name", "Enabled"},
 		}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"list conversion",
 		DummyTfSdk{Repeated: []types.Int64{types.Int64Value(12), types.Int64Value(34)}},
 		DummyGoSdk{Repeated: []int64{12, 34}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"map conversion",
 		DummyTfSdk{Attributes: map[string]types.String{"key": types.StringValue("value")}},
 		DummyGoSdk{Attributes: map[string]string{"key": "value"}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"nested list conversion",
 		DummyTfSdk{NestedList: []DummyNestedTfSdk{
 			{
@@ -200,35 +193,8 @@ func TestConverter(t *testing.T) {
 				ForceSendFields: []string{"Name", "Enabled"},
 			},
 		}},
-	)
-	ConverterTestCase(
-		t,
-		"nested list conversion",
-		DummyTfSdk{NestedList: []DummyNestedTfSdk{
-			{
-				Name:    types.StringValue("abc"),
-				Enabled: types.BoolValue(true),
-			},
-			{
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(false),
-			},
-		}},
-		DummyGoSdk{NestedList: []DummyNestedGoSdk{
-			{
-				Name:            "abc",
-				Enabled:         true,
-				ForceSendFields: []string{"Name", "Enabled"},
-			},
-			{
-				Name:            "def",
-				Enabled:         false,
-				ForceSendFields: []string{"Name", "Enabled"},
-			},
-		}},
-	)
-	ConverterTestCase(
-		t,
+	},
+	{
 		"nested map conversion",
 		DummyTfSdk{NestedMap: map[string]DummyNestedTfSdk{
 			"key1": {
@@ -252,5 +218,11 @@ func TestConverter(t *testing.T) {
 				ForceSendFields: []string{"Name", "Enabled"},
 			},
 		}},
-	)
+	},
+}
+
+func TestConverter(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) { RunConverterTest(t, test.name, test.tfSdkStruct, test.goSdkStruct) })
+	}
 }

@@ -1,4 +1,4 @@
-package pluginframework
+package converters
 
 import (
 	"context"
@@ -9,7 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/databricks/terraform-provider-databricks/internal/reflect_utils"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 )
 
 // Converts a gosdk struct into a tfsdk struct, with the folowing rules.
@@ -27,7 +28,7 @@ import (
 //	map keys should always be a string
 //	tfsdk structs use types.String for all enum values
 //	non-json fields will be omitted
-func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Context) diag.Diagnostics {
+func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{}) diag.Diagnostics {
 
 	srcVal := reflect.ValueOf(gosdk)
 	destVal := reflect.ValueOf(tfsdk)
@@ -55,11 +56,11 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 		forceSendFieldVal = forceSendField.Interface().([]string)
 	}
 
-	for _, field := range reflect_utils.ListAllFields(srcVal) {
-		srcField := field.V
-		srcFieldName := field.Sf.Name
+	for _, field := range tfreflect.ListAllFields(srcVal) {
+		srcField := field.Value
+		srcFieldName := field.StructField.Name
 
-		srcFieldTag := field.Sf.Tag.Get("json")
+		srcFieldTag := field.StructField.Tag.Get("json")
 		if srcFieldTag == "-" {
 			continue
 		}
@@ -70,7 +71,7 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 			continue
 		}
 
-		err := goSdkToTfSdkSingleField(srcField, destField, fieldInForceSendFields(srcFieldName, forceSendFieldVal), ctx)
+		err := goSdkToTfSdkSingleField(ctx, srcField, destField, fieldInForceSendFields(srcFieldName, forceSendFieldVal))
 		if err != nil {
 			return diag.Diagnostics{diag.NewErrorDiagnostic(err.Error(), "gosdk to tfsdk field conversion failure")}
 		}
@@ -78,10 +79,10 @@ func GoSdkToTfSdkStruct(gosdk interface{}, tfsdk interface{}, ctx context.Contex
 	return nil
 }
 
-func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, forceSendField bool, ctx context.Context) error {
+func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destField reflect.Value, forceSendField bool) error {
 
 	if !destField.CanSet() {
-		panic(fmt.Errorf("destination field can not be set: %s", destField.Type().Name()))
+		panic(fmt.Errorf("destination field can not be set: %s. %s", destField.Type().Name(), common.TerraformBugErrorMessage))
 	}
 
 	srcFieldValue := srcField.Interface()
@@ -99,8 +100,8 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, fo
 		destField.Set(reflect.New(destField.Type().Elem()))
 
 		// Recursively populate the nested struct.
-		if diags := GoSdkToTfSdkStruct(srcFieldValue, destField.Interface(), ctx); diags.ErrorsCount() > 0 {
-			panic("Error converting gosdk to tfsdk struct")
+		if GoSdkToTfSdkStruct(ctx, srcFieldValue, destField.Interface()).HasError() {
+			panic(fmt.Sprintf("Error converting gosdk to tfsdk struct. %s", common.TerraformBugErrorMessage))
 		}
 	case reflect.Bool:
 		boolVal := srcFieldValue.(bool)
@@ -112,16 +113,16 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, fo
 		}
 	case reflect.Int64:
 		// convert any kind of integer to int64
-		intVal := srcField.Convert(reflect.TypeOf(int64(0))).Interface().(int64)
+		intVal := srcField.Convert(reflect.TypeOf(int64(0))).Int()
 		// check if the value is non-zero or if the field is in the forceSendFields list
 		if intVal != 0 || forceSendField {
-			destField.Set(reflect.ValueOf(types.Int64Value(int64(intVal))))
+			destField.Set(reflect.ValueOf(types.Int64Value(intVal)))
 		} else {
 			destField.Set(reflect.ValueOf(types.Int64Null()))
 		}
 	case reflect.Float64:
 		// convert any kind of float to float64
-		float64Val := srcField.Convert(reflect.TypeOf(float64(0))).Interface().(float64)
+		float64Val := srcField.Convert(reflect.TypeOf(float64(0))).Float()
 		// check if the value is non-zero or if the field is in the forceSendFields list
 		if float64Val != 0 || forceSendField {
 			destField.Set(reflect.ValueOf(types.Float64Value(float64Val)))
@@ -148,8 +149,8 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, fo
 			return nil
 		}
 		// resolve the nested struct by recursively calling the function
-		if GoSdkToTfSdkStruct(srcFieldValue, destField.Addr().Interface(), ctx).ErrorsCount() > 0 {
-			panic("Error converting gosdk to tfsdk struct")
+		if GoSdkToTfSdkStruct(ctx, srcFieldValue, destField.Addr().Interface()).HasError() {
+			panic(fmt.Sprintf("Error converting gosdk to tfsdk struct. %s", common.TerraformBugErrorMessage))
 		}
 	case reflect.Slice:
 		if srcField.IsNil() {
@@ -162,7 +163,7 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, fo
 			srcElem := srcField.Index(j)
 
 			destElem := destSlice.Index(j)
-			if err := goSdkToTfSdkSingleField(srcElem, destElem, true, ctx); err != nil {
+			if err := goSdkToTfSdkSingleField(ctx, srcElem, destElem, true); err != nil {
 				return err
 			}
 		}
@@ -177,14 +178,14 @@ func goSdkToTfSdkSingleField(srcField reflect.Value, destField reflect.Value, fo
 			srcMapValue := srcField.MapIndex(key)
 			destMapValue := reflect.New(destField.Type().Elem()).Elem()
 			destMapKey := reflect.ValueOf(key.Interface())
-			if err := goSdkToTfSdkSingleField(srcMapValue, destMapValue, true, ctx); err != nil {
+			if err := goSdkToTfSdkSingleField(ctx, srcMapValue, destMapValue, true); err != nil {
 				return err
 			}
 			destMap.SetMapIndex(destMapKey, destMapValue)
 		}
 		destField.Set(destMap)
 	default:
-		panic(fmt.Errorf("unknown type for field: %s", srcField.Type().Name()))
+		panic(fmt.Errorf("unknown type for field: %s. %s", srcField.Type().Name(), common.TerraformBugErrorMessage))
 	}
 	return nil
 }
@@ -195,6 +196,7 @@ func getStringFromEnum(srcField reflect.Value) string {
 	if srcField.CanAddr() {
 		stringMethod = srcField.Addr().MethodByName("String")
 	} else {
+		// This case is for the unit tests because the enum values will be const and we cannot get the address.
 		// If cannot get addr, create a new addressable variable to call the String method
 		addr := reflect.New(srcField.Type()).Elem()
 		addr.Set(srcField)
@@ -205,10 +207,10 @@ func getStringFromEnum(srcField reflect.Value) string {
 		if len(stringResult) == 1 {
 			return stringResult[0].Interface().(string)
 		} else {
-			panic("num get string has more than one result")
+			panic(fmt.Sprintf("num get string has more than one result. %s", common.TerraformBugErrorMessage))
 		}
 	} else {
-		panic("enum does not have valid .String() method")
+		panic(fmt.Sprintf("enum does not have valid .String() method. %s", common.TerraformBugErrorMessage))
 	}
 }
 

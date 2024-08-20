@@ -14,6 +14,6 @@ func TestTfLogger_Enabled(t *testing.T) {
 }
 
 func TestSetLogger(t *testing.T) {
-	SetLogger(context.Background())
+	SetTfLogger(context.Background())
 	assert.IsType(t, &TfLogger{}, goLogger.DefaultLogger)
 }

@@ -20,8 +20,6 @@ func SetTfLogger(ctx context.Context) {
 	logger.DefaultLogger = NewTfLogger(ctx)
 }
 
-var loggerContext context.Context
-
 // This function is always enabled because TfLogger implements the Logger interface from Go SDK and there we check
 // if the logging is enabled based on level (which default to Info).
 // This however isn't possible here since tflog isn't enabled / disabled based on log level.

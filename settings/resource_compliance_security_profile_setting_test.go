@@ -256,3 +256,21 @@ func TestQueryUpdateComplianceSecurityProfileSettingWithConflict(t *testing.T) {
 	assert.Equal(t, true, res["is_enabled"])
 	assert.Equal(t, "HIPAA", res["compliance_standards"].([]interface{})[0])
 }
+
+func TestDeleteComplianceSecurityProfileSetting(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: testComplianceSecurityProfileSetting,
+		Delete:   true,
+		HCL: `
+			compliance_security_profile_workspace {
+				is_enabled = true
+				compliance_standards = ["HIPAA", "PCI_DSS"]
+			}
+			etag = "etag1"
+		`,
+		ID: defaultSettingId,
+	}.ApplyAndExpectData(t, map[string]any{
+		etagAttrName: "etag1",
+		"id":         defaultSettingId,
+	})
+}

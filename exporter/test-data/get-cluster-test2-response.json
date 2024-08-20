@@ -3,7 +3,6 @@
     "max_workers": 2,
     "min_workers": 1
   },
-  "autotermination_minutes": 10,
   "azure_attributes": {
     "availability": "ON_DEMAND_AZURE",
     "first_on_demand": 1,

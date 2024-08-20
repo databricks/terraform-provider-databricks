@@ -2,15 +2,18 @@ package clusters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -604,7 +607,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				return err
 			}
 			cluster.ForceSendFields = []string{"NumWorkers"}
-			_, err = clusters.Edit(ctx, cluster)
+
+			err = retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {
+				_, err = clusters.Edit(ctx, cluster)
+				if err == nil {
+					return nil
+				}
+				var apiErr *apierr.APIError
+				// Only Running and Terminated clusters can be modified. In particular, autoscaling clusters cannot be modified
+				// while the resizing is ongoing. We retry in this case. Scaling can take several minutes.
+				if errors.As(err, &apiErr) && apiErr.ErrorCode == "INVALID_STATE" {
+					return retry.RetryableError(fmt.Errorf("cluster %s cannot be modified in its current state", clusterId))
+				}
+				return retry.NonRetryableError(err)
+			})
+
 		}
 		if err != nil {
 			return err

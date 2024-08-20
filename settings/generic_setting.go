@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -133,6 +134,10 @@ func (w workspaceSetting[T]) Update(ctx context.Context, c *databricks.Workspace
 	return w.updateFunc(ctx, c, t)
 }
 func (w workspaceSetting[T]) Delete(ctx context.Context, c *databricks.WorkspaceClient, etag string) (string, error) {
+	if w.deleteFunc == nil {
+		tflog.Warn(ctx, "The `delete` function isn't defined for this resource. Most probably it's not supported.")
+		return etag, nil
+	}
 	return w.deleteFunc(ctx, c, etag)
 }
 func (w workspaceSetting[T]) GetETag(t *T) string {
@@ -203,6 +208,10 @@ func (w accountSetting[T]) Update(ctx context.Context, c *databricks.AccountClie
 	return w.updateFunc(ctx, c, t)
 }
 func (w accountSetting[T]) Delete(ctx context.Context, c *databricks.AccountClient, etag string) (string, error) {
+	if w.deleteFunc == nil {
+		tflog.Warn(ctx, "The `delete` function isn't defined for this resource. Most probably it's not supported.")
+		return etag, nil
+	}
 	return w.deleteFunc(ctx, c, etag)
 }
 func (w accountSetting[T]) GetETag(t *T) string {

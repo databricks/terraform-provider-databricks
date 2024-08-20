@@ -6,6 +6,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Enhanced Security Monitoring setting
@@ -31,5 +32,9 @@ var complianceSecurityProfileSetting = workspaceSetting[settings.ComplianceSecur
 			return "", err
 		}
 		return res.Etag, err
+	},
+	deleteFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (string, error) {
+		tflog.Warn(ctx, "databricks_compliance_security_profile_workspace_setting couldn't be disabled!")
+		return etag, nil
 	},
 }

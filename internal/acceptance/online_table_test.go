@@ -30,6 +30,12 @@ resource "databricks_catalog" "sandbox" {
 	cluster_size     = "2X-Small"
 	max_num_clusters = 1
 	warehouse_type   = "PRO"
+	tags {
+		custom_tags {
+			key   = "Owner"
+			value = "eng-dev-ecosystem-team_at_databricks.com"
+		}
+	}
   }
   
   resource "databricks_sql_table" "table" {

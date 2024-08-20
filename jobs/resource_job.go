@@ -503,7 +503,6 @@ type JobSettingsResource struct {
 	DbtTask                *DbtTask             `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask             *RunJobTask          `json:"run_job_task,omitempty" tf:"group:task_type"`
 	Libraries              []compute.Library    `json:"libraries,omitempty" tf:"alias:library"`
-	TimeoutSeconds         int32                `json:"timeout_seconds,omitempty"`
 	MaxRetries             int32                `json:"max_retries,omitempty"`
 	MinRetryIntervalMillis int32                `json:"min_retry_interval_millis,omitempty"`
 	RetryOnTimeout         bool                 `json:"retry_on_timeout,omitempty"`

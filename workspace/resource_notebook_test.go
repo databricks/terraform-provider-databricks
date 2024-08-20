@@ -13,7 +13,7 @@ import (
 func TestResourceNotebookRead(t *testing.T) {
 	path := "/test/path.py"
 	objectID := 12345
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -30,17 +30,18 @@ func TestResourceNotebookRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       path,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
-	assert.Equal(t, path, d.Get("path"))
-	assert.Equal(t, "PYTHON", d.Get("language"))
-	assert.Equal(t, objectID, d.Get("object_id"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"path":           path,
+		"object_id":      objectID,
+		"language":       "PYTHON",
+		"id":             path,
+		"workspace_path": "/Workspace" + path,
+	})
 }
 
 func TestResourceNotebookDelete(t *testing.T) {
 	path := "/test/path.py"
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:          http.MethodPost,
@@ -52,9 +53,9 @@ func TestResourceNotebookDelete(t *testing.T) {
 		Resource: ResourceNotebook(),
 		Delete:   true,
 		ID:       path,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, path, d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": path,
+	})
 }
 
 func TestResourceNotebookRead_NotFound(t *testing.T) {
@@ -99,7 +100,7 @@ func TestResourceNotebookRead_Error(t *testing.T) {
 }
 
 func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -144,13 +145,14 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 			"path":           "/foo/path.py",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "/foo/path.py", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"path": "/foo/path.py",
+		"id":   "/foo/path.py",
+	})
 }
 
 func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -211,9 +213,10 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 			"path":           "/foo/path.py",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "/foo/path.py", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"path": "/foo/path.py",
+		"id":   "/foo/path.py",
+	})
 }
 
 func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
@@ -260,7 +263,7 @@ func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
 }
 
 func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
@@ -308,13 +311,13 @@ func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
 			"path":   "/Mars",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "/Mars", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "/Mars",
+	})
 }
 
 func TestResourceNotebookCreateSource(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodPost,
@@ -346,9 +349,9 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 			"path":   "/Dashboard",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "/Dashboard", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "/Dashboard",
+	})
 }
 
 func TestResourceNotebookCreate_Error(t *testing.T) {

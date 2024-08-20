@@ -20,7 +20,7 @@ func assertEnableIpAccessList(t *testing.T, expected string) {
 	})
 	require.NoError(t, err)
 	assert.Len(t, *conf, 1)
-	assert.Equal(t, (*conf)["enableIpAccessLists"], expected)
+	assert.Equal(t, expected, (*conf)["enableIpAccessLists"])
 }
 
 func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
@@ -70,11 +70,11 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			}`,
 		Check: func(s *terraform.State) error {
 			// Assert server side configuration is updated
-			assertEnableIpAccessList(t, "true")
+			assertEnableIpAccessList(t, "TRue")
 
 			// Assert state is persisted
 			conf := s.RootModule().Resources["databricks_workspace_conf.this"]
-			assert.Equal(t, "true", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
+			assert.Equal(t, "TRue", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
 			return nil
 		},
 	})

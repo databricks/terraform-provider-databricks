@@ -458,7 +458,7 @@ func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCas
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := r.TestResourceData()
-		client.Config.AccountID = config["account_id"]
+		client.Config.WithTesting().AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue

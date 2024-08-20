@@ -60,6 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` -  Path of notebook on workspace
 * `url` - Routable URL of the notebook
 * `object_id` -  Unique identifier for a NOTEBOOK
+* `workspace_path` - path on Workspace File System (WSFS) in form of `/Workspace` + `path`
 
 ## Access Control
 

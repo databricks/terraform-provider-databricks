@@ -10,6 +10,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -314,4 +315,23 @@ func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 	require.Error(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(),
 		"default auth: azure-cli: cannot get access token: This is just a failing script"))
+}
+
+type mockInternalUserService struct {
+	count int
+}
+
+func (m *mockInternalUserService) Me(ctx context.Context) (user *iam.User, err error) {
+	m.count++
+	return &iam.User{
+		UserName: "test",
+	}, nil
+}
+
+func TestCachedMe_Me_MakesSingleRequest(t *testing.T) {
+	mock := &mockInternalUserService{}
+	cm := newCachedMe(mock)
+	cm.Me(context.Background())
+	cm.Me(context.Background())
+	assert.Equal(t, 1, mock.count)
 }

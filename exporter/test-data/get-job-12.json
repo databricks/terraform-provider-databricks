@@ -11,7 +11,7 @@
               "task_key": "test",
               "existing_cluster_id": "test2",
               "notebook_task": {
-                  "notebook_path": "/Users/test@test.com/Test"
+                  "notebook_path": "/Workspace/Users/test@test.com/Test"
               }
           }
       ],

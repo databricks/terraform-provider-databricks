@@ -12,6 +12,8 @@ type TfLogger struct {
 	ctx context.Context
 }
 
+// This function expects the context to have the logger key configured to hold the logger.
+// Please see: GetProviderRootLogger defined in terraform-plugin-log here: https://github.com/hashicorp/terraform-plugin-log/blob/main/internal/logging/provider.go#L14 for reference.
 func NewTfLogger(ctx context.Context) *TfLogger {
 	return &TfLogger{ctx: ctx}
 }

@@ -16,8 +16,8 @@ func NewTfLogger(ctx context.Context) *TfLogger {
 	return &TfLogger{ctx: ctx}
 }
 
-func SetTfLogger(ctx context.Context) {
-	logger.DefaultLogger = NewTfLogger(ctx)
+func SetTfLogger(tfLogger *TfLogger) {
+	logger.DefaultLogger = tfLogger
 }
 
 // This function is always enabled because TfLogger implements the Logger interface from Go SDK and there we check

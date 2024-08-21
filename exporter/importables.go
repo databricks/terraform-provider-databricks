@@ -2084,6 +2084,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.emitSecretsFromSecretsPathMap(pipeline.Configuration)
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/pipelines/%s", r.ID),
 				"pipeline_"+ic.Importables["databricks_pipeline"].Name(ic, r.Data))
+			if pipeline.Notifications != nil {
+				for _, n := range pipeline.Notifications {
+					ic.emitListOfUsers(n.EmailRecipients)
+				}
+			}
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -2136,6 +2141,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.file.path", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+			{Path: "notification.email_recipients", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "configuration", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path",

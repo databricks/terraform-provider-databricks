@@ -2117,7 +2117,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 					Resources: []scim.User{
 						{
 							ID:       "id",
-							UserName: "id",
+							UserName: "id@domain.com",
 						},
 					},
 				},
@@ -2184,6 +2184,42 @@ func TestImportingDLTPipelines(t *testing.T) {
 
 			err := ic.Run()
 			assert.NoError(t, err)
+			content, err := os.ReadFile(tmpDir + "/dlt.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_pipeline" "test_dlt_123"`))
+			assert.True(t, strings.Contains(contentStr, `library {
+    notebook {
+      path = databricks_notebook.users_user_domain_com_test_dlt_123.id
+    }
+  }`))
+			assert.True(t, strings.Contains(contentStr, `cluster {
+    spark_conf = {
+      "fs.azure.account.auth.type"            = "OAuth"
+      "fs.azure.account.oauth.provider.type"  = "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider"
+      "fs.azure.account.oauth2.client.secret" = "{{secrets/some-kv-scope/test-secret}}"
+    }
+    num_workers      = 1
+    label            = "default"
+    instance_pool_id = "123"
+    init_scripts {
+      dbfs {
+        destination = "dbfs:/FileStore/jars/test.jar"
+      }
+    }
+    init_scripts {
+      workspace {
+        destination = databricks_workspace_file.init_sh_789.id
+      }
+    }
+  }`))
+			assert.True(t, strings.Contains(contentStr, `notification {
+    email_recipients = [databricks_user.user_123.user_name]
+    alerts           = ["on-flow-failure", "on-update-failure"]
+  }`))
+			assert.True(t, strings.Contains(contentStr, `edition     = "advanced"
+  development = true
+  continuous  = true`))
 		})
 }
 

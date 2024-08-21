@@ -18,11 +18,27 @@ type MapNestedAttributeBuilder struct {
 }
 
 func (a MapNestedAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.MapNestedAttribute{NestedObject: a.NestedObject.BuildDataSourceAttribute(), Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return dataschema.MapNestedAttribute{
+		NestedObject:       a.NestedObject.BuildDataSourceAttribute(),
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a MapNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.MapNestedAttribute{NestedObject: a.NestedObject.BuildResourceAttribute(), Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return schema.MapNestedAttribute{
+		NestedObject:       a.NestedObject.BuildResourceAttribute(),
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a MapNestedAttributeBuilder) SetOptional() AttributeBuilder {

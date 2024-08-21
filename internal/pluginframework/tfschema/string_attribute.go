@@ -16,11 +16,25 @@ type StringAttributeBuilder struct {
 }
 
 func (a StringAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.StringAttribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return dataschema.StringAttribute{
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a StringAttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.StringAttribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return schema.StringAttribute{
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a StringAttributeBuilder) SetOptional() AttributeBuilder {

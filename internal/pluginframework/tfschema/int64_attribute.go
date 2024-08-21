@@ -16,11 +16,25 @@ type Int64AttributeBuilder struct {
 }
 
 func (a Int64AttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.Int64Attribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return dataschema.Int64Attribute{
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a Int64AttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.Int64Attribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return schema.Int64Attribute{
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a Int64AttributeBuilder) SetOptional() AttributeBuilder {

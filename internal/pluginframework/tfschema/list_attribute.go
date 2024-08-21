@@ -19,11 +19,27 @@ type ListAttributeBuilder struct {
 }
 
 func (a ListAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.ListAttribute{ElementType: a.ElementType, Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return dataschema.ListAttribute{
+		ElementType:        a.ElementType,
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a ListAttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.ListAttribute{ElementType: a.ElementType, Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return schema.ListAttribute{
+		ElementType:        a.ElementType,
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a ListAttributeBuilder) SetOptional() AttributeBuilder {

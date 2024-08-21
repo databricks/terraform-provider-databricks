@@ -19,11 +19,27 @@ type MapAttributeBuilder struct {
 }
 
 func (a MapAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.MapAttribute{ElementType: a.ElementType, Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return dataschema.MapAttribute{
+		ElementType:        a.ElementType,
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a MapAttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.MapAttribute{ElementType: a.ElementType, Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return schema.MapAttribute{
+		ElementType:        a.ElementType,
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a MapAttributeBuilder) SetOptional() AttributeBuilder {

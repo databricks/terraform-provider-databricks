@@ -16,11 +16,25 @@ type BoolAttributeBuilder struct {
 }
 
 func (a BoolAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.BoolAttribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return dataschema.BoolAttribute{
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a BoolAttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.BoolAttribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return schema.BoolAttribute{
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a BoolAttributeBuilder) SetOptional() AttributeBuilder {

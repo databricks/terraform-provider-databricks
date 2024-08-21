@@ -19,7 +19,7 @@ type AttributeBuilder interface {
 	SetDeprecated(string) AttributeBuilder
 }
 
-// BuildDataSourceAttributeMap takes a map from string to AttributeBuilder and returns a map from string to datasource.schema.Attribute
+// BuildDataSourceAttributeMap takes a map from string to AttributeBuilder and returns a map from string to datasource.schema.Attribute.
 func BuildDataSourceAttributeMap(attributes map[string]AttributeBuilder) map[string]dataschema.Attribute {
 	dataSourceAttributes := make(map[string]dataschema.Attribute)
 
@@ -30,7 +30,7 @@ func BuildDataSourceAttributeMap(attributes map[string]AttributeBuilder) map[str
 	return dataSourceAttributes
 }
 
-// BuildResourceAttributeMap takes a map from string to AttributeBuilder and returns a map from string to resource.schema.Attribute
+// BuildResourceAttributeMap takes a map from string to AttributeBuilder and returns a map from string to resource.schema.Attribute.
 func BuildResourceAttributeMap(attributes map[string]AttributeBuilder) map[string]schema.Attribute {
 	resourceAttributes := make(map[string]schema.Attribute)
 

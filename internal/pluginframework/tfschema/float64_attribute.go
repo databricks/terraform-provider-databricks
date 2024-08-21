@@ -16,11 +16,25 @@ type Float64AttributeBuilder struct {
 }
 
 func (a Float64AttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.Float64Attribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return dataschema.Float64Attribute{
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a Float64AttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.Float64Attribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return schema.Float64Attribute{
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a Float64AttributeBuilder) SetOptional() AttributeBuilder {

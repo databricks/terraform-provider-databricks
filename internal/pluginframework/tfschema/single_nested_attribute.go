@@ -18,11 +18,27 @@ type SingleNestedAttributeBuilder struct {
 }
 
 func (a SingleNestedAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.SingleNestedAttribute{Attributes: BuildDataSourceAttributeMap(a.Attributes), Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return dataschema.SingleNestedAttribute{
+		Attributes:         BuildDataSourceAttributeMap(a.Attributes),
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a SingleNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.SingleNestedAttribute{Attributes: BuildResourceAttributeMap(a.Attributes), Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
+	return schema.SingleNestedAttribute{
+		Attributes:         BuildResourceAttributeMap(a.Attributes),
+		Optional:           a.Optional,
+		Required:           a.Required,
+		Sensitive:          a.Sensitive,
+		DeprecationMessage: a.DeprecationMessage,
+		Computed:           a.Computed,
+		Validators:         a.Validators,
+	}
 }
 
 func (a SingleNestedAttributeBuilder) SetOptional() AttributeBuilder {

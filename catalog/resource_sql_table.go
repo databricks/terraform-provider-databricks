@@ -42,9 +42,9 @@ type SqlTableInfo struct {
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Comment               string            `json:"comment,omitempty"`
 	Properties            map[string]string `json:"properties,omitempty"`
-	EffectiveProperties   map[string]string `json:"effective_properties,omitempty" tf:"computed"`
+	EffectiveProperties   map[string]string `json:"effective_properties" tf:"computed"`
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
-	EffectiveOptions      map[string]string `json:"effective_options,omitempty" tf:"computed"`
+	EffectiveOptions      map[string]string `json:"effective_options" tf:"computed"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
 	WarehouseID           string            `json:"warehouse_id,omitempty"`
 	Owner                 string            `json:"owner,omitempty" tf:"computed"`

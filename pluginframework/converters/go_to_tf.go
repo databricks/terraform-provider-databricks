@@ -13,7 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 )
 
-// Converts a gosdk struct into a tfsdk struct, with the folowing rules.
+// GoSdkToTfSdkStruct converts a gosdk struct into a tfsdk struct, with the folowing rules.
 //
 //	string -> types.String
 //	bool -> types.Bool

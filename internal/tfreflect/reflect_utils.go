@@ -7,7 +7,7 @@ type Field struct {
 	Value       reflect.Value
 }
 
-// Given a reflect.Value of a struct, list all of the fields for both struct field and
+// ListAllFields takes in a reflect.Value of a struct, returns all of the fields for both struct field and
 // the value. This function also extracts and flattens the anonymous fields nested inside.
 func ListAllFields(v reflect.Value) []Field {
 	t := v.Type()

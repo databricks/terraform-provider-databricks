@@ -121,14 +121,34 @@ var tests = []struct {
 		DummyGoSdk{Workers: 123, ForceSendFields: []string{"Workers"}},
 	},
 	{
-		"tf null value conversion",
-		DummyTfSdk{Workers: types.Int64Null()},
-		DummyGoSdk{},
-	},
-	{
 		"float64 conversion",
 		DummyTfSdk{Floats: types.Float64Value(1.1)},
 		DummyGoSdk{Floats: 1.1, ForceSendFields: []string{"Floats"}},
+	},
+	{
+		"string zero value conversion",
+		DummyTfSdk{Description: types.StringValue("")},
+		DummyGoSdk{Description: "", ForceSendFields: []string{"Description"}},
+	},
+	{
+		"bool zero value conversion",
+		DummyTfSdk{Enabled: types.BoolValue(false)},
+		DummyGoSdk{Enabled: false, ForceSendFields: []string{"Enabled"}},
+	},
+	{
+		"int64 zero value conversion",
+		DummyTfSdk{Workers: types.Int64Value(0)},
+		DummyGoSdk{Workers: 0, ForceSendFields: []string{"Workers"}},
+	},
+	{
+		"float64 zero value conversion",
+		DummyTfSdk{Floats: types.Float64Value(0)},
+		DummyGoSdk{Floats: 0, ForceSendFields: []string{"Floats"}},
+	},
+	{
+		"tf null value conversion",
+		DummyTfSdk{Workers: types.Int64Null()},
+		DummyGoSdk{},
 	},
 	{
 		"enum conversion",

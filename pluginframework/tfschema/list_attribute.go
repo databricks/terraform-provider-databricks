@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-// ListAttributte represents a list of primitive types.
-type ListAttribute struct {
+// ListAttributteBuilder represents a list of primitive types.
+type ListAttributeBuilder struct {
 	ElementType        attr.Type
 	Optional           bool
 	Required           bool
@@ -18,15 +18,15 @@ type ListAttribute struct {
 	Validators         []validator.List
 }
 
-func (a ListAttribute) BuildDataSourceAttribute() dataschema.Attribute {
+func (a ListAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
 	return dataschema.ListAttribute{ElementType: a.ElementType, Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
 }
 
-func (a ListAttribute) BuildResourceAttribute() schema.Attribute {
+func (a ListAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	return schema.ListAttribute{ElementType: a.ElementType, Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
 }
 
-func (a ListAttribute) SetOptional() AttributeBuilder {
+func (a ListAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -35,7 +35,7 @@ func (a ListAttribute) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a ListAttribute) SetRequired() AttributeBuilder {
+func (a ListAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -44,7 +44,7 @@ func (a ListAttribute) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a ListAttribute) SetSensitive() AttributeBuilder {
+func (a ListAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -52,7 +52,7 @@ func (a ListAttribute) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a ListAttribute) SetComputed() AttributeBuilder {
+func (a ListAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -60,7 +60,7 @@ func (a ListAttribute) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a ListAttribute) SetReadOnly() AttributeBuilder {
+func (a ListAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -70,12 +70,12 @@ func (a ListAttribute) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a ListAttribute) SetDeprecated(msg string) AttributeBuilder {
+func (a ListAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a ListAttribute) AddValidator(v validator.List) AttributeBuilder {
+func (a ListAttributeBuilder) AddValidator(v validator.List) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }

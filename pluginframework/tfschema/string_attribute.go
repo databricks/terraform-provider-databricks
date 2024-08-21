@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-type StringAttribute struct {
+type StringAttributeBuilder struct {
 	Optional           bool
 	Required           bool
 	Sensitive          bool
@@ -15,15 +15,15 @@ type StringAttribute struct {
 	Validators         []validator.String
 }
 
-func (a StringAttribute) BuildDataSourceAttribute() dataschema.Attribute {
+func (a StringAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
 	return dataschema.StringAttribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
 }
 
-func (a StringAttribute) BuildResourceAttribute() schema.Attribute {
+func (a StringAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	return schema.StringAttribute{Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
 }
 
-func (a StringAttribute) SetOptional() AttributeBuilder {
+func (a StringAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -32,7 +32,7 @@ func (a StringAttribute) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a StringAttribute) SetRequired() AttributeBuilder {
+func (a StringAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -41,7 +41,7 @@ func (a StringAttribute) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a StringAttribute) SetSensitive() AttributeBuilder {
+func (a StringAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -49,7 +49,7 @@ func (a StringAttribute) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a StringAttribute) SetComputed() AttributeBuilder {
+func (a StringAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -57,7 +57,7 @@ func (a StringAttribute) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a StringAttribute) SetReadOnly() AttributeBuilder {
+func (a StringAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -67,12 +67,12 @@ func (a StringAttribute) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a StringAttribute) SetDeprecated(msg string) AttributeBuilder {
+func (a StringAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a StringAttribute) AddValidator(v validator.String) AttributeBuilder {
+func (a StringAttributeBuilder) AddValidator(v validator.String) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }

@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-// ListNestedAttributte represents a list of complex (non-primitive) types.
-type ListNestedAttribute struct {
+// ListNestedAttributteBuilder represents a list of complex (non-primitive) types.
+type ListNestedAttributeBuilder struct {
 	NestedObject       NestedAttributeObject
 	Optional           bool
 	Required           bool
@@ -17,15 +17,15 @@ type ListNestedAttribute struct {
 	Validators         []validator.List
 }
 
-func (a ListNestedAttribute) BuildDataSourceAttribute() dataschema.Attribute {
+func (a ListNestedAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
 	return dataschema.ListNestedAttribute{NestedObject: a.NestedObject.BuildDataSourceAttribute(), Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
 }
 
-func (a ListNestedAttribute) BuildResourceAttribute() schema.Attribute {
+func (a ListNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	return schema.ListNestedAttribute{NestedObject: a.NestedObject.BuildResourceAttribute(), Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
 }
 
-func (a ListNestedAttribute) SetOptional() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -34,7 +34,7 @@ func (a ListNestedAttribute) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttribute) SetRequired() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -43,7 +43,7 @@ func (a ListNestedAttribute) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttribute) SetSensitive() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -51,7 +51,7 @@ func (a ListNestedAttribute) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttribute) SetComputed() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -59,7 +59,7 @@ func (a ListNestedAttribute) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttribute) SetReadOnly() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -69,12 +69,12 @@ func (a ListNestedAttribute) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttribute) SetDeprecated(msg string) AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a ListNestedAttribute) AddValidator(v validator.List) AttributeBuilder {
+func (a ListNestedAttributeBuilder) AddValidator(v validator.List) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }

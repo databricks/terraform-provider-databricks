@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-// MapNestedAttributte represents a map of complex (non-primitive) types.
-type MapNestedAttribute struct {
+// MapNestedAttributteBuilder represents a map of complex (non-primitive) types.
+type MapNestedAttributeBuilder struct {
 	NestedObject       NestedAttributeObject
 	Optional           bool
 	Required           bool
@@ -17,15 +17,15 @@ type MapNestedAttribute struct {
 	Validators         []validator.Map
 }
 
-func (a MapNestedAttribute) BuildDataSourceAttribute() dataschema.Attribute {
+func (a MapNestedAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
 	return dataschema.MapNestedAttribute{NestedObject: a.NestedObject.BuildDataSourceAttribute(), Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
 }
 
-func (a MapNestedAttribute) BuildResourceAttribute() schema.Attribute {
+func (a MapNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	return schema.MapNestedAttribute{NestedObject: a.NestedObject.BuildResourceAttribute(), Optional: a.Optional, Required: a.Required, Sensitive: a.Sensitive, DeprecationMessage: a.DeprecationMessage, Computed: a.Computed, Validators: a.Validators}
 }
 
-func (a MapNestedAttribute) SetOptional() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -34,7 +34,7 @@ func (a MapNestedAttribute) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttribute) SetRequired() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -43,7 +43,7 @@ func (a MapNestedAttribute) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttribute) SetSensitive() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -51,7 +51,7 @@ func (a MapNestedAttribute) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttribute) SetComputed() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -59,7 +59,7 @@ func (a MapNestedAttribute) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttribute) SetReadOnly() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -69,12 +69,12 @@ func (a MapNestedAttribute) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttribute) SetDeprecated(msg string) AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a MapNestedAttribute) AddValidator(v validator.Map) AttributeBuilder {
+func (a MapNestedAttributeBuilder) AddValidator(v validator.Map) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }

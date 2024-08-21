@@ -41,7 +41,7 @@ type SqlTableInfo struct {
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Comment               string            `json:"comment,omitempty"`
-	Properties            map[string]string `json:"properties,omitempty" tf:"computed"`
+	Properties            map[string]string `json:"properties,omitempty"`
 	EffectiveProperties   map[string]string `json:"effective_properties,omitempty" tf:"computed"`
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
 	EffectiveOptions      map[string]string `json:"effective_options,omitempty" tf:"computed"`
@@ -556,7 +556,7 @@ func ResourceSqlTable() common.Resource {
 				effective := d.Get(effectiveField).(map[string]interface{})
 				diff := make(map[string]interface{})
 				for k, userSpecifiedValue := range userSpecified {
-					if effective[k] != userSpecifiedValue {
+					if effectiveValue, ok := effective[k]; !ok || effectiveValue != userSpecifiedValue {
 						diff[k] = userSpecifiedValue
 					}
 				}

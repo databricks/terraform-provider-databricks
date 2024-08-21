@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
 )
@@ -1396,6 +1397,128 @@ func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
 		Resource: ResourceSqlTable(),
 	}.Apply(t)
 	assert.NoError(t, err)
+}
+
+func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {
+	testCases := []struct {
+		name          string
+		hcl           string
+		instanceState map[string]string
+		expectedDiff  map[string]*terraform.ResourceAttrDiff
+	}{
+		{
+			"existing resource with no properties or options",
+			"",
+			map[string]string{
+				"effective_properties.%": "0",
+				"effective_options.%":    "0",
+			},
+			nil,
+		},
+		{
+			"existing resource with computed properties and options",
+			"",
+			map[string]string{
+				"effective_properties.%":            "1",
+				"effective_properties.computedprop": "computedvalue",
+				"effective_options.%":               "1",
+				"effective_options.computedprop":    "computedvalue",
+			},
+			nil,
+		},
+		{
+			"existing resource with property and option",
+			`properties = {
+			    "myprop" = "myval"
+			}
+			options = {
+				"myopt" = "myval"
+			}`,
+			map[string]string{
+				"properties.%":                "1",
+				"properties.myprop":           "myval",
+				"options.%":                   "1",
+				"options.myopt":               "myval",
+				"effective_properties.%":      "1",
+				"effective_properties.myprop": "myval",
+				"effective_options.%":         "1",
+				"effective_options.myopt":     "myval",
+			},
+			nil,
+		},
+		{
+			"existing resource with property and option and computed property and computed option",
+			`properties = {
+			    "myprop" = "myval"
+			}
+			options = {
+				"myopt" = "myval"
+			}`,
+			map[string]string{
+				"properties.%":                      "1",
+				"properties.myprop":                 "myval",
+				"options.%":                         "1",
+				"options.myopt":                     "myval",
+				"effective_properties.%":            "2",
+				"effective_properties.myprop":       "myval",
+				"effective_properties.computedprop": "computedval",
+				"effective_options.%":               "2",
+				"effective_options.myopt":           "myval",
+				"effective_options.computedopt":     "computedval",
+			},
+			nil,
+		},
+		{
+			"existing resource with conflicting property",
+			`properties = {
+			    "myprop" = "myval"
+			}
+			`,
+			map[string]string{
+				"properties.%":                "1",
+				"properties.myprop":           "myval",
+				"effective_properties.%":      "1",
+				"effective_properties.myprop": "otherval",
+				"effective_options.%":         "0",
+			},
+			map[string]*terraform.ResourceAttrDiff{
+				"effective_properties.myprop": {New: "myval", Old: "otherval"},
+			},
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			instanceState := testCase.instanceState
+			if instanceState == nil {
+				instanceState = make(map[string]string)
+			}
+			instanceState["catalog_name"] = "main"
+			instanceState["schema_name"] = "default"
+			instanceState["table_type"] = "MANAGED"
+			instanceState["name"] = "mytable"
+			instanceState["cluster_id"] = "test-1234"
+			instanceState["column.#"] = "0"
+			instanceState["owner"] = "testuser"
+
+			expectedDiff := testCase.expectedDiff
+			if expectedDiff == nil {
+				expectedDiff = make(map[string]*terraform.ResourceAttrDiff)
+			}
+			qa.ResourceFixture{
+				HCL: `
+					catalog_name = "main"
+					schema_name  = "default"
+					table_type   = "MANAGED"
+					name         = "mytable"
+					cluster_id   = "test-1234"
+					owner        = "testuser"
+				` + testCase.hcl,
+				InstanceState: instanceState,
+				ExpectedDiff:  expectedDiff,
+				Resource:      ResourceSqlTable(),
+			}.ApplyNoError(t)
+		})
+	}
 }
 
 var baseClusterFixture = []qa.HTTPFixture{

@@ -310,6 +310,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
 	if f.ExpectedDiff != nil {
+		// Users can specify that there is no diff by setting an empty but initialized map.
+		// resource.Diff returns nil if there is no diff.
+		if len(f.ExpectedDiff) == 0 {
+			assert.Nil(t, diff)
+			return nil, err
+		}
 		assert.Equal(t, f.ExpectedDiff, diff.Attributes)
 		return nil, err
 	}

@@ -51,6 +51,32 @@ type SqlTableInfo struct {
 	sqlExec sql.StatementExecutionInterface
 }
 
+func (ti *SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+
+	caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
+	for _, field := range caseInsensitiveFields {
+		s.SchemaPath(field).SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+	}
+	s.SchemaPath("data_source_format").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
+		if new == "" {
+			return true
+		}
+		return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
+	})
+	s.SchemaPath("storage_location").SetCustomSuppressDiff(ucDirectoryPathSlashAndEmptySuppressDiff)
+	s.SchemaPath("view_definition").SetCustomSuppressDiff(common.SuppressDiffWhitespaceChange)
+
+	s.SchemaPath("cluster_id").SetConflictsWith([]string{"warehouse_id"})
+	s.SchemaPath("warehouse_id").SetConflictsWith([]string{"cluster_id"})
+
+	s.SchemaPath("partitions").SetConflictsWith([]string{"cluster_keys"})
+	s.SchemaPath("cluster_keys").SetConflictsWith([]string{"partitions"})
+	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
+		return getColumnType(old) == getColumnType(new)
+	})
+	return s
+}
+
 type SqlTablesAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
@@ -549,31 +575,7 @@ func assertNoColumnMembershipAndFieldValueUpdate(oldCols []interface{}, newColum
 }
 
 func ResourceSqlTable() common.Resource {
-	tableSchema := common.StructToSchema(SqlTableInfo{},
-		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
-			for _, field := range caseInsensitiveFields {
-				s[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
-			}
-			s["data_source_format"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				if new == "" {
-					return true
-				}
-				return strings.EqualFold(strings.ToLower(old), strings.ToLower(new))
-			}
-			s["storage_location"].DiffSuppressFunc = ucDirectoryPathSlashAndEmptySuppressDiff
-			s["view_definition"].DiffSuppressFunc = common.SuppressDiffWhitespaceChange
-
-			s["cluster_id"].ConflictsWith = []string{"warehouse_id"}
-			s["warehouse_id"].ConflictsWith = []string{"cluster_id"}
-
-			s["partitions"].ConflictsWith = []string{"cluster_keys"}
-			s["cluster_keys"].ConflictsWith = []string{"partitions"}
-			common.MustSchemaPath(s, "column", "type").DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
-				return getColumnType(old) == getColumnType(new)
-			}
-			return s
-		})
+	tableSchema := common.StructToSchema(SqlTableInfo{}, nil)
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {

@@ -2,6 +2,8 @@ package tfschema
 
 import (
 	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 type CustomizableSchemaPluginFramework struct {
@@ -36,6 +38,22 @@ func attributeToMap(attr *AttributeBuilder) map[string]AttributeBuilder {
 
 func (s *CustomizableSchemaPluginFramework) AddValidator(v any, path ...string) *CustomizableSchemaPluginFramework {
 	cb := func(attr AttributeBuilder) AttributeBuilder {
+		switch a := attr.(type) {
+		case BoolAttributeBuilder:
+			return a.AddValidator(v.(validator.Bool))
+		case Float64AttributeBuilder:
+			return a.AddValidator(v.(validator.Float64))
+		case BoolAttributeBuilder:
+			return a.AddValidator(v.(validator.Bool))
+		case BoolAttributeBuilder:
+			return a.AddValidator(v.(validator.Bool))
+		case BoolAttributeBuilder:
+			return a.AddValidator(v.(validator.Bool))
+		case BoolAttributeBuilder:
+			return a.AddValidator(v.(validator.Bool))
+		case BoolAttributeBuilder:
+			return a.AddValidator(v.(validator.Bool))
+		}
 		return attr.AddValidators(v)
 	}
 

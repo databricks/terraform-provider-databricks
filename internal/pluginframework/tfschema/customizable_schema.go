@@ -2,6 +2,7 @@ package tfschema
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -62,7 +63,7 @@ func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSc
 		case StringAttributeBuilder:
 			return a.AddValidator(v.(validator.String))
 		default:
-			panic(fmt.Errorf("cannot add validator, attribute builder type is invalid. %s", common.TerraformBugErrorMessage))
+			panic(fmt.Errorf("cannot add validator, attribute builder type is invalid: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
 		}
 	}
 

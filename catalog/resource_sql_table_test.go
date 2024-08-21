@@ -1332,6 +1332,72 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "MANAGED"
+		data_source_format = "DELTA"
+		warehouse_id       = "existingwarehouse"
+	  
+		column {
+		  name      = "id"
+		  type      = "int"
+		}
+		properties = {
+		  "delta.enableDeletionVectors" = "false"
+		}
+		`,
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/statements/",
+				ExpectedRequest: sql.ExecuteStatementRequest{
+					Statement:     "CREATE TABLE `main`.`foo`.`bar` (`id` int)\nUSING DELTA\nTBLPROPERTIES ('delta.enableDeletionVectors'='false');",
+					WaitTimeout:   "50s",
+					WarehouseId:   "existingwarehouse",
+					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+				},
+				Response: sql.StatementResponse{
+					StatementId: "statement1",
+					Status: &sql.StatementStatus{
+						State: "SUCCEEDED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					Properties: map[string]string{
+						"one":   "two",
+						"three": "four",
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceSqlTable(),
+	}.Apply(t)
+	assert.NoError(t, err)
+}
+
 var baseClusterFixture = []qa.HTTPFixture{
 	{
 		Method:       "GET",

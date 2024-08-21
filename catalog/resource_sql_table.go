@@ -42,7 +42,9 @@ type SqlTableInfo struct {
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Comment               string            `json:"comment,omitempty"`
 	Properties            map[string]string `json:"properties,omitempty" tf:"computed"`
+	EffectiveProperties   map[string]string `json:"effective_properties,omitempty" tf:"computed"`
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
+	EffectiveOptions      map[string]string `json:"effective_options,omitempty" tf:"computed"`
 	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
 	WarehouseID           string            `json:"warehouse_id,omitempty"`
 	Owner                 string            `json:"owner,omitempty" tf:"computed"`
@@ -51,7 +53,7 @@ type SqlTableInfo struct {
 	sqlExec sql.StatementExecutionInterface
 }
 
-func (ti *SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 
 	caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 	for _, field := range caseInsensitiveFields {
@@ -74,6 +76,9 @@ func (ti *SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cu
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 		return getColumnType(old) == getColumnType(new)
 	})
+	for _, field := range []string{"effective_properties", "effective_options"} {
+		s.SchemaPath(field).SetReadOnly()
+	}
 	return s
 }
 
@@ -88,6 +93,11 @@ func NewSqlTablesAPI(ctx context.Context, m any) SqlTablesAPI {
 
 func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
 	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
+	// Copy returned properties & options to read-only attributes
+	ti.EffectiveProperties = ti.Properties
+	ti.Properties = nil
+	ti.EffectiveOptions = ti.Options
+	ti.Options = nil
 	return
 }
 
@@ -101,54 +111,6 @@ func (ti *SqlTableInfo) SQLFullName() string {
 
 func parseComment(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(s, `\'`, `'`), `'`, `\'`)
-}
-
-// These properties are added automatically
-// If we do not customize the diff using these then terraform will constantly try to remove them
-// `properties` is essentially a "partially" computed field
-// This needs to be replaced with something a bit more robust in the future
-func sqlTableIsManagedProperty(key string) bool {
-	managedProps := map[string]bool{
-		// Property set if the table uses `cluster_keys`.
-		"clusteringColumns": true,
-
-		"delta.lastCommitTimestamp":                                true,
-		"delta.lastUpdateVersion":                                  true,
-		"delta.minReaderVersion":                                   true,
-		"delta.minWriterVersion":                                   true,
-		"delta.columnMapping.maxColumnId":                          true,
-		"delta.enableDeletionVectors":                              true,
-		"delta.enableRowTracking":                                  true,
-		"delta.feature.clustering":                                 true,
-		"delta.feature.changeDataFeed":                             true,
-		"delta.feature.deletionVectors":                            true,
-		"delta.feature.domainMetadata":                             true,
-		"delta.feature.liquid":                                     true,
-		"delta.feature.rowTracking":                                true,
-		"delta.feature.v2Checkpoint":                               true,
-		"delta.feature.timestampNtz":                               true,
-		"delta.liquid.clusteringColumns":                           true,
-		"delta.rowTracking.materializedRowCommitVersionColumnName": true,
-		"delta.rowTracking.materializedRowIdColumnName":            true,
-		"delta.checkpoint.writeStatsAsJson":                        true,
-		"delta.checkpoint.writeStatsAsStruct":                      true,
-		"delta.checkpointPolicy":                                   true,
-		"view.catalogAndNamespace.numParts":                        true,
-		"view.catalogAndNamespace.part.0":                          true,
-		"view.catalogAndNamespace.part.1":                          true,
-		"view.query.out.col.0":                                     true,
-		"view.query.out.numCols":                                   true,
-		"view.referredTempFunctionsNames":                          true,
-		"view.referredTempViewNames":                               true,
-		"view.sqlConfig.spark.sql.hive.convertCTAS":                true,
-		"view.sqlConfig.spark.sql.legacy.createHiveTableByDefault": true,
-		"view.sqlConfig.spark.sql.parquet.compression.codec":       true,
-		"view.sqlConfig.spark.sql.session.timeZone":                true,
-		"view.sqlConfig.spark.sql.sources.commitProtocolClass":     true,
-		"view.sqlConfig.spark.sql.sources.default":                 true,
-		"view.sqlConfig.spark.sql.streaming.stopTimeout":           true,
-	}
-	return managedProps[key]
 }
 
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
@@ -238,9 +200,7 @@ func (ti *SqlTableInfo) serializeColumnInfos() string {
 func (ti *SqlTableInfo) serializeProperties() string {
 	propsMap := make([]string, 0, len(ti.Properties))
 	for key, value := range ti.Properties {
-		if !sqlTableIsManagedProperty(key) {
-			propsMap = append(propsMap, fmt.Sprintf("'%s'='%s'", key, value))
-		}
+		propsMap = append(propsMap, fmt.Sprintf("'%s'='%s'", key, value))
 	}
 	return strings.Join(propsMap[:], ", ") // 'foo'='bar', 'this'='that'
 }
@@ -248,9 +208,7 @@ func (ti *SqlTableInfo) serializeProperties() string {
 func (ti *SqlTableInfo) serializeOptions() string {
 	optionsMap := make([]string, 0, len(ti.Options))
 	for key, value := range ti.Options {
-		if !sqlTableIsManagedProperty(key) {
-			optionsMap = append(optionsMap, fmt.Sprintf("'%s'='%s'", key, value))
-		}
+		optionsMap = append(optionsMap, fmt.Sprintf("'%s'='%s'", key, value))
 	}
 	return strings.Join(optionsMap[:], ", ") // 'foo'='bar', 'this'='that'
 }
@@ -587,25 +545,27 @@ func ResourceSqlTable() common.Resource {
 					return err
 				}
 			}
-			if d.HasChange("properties") {
-				old, new := d.GetChange("properties")
-				oldProps := old.(map[string]any)
-				newProps := new.(map[string]any)
-				old, _ = d.GetChange("options")
-				options := old.(map[string]any)
-				for key := range oldProps {
-					if _, ok := newProps[key]; !ok {
-						//options also gets exposed as properties
-						if _, ok := options[key]; ok {
-							newProps[key] = oldProps[key]
-						}
-						//some options are exposed as option.[...] properties
-						if sqlTableIsManagedProperty(key) || strings.HasPrefix(key, "option.") {
-							newProps[key] = oldProps[key]
-						}
+			// Compute the new effective property/options.
+			// If the user changed a property or option, the resource will already be considered changed.
+			// If the user specified a property but the value of that property has changed, that will appear
+			// as a change in the effective property/option. To cause a diff to be detected, we need to
+			// reset the effective property/option to the requested value.
+			for _, field := range []string{"properties", "options"} {
+				userSpecified := d.Get(field).(map[string]interface{})
+				effectiveField := "effective_" + field
+				effective := d.Get(effectiveField).(map[string]interface{})
+				diff := make(map[string]interface{})
+				for k, userSpecifiedValue := range userSpecified {
+					if effective[k] != userSpecifiedValue {
+						diff[k] = userSpecifiedValue
 					}
 				}
-				d.SetNew("properties", newProps)
+				if len(diff) > 0 {
+					for k, v := range diff {
+						effective[k] = v
+					}
+					d.SetNew(effectiveField, effective)
+				}
 			}
 			// No support yet for changing the COMMENT on a VIEW
 			// Once added this can be removed

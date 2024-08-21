@@ -7,20 +7,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-type CustomizableSchemaPluginFramework struct {
+// CustomizableSchema is a wrapper struct on top of AttributeBuilder that can be used to navigate through nested schema add customizations.
+type CustomizableSchema struct {
 	attr AttributeBuilder
 }
 
-func ConstructCustomizableSchema(attributes map[string]AttributeBuilder) *CustomizableSchemaPluginFramework {
+// ConstructCustomizableSchema constructs a CustomizableSchema given a map from string to AttributeBuilder.
+func ConstructCustomizableSchema(attributes map[string]AttributeBuilder) *CustomizableSchema {
 	attr := AttributeBuilder(SingleNestedAttributeBuilder{Attributes: attributes})
-	return &CustomizableSchemaPluginFramework{attr: attr}
+	return &CustomizableSchema{attr: attr}
 }
 
-// Converts CustomizableSchema into a map from string to Attribute.
-func (s *CustomizableSchemaPluginFramework) ToAttributeMap() map[string]AttributeBuilder {
+// ToAttributeMap converts CustomizableSchema into a map from string to Attribute.
+func (s *CustomizableSchema) ToAttributeMap() map[string]AttributeBuilder {
 	return attributeToMap(&s.attr)
 }
 
+// attributeToMap converts AttributeBuilder into a map from string to AttributeBuilder.
 func attributeToMap(attr *AttributeBuilder) map[string]AttributeBuilder {
 	var m map[string]AttributeBuilder
 	switch attr := (*attr).(type) {
@@ -37,7 +40,7 @@ func attributeToMap(attr *AttributeBuilder) map[string]AttributeBuilder {
 	return m
 }
 
-func (s *CustomizableSchemaPluginFramework) AddValidator(v any, path ...string) *CustomizableSchemaPluginFramework {
+func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSchema {
 	cb := func(attr AttributeBuilder) AttributeBuilder {
 		switch a := attr.(type) {
 		case BoolAttributeBuilder:
@@ -68,7 +71,7 @@ func (s *CustomizableSchemaPluginFramework) AddValidator(v any, path ...string) 
 	return s
 }
 
-func (s *CustomizableSchemaPluginFramework) SetOptional(path ...string) *CustomizableSchemaPluginFramework {
+func (s *CustomizableSchema) SetOptional(path ...string) *CustomizableSchema {
 	cb := func(attr AttributeBuilder) AttributeBuilder {
 		return attr.SetOptional()
 	}
@@ -78,7 +81,7 @@ func (s *CustomizableSchemaPluginFramework) SetOptional(path ...string) *Customi
 	return s
 }
 
-func (s *CustomizableSchemaPluginFramework) SetRequired(path ...string) *CustomizableSchemaPluginFramework {
+func (s *CustomizableSchema) SetRequired(path ...string) *CustomizableSchema {
 	cb := func(attr AttributeBuilder) AttributeBuilder {
 		return attr.SetRequired()
 	}
@@ -88,7 +91,7 @@ func (s *CustomizableSchemaPluginFramework) SetRequired(path ...string) *Customi
 	return s
 }
 
-func (s *CustomizableSchemaPluginFramework) SetSensitive(path ...string) *CustomizableSchemaPluginFramework {
+func (s *CustomizableSchema) SetSensitive(path ...string) *CustomizableSchema {
 	cb := func(attr AttributeBuilder) AttributeBuilder {
 		return attr.SetSensitive()
 	}
@@ -97,7 +100,7 @@ func (s *CustomizableSchemaPluginFramework) SetSensitive(path ...string) *Custom
 	return s
 }
 
-func (s *CustomizableSchemaPluginFramework) SetDeprecated(msg string, path ...string) *CustomizableSchemaPluginFramework {
+func (s *CustomizableSchema) SetDeprecated(msg string, path ...string) *CustomizableSchema {
 	cb := func(attr AttributeBuilder) AttributeBuilder {
 		return attr.SetDeprecated(msg)
 	}
@@ -107,7 +110,7 @@ func (s *CustomizableSchemaPluginFramework) SetDeprecated(msg string, path ...st
 	return s
 }
 
-func (s *CustomizableSchemaPluginFramework) SetComputed(path ...string) *CustomizableSchemaPluginFramework {
+func (s *CustomizableSchema) SetComputed(path ...string) *CustomizableSchema {
 	cb := func(attr AttributeBuilder) AttributeBuilder {
 		return attr.SetComputed()
 	}
@@ -119,7 +122,7 @@ func (s *CustomizableSchemaPluginFramework) SetComputed(path ...string) *Customi
 // SetReadOnly sets the schema to be read-only (i.e. computed, non-optional).
 // This should be used for fields that are not user-configurable but are returned
 // by the platform.
-func (s *CustomizableSchemaPluginFramework) SetReadOnly(path ...string) *CustomizableSchemaPluginFramework {
+func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 	cb := func(attr AttributeBuilder) AttributeBuilder {
 		return attr.SetReadOnly()
 	}
@@ -129,7 +132,7 @@ func (s *CustomizableSchemaPluginFramework) SetReadOnly(path ...string) *Customi
 	return s
 }
 
-// Helper function for navigating through schema attributes, panics if path does not exist or invalid.
+// navigateSchemaWithCallback navigates through schema attributes and executes callback on the target, panics if path does not exist or invalid.
 func navigateSchemaWithCallback(s *AttributeBuilder, cb func(AttributeBuilder) AttributeBuilder, path ...string) (AttributeBuilder, error) {
 	current_scm := s
 	for i, p := range path {

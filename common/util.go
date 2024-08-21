@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	uuidRegex = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	uuidRegex                = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	TerraformBugErrorMessage = "This is a bug. Please report this to the maintainers at github.com/databricks/terraform-provider-databricks."
 )
 
 func StringIsUUID(s string) bool {

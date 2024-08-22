@@ -23,8 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var pluginFrameworkProviderName = "databricks-tf-provider"
-
 func GetDatabricksProviderPluginFramework() provider.Provider {
 	p := &DatabricksProviderPluginFramework{}
 	return p
@@ -48,7 +46,7 @@ func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req prov
 }
 
 func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = pluginFrameworkProviderName
+	resp.TypeName = ProviderName
 	resp.Version = common.Version()
 }
 

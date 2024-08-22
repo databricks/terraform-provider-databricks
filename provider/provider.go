@@ -47,10 +47,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/workspace"
 )
 
+var ProviderName = "databricks-tf-provider"
+
 func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
-	useragent.WithProduct("databricks-tf-provider", common.Version())
+	useragent.WithProduct(ProviderName, common.Version())
 
 	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
 	out, err := parseUserAgentExtra(userAgentExtraEnv)

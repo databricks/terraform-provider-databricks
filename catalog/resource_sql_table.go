@@ -94,6 +94,16 @@ func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
 	ti.EffectiveProperties = ti.Properties
 	ti.Properties = nil
 	ti.EffectiveOptions = ti.Options
+	for k, v := range ti.EffectiveProperties {
+		if strings.HasPrefix(k, "option.") {
+			if ti.EffectiveOptions == nil {
+				ti.EffectiveOptions = make(map[string]string)
+			}
+			newk := strings.TrimPrefix(k, "option.")
+			ti.EffectiveOptions[newk] = v
+			delete(ti.EffectiveProperties, k)
+		}
+	}
 	ti.Options = nil
 	return
 }

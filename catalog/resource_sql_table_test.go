@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -1652,4 +1653,72 @@ func TestParseComment_unescapedquote(t *testing.T) {
 	cmt := "Comment with' unescaped quotes '"
 	prsd := parseComment(cmt)
 	assert.Equal(t, `Comment with\' unescaped quotes \'`, prsd)
+}
+
+func TestSqlTablesAPI_getTable_OptionsAndParametersProcessedCorrectly(t *testing.T) {
+	testCases := []struct {
+		name                        string
+		apiResponse                 SqlTableInfo
+		expectedEffectiveProperties map[string]string
+		expectedEffectiveOptions    map[string]string
+	}{
+		{
+			name:                        "no properties or options",
+			apiResponse:                 SqlTableInfo{},
+			expectedEffectiveProperties: nil,
+			expectedEffectiveOptions:    nil,
+		},
+		{
+			name: "empty properties and options",
+			apiResponse: SqlTableInfo{
+				Properties: map[string]string{},
+				Options:    map[string]string{},
+			},
+			expectedEffectiveProperties: nil,
+			expectedEffectiveOptions:    nil,
+		},
+		{
+			name: "properties and options",
+			apiResponse: SqlTableInfo{
+				// Options don't seem to be returned in the API response even when specified.
+				// Instead, they appear in Properties with a "option." prefix.
+				// For now, we will merge them into the Options map, with the values in Properties taking precedence.
+				Properties: map[string]string{
+					"myprop":       "myval",
+					"option.myopt": "myval",
+				},
+				Options: map[string]string{
+					"myopt":  "myotherval",
+					"myopt2": "myval2",
+				},
+			},
+			expectedEffectiveProperties: map[string]string{
+				"myprop": "myval",
+			},
+			expectedEffectiveOptions: map[string]string{
+				"myopt":  "myval",
+				"myopt2": "myval2",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			client, _, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+				{
+					Method:   "GET",
+					Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+					Response: testCase.apiResponse,
+				},
+			})
+			assert.NoError(t, err)
+			api := NewSqlTablesAPI(context.Background(), client)
+			actual, err := api.getTable("main.foo.bar")
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.expectedEffectiveProperties, actual.EffectiveProperties)
+			assert.Equal(t, testCase.expectedEffectiveOptions, actual.EffectiveOptions)
+			assert.Nil(t, actual.Properties)
+			assert.Nil(t, actual.Options)
+		})
+	}
 }

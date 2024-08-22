@@ -11,6 +11,7 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package dashboards_tf
 
 import (
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -18,9 +19,11 @@ type CreateDashboardRequest struct {
 	// The display name of the dashboard.
 	DisplayName types.String `tfsdk:"display_name" tf:""`
 	// The workspace path of the folder containing the dashboard. Includes
-	// leading slash and no trailing slash.
+	// leading slash and no trailing slash. This field is excluded in List
+	// Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
-	// The contents of the dashboard in serialized string form.
+	// The contents of the dashboard in serialized string form. This field is
+	// excluded in List Dashboards responses.
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -69,18 +72,23 @@ type Dashboard struct {
 	// The display name of the dashboard.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// The etag for the dashboard. Can be optionally provided on updates to
-	// ensure that the dashboard has not been modified since the last read.
+	// ensure that the dashboard has not been modified since the last read. This
+	// field is excluded in List Dashboards responses.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 	// The state of the dashboard resource. Used for tracking trashed status.
 	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
 	// The workspace path of the folder containing the dashboard. Includes
-	// leading slash and no trailing slash.
+	// leading slash and no trailing slash. This field is excluded in List
+	// Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
-	// The workspace path of the dashboard asset, including the file name.
+	// The workspace path of the dashboard asset, including the file name. This
+	// field is excluded in List Dashboards responses.
 	Path types.String `tfsdk:"path" tf:"optional"`
-	// The contents of the dashboard in serialized string form.
+	// The contents of the dashboard in serialized string form. This field is
+	// excluded in List Dashboards responses.
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
-	// The timestamp of when the dashboard was last updated by the user.
+	// The timestamp of when the dashboard was last updated by the user. This
+	// field is excluded in List Dashboards responses.
 	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -114,6 +122,132 @@ type DeleteSubscriptionRequest struct {
 }
 
 type DeleteSubscriptionResponse struct {
+}
+
+// Execute SQL query in a conversation message
+type ExecuteMessageQueryRequest struct {
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// Genie AI Response
+type GenieAttachment struct {
+	Query *QueryAttachment `tfsdk:"query" tf:"optional"`
+
+	Text *TextAttachment `tfsdk:"text" tf:"optional"`
+}
+
+type GenieConversation struct {
+	// Timestamp when the message was created
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
+	// Conversation ID
+	Id types.String `tfsdk:"id" tf:""`
+	// Timestamp when the message was last updated
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"space_id" tf:""`
+	// Conversation title
+	Title types.String `tfsdk:"title" tf:""`
+	// ID of the user who created the conversation
+	UserId types.Int64 `tfsdk:"user_id" tf:""`
+}
+
+type GenieCreateConversationMessageRequest struct {
+	// User message content.
+	Content types.String `tfsdk:"content" tf:""`
+	// The ID associated with the conversation.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID associated with the Genie space where the conversation is started.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// Get conversation message
+type GenieGetConversationMessageRequest struct {
+	// The ID associated with the target conversation.
+	ConversationId types.String `tfsdk:"-"`
+	// The ID associated with the target message from the identified
+	// conversation.
+	MessageId types.String `tfsdk:"-"`
+	// The ID associated with the Genie space where the target conversation is
+	// located.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// Get conversation message SQL query result
+type GenieGetMessageQueryResultRequest struct {
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+type GenieGetMessageQueryResultResponse struct {
+	// SQL Statement Execution response. See [Get status, manifest, and result
+	// first chunk](:method:statementexecution/getstatement) for more details.
+	StatementResponse *sql.StatementResponse `tfsdk:"statement_response" tf:"optional"`
+}
+
+type GenieMessage struct {
+	// AI produced response to the message
+	Attachments []GenieAttachment `tfsdk:"attachments" tf:"optional"`
+	// User message content
+	Content types.String `tfsdk:"content" tf:""`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"conversation_id" tf:""`
+	// Timestamp when the message was created
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
+	// Error message if AI failed to respond to the message
+	Error *MessageError `tfsdk:"error" tf:"optional"`
+	// Message ID
+	Id types.String `tfsdk:"id" tf:""`
+	// Timestamp when the message was last updated
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	// The result of SQL query if the message has a query attachment
+	QueryResult *Result `tfsdk:"query_result" tf:"optional"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"space_id" tf:""`
+	// MesssageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
+	// metadata from the data sources. * `ASKING_AI`: Waiting for the LLM to
+	// respond to the users question. * `EXECUTING_QUERY`: Executing AI provided
+	// SQL query. Get the SQL query result by calling
+	// [getMessageQueryResult](:method:genie/getMessageQueryResult) API.
+	// **Important: The message status will stay in the `EXECUTING_QUERY` until
+	// a client calls
+	// [getMessageQueryResult](:method:genie/getMessageQueryResult)**. *
+	// `FAILED`: Generating a response or the executing the query failed. Please
+	// see `error` field. * `COMPLETED`: Message processing is completed.
+	// Results are in the `attachments` field. Get the SQL query result by
+	// calling [getMessageQueryResult](:method:genie/getMessageQueryResult) API.
+	// * `SUBMITTED`: Message has been submitted. * `QUERY_RESULT_EXPIRED`: SQL
+	// result is not available anymore. The user needs to execute the query
+	// again. * `CANCELLED`: Message has been cancelled.
+	Status types.String `tfsdk:"status" tf:"optional"`
+	// ID of the user who created the message
+	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
+}
+
+type GenieStartConversationMessageRequest struct {
+	// The text of the message that starts the conversation.
+	Content types.String `tfsdk:"content" tf:""`
+	// The ID associated with the Genie space where you want to start a
+	// conversation.
+	SpaceId types.String `tfsdk:"-"`
+}
+
+type GenieStartConversationResponse struct {
+	Conversation *GenieConversation `tfsdk:"conversation" tf:"optional"`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"conversation_id" tf:""`
+
+	Message *GenieMessage `tfsdk:"message" tf:"optional"`
+	// Message ID
+	MessageId types.String `tfsdk:"message_id" tf:""`
 }
 
 // Get dashboard
@@ -156,9 +290,7 @@ type ListDashboardsRequest struct {
 	// The flag to include dashboards located in the trash. If unspecified, only
 	// active dashboards will be returned.
 	ShowTrashed types.Bool `tfsdk:"-"`
-	// Indicates whether to include all metadata from the dashboard in the
-	// response. If unset, the response defaults to `DASHBOARD_VIEW_BASIC` which
-	// only includes summary metadata from the dashboard.
+	// `DASHBOARD_VIEW_BASIC`only includes summary metadata from the dashboard.
 	View types.String `tfsdk:"-"`
 }
 
@@ -211,6 +343,12 @@ type ListSubscriptionsResponse struct {
 	Subscriptions []Subscription `tfsdk:"subscriptions" tf:"optional"`
 }
 
+type MessageError struct {
+	Error types.String `tfsdk:"error" tf:"optional"`
+
+	Type types.String `tfsdk:"type" tf:"optional"`
+}
+
 type MigrateDashboardRequest struct {
 	// Display name for the new Lakeview dashboard.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
@@ -242,6 +380,34 @@ type PublishedDashboard struct {
 	RevisionCreateTime types.String `tfsdk:"revision_create_time" tf:"optional"`
 	// The warehouse ID used to run the published dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+}
+
+type QueryAttachment struct {
+	// Description of the query
+	Description types.String `tfsdk:"description" tf:"optional"`
+
+	Id types.String `tfsdk:"id" tf:"optional"`
+	// If the query was created on an instruction (trusted asset) we link to the
+	// id
+	InstructionId types.String `tfsdk:"instruction_id" tf:"optional"`
+	// Always store the title next to the id in case the original instruction
+	// title changes or the instruction is deleted.
+	InstructionTitle types.String `tfsdk:"instruction_title" tf:"optional"`
+	// Time when the user updated the query last
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	// AI generated SQL query
+	Query types.String `tfsdk:"query" tf:"optional"`
+	// Name of the query
+	Title types.String `tfsdk:"title" tf:"optional"`
+}
+
+type Result struct {
+	// Row count of the result
+	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
+	// Statement Execution API statement id. Use [Get status, manifest, and
+	// result first chunk](:method:statementexecution/getstatement) to get the
+	// full result data.
+	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
 }
 
 type Schedule struct {
@@ -309,6 +475,13 @@ type SubscriptionSubscriberUser struct {
 	UserId types.Int64 `tfsdk:"user_id" tf:""`
 }
 
+type TextAttachment struct {
+	// AI generated message
+	Content types.String `tfsdk:"content" tf:"optional"`
+
+	Id types.String `tfsdk:"id" tf:"optional"`
+}
+
 // Trash dashboard
 type TrashDashboardRequest struct {
 	// UUID identifying the dashboard.
@@ -333,9 +506,11 @@ type UpdateDashboardRequest struct {
 	// The display name of the dashboard.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// The etag for the dashboard. Can be optionally provided on updates to
-	// ensure that the dashboard has not been modified since the last read.
+	// ensure that the dashboard has not been modified since the last read. This
+	// field is excluded in List Dashboards responses.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
-	// The contents of the dashboard in serialized string form.
+	// The contents of the dashboard in serialized string form. This field is
+	// excluded in List Dashboards responses.
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`

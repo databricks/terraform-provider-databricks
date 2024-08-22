@@ -18,105 +18,63 @@ import (
 )
 
 type Ai21LabsConfig struct {
-	// The Databricks secret key reference for an AI21Labs API key.
-	Ai21labsApiKey types.String `tfsdk:"ai21labs_api_key" tf:""`
+	// The Databricks secret key reference for an AI21 Labs API key. If you
+	// prefer to paste your API key directly, see `ai21labs_api_key_plaintext`.
+	// You must provide an API key using one of the following fields:
+	// `ai21labs_api_key` or `ai21labs_api_key_plaintext`.
+	Ai21labsApiKey types.String `tfsdk:"ai21labs_api_key" tf:"optional"`
+	// An AI21 Labs API key provided as a plaintext string. If you prefer to
+	// reference your key using Databricks Secrets, see `ai21labs_api_key`. You
+	// must provide an API key using one of the following fields:
+	// `ai21labs_api_key` or `ai21labs_api_key_plaintext`.
+	Ai21labsApiKeyPlaintext types.String `tfsdk:"ai21labs_api_key_plaintext" tf:"optional"`
 }
 
 type AmazonBedrockConfig struct {
-	// The Databricks secret key reference for an AWS Access Key ID with
-	// permissions to interact with Bedrock services.
-	AwsAccessKeyId types.String `tfsdk:"aws_access_key_id" tf:""`
+	// The Databricks secret key reference for an AWS access key ID with
+	// permissions to interact with Bedrock services. If you prefer to paste
+	// your API key directly, see `aws_access_key_id`. You must provide an API
+	// key using one of the following fields: `aws_access_key_id` or
+	// `aws_access_key_id_plaintext`.
+	AwsAccessKeyId types.String `tfsdk:"aws_access_key_id" tf:"optional"`
+	// An AWS access key ID with permissions to interact with Bedrock services
+	// provided as a plaintext string. If you prefer to reference your key using
+	// Databricks Secrets, see `aws_access_key_id`. You must provide an API key
+	// using one of the following fields: `aws_access_key_id` or
+	// `aws_access_key_id_plaintext`.
+	AwsAccessKeyIdPlaintext types.String `tfsdk:"aws_access_key_id_plaintext" tf:"optional"`
 	// The AWS region to use. Bedrock has to be enabled there.
 	AwsRegion types.String `tfsdk:"aws_region" tf:""`
-	// The Databricks secret key reference for an AWS Secret Access Key paired
+	// The Databricks secret key reference for an AWS secret access key paired
 	// with the access key ID, with permissions to interact with Bedrock
-	// services.
-	AwsSecretAccessKey types.String `tfsdk:"aws_secret_access_key" tf:""`
+	// services. If you prefer to paste your API key directly, see
+	// `aws_secret_access_key_plaintext`. You must provide an API key using one
+	// of the following fields: `aws_secret_access_key` or
+	// `aws_secret_access_key_plaintext`.
+	AwsSecretAccessKey types.String `tfsdk:"aws_secret_access_key" tf:"optional"`
+	// An AWS secret access key paired with the access key ID, with permissions
+	// to interact with Bedrock services provided as a plaintext string. If you
+	// prefer to reference your key using Databricks Secrets, see
+	// `aws_secret_access_key`. You must provide an API key using one of the
+	// following fields: `aws_secret_access_key` or
+	// `aws_secret_access_key_plaintext`.
+	AwsSecretAccessKeyPlaintext types.String `tfsdk:"aws_secret_access_key_plaintext" tf:"optional"`
 	// The underlying provider in Amazon Bedrock. Supported values (case
 	// insensitive) include: Anthropic, Cohere, AI21Labs, Amazon.
 	BedrockProvider types.String `tfsdk:"bedrock_provider" tf:""`
 }
 
 type AnthropicConfig struct {
-	// The Databricks secret key reference for an Anthropic API key.
-	AnthropicApiKey types.String `tfsdk:"anthropic_api_key" tf:""`
-}
-
-type App struct {
-	// The active deployment of the app.
-	ActiveDeployment *AppDeployment `tfsdk:"active_deployment" tf:"optional"`
-	// The creation time of the app. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
-	// The email of the user that created the app.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
-	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
-	// The name of the app. The name must contain only lowercase alphanumeric
-	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" tf:""`
-	// The pending deployment of the app.
-	PendingDeployment *AppDeployment `tfsdk:"pending_deployment" tf:"optional"`
-
-	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"optional"`
-
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
-
-	Status *AppStatus `tfsdk:"status" tf:"optional"`
-	// The update time of the app. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
-	// The email of the user that last updated the app.
-	Updater types.String `tfsdk:"updater" tf:"optional"`
-	// The URL of the app once it is deployed.
-	Url types.String `tfsdk:"url" tf:"optional"`
-}
-
-type AppDeployment struct {
-	// The creation time of the deployment. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
-	// The email of the user creates the deployment.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
-	// The deployment artifacts for an app.
-	DeploymentArtifacts *AppDeploymentArtifacts `tfsdk:"deployment_artifacts" tf:"optional"`
-	// The unique id of the deployment.
-	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
-	// The mode of which the deployment will manage the source code.
-	Mode types.String `tfsdk:"mode" tf:""`
-	// The workspace file system path of the source code used to create the app
-	// deployment. This is different from
-	// `deployment_artifacts.source_code_path`, which is the path used by the
-	// deployed app. The former refers to the original source code location of
-	// the app in the workspace during deployment creation, whereas the latter
-	// provides a system generated stable snapshotted source code path used by
-	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:""`
-	// Status and status message of the deployment
-	Status *AppDeploymentStatus `tfsdk:"status" tf:"optional"`
-	// The update time of the deployment. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
-}
-
-type AppDeploymentArtifacts struct {
-	// The snapshotted workspace file system path of the source code loaded by
-	// the deployed app.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
-}
-
-type AppDeploymentStatus struct {
-	// Message corresponding with the deployment state.
-	Message types.String `tfsdk:"message" tf:"optional"`
-	// State of the deployment.
-	State types.String `tfsdk:"state" tf:"optional"`
-}
-
-type AppEnvironment struct {
-	Env []EnvVariable `tfsdk:"env" tf:"optional"`
-}
-
-type AppStatus struct {
-	// Message corresponding with the app state.
-	Message types.String `tfsdk:"message" tf:"optional"`
-	// State of the app.
-	State types.String `tfsdk:"state" tf:"optional"`
+	// The Databricks secret key reference for an Anthropic API key. If you
+	// prefer to paste your API key directly, see `anthropic_api_key_plaintext`.
+	// You must provide an API key using one of the following fields:
+	// `anthropic_api_key` or `anthropic_api_key_plaintext`.
+	AnthropicApiKey types.String `tfsdk:"anthropic_api_key" tf:"optional"`
+	// The Anthropic API key provided as a plaintext string. If you prefer to
+	// reference your key using Databricks Secrets, see `anthropic_api_key`. You
+	// must provide an API key using one of the following fields:
+	// `anthropic_api_key` or `anthropic_api_key_plaintext`.
+	AnthropicApiKeyPlaintext types.String `tfsdk:"anthropic_api_key_plaintext" tf:"optional"`
 }
 
 type AutoCaptureConfigInput struct {
@@ -173,31 +131,19 @@ type ChatMessage struct {
 }
 
 type CohereConfig struct {
-	// The Databricks secret key reference for a Cohere API key.
-	CohereApiKey types.String `tfsdk:"cohere_api_key" tf:""`
-}
-
-type CreateAppDeploymentRequest struct {
-	// The name of the app.
-	AppName types.String `tfsdk:"-"`
-	// The mode of which the deployment will manage the source code.
-	Mode types.String `tfsdk:"mode" tf:""`
-	// The workspace file system path of the source code used to create the app
-	// deployment. This is different from
-	// `deployment_artifacts.source_code_path`, which is the path used by the
-	// deployed app. The former refers to the original source code location of
-	// the app in the workspace during deployment creation, whereas the latter
-	// provides a system generated stable snapshotted source code path used by
-	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:""`
-}
-
-type CreateAppRequest struct {
-	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
-	// The name of the app. The name must contain only lowercase alphanumeric
-	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" tf:""`
+	// This is an optional field to provide a customized base URL for the Cohere
+	// API. If left unspecified, the standard Cohere base URL is used.
+	CohereApiBase types.String `tfsdk:"cohere_api_base" tf:"optional"`
+	// The Databricks secret key reference for a Cohere API key. If you prefer
+	// to paste your API key directly, see `cohere_api_key_plaintext`. You must
+	// provide an API key using one of the following fields: `cohere_api_key` or
+	// `cohere_api_key_plaintext`.
+	CohereApiKey types.String `tfsdk:"cohere_api_key" tf:"optional"`
+	// The Cohere API key provided as a plaintext string. If you prefer to
+	// reference your key using Databricks Secrets, see `cohere_api_key`. You
+	// must provide an API key using one of the following fields:
+	// `cohere_api_key` or `cohere_api_key_plaintext`.
+	CohereApiKeyPlaintext types.String `tfsdk:"cohere_api_key_plaintext" tf:"optional"`
 }
 
 type CreateServingEndpoint struct {
@@ -220,8 +166,18 @@ type CreateServingEndpoint struct {
 type DatabricksModelServingConfig struct {
 	// The Databricks secret key reference for a Databricks API token that
 	// corresponds to a user or service principal with Can Query access to the
-	// model serving endpoint pointed to by this external model.
-	DatabricksApiToken types.String `tfsdk:"databricks_api_token" tf:""`
+	// model serving endpoint pointed to by this external model. If you prefer
+	// to paste your API key directly, see `databricks_api_token_plaintext`. You
+	// must provide an API key using one of the following fields:
+	// `databricks_api_token` or `databricks_api_token_plaintext`.
+	DatabricksApiToken types.String `tfsdk:"databricks_api_token" tf:"optional"`
+	// The Databricks API token that corresponds to a user or service principal
+	// with Can Query access to the model serving endpoint pointed to by this
+	// external model provided as a plaintext string. If you prefer to reference
+	// your key using Databricks Secrets, see `databricks_api_token`. You must
+	// provide an API key using one of the following fields:
+	// `databricks_api_token` or `databricks_api_token_plaintext`.
+	DatabricksApiTokenPlaintext types.String `tfsdk:"databricks_api_token_plaintext" tf:"optional"`
 	// The URL of the Databricks workspace containing the model serving endpoint
 	// pointed to by this external model.
 	DatabricksWorkspaceUrl types.String `tfsdk:"databricks_workspace_url" tf:""`
@@ -233,12 +189,6 @@ type DataframeSplitInput struct {
 	Data []any `tfsdk:"data" tf:"optional"`
 
 	Index []types.Int64 `tfsdk:"index" tf:"optional"`
-}
-
-// Delete an app
-type DeleteAppRequest struct {
-	// The name of the app.
-	Name types.String `tfsdk:"-"`
 }
 
 type DeleteResponse struct {
@@ -338,14 +288,6 @@ type EndpointTag struct {
 	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
-type EnvVariable struct {
-	Name types.String `tfsdk:"name" tf:"optional"`
-
-	Value types.String `tfsdk:"value" tf:"optional"`
-
-	ValueFrom types.String `tfsdk:"value_from" tf:"optional"`
-}
-
 // Get metrics of a serving endpoint
 type ExportMetricsRequest struct {
 	// The name of the serving endpoint to retrieve metrics for. This field is
@@ -369,6 +311,9 @@ type ExternalModel struct {
 	// Databricks Model Serving Config. Only required if the provider is
 	// 'databricks-model-serving'.
 	DatabricksModelServingConfig *DatabricksModelServingConfig `tfsdk:"databricks_model_serving_config" tf:"optional"`
+	// Google Cloud Vertex AI Config. Only required if the provider is
+	// 'google-cloud-vertex-ai'.
+	GoogleCloudVertexAiConfig *GoogleCloudVertexAiConfig `tfsdk:"google_cloud_vertex_ai_config" tf:"optional"`
 	// The name of the external model.
 	Name types.String `tfsdk:"name" tf:""`
 	// OpenAI Config. Only required if the provider is 'openai'.
@@ -377,7 +322,8 @@ type ExternalModel struct {
 	PalmConfig *PaLmConfig `tfsdk:"palm_config" tf:"optional"`
 	// The name of the provider for the external model. Currently, the supported
 	// providers are 'ai21labs', 'anthropic', 'amazon-bedrock', 'cohere',
-	// 'databricks-model-serving', 'openai', and 'palm'.",
+	// 'databricks-model-serving', 'google-cloud-vertex-ai', 'openai', and
+	// 'palm'.",
 	Provider types.String `tfsdk:"provider" tf:""`
 	// The task type of the external model.
 	Task types.String `tfsdk:"task" tf:""`
@@ -401,26 +347,6 @@ type FoundationModel struct {
 	Docs types.String `tfsdk:"docs" tf:"optional"`
 	// The name of the foundation model.
 	Name types.String `tfsdk:"name" tf:"optional"`
-}
-
-// Get an app deployment
-type GetAppDeploymentRequest struct {
-	// The name of the app.
-	AppName types.String `tfsdk:"-"`
-	// The unique id of the deployment.
-	DeploymentId types.String `tfsdk:"-"`
-}
-
-// Get app environment
-type GetAppEnvironmentRequest struct {
-	// The name of the app.
-	Name types.String `tfsdk:"-"`
-}
-
-// Get an app
-type GetAppRequest struct {
-	// The name of the app.
-	Name types.String `tfsdk:"-"`
 }
 
 // Get the schema for a serving endpoint
@@ -458,37 +384,34 @@ type GetServingEndpointRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-// List app deployments
-type ListAppDeploymentsRequest struct {
-	// The name of the app.
-	AppName types.String `tfsdk:"-"`
-	// Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of apps. Requests first page if
-	// absent.
-	PageToken types.String `tfsdk:"-"`
-}
-
-type ListAppDeploymentsResponse struct {
-	// Deployment history of the app.
-	AppDeployments []AppDeployment `tfsdk:"app_deployments" tf:"optional"`
-	// Pagination token to request the next page of apps.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
-}
-
-// List apps
-type ListAppsRequest struct {
-	// Upper bound for items returned.
-	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of apps. Requests first page if
-	// absent.
-	PageToken types.String `tfsdk:"-"`
-}
-
-type ListAppsResponse struct {
-	Apps []App `tfsdk:"apps" tf:"optional"`
-	// Pagination token to request the next page of apps.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+type GoogleCloudVertexAiConfig struct {
+	// The Databricks secret key reference for a private key for the service
+	// account which has access to the Google Cloud Vertex AI Service. See [Best
+	// practices for managing service account keys]. If you prefer to paste your
+	// API key directly, see `private_key_plaintext`. You must provide an API
+	// key using one of the following fields: `private_key` or
+	// `private_key_plaintext`
+	//
+	// [Best practices for managing service account keys]: https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
+	PrivateKey types.String `tfsdk:"private_key" tf:"optional"`
+	// The private key for the service account which has access to the Google
+	// Cloud Vertex AI Service provided as a plaintext secret. See [Best
+	// practices for managing service account keys]. If you prefer to reference
+	// your key using Databricks Secrets, see `private_key`. You must provide an
+	// API key using one of the following fields: `private_key` or
+	// `private_key_plaintext`.
+	//
+	// [Best practices for managing service account keys]: https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
+	PrivateKeyPlaintext types.String `tfsdk:"private_key_plaintext" tf:"optional"`
+	// This is the Google Cloud project id that the service account is
+	// associated with.
+	ProjectId types.String `tfsdk:"project_id" tf:"optional"`
+	// This is the region for the Google Cloud Vertex AI Service. See [supported
+	// regions] for more details. Some models are only available in specific
+	// regions.
+	//
+	// [supported regions]: https://cloud.google.com/vertex-ai/docs/general/locations
+	Region types.String `tfsdk:"region" tf:"optional"`
 }
 
 type ListEndpointsResponse struct {
@@ -515,19 +438,38 @@ type OpenAiConfig struct {
 	// This field is only required for Azure AD OpenAI and is the Microsoft
 	// Entra Client ID.
 	MicrosoftEntraClientId types.String `tfsdk:"microsoft_entra_client_id" tf:"optional"`
-	// The Databricks secret key reference for the Microsoft Entra Client Secret
-	// that is only required for Azure AD OpenAI.
+	// The Databricks secret key reference for a client secret used for
+	// Microsoft Entra ID authentication. If you prefer to paste your client
+	// secret directly, see `microsoft_entra_client_secret_plaintext`. You must
+	// provide an API key using one of the following fields:
+	// `microsoft_entra_client_secret` or
+	// `microsoft_entra_client_secret_plaintext`.
 	MicrosoftEntraClientSecret types.String `tfsdk:"microsoft_entra_client_secret" tf:"optional"`
+	// The client secret used for Microsoft Entra ID authentication provided as
+	// a plaintext string. If you prefer to reference your key using Databricks
+	// Secrets, see `microsoft_entra_client_secret`. You must provide an API key
+	// using one of the following fields: `microsoft_entra_client_secret` or
+	// `microsoft_entra_client_secret_plaintext`.
+	MicrosoftEntraClientSecretPlaintext types.String `tfsdk:"microsoft_entra_client_secret_plaintext" tf:"optional"`
 	// This field is only required for Azure AD OpenAI and is the Microsoft
 	// Entra Tenant ID.
 	MicrosoftEntraTenantId types.String `tfsdk:"microsoft_entra_tenant_id" tf:"optional"`
-	// This is the base URL for the OpenAI API (default:
-	// "https://api.openai.com/v1"). For Azure OpenAI, this field is required,
-	// and is the base URL for the Azure OpenAI API service provided by Azure.
+	// This is a field to provide a customized base URl for the OpenAI API. For
+	// Azure OpenAI, this field is required, and is the base URL for the Azure
+	// OpenAI API service provided by Azure. For other OpenAI API types, this
+	// field is optional, and if left unspecified, the standard OpenAI base URL
+	// is used.
 	OpenaiApiBase types.String `tfsdk:"openai_api_base" tf:"optional"`
-	// The Databricks secret key reference for an OpenAI or Azure OpenAI API
-	// key.
+	// The Databricks secret key reference for an OpenAI API key using the
+	// OpenAI or Azure service. If you prefer to paste your API key directly,
+	// see `openai_api_key_plaintext`. You must provide an API key using one of
+	// the following fields: `openai_api_key` or `openai_api_key_plaintext`.
 	OpenaiApiKey types.String `tfsdk:"openai_api_key" tf:"optional"`
+	// The OpenAI API key using the OpenAI or Azure service provided as a
+	// plaintext string. If you prefer to reference your key using Databricks
+	// Secrets, see `openai_api_key`. You must provide an API key using one of
+	// the following fields: `openai_api_key` or `openai_api_key_plaintext`.
+	OpenaiApiKeyPlaintext types.String `tfsdk:"openai_api_key_plaintext" tf:"optional"`
 	// This is an optional field to specify the type of OpenAI API to use. For
 	// Azure OpenAI, this field is required, and adjust this parameter to
 	// represent the preferred security access validation protocol. For access
@@ -547,8 +489,16 @@ type OpenAiConfig struct {
 }
 
 type PaLmConfig struct {
-	// The Databricks secret key reference for a PaLM API key.
-	PalmApiKey types.String `tfsdk:"palm_api_key" tf:""`
+	// The Databricks secret key reference for a PaLM API key. If you prefer to
+	// paste your API key directly, see `palm_api_key_plaintext`. You must
+	// provide an API key using one of the following fields: `palm_api_key` or
+	// `palm_api_key_plaintext`.
+	PalmApiKey types.String `tfsdk:"palm_api_key" tf:"optional"`
+	// The PaLM API key provided as a plaintext string. If you prefer to
+	// reference your key using Databricks Secrets, see `palm_api_key`. You must
+	// provide an API key using one of the following fields: `palm_api_key` or
+	// `palm_api_key_plaintext`.
+	PalmApiKeyPlaintext types.String `tfsdk:"palm_api_key_plaintext" tf:"optional"`
 }
 
 type PatchServingEndpointTags struct {
@@ -708,12 +658,11 @@ type ServedEntityInput struct {
 	// The external model to be served. NOTE: Only one of external_model and
 	// (entity_name, entity_version, workload_size, workload_type, and
 	// scale_to_zero_enabled) can be specified with the latter set being used
-	// for custom model serving for a Databricks registered model. When an
-	// external_model is present, the served entities list can only have one
-	// served_entity object. For an existing endpoint with external_model, it
-	// can not be updated to an endpoint without external_model. If the endpoint
-	// is created without external_model, users cannot update it to add
-	// external_model later.
+	// for custom model serving for a Databricks registered model. For an
+	// existing endpoint with external_model, it cannot be updated to an
+	// endpoint without external_model. If the endpoint is created without
+	// external_model, users cannot update it to add external_model later. The
+	// task type of all external models within an endpoint must be the same.
 	ExternalModel *ExternalModel `tfsdk:"external_model" tf:"optional"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
@@ -1067,30 +1016,9 @@ type ServingEndpointPermissionsRequest struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
-type StartAppRequest struct {
-	// The name of the app.
-	Name types.String `tfsdk:"-"`
-}
-
-type StopAppRequest struct {
-	// The name of the app.
-	Name types.String `tfsdk:"-"`
-}
-
-type StopAppResponse struct {
-}
-
 type TrafficConfig struct {
 	// The list of routes that define traffic to each served entity.
 	Routes []Route `tfsdk:"routes" tf:"optional"`
-}
-
-type UpdateAppRequest struct {
-	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
-	// The name of the app. The name must contain only lowercase alphanumeric
-	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" tf:""`
 }
 
 type V1ResponseChoiceElement struct {

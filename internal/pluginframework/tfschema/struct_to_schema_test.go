@@ -176,7 +176,7 @@ func testStructToSchemaPanics(t *testing.T, testStruct any, expectedError string
 	defer func() {
 		err := recover()
 		if err == nil {
-			t.Fatalf(fmt.Sprintf("did not fail with error %q", expectedError))
+			t.Fatalf("did not fail with error")
 		}
 		var errMsg string
 		switch e := err.(type) {

@@ -31,13 +31,15 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 		}
 		isOptional := fieldIsOptional(typeField)
 		kind := typeField.Type.Kind()
+		value := field.Value
+		typeFieldType := typeField.Type
 		if kind == reflect.Ptr {
-			elem := typeField.Type.Elem()
-			sv := reflect.New(elem).Elem()
-			nestedScm := typeToSchema(sv)
-			scm[fieldName] = SingleNestedAttributeBuilder{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}
-		} else if kind == reflect.Slice {
-			elemType := typeField.Type.Elem()
+			typeFieldType = typeFieldType.Elem()
+			kind = typeFieldType.Kind()
+			value = reflect.New(typeFieldType).Elem()
+		}
+		if kind == reflect.Slice {
+			elemType := typeFieldType.Elem()
 			if elemType.Kind() == reflect.Ptr {
 				elemType = elemType.Elem()
 			}
@@ -59,7 +61,7 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 				scm[fieldName] = ListNestedAttributeBuilder{NestedObject: NestedAttributeObject{Attributes: nestedScm}, Optional: isOptional, Required: !isOptional}
 			}
 		} else if kind == reflect.Map {
-			elemType := typeField.Type.Elem()
+			elemType := typeFieldType.Elem()
 			if elemType.Kind() == reflect.Ptr {
 				elemType = elemType.Elem()
 			}
@@ -81,7 +83,7 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 				scm[fieldName] = MapNestedAttributeBuilder{NestedObject: NestedAttributeObject{Attributes: nestedScm}, Optional: isOptional, Required: !isOptional}
 			}
 		} else if kind == reflect.Struct {
-			switch field.Value.Interface().(type) {
+			switch value.Interface().(type) {
 			case types.Bool:
 				scm[fieldName] = BoolAttributeBuilder{Optional: isOptional, Required: !isOptional}
 			case types.Int64:
@@ -96,7 +98,7 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 				panic(fmt.Errorf("types.Map should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage))
 			default:
 				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
-				elem := typeField.Type
+				elem := typeFieldType
 				sv := reflect.New(elem)
 				nestedScm := typeToSchema(sv)
 				scm[fieldName] = SingleNestedAttributeBuilder{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}

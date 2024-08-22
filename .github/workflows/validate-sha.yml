@@ -1,4 +1,4 @@
-name: Validate Commit Message
+name: Validate openapi sha
 
 on:
   pull_request:
@@ -7,10 +7,6 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    # GitHub required checks are shared between PRs and the Merge Queue.
-    # Since there is no PR title on Merge Queue, we need to trigger and
-    # skip this test for Merge Queue to succeed.
-    if: github.event_name == 'pull_request' 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,11 +17,11 @@ jobs:
           echo "Version: $Version"
           OPENAPI_SHA_GO_SDK=$(curl https://raw.githubusercontent.com/databricks/databricks-sdk-go/$Version/.codegen/_openapi_sha)
           OPENAPI_SHA=$(cat .codegen/_openapi_sha)
-          if $OPENAPI_SHA != $SHA; then
-            echo "OpenAPI SHA mismatch: $OPENAPI_SHA != $SHA"
+          if $OPENAPI_SHA_GO_SDK != $OPENAPI_SHA; then
+            echo "OpenAPI SHA mismatch: $OPENAPI_SHA_GO_SDK != $OPENAPI_SHA"
             exit 1
           else 
-            echo "OpenAPI SHA match: $OPENAPI_SHA == $SHA"
+            echo "OpenAPI SHA match: $OPENAPI_SHA_GO_SDK == $OPENAPI_SHA"
           fi
           if grep -q "tag: \"\[$TAG\]\"" .codegen/changelog_config.yml; then 
             echo "Valid tag found: [$TAG]"

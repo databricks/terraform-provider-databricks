@@ -335,7 +335,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		// this is a bit strange, but we'll fix it later
 		diags := execute(ctx, resourceData, client)
 		if diags != nil {
-			return resourceData, fmt.Errorf(diagsToString(diags))
+			return resourceData, errors.New(diagsToString(diags))
 		}
 	}
 	if resourceData.Id() == "" && !f.Removed {

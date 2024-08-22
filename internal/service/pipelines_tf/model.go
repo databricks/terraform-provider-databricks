@@ -49,7 +49,7 @@ type CreatePipeline struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *ManagedIngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -135,7 +135,7 @@ type EditPipeline struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *ManagedIngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -256,7 +256,7 @@ type IngestionGatewayPipelineDefinition struct {
 	// Required, Immutable. The name of the catalog for the gateway pipeline's
 	// storage location.
 	GatewayStorageCatalog types.String `tfsdk:"gateway_storage_catalog" tf:"optional"`
-	// Required. The Unity Catalog-compatible naming for the gateway storage
+	// Optional. The Unity Catalog-compatible name for the gateway storage
 	// location. This is the destination to use for the data that is extracted
 	// by the gateway. Delta Live Tables system will automatically create the
 	// storage location under the catalog and schema.
@@ -264,6 +264,23 @@ type IngestionGatewayPipelineDefinition struct {
 	// Required, Immutable. The name of the schema for the gateway pipelines's
 	// storage location.
 	GatewayStorageSchema types.String `tfsdk:"gateway_storage_schema" tf:"optional"`
+}
+
+type IngestionPipelineDefinition struct {
+	// Immutable. The Unity Catalog connection this ingestion pipeline uses to
+	// communicate with the source. Specify either ingestion_gateway_id or
+	// connection_name.
+	ConnectionName types.String `tfsdk:"connection_name" tf:"optional"`
+	// Immutable. Identifier for the ingestion gateway used by this ingestion
+	// pipeline to communicate with the source. Specify either
+	// ingestion_gateway_id or connection_name.
+	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id" tf:"optional"`
+	// Required. Settings specifying tables to replicate and the destination for
+	// the replicated tables.
+	Objects []IngestionConfig `tfsdk:"objects" tf:"optional"`
+	// Configuration settings to control the ingestion of tables. These settings
+	// are applied to all tables in the pipeline.
+	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
 }
 
 // List pipeline events
@@ -355,23 +372,6 @@ type ListUpdatesResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
 
 	Updates []UpdateInfo `tfsdk:"updates" tf:"optional"`
-}
-
-type ManagedIngestionPipelineDefinition struct {
-	// Immutable. The Unity Catalog connection this ingestion pipeline uses to
-	// communicate with the source. Specify either ingestion_gateway_id or
-	// connection_name.
-	ConnectionName types.String `tfsdk:"connection_name" tf:"optional"`
-	// Immutable. Identifier for the ingestion gateway used by this ingestion
-	// pipeline to communicate with the source. Specify either
-	// ingestion_gateway_id or connection_name.
-	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id" tf:"optional"`
-	// Required. Settings specifying tables to replicate and the destination for
-	// the replicated tables.
-	Objects []IngestionConfig `tfsdk:"objects" tf:"optional"`
-	// Configuration settings to control the ingestion of tables. These settings
-	// are applied to all tables in the pipeline.
-	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
 }
 
 type ManualTrigger struct {
@@ -495,6 +495,8 @@ type PipelineCluster struct {
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	// Whether to enable local disk encryption for the cluster.
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
 	GcpAttributes *compute.GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
@@ -607,6 +609,8 @@ type PipelineLibrary struct {
 	// The path to a notebook that defines a pipeline and is stored in the
 	// Databricks workspace.
 	Notebook *NotebookLibrary `tfsdk:"notebook" tf:"optional"`
+	// URI of the whl to be installed.
+	Whl types.String `tfsdk:"whl" tf:"optional"`
 }
 
 type PipelinePermission struct {
@@ -666,7 +670,7 @@ type PipelineSpec struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *ManagedIngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -692,6 +696,8 @@ type PipelineStateInfo struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// The username of the pipeline creator.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	// The health of a pipeline.
+	Health types.String `tfsdk:"health" tf:"optional"`
 	// Status of the latest updates for the pipeline. Ordered with the newest
 	// update first.
 	LatestUpdates []UpdateStateInfo `tfsdk:"latest_updates" tf:"optional"`
@@ -726,8 +732,7 @@ type SchemaSpec struct {
 	SourceSchema types.String `tfsdk:"source_schema" tf:"optional"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in this schema and override the
-	// table_configuration defined in the ManagedIngestionPipelineDefinition
-	// object.
+	// table_configuration defined in the IngestionPipelineDefinition object.
 	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
 }
 
@@ -808,7 +813,7 @@ type TableSpec struct {
 	SourceTable types.String `tfsdk:"source_table" tf:"optional"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the
-	// ManagedIngestionPipelineDefinition object and the SchemaSpec.
+	// IngestionPipelineDefinition object and the SchemaSpec.
 	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
 }
 

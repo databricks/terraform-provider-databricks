@@ -41,25 +41,35 @@ func (ic *importContext) emitRepoByPath(path string) {
 	}
 }
 
+func isRepoPath(path string) bool {
+	return strings.HasPrefix(path, "/Repos") || strings.HasPrefix(path, "/Workspace/Repos")
+}
+
+func maybeStringWorkspacePrefix(path string) string {
+	if strings.HasPrefix(path, "/Workspace/") {
+		return path[10:]
+	}
+	return path
+}
+
 func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
-	if strings.HasPrefix(path, "/Repos") {
-		ic.emitRepoByPath(path)
+	if isRepoPath(path) {
+		ic.emitRepoByPath(maybeStringWorkspacePrefix(path))
 	} else {
 		// TODO: wrap this into ic.shouldEmit...
 		// TODO: strip /Workspace prefix if it's provided
 		ic.Emit(&resource{
 			Resource: "databricks_workspace_file",
-			ID:       path,
+			ID:       maybeStringWorkspacePrefix(path),
 		})
 	}
 }
 
 func (ic *importContext) emitNotebookOrRepo(path string) {
-	if strings.HasPrefix(path, "/Repos") {
-		ic.emitRepoByPath(path)
+	if isRepoPath(path) {
+		ic.emitRepoByPath(maybeStringWorkspacePrefix(path))
 	} else {
-		// TODO: strip /Workspace prefix if it's provided
-		ic.maybeEmitWorkspaceObject("databricks_notebook", path, nil)
+		ic.maybeEmitWorkspaceObject("databricks_notebook", maybeStringWorkspacePrefix(path), nil)
 	}
 }
 

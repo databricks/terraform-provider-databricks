@@ -179,6 +179,8 @@ type CreateRecipient struct {
 	// **DATABRICKS**. The identifier is of format
 	// __cloud__:__region__:__metastore-uuid__.
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id" tf:"optional"`
+	// Expiration timestamp of the token, in epoch milliseconds.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// IP Access List
 	IpAccessList *IpAccessList `tfsdk:"ip_access_list" tf:"optional"`
 	// Name of Recipient.
@@ -258,6 +260,10 @@ type GetRecipientRequest struct {
 }
 
 type GetRecipientSharePermissionsResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of data share permissions for a recipient.
 	PermissionsOut []ShareToPrivilegeAssignment `tfsdk:"permissions_out" tf:"optional"`
 }
@@ -298,6 +304,10 @@ type ListCleanRoomsResponse struct {
 }
 
 type ListProviderSharesResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of provider shares.
 	Shares []ProviderShare `tfsdk:"shares" tf:"optional"`
 }
@@ -307,9 +317,25 @@ type ListProvidersRequest struct {
 	// If not provided, all providers will be returned. If no providers exist
 	// with this ID, no results will be returned.
 	DataProviderGlobalMetastoreId types.String `tfsdk:"-"`
+	// Maximum number of providers to return. - when set to 0, the page length
+	// is set to a server configured value (recommended); - when set to a value
+	// greater than 0, the page length is the minimum of this value and a server
+	// configured value; - when set to a value less than 0, an invalid parameter
+	// error is returned; - If not set, all valid providers are returned (not
+	// recommended). - Note: The number of returned providers might be less than
+	// the specified max_results size, even zero. The only definitive indication
+	// that no further providers can be fetched is when the next_page_token is
+	// unset from the response.
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 }
 
 type ListProvidersResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of provider information objects.
 	Providers []ProviderInfo `tfsdk:"providers" tf:"optional"`
 }
@@ -319,20 +345,52 @@ type ListRecipientsRequest struct {
 	// If not provided, all recipients will be returned. If no recipients exist
 	// with this ID, no results will be returned.
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"-"`
+	// Maximum number of recipients to return. - when set to 0, the page length
+	// is set to a server configured value (recommended); - when set to a value
+	// greater than 0, the page length is the minimum of this value and a server
+	// configured value; - when set to a value less than 0, an invalid parameter
+	// error is returned; - If not set, all valid recipients are returned (not
+	// recommended). - Note: The number of returned recipients might be less
+	// than the specified max_results size, even zero. The only definitive
+	// indication that no further recipients can be fetched is when the
+	// next_page_token is unset from the response.
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 }
 
 type ListRecipientsResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of recipient information objects.
 	Recipients []RecipientInfo `tfsdk:"recipients" tf:"optional"`
 }
 
 // List shares by Provider
 type ListSharesRequest struct {
+	// Maximum number of shares to return. - when set to 0, the page length is
+	// set to a server configured value (recommended); - when set to a value
+	// greater than 0, the page length is the minimum of this value and a server
+	// configured value; - when set to a value less than 0, an invalid parameter
+	// error is returned; - If not set, all valid shares are returned (not
+	// recommended). - Note: The number of returned shares might be less than
+	// the specified max_results size, even zero. The only definitive indication
+	// that no further shares can be fetched is when the next_page_token is
+	// unset from the response.
+	MaxResults types.Int64 `tfsdk:"-"`
 	// Name of the provider in which to list shares.
 	Name types.String `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 }
 
 type ListSharesResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of data share information objects.
 	Shares []ShareInfo `tfsdk:"shares" tf:"optional"`
 }
@@ -541,8 +599,20 @@ type ShareInfo struct {
 
 // Get recipient share permissions
 type SharePermissionsRequest struct {
+	// Maximum number of permissions to return. - when set to 0, the page length
+	// is set to a server configured value (recommended); - when set to a value
+	// greater than 0, the page length is the minimum of this value and a server
+	// configured value; - when set to a value less than 0, an invalid parameter
+	// error is returned; - If not set, all valid permissions are returned (not
+	// recommended). - Note: The number of returned permissions might be less
+	// than the specified max_results size, even zero. The only definitive
+	// indication that no further permissions can be fetched is when the
+	// next_page_token is unset from the response.
+	MaxResults types.Int64 `tfsdk:"-"`
 	// The name of the Recipient.
 	Name types.String `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 }
 
 type ShareToPrivilegeAssignment struct {
@@ -640,6 +710,8 @@ type UpdateProvider struct {
 type UpdateRecipient struct {
 	// Description about the recipient.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
+	// Expiration timestamp of the token, in epoch milliseconds.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// IP Access List
 	IpAccessList *IpAccessList `tfsdk:"ip_access_list" tf:"optional"`
 	// Name of the recipient.
@@ -676,6 +748,18 @@ type UpdateShare struct {
 type UpdateSharePermissions struct {
 	// Array of permission changes.
 	Changes []catalog.PermissionsChange `tfsdk:"changes" tf:"optional"`
+	// Maximum number of permissions to return. - when set to 0, the page length
+	// is set to a server configured value (recommended); - when set to a value
+	// greater than 0, the page length is the minimum of this value and a server
+	// configured value; - when set to a value less than 0, an invalid parameter
+	// error is returned; - If not set, all valid permissions are returned (not
+	// recommended). - Note: The number of returned permissions might be less
+	// than the specified max_results size, even zero. The only definitive
+	// indication that no further permissions can be fetched is when the
+	// next_page_token is unset from the response.
+	MaxResults types.Int64 `tfsdk:"-"`
 	// The name of the share.
 	Name types.String `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 }

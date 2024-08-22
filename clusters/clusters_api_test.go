@@ -2,13 +2,13 @@ package clusters
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	// "reflect"
 
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -1158,7 +1158,7 @@ func TestWrapMissingClusterError(t *testing.T) {
 	assert.EqualError(t, wrapMissingClusterError(fmt.Errorf("x"), "abc"), "x")
 	assert.EqualError(t, wrapMissingClusterError(&apierr.APIError{
 		Message: "Cluster abc does not exist",
-	}, "abc"), "Cluster abc does not exist")
+	}, "abc"), databricks.ErrResourceDoesNotExist.Error())
 }
 
 func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
@@ -1166,7 +1166,5 @@ func TestExpiredClusterAssumedAsRemoved(t *testing.T) {
 		ErrorCode: "INVALID_STATE",
 		Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
 	}, "X")
-	var ae *apierr.APIError
-	assert.True(t, errors.As(err, &ae))
-	assert.Equal(t, 404, ae.StatusCode)
+	assert.EqualError(t, err, databricks.ErrResourceDoesNotExist.Error())
 }

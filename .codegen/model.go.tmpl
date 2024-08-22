@@ -31,7 +31,7 @@ type {{.PascalName}} struct {
 {{end}}
 
 {{- define "field-tag" -}}
-	{{if .IsJson}}tfsdk:"{{.Name}}" tf:"{{if not .Required}}optional{{end}}"{{else}}tfsdk:"-"{{end -}}
+	{{if .IsJson}}tfsdk:"{{if and (ne .Entity.Terraform nil) (ne .Entity.Terraform.Alias "") }}{{.Entity.Terraform.Alias}}{{else}}{{.Name}}{{end}}" tf:"{{if not .Required}}optional{{end}}"{{else}}tfsdk:"-"{{end -}}
 {{- end -}}
 
 {{- define "type" -}}

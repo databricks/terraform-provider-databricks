@@ -1,5 +1,40 @@
 # Version changelog
 
+## [Release] Release v1.51.0
+
+### New Features and Improvements
+
+ * Automatically create `parent_path` folder when creating `databricks_dashboard resource` if it doesn't exist ([#3778](https://github.com/databricks/terraform-provider-databricks/pull/3778)).
+
+
+### Bug Fixes
+
+ * Fixed logging for underlying Go SDK ([#3917](https://github.com/databricks/terraform-provider-databricks/pull/3917)).
+ * Remove not necessary field in `databricks_job` schema ([#3907](https://github.com/databricks/terraform-provider-databricks/pull/3907)).
+
+
+### Internal Changes
+
+ * Add AttributeBuilder for Plugin Framework schema ([#3922](https://github.com/databricks/terraform-provider-databricks/pull/3922)).
+ * Add CustomizableSchema for Plugin Framework ([#3927](https://github.com/databricks/terraform-provider-databricks/pull/3927)).
+ * Add StructToSchema for Plugin Framework ([#3928](https://github.com/databricks/terraform-provider-databricks/pull/3928)).
+ * Add codegen template and generated files for tfsdk structs ([#3911](https://github.com/databricks/terraform-provider-databricks/pull/3911)).
+ * Add converter functions and tests for plugin framework ([#3914](https://github.com/databricks/terraform-provider-databricks/pull/3914)).
+ * Added support to use protocol version 6 provider server for SDK plugin ([#3862](https://github.com/databricks/terraform-provider-databricks/pull/3862)).
+ * Bump Go SDK to v0.45.0 ([#3933](https://github.com/databricks/terraform-provider-databricks/pull/3933)).
+ * Change name with the aliases in codegen template ([#3936](https://github.com/databricks/terraform-provider-databricks/pull/3936)).
+ * Update jd version from latest to 1.8.1 ([#3915](https://github.com/databricks/terraform-provider-databricks/pull/3915)).
+ * Upgrade `staticcheck` to v0.5.1 to get Go 1.23 support ([#3931](https://github.com/databricks/terraform-provider-databricks/pull/3931)).
+ * OPENAPI_SHA check ([#3935](https://github.com/databricks/terraform-provider-databricks/pull/3935)).
+ * Use generic error for missing clusters ([#3938](https://github.com/databricks/terraform-provider-databricks/pull/3938))
+
+
+### Exporter
+
+ * Better support for notebooks with /Workspace path ([#3901](https://github.com/databricks/terraform-provider-databricks/pull/3901)).
+ * Improve exporting of DLT and test coverage ([#3898](https://github.com/databricks/terraform-provider-databricks/pull/3898)).
+
+
 ## [Release] Release v1.50.0
 
 ### New Features and Improvements

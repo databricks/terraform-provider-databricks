@@ -93,11 +93,11 @@ type DeleteUserRequest struct {
 type DeleteWorkspaceAssignmentRequest struct {
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
-	// The workspace ID.
+	// The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
-type DeleteWorkspaceAssignments struct {
+type DeleteWorkspacePermissionAssignmentResponse struct {
 }
 
 // Get group details
@@ -177,10 +177,10 @@ type GetPermissionLevelsResponse struct {
 type GetPermissionRequest struct {
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
-	// The type of the request object. Can be one of the following:
-	// authorization, clusters, cluster-policies, directories, experiments,
-	// files, instance-pools, jobs, notebooks, pipelines, registered-models,
-	// repos, serving-endpoints, or warehouses.
+	// The type of the request object. Can be one of the following: alerts,
+	// authorization, clusters, cluster-policies, dbsql-dashboards, directories,
+	// experiments, files, instance-pools, jobs, notebooks, pipelines, queries,
+	// registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -463,6 +463,23 @@ type ListWorkspaceAssignmentRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+type MigratePermissionsRequest struct {
+	// The name of the workspace group that permissions will be migrated from.
+	FromWorkspaceGroupName types.String `tfsdk:"from_workspace_group_name" tf:""`
+	// The maximum number of permissions that will be migrated.
+	Size types.Int64 `tfsdk:"size" tf:"optional"`
+	// The name of the account group that permissions will be migrated to.
+	ToAccountGroupName types.String `tfsdk:"to_account_group_name" tf:""`
+	// WorkspaceId of the associated workspace where the permission migration
+	// will occur.
+	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:""`
+}
+
+type MigratePermissionsResponse struct {
+	// Number of permissions migrated.
+	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated" tf:"optional"`
+}
+
 type Name struct {
 	// Family name of the Databricks user.
 	FamilyName types.String `tfsdk:"familyName" tf:"optional"`
@@ -558,6 +575,8 @@ type Permission struct {
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+// The output format for existing workspace PermissionAssignment records, which
+// contains some info for user consumption.
 type PermissionAssignment struct {
 	// Error response associated with a workspace permission assignment, if any.
 	Error types.String `tfsdk:"error" tf:"optional"`
@@ -570,24 +589,6 @@ type PermissionAssignment struct {
 type PermissionAssignments struct {
 	// Array of permissions assignments defined for a workspace.
 	PermissionAssignments []PermissionAssignment `tfsdk:"permission_assignments" tf:"optional"`
-}
-
-type PermissionMigrationRequest struct {
-	// The name of the workspace group that permissions will be migrated from.
-	FromWorkspaceGroupName types.String `tfsdk:"from_workspace_group_name" tf:""`
-	// The maximum number of permissions that will be migrated.
-	Size types.Int64 `tfsdk:"size" tf:"optional"`
-	// The name of the account group that permissions will be migrated to.
-	ToAccountGroupName types.String `tfsdk:"to_account_group_name" tf:""`
-	// WorkspaceId of the associated workspace where the permission migration
-	// will occur. Both workspace group and account group must be in this
-	// workspace.
-	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:""`
-}
-
-type PermissionMigrationResponse struct {
-	// Number of permissions migrated.
-	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated" tf:"optional"`
 }
 
 type PermissionOutput struct {
@@ -607,13 +608,14 @@ type PermissionsRequest struct {
 	AccessControlList []AccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
-	// The type of the request object. Can be one of the following:
-	// authorization, clusters, cluster-policies, directories, experiments,
-	// files, instance-pools, jobs, notebooks, pipelines, registered-models,
-	// repos, serving-endpoints, or warehouses.
+	// The type of the request object. Can be one of the following: alerts,
+	// authorization, clusters, cluster-policies, dbsql-dashboards, directories,
+	// experiments, files, instance-pools, jobs, notebooks, pipelines, queries,
+	// registered-models, repos, serving-endpoints, or warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
+// Information about the principal assigned to the workspace.
 type PrincipalOutput struct {
 	// The display name of the principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
@@ -694,13 +696,16 @@ type UpdateRuleSetRequest struct {
 }
 
 type UpdateWorkspaceAssignments struct {
-	// Array of permissions assignments to update on the workspace. Note that
-	// excluding this field will have the same effect as providing an empty list
-	// which will result in the deletion of all permissions for the principal.
-	Permissions []types.String `tfsdk:"permissions" tf:""`
+	// Array of permissions assignments to update on the workspace. Valid values
+	// are "USER" and "ADMIN" (case-sensitive). If both "USER" and "ADMIN" are
+	// provided, "ADMIN" takes precedence. Other values will be ignored. Note
+	// that excluding this field, or providing unsupported values, will have the
+	// same effect as providing an empty list, which will result in the deletion
+	// of all permissions for the principal.
+	Permissions []types.String `tfsdk:"permissions" tf:"optional"`
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
-	// The workspace ID.
+	// The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 

@@ -2,6 +2,7 @@ package pipelines
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -96,7 +97,7 @@ func Delete(w *databricks.WorkspaceClient, ctx context.Context, id string, timeo
 			}
 			message := fmt.Sprintf("Pipeline %s is in state %s, not yet deleted", id, i.State)
 			log.Printf("[DEBUG] %s", message)
-			return retry.RetryableError(fmt.Errorf(message))
+			return retry.RetryableError(errors.New(message))
 		})
 }
 
@@ -120,7 +121,7 @@ func waitForState(w *databricks.WorkspaceClient, ctx context.Context, id string,
 			}
 			message := fmt.Sprintf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState)
 			log.Printf("[DEBUG] %s", message)
-			return retry.RetryableError(fmt.Errorf(message))
+			return retry.RetryableError(errors.New(message))
 		})
 }
 

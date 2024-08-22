@@ -119,7 +119,7 @@ provider_installation {
 After installing the necessary software for building provider from sources, you should be able to run `make coverage` to run the tests and see the coverage.
 
 ## Package organization for Providers
-We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For better readability and development, they are defined under internal root directory: 
+We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are defined under internal directory under root as: 
 - `common/provider`: This package contains the changes common to both the providers example provider factory and tests
   - imports are declared as: 
   	- `pluginframeworkprovider` "github.com/databricks/terraform-provider-databricks/internal/pluginframework/provider"

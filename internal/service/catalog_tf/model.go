@@ -363,6 +363,10 @@ type CreateExternalLocation struct {
 	CredentialName types.String `tfsdk:"credential_name" tf:""`
 	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	// Indicates whether fallback mode is enabled for this external location.
+	// When fallback mode is enabled, the access to the location falls back to
+	// cluster credentials if UC credentials are not sufficient.
+	Fallback types.Bool `tfsdk:"fallback" tf:"optional"`
 	// Name of the external location.
 	Name types.String `tfsdk:"name" tf:""`
 	// Indicates whether the external location is read-only.
@@ -699,6 +703,8 @@ type DeleteResponse struct {
 
 // Delete a schema
 type DeleteSchemaRequest struct {
+	// Force deletion even if the schema is not empty.
+	Force types.Bool `tfsdk:"-"`
 	// Full name of the schema.
 	FullName types.String `tfsdk:"-"`
 }
@@ -851,6 +857,10 @@ type ExternalLocationInfo struct {
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	// Indicates whether fallback mode is enabled for this external location.
+	// When fallback mode is enabled, the access to the location falls back to
+	// cluster credentials if UC credentials are not sufficient.
+	Fallback types.Bool `tfsdk:"fallback" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
 	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
@@ -1034,9 +1044,18 @@ type GetArtifactAllowlistRequest struct {
 
 // Get securable workspace bindings
 type GetBindingsRequest struct {
+	// Maximum number of workspace bindings to return. - When set to 0, the page
+	// length is set to a server configured value (recommended); - When set to a
+	// value greater than 0, the page length is the minimum of this value and a
+	// server configured value; - When set to a value less than 0, an invalid
+	// parameter error is returned; - If not set, all the workspace bindings are
+	// returned (not recommended).
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 	// The name of the securable.
 	SecurableName types.String `tfsdk:"-"`
-	// The type of the securable.
+	// The type of the securable to bind to a workspace.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -1046,6 +1065,9 @@ type GetByAliasRequest struct {
 	Alias types.String `tfsdk:"-"`
 	// The three-level (fully qualified) name of the registered model
 	FullName types.String `tfsdk:"-"`
+	// Whether to include aliases associated with the model version in the
+	// response
+	IncludeAliases types.Bool `tfsdk:"-"`
 }
 
 // Get a catalog
@@ -1156,6 +1178,9 @@ type GetMetastoreSummaryResponse struct {
 type GetModelVersionRequest struct {
 	// The three-level (fully qualified) name of the model version
 	FullName types.String `tfsdk:"-"`
+	// Whether to include aliases associated with the model version in the
+	// response
+	IncludeAliases types.Bool `tfsdk:"-"`
 	// Whether to include model versions in the response for which the principal
 	// can only access selective metadata for
 	IncludeBrowse types.Bool `tfsdk:"-"`
@@ -1175,6 +1200,23 @@ type GetQualityMonitorRequest struct {
 	TableName types.String `tfsdk:"-"`
 }
 
+// Get information for a single resource quota.
+type GetQuotaRequest struct {
+	// Full name of the parent resource. Provide the metastore ID if the parent
+	// is a metastore.
+	ParentFullName types.String `tfsdk:"-"`
+	// Securable type of the quota parent.
+	ParentSecurableType types.String `tfsdk:"-"`
+	// Name of the quota. Follows the pattern of the quota type, with "-quota"
+	// added as a suffix.
+	QuotaName types.String `tfsdk:"-"`
+}
+
+type GetQuotaResponse struct {
+	// The returned QuotaInfo.
+	QuotaInfo *QuotaInfo `tfsdk:"quota_info" tf:"optional"`
+}
+
 // Get refresh
 type GetRefreshRequest struct {
 	// ID of the refresh.
@@ -1187,6 +1229,8 @@ type GetRefreshRequest struct {
 type GetRegisteredModelRequest struct {
 	// The three-level (fully qualified) name of the registered model
 	FullName types.String `tfsdk:"-"`
+	// Whether to include registered model aliases in the response
+	IncludeAliases types.Bool `tfsdk:"-"`
 	// Whether to include registered models in the response for which the
 	// principal can only access selective metadata for
 	IncludeBrowse types.Bool `tfsdk:"-"`
@@ -1383,6 +1427,23 @@ type ListModelVersionsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+// List all resource quotas under a metastore.
+type ListQuotasRequest struct {
+	// The number of quotas to return.
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Opaque token for the next page of results.
+	PageToken types.String `tfsdk:"-"`
+}
+
+type ListQuotasResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	// An array of returned QuotaInfos.
+	Quotas []QuotaInfo `tfsdk:"quotas" tf:"optional"`
+}
+
 // List refreshes
 type ListRefreshesRequest struct {
 	// Full name of the table.
@@ -1503,11 +1564,24 @@ type ListSummariesRequest struct {
 
 // List system schemas
 type ListSystemSchemasRequest struct {
+	// Maximum number of schemas to return. - When set to 0, the page length is
+	// set to a server configured value (recommended); - When set to a value
+	// greater than 0, the page length is the minimum of this value and a server
+	// configured value; - When set to a value less than 0, an invalid parameter
+	// error is returned; - If not set, all the schemas are returned (not
+	// recommended).
+	MaxResults types.Int64 `tfsdk:"-"`
 	// The ID for the metastore in which the system schema resides.
 	MetastoreId types.String `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 }
 
 type ListSystemSchemasResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of system schema information objects.
 	Schemas []SystemSchemaInfo `tfsdk:"schemas" tf:"optional"`
 }
@@ -1644,6 +1718,8 @@ type MetastoreInfo struct {
 }
 
 type ModelVersionInfo struct {
+	// List of aliases associated with the model version
+	Aliases []RegisteredModelAlias `tfsdk:"aliases" tf:"optional"`
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
 	// enabled in the request.
@@ -2002,6 +2078,22 @@ type ProvisioningStatus struct {
 	// Details about initial data synchronization. Only populated when in the
 	// PROVISIONING_INITIAL_SNAPSHOT state.
 	InitialPipelineSyncProgress *PipelineProgress `tfsdk:"initial_pipeline_sync_progress" tf:"optional"`
+}
+
+type QuotaInfo struct {
+	// The timestamp that indicates when the quota count was last updated.
+	LastRefreshedAt types.Int64 `tfsdk:"last_refreshed_at" tf:"optional"`
+	// Name of the parent resource. Returns metastore ID if the parent is a
+	// metastore.
+	ParentFullName types.String `tfsdk:"parent_full_name" tf:"optional"`
+	// The quota parent securable type.
+	ParentSecurableType types.String `tfsdk:"parent_securable_type" tf:"optional"`
+	// The current usage of the resource quota.
+	QuotaCount types.Int64 `tfsdk:"quota_count" tf:"optional"`
+	// The current limit of the resource quota.
+	QuotaLimit types.Int64 `tfsdk:"quota_limit" tf:"optional"`
+	// The name of the quota.
+	QuotaName types.String `tfsdk:"quota_name" tf:"optional"`
 }
 
 // Get a Volume
@@ -2363,6 +2455,10 @@ type UpdateExternalLocation struct {
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	// Indicates whether fallback mode is enabled for this external location.
+	// When fallback mode is enabled, the access to the location falls back to
+	// cluster credentials if UC credentials are not sufficient.
+	Fallback types.Bool `tfsdk:"fallback" tf:"optional"`
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.
 	Force types.Bool `tfsdk:"force" tf:"optional"`
@@ -2573,7 +2669,7 @@ type UpdateWorkspaceBindingsParameters struct {
 	Remove []WorkspaceBinding `tfsdk:"remove" tf:"optional"`
 	// The name of the securable.
 	SecurableName types.String `tfsdk:"-"`
-	// The type of the securable.
+	// The type of the securable to bind to a workspace.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -2663,4 +2759,8 @@ type WorkspaceBinding struct {
 type WorkspaceBindingsResponse struct {
 	// List of workspace bindings
 	Bindings []WorkspaceBinding `tfsdk:"bindings" tf:"optional"`
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }

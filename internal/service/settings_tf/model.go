@@ -110,6 +110,18 @@ type ComplianceSecurityProfileSetting struct {
 	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
 }
 
+type Config struct {
+	Email *EmailConfig `tfsdk:"email" tf:"optional"`
+
+	GenericWebhook *GenericWebhookConfig `tfsdk:"generic_webhook" tf:"optional"`
+
+	MicrosoftTeams *MicrosoftTeamsConfig `tfsdk:"microsoft_teams" tf:"optional"`
+
+	Pagerduty *PagerdutyConfig `tfsdk:"pagerduty" tf:"optional"`
+
+	Slack *SlackConfig `tfsdk:"slack" tf:"optional"`
+}
+
 // Details required to configure a block list or allow list.
 type CreateIpAccessList struct {
 	IpAddresses []types.String `tfsdk:"ip_addresses" tf:"optional"`
@@ -140,6 +152,14 @@ type CreateNetworkConnectivityConfigRequest struct {
 	// the same region can be attached to the network connectivity
 	// configuration.
 	Region types.String `tfsdk:"region" tf:""`
+}
+
+type CreateNotificationDestinationRequest struct {
+	// The configuration for the notification destination. Must wrap EXACTLY one
+	// of the nested configs.
+	Config *Config `tfsdk:"config" tf:"optional"`
+	// The display name for the notification destination.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 }
 
 // Configuration details for creating on-behalf tokens.
@@ -287,6 +307,11 @@ type DeleteNetworkConnectivityConfigurationRequest struct {
 type DeleteNetworkConnectivityConfigurationResponse struct {
 }
 
+// Delete a notification destination
+type DeleteNotificationDestinationRequest struct {
+	Id types.String `tfsdk:"-"`
+}
+
 // Delete Personal Compute setting
 type DeletePersonalComputeSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -350,6 +375,14 @@ type DeleteRestrictWorkspaceAdminsSettingResponse struct {
 type DeleteTokenManagementRequest struct {
 	// The ID of the token to get.
 	TokenId types.String `tfsdk:"-"`
+}
+
+type EmailConfig struct {
+	// Email addresses to notify.
+	Addresses []types.String `tfsdk:"addresses" tf:"optional"`
+}
+
+type Empty struct {
 }
 
 // SHIELD feature: ESM
@@ -434,6 +467,21 @@ type ExchangeTokenResponse struct {
 type FetchIpAccessListResponse struct {
 	// Definition of an IP Access list
 	IpAccessList *IpAccessListInfo `tfsdk:"ip_access_list" tf:"optional"`
+}
+
+type GenericWebhookConfig struct {
+	// [Input-Only][Optional] Password for webhook.
+	Password types.String `tfsdk:"password" tf:"optional"`
+	// [Output-Only] Whether password is set.
+	PasswordSet types.Bool `tfsdk:"password_set" tf:"optional"`
+	// [Input-Only] URL for webhook.
+	Url types.String `tfsdk:"url" tf:"optional"`
+	// [Output-Only] Whether URL is set.
+	UrlSet types.Bool `tfsdk:"url_set" tf:"optional"`
+	// [Input-Only][Optional] Username for webhook.
+	Username types.String `tfsdk:"username" tf:"optional"`
+	// [Output-Only] Whether username is set.
+	UsernameSet types.Bool `tfsdk:"username_set" tf:"optional"`
 }
 
 // Get IP access list
@@ -534,6 +582,11 @@ type GetIpAccessListsResponse struct {
 type GetNetworkConnectivityConfigurationRequest struct {
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
+}
+
+// Get a notification destination
+type GetNotificationDestinationRequest struct {
+	Id types.String `tfsdk:"-"`
 }
 
 // Get Personal Compute setting
@@ -643,6 +696,30 @@ type ListNetworkConnectivityConfigurationsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+// List notification destinations
+type ListNotificationDestinationsRequest struct {
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+type ListNotificationDestinationsResponse struct {
+	// Page token for next of results.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+
+	Results []ListNotificationDestinationsResult `tfsdk:"results" tf:"optional"`
+}
+
+type ListNotificationDestinationsResult struct {
+	// [Output-only] The type of the notification destination. The type can not
+	// be changed once set.
+	DestinationType types.String `tfsdk:"destination_type" tf:"optional"`
+	// The display name for the notification destination.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// UUID identifying notification destination.
+	Id types.String `tfsdk:"id" tf:"optional"`
+}
+
 // List private endpoint rules
 type ListPrivateEndpointRulesRequest struct {
 	// Your Network Connectvity Configuration ID.
@@ -668,6 +745,13 @@ type ListTokenManagementRequest struct {
 type ListTokensResponse struct {
 	// Token metadata of each user-created token in the workspace
 	TokenInfos []TokenInfo `tfsdk:"token_infos" tf:"optional"`
+}
+
+type MicrosoftTeamsConfig struct {
+	// [Input-Only] URL for Microsoft Teams.
+	Url types.String `tfsdk:"url" tf:"optional"`
+	// [Output-Only] Whether URL is set.
+	UrlSet types.Bool `tfsdk:"url_set" tf:"optional"`
 }
 
 // The stable AWS IP CIDR blocks. You can use these to configure the firewall of
@@ -784,6 +868,27 @@ type NetworkConnectivityConfiguration struct {
 	UpdatedTime types.Int64 `tfsdk:"updated_time" tf:"optional"`
 }
 
+type NotificationDestination struct {
+	// The configuration for the notification destination. Will be exactly one
+	// of the nested configs. Only returns for users with workspace admin
+	// permissions.
+	Config *Config `tfsdk:"config" tf:"optional"`
+	// [Output-only] The type of the notification destination. The type can not
+	// be changed once set.
+	DestinationType types.String `tfsdk:"destination_type" tf:"optional"`
+	// The display name for the notification destination.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// UUID identifying notification destination.
+	Id types.String `tfsdk:"id" tf:"optional"`
+}
+
+type PagerdutyConfig struct {
+	// [Input-Only] Integration key for PagerDuty.
+	IntegrationKey types.String `tfsdk:"integration_key" tf:"optional"`
+	// [Output-Only] Whether integration key is set.
+	IntegrationKeySet types.Bool `tfsdk:"integration_key_set" tf:"optional"`
+}
+
 // Partition by workspace or account
 type PartitionId struct {
 	// The ID of the workspace.
@@ -886,6 +991,13 @@ type RevokeTokenResponse struct {
 }
 
 type SetStatusResponse struct {
+}
+
+type SlackConfig struct {
+	// [Input-Only] URL for Slack destination.
+	Url types.String `tfsdk:"url" tf:"optional"`
+	// [Output-Only] Whether URL is set.
+	UrlSet types.Bool `tfsdk:"url_set" tf:"optional"`
 }
 
 type StringMessage struct {
@@ -1070,6 +1182,16 @@ type UpdateIpAccessList struct {
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
 	ListType types.String `tfsdk:"list_type" tf:"optional"`
+}
+
+type UpdateNotificationDestinationRequest struct {
+	// The configuration for the notification destination. Must wrap EXACTLY one
+	// of the nested configs.
+	Config *Config `tfsdk:"config" tf:"optional"`
+	// The display name for the notification destination.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+
+	Id types.String `tfsdk:"-"`
 }
 
 // Details required to update a setting.

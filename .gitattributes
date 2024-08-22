@@ -1,3 +1,4 @@
+internal/service/apps_tf/model.go linguist-generated=true
 internal/service/billing_tf/model.go linguist-generated=true
 internal/service/catalog_tf/model.go linguist-generated=true
 internal/service/compute_tf/model.go linguist-generated=true

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -35,7 +36,7 @@ type SqlTableInfo struct {
 	DataSourceFormat      string            `json:"data_source_format,omitempty" tf:"force_new"`
 	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
 	Partitions            []string          `json:"partitions,omitempty" tf:"force_new"`
-	ClusterKeys           []string          `json:"cluster_keys,omitempty" tf:"force_new"`
+	ClusterKeys           []string          `json:"cluster_keys,omitempty"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
@@ -82,6 +83,9 @@ func parseComment(s string) string {
 // This needs to be replaced with something a bit more robust in the future
 func sqlTableIsManagedProperty(key string) bool {
 	managedProps := map[string]bool{
+		// Property set if the table uses `cluster_keys`.
+		"clusteringColumns": true,
+
 		"delta.lastCommitTimestamp":                                true,
 		"delta.lastUpdateVersion":                                  true,
 		"delta.minReaderVersion":                                   true,
@@ -159,7 +163,7 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 }
 
 func (ti *SqlTableInfo) getOrCreateCluster(clusterName string, clustersAPI clusters.ClustersAPI) (string, error) {
-	sparkVersion := clustersAPI.LatestSparkVersionOrDefault(clusters.SparkVersionRequest{
+	sparkVersion := clusters.LatestSparkVersionOrDefault(clustersAPI.Context(), clustersAPI.WorkspaceClient(), compute.SparkVersionRequest{
 		Latest: true,
 	})
 	nodeType := clustersAPI.GetSmallestNodeType(compute.NodeTypeRequest{LocalDisk: true})
@@ -271,7 +275,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	}
 
 	if len(ti.ClusterKeys) > 0 {
-		statements = append(statements, fmt.Sprintf("\nCLUSTER BY (%s)", strings.Join(ti.ClusterKeys, ", "))) // CLUSTER BY (university, major)
+		statements = append(statements, fmt.Sprintf("\nCLUSTER BY (%s)", ti.getWrappedClusterKeys())) // CLUSTER BY (`university`, `major`)
 	}
 
 	if ti.Comment != "" {
@@ -302,6 +306,11 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 // Wrapping the column name with backticks to avoid special character messing things up.
 func (ci SqlColumnInfo) getWrappedColumnName() string {
 	return fmt.Sprintf("`%s`", ci.Name)
+}
+
+// Wrapping column name with backticks to avoid special character messing things up.
+func (ti *SqlTableInfo) getWrappedClusterKeys() string {
+	return "`" + strings.Join(ti.ClusterKeys, "`,`") + "`"
 }
 
 func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
@@ -389,8 +398,9 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		if ti.StorageLocation != oldti.StorageLocation {
 			statements = append(statements, fmt.Sprintf("ALTER TABLE %s SET %s", ti.SQLFullName(), ti.buildLocationStatement()))
 		}
-		if !reflect.DeepEqual(ti.ClusterKeys, oldti.ClusterKeys) {
-			statements = append(statements, fmt.Sprintf("ALTER TABLE %s CLUSTER BY (%s)", ti.SQLFullName(), strings.Join(ti.ClusterKeys, ", ")))
+		equal := slices.Equal(ti.ClusterKeys, oldti.ClusterKeys)
+		if !equal {
+			statements = append(statements, fmt.Sprintf("ALTER TABLE %s CLUSTER BY (%s)", ti.SQLFullName(), ti.getWrappedClusterKeys()))
 		}
 	}
 

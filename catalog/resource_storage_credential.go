@@ -19,6 +19,7 @@ type StorageCredentialInfo struct {
 	AzMI                        *catalog.AzureManagedIdentityResponse        `json:"azure_managed_identity,omitempty" tf:"group:access"`
 	GcpSAKey                    *GcpServiceAccountKey                        `json:"gcp_service_account_key,omitempty" tf:"group:access"`
 	DatabricksGcpServiceAccount *catalog.DatabricksGcpServiceAccountResponse `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
+	CloudflareApiToken          *catalog.CloudflareApiToken                  `json:"cloudflare_api_token,omitempty" tf:"group:access"`
 	MetastoreID                 string                                       `json:"metastore_id,omitempty" tf:"computed"`
 	ReadOnly                    bool                                         `json:"read_only,omitempty"`
 	SkipValidation              bool                                         `json:"skip_validation,omitempty"`
@@ -110,7 +111,7 @@ func ResourceStorageCredential() common.Resource {
 					return err
 				}
 				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
-				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredential.Name, "storage-credential")
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredential.Name, catalog.UpdateBindingsSecurableTypeStorageCredential)
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -122,12 +123,17 @@ func ResourceStorageCredential() common.Resource {
 				if err != nil {
 					return err
 				}
-				// azure client secret is sensitive, so we need to preserve it
+				// azure client secret, & r2 secret access key are sensitive, so we need to preserve them
 				var scOrig catalog.CreateStorageCredential
 				common.DataToStructPointer(d, storageCredentialSchema, &scOrig)
 				if scOrig.AzureServicePrincipal != nil {
 					if scOrig.AzureServicePrincipal.ClientSecret != "" {
 						storageCredential.CredentialInfo.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
+					}
+				}
+				if scOrig.CloudflareApiToken != nil {
+					if scOrig.CloudflareApiToken.SecretAccessKey != "" {
+						storageCredential.CredentialInfo.CloudflareApiToken.SecretAccessKey = scOrig.CloudflareApiToken.SecretAccessKey
 					}
 				}
 				err = common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
@@ -141,12 +147,17 @@ func ResourceStorageCredential() common.Resource {
 				if err != nil {
 					return err
 				}
-				// azure client secret is sensitive, so we need to preserve it
+				// azure client secret, & r2 secret access key are sensitive, so we need to preserve them
 				var scOrig catalog.CreateStorageCredential
 				common.DataToStructPointer(d, storageCredentialSchema, &scOrig)
 				if scOrig.AzureServicePrincipal != nil {
 					if scOrig.AzureServicePrincipal.ClientSecret != "" {
 						storageCredential.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
+					}
+				}
+				if scOrig.CloudflareApiToken != nil {
+					if scOrig.CloudflareApiToken.SecretAccessKey != "" {
+						storageCredential.CloudflareApiToken.SecretAccessKey = scOrig.CloudflareApiToken.SecretAccessKey
 					}
 				}
 				err = common.StructToData(storageCredential, storageCredentialSchema, d)
@@ -246,7 +257,7 @@ func ResourceStorageCredential() common.Resource {
 					return err
 				}
 				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
-				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, update.Name, "storage-credential")
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, update.Name, catalog.UpdateBindingsSecurableTypeStorageCredential)
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

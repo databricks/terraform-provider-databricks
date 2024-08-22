@@ -27,42 +27,11 @@ type {{.PascalName}} struct {
     {{.PascalName}} {{if .IsOptionalObject}}*{{end}}{{template "type" .Entity}} `{{template "field-tag" . }}`{{end}}
 }
 
-{{else if .MapValue}}{{.Comment "// " 80}}
-type {{.PascalName}} {{template "type" .}}
-{{else if .Enum}}{{.Comment "// " 80}}
-type {{.PascalName}} string
-{{range .Enum }}
-{{.Comment "// " 80}}
-const {{.Entity.PascalName}}{{.PascalName}} {{.Entity.PascalName}} = `{{.Content}}`{{end}}
-
-// String representation for [fmt.Print]
-func (f *{{.PascalName}}) String() string {
-    return string(*f)
-}
-
-// Set raw string value and validate it against allowed values
-func (f *{{.PascalName}}) Set(v string) error {
-    switch v {
-    case {{range $i, $e := .Enum }}{{if $i}}, {{end}}`{{.Content}}`{{end}}:
-        *f = {{.PascalName}}(v)
-        return nil
-    default:
-        return fmt.Errorf(`value "%s" is not one of {{range $i, $e := .Enum }}{{if $i}}, {{end}}"{{.Content}}"{{end}}`, v)
-    }
-}
-
-// Type always returns {{.PascalName}} to satisfy [pflag.Value] interface
-func (f *{{.PascalName}}) Type() string {
-    return "{{.PascalName}}"
-}
 {{end}}
 {{end}}
 
 {{- define "field-tag" -}}
 	{{if .IsJson}}tfsdk:"{{if and (ne .Entity.Terraform nil) (ne .Entity.Terraform.Alias "") }}{{.Entity.Terraform.Alias}}{{else}}{{.Name}}{{end}}" tf:"{{if not .Required}}optional{{end}}"{{else}}tfsdk:"-"{{end -}}
-	{{if .IsPath}} url:"-"{{end -}}
-	{{if .IsHeader}} url:"-" header:"{{.Name}}{{if not .Required}},omitempty{{end}}"{{end -}}
-	{{if .IsQuery}} url:"{{.Name}}{{if not .Required}},omitempty{{end}}"{{end -}}
 {{- end -}}
 
 {{- define "type" -}}

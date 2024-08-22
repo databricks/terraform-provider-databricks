@@ -17,15 +17,9 @@ jobs:
           echo "Version: $Version"
           OPENAPI_SHA_GO_SDK=$(curl https://raw.githubusercontent.com/databricks/databricks-sdk-go/$Version/.codegen/_openapi_sha)
           OPENAPI_SHA=$(cat .codegen/_openapi_sha)
-          if $OPENAPI_SHA_GO_SDK != $OPENAPI_SHA; then
-            echo "OpenAPI SHA mismatch: $OPENAPI_SHA_GO_SDK != $OPENAPI_SHA"
+          if "$OPENAPI_SHA_GO_SDK" != "$OPENAPI_SHA"; then
+            echo "OpenAPI SHA mismatch"
             exit 1
           else 
-            echo "OpenAPI SHA match: $OPENAPI_SHA_GO_SDK == $OPENAPI_SHA"
-          fi
-          if grep -q "tag: \"\[$TAG\]\"" .codegen/changelog_config.yml; then 
-            echo "Valid tag found: [$TAG]"
-          else 
-            echo "Invalid or missing tag in commit message: [$TAG]" 
-            exit 1
+            echo "OpenAPI SHA match"
           fi

@@ -314,7 +314,7 @@ func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 	_, err := client.GetAzureJwtProperty("tid")
 	require.Error(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(),
-		"default auth: azure-cli: cannot get access token: This is just a failing script"))
+		"default auth: azure-cli: cannot get account info"))
 }
 
 type mockInternalUserService struct {

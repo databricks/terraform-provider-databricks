@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,7 +20,7 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 		rk = v.Kind()
 	}
 	if rk != reflect.Struct {
-		panic(fmt.Errorf("schema value of Struct is expected, but got %s: %#v", rk.String(), v))
+		panic(fmt.Errorf("schema value of Struct is expected, but got %s: %#v. %s", rk.String(), v, common.TerraformBugErrorMessage))
 	}
 	fields := tfreflect.ListAllFields(v)
 	for _, field := range fields {
@@ -41,7 +42,7 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 				elemType = elemType.Elem()
 			}
 			if elemType.Kind() != reflect.Struct {
-				panic(fmt.Errorf("unsupported slice value for %s: %s", fieldName, elemType.Kind().String()))
+				panic(fmt.Errorf("unsupported slice value for %s: %s. %s", fieldName, elemType.Kind().String(), common.TerraformBugErrorMessage))
 			}
 			switch elemType {
 			case reflect.TypeOf(types.Bool{}):
@@ -63,7 +64,7 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 				elemType = elemType.Elem()
 			}
 			if elemType.Kind() != reflect.Struct {
-				panic(fmt.Errorf("unsupported map value for %s: %s", fieldName, elemType.Kind().String()))
+				panic(fmt.Errorf("unsupported map value for %s: %s. %s", fieldName, elemType.Kind().String(), common.TerraformBugErrorMessage))
 			}
 			switch elemType {
 			case reflect.TypeOf(types.Bool{}):
@@ -90,9 +91,9 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 			case types.String:
 				scm[fieldName] = StringAttributeBuilder{Optional: isOptional, Required: !isOptional}
 			case types.List:
-				panic("types.List should never be used in tfsdk structs")
+				panic(fmt.Errorf("types.List should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage))
 			case types.Map:
-				panic("types.Map should never be used in tfsdk structs")
+				panic(fmt.Errorf("types.Map should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage))
 			default:
 				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
 				elem := typeField.Type
@@ -101,7 +102,7 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 				scm[fieldName] = SingleNestedAttributeBuilder{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}
 			}
 		} else {
-			panic(fmt.Errorf("unknown type for field: %s", typeField.Name))
+			panic(fmt.Errorf("unknown type for field: %s. %s", typeField.Name, common.TerraformBugErrorMessage))
 		}
 	}
 	return scm
@@ -112,16 +113,19 @@ func fieldIsOptional(field reflect.StructField) bool {
 	return strings.Contains(tagValue, "optional")
 }
 
+// ResourceStructToSchema builds a resource schema from a tfsdk struct, with custoimzations applied.
 func ResourceStructToSchema(v any, customizeSchema func(CustomizableSchema) CustomizableSchema) schema.Schema {
 	attributes := ResourceStructToSchemaMap(v, customizeSchema)
 	return schema.Schema{Attributes: attributes}
 }
 
+// DataSourceStructToSchema builds a data source schema from a tfsdk struct, with custoimzations applied.
 func DataSourceStructToSchema(v any, customizeSchema func(CustomizableSchema) CustomizableSchema) dataschema.Schema {
 	attributes := DataSourceStructToSchemaMap(v, customizeSchema)
 	return dataschema.Schema{Attributes: attributes}
 }
 
+// ResourceStructToSchemaMap returns a map from string to resource schema attributes using a tfsdk struct, with custoimzations applied.
 func ResourceStructToSchemaMap(v any, customizeSchema func(CustomizableSchema) CustomizableSchema) map[string]schema.Attribute {
 	attributes := typeToSchema(reflect.ValueOf(v))
 
@@ -133,6 +137,7 @@ func ResourceStructToSchemaMap(v any, customizeSchema func(CustomizableSchema) C
 	}
 }
 
+// DataSourceStructToSchemaMap returns a map from string to data source schema attributes using a tfsdk struct, with custoimzations applied.
 func DataSourceStructToSchemaMap(v any, customizeSchema func(CustomizableSchema) CustomizableSchema) map[string]dataschema.Attribute {
 	attributes := typeToSchema(reflect.ValueOf(v))
 

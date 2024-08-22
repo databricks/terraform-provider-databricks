@@ -43,12 +43,20 @@ type DummyNested struct {
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
 }
 
+type DummyDoubleNested struct {
+	Nested *DummyNested `tfsdk:"nested" tf:"optional"`
+}
+
 type TestNestedMapTfSdk struct {
 	NestedMap map[string]DummyNested `tfsdk:"nested_map" tf:"optional"`
 }
 
 type TestPointerTfSdk struct {
 	Nested *DummyNested `tfsdk:"nested" tf:"optional"`
+}
+
+type TestNestedPointerTfSdk struct {
+	Nested DummyDoubleNested `tfsdk:"nested" tf:"optional"`
 }
 
 var tests = []struct {
@@ -106,11 +114,22 @@ var tests = []struct {
 		}},
 	},
 	{
-		"pointer conversion",
+		"pointer to a struct conversion",
 		TestPointerTfSdk{
 			&DummyNested{
 				Name:    types.StringValue("def"),
 				Enabled: types.BoolValue(true),
+			},
+		},
+	},
+	{
+		"nested pointer to a struct conversion",
+		TestNestedPointerTfSdk{
+			DummyDoubleNested{
+				Nested: &DummyNested{
+					Name:    types.StringValue("def"),
+					Enabled: types.BoolValue(true),
+				},
 			},
 		},
 	},

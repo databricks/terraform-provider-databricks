@@ -2,6 +2,8 @@ package dashboards
 
 import (
 	"context"
+	"log"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -75,6 +77,14 @@ func ResourceDashboard() common.Resource {
 			d.Set("md5", md5Hash)
 			newDashboardRequest.SerializedDashboard = content
 			createdDashboard, err := w.Lakeview.Create(ctx, newDashboardRequest)
+			if err != nil && isParentDoesntExistError(err) {
+				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", newDashboardRequest.ParentPath)
+				err = w.Workspace.MkdirsByPath(ctx, newDashboardRequest.ParentPath)
+				if err != nil {
+					return err
+				}
+				createdDashboard, err = w.Lakeview.Create(ctx, newDashboardRequest)
+			}
 			if err != nil {
 				return err
 			}
@@ -167,4 +177,9 @@ func ResourceDashboard() common.Resource {
 			})
 		},
 	}
+}
+
+func isParentDoesntExistError(err error) bool {
+	errStr := err.Error()
+	return strings.HasPrefix(errStr, "Path (") && strings.HasSuffix(errStr, ") doesn't exist.")
 }

@@ -1,6 +1,7 @@
 package dashboards
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
@@ -38,6 +39,64 @@ func TestDashboardCreate(t *testing.T) {
 				RevisionCreateTime: "823828",
 			}, nil)
 			e.Get(mock.Anything, dashboards.GetDashboardRequest{
+				DashboardId: "xyz",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_json_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
+		},
+		Resource: ResourceDashboard(),
+		Create:   true,
+		HCL: `
+			display_name = "Dashboard name"
+			warehouse_id = "abc"
+			parent_path = "/path"
+			serialized_dashboard = "serialized_json"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":           "xyz",
+		"display_name": "Dashboard name",
+	})
+}
+
+func TestDashboardCreate_NoParent(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			lv := w.GetMockLakeviewAPI().EXPECT()
+			lv.Create(mock.Anything, dashboards.CreateDashboardRequest{
+				DisplayName:         "Dashboard name",
+				WarehouseId:         "abc",
+				ParentPath:          "/path",
+				SerializedDashboard: "serialized_json",
+			}).Return(nil, fmt.Errorf("Path (/path) doesn't exist.")).Once()
+			w.GetMockWorkspaceAPI().EXPECT().MkdirsByPath(mock.Anything, "/path").Return(nil)
+			lv.Create(mock.Anything, dashboards.CreateDashboardRequest{
+				DisplayName:         "Dashboard name",
+				WarehouseId:         "abc",
+				ParentPath:          "/path",
+				SerializedDashboard: "serialized_json",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:         "xyz",
+				DisplayName:         "Dashboard name",
+				SerializedDashboard: "serialized_json_2",
+				WarehouseId:         "abc",
+				UpdateTime:          "2125678",
+			}, nil)
+			lv.Publish(mock.Anything, dashboards.PublishRequest{
+				EmbedCredentials: true,
+				WarehouseId:      "abc",
+				DashboardId:      "xyz",
+				ForceSendFields:  []string{"EmbedCredentials"},
+			}).Return(&dashboards.PublishedDashboard{
+				EmbedCredentials:   true,
+				WarehouseId:        "abc",
+				DisplayName:        "Dashboard name",
+				RevisionCreateTime: "823828",
+			}, nil)
+			lv.Get(mock.Anything, dashboards.GetDashboardRequest{
 				DashboardId: "xyz",
 			}).Return(&dashboards.Dashboard{
 				DashboardId:         "xyz",

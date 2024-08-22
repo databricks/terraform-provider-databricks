@@ -329,7 +329,7 @@ func TestConfig_AzureCliHost_Fail(t *testing.T) {
 			"HOME": p,
 			"FAIL": "yes",
 		},
-		assertError: "default auth: azure-cli: cannot get access token: This is just a failing script.",
+		assertError: "default auth: azure-cli: cannot get account info",
 	}.apply(t)
 }
 

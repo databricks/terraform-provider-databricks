@@ -42,12 +42,12 @@ type SqlTableInfo struct {
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Comment               string            `json:"comment,omitempty"`
 	Properties            map[string]string `json:"properties,omitempty"`
-	EffectiveProperties   map[string]string `json:"effective_properties" tf:"computed"`
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
-	EffectiveOptions      map[string]string `json:"effective_options" tf:"computed"`
-	ClusterID             string            `json:"cluster_id,omitempty" tf:"computed"`
-	WarehouseID           string            `json:"warehouse_id,omitempty"`
-	Owner                 string            `json:"owner,omitempty" tf:"computed"`
+	// EffectiveProperties includes both properties and options. Options are prefixed with `option.`.
+	EffectiveProperties map[string]string `json:"effective_properties" tf:"computed"`
+	ClusterID           string            `json:"cluster_id,omitempty" tf:"computed"`
+	WarehouseID         string            `json:"warehouse_id,omitempty"`
+	Owner               string            `json:"owner,omitempty" tf:"computed"`
 
 	exec    common.CommandExecutor
 	sqlExec sql.StatementExecutionInterface
@@ -93,18 +93,6 @@ func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
 	// Copy returned properties & options to read-only attributes
 	ti.EffectiveProperties = ti.Properties
 	ti.Properties = nil
-	ti.EffectiveOptions = ti.Options
-	for k, v := range ti.EffectiveProperties {
-		if strings.HasPrefix(k, "option.") {
-			if ti.EffectiveOptions == nil {
-				ti.EffectiveOptions = make(map[string]string)
-			}
-			newk := strings.TrimPrefix(k, "option.")
-			ti.EffectiveOptions[newk] = v
-			delete(ti.EffectiveProperties, k)
-		}
-	}
-	ti.Options = nil
 	return
 }
 
@@ -557,22 +545,25 @@ func ResourceSqlTable() common.Resource {
 			// If the user specified a property but the value of that property has changed, that will appear
 			// as a change in the effective property/option. To cause a diff to be detected, we need to
 			// reset the effective property/option to the requested value.
-			for _, field := range []string{"properties", "options"} {
-				userSpecified := d.Get(field).(map[string]interface{})
-				effectiveField := "effective_" + field
-				effective := d.Get(effectiveField).(map[string]interface{})
-				diff := make(map[string]interface{})
-				for k, userSpecifiedValue := range userSpecified {
-					if effectiveValue, ok := effective[k]; !ok || effectiveValue != userSpecifiedValue {
-						diff[k] = userSpecifiedValue
-					}
+			userSpecifiedProperties := d.Get("properties").(map[string]interface{})
+			userSpecifiedOptions := d.Get("options").(map[string]interface{})
+			effectiveProperties := d.Get("effective_properties").(map[string]interface{})
+			diff := make(map[string]interface{})
+			for k, userSpecifiedValue := range userSpecifiedProperties {
+				if effectiveValue, ok := effectiveProperties[k]; !ok || effectiveValue != userSpecifiedValue {
+					diff[k] = userSpecifiedValue
 				}
-				if len(diff) > 0 {
-					for k, v := range diff {
-						effective[k] = v
-					}
-					d.SetNew(effectiveField, effective)
+			}
+			for k, userSpecifiedValue := range userSpecifiedOptions {
+				if effectiveValue, ok := effectiveProperties["option."+k]; !ok || effectiveValue != userSpecifiedValue {
+					diff["option."+k] = userSpecifiedValue
 				}
+			}
+			if len(diff) > 0 {
+				for k, v := range diff {
+					effectiveProperties[k] = v
+				}
+				d.SetNew("effective_properties", effectiveProperties)
 			}
 			// No support yet for changing the COMMENT on a VIEW
 			// Once added this can be removed

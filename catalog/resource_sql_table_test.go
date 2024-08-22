@@ -1412,7 +1412,6 @@ func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {
 			"",
 			map[string]string{
 				"effective_properties.%": "0",
-				"effective_options.%":    "0",
 			},
 			nil,
 		},
@@ -1420,35 +1419,14 @@ func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {
 			"existing resource with computed properties and options",
 			"",
 			map[string]string{
-				"effective_properties.%":            "1",
-				"effective_properties.computedprop": "computedvalue",
-				"effective_options.%":               "1",
-				"effective_options.computedprop":    "computedvalue",
+				"effective_properties.%":                   "2",
+				"effective_properties.computedprop":        "computedvalue",
+				"effective_properties.option.computedprop": "computedvalue",
 			},
 			nil,
 		},
 		{
 			"existing resource with property and option",
-			`properties = {
-			    "myprop" = "myval"
-			}
-			options = {
-				"myopt" = "myval"
-			}`,
-			map[string]string{
-				"properties.%":                "1",
-				"properties.myprop":           "myval",
-				"options.%":                   "1",
-				"options.myopt":               "myval",
-				"effective_properties.%":      "1",
-				"effective_properties.myprop": "myval",
-				"effective_options.%":         "1",
-				"effective_options.myopt":     "myval",
-			},
-			nil,
-		},
-		{
-			"existing resource with property and option and computed property and computed option",
 			`properties = {
 			    "myprop" = "myval"
 			}
@@ -1462,28 +1440,52 @@ func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {
 				"options.myopt":                     "myval",
 				"effective_properties.%":            "2",
 				"effective_properties.myprop":       "myval",
-				"effective_properties.computedprop": "computedval",
-				"effective_options.%":               "2",
-				"effective_options.myopt":           "myval",
-				"effective_options.computedopt":     "computedval",
+				"effective_properties.option.myopt": "myval",
 			},
 			nil,
 		},
 		{
-			"existing resource with conflicting property",
+			"existing resource with property and option and computed property and computed option",
 			`properties = {
 			    "myprop" = "myval"
 			}
+			options = {
+				"myopt" = "myval"
+			}`,
+			map[string]string{
+				"properties.%":                            "1",
+				"properties.myprop":                       "myval",
+				"options.%":                               "1",
+				"options.myopt":                           "myval",
+				"effective_properties.%":                  "4",
+				"effective_properties.myprop":             "myval",
+				"effective_properties.computedprop":       "computedval",
+				"effective_properties.option.myopt":       "myval",
+				"effective_properties.option.computedopt": "computedval",
+			},
+			nil,
+		},
+		{
+			"existing resource with conflicting property and option",
+			`properties = {
+			    "myprop" = "myval"
+			}
+			options = {
+			    "myopt" = "myval"
+			}
 			`,
 			map[string]string{
-				"properties.%":                "1",
-				"properties.myprop":           "myval",
-				"effective_properties.%":      "1",
-				"effective_properties.myprop": "otherval",
-				"effective_options.%":         "0",
+				"properties.%":                      "1",
+				"properties.myprop":                 "myval",
+				"options.%":                         "1",
+				"options.myopt":                     "myval",
+				"effective_properties.%":            "2",
+				"effective_properties.myprop":       "otherval",
+				"effective_properties.option.myopt": "otherval",
 			},
 			map[string]*terraform.ResourceAttrDiff{
-				"effective_properties.myprop": {New: "myval", Old: "otherval"},
+				"effective_properties.myprop":       {New: "myval", Old: "otherval"},
+				"effective_properties.option.myopt": {New: "myval", Old: "otherval"},
 			},
 		},
 	}
@@ -1660,44 +1662,31 @@ func TestSqlTablesAPI_getTable_OptionsAndParametersProcessedCorrectly(t *testing
 		name                        string
 		apiResponse                 SqlTableInfo
 		expectedEffectiveProperties map[string]string
-		expectedEffectiveOptions    map[string]string
 	}{
 		{
 			name:                        "no properties or options",
 			apiResponse:                 SqlTableInfo{},
 			expectedEffectiveProperties: nil,
-			expectedEffectiveOptions:    nil,
 		},
 		{
 			name: "empty properties and options",
 			apiResponse: SqlTableInfo{
 				Properties: map[string]string{},
-				Options:    map[string]string{},
 			},
 			expectedEffectiveProperties: nil,
-			expectedEffectiveOptions:    nil,
 		},
 		{
 			name: "properties and options",
 			apiResponse: SqlTableInfo{
-				// Options don't seem to be returned in the API response even when specified.
-				// Instead, they appear in Properties with a "option." prefix.
-				// For now, we will merge them into the Options map, with the values in Properties taking precedence.
+				// Options appear in Properties with a "option." prefix.
 				Properties: map[string]string{
 					"myprop":       "myval",
 					"option.myopt": "myval",
 				},
-				Options: map[string]string{
-					"myopt":  "myotherval",
-					"myopt2": "myval2",
-				},
 			},
 			expectedEffectiveProperties: map[string]string{
-				"myprop": "myval",
-			},
-			expectedEffectiveOptions: map[string]string{
-				"myopt":  "myval",
-				"myopt2": "myval2",
+				"myprop":       "myval",
+				"option.myopt": "myval",
 			},
 		},
 	}
@@ -1716,7 +1705,6 @@ func TestSqlTablesAPI_getTable_OptionsAndParametersProcessedCorrectly(t *testing
 			actual, err := api.getTable("main.foo.bar")
 			assert.NoError(t, err)
 			assert.Equal(t, testCase.expectedEffectiveProperties, actual.EffectiveProperties)
-			assert.Equal(t, testCase.expectedEffectiveOptions, actual.EffectiveOptions)
 			assert.Nil(t, actual.Properties)
 			assert.Nil(t, actual.Options)
 		})

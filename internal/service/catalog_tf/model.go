@@ -363,6 +363,10 @@ type CreateExternalLocation struct {
 	CredentialName types.String `tfsdk:"credential_name" tf:""`
 	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	// Indicates whether fallback mode is enabled for this external location.
+	// When fallback mode is enabled, the access to the location falls back to
+	// cluster credentials if UC credentials are not sufficient.
+	Fallback types.Bool `tfsdk:"fallback" tf:"optional"`
 	// Name of the external location.
 	Name types.String `tfsdk:"name" tf:""`
 	// Indicates whether the external location is read-only.
@@ -853,6 +857,10 @@ type ExternalLocationInfo struct {
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	// Indicates whether fallback mode is enabled for this external location.
+	// When fallback mode is enabled, the access to the location falls back to
+	// cluster credentials if UC credentials are not sufficient.
+	Fallback types.Bool `tfsdk:"fallback" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
 	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
@@ -1192,6 +1200,23 @@ type GetQualityMonitorRequest struct {
 	TableName types.String `tfsdk:"-"`
 }
 
+// Get information for a single resource quota.
+type GetQuotaRequest struct {
+	// Full name of the parent resource. Provide the metastore ID if the parent
+	// is a metastore.
+	ParentFullName types.String `tfsdk:"-"`
+	// Securable type of the quota parent.
+	ParentSecurableType types.String `tfsdk:"-"`
+	// Name of the quota. Follows the pattern of the quota type, with "-quota"
+	// added as a suffix.
+	QuotaName types.String `tfsdk:"-"`
+}
+
+type GetQuotaResponse struct {
+	// The returned QuotaInfo.
+	QuotaInfo *QuotaInfo `tfsdk:"quota_info" tf:"optional"`
+}
+
 // Get refresh
 type GetRefreshRequest struct {
 	// ID of the refresh.
@@ -1400,6 +1425,23 @@ type ListModelVersionsResponse struct {
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+// List all resource quotas under a metastore.
+type ListQuotasRequest struct {
+	// The number of quotas to return.
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Opaque token for the next page of results.
+	PageToken types.String `tfsdk:"-"`
+}
+
+type ListQuotasResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	// An array of returned QuotaInfos.
+	Quotas []QuotaInfo `tfsdk:"quotas" tf:"optional"`
 }
 
 // List refreshes
@@ -2038,6 +2080,22 @@ type ProvisioningStatus struct {
 	InitialPipelineSyncProgress *PipelineProgress `tfsdk:"initial_pipeline_sync_progress" tf:"optional"`
 }
 
+type QuotaInfo struct {
+	// The timestamp that indicates when the quota count was last updated.
+	LastRefreshedAt types.Int64 `tfsdk:"last_refreshed_at" tf:"optional"`
+	// Name of the parent resource. Returns metastore ID if the parent is a
+	// metastore.
+	ParentFullName types.String `tfsdk:"parent_full_name" tf:"optional"`
+	// The quota parent securable type.
+	ParentSecurableType types.String `tfsdk:"parent_securable_type" tf:"optional"`
+	// The current usage of the resource quota.
+	QuotaCount types.Int64 `tfsdk:"quota_count" tf:"optional"`
+	// The current limit of the resource quota.
+	QuotaLimit types.Int64 `tfsdk:"quota_limit" tf:"optional"`
+	// The name of the quota.
+	QuotaName types.String `tfsdk:"quota_name" tf:"optional"`
+}
+
 // Get a Volume
 type ReadVolumeRequest struct {
 	// Whether to include volumes in the response for which the principal can
@@ -2397,6 +2455,10 @@ type UpdateExternalLocation struct {
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	// Indicates whether fallback mode is enabled for this external location.
+	// When fallback mode is enabled, the access to the location falls back to
+	// cluster credentials if UC credentials are not sufficient.
+	Fallback types.Bool `tfsdk:"fallback" tf:"optional"`
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.
 	Force types.Bool `tfsdk:"force" tf:"optional"`

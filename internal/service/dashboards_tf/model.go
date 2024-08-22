@@ -19,9 +19,11 @@ type CreateDashboardRequest struct {
 	// The display name of the dashboard.
 	DisplayName types.String `tfsdk:"display_name" tf:""`
 	// The workspace path of the folder containing the dashboard. Includes
-	// leading slash and no trailing slash.
+	// leading slash and no trailing slash. This field is excluded in List
+	// Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
-	// The contents of the dashboard in serialized string form.
+	// The contents of the dashboard in serialized string form. This field is
+	// excluded in List Dashboards responses.
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -70,18 +72,23 @@ type Dashboard struct {
 	// The display name of the dashboard.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// The etag for the dashboard. Can be optionally provided on updates to
-	// ensure that the dashboard has not been modified since the last read.
+	// ensure that the dashboard has not been modified since the last read. This
+	// field is excluded in List Dashboards responses.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 	// The state of the dashboard resource. Used for tracking trashed status.
 	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
 	// The workspace path of the folder containing the dashboard. Includes
-	// leading slash and no trailing slash.
+	// leading slash and no trailing slash. This field is excluded in List
+	// Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
-	// The workspace path of the dashboard asset, including the file name.
+	// The workspace path of the dashboard asset, including the file name. This
+	// field is excluded in List Dashboards responses.
 	Path types.String `tfsdk:"path" tf:"optional"`
-	// The contents of the dashboard in serialized string form.
+	// The contents of the dashboard in serialized string form. This field is
+	// excluded in List Dashboards responses.
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
-	// The timestamp of when the dashboard was last updated by the user.
+	// The timestamp of when the dashboard was last updated by the user. This
+	// field is excluded in List Dashboards responses.
 	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -499,9 +506,11 @@ type UpdateDashboardRequest struct {
 	// The display name of the dashboard.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// The etag for the dashboard. Can be optionally provided on updates to
-	// ensure that the dashboard has not been modified since the last read.
+	// ensure that the dashboard has not been modified since the last read. This
+	// field is excluded in List Dashboards responses.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
-	// The contents of the dashboard in serialized string form.
+	// The contents of the dashboard in serialized string form. This field is
+	// excluded in List Dashboards responses.
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`

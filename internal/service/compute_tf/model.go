@@ -363,6 +363,19 @@ type ClusterAttributes struct {
 	WorkloadType *WorkloadType `tfsdk:"workload_type" tf:"optional"`
 }
 
+type ClusterCompliance struct {
+	// Canonical unique identifier for a cluster.
+	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	// Whether this cluster is in compliance with the latest version of its
+	// policy.
+	IsCompliant types.Bool `tfsdk:"is_compliant" tf:"optional"`
+	// An object containing key-value mappings representing the first 200 policy
+	// validation errors. The keys indicate the path where the policy validation
+	// error is occurring. The values indicate an error message describing the
+	// policy validation error.
+	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
+}
+
 type ClusterDetails struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
@@ -685,6 +698,23 @@ type ClusterPolicyPermissionsRequest struct {
 	AccessControlList []ClusterPolicyAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-"`
+}
+
+// Represents a change to the cluster settings required for the cluster to
+// become compliant with its policy.
+type ClusterSettingsChange struct {
+	// The field where this change would be made.
+	Field types.String `tfsdk:"field" tf:"optional"`
+	// The new value of this field after enforcing policy compliance (either a
+	// number, a boolean, or a string) converted to a string. This is intended
+	// to be read by a human. The typed new value of this field can be retrieved
+	// by reading the settings field in the API response.
+	NewValue types.String `tfsdk:"new_value" tf:"optional"`
+	// The previous value of this field before enforcing policy compliance
+	// (either a number, a boolean, or a string) converted to a string. This is
+	// intended to be read by a human. The type of the field can be retrieved by
+	// reading the settings field in the API response.
+	PreviousValue types.String `tfsdk:"previous_value" tf:"optional"`
 }
 
 type ClusterSize struct {
@@ -1514,6 +1544,23 @@ type EditPolicyResponse struct {
 type EditResponse struct {
 }
 
+type EnforceClusterComplianceRequest struct {
+	// The ID of the cluster you want to enforce policy compliance on.
+	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	// If set, previews the changes that would be made to a cluster to enforce
+	// compliance but does not update the cluster.
+	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
+}
+
+type EnforceClusterComplianceResponse struct {
+	// A list of changes that have been made to the cluster settings for the
+	// cluster to become compliant with its policy.
+	Changes []ClusterSettingsChange `tfsdk:"changes" tf:"optional"`
+	// Whether any changes have been made to the cluster settings for the
+	// cluster to become compliant with its policy.
+	HasChanges types.Bool `tfsdk:"has_changes" tf:"optional"`
+}
+
 // The environment entity used to preserve serverless environment side panel and
 // jobs' environment for non-notebook task. In this minimal environment spec,
 // only pip dependencies are supported.
@@ -1620,6 +1667,24 @@ type GcpAttributes struct {
 type GcsStorageInfo struct {
 	// GCS destination/URI, e.g. `gs://my-bucket/some-prefix`
 	Destination types.String `tfsdk:"destination" tf:""`
+}
+
+// Get cluster policy compliance
+type GetClusterComplianceRequest struct {
+	// The ID of the cluster to get the compliance status
+	ClusterId types.String `tfsdk:"-"`
+}
+
+type GetClusterComplianceResponse struct {
+	// Whether the cluster is compliant with its policy or not. Clusters could
+	// be out of compliance if the policy was updated after the cluster was last
+	// edited.
+	IsCompliant types.Bool `tfsdk:"is_compliant" tf:"optional"`
+	// An object containing key-value mappings representing the first 200 policy
+	// validation errors. The keys indicate the path where the policy validation
+	// error is occurring. The values indicate an error message describing the
+	// policy validation error.
+	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
 }
 
 // Get cluster permission levels
@@ -2278,6 +2343,31 @@ type ListAvailableZonesResponse struct {
 	DefaultZone types.String `tfsdk:"default_zone" tf:"optional"`
 	// The list of available zones (e.g., ['us-west-2c', 'us-east-2']).
 	Zones []types.String `tfsdk:"zones" tf:"optional"`
+}
+
+// List cluster policy compliance
+type ListClusterCompliancesRequest struct {
+	// Use this field to specify the maximum number of results to be returned by
+	// the server. The server may further constrain the maximum number of
+	// results returned in a single page.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token that can be used to navigate to the next page or previous
+	// page as returned by `next_page_token` or `prev_page_token`.
+	PageToken types.String `tfsdk:"-"`
+	// Canonical unique identifier for the cluster policy.
+	PolicyId types.String `tfsdk:"-"`
+}
+
+type ListClusterCompliancesResponse struct {
+	// A list of clusters and their policy compliance statuses.
+	Clusters []ClusterCompliance `tfsdk:"clusters" tf:"optional"`
+	// This field represents the pagination token to retrieve the next page of
+	// results. If the value is "", it means no further results for the request.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	// This field represents the pagination token to retrieve the previous page
+	// of results. If the value is "", it means no further results for the
+	// request.
+	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
 }
 
 // List cluster policies

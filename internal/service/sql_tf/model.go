@@ -237,29 +237,6 @@ type ColumnInfo struct {
 	TypeText types.String `tfsdk:"type_text" tf:"optional"`
 }
 
-type ContextFilter struct {
-	// Databricks SQL Alert id
-	DbsqlAlertId types.String `tfsdk:"dbsql_alert_id" tf:"optional"`
-	// Databricks SQL Dashboard id
-	DbsqlDashboardId types.String `tfsdk:"dbsql_dashboard_id" tf:"optional"`
-	// Databricks SQL Query id
-	DbsqlQueryId types.String `tfsdk:"dbsql_query_id" tf:"optional"`
-	// Databricks SQL Query session id
-	DbsqlSessionId types.String `tfsdk:"dbsql_session_id" tf:"optional"`
-	// Databricks Workflows id
-	JobId types.String `tfsdk:"job_id" tf:"optional"`
-	// Databricks Workflows task run id
-	JobRunId types.String `tfsdk:"job_run_id" tf:"optional"`
-	// Databricks Lakeview Dashboard id
-	LakeviewDashboardId types.String `tfsdk:"lakeview_dashboard_id" tf:"optional"`
-	// Databricks Notebook runnableCommandId
-	NotebookCellRunId types.String `tfsdk:"notebook_cell_run_id" tf:"optional"`
-	// Databricks Notebook id
-	NotebookId types.String `tfsdk:"notebook_id" tf:"optional"`
-	// Databricks Query History statement ids.
-	StatementIds []types.String `tfsdk:"statement_ids" tf:"optional"`
-}
-
 type CreateAlert struct {
 	// Name of the alert.
 	Name types.String `tfsdk:"name" tf:""`
@@ -1439,6 +1416,9 @@ type ListQueriesResponse struct {
 type ListQueryHistoryRequest struct {
 	// A filter to limit query history results. This field is optional.
 	FilterBy *QueryFilter `tfsdk:"-"`
+	// Whether to include the query metrics with each query. Only use this for a
+	// small subset of queries (max_results). Defaults to false.
+	IncludeMetrics types.Bool `tfsdk:"-"`
 	// Limit the number of results returned in one page. Must be less than 1000
 	// and the default is 100.
 	MaxResults types.Int64 `tfsdk:"-"`
@@ -1652,11 +1632,11 @@ type QueryEditContent struct {
 }
 
 type QueryFilter struct {
-	// Filter by one or more property describing where the query was generated
-	ContextFilter *ContextFilter `tfsdk:"context_filter" tf:"optional"`
 	// A range filter for query submitted time. The time range must be <= 30
 	// days.
 	QueryStartTimeRange *TimeRange `tfsdk:"query_start_time_range" tf:"optional"`
+	// A list of statement IDs.
+	StatementIds []types.String `tfsdk:"statement_ids" tf:"optional"`
 
 	Statuses []types.String `tfsdk:"statuses" tf:"optional"`
 	// A list of user IDs who ran the queries.
@@ -1886,10 +1866,6 @@ type QuerySource struct {
 	JobManagedBy types.String `tfsdk:"job_managed_by" tf:"optional"`
 
 	NotebookId types.String `tfsdk:"notebook_id" tf:"optional"`
-	// Id associated with a DLT pipeline
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
-	// Id associated with a DLT update
-	PipelineUpdateId types.String `tfsdk:"pipeline_update_id" tf:"optional"`
 	// String provided by a customer that'll help them identify the query
 	QueryTags types.String `tfsdk:"query_tags" tf:"optional"`
 	// Id associated with a job run or execution

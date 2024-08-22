@@ -730,14 +730,12 @@ func wrapMissingClusterError(err error, id string) error {
 	// as is in the longer term, so that this keeps working.
 	if apiErr.ErrorCode == "INVALID_STATE" {
 		log.Printf("[WARN] assuming that cluster is removed on backend: %s", apiErr)
-		apiErr.StatusCode = 404
-		return apiErr
+		return databricks.ErrResourceDoesNotExist
 	}
 	// fix non-compliant error code
 	if strings.Contains(apiErr.Message,
 		fmt.Sprintf("Cluster %s does not exist", id)) {
-		apiErr.StatusCode = 404
-		return apiErr
+		return databricks.ErrResourceDoesNotExist
 	}
 	return err
 }

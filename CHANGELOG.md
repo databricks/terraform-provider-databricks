@@ -4,13 +4,12 @@
 
 ### New Features and Improvements
 
- * Automatically create `parent_path` folder if it doesn't exist ([#3778](https://github.com/databricks/terraform-provider-databricks/pull/3778)).
+ * Automatically create `parent_path` folder when creating `databricks_dashboard resource` if it doesn't exist ([#3778](https://github.com/databricks/terraform-provider-databricks/pull/3778)).
 
 
 ### Bug Fixes
 
  * Fixed logging for underlying Go SDK ([#3917](https://github.com/databricks/terraform-provider-databricks/pull/3917)).
- * OPENAPI_SHA check ([#3935](https://github.com/databricks/terraform-provider-databricks/pull/3935)).
  * Remove not necessary field in `databricks_job` schema ([#3907](https://github.com/databricks/terraform-provider-databricks/pull/3907)).
 
 
@@ -26,6 +25,8 @@
  * Change name with the aliases in codegen template ([#3936](https://github.com/databricks/terraform-provider-databricks/pull/3936)).
  * Update jd version from latest to 1.8.1 ([#3915](https://github.com/databricks/terraform-provider-databricks/pull/3915)).
  * Upgrade `staticcheck` to v0.5.1 to get Go 1.23 support ([#3931](https://github.com/databricks/terraform-provider-databricks/pull/3931)).
+ * OPENAPI_SHA check ([#3935](https://github.com/databricks/terraform-provider-databricks/pull/3935)).
+ * Use generic error for missing clusters ([#3938](https://github.com/databricks/terraform-provider-databricks/pull/3938))
 
 
 ### Exporter

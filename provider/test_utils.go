@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	pluginframeworkprovider "github.com/databricks/terraform-provider-databricks/internal/pluginframework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -163,7 +164,7 @@ func (pf providerFixture) configureProviderAndReturnClient_PluginFramework(t *te
 	for k, v := range pf.env {
 		t.Setenv(k, v)
 	}
-	p := GetDatabricksProviderPluginFramework()
+	p := pluginframeworkprovider.GetDatabricksProviderPluginFramework()
 	ctx := context.Background()
 	rawConfig := pf.rawConfigPluginFramework()
 	var providerSchemaResponse provider.SchemaResponse

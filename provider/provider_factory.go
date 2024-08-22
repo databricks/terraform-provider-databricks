@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	pluginframeworkprovider "github.com/databricks/terraform-provider-databricks/internal/pluginframework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
@@ -29,7 +30,7 @@ func GetProviderServer(ctx context.Context) (tfprotov6.ProviderServer, error) {
 		log.Fatal(err)
 	}
 
-	pluginFrameworkProvider := GetDatabricksProviderPluginFramework()
+	pluginFrameworkProvider := pluginframeworkprovider.GetDatabricksProviderPluginFramework()
 
 	providers := []func() tfprotov6.ProviderServer{
 		func() tfprotov6.ProviderServer {

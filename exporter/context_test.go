@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/sdkv2/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"

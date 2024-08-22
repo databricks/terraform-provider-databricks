@@ -22,7 +22,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/sdkv2/provider"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 

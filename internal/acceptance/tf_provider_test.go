@@ -3,7 +3,7 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/sdkv2/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )

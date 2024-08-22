@@ -8,7 +8,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/exporter"
-	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/common/provider"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 )

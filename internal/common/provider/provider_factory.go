@@ -5,6 +5,7 @@ import (
 	"log"
 
 	pluginframeworkprovider "github.com/databricks/terraform-provider-databricks/internal/pluginframework/provider"
+	sdkv2provider "github.com/databricks/terraform-provider-databricks/internal/sdkv2/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
@@ -20,7 +21,7 @@ import (
 // Protocol v6 providers to be served together. The function returns the multiplexed
 // ProviderServer, or an error if any part of the process fails.
 func GetProviderServer(ctx context.Context) (tfprotov6.ProviderServer, error) {
-	sdkPluginProvider := DatabricksProvider()
+	sdkPluginProvider := sdkv2provider.DatabricksProvider()
 
 	upgradedSdkPluginProvider, err := tf5to6server.UpgradeServer(
 		context.Background(),

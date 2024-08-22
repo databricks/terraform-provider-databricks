@@ -16,99 +16,144 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Budget configuration to be created.
-type Budget struct {
-	Alerts []BudgetAlert `tfsdk:"alerts" tf:"optional"`
-	// Optional end date of the budget.
-	EndDate types.String `tfsdk:"end_date" tf:"optional"`
-	// SQL-like filter expression with workspaceId, SKU and tag. Usage in your
-	// account that matches this expression will be counted in this budget.
-	//
-	// Supported properties on left-hand side of comparison: * `workspaceId` -
-	// the ID of the workspace * `sku` - SKU of the cluster, e.g.
-	// `STANDARD_ALL_PURPOSE_COMPUTE` * `tag.tagName`, `tag.'tag name'` - tag of
-	// the cluster
-	//
-	// Supported comparison operators: * `=` - equal * `!=` - not equal
-	//
-	// Supported logical operators: `AND`, `OR`.
-	//
-	// Examples: * `workspaceId=123 OR (sku='STANDARD_ALL_PURPOSE_COMPUTE' AND
-	// tag.'my tag'='my value')` * `workspaceId!=456` *
-	// `sku='STANDARD_ALL_PURPOSE_COMPUTE' OR sku='PREMIUM_ALL_PURPOSE_COMPUTE'`
-	// * `tag.name1='value1' AND tag.name2='value2'`
-	Filter types.String `tfsdk:"filter" tf:""`
-	// Human-readable name of the budget.
-	Name types.String `tfsdk:"name" tf:""`
-	// Period length in years, months, weeks and/or days. Examples: `1 month`,
-	// `30 days`, `1 year, 2 months, 1 week, 2 days`
-	Period types.String `tfsdk:"period" tf:""`
-	// Start date of the budget period calculation.
-	StartDate types.String `tfsdk:"start_date" tf:""`
-	// Target amount of the budget per period in USD.
-	TargetAmount types.String `tfsdk:"target_amount" tf:""`
+type ActionConfiguration struct {
+	// Databricks action configuration ID.
+	ActionConfigurationId types.String `tfsdk:"action_configuration_id" tf:"optional"`
+	// The type of the action.
+	ActionType types.String `tfsdk:"action_type" tf:"optional"`
+	// Target for the action. For example, an email address.
+	Target types.String `tfsdk:"target" tf:"optional"`
 }
 
-type BudgetAlert struct {
-	// List of email addresses to be notified when budget percentage is exceeded
-	// in the given period.
-	EmailNotifications []types.String `tfsdk:"email_notifications" tf:"optional"`
-	// Percentage of the target amount used in the currect period that will
-	// trigger a notification.
-	MinPercentage types.Int64 `tfsdk:"min_percentage" tf:"optional"`
+type AlertConfiguration struct {
+	// Configured actions for this alert. These define what happens when an
+	// alert enters a triggered state.
+	ActionConfigurations []ActionConfiguration `tfsdk:"action_configurations" tf:"optional"`
+	// Databricks alert configuration ID.
+	AlertConfigurationId types.String `tfsdk:"alert_configuration_id" tf:"optional"`
+	// The threshold for the budget alert to determine if it is in a triggered
+	// state. The number is evaluated based on `quantity_type`.
+	QuantityThreshold types.String `tfsdk:"quantity_threshold" tf:"optional"`
+	// The way to calculate cost for this budget alert. This is what
+	// `quantity_threshold` is measured in.
+	QuantityType types.String `tfsdk:"quantity_type" tf:"optional"`
+	// The time window of usage data for the budget.
+	TimePeriod types.String `tfsdk:"time_period" tf:"optional"`
+	// The evaluation method to determine when this budget alert is in a
+	// triggered state.
+	TriggerType types.String `tfsdk:"trigger_type" tf:"optional"`
 }
 
-// List of budgets.
-type BudgetList struct {
-	Budgets []BudgetWithStatus `tfsdk:"budgets" tf:"optional"`
+type BudgetConfiguration struct {
+	// Databricks account ID.
+	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	// Alerts to configure when this budget is in a triggered state. Budgets
+	// must have exactly one alert configuration.
+	AlertConfigurations []AlertConfiguration `tfsdk:"alert_configurations" tf:"optional"`
+	// Databricks budget configuration ID.
+	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id" tf:"optional"`
+	// Creation time of this budget configuration.
+	CreateTime types.Int64 `tfsdk:"create_time" tf:"optional"`
+	// Human-readable name of budget configuration. Max Length: 128
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// Configured filters for this budget. These are applied to your account's
+	// usage to limit the scope of what is considered for this budget. Leave
+	// empty to include all usage for this account. All provided filters must be
+	// matched for usage to be included.
+	Filter *BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	// Update time of this budget configuration.
+	UpdateTime types.Int64 `tfsdk:"update_time" tf:"optional"`
 }
 
-// Budget configuration with daily status.
-type BudgetWithStatus struct {
-	Alerts []BudgetAlert `tfsdk:"alerts" tf:"optional"`
-
-	BudgetId types.String `tfsdk:"budget_id" tf:"optional"`
-
-	CreationTime types.String `tfsdk:"creation_time" tf:"optional"`
-	// Optional end date of the budget.
-	EndDate types.String `tfsdk:"end_date" tf:"optional"`
-	// SQL-like filter expression with workspaceId, SKU and tag. Usage in your
-	// account that matches this expression will be counted in this budget.
-	//
-	// Supported properties on left-hand side of comparison: * `workspaceId` -
-	// the ID of the workspace * `sku` - SKU of the cluster, e.g.
-	// `STANDARD_ALL_PURPOSE_COMPUTE` * `tag.tagName`, `tag.'tag name'` - tag of
-	// the cluster
-	//
-	// Supported comparison operators: * `=` - equal * `!=` - not equal
-	//
-	// Supported logical operators: `AND`, `OR`.
-	//
-	// Examples: * `workspaceId=123 OR (sku='STANDARD_ALL_PURPOSE_COMPUTE' AND
-	// tag.'my tag'='my value')` * `workspaceId!=456` *
-	// `sku='STANDARD_ALL_PURPOSE_COMPUTE' OR sku='PREMIUM_ALL_PURPOSE_COMPUTE'`
-	// * `tag.name1='value1' AND tag.name2='value2'`
-	Filter types.String `tfsdk:"filter" tf:"optional"`
-	// Human-readable name of the budget.
-	Name types.String `tfsdk:"name" tf:"optional"`
-	// Period length in years, months, weeks and/or days. Examples: `1 month`,
-	// `30 days`, `1 year, 2 months, 1 week, 2 days`
-	Period types.String `tfsdk:"period" tf:"optional"`
-	// Start date of the budget period calculation.
-	StartDate types.String `tfsdk:"start_date" tf:"optional"`
-	// Amount used in the budget for each day (noncumulative).
-	StatusDaily []BudgetWithStatusStatusDailyItem `tfsdk:"status_daily" tf:"optional"`
-	// Target amount of the budget per period in USD.
-	TargetAmount types.String `tfsdk:"target_amount" tf:"optional"`
-
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+type BudgetConfigurationFilter struct {
+	// A list of tag keys and values that will limit the budget to usage that
+	// includes those specific custom tags. Tags are case-sensitive and should
+	// be entered exactly as they appear in your usage data.
+	Tags []BudgetConfigurationFilterTagClause `tfsdk:"tags" tf:"optional"`
+	// If provided, usage must match with the provided Databricks workspace IDs.
+	WorkspaceId *BudgetConfigurationFilterWorkspaceIdClause `tfsdk:"workspace_id" tf:"optional"`
 }
 
-type BudgetWithStatusStatusDailyItem struct {
-	// Amount used in this day in USD.
-	Amount types.String `tfsdk:"amount" tf:"optional"`
+type BudgetConfigurationFilterClause struct {
+	Operator types.String `tfsdk:"operator" tf:"optional"`
 
-	Date types.String `tfsdk:"date" tf:"optional"`
+	Values []types.String `tfsdk:"values" tf:"optional"`
+}
+
+type BudgetConfigurationFilterTagClause struct {
+	Key types.String `tfsdk:"key" tf:"optional"`
+
+	Value *BudgetConfigurationFilterClause `tfsdk:"value" tf:"optional"`
+}
+
+type BudgetConfigurationFilterWorkspaceIdClause struct {
+	Operator types.String `tfsdk:"operator" tf:"optional"`
+
+	Values []types.Int64 `tfsdk:"values" tf:"optional"`
+}
+
+type CreateBillingUsageDashboardRequest struct {
+	// Workspace level usage dashboard shows usage data for the specified
+	// workspace ID. Global level usage dashboard shows usage data for all
+	// workspaces in the account.
+	DashboardType types.String `tfsdk:"dashboard_type" tf:"optional"`
+	// The workspace ID of the workspace in which the usage dashboard is
+	// created.
+	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
+}
+
+type CreateBillingUsageDashboardResponse struct {
+	// The unique id of the usage dashboard.
+	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
+}
+
+type CreateBudgetConfigurationBudget struct {
+	// Databricks account ID.
+	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	// Alerts to configure when this budget is in a triggered state. Budgets
+	// must have exactly one alert configuration.
+	AlertConfigurations []CreateBudgetConfigurationBudgetAlertConfigurations `tfsdk:"alert_configurations" tf:"optional"`
+	// Human-readable name of budget configuration. Max Length: 128
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// Configured filters for this budget. These are applied to your account's
+	// usage to limit the scope of what is considered for this budget. Leave
+	// empty to include all usage for this account. All provided filters must be
+	// matched for usage to be included.
+	Filter *BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+}
+
+type CreateBudgetConfigurationBudgetActionConfigurations struct {
+	// The type of the action.
+	ActionType types.String `tfsdk:"action_type" tf:"optional"`
+	// Target for the action. For example, an email address.
+	Target types.String `tfsdk:"target" tf:"optional"`
+}
+
+type CreateBudgetConfigurationBudgetAlertConfigurations struct {
+	// Configured actions for this alert. These define what happens when an
+	// alert enters a triggered state.
+	ActionConfigurations []CreateBudgetConfigurationBudgetActionConfigurations `tfsdk:"action_configurations" tf:"optional"`
+	// The threshold for the budget alert to determine if it is in a triggered
+	// state. The number is evaluated based on `quantity_type`.
+	QuantityThreshold types.String `tfsdk:"quantity_threshold" tf:"optional"`
+	// The way to calculate cost for this budget alert. This is what
+	// `quantity_threshold` is measured in.
+	QuantityType types.String `tfsdk:"quantity_type" tf:"optional"`
+	// The time window of usage data for the budget.
+	TimePeriod types.String `tfsdk:"time_period" tf:"optional"`
+	// The evaluation method to determine when this budget alert is in a
+	// triggered state.
+	TriggerType types.String `tfsdk:"trigger_type" tf:"optional"`
+}
+
+type CreateBudgetConfigurationRequest struct {
+	// Properties of the new budget configuration.
+	Budget CreateBudgetConfigurationBudget `tfsdk:"budget" tf:""`
+}
+
+type CreateBudgetConfigurationResponse struct {
+	// The created budget configuration.
+	Budget *BudgetConfiguration `tfsdk:"budget" tf:"optional"`
 }
 
 type CreateLogDeliveryConfigurationParams struct {
@@ -184,12 +229,12 @@ type CreateLogDeliveryConfigurationParams struct {
 }
 
 // Delete budget
-type DeleteBudgetRequest struct {
-	// Budget ID
+type DeleteBudgetConfigurationRequest struct {
+	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
 }
 
-type DeleteResponse struct {
+type DeleteBudgetConfigurationResponse struct {
 }
 
 // Return billable usage logs
@@ -210,16 +255,53 @@ type DownloadResponse struct {
 	Contents io.ReadCloser `tfsdk:"-"`
 }
 
-// Get budget and its status
-type GetBudgetRequest struct {
-	// Budget ID
+// Get usage dashboard
+type GetBillingUsageDashboardRequest struct {
+	// Workspace level usage dashboard shows usage data for the specified
+	// workspace ID. Global level usage dashboard shows usage data for all
+	// workspaces in the account.
+	DashboardType types.String `tfsdk:"-"`
+	// The workspace ID of the workspace in which the usage dashboard is
+	// created.
+	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+type GetBillingUsageDashboardResponse struct {
+	// The unique id of the usage dashboard.
+	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
+	// The URL of the usage dashboard.
+	DashboardUrl types.String `tfsdk:"dashboard_url" tf:"optional"`
+}
+
+// Get budget
+type GetBudgetConfigurationRequest struct {
+	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
+}
+
+type GetBudgetConfigurationResponse struct {
+	Budget *BudgetConfiguration `tfsdk:"budget" tf:"optional"`
 }
 
 // Get log delivery configuration
 type GetLogDeliveryRequest struct {
 	// Databricks log delivery configuration ID
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
+}
+
+// Get all budgets
+type ListBudgetConfigurationsRequest struct {
+	// A page token received from a previous get all budget configurations call.
+	// This token can be used to retrieve the subsequent page. Requests first
+	// page if absent.
+	PageToken types.String `tfsdk:"-"`
+}
+
+type ListBudgetConfigurationsResponse struct {
+	Budgets []BudgetConfiguration `tfsdk:"budgets" tf:"optional"`
+	// Token which can be sent as `page_token` to retrieve the next page of
+	// results. If this field is omitted, there are no subsequent budgets.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
 // Get all log delivery configurations
@@ -342,6 +424,36 @@ type LogDeliveryStatus struct {
 type PatchStatusResponse struct {
 }
 
+type UpdateBudgetConfigurationBudget struct {
+	// Databricks account ID.
+	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	// Alerts to configure when this budget is in a triggered state. Budgets
+	// must have exactly one alert configuration.
+	AlertConfigurations []AlertConfiguration `tfsdk:"alert_configurations" tf:"optional"`
+	// Databricks budget configuration ID.
+	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id" tf:"optional"`
+	// Human-readable name of budget configuration. Max Length: 128
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// Configured filters for this budget. These are applied to your account's
+	// usage to limit the scope of what is considered for this budget. Leave
+	// empty to include all usage for this account. All provided filters must be
+	// matched for usage to be included.
+	Filter *BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+}
+
+type UpdateBudgetConfigurationRequest struct {
+	// The updated budget. This will overwrite the budget specified by the
+	// budget ID.
+	Budget UpdateBudgetConfigurationBudget `tfsdk:"budget" tf:""`
+	// The Databricks budget configuration ID.
+	BudgetId types.String `tfsdk:"-"`
+}
+
+type UpdateBudgetConfigurationResponse struct {
+	// The updated budget.
+	Budget *BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+}
+
 type UpdateLogDeliveryConfigurationStatusRequest struct {
 	// Databricks log delivery configuration ID
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
@@ -351,21 +463,6 @@ type UpdateLogDeliveryConfigurationStatusRequest struct {
 	// Deletion of a configuration is not supported, so disable a log delivery
 	// configuration that is no longer needed.
 	Status types.String `tfsdk:"status" tf:""`
-}
-
-type UpdateResponse struct {
-}
-
-type WrappedBudget struct {
-	// Budget configuration to be created.
-	Budget Budget `tfsdk:"budget" tf:""`
-	// Budget ID
-	BudgetId types.String `tfsdk:"-"`
-}
-
-type WrappedBudgetWithStatus struct {
-	// Budget configuration with daily status.
-	Budget BudgetWithStatus `tfsdk:"budget" tf:""`
 }
 
 type WrappedCreateLogDeliveryConfiguration struct {

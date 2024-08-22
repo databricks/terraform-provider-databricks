@@ -1136,7 +1136,7 @@ type CreatePolicy struct {
 	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user" tf:"optional"`
 	// Cluster Policy name requested by the user. This has to be unique. Length
 	// must be between 1 and 100 characters.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// Policy definition JSON document expressed in [Databricks Policy
 	// Definition Language]. The JSON document must be passed as a string and
 	// cannot be embedded in the requests.
@@ -1486,7 +1486,7 @@ type EditPolicy struct {
 	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user" tf:"optional"`
 	// Cluster Policy name requested by the user. This has to be unique. Length
 	// must be between 1 and 100 characters.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name" tf:"optional"`
 	// Policy definition JSON document expressed in [Databricks Policy
 	// Definition Language]. The JSON document must be passed as a string and
 	// cannot be embedded in the requests.
@@ -1658,7 +1658,7 @@ type GetClusterPolicyPermissionsRequest struct {
 
 // Get a cluster policy
 type GetClusterPolicyRequest struct {
-	// Canonical unique identifier for the cluster policy.
+	// Canonical unique identifier for the Cluster Policy.
 	PolicyId types.String `tfsdk:"-"`
 }
 
@@ -1809,7 +1809,11 @@ type GetInstancePoolRequest struct {
 
 // Get policy family information
 type GetPolicyFamilyRequest struct {
+	// The family ID about which to retrieve information.
 	PolicyFamilyId types.String `tfsdk:"-"`
+	// The version number for the family to fetch. Defaults to the latest
+	// version.
+	Version types.Int64 `tfsdk:"-"`
 }
 
 type GetSparkVersionsResponse struct {
@@ -2216,13 +2220,9 @@ type InstanceProfile struct {
 type Library struct {
 	// Specification of a CRAN library to be installed as part of the library
 	Cran *RCranLibrary `tfsdk:"cran" tf:"optional"`
-	// URI of the egg library to install. Supported URIs include Workspace
-	// paths, Unity Catalog Volumes paths, and S3 URIs. For example: `{ "egg":
-	// "/Workspace/path/to/library.egg" }`, `{ "egg" :
-	// "/Volumes/path/to/library.egg" }` or `{ "egg":
-	// "s3://my-bucket/library.egg" }`. If S3 is used, please make sure the
-	// cluster has read access on the library. You may need to launch the
-	// cluster with an IAM role to access the S3 URI.
+	// Deprecated. URI of the egg library to install. Installing Python egg
+	// files is deprecated and is not supported in Databricks Runtime 14.0 and
+	// above.
 	Egg types.String `tfsdk:"egg" tf:"optional"`
 	// URI of the JAR library to install. Supported URIs include Workspace
 	// paths, Unity Catalog Volumes paths, and S3 URIs. For example: `{ "jar":
@@ -2291,17 +2291,51 @@ type ListClusterPoliciesRequest struct {
 	SortOrder types.String `tfsdk:"-"`
 }
 
-// List all clusters
+type ListClustersFilterBy struct {
+	// The source of cluster creation.
+	ClusterSources []types.String `tfsdk:"cluster_sources" tf:"optional"`
+	// The current state of the clusters.
+	ClusterStates []types.String `tfsdk:"cluster_states" tf:"optional"`
+	// Whether the clusters are pinned or not.
+	IsPinned types.Bool `tfsdk:"is_pinned" tf:"optional"`
+	// The ID of the cluster policy used to create the cluster if applicable.
+	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+}
+
+// List clusters
 type ListClustersRequest struct {
-	// Filter clusters based on what type of client it can be used for. Could be
-	// either NOTEBOOKS or JOBS. No input for this field will get all clusters
-	// in the workspace without filtering on its supported client
-	CanUseClient types.String `tfsdk:"-"`
+	// Filters to apply to the list of clusters.
+	FilterBy *ListClustersFilterBy `tfsdk:"-"`
+	// Use this field to specify the maximum number of results to be returned by
+	// the server. The server may further constrain the maximum number of
+	// results returned in a single page.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Use next_page_token or prev_page_token returned from the previous request
+	// to list the next or previous page of clusters respectively.
+	PageToken types.String `tfsdk:"-"`
+	// Sort the list of clusters by a specific criteria.
+	SortBy *ListClustersSortBy `tfsdk:"-"`
 }
 
 type ListClustersResponse struct {
 	// <needs content added>
 	Clusters []ClusterDetails `tfsdk:"clusters" tf:"optional"`
+	// This field represents the pagination token to retrieve the next page of
+	// results. If the value is "", it means no further results for the request.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	// This field represents the pagination token to retrieve the previous page
+	// of results. If the value is "", it means no further results for the
+	// request.
+	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+}
+
+type ListClustersSortBy struct {
+	// The direction to sort by.
+	Direction types.String `tfsdk:"direction" tf:"optional"`
+	// The sorting criteria. By default, clusters are sorted by 3 columns from
+	// highest to lowest precedence: cluster state, pinned or unpinned, then
+	// cluster name.
+	Field types.String `tfsdk:"field" tf:"optional"`
 }
 
 type ListGlobalInitScriptsResponse struct {
@@ -2329,7 +2363,7 @@ type ListPoliciesResponse struct {
 
 // List policy families
 type ListPolicyFamiliesRequest struct {
-	// The max number of policy families to return.
+	// Maximum number of policy families to return.
 	MaxResults types.Int64 `tfsdk:"-"`
 	// A token that can be used to get the next page of results.
 	PageToken types.String `tfsdk:"-"`
@@ -2340,7 +2374,7 @@ type ListPolicyFamiliesResponse struct {
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// List of policy families.
-	PolicyFamilies []PolicyFamily `tfsdk:"policy_families" tf:""`
+	PolicyFamilies []PolicyFamily `tfsdk:"policy_families" tf:"optional"`
 }
 
 type LocalFileInfo struct {
@@ -2462,6 +2496,7 @@ type PinCluster struct {
 type PinClusterResponse struct {
 }
 
+// Describes a Cluster Policy entity.
 type Policy struct {
 	// Creation time. The timestamp (in millisecond) when this Cluster Policy
 	// was created.
@@ -2499,7 +2534,12 @@ type Policy struct {
 	//
 	// [Databricks Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
 	PolicyFamilyDefinitionOverrides types.String `tfsdk:"policy_family_definition_overrides" tf:"optional"`
-	// ID of the policy family.
+	// ID of the policy family. The cluster policy's policy definition inherits
+	// the policy family's policy definition.
+	//
+	// Cannot be used with `definition`. Use
+	// `policy_family_definition_overrides` instead to customize the policy
+	// definition.
 	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:"optional"`
 	// Canonical unique identifier for the Cluster Policy.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
@@ -2510,13 +2550,13 @@ type PolicyFamily struct {
 	// Definition Language].
 	//
 	// [Databricks Cluster Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
-	Definition types.String `tfsdk:"definition" tf:""`
+	Definition types.String `tfsdk:"definition" tf:"optional"`
 	// Human-readable description of the purpose of the policy family.
-	Description types.String `tfsdk:"description" tf:""`
+	Description types.String `tfsdk:"description" tf:"optional"`
 	// Name of the policy family.
-	Name types.String `tfsdk:"name" tf:""`
-	// ID of the policy family.
-	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:""`
+	Name types.String `tfsdk:"name" tf:"optional"`
+	// Unique identifier for the policy family.
+	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:"optional"`
 }
 
 type PythonPyPiLibrary struct {
@@ -2713,6 +2753,164 @@ type UnpinCluster struct {
 }
 
 type UnpinClusterResponse struct {
+}
+
+type UpdateCluster struct {
+	// The cluster to be updated.
+	Cluster *UpdateClusterResource `tfsdk:"cluster" tf:"optional"`
+	// ID of the cluster.
+	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	// Specifies which fields of the cluster will be updated. This is required
+	// in the POST request. The update mask should be supplied as a single
+	// string. To specify multiple fields, separate them with commas (no
+	// spaces). To delete a field from a cluster configuration, add it to the
+	// `update_mask` string but omit it from the `cluster` object.
+	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+}
+
+type UpdateClusterResource struct {
+	// Parameters needed in order to automatically scale clusters up and down
+	// based on load. Note: autoscaling works best with DB runtime versions 3.0
+	// or later.
+	Autoscale *AutoScale `tfsdk:"autoscale" tf:"optional"`
+	// Automatically terminates the cluster after it is inactive for this time
+	// in minutes. If not set, this cluster will not be automatically
+	// terminated. If specified, the threshold must be between 10 and 10000
+	// minutes. Users can also set this value to 0 to explicitly disable
+	// automatic termination.
+	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
+	// Attributes related to clusters running on Amazon Web Services. If not
+	// specified at cluster creation, a set of default values will be used.
+	AwsAttributes *AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	// Attributes related to clusters running on Microsoft Azure. If not
+	// specified at cluster creation, a set of default values will be used.
+	AzureAttributes *AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	// The configuration for delivering spark logs to a long-term storage
+	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
+	// one destination can be specified for one cluster. If the conf is given,
+	// the logs will be delivered to the destination every `5 mins`. The
+	// destination of driver logs is `$destination/$clusterId/driver`, while the
+	// destination of executor logs is `$destination/$clusterId/executor`.
+	ClusterLogConf *ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	// Cluster name requested by the user. This doesn't have to be unique. If
+	// not specified at creation, the cluster name will be an empty string.
+	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
+	// Additional tags for cluster resources. Databricks will tag all cluster
+	// resources (e.g., AWS instances and EBS volumes) with these tags in
+	// addition to `default_tags`. Notes:
+	//
+	// - Currently, Databricks allows at most 45 custom tags
+	//
+	// - Clusters can only reuse cloud resources if the resources' tags are a
+	// subset of the cluster tags
+	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	// Data security mode decides what data governance model to use when
+	// accessing data from a cluster.
+	//
+	// * `NONE`: No security isolation for multiple users sharing the cluster.
+	// Data governance features are not available in this mode. * `SINGLE_USER`:
+	// A secure cluster that can only be exclusively used by a single user
+	// specified in `single_user_name`. Most programming languages, cluster
+	// features and data governance features are available in this mode. *
+	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
+	// Cluster users are fully isolated so that they cannot see each other's
+	// data and credentials. Most data governance features are supported in this
+	// mode. But programming languages and cluster features might be limited.
+	//
+	// The following modes are deprecated starting with Databricks Runtime 15.0
+	// and will be removed for future Databricks Runtime versions:
+	//
+	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
+	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
+	// from legacy Passthrough on high concurrency clusters. *
+	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
+	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
+	// mode provides a way that doesn’t have UC nor passthrough enabled.
+	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
+
+	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
+	// The optional ID of the instance pool for the driver of the cluster
+	// belongs. The pool cluster uses the instance pool with id
+	// (instance_pool_id) if the driver pool is not assigned.
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id" tf:"optional"`
+	// The node type of the Spark driver. Note that this field is optional; if
+	// unset, the driver node type will be set as the same value as
+	// `node_type_id` defined above.
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	// Autoscaling Local Storage: when enabled, this cluster will dynamically
+	// acquire additional disk space when its Spark workers are running low on
+	// disk space. This feature requires specific AWS permissions to function
+	// correctly - refer to the User Guide for more details.
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	// Whether to enable LUKS on cluster VMs' local disks
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
+	// Attributes related to clusters running on Google Cloud Platform. If not
+	// specified at cluster creation, a set of default values will be used.
+	GcpAttributes *GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	// The configuration for storing init scripts. Any number of destinations
+	// can be specified. The scripts are executed sequentially in the order
+	// provided. If `cluster_log_conf` is specified, init script logs are sent
+	// to `<destination>/<cluster-ID>/init_scripts`.
+	InitScripts []InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	// The optional ID of the instance pool to which the cluster belongs.
+	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	// This field encodes, through a single value, the resources available to
+	// each of the Spark nodes in this cluster. For example, the Spark nodes can
+	// be provisioned and optimized for memory or compute intensive workloads. A
+	// list of available node types can be retrieved by using the
+	// :method:clusters/listNodeTypes API call.
+	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	// Number of worker nodes that this cluster should have. A cluster has one
+	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
+	// Spark nodes.
+	//
+	// Note: When reading the properties of a cluster, this field reflects the
+	// desired number of workers rather than the actual current number of
+	// workers. For instance, if a cluster is resized from 5 to 10 workers, this
+	// field will immediately be updated to reflect the target size of 10
+	// workers, whereas the workers listed in `spark_info` will gradually
+	// increase from 5 to 10 as the new nodes are provisioned.
+	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	// The ID of the cluster policy used to create the cluster if applicable.
+	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
+	// unspecified, the runtime engine is inferred from spark_version.
+	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
+	// Single user name if data_security_mode is `SINGLE_USER`
+	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
+	// An object containing a set of optional, user-specified Spark
+	// configuration key-value pairs. Users can also pass in a string of extra
+	// JVM options to the driver and the executors via
+	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
+	// respectively.
+	SparkConf map[string]types.String `tfsdk:"spark_conf" tf:"optional"`
+	// An object containing a set of optional, user-specified environment
+	// variable key-value pairs. Please note that key-value pair of the form
+	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
+	// driver and workers.
+	//
+	// In order to specify an additional set of `SPARK_DAEMON_JAVA_OPTS`, we
+	// recommend appending them to `$SPARK_DAEMON_JAVA_OPTS` as shown in the
+	// example below. This ensures that all default databricks managed
+	// environmental variables are included as well.
+	//
+	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
+	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
+	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
+	SparkEnvVars map[string]types.String `tfsdk:"spark_env_vars" tf:"optional"`
+	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
+	// available Spark versions can be retrieved by using the
+	// :method:clusters/sparkVersions API call.
+	SparkVersion types.String `tfsdk:"spark_version" tf:"optional"`
+	// SSH public key contents that will be added to each Spark node in this
+	// cluster. The corresponding private keys can be used to login with the
+	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
+	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
+
+	WorkloadType *WorkloadType `tfsdk:"workload_type" tf:"optional"`
+}
+
+type UpdateClusterResponse struct {
 }
 
 type UpdateResponse struct {

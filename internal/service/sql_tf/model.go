@@ -24,32 +24,79 @@ type AccessControl struct {
 }
 
 type Alert struct {
-	// Timestamp when the alert was created.
-	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
-	// Alert ID.
+	// Trigger conditions of the alert.
+	Condition *AlertCondition `tfsdk:"condition" tf:"optional"`
+	// The timestamp indicating when the alert was created.
+	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	// Custom body of alert notification, if it exists. See [here] for custom
+	// templating instructions.
+	//
+	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	// Custom subject of alert notification, if it exists. This can include
+	// email subject entries and Slack notification headers, for example. See
+	// [here] for custom templating instructions.
+	//
+	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	// The display name of the alert.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// UUID identifying the alert.
 	Id types.String `tfsdk:"id" tf:"optional"`
-	// Timestamp when the alert was last triggered.
-	LastTriggeredAt types.String `tfsdk:"last_triggered_at" tf:"optional"`
-	// Name of the alert.
-	Name types.String `tfsdk:"name" tf:"optional"`
-	// Alert configuration options.
-	Options *AlertOptions `tfsdk:"options" tf:"optional"`
-	// The identifier of the workspace folder containing the object.
-	Parent types.String `tfsdk:"parent" tf:"optional"`
-
-	Query *AlertQuery `tfsdk:"query" tf:"optional"`
-	// Number of seconds after being triggered before the alert rearms itself
-	// and can be triggered again. If `null`, alert will never be triggered
-	// again.
-	Rearm types.Int64 `tfsdk:"rearm" tf:"optional"`
-	// State of the alert. Possible values are: `unknown` (yet to be evaluated),
-	// `triggered` (evaluated and fulfilled trigger conditions), or `ok`
-	// (evaluated and did not fulfill trigger conditions).
+	// The workspace state of the alert. Used for tracking trashed status.
+	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	// The owner's username. This field is set to "Unavailable" if the user has
+	// been deleted.
+	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	// The workspace path of the folder containing the alert.
+	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	// UUID of the query attached to the alert.
+	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	// Number of seconds an alert must wait after being triggered to rearm
+	// itself. After rearming, it can be triggered again. If 0 or not specified,
+	// the alert will not be triggered again.
+	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger" tf:"optional"`
+	// Current state of the alert's trigger status. This field is set to UNKNOWN
+	// if the alert has not yet been evaluated or ran into an error during the
+	// last evaluation.
 	State types.String `tfsdk:"state" tf:"optional"`
-	// Timestamp when the alert was last updated.
-	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+	// Timestamp when the alert was last triggered, if the alert has been
+	// triggered before.
+	TriggerTime types.String `tfsdk:"trigger_time" tf:"optional"`
+	// The timestamp indicating when the alert was updated.
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+}
 
-	User *User `tfsdk:"user" tf:"optional"`
+type AlertCondition struct {
+	// Alert state if result is empty.
+	EmptyResultState types.String `tfsdk:"empty_result_state" tf:"optional"`
+	// Operator used for comparison in alert evaluation.
+	Op types.String `tfsdk:"op" tf:"optional"`
+	// Name of the column from the query result to use for comparison in alert
+	// evaluation.
+	Operand *AlertConditionOperand `tfsdk:"operand" tf:"optional"`
+	// Threshold value used for comparison in alert evaluation.
+	Threshold *AlertConditionThreshold `tfsdk:"threshold" tf:"optional"`
+}
+
+type AlertConditionOperand struct {
+	Column *AlertOperandColumn `tfsdk:"column" tf:"optional"`
+}
+
+type AlertConditionThreshold struct {
+	Value *AlertOperandValue `tfsdk:"value" tf:"optional"`
+}
+
+type AlertOperandColumn struct {
+	Name types.String `tfsdk:"name" tf:"optional"`
+}
+
+type AlertOperandValue struct {
+	BoolValue types.Bool `tfsdk:"bool_value" tf:"optional"`
+
+	DoubleValue types.Float64 `tfsdk:"double_value" tf:"optional"`
+
+	StringValue types.String `tfsdk:"string_value" tf:"optional"`
 }
 
 // Alert configuration options.
@@ -153,12 +200,21 @@ type Channel struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
-// Channel information for the SQL warehouse at the time of query execution
+// Details about a Channel.
 type ChannelInfo struct {
-	// DBSQL Version the channel is mapped to
+	// DB SQL Version the Channel is mapped to.
 	DbsqlVersion types.String `tfsdk:"dbsql_version" tf:"optional"`
 	// Name of the channel
 	Name types.String `tfsdk:"name" tf:"optional"`
+}
+
+// Client code that triggered the request
+type ClientCallContext struct {
+	// File name that contains the last line that triggered the request.
+	FileName *EncodedText `tfsdk:"file_name" tf:"optional"`
+	// Last line number within a file or notebook cell that triggered the
+	// request.
+	LineNumber types.Int64 `tfsdk:"line_number" tf:"optional"`
 }
 
 type ColumnInfo struct {
@@ -181,6 +237,29 @@ type ColumnInfo struct {
 	TypeText types.String `tfsdk:"type_text" tf:"optional"`
 }
 
+type ContextFilter struct {
+	// Databricks SQL Alert id
+	DbsqlAlertId types.String `tfsdk:"dbsql_alert_id" tf:"optional"`
+	// Databricks SQL Dashboard id
+	DbsqlDashboardId types.String `tfsdk:"dbsql_dashboard_id" tf:"optional"`
+	// Databricks SQL Query id
+	DbsqlQueryId types.String `tfsdk:"dbsql_query_id" tf:"optional"`
+	// Databricks SQL Query session id
+	DbsqlSessionId types.String `tfsdk:"dbsql_session_id" tf:"optional"`
+	// Databricks Workflows id
+	JobId types.String `tfsdk:"job_id" tf:"optional"`
+	// Databricks Workflows task run id
+	JobRunId types.String `tfsdk:"job_run_id" tf:"optional"`
+	// Databricks Lakeview Dashboard id
+	LakeviewDashboardId types.String `tfsdk:"lakeview_dashboard_id" tf:"optional"`
+	// Databricks Notebook runnableCommandId
+	NotebookCellRunId types.String `tfsdk:"notebook_cell_run_id" tf:"optional"`
+	// Databricks Notebook id
+	NotebookId types.String `tfsdk:"notebook_id" tf:"optional"`
+	// Databricks Query History statement ids.
+	StatementIds []types.String `tfsdk:"statement_ids" tf:"optional"`
+}
+
 type CreateAlert struct {
 	// Name of the alert.
 	Name types.String `tfsdk:"name" tf:""`
@@ -196,8 +275,69 @@ type CreateAlert struct {
 	Rearm types.Int64 `tfsdk:"rearm" tf:"optional"`
 }
 
+type CreateAlertRequest struct {
+	Alert *CreateAlertRequestAlert `tfsdk:"alert" tf:"optional"`
+}
+
+type CreateAlertRequestAlert struct {
+	// Trigger conditions of the alert.
+	Condition *AlertCondition `tfsdk:"condition" tf:"optional"`
+	// Custom body of alert notification, if it exists. See [here] for custom
+	// templating instructions.
+	//
+	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	// Custom subject of alert notification, if it exists. This can include
+	// email subject entries and Slack notification headers, for example. See
+	// [here] for custom templating instructions.
+	//
+	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	// The display name of the alert.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// The workspace path of the folder containing the alert.
+	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	// UUID of the query attached to the alert.
+	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	// Number of seconds an alert must wait after being triggered to rearm
+	// itself. After rearming, it can be triggered again. If 0 or not specified,
+	// the alert will not be triggered again.
+	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger" tf:"optional"`
+}
+
+type CreateQueryRequest struct {
+	Query *CreateQueryRequestQuery `tfsdk:"query" tf:"optional"`
+}
+
+type CreateQueryRequestQuery struct {
+	// Whether to apply a 1000 row limit to the query result.
+	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
+	// Name of the catalog where this query will be executed.
+	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	// General description that conveys additional information about this query
+	// such as usage notes.
+	Description types.String `tfsdk:"description" tf:"optional"`
+	// Display name of the query that appears in list views, widget headings,
+	// and on the query page.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// List of query parameter definitions.
+	Parameters []QueryParameter `tfsdk:"parameters" tf:"optional"`
+	// Workspace path of the workspace folder containing the object.
+	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	// Text of the query to be run.
+	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	// Sets the "Run as" role for the object.
+	RunAsMode types.String `tfsdk:"run_as_mode" tf:"optional"`
+	// Name of the schema where this query will be executed.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
+
+	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	// ID of the SQL warehouse attached to the query.
+	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+}
+
 // Add visualization to a query
-type CreateQueryVisualizationRequest struct {
+type CreateQueryVisualizationsLegacyRequest struct {
 	// A short description of this visualization. This is not displayed in the
 	// UI.
 	Description types.String `tfsdk:"description" tf:"optional"`
@@ -212,6 +352,27 @@ type CreateQueryVisualizationRequest struct {
 	QueryId types.String `tfsdk:"query_id" tf:""`
 	// The type of visualization: chart, table, pivot table, and so on.
 	Type types.String `tfsdk:"type" tf:""`
+}
+
+type CreateVisualizationRequest struct {
+	Visualization *CreateVisualizationRequestVisualization `tfsdk:"visualization" tf:"optional"`
+}
+
+type CreateVisualizationRequestVisualization struct {
+	// The display name of the visualization.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// UUID of the query that the visualization is attached to.
+	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	// The visualization options varies widely from one visualization type to
+	// the next and is unsupported. Databricks does not recommend modifying
+	// visualization options directly.
+	SerializedOptions types.String `tfsdk:"serialized_options" tf:"optional"`
+	// The visualization query plan varies widely from one visualization type to
+	// the next and is unsupported. Databricks does not recommend modifying the
+	// visualization query plan directly.
+	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan" tf:"optional"`
+	// The type of visualization: counter, table, funnel, and so on.
+	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
 type CreateWarehouseRequest struct {
@@ -414,8 +575,36 @@ type DataSource struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+type DateRange struct {
+	End types.String `tfsdk:"end" tf:""`
+
+	Start types.String `tfsdk:"start" tf:""`
+}
+
+type DateRangeValue struct {
+	// Manually specified date-time range value.
+	DateRangeValue *DateRange `tfsdk:"date_range_value" tf:"optional"`
+	// Dynamic date-time range value based on current date-time.
+	DynamicDateRangeValue types.String `tfsdk:"dynamic_date_range_value" tf:"optional"`
+	// Date-time precision to format the value into when the query is run.
+	// Defaults to DAY_PRECISION (YYYY-MM-DD).
+	Precision types.String `tfsdk:"precision" tf:"optional"`
+
+	StartDayOfWeek types.Int64 `tfsdk:"start_day_of_week" tf:"optional"`
+}
+
+type DateValue struct {
+	// Manually specified date-time value.
+	DateValue types.String `tfsdk:"date_value" tf:"optional"`
+	// Dynamic date-time value based on current date-time.
+	DynamicDateValue types.String `tfsdk:"dynamic_date_value" tf:"optional"`
+	// Date-time precision to format the value into when the query is run.
+	// Defaults to DAY_PRECISION (YYYY-MM-DD).
+	Precision types.String `tfsdk:"precision" tf:"optional"`
+}
+
 // Delete an alert
-type DeleteAlertRequest struct {
+type DeleteAlertsLegacyRequest struct {
 	AlertId types.String `tfsdk:"-"`
 }
 
@@ -431,17 +620,22 @@ type DeleteDashboardWidgetRequest struct {
 }
 
 // Delete a query
-type DeleteQueryRequest struct {
+type DeleteQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
 }
 
 // Remove visualization
-type DeleteQueryVisualizationRequest struct {
+type DeleteQueryVisualizationsLegacyRequest struct {
 	// Widget ID returned by :method:queryvizualisations/create
 	Id types.String `tfsdk:"-"`
 }
 
 type DeleteResponse struct {
+}
+
+// Remove a visualization
+type DeleteVisualizationRequest struct {
+	Id types.String `tfsdk:"-"`
 }
 
 // Delete a warehouse
@@ -532,6 +726,18 @@ type EditWarehouseRequest struct {
 }
 
 type EditWarehouseResponse struct {
+}
+
+// Represents an empty message, similar to google.protobuf.Empty, which is not
+// available in the firm right now.
+type Empty struct {
+}
+
+type EncodedText struct {
+	// Carry text data in different form.
+	Encoding types.String `tfsdk:"encoding" tf:"optional"`
+	// text data
+	Text types.String `tfsdk:"text" tf:"optional"`
 }
 
 type EndpointConfPair struct {
@@ -642,6 +848,15 @@ type EndpointTags struct {
 	CustomTags []EndpointTagPair `tfsdk:"custom_tags" tf:"optional"`
 }
 
+type EnumValue struct {
+	// List of valid query parameter values, newline delimited.
+	EnumOptions types.String `tfsdk:"enum_options" tf:"optional"`
+	// If specified, allows multiple values to be selected for this parameter.
+	MultiValuesOptions *MultiValuesOptions `tfsdk:"multi_values_options" tf:"optional"`
+	// List of selected query parameter values.
+	Values []types.String `tfsdk:"values" tf:"optional"`
+}
+
 type ExecuteStatementRequest struct {
 	// Applies the given byte limit to the statement's result size. Byte counts
 	// are based on internal data representations and might not match the final
@@ -655,32 +870,7 @@ type ExecuteStatementRequest struct {
 	//
 	// [`USE CATALOG`]: https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-catalog.html
 	Catalog types.String `tfsdk:"catalog" tf:"optional"`
-	// The fetch disposition provides two modes of fetching results: `INLINE`
-	// and `EXTERNAL_LINKS`.
-	//
-	// Statements executed with `INLINE` disposition will return result data
-	// inline, in `JSON_ARRAY` format, in a series of chunks. If a given
-	// statement produces a result set with a size larger than 25 MiB, that
-	// statement execution is aborted, and no result set will be available.
-	//
-	// **NOTE** Byte limits are computed based upon internal representations of
-	// the result set data, and might not match the sizes visible in JSON
-	// responses.
-	//
-	// Statements executed with `EXTERNAL_LINKS` disposition will return result
-	// data as external links: URLs that point to cloud storage internal to the
-	// workspace. Using `EXTERNAL_LINKS` disposition allows statements to
-	// generate arbitrarily sized result sets for fetching up to 100 GiB. The
-	// resulting links have two important properties:
-	//
-	// 1. They point to resources _external_ to the Databricks compute;
-	// therefore any associated authentication information (typically a personal
-	// access token, OAuth token, or similar) _must be removed_ when fetching
-	// from these links.
-	//
-	// 2. These are presigned URLs with a specific expiration, indicated in the
-	// response. The behavior when attempting to use an expired link is cloud
-	// specific.
+
 	Disposition types.String `tfsdk:"disposition" tf:"optional"`
 	// Statement execution supports three result formats: `JSON_ARRAY`
 	// (default), `ARROW_STREAM`, and `CSV`.
@@ -793,24 +983,6 @@ type ExecuteStatementRequest struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:""`
 }
 
-type ExecuteStatementResponse struct {
-	// The result manifest provides schema and metadata for the result set.
-	Manifest *ResultManifest `tfsdk:"manifest" tf:"optional"`
-	// Contains the result data of a single chunk when using `INLINE`
-	// disposition. When using `EXTERNAL_LINKS` disposition, the array
-	// `external_links` is used instead to provide presigned URLs to the result
-	// data in cloud storage. Exactly one of these alternatives is used. (While
-	// the `external_links` array prepares the API to return multiple links in a
-	// single response. Currently only a single link is returned.)
-	Result *ResultData `tfsdk:"result" tf:"optional"`
-	// The statement ID is returned upon successfully submitting a SQL
-	// statement, and is a required reference for all subsequent calls.
-	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
-	// The status response includes execution state and if relevant, error
-	// information.
-	Status *StatementStatus `tfsdk:"status" tf:"optional"`
-}
-
 type ExternalLink struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
@@ -821,10 +993,7 @@ type ExternalLink struct {
 	// becomes invalid, after which point a new `external_link` must be
 	// requested.
 	Expiration types.String `tfsdk:"expiration" tf:"optional"`
-	// A presigned URL pointing to a chunk of result data, hosted by an external
-	// service, with a short expiration time (<= 15 minutes). As this URL
-	// contains a temporary credential, it should be considered sensitive and
-	// the client should not expose this URL in a log.
+
 	ExternalLink types.String `tfsdk:"external_link" tf:"optional"`
 	// HTTP headers that must be included with a GET request to the
 	// `external_link`. Each header is provided as a key-value pair. Headers are
@@ -849,6 +1018,11 @@ type ExternalLink struct {
 
 // Get an alert
 type GetAlertRequest struct {
+	Id types.String `tfsdk:"-"`
+}
+
+// Get an alert
+type GetAlertsLegacyRequest struct {
 	AlertId types.String `tfsdk:"-"`
 }
 
@@ -866,8 +1040,13 @@ type GetDbsqlPermissionRequest struct {
 }
 
 // Get a query definition.
-type GetQueryRequest struct {
+type GetQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
+}
+
+// Get a query
+type GetQueryRequest struct {
+	Id types.String `tfsdk:"-"`
 }
 
 type GetResponse struct {
@@ -883,24 +1062,6 @@ type GetStatementRequest struct {
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
 	StatementId types.String `tfsdk:"-"`
-}
-
-type GetStatementResponse struct {
-	// The result manifest provides schema and metadata for the result set.
-	Manifest *ResultManifest `tfsdk:"manifest" tf:"optional"`
-	// Contains the result data of a single chunk when using `INLINE`
-	// disposition. When using `EXTERNAL_LINKS` disposition, the array
-	// `external_links` is used instead to provide presigned URLs to the result
-	// data in cloud storage. Exactly one of these alternatives is used. (While
-	// the `external_links` array prepares the API to return multiple links in a
-	// single response. Currently only a single link is returned.)
-	Result *ResultData `tfsdk:"result" tf:"optional"`
-	// The statement ID is returned upon successfully submitting a SQL
-	// statement, and is a required reference for all subsequent calls.
-	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
-	// The status response includes execution state and if relevant, error
-	// information.
-	Status *StatementStatus `tfsdk:"status" tf:"optional"`
 }
 
 // Get result chunk by index
@@ -1039,133 +1200,36 @@ type GetWorkspaceWarehouseConfigResponse struct {
 	SqlConfigurationParameters *RepeatedEndpointConfPairs `tfsdk:"sql_configuration_parameters" tf:"optional"`
 }
 
-// Get dashboard objects
-type ListDashboardsRequest struct {
-	// Name of dashboard attribute to order by.
-	Order types.String `tfsdk:"-"`
-	// Page number to retrieve.
-	Page types.Int64 `tfsdk:"-"`
-	// Number of dashboards to return per page.
-	PageSize types.Int64 `tfsdk:"-"`
-	// Full text search term.
-	Q types.String `tfsdk:"-"`
-}
-
-// Get a list of queries
-type ListQueriesRequest struct {
-	// Name of query attribute to order by. Default sort order is ascending.
-	// Append a dash (`-`) to order descending instead.
-	//
-	// - `name`: The name of the query.
-	//
-	// - `created_at`: The timestamp the query was created.
-	//
-	// - `runtime`: The time it took to run this query. This is blank for
-	// parameterized queries. A blank value is treated as the highest value for
-	// sorting.
-	//
-	// - `executed_at`: The timestamp when the query was last run.
-	//
-	// - `created_by`: The user name of the user that created the query.
-	Order types.String `tfsdk:"-"`
-	// Page number to retrieve.
-	Page types.Int64 `tfsdk:"-"`
-	// Number of queries to return per page.
-	PageSize types.Int64 `tfsdk:"-"`
-	// Full text search term
-	Q types.String `tfsdk:"-"`
-}
-
-type ListQueriesResponse struct {
-	// Whether there is another page of results.
-	HasNextPage types.Bool `tfsdk:"has_next_page" tf:"optional"`
-	// A token that can be used to get the next page of results.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
-
-	Res []QueryInfo `tfsdk:"res" tf:"optional"`
-}
-
-// List Queries
-type ListQueryHistoryRequest struct {
-	// A filter to limit query history results. This field is optional.
-	FilterBy *QueryFilter `tfsdk:"-"`
-	// Whether to include metrics about query.
-	IncludeMetrics types.Bool `tfsdk:"-"`
-	// Limit the number of results returned in one page. The default is 100.
-	MaxResults types.Int64 `tfsdk:"-"`
-	// A token that can be used to get the next page of results. The token can
-	// contains characters that need to be encoded before using it in a URL. For
-	// example, the character '+' needs to be replaced by %2B.
-	PageToken types.String `tfsdk:"-"`
-}
-
-type ListResponse struct {
-	// The total number of dashboards.
-	Count types.Int64 `tfsdk:"count" tf:"optional"`
-	// The current page being displayed.
-	Page types.Int64 `tfsdk:"page" tf:"optional"`
-	// The number of dashboards per page.
-	PageSize types.Int64 `tfsdk:"page_size" tf:"optional"`
-	// List of dashboards returned.
-	Results []Dashboard `tfsdk:"results" tf:"optional"`
-}
-
-// List warehouses
-type ListWarehousesRequest struct {
-	// Service Principal which will be used to fetch the list of warehouses. If
-	// not specified, the user from the session header is used.
-	RunAsUserId types.Int64 `tfsdk:"-"`
-}
-
-type ListWarehousesResponse struct {
-	// A list of warehouses and their configurations.
-	Warehouses []EndpointInfo `tfsdk:"warehouses" tf:"optional"`
-}
-
-// If specified, allows multiple values to be selected for this parameter. Only
-// applies to dropdown list and query-based dropdown list parameters.
-type MultiValuesOptions struct {
-	// Character that prefixes each selected parameter value.
-	Prefix types.String `tfsdk:"prefix" tf:"optional"`
-	// Character that separates each selected parameter value. Defaults to a
-	// comma.
-	Separator types.String `tfsdk:"separator" tf:"optional"`
-	// Character that suffixes each selected parameter value.
-	Suffix types.String `tfsdk:"suffix" tf:"optional"`
-}
-
-type OdbcParams struct {
-	Hostname types.String `tfsdk:"hostname" tf:"optional"`
-
-	Path types.String `tfsdk:"path" tf:"optional"`
-
-	Port types.Int64 `tfsdk:"port" tf:"optional"`
-
-	Protocol types.String `tfsdk:"protocol" tf:"optional"`
-}
-
-type Parameter struct {
-	// List of valid parameter values, newline delimited. Only applies for
-	// dropdown list parameters.
-	EnumOptions types.String `tfsdk:"enumOptions" tf:"optional"`
-	// If specified, allows multiple values to be selected for this parameter.
-	// Only applies to dropdown list and query-based dropdown list parameters.
-	MultiValuesOptions *MultiValuesOptions `tfsdk:"multiValuesOptions" tf:"optional"`
-	// The literal parameter marker that appears between double curly braces in
-	// the query text.
+type LegacyAlert struct {
+	// Timestamp when the alert was created.
+	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
+	// Alert ID.
+	Id types.String `tfsdk:"id" tf:"optional"`
+	// Timestamp when the alert was last triggered.
+	LastTriggeredAt types.String `tfsdk:"last_triggered_at" tf:"optional"`
+	// Name of the alert.
 	Name types.String `tfsdk:"name" tf:"optional"`
-	// The UUID of the query that provides the parameter values. Only applies
-	// for query-based dropdown list parameters.
-	QueryId types.String `tfsdk:"queryId" tf:"optional"`
-	// The text displayed in a parameter picking widget.
-	Title types.String `tfsdk:"title" tf:"optional"`
-	// Parameters can have several different types.
-	Type types.String `tfsdk:"type" tf:"optional"`
-	// The default value for this parameter.
-	Value any `tfsdk:"value" tf:"optional"`
+	// Alert configuration options.
+	Options *AlertOptions `tfsdk:"options" tf:"optional"`
+	// The identifier of the workspace folder containing the object.
+	Parent types.String `tfsdk:"parent" tf:"optional"`
+
+	Query *AlertQuery `tfsdk:"query" tf:"optional"`
+	// Number of seconds after being triggered before the alert rearms itself
+	// and can be triggered again. If `null`, alert will never be triggered
+	// again.
+	Rearm types.Int64 `tfsdk:"rearm" tf:"optional"`
+	// State of the alert. Possible values are: `unknown` (yet to be evaluated),
+	// `triggered` (evaluated and fulfilled trigger conditions), or `ok`
+	// (evaluated and did not fulfill trigger conditions).
+	State types.String `tfsdk:"state" tf:"optional"`
+	// Timestamp when the alert was last updated.
+	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+
+	User *User `tfsdk:"user" tf:"optional"`
 }
 
-type Query struct {
+type LegacyQuery struct {
 	// Describes whether the authenticated user is allowed to edit the
 	// definition of this query.
 	CanEdit types.Bool `tfsdk:"can_edit" tf:"optional"`
@@ -1233,7 +1297,330 @@ type Query struct {
 	// The ID of the user who owns the query.
 	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
 
-	Visualizations []Visualization `tfsdk:"visualizations" tf:"optional"`
+	Visualizations []LegacyVisualization `tfsdk:"visualizations" tf:"optional"`
+}
+
+// The visualization description API changes frequently and is unsupported. You
+// can duplicate a visualization by copying description objects received _from
+// the API_ and then using them to create a new one with a POST request to the
+// same endpoint. Databricks does not recommend constructing ad-hoc
+// visualizations entirely in JSON.
+type LegacyVisualization struct {
+	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
+	// A short description of this visualization. This is not displayed in the
+	// UI.
+	Description types.String `tfsdk:"description" tf:"optional"`
+	// The UUID for this visualization.
+	Id types.String `tfsdk:"id" tf:"optional"`
+	// The name of the visualization that appears on dashboards and the query
+	// screen.
+	Name types.String `tfsdk:"name" tf:"optional"`
+	// The options object varies widely from one visualization type to the next
+	// and is unsupported. Databricks does not recommend modifying visualization
+	// settings in JSON.
+	Options any `tfsdk:"options" tf:"optional"`
+
+	Query *LegacyQuery `tfsdk:"query" tf:"optional"`
+	// The type of visualization: chart, table, pivot table, and so on.
+	Type types.String `tfsdk:"type" tf:"optional"`
+
+	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+}
+
+// List alerts
+type ListAlertsRequest struct {
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+type ListAlertsResponse struct {
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+
+	Results []ListAlertsResponseAlert `tfsdk:"results" tf:"optional"`
+}
+
+type ListAlertsResponseAlert struct {
+	// Trigger conditions of the alert.
+	Condition *AlertCondition `tfsdk:"condition" tf:"optional"`
+	// The timestamp indicating when the alert was created.
+	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	// Custom body of alert notification, if it exists. See [here] for custom
+	// templating instructions.
+	//
+	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	// Custom subject of alert notification, if it exists. This can include
+	// email subject entries and Slack notification headers, for example. See
+	// [here] for custom templating instructions.
+	//
+	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	// The display name of the alert.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// UUID identifying the alert.
+	Id types.String `tfsdk:"id" tf:"optional"`
+	// The workspace state of the alert. Used for tracking trashed status.
+	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	// The owner's username. This field is set to "Unavailable" if the user has
+	// been deleted.
+	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	// UUID of the query attached to the alert.
+	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	// Number of seconds an alert must wait after being triggered to rearm
+	// itself. After rearming, it can be triggered again. If 0 or not specified,
+	// the alert will not be triggered again.
+	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger" tf:"optional"`
+	// Current state of the alert's trigger status. This field is set to UNKNOWN
+	// if the alert has not yet been evaluated or ran into an error during the
+	// last evaluation.
+	State types.String `tfsdk:"state" tf:"optional"`
+	// Timestamp when the alert was last triggered, if the alert has been
+	// triggered before.
+	TriggerTime types.String `tfsdk:"trigger_time" tf:"optional"`
+	// The timestamp indicating when the alert was updated.
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+}
+
+// Get dashboard objects
+type ListDashboardsRequest struct {
+	// Name of dashboard attribute to order by.
+	Order types.String `tfsdk:"-"`
+	// Page number to retrieve.
+	Page types.Int64 `tfsdk:"-"`
+	// Number of dashboards to return per page.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Full text search term.
+	Q types.String `tfsdk:"-"`
+}
+
+// Get a list of queries
+type ListQueriesLegacyRequest struct {
+	// Name of query attribute to order by. Default sort order is ascending.
+	// Append a dash (`-`) to order descending instead.
+	//
+	// - `name`: The name of the query.
+	//
+	// - `created_at`: The timestamp the query was created.
+	//
+	// - `runtime`: The time it took to run this query. This is blank for
+	// parameterized queries. A blank value is treated as the highest value for
+	// sorting.
+	//
+	// - `executed_at`: The timestamp when the query was last run.
+	//
+	// - `created_by`: The user name of the user that created the query.
+	Order types.String `tfsdk:"-"`
+	// Page number to retrieve.
+	Page types.Int64 `tfsdk:"-"`
+	// Number of queries to return per page.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Full text search term
+	Q types.String `tfsdk:"-"`
+}
+
+// List queries
+type ListQueriesRequest struct {
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+type ListQueriesResponse struct {
+	// Whether there is another page of results.
+	HasNextPage types.Bool `tfsdk:"has_next_page" tf:"optional"`
+	// A token that can be used to get the next page of results.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+
+	Res []QueryInfo `tfsdk:"res" tf:"optional"`
+}
+
+// List Queries
+type ListQueryHistoryRequest struct {
+	// A filter to limit query history results. This field is optional.
+	FilterBy *QueryFilter `tfsdk:"-"`
+	// Limit the number of results returned in one page. Must be less than 1000
+	// and the default is 100.
+	MaxResults types.Int64 `tfsdk:"-"`
+	// A token that can be used to get the next page of results. The token can
+	// contains characters that need to be encoded before using it in a URL. For
+	// example, the character '+' needs to be replaced by %2B. This field is
+	// optional.
+	PageToken types.String `tfsdk:"-"`
+}
+
+type ListQueryObjectsResponse struct {
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+
+	Results []ListQueryObjectsResponseQuery `tfsdk:"results" tf:"optional"`
+}
+
+type ListQueryObjectsResponseQuery struct {
+	// Whether to apply a 1000 row limit to the query result.
+	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
+	// Name of the catalog where this query will be executed.
+	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	// Timestamp when this query was created.
+	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	// General description that conveys additional information about this query
+	// such as usage notes.
+	Description types.String `tfsdk:"description" tf:"optional"`
+	// Display name of the query that appears in list views, widget headings,
+	// and on the query page.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// UUID identifying the query.
+	Id types.String `tfsdk:"id" tf:"optional"`
+	// Username of the user who last saved changes to this query.
+	LastModifierUserName types.String `tfsdk:"last_modifier_user_name" tf:"optional"`
+	// Indicates whether the query is trashed.
+	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	// Username of the user that owns the query.
+	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	// List of query parameter definitions.
+	Parameters []QueryParameter `tfsdk:"parameters" tf:"optional"`
+	// Text of the query to be run.
+	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	// Sets the "Run as" role for the object.
+	RunAsMode types.String `tfsdk:"run_as_mode" tf:"optional"`
+	// Name of the schema where this query will be executed.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
+
+	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	// Timestamp when this query was last updated.
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	// ID of the SQL warehouse attached to the query.
+	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+}
+
+type ListResponse struct {
+	// The total number of dashboards.
+	Count types.Int64 `tfsdk:"count" tf:"optional"`
+	// The current page being displayed.
+	Page types.Int64 `tfsdk:"page" tf:"optional"`
+	// The number of dashboards per page.
+	PageSize types.Int64 `tfsdk:"page_size" tf:"optional"`
+	// List of dashboards returned.
+	Results []Dashboard `tfsdk:"results" tf:"optional"`
+}
+
+// List visualizations on a query
+type ListVisualizationsForQueryRequest struct {
+	Id types.String `tfsdk:"-"`
+
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+type ListVisualizationsForQueryResponse struct {
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+
+	Results []Visualization `tfsdk:"results" tf:"optional"`
+}
+
+// List warehouses
+type ListWarehousesRequest struct {
+	// Service Principal which will be used to fetch the list of warehouses. If
+	// not specified, the user from the session header is used.
+	RunAsUserId types.Int64 `tfsdk:"-"`
+}
+
+type ListWarehousesResponse struct {
+	// A list of warehouses and their configurations.
+	Warehouses []EndpointInfo `tfsdk:"warehouses" tf:"optional"`
+}
+
+type MultiValuesOptions struct {
+	// Character that prefixes each selected parameter value.
+	Prefix types.String `tfsdk:"prefix" tf:"optional"`
+	// Character that separates each selected parameter value. Defaults to a
+	// comma.
+	Separator types.String `tfsdk:"separator" tf:"optional"`
+	// Character that suffixes each selected parameter value.
+	Suffix types.String `tfsdk:"suffix" tf:"optional"`
+}
+
+type NumericValue struct {
+	Value types.Float64 `tfsdk:"value" tf:"optional"`
+}
+
+type OdbcParams struct {
+	Hostname types.String `tfsdk:"hostname" tf:"optional"`
+
+	Path types.String `tfsdk:"path" tf:"optional"`
+
+	Port types.Int64 `tfsdk:"port" tf:"optional"`
+
+	Protocol types.String `tfsdk:"protocol" tf:"optional"`
+}
+
+type Parameter struct {
+	// List of valid parameter values, newline delimited. Only applies for
+	// dropdown list parameters.
+	EnumOptions types.String `tfsdk:"enumOptions" tf:"optional"`
+	// If specified, allows multiple values to be selected for this parameter.
+	// Only applies to dropdown list and query-based dropdown list parameters.
+	MultiValuesOptions *MultiValuesOptions `tfsdk:"multiValuesOptions" tf:"optional"`
+	// The literal parameter marker that appears between double curly braces in
+	// the query text.
+	Name types.String `tfsdk:"name" tf:"optional"`
+	// The UUID of the query that provides the parameter values. Only applies
+	// for query-based dropdown list parameters.
+	QueryId types.String `tfsdk:"queryId" tf:"optional"`
+	// The text displayed in a parameter picking widget.
+	Title types.String `tfsdk:"title" tf:"optional"`
+	// Parameters can have several different types.
+	Type types.String `tfsdk:"type" tf:"optional"`
+	// The default value for this parameter.
+	Value any `tfsdk:"value" tf:"optional"`
+}
+
+type Query struct {
+	// Whether to apply a 1000 row limit to the query result.
+	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
+	// Name of the catalog where this query will be executed.
+	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	// Timestamp when this query was created.
+	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	// General description that conveys additional information about this query
+	// such as usage notes.
+	Description types.String `tfsdk:"description" tf:"optional"`
+	// Display name of the query that appears in list views, widget headings,
+	// and on the query page.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// UUID identifying the query.
+	Id types.String `tfsdk:"id" tf:"optional"`
+	// Username of the user who last saved changes to this query.
+	LastModifierUserName types.String `tfsdk:"last_modifier_user_name" tf:"optional"`
+	// Indicates whether the query is trashed.
+	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	// Username of the user that owns the query.
+	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	// List of query parameter definitions.
+	Parameters []QueryParameter `tfsdk:"parameters" tf:"optional"`
+	// Workspace path of the workspace folder containing the object.
+	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	// Text of the query to be run.
+	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	// Sets the "Run as" role for the object.
+	RunAsMode types.String `tfsdk:"run_as_mode" tf:"optional"`
+	// Name of the schema where this query will be executed.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
+
+	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	// Timestamp when this query was last updated.
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	// ID of the SQL warehouse attached to the query.
+	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+}
+
+type QueryBackedValue struct {
+	// If specified, allows multiple values to be selected for this parameter.
+	MultiValuesOptions *MultiValuesOptions `tfsdk:"multi_values_options" tf:"optional"`
+	// UUID of the query that provides the parameter values.
+	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	// List of selected query parameter values.
+	Values []types.String `tfsdk:"values" tf:"optional"`
 }
 
 type QueryEditContent struct {
@@ -1264,11 +1651,12 @@ type QueryEditContent struct {
 	Tags []types.String `tfsdk:"tags" tf:"optional"`
 }
 
-// A filter to limit query history results. This field is optional.
 type QueryFilter struct {
+	// Filter by one or more property describing where the query was generated
+	ContextFilter *ContextFilter `tfsdk:"context_filter" tf:"optional"`
+	// A range filter for query submitted time. The time range must be <= 30
+	// days.
 	QueryStartTimeRange *TimeRange `tfsdk:"query_start_time_range" tf:"optional"`
-	// A list of statement IDs.
-	StatementIds []types.String `tfsdk:"statement_ids" tf:"optional"`
 
 	Statuses []types.String `tfsdk:"statuses" tf:"optional"`
 	// A list of user IDs who ran the queries.
@@ -1278,9 +1666,7 @@ type QueryFilter struct {
 }
 
 type QueryInfo struct {
-	// Reserved for internal use.
-	CanSubscribeToLiveQuery types.Bool `tfsdk:"canSubscribeToLiveQuery" tf:"optional"`
-	// Channel information for the SQL warehouse at the time of query execution
+	// SQL Warehouse channel information at the time of query execution
 	ChannelUsed *ChannelInfo `tfsdk:"channel_used" tf:"optional"`
 	// Total execution time of the statement ( excluding result fetch time ).
 	Duration types.Int64 `tfsdk:"duration" tf:"optional"`
@@ -1307,20 +1693,23 @@ type QueryInfo struct {
 	QueryEndTimeMs types.Int64 `tfsdk:"query_end_time_ms" tf:"optional"`
 	// The query ID.
 	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+
+	QuerySource *QuerySource `tfsdk:"query_source" tf:"optional"`
 	// The time the query started.
 	QueryStartTimeMs types.Int64 `tfsdk:"query_start_time_ms" tf:"optional"`
 	// The text of the query.
 	QueryText types.String `tfsdk:"query_text" tf:"optional"`
 	// The number of results returned by the query.
 	RowsProduced types.Int64 `tfsdk:"rows_produced" tf:"optional"`
-	// URL to the query plan.
+	// URL to the Spark UI query plan.
 	SparkUiUrl types.String `tfsdk:"spark_ui_url" tf:"optional"`
 	// Type of statement for this query
 	StatementType types.String `tfsdk:"statement_type" tf:"optional"`
-	// Query status with one the following values: * `QUEUED`: Query has been
-	// received and queued. * `RUNNING`: Query has started. * `CANCELED`: Query
-	// has been cancelled by the user. * `FAILED`: Query has failed. *
-	// `FINISHED`: Query has completed.
+	// Query status with one the following values:
+	//
+	// - `QUEUED`: Query has been received and queued. - `RUNNING`: Query has
+	// started. - `CANCELED`: Query has been cancelled by the user. - `FAILED`:
+	// Query has failed. - `FINISHED`: Query has completed.
 	Status types.String `tfsdk:"status" tf:"optional"`
 	// The ID of the user who ran the query.
 	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
@@ -1338,17 +1727,16 @@ type QueryList struct {
 	// The number of queries per page.
 	PageSize types.Int64 `tfsdk:"page_size" tf:"optional"`
 	// List of queries returned.
-	Results []Query `tfsdk:"results" tf:"optional"`
+	Results []LegacyQuery `tfsdk:"results" tf:"optional"`
 }
 
-// Metrics about query execution.
+// A query metric that encapsulates a set of measurements for a single query.
+// Metrics come from the driver and are stored in the history service database.
 type QueryMetrics struct {
 	// Time spent loading metadata and optimizing the query, in milliseconds.
 	CompilationTimeMs types.Int64 `tfsdk:"compilation_time_ms" tf:"optional"`
 	// Time spent executing the query, in milliseconds.
 	ExecutionTimeMs types.Int64 `tfsdk:"execution_time_ms" tf:"optional"`
-	// Reserved for internal use.
-	MetadataTimeMs types.Int64 `tfsdk:"metadata_time_ms" tf:"optional"`
 	// Total amount of data sent over the network between executor nodes during
 	// shuffle, in bytes.
 	NetworkSentBytes types.Int64 `tfsdk:"network_sent_bytes" tf:"optional"`
@@ -1359,8 +1747,6 @@ type QueryMetrics struct {
 	// Total execution time for all individual Photon query engine tasks in the
 	// query, in milliseconds.
 	PhotonTotalTimeMs types.Int64 `tfsdk:"photon_total_time_ms" tf:"optional"`
-	// Reserved for internal use.
-	PlanningTimeMs types.Int64 `tfsdk:"planning_time_ms" tf:"optional"`
 	// Timestamp of when the query was enqueued waiting for a cluster to be
 	// provisioned for the warehouse. This field is optional and will not appear
 	// if the query skipped the provisioning queue.
@@ -1372,13 +1758,11 @@ type QueryMetrics struct {
 	// Timestamp of when the underlying compute started compilation of the
 	// query.
 	QueryCompilationStartTimestamp types.Int64 `tfsdk:"query_compilation_start_timestamp" tf:"optional"`
-	// Reserved for internal use.
-	QueryExecutionTimeMs types.Int64 `tfsdk:"query_execution_time_ms" tf:"optional"`
 	// Total size of data read by the query, in bytes.
 	ReadBytes types.Int64 `tfsdk:"read_bytes" tf:"optional"`
 	// Size of persistent data read from the cache, in bytes.
 	ReadCacheBytes types.Int64 `tfsdk:"read_cache_bytes" tf:"optional"`
-	// Number of files read after pruning.
+	// Number of files read after pruning
 	ReadFilesCount types.Int64 `tfsdk:"read_files_count" tf:"optional"`
 	// Number of partitions read after pruning.
 	ReadPartitionsCount types.Int64 `tfsdk:"read_partitions_count" tf:"optional"`
@@ -1388,7 +1772,7 @@ type QueryMetrics struct {
 	// Time spent fetching the query results after the execution finished, in
 	// milliseconds.
 	ResultFetchTimeMs types.Int64 `tfsdk:"result_fetch_time_ms" tf:"optional"`
-	// true if the query result was fetched from cache, false otherwise.
+	// `true` if the query result was fetched from cache, `false` otherwise.
 	ResultFromCache types.Bool `tfsdk:"result_from_cache" tf:"optional"`
 	// Total number of rows returned by the query.
 	RowsProducedCount types.Int64 `tfsdk:"rows_produced_count" tf:"optional"`
@@ -1420,6 +1804,28 @@ type QueryOptions struct {
 	Schema types.String `tfsdk:"schema" tf:"optional"`
 }
 
+type QueryParameter struct {
+	// Date-range query parameter value. Can only specify one of
+	// `dynamic_date_range_value` or `date_range_value`.
+	DateRangeValue *DateRangeValue `tfsdk:"date_range_value" tf:"optional"`
+	// Date query parameter value. Can only specify one of `dynamic_date_value`
+	// or `date_value`.
+	DateValue *DateValue `tfsdk:"date_value" tf:"optional"`
+	// Dropdown query parameter value.
+	EnumValue *EnumValue `tfsdk:"enum_value" tf:"optional"`
+	// Literal parameter marker that appears between double curly braces in the
+	// query text.
+	Name types.String `tfsdk:"name" tf:"optional"`
+	// Numeric query parameter value.
+	NumericValue *NumericValue `tfsdk:"numeric_value" tf:"optional"`
+	// Query-based dropdown query parameter value.
+	QueryBackedValue *QueryBackedValue `tfsdk:"query_backed_value" tf:"optional"`
+	// Text query parameter value.
+	TextValue *TextValue `tfsdk:"text_value" tf:"optional"`
+	// Text displayed in the user-facing parameter widget in the UI.
+	Title types.String `tfsdk:"title" tf:"optional"`
+}
+
 type QueryPostContent struct {
 	// Data source ID maps to the ID of the data source used by the resource and
 	// is distinct from the warehouse ID. [Learn more]
@@ -1448,6 +1854,66 @@ type QueryPostContent struct {
 	Tags []types.String `tfsdk:"tags" tf:"optional"`
 }
 
+type QuerySource struct {
+	// UUID
+	AlertId types.String `tfsdk:"alert_id" tf:"optional"`
+	// Client code that triggered the request
+	ClientCallContext *ClientCallContext `tfsdk:"client_call_context" tf:"optional"`
+	// Id associated with a notebook cell
+	CommandId types.String `tfsdk:"command_id" tf:"optional"`
+	// Id associated with a notebook run or execution
+	CommandRunId types.String `tfsdk:"command_run_id" tf:"optional"`
+	// UUID
+	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
+	// UUID for Lakeview Dashboards, separate from DBSQL Dashboards
+	// (dashboard_id)
+	DashboardV3Id types.String `tfsdk:"dashboard_v3_id" tf:"optional"`
+
+	DriverInfo *QuerySourceDriverInfo `tfsdk:"driver_info" tf:"optional"`
+	// Spark service that received and processed the query
+	EntryPoint types.String `tfsdk:"entry_point" tf:"optional"`
+	// UUID for Genie space
+	GenieSpaceId types.String `tfsdk:"genie_space_id" tf:"optional"`
+
+	IsCloudFetch types.Bool `tfsdk:"is_cloud_fetch" tf:"optional"`
+
+	IsDatabricksSqlExecApi types.Bool `tfsdk:"is_databricks_sql_exec_api" tf:"optional"`
+
+	JobId types.String `tfsdk:"job_id" tf:"optional"`
+	// With background compute, jobs can be managed by different internal teams.
+	// When not specified, not a background compute job When specified and the
+	// value is not JOBS, it is a background compute job
+	JobManagedBy types.String `tfsdk:"job_managed_by" tf:"optional"`
+
+	NotebookId types.String `tfsdk:"notebook_id" tf:"optional"`
+	// Id associated with a DLT pipeline
+	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	// Id associated with a DLT update
+	PipelineUpdateId types.String `tfsdk:"pipeline_update_id" tf:"optional"`
+	// String provided by a customer that'll help them identify the query
+	QueryTags types.String `tfsdk:"query_tags" tf:"optional"`
+	// Id associated with a job run or execution
+	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	// Id associated with a notebook cell run or execution
+	RunnableCommandId types.String `tfsdk:"runnable_command_id" tf:"optional"`
+
+	ScheduledBy types.String `tfsdk:"scheduled_by" tf:"optional"`
+
+	ServerlessChannelInfo *ServerlessChannelInfo `tfsdk:"serverless_channel_info" tf:"optional"`
+	// UUID
+	SourceQueryId types.String `tfsdk:"source_query_id" tf:"optional"`
+}
+
+type QuerySourceDriverInfo struct {
+	BiToolEntry types.String `tfsdk:"bi_tool_entry" tf:"optional"`
+
+	DriverName types.String `tfsdk:"driver_name" tf:"optional"`
+
+	SimbaBrandingVendor types.String `tfsdk:"simba_branding_vendor" tf:"optional"`
+
+	VersionNumber types.String `tfsdk:"version_number" tf:"optional"`
+}
+
 type RepeatedEndpointConfPairs struct {
 	// Deprecated: Use configuration_pairs
 	ConfigPair []EndpointConfPair `tfsdk:"config_pair" tf:"optional"`
@@ -1461,19 +1927,13 @@ type RestoreDashboardRequest struct {
 }
 
 // Restore a query
-type RestoreQueryRequest struct {
+type RestoreQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
 }
 
 type RestoreResponse struct {
 }
 
-// Contains the result data of a single chunk when using `INLINE` disposition.
-// When using `EXTERNAL_LINKS` disposition, the array `external_links` is used
-// instead to provide presigned URLs to the result data in cloud storage.
-// Exactly one of these alternatives is used. (While the `external_links` array
-// prepares the API to return multiple links in a single response. Currently
-// only a single link is returned.)
 type ResultData struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
@@ -1526,6 +1986,11 @@ type ResultSchema struct {
 	ColumnCount types.Int64 `tfsdk:"column_count" tf:"optional"`
 
 	Columns []ColumnInfo `tfsdk:"columns" tf:"optional"`
+}
+
+type ServerlessChannelInfo struct {
+	// Name of the Channel
+	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
 type ServiceError struct {
@@ -1608,6 +2073,19 @@ type StatementParameterListItem struct {
 	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
+type StatementResponse struct {
+	// The result manifest provides schema and metadata for the result set.
+	Manifest *ResultManifest `tfsdk:"manifest" tf:"optional"`
+
+	Result *ResultData `tfsdk:"result" tf:"optional"`
+	// The statement ID is returned upon successfully submitting a SQL
+	// statement, and is a required reference for all subsequent calls.
+	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
+	// The status response includes execution state and if relevant, error
+	// information.
+	Status *StatementStatus `tfsdk:"status" tf:"optional"`
+}
+
 // The status response includes execution state and if relevant, error
 // information.
 type StatementStatus struct {
@@ -1645,10 +2123,14 @@ type TerminationReason struct {
 	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
+type TextValue struct {
+	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
 type TimeRange struct {
-	// Limit results to queries that started before this time.
+	// The end time in milliseconds.
 	EndTimeMs types.Int64 `tfsdk:"end_time_ms" tf:"optional"`
-	// Limit results to queries that started after this time.
+	// The start time in milliseconds.
 	StartTimeMs types.Int64 `tfsdk:"start_time_ms" tf:"optional"`
 }
 
@@ -1667,7 +2149,119 @@ type TransferOwnershipRequest struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+// Delete an alert
+type TrashAlertRequest struct {
+	Id types.String `tfsdk:"-"`
+}
+
+// Delete a query
+type TrashQueryRequest struct {
+	Id types.String `tfsdk:"-"`
+}
+
+type UpdateAlertRequest struct {
+	Alert *UpdateAlertRequestAlert `tfsdk:"alert" tf:"optional"`
+
+	Id types.String `tfsdk:"-"`
+	// Field mask is required to be passed into the PATCH request. Field mask
+	// specifies which fields of the setting payload will be updated. The field
+	// mask needs to be supplied as single string. To specify multiple fields in
+	// the field mask, use comma as the separator (no space).
+	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+}
+
+type UpdateAlertRequestAlert struct {
+	// Trigger conditions of the alert.
+	Condition *AlertCondition `tfsdk:"condition" tf:"optional"`
+	// Custom body of alert notification, if it exists. See [here] for custom
+	// templating instructions.
+	//
+	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	// Custom subject of alert notification, if it exists. This can include
+	// email subject entries and Slack notification headers, for example. See
+	// [here] for custom templating instructions.
+	//
+	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	// The display name of the alert.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// The owner's username. This field is set to "Unavailable" if the user has
+	// been deleted.
+	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	// UUID of the query attached to the alert.
+	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	// Number of seconds an alert must wait after being triggered to rearm
+	// itself. After rearming, it can be triggered again. If 0 or not specified,
+	// the alert will not be triggered again.
+	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger" tf:"optional"`
+}
+
+type UpdateQueryRequest struct {
+	Id types.String `tfsdk:"-"`
+
+	Query *UpdateQueryRequestQuery `tfsdk:"query" tf:"optional"`
+	// Field mask is required to be passed into the PATCH request. Field mask
+	// specifies which fields of the setting payload will be updated. The field
+	// mask needs to be supplied as single string. To specify multiple fields in
+	// the field mask, use comma as the separator (no space).
+	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+}
+
+type UpdateQueryRequestQuery struct {
+	// Whether to apply a 1000 row limit to the query result.
+	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
+	// Name of the catalog where this query will be executed.
+	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	// General description that conveys additional information about this query
+	// such as usage notes.
+	Description types.String `tfsdk:"description" tf:"optional"`
+	// Display name of the query that appears in list views, widget headings,
+	// and on the query page.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// Username of the user that owns the query.
+	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	// List of query parameter definitions.
+	Parameters []QueryParameter `tfsdk:"parameters" tf:"optional"`
+	// Text of the query to be run.
+	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	// Sets the "Run as" role for the object.
+	RunAsMode types.String `tfsdk:"run_as_mode" tf:"optional"`
+	// Name of the schema where this query will be executed.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
+
+	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	// ID of the SQL warehouse attached to the query.
+	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+}
+
 type UpdateResponse struct {
+}
+
+type UpdateVisualizationRequest struct {
+	Id types.String `tfsdk:"-"`
+	// Field mask is required to be passed into the PATCH request. Field mask
+	// specifies which fields of the setting payload will be updated. The field
+	// mask needs to be supplied as single string. To specify multiple fields in
+	// the field mask, use comma as the separator (no space).
+	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+
+	Visualization *UpdateVisualizationRequestVisualization `tfsdk:"visualization" tf:"optional"`
+}
+
+type UpdateVisualizationRequestVisualization struct {
+	// The display name of the visualization.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// The visualization options varies widely from one visualization type to
+	// the next and is unsupported. Databricks does not recommend modifying
+	// visualization options directly.
+	SerializedOptions types.String `tfsdk:"serialized_options" tf:"optional"`
+	// The visualization query plan varies widely from one visualization type to
+	// the next and is unsupported. Databricks does not recommend modifying the
+	// visualization query plan directly.
+	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan" tf:"optional"`
+	// The type of visualization: counter, table, funnel, and so on.
+	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
 type User struct {
@@ -1678,31 +2272,27 @@ type User struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
-// The visualization description API changes frequently and is unsupported. You
-// can duplicate a visualization by copying description objects received _from
-// the API_ and then using them to create a new one with a POST request to the
-// same endpoint. Databricks does not recommend constructing ad-hoc
-// visualizations entirely in JSON.
 type Visualization struct {
-	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
-	// A short description of this visualization. This is not displayed in the
-	// UI.
-	Description types.String `tfsdk:"description" tf:"optional"`
-	// The UUID for this visualization.
+	// The timestamp indicating when the visualization was created.
+	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	// The display name of the visualization.
+	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	// UUID identifying the visualization.
 	Id types.String `tfsdk:"id" tf:"optional"`
-	// The name of the visualization that appears on dashboards and the query
-	// screen.
-	Name types.String `tfsdk:"name" tf:"optional"`
-	// The options object varies widely from one visualization type to the next
-	// and is unsupported. Databricks does not recommend modifying visualization
-	// settings in JSON.
-	Options any `tfsdk:"options" tf:"optional"`
-
-	Query *Query `tfsdk:"query" tf:"optional"`
-	// The type of visualization: chart, table, pivot table, and so on.
+	// UUID of the query that the visualization is attached to.
+	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	// The visualization options varies widely from one visualization type to
+	// the next and is unsupported. Databricks does not recommend modifying
+	// visualization options directly.
+	SerializedOptions types.String `tfsdk:"serialized_options" tf:"optional"`
+	// The visualization query plan varies widely from one visualization type to
+	// the next and is unsupported. Databricks does not recommend modifying the
+	// visualization query plan directly.
+	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan" tf:"optional"`
+	// The type of visualization: counter, table, funnel, and so on.
 	Type types.String `tfsdk:"type" tf:"optional"`
-
-	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+	// The timestamp indicating when the visualization was updated.
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 }
 
 type WarehouseAccessControlRequest struct {
@@ -1775,7 +2365,7 @@ type Widget struct {
 	// _from the API_ and then using them to create a new one with a POST
 	// request to the same endpoint. Databricks does not recommend constructing
 	// ad-hoc visualizations entirely in JSON.
-	Visualization *Visualization `tfsdk:"visualization" tf:"optional"`
+	Visualization *LegacyVisualization `tfsdk:"visualization" tf:"optional"`
 	// Unused field.
 	Width types.Int64 `tfsdk:"width" tf:"optional"`
 }

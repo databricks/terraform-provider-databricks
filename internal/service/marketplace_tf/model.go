@@ -531,8 +531,6 @@ type ListListingsRequest struct {
 	Assets []types.String `tfsdk:"-"`
 	// Matches any of the following categories
 	Categories []types.String `tfsdk:"-"`
-
-	IsAscending types.Bool `tfsdk:"-"`
 	// Filters each listing based on if it is free.
 	IsFree types.Bool `tfsdk:"-"`
 	// Filters each listing based on if it is a private exchange.
@@ -545,8 +543,6 @@ type ListListingsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 	// Matches any of the following provider ids
 	ProviderIds []types.String `tfsdk:"-"`
-	// Criteria for sorting the resulting set of listings.
-	SortBy types.String `tfsdk:"-"`
 	// Matches any of the following tags
 	Tags []ListingTag `tfsdk:"-"`
 }
@@ -585,9 +581,6 @@ type Listing struct {
 	Detail *ListingDetail `tfsdk:"detail" tf:"optional"`
 
 	Id types.String `tfsdk:"id" tf:"optional"`
-	// we can not use just ProviderListingSummary since we already have same
-	// name on entity side of the state
-	ProviderSummary *ProviderListingSummaryInfo `tfsdk:"provider_summary" tf:"optional"`
 	// Next Number: 26
 	Summary ListingSummary `tfsdk:"summary" tf:""`
 }
@@ -656,9 +649,6 @@ type ListingFulfillment struct {
 }
 
 type ListingSetting struct {
-	// filters are joined with `or` conjunction.
-	Filters []VisibilityFilter `tfsdk:"filters" tf:"optional"`
-
 	Visibility types.String `tfsdk:"visibility" tf:"optional"`
 }
 
@@ -678,8 +668,6 @@ type ListingSummary struct {
 	GitRepo *RepoInfo `tfsdk:"git_repo" tf:"optional"`
 
 	ListingType types.String `tfsdk:"listingType" tf:""`
-
-	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
 
 	Name types.String `tfsdk:"name" tf:""`
 
@@ -753,14 +741,6 @@ type ProviderAnalyticsDashboard struct {
 	Id types.String `tfsdk:"id" tf:""`
 }
 
-type ProviderIconFile struct {
-	IconFileId types.String `tfsdk:"icon_file_id" tf:"optional"`
-
-	IconFilePath types.String `tfsdk:"icon_file_path" tf:"optional"`
-
-	IconType types.String `tfsdk:"icon_type" tf:"optional"`
-}
-
 type ProviderInfo struct {
 	BusinessContactEmail types.String `tfsdk:"business_contact_email" tf:""`
 
@@ -789,16 +769,6 @@ type ProviderInfo struct {
 	SupportContactEmail types.String `tfsdk:"support_contact_email" tf:"optional"`
 
 	TermOfServiceLink types.String `tfsdk:"term_of_service_link" tf:""`
-}
-
-// we can not use just ProviderListingSummary since we already have same name on
-// entity side of the state
-type ProviderListingSummaryInfo struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
-
-	IconFiles []ProviderIconFile `tfsdk:"icon_files" tf:"optional"`
-
-	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
 type RegionInfo struct {
@@ -836,8 +806,6 @@ type SearchListingsRequest struct {
 	// Matches any of the following categories
 	Categories []types.String `tfsdk:"-"`
 
-	IsAscending types.Bool `tfsdk:"-"`
-
 	IsFree types.Bool `tfsdk:"-"`
 
 	IsPrivateExchange types.Bool `tfsdk:"-"`
@@ -849,8 +817,6 @@ type SearchListingsRequest struct {
 	ProviderIds []types.String `tfsdk:"-"`
 	// Fuzzy matches query
 	Query types.String `tfsdk:"-"`
-
-	SortBy types.String `tfsdk:"-"`
 }
 
 type SearchListingsResponse struct {
@@ -989,10 +955,4 @@ type UpdateProviderRequest struct {
 
 type UpdateProviderResponse struct {
 	Provider *ProviderInfo `tfsdk:"provider" tf:"optional"`
-}
-
-type VisibilityFilter struct {
-	FilterType types.String `tfsdk:"filterType" tf:"optional"`
-
-	FilterValue types.String `tfsdk:"filterValue" tf:"optional"`
 }

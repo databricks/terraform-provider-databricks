@@ -699,6 +699,8 @@ type DeleteResponse struct {
 
 // Delete a schema
 type DeleteSchemaRequest struct {
+	// Force deletion even if the schema is not empty.
+	Force types.Bool `tfsdk:"-"`
 	// Full name of the schema.
 	FullName types.String `tfsdk:"-"`
 }
@@ -1034,9 +1036,18 @@ type GetArtifactAllowlistRequest struct {
 
 // Get securable workspace bindings
 type GetBindingsRequest struct {
+	// Maximum number of workspace bindings to return. - When set to 0, the page
+	// length is set to a server configured value (recommended); - When set to a
+	// value greater than 0, the page length is the minimum of this value and a
+	// server configured value; - When set to a value less than 0, an invalid
+	// parameter error is returned; - If not set, all the workspace bindings are
+	// returned (not recommended).
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 	// The name of the securable.
 	SecurableName types.String `tfsdk:"-"`
-	// The type of the securable.
+	// The type of the securable to bind to a workspace.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -1046,6 +1057,9 @@ type GetByAliasRequest struct {
 	Alias types.String `tfsdk:"-"`
 	// The three-level (fully qualified) name of the registered model
 	FullName types.String `tfsdk:"-"`
+	// Whether to include aliases associated with the model version in the
+	// response
+	IncludeAliases types.Bool `tfsdk:"-"`
 }
 
 // Get a catalog
@@ -1156,6 +1170,9 @@ type GetMetastoreSummaryResponse struct {
 type GetModelVersionRequest struct {
 	// The three-level (fully qualified) name of the model version
 	FullName types.String `tfsdk:"-"`
+	// Whether to include aliases associated with the model version in the
+	// response
+	IncludeAliases types.Bool `tfsdk:"-"`
 	// Whether to include model versions in the response for which the principal
 	// can only access selective metadata for
 	IncludeBrowse types.Bool `tfsdk:"-"`
@@ -1187,6 +1204,8 @@ type GetRefreshRequest struct {
 type GetRegisteredModelRequest struct {
 	// The three-level (fully qualified) name of the registered model
 	FullName types.String `tfsdk:"-"`
+	// Whether to include registered model aliases in the response
+	IncludeAliases types.Bool `tfsdk:"-"`
 	// Whether to include registered models in the response for which the
 	// principal can only access selective metadata for
 	IncludeBrowse types.Bool `tfsdk:"-"`
@@ -1503,11 +1522,24 @@ type ListSummariesRequest struct {
 
 // List system schemas
 type ListSystemSchemasRequest struct {
+	// Maximum number of schemas to return. - When set to 0, the page length is
+	// set to a server configured value (recommended); - When set to a value
+	// greater than 0, the page length is the minimum of this value and a server
+	// configured value; - When set to a value less than 0, an invalid parameter
+	// error is returned; - If not set, all the schemas are returned (not
+	// recommended).
+	MaxResults types.Int64 `tfsdk:"-"`
 	// The ID for the metastore in which the system schema resides.
 	MetastoreId types.String `tfsdk:"-"`
+	// Opaque pagination token to go to next page based on previous query.
+	PageToken types.String `tfsdk:"-"`
 }
 
 type ListSystemSchemasResponse struct {
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of system schema information objects.
 	Schemas []SystemSchemaInfo `tfsdk:"schemas" tf:"optional"`
 }
@@ -1644,6 +1676,8 @@ type MetastoreInfo struct {
 }
 
 type ModelVersionInfo struct {
+	// List of aliases associated with the model version
+	Aliases []RegisteredModelAlias `tfsdk:"aliases" tf:"optional"`
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
 	// enabled in the request.
@@ -2573,7 +2607,7 @@ type UpdateWorkspaceBindingsParameters struct {
 	Remove []WorkspaceBinding `tfsdk:"remove" tf:"optional"`
 	// The name of the securable.
 	SecurableName types.String `tfsdk:"-"`
-	// The type of the securable.
+	// The type of the securable to bind to a workspace.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -2663,4 +2697,8 @@ type WorkspaceBinding struct {
 type WorkspaceBindingsResponse struct {
 	// List of workspace bindings
 	Bindings []WorkspaceBinding `tfsdk:"bindings" tf:"optional"`
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }

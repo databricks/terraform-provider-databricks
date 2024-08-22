@@ -12,7 +12,6 @@ package jobs_tf
 
 import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
-	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -204,7 +203,7 @@ type ClusterSpec struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries []compute.Library `tfsdk:"libraries" tf:"optional"`
+	Libraries []compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
@@ -238,14 +237,14 @@ type Continuous struct {
 
 type CreateJob struct {
 	// List of permissions to set on the job.
-	AccessControlList []iam.AccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
 	Continuous *Continuous `tfsdk:"continuous" tf:"optional"`
 	// Deployment information for jobs managed by external sources.
 	Deployment *JobDeployment `tfsdk:"deployment" tf:"optional"`
-	// An optional description for the job. The maximum length is 1024
+	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Edit mode of the job.
@@ -258,7 +257,7 @@ type CreateJob struct {
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this job.
-	Environments []JobEnvironment `tfsdk:"environments" tf:"optional"`
+	Environments []JobEnvironment `tfsdk:"environment" tf:"optional"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
 	// always set to `"MULTI_TASK"`.
@@ -279,7 +278,7 @@ type CreateJob struct {
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters []JobCluster `tfsdk:"job_clusters" tf:"optional"`
+	JobClusters []JobCluster `tfsdk:"job_cluster" tf:"optional"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
 	// job concurrently. This is useful for example if you trigger your job on a
@@ -300,7 +299,7 @@ type CreateJob struct {
 	// job.
 	NotificationSettings *JobNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
 	// Job-level parameter definitions
-	Parameters []JobParameterDefinition `tfsdk:"parameters" tf:"optional"`
+	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
 	Queue *QueueSettings `tfsdk:"queue" tf:"optional"`
 	// Write-only setting, available only in Create/Update/Reset and Submit
@@ -320,7 +319,7 @@ type CreateJob struct {
 	// job.
 	Tags map[string]types.String `tfsdk:"tags" tf:"optional"`
 	// A list of task specifications to be executed by this job.
-	Tasks []Task `tfsdk:"tasks" tf:"optional"`
+	Tasks []Task `tfsdk:"task" tf:"optional"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
 	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
@@ -530,6 +529,10 @@ type GetRunRequest struct {
 	IncludeHistory types.Bool `tfsdk:"-"`
 	// Whether to include resolved parameter values in the response.
 	IncludeResolvedValues types.Bool `tfsdk:"-"`
+	// To list the next page or the previous page of job tasks, set this field
+	// to the value of the `next_page_token` or `prev_page_token` returned in
+	// the GetJob response.
+	PageToken types.String `tfsdk:"-"`
 	// The canonical identifier of the run for which to retrieve the metadata.
 	// This field is required.
 	RunId types.Int64 `tfsdk:"-"`
@@ -557,10 +560,10 @@ type GitSnapshot struct {
 type GitSource struct {
 	// Name of the branch to be checked out and used by this job. This field
 	// cannot be specified in conjunction with git_tag or git_commit.
-	GitBranch types.String `tfsdk:"git_branch" tf:"optional"`
+	GitBranch types.String `tfsdk:"branch" tf:"optional"`
 	// Commit to be checked out and used by this job. This field cannot be
 	// specified in conjunction with git_branch or git_tag.
-	GitCommit types.String `tfsdk:"git_commit" tf:"optional"`
+	GitCommit types.String `tfsdk:"commit" tf:"optional"`
 	// Unique identifier of the service used to host the Git repository. The
 	// value is case insensitive.
 	GitProvider types.String `tfsdk:"git_provider" tf:""`
@@ -569,9 +572,9 @@ type GitSource struct {
 	GitSnapshot *GitSnapshot `tfsdk:"git_snapshot" tf:"optional"`
 	// Name of the tag to be checked out and used by this job. This field cannot
 	// be specified in conjunction with git_branch or git_commit.
-	GitTag types.String `tfsdk:"git_tag" tf:"optional"`
+	GitTag types.String `tfsdk:"tag" tf:"optional"`
 	// URL of the repository to be cloned by this job.
-	GitUrl types.String `tfsdk:"git_url" tf:""`
+	GitUrl types.String `tfsdk:"url" tf:""`
 	// The source of the job specification in the remote repository when the job
 	// is source controlled.
 	JobSource *JobSource `tfsdk:"job_source" tf:"optional"`
@@ -762,7 +765,7 @@ type JobSettings struct {
 	Continuous *Continuous `tfsdk:"continuous" tf:"optional"`
 	// Deployment information for jobs managed by external sources.
 	Deployment *JobDeployment `tfsdk:"deployment" tf:"optional"`
-	// An optional description for the job. The maximum length is 1024
+	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Edit mode of the job.
@@ -775,7 +778,7 @@ type JobSettings struct {
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this job.
-	Environments []JobEnvironment `tfsdk:"environments" tf:"optional"`
+	Environments []JobEnvironment `tfsdk:"environment" tf:"optional"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
 	// always set to `"MULTI_TASK"`.
@@ -796,7 +799,7 @@ type JobSettings struct {
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters []JobCluster `tfsdk:"job_clusters" tf:"optional"`
+	JobClusters []JobCluster `tfsdk:"job_cluster" tf:"optional"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
 	// job concurrently. This is useful for example if you trigger your job on a
@@ -817,7 +820,7 @@ type JobSettings struct {
 	// job.
 	NotificationSettings *JobNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
 	// Job-level parameter definitions
-	Parameters []JobParameterDefinition `tfsdk:"parameters" tf:"optional"`
+	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
 	Queue *QueueSettings `tfsdk:"queue" tf:"optional"`
 	// Write-only setting, available only in Create/Update/Reset and Submit
@@ -837,7 +840,7 @@ type JobSettings struct {
 	// job.
 	Tags map[string]types.String `tfsdk:"tags" tf:"optional"`
 	// A list of task specifications to be executed by this job.
-	Tasks []Task `tfsdk:"tasks" tf:"optional"`
+	Tasks []Task `tfsdk:"task" tf:"optional"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
 	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
@@ -1323,6 +1326,9 @@ type Run struct {
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
 	GitSource *GitSource `tfsdk:"git_source" tf:"optional"`
+	// Only populated by for-each iterations. The parent for-each task is
+	// located in tasks array.
+	Iterations []RunTask `tfsdk:"iterations" tf:"optional"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
@@ -1331,6 +1337,8 @@ type Run struct {
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// Job-level parameters used in the run
 	JobParameters []JobParameter `tfsdk:"job_parameters" tf:"optional"`
+	// A token that can be used to list the next page of sub-resources.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// A unique identifier for this job run. This is set to the same value as
 	// `run_id`.
 	NumberInJob types.Int64 `tfsdk:"number_in_job" tf:"optional"`
@@ -1339,6 +1347,8 @@ type Run struct {
 	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id" tf:"optional"`
 	// The parameters used for this run.
 	OverridingParameters *RunParameters `tfsdk:"overriding_parameters" tf:"optional"`
+	// A token that can be used to list the previous page of sub-resources.
+	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
 	// The time in milliseconds that the run has spent in the queue.
 	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
 	// The repair history of the run.
@@ -1856,7 +1866,7 @@ type RunTask struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries []compute.Library `tfsdk:"libraries" tf:"optional"`
+	Libraries []compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
@@ -2146,7 +2156,7 @@ type SqlTaskSubscription struct {
 
 type SubmitRun struct {
 	// List of permissions to set on the job.
-	AccessControlList []iam.AccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// An optional set of email addresses notified when the run begins or
 	// completes.
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
@@ -2244,7 +2254,7 @@ type SubmitTask struct {
 	Health *JobsHealthRules `tfsdk:"health" tf:"optional"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries []compute.Library `tfsdk:"libraries" tf:"optional"`
+	Libraries []compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
@@ -2362,7 +2372,7 @@ type Task struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries []compute.Library `tfsdk:"libraries" tf:"optional"`
+	Libraries []compute.Library `tfsdk:"library" tf:"optional"`
 	// An optional maximum number of times to retry an unsuccessful run. A run
 	// is considered to be unsuccessful if it completes with the `FAILED`
 	// result_state or `INTERNAL_ERROR` `life_cycle_state`. The value `-1` means

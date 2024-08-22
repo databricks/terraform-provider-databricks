@@ -76,9 +76,6 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 		return getColumnType(old) == getColumnType(new)
 	})
-	for _, field := range []string{"effective_properties", "effective_options"} {
-		s.SchemaPath(field).SetReadOnly()
-	}
 	return s
 }
 

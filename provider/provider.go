@@ -26,6 +26,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/dashboards"
+	pluginframeworkprovider "github.com/databricks/terraform-provider-databricks/internal/pluginframework/provider"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
@@ -50,7 +51,7 @@ import (
 func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
-	useragent.WithProduct("databricks-tf-provider", common.Version())
+	useragent.WithProduct(pluginframeworkprovider.GetProviderName(), common.Version())
 
 	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
 	out, err := parseUserAgentExtra(userAgentExtraEnv)

@@ -60,6 +60,8 @@ func (p *DatabricksProviderPluginFramework) Configure(ctx context.Context, req p
 	resp.ResourceData = client
 }
 
+// Function returns a schema.Schema based on config attributes where each attribute is mapped to the appropriate
+// schema type (BoolAttribute, StringAttribute, Int64Attribute).
 func providerSchemaPluginFramework() schema.Schema {
 	ps := map[string]schema.Attribute{}
 	for _, attr := range config.ConfigAttributes {

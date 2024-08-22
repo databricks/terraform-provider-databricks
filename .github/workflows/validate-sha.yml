@@ -17,7 +17,7 @@ jobs:
           echo "Version: $Version"
           OPENAPI_SHA_GO_SDK=$(curl https://raw.githubusercontent.com/databricks/databricks-sdk-go/$Version/.codegen/_openapi_sha)
           OPENAPI_SHA=$(cat .codegen/_openapi_sha)
-          if "$OPENAPI_SHA_GO_SDK" != "$OPENAPI_SHA"; then
+          if [ "$OPENAPI_SHA_GO_SDK" != "$OPENAPI_SHA" ]; then
             echo "OpenAPI SHA mismatch"
             exit 1
           else 

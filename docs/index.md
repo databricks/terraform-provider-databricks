@@ -284,7 +284,7 @@ resource "databricks_user" "my-user" {
 }
 ```
 
-### Authenticating with Azure-managed Service Principal
+### Authenticating with Azure-managed Service Principal using Client Secret
 
 ```hcl
 provider "azurerm" {
@@ -306,6 +306,36 @@ provider "databricks" {
   azure_workspace_resource_id = azurerm_databricks_workspace.this.id
   azure_client_id             = var.client_id
   azure_client_secret         = var.client_secret
+  azure_tenant_id             = var.tenant_id
+}
+
+resource "databricks_user" "my-user" {
+  user_name = "test-user@databricks.com"
+}
+```
+
+### Authenticating with Azure-managed Service Principal using GITHUB OIDC
+
+```hcl
+provider "azurerm" {
+  client_id       = var.client_id
+  tenant_id       = var.tenant_id
+  subscription_id = var.subscription_id
+  use_oidc        = true
+}
+
+resource "azurerm_databricks_workspace" "this" {
+  location            = "centralus"
+  name                = "my-workspace-name"
+  resource_group_name = var.resource_group
+  sku                 = "premium"
+}
+
+provider "databricks" {
+  host                        = azurerm_databricks_workspace.this.workspace_url
+  auth_type                   = "github-oidc-azure"
+  azure_workspace_resource_id = azurerm_databricks_workspace.this.id
+  azure_client_id             = var.client_id
   azure_tenant_id             = var.tenant_id
 }
 

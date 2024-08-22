@@ -1,0 +1,35 @@
+name: Validate Commit Message
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    # GitHub required checks are shared between PRs and the Merge Queue.
+    # Since there is no PR title on Merge Queue, we need to trigger and
+    # skip this test for Merge Queue to succeed.
+    if: github.event_name == 'pull_request' 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate SHA
+        run: |
+          Version=$(go list -m -json github.com/databricks/databricks-sdk-go | jq -r ".Version")
+          echo "Version: $Version"
+          OPENAPI_SHA_GO_SDK=$(curl https://raw.githubusercontent.com/databricks/databricks-sdk-go/$Version/.codegen/_openapi_sha)
+          OPENAPI_SHA=$(cat .codegen/_openapi_sha)
+          if $OPENAPI_SHA != $SHA; then
+            echo "OpenAPI SHA mismatch: $OPENAPI_SHA != $SHA"
+            exit 1
+          else 
+            echo "OpenAPI SHA match: $OPENAPI_SHA == $SHA"
+          fi
+          if grep -q "tag: \"\[$TAG\]\"" .codegen/changelog_config.yml; then 
+            echo "Valid tag found: [$TAG]"
+          else 
+            echo "Invalid or missing tag in commit message: [$TAG]" 
+            exit 1
+          fi

@@ -1335,7 +1335,7 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 }
 
 func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
-	_, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
 			return common.CommandResults{
 				ResultType: "",
@@ -1388,16 +1388,16 @@ func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
 					StorageCredentialName: "somecred",
 					Comment:               "terraform managed",
 					Properties: map[string]string{
-						"one":   "two",
-						"three": "four",
+						"one":                         "two",
+						"three":                       "four",
+						"delta.enableDeletionVectors": "false",
 					},
 				},
 			},
 		},
 		Create:   true,
 		Resource: ResourceSqlTable(),
-	}.Apply(t)
-	assert.NoError(t, err)
+	}.ApplyNoError(t)
 }
 
 func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {

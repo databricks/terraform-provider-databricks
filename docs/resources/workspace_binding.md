@@ -43,5 +43,5 @@ The following arguments are required:
 This resource can be imported by using combination of workspace ID, securable type and name:
 
 ```sh
-terraform import databricks_catalog_workspace_binding.this "<workspace_id>|<securable_type>|<securable_name>"
+terraform import databricks_workspace_binding.this "<workspace_id>|<securable_type>|<securable_name>"
 ```

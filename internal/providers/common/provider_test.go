@@ -1,4 +1,4 @@
-package provider
+package common
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	sdkv2provider "github.com/databricks/terraform-provider-databricks/internal/sdkv2/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -391,7 +391,7 @@ type parseUserAgentTestCase struct {
 	name string
 	env  string
 	err  error
-	out  []sdkv2provider.UserAgentExtra
+	out  []sdkv2.UserAgentExtra
 }
 
 func Test_ParseUserAgentExtra(t *testing.T) {
@@ -400,7 +400,7 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 			name: "single product",
 			env:  "databricks-cli/0.1.2",
 			err:  nil,
-			out: []sdkv2provider.UserAgentExtra{
+			out: []sdkv2.UserAgentExtra{
 				{"databricks-cli", "0.1.2"},
 			},
 		},
@@ -408,7 +408,7 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 			name: "multiple products",
 			env:  "databricks-cli/0.1.2 custom-thing/0.0.1",
 			err:  nil,
-			out: []sdkv2provider.UserAgentExtra{
+			out: []sdkv2.UserAgentExtra{
 				{"databricks-cli", "0.1.2"},
 				{"custom-thing", "0.0.1"},
 			},
@@ -417,7 +417,7 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 			name: "multiple products with many separators",
 			env:  "\ta/0.0.1\tb/0.0.2 \t c/0.0.3",
 			err:  nil,
-			out: []sdkv2provider.UserAgentExtra{
+			out: []sdkv2.UserAgentExtra{
 				{"a", "0.0.1"},
 				{"b", "0.0.2"},
 				{"c", "0.0.3"},
@@ -427,7 +427,7 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 			name: "empty string",
 			env:  "",
 			err:  nil,
-			out:  []sdkv2provider.UserAgentExtra{},
+			out:  []sdkv2.UserAgentExtra{},
 		},
 		{
 			name: "product with comment",
@@ -451,7 +451,7 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			out, err := sdkv2provider.ParseUserAgentExtra(tc.env)
+			out, err := sdkv2.ParseUserAgentExtra(tc.env)
 
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.out, out)

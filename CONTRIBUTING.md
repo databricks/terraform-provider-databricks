@@ -127,7 +127,7 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 - `sdkv2/provider`: This package contains the changes related to only sdkv2 provider and shouldn't depend on pluginframework provider
 - `pluginframework/provider`: This package contains the changes related to only plugin framework provider and shouldn't depend on sdkv2
 
-Note: To avoid circular dependency and make code easy to read, any common changes for both provider will go into interna/common/provider package.
+Note: Common dependencies for both providers will go into the internal/common/provider package.
 
 ## Debugging
 

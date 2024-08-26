@@ -1,4 +1,4 @@
-package provider
+package common
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	pluginframeworkprovider "github.com/databricks/terraform-provider-databricks/internal/pluginframework/provider"
-	sdkv2provider "github.com/databricks/terraform-provider-databricks/internal/sdkv2/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -139,7 +139,7 @@ func (pf providerFixture) configureProviderAndReturnClient_SDKv2(t *testing.T) (
 	for k, v := range pf.env {
 		t.Setenv(k, v)
 	}
-	p := sdkv2provider.DatabricksProvider()
+	p := sdkv2.DatabricksProvider()
 	ctx := context.Background()
 	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(pf.rawConfigSDKv2()))
 	if len(diags) > 0 {
@@ -165,7 +165,7 @@ func (pf providerFixture) configureProviderAndReturnClient_PluginFramework(t *te
 	for k, v := range pf.env {
 		t.Setenv(k, v)
 	}
-	p := pluginframeworkprovider.GetDatabricksProviderPluginFramework()
+	p := pluginfw.GetDatabricksProviderPluginFramework()
 	ctx := context.Background()
 	rawConfig := pf.rawConfigPluginFramework()
 	var providerSchemaResponse provider.SchemaResponse

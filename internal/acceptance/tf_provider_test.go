@@ -3,7 +3,7 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/internal/sdkv2/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,7 +28,7 @@ func TestAccProviderPlanShouldSucceedWithIncompleteConfiguration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProviderFactories: map[string]func() (*schema.Provider, error){
-			"databricks": func() (*schema.Provider, error) { return provider.DatabricksProvider(), nil },
+			"databricks": func() (*schema.Provider, error) { return sdkv2.DatabricksProvider(), nil },
 			"noop":       func() (*schema.Provider, error) { return noOpProvider(), nil },
 		},
 		Steps: []resource.TestStep{

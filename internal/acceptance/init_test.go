@@ -21,7 +21,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/internal/sdkv2/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	dbproviderlogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -138,7 +138,7 @@ func run(t *testing.T, steps []step) {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	t.Parallel()
-	provider := provider.DatabricksProvider()
+	provider := sdkv2.DatabricksProvider()
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Skip(err.Error())

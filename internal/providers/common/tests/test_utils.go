@@ -37,6 +37,10 @@ type providerFixture struct {
 	assertAzure       bool
 }
 
+func getTestDataPath() string {
+	return "../../../../common/testdata"
+}
+
 func (pf providerFixture) rawConfig() map[string]string {
 	rawConfig := map[string]string{}
 	if pf.host != "" {

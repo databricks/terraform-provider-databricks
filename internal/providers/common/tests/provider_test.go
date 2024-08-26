@@ -180,7 +180,7 @@ func TestConfig_PatFromDatabricksCfg(t *testing.T) {
 	providerFixture{
 		// loading with DEFAULT profile in databrickscfs
 		env: map[string]string{
-			"HOME": "../../../common/testdata",
+			"HOME": getTestDataPath(),
 		},
 		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com",
 		assertAuth: "pat",
@@ -191,7 +191,7 @@ func TestConfig_PatFromDatabricksCfg_NohostProfile(t *testing.T) {
 	providerFixture{
 		// loading with nohost profile in databrickscfs
 		env: map[string]string{
-			"HOME":                      "../../../common/testdata",
+			"HOME":                      getTestDataPath(),
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 		},
 		assertError: common.NoAuth +
@@ -204,7 +204,7 @@ func TestConfig_ConfigProfileAndToken(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN":          "x",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
-			"HOME":                      "../../../common/testdata",
+			"HOME":                      getTestDataPath(),
 		},
 		assertError: common.NoAuth +
 			". Config: token=***, profile=nohost. Env: DATABRICKS_TOKEN, DATABRICKS_CONFIG_PROFILE",
@@ -216,7 +216,7 @@ func TestConfig_ConfigProfileAndPassword(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_USERNAME":       "x",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
-			"HOME":                      "../../../common/testdata",
+			"HOME":                      getTestDataPath(),
 		},
 		assertError: "validate: more than one authorization method configured: basic and pat. " +
 			"Config: token=***, username=x, profile=nohost. Env: DATABRICKS_USERNAME, DATABRICKS_CONFIG_PROFILE",
@@ -226,7 +226,7 @@ func TestConfig_ConfigProfileAndPassword(t *testing.T) {
 var azResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
 func TestConfig_AzureCliHost(t *testing.T) {
-	p, _ := filepath.Abs("../../../common/testdata")
+	p, _ := filepath.Abs(getTestDataPath())
 	providerFixture{
 		// this test will skip ensureWorkspaceUrl
 		host:            "x",
@@ -244,7 +244,7 @@ func TestConfig_AzureCliHost(t *testing.T) {
 }
 
 func TestConfig_AzureCliHost_Fail(t *testing.T) {
-	p, _ := filepath.Abs("../../../common/testdata")
+	p, _ := filepath.Abs(getTestDataPath())
 	providerFixture{
 		azureResourceID: azResourceID,
 		env: map[string]string{
@@ -270,7 +270,7 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 }
 
 func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
-	p, _ := filepath.Abs("../../../common/testdata")
+	p, _ := filepath.Abs(getTestDataPath())
 	providerFixture{
 		azureResourceID: azResourceID,
 		token:           "x",
@@ -284,7 +284,7 @@ func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
 }
 
 func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
-	p, _ := filepath.Abs("../../../common/testdata")
+	p, _ := filepath.Abs(getTestDataPath())
 	providerFixture{
 		// omit request to management endpoint to get workspace properties
 		azureResourceID: azResourceID,
@@ -302,7 +302,7 @@ func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 }
 
 func TestConfig_AzureAndPasswordConflict(t *testing.T) {
-	p, _ := filepath.Abs("../../../common/testdata")
+	p, _ := filepath.Abs(getTestDataPath())
 	providerFixture{
 		host:            "x",
 		azureResourceID: azResourceID,
@@ -319,7 +319,7 @@ func TestConfig_AzureAndPasswordConflict(t *testing.T) {
 func TestConfig_CorruptConfig(t *testing.T) {
 	providerFixture{
 		env: map[string]string{
-			"HOME": "../../../common/testdata/corrupt",
+			"HOME": getTestDataPath() + "/corrupt",
 		},
 		assertError: common.NoAuth,
 	}.apply(t)

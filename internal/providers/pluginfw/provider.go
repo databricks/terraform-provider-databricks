@@ -1,3 +1,6 @@
+// Package pluginfw contains the changes specific to the plugin framework
+//
+// Note: This shouldn't depend on internal/providers/sdkv2 or internal/providers/common
 package pluginfw
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/internal"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -22,10 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
-
-func GetProviderName() string {
-	return "databricks-tf-provider"
-}
 
 func GetDatabricksProviderPluginFramework() provider.Provider {
 	p := &DatabricksProviderPluginFramework{}
@@ -50,7 +50,7 @@ func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req prov
 }
 
 func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = GetProviderName()
+	resp.TypeName = internal.GetProviderName()
 	resp.Version = common.Version()
 }
 

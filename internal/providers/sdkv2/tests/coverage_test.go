@@ -1,4 +1,4 @@
-package sdkv2
+package tests
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -143,7 +144,7 @@ func TestCoverageReport(t *testing.T) {
 	files, err := recursiveChildren("..")
 	assert.NoError(t, err)
 
-	p := DatabricksProvider()
+	p := sdkv2.DatabricksProvider()
 	var cr CoverageReport
 	var longestResourceName, longestFieldName int
 

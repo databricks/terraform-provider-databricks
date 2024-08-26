@@ -1,3 +1,6 @@
+// Package sdkv2 contains the changes specific to the SDKv2
+//
+// Note: This package shouldn't depend on internal/providers/pluginfw or internal/providers/common
 package sdkv2
 
 import (
@@ -26,7 +29,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/dashboards"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/internal"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
@@ -51,7 +54,7 @@ import (
 func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
-	useragent.WithProduct(pluginfw.GetProviderName(), common.Version())
+	useragent.WithProduct(internal.GetProviderName(), common.Version())
 
 	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
 	out, err := ParseUserAgentExtra(userAgentExtraEnv)

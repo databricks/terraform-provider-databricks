@@ -35,7 +35,7 @@ The following arguments are required:
 
 * `workspace_id` - ID of the workspace. Change forces creation of a new resource.
 * `securable_name` - Name of securable. Change forces creation of a new resource.
-* `securable_type` - Type of securable. Can be `catalog`, `external_location` or `storage_credential`. Default to `catalog`. Change forces creation of a new resource.
+* `securable_type` - Type of securable. Can be `catalog`, `external-location` or `storage-credential`. Default to `catalog`. Change forces creation of a new resource.
 * `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`.
 
 ## Import
@@ -43,5 +43,5 @@ The following arguments are required:
 This resource can be imported by using combination of workspace ID, securable type and name:
 
 ```sh
-terraform import databricks_catalog_workspace_binding.this "<workspace_id>|<securable_type>|<securable_name>"
+terraform import databricks_workspace_binding.this "<workspace_id>|<securable_type>|<securable_name>"
 ```

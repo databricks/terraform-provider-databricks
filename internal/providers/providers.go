@@ -1,4 +1,6 @@
-// Package providers contains the changes that depends on both internal/providers/sdkv2 and internal/providers/pluginfw packages
+// Package providers contains the changes for both SDKv2 and Plugin Framework which are defined in their respective sub packages.
+//
+// Note: Top level files under providers package only contains the changes that depends on both internal/providers/sdkv2 and internal/providers/pluginfw packages
 package providers
 
 import (

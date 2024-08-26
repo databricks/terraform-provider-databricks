@@ -401,7 +401,7 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 			env:  "databricks-cli/0.1.2",
 			err:  nil,
 			out: []sdkv2.UserAgentExtra{
-				{"databricks-cli", "0.1.2"},
+				{Key: "databricks-cli", Value: "0.1.2"},
 			},
 		},
 		{
@@ -409,8 +409,8 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 			env:  "databricks-cli/0.1.2 custom-thing/0.0.1",
 			err:  nil,
 			out: []sdkv2.UserAgentExtra{
-				{"databricks-cli", "0.1.2"},
-				{"custom-thing", "0.0.1"},
+				{Key: "databricks-cli", Value: "0.1.2"},
+				{Key: "custom-thing", Value: "0.0.1"},
 			},
 		},
 		{
@@ -418,9 +418,9 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 			env:  "\ta/0.0.1\tb/0.0.2 \t c/0.0.3",
 			err:  nil,
 			out: []sdkv2.UserAgentExtra{
-				{"a", "0.0.1"},
-				{"b", "0.0.2"},
-				{"c", "0.0.3"},
+				{Key: "a", Value: "0.0.1"},
+				{Key: "b", Value: "0.0.2"},
+				{Key: "c", Value: "0.0.3"},
 			},
 		},
 		{

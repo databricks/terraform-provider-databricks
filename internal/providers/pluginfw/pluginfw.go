@@ -1,6 +1,6 @@
 // Package pluginfw contains the changes specific to the plugin framework
 //
-// Note: This shouldn't depend on internal/providers/sdkv2 or internal/providers/common
+// Note: This shouldn't depend on internal/providers/sdkv2 or internal/providers
 package pluginfw
 
 import (
@@ -50,7 +50,7 @@ func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req prov
 }
 
 func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = internal.GetProviderName()
+	resp.TypeName = internal.ProviderName
 	resp.Version = common.Version()
 }
 

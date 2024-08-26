@@ -1,4 +1,4 @@
-package tests
+package providers
 
 import (
 	"context"
@@ -37,9 +37,7 @@ type providerFixture struct {
 	assertAzure       bool
 }
 
-func getTestDataPath() string {
-	return "../../../../common/testdata"
-}
+const testDataPath = "../../common/testdata"
 
 func (pf providerFixture) rawConfig() map[string]string {
 	rawConfig := map[string]string{}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/exporter"
-	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 )
@@ -38,7 +38,7 @@ func main() {
 	log.Printf(startMessageFormat, common.Version())
 
 	ctx := context.Background()
-	providerServer, err := providercommon.GetProviderServer(ctx)
+	providerServer, err := providers.GetProviderServer(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,5 +1,5 @@
-// Package common contains the changes that depends on both internal/providers/sdkv2 and internal/providers/pluginfw packages
-package common
+// Package providers contains the changes that depends on both internal/providers/sdkv2 and internal/providers/pluginfw packages
+package providers
 
 import (
 	"context"

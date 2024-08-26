@@ -1,6 +1,6 @@
 // Package sdkv2 contains the changes specific to the SDKv2
 //
-// Note: This package shouldn't depend on internal/providers/pluginfw or internal/providers/common
+// Note: This package shouldn't depend on internal/providers/pluginfw or internal/providers
 package sdkv2
 
 import (
@@ -54,7 +54,7 @@ import (
 func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
-	useragent.WithProduct(internal.GetProviderName(), common.Version())
+	useragent.WithProduct(internal.ProviderName, common.Version())
 
 	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
 	out, err := ParseUserAgentExtra(userAgentExtraEnv)

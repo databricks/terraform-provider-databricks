@@ -5,7 +5,6 @@
 - [Issues for new contributors](#issues-for-new-contributors)
 - [Contribution Workflow](#contribution-workflow)
 - [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
-- [Installing for Terraform 0.12](#installing-for-terraform-012)
 - [Installing from source](#installing-from-source)
 - [Contributing documentation](#contributing-documentation)
 - [Developing provider](#developing-provider)
@@ -20,13 +19,13 @@ We happily welcome contributions to the Databricks Terraform Provider. We use Gi
 
 ## Issues for new contributors
 
-New contributors should look for the following tags when searching for a first contribution to the Databricks code base. We strongly recommend that new contributors tackle “good first issue” projects first; this helps the contributor become familiar with the contribution workflow, and for the core devs to become acquainted with the contributor.
+New contributors should look for the following tags when searching for a first contribution to the Databricks code base. We strongly recommend that new contributors tackle "good first issue" projects first; this helps the contributor become familiar with the contribution workflow, and for the core devs to become acquainted with the contributor.
 
 [good first issue](https://github.com/databricks/terraform-provider-databricks/labels/good%20first%20issue)
 
 ## Contribution Workflow
 
-Code contributions—bug fixes, new development, test improvement—all follow a GitHub-centered workflow. To participate in Databricks Terraform provider development, set up a GitHub account. Then:
+Code contributions—bug fixes, new development, test improvement — all follow a GitHub-centered workflow. To participate in Databricks Terraform provider development, set up a GitHub account. Then:
 
 1. Fork the repo you plan to work on. Go to the project repo page and use the Fork button. This will create a copy of the repo, under your username. (For more details on how to fork a repository see [this guide](https://help.github.com/articles/fork-a-repo/).)
 
@@ -67,14 +66,6 @@ Additional git and GitHub resources:
 [Git documentation](https://git-scm.com/documentation)
 [Git development workflow](https://docs.scipy.org/doc/numpy/dev/development_workflow.html)
 [Resolving merge conflicts](https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/)
-
-## Installing for Terraform 0.12
-
-If you use Terraform 0.12, please execute the following curl command in your shell:
-
-```bash
-curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
-```
 
 ## Installing from source
 

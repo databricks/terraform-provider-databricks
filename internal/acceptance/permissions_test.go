@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 
@@ -221,4 +223,85 @@ func TestAccDatabricksPermissionsForSqlWarehouses(t *testing.T) {
 			},
 		},
 	)
+}
+
+func TestAccDatabricksPermissionsForJobs(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `
+		data databricks_current_user me {}
+
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+		}
+
+		resource "databricks_permissions" "this" {
+			job_id = databricks_job.this.id
+			access_control {
+			    permission_level = "IS_OWNER"
+				service_principal_name = data.databricks_current_user.me.user_name
+			}
+		}
+		`,
+	}, step{
+		Template: `
+		data databricks_current_user me {}
+
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+		}
+
+		resource "databricks_service_principal" "this" {
+			display_name = "{var.RANDOM}"
+		}
+
+		resource "databricks_permissions" "this" {
+			job_id = databricks_job.this.id
+			# Lower the current users permissions to CAN_MANAGE and set a new owner
+			access_control {
+			    permission_level = "CAN_MANAGE"
+				service_principal_name = data.databricks_current_user.me.user_name
+			}
+			access_control {
+			    permission_level = "IS_OWNER"
+				service_principal_name = databricks_service_principal.this.application_id
+			}
+		}
+		`,
+	}, step{
+		Template: `
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+		}
+		`,
+		// The current user should be the owner after permissions are removed.
+		Check: func(s *terraform.State) error {
+			job, ok := s.RootModule().Resources["databricks_job.this"]
+			require.True(t, ok, "could not find job resource: databricks_job.this")
+			w := databricks.Must(databricks.NewWorkspaceClient())
+			permissions, err := getCurrentUserPermissions(context.Background(), t, w, job.Primary.ID)
+			assert.NoError(t, err)
+			assert.Len(t, permissions, 1)
+			assert.Equal(t, jobs.JobPermissionLevelIsOwner, permissions[0].PermissionLevel)
+			return nil
+		},
+	})
+}
+
+// getCurrentUserPermissions gets the permissions for the current user on a job with a given ID. If the user
+// does not have any permissions on the job, an error is returned. This does not check whether the user belongs
+// to any groups that have permissions on the job; it only checks the user's direct permissions.
+func getCurrentUserPermissions(ctx context.Context, t *testing.T, w *databricks.WorkspaceClient, jobId string) ([]jobs.JobPermission, error) {
+	permissions, err := w.Jobs.GetPermissions(ctx, jobs.GetJobPermissionsRequest{
+		JobId: jobId,
+	})
+	require.NoError(t, err)
+	me, err := w.CurrentUser.Me(ctx)
+	require.NoError(t, err)
+	for _, acl := range permissions.AccessControlList {
+		if acl.ServicePrincipalName != me.UserName && acl.UserName != me.UserName {
+			continue
+		}
+		return acl.AllPermissions, nil
+	}
+	return nil, fmt.Errorf("could not find current user %s in permissions for job %s", me.UserName, jobId)
 }

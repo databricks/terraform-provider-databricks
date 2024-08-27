@@ -400,10 +400,6 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 			// not possible to lower admins permissions anywhere from CAN_MANAGE
 			continue
 		}
-		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
-			// not possible to lower one's permissions anywhere from CAN_MANAGE
-			continue
-		}
 		if change, direct := accessControl.toAccessControlChange(); direct {
 			entity.AccessControlList = append(entity.AccessControlList, change)
 		}
@@ -509,10 +505,6 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			me, err := w.CurrentUser.Me(ctx)
-			if err != nil {
-				return err
-			}
 			for _, mapping := range permissionsResourceIDFields() {
 				if v, ok := d.GetOk(mapping.field); ok {
 					id, err := mapping.idRetriever(ctx, w, v.(string))
@@ -524,11 +516,6 @@ func ResourcePermissions() common.Resource {
 					// in the corner-case scenarios.
 					// see https://github.com/databricks/terraform-provider-databricks/issues/2052
 					for _, v := range entity.AccessControlList {
-						if v.UserName == me.UserName {
-							format := "it is not possible to decrease administrative permissions for the current user: %s"
-							return fmt.Errorf(format, me.UserName)
-						}
-
 						if v.GroupName == "admins" && mapping.resourceType != "authorization" {
 							// should allow setting admins permissions for passwords and tokens usage
 							return fmt.Errorf("it is not possible to restrict any permissions from `admins`")

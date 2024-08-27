@@ -446,3 +446,23 @@ func TestAccPeriodicTrigger(t *testing.T) {
 		}),
 	})
 }
+
+func TestAccJob_SetCurrentUserAsOwner(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `
+		data databricks_current_user me {}
+
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+		}
+
+		resource "databricks_permissions" "this" {
+			job_id = databricks_job.this.id
+			access_control {
+			    permission_level = "IS_OWNER"
+				service_principal_name = data.databricks_current_user.me.user_name
+			}
+		}
+		`,
+	})
+}

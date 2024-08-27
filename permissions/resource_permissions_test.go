@@ -458,22 +458,6 @@ func TestResourcePermissionsCustomizeDiff_ErrorOnCreate(t *testing.T) {
 	}.ExpectError(t, "permission_level WHATEVER is not supported with cluster_id objects")
 }
 
-func TestResourcePermissionsCustomizeDiff_ErrorOnPermissionsDecreate(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-		},
-		Resource: ResourcePermissions(),
-		Create:   true,
-		HCL: `
-		cluster_id = "abc"
-		access_control {
-			permission_level = "CAN_ATTACH_TO"
-			user_name = "admin"
-		}`,
-	}.ExpectError(t, "it is not possible to decrease administrative permissions for the current user: admin")
-}
-
 func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

@@ -83,7 +83,7 @@ func TestDiffShareInfo(t *testing.T) {
 	}
 	diffAdd := []sharing.SharedDataObjectUpdate{
 		{
-			Action: ShareAdd,
+			Action: sharing.SharedDataObjectUpdateActionAdd,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.b",
 				DataObjectType: "TABLE",
@@ -91,7 +91,7 @@ func TestDiffShareInfo(t *testing.T) {
 			},
 		},
 		{
-			Action: ShareAdd,
+			Action: sharing.SharedDataObjectUpdateActionAdd,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.a",
 				DataObjectType: "TABLE",
@@ -101,7 +101,7 @@ func TestDiffShareInfo(t *testing.T) {
 	}
 	diffRemove := []sharing.SharedDataObjectUpdate{
 		{
-			Action: ShareRemove,
+			Action: sharing.SharedDataObjectUpdateActionRemove,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.b",
 				DataObjectType: "TABLE",
@@ -109,7 +109,7 @@ func TestDiffShareInfo(t *testing.T) {
 			},
 		},
 		{
-			Action: ShareRemove,
+			Action: sharing.SharedDataObjectUpdateActionRemove,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.a",
 				DataObjectType: "TABLE",
@@ -119,7 +119,7 @@ func TestDiffShareInfo(t *testing.T) {
 	}
 	diff12 := []sharing.SharedDataObjectUpdate{
 		{
-			Action: ShareRemove,
+			Action: sharing.SharedDataObjectUpdateActionRemove,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.b",
 				DataObjectType: "TABLE",
@@ -127,7 +127,7 @@ func TestDiffShareInfo(t *testing.T) {
 			},
 		},
 		{
-			Action: ShareAdd,
+			Action: sharing.SharedDataObjectUpdateActionAdd,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.c",
 				DataObjectType: "TABLE",
@@ -137,7 +137,7 @@ func TestDiffShareInfo(t *testing.T) {
 	}
 	diff13 := []sharing.SharedDataObjectUpdate{
 		{
-			Action: ShareRemove,
+			Action: sharing.SharedDataObjectUpdateActionRemove,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.a",
 				DataObjectType: "TABLE",
@@ -145,7 +145,7 @@ func TestDiffShareInfo(t *testing.T) {
 			},
 		},
 		{
-			Action: ShareAdd,
+			Action: sharing.SharedDataObjectUpdateActionAdd,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.c",
 				DataObjectType: "TABLE",
@@ -153,7 +153,7 @@ func TestDiffShareInfo(t *testing.T) {
 			},
 		},
 		{
-			Action: ShareUpdate,
+			Action: sharing.SharedDataObjectUpdateActionUpdate,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.b",
 				DataObjectType: "TABLE",
@@ -163,7 +163,7 @@ func TestDiffShareInfo(t *testing.T) {
 	}
 	diff14 := []sharing.SharedDataObjectUpdate{
 		{
-			Action: ShareUpdate,
+			Action: sharing.SharedDataObjectUpdateActionUpdate,
 			DataObject: &sharing.SharedDataObject{
 				Name:           "main.b",
 				DataObjectType: "TABLE",
@@ -519,12 +519,13 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 						Name: "abc",
 						Objects: []sharing.SharedDataObject{
 							{
-								Name:           "d",
-								DataObjectType: "TABLE",
-								Comment:        "c",
-								SharedAs:       "",
-								AddedAt:        0,
-								AddedBy:        "",
+								Name:            "d",
+								DataObjectType:  "TABLE",
+								Comment:         "c",
+								SharedAs:        "",
+								AddedAt:         0,
+								AddedBy:         "",
+								ForceSendFields: []string{"Name", "Comment", "DataObjectType"},
 							},
 						},
 					}},

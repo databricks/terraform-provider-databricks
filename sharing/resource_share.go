@@ -11,12 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	ShareAdd    = "ADD"
-	ShareRemove = "REMOVE"
-	ShareUpdate = "UPDATE"
-)
-
 type ShareInfo struct {
 	sharing.ShareInfo
 }
@@ -46,15 +40,6 @@ func (ShareInfo) Aliases() map[string]map[string]string {
 		"sharing.ShareInfo": {
 			"objects": "object",
 		},
-	}
-}
-
-type SharedDataObject struct {
-	sharing.SharedDataObject
-}
-
-func (SharedDataObject) Aliases() map[string]map[string]string {
-	return map[string]map[string]string{
 		"sharing.SharedDataObject": {
 			"partitions": "partition",
 		},
@@ -109,24 +94,24 @@ func (si ShareInfo) shareChanges(action string) sharing.UpdateShare {
 	}
 }
 
-func (si ShareInfo) resourceShareMap() map[string]SharedDataObject {
-	m := make(map[string]SharedDataObject, len(si.Objects))
+func (si ShareInfo) resourceShareMap() map[string]sharing.SharedDataObject {
+	m := make(map[string]sharing.SharedDataObject, len(si.Objects))
 	for _, sdo := range si.Objects {
-		m[sdo.Name] = SharedDataObject{sdo}
+		m[sdo.Name] = sdo
 	}
 	return m
 }
 
-func (sdo SharedDataObject) Equal(other SharedDataObject) bool {
+func Equal(this sharing.SharedDataObject, other sharing.SharedDataObject) bool {
 	if other.SharedAs == "" {
-		other.SharedAs = sdo.SharedAs
+		other.SharedAs = this.SharedAs
 	}
 	//don't compare computed fields
-	other.AddedAt = sdo.AddedAt
-	other.AddedBy = sdo.AddedBy
-	other.Status = sdo.Status
-	other.ForceSendFields = sdo.ForceSendFields // TODO: is this the right thing to do?
-	return reflect.DeepEqual(sdo, other)
+	other.AddedAt = this.AddedAt
+	other.AddedBy = this.AddedBy
+	other.Status = this.Status
+	other.ForceSendFields = this.ForceSendFields // TODO: is this the right thing to do?
+	return reflect.DeepEqual(this, other)
 }
 
 func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []sharing.SharedDataObjectUpdate {
@@ -140,7 +125,7 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []sharing.SharedDataObjectUpda
 			continue
 		}
 		changes = append(changes, sharing.SharedDataObjectUpdate{
-			Action:     ShareRemove,
+			Action:     sharing.SharedDataObjectUpdateActionRemove,
 			DataObject: &beforeSdo,
 		})
 	}
@@ -150,18 +135,18 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []sharing.SharedDataObjectUpda
 	for _, afterSdo := range afterSi.Objects {
 		beforeSdo, exists := beforeMap[afterSdo.Name]
 		if exists {
-			if !beforeSdo.Equal(SharedDataObject{afterSdo}) {
+			if !Equal(beforeSdo, afterSdo) {
 				// do not send SharedAs
 				afterSdo.SharedAs = ""
 				changes = append(changes, sharing.SharedDataObjectUpdate{
-					Action:     ShareUpdate,
+					Action:     sharing.SharedDataObjectUpdateActionUpdate,
 					DataObject: &afterSdo,
 				})
 			}
 			continue
 		}
 		changes = append(changes, sharing.SharedDataObjectUpdate{
-			Action:     ShareAdd,
+			Action:     sharing.SharedDataObjectUpdateActionAdd,
 			DataObject: &afterSdo,
 		})
 	}
@@ -187,7 +172,7 @@ func ResourceShare() common.Resource {
 			//can only create empty share, objects & owners have to be added using update API
 			var si ShareInfo
 			common.DataToStructPointer(d, shareSchema, &si)
-			shareChanges := si.shareChanges(ShareAdd)
+			shareChanges := si.shareChanges(string(sharing.SharedDataObjectUpdateActionAdd))
 			shareChanges.Name = si.Name
 			shareChanges.Owner = si.Owner
 			if _, err := w.Shares.Update(ctx, shareChanges); err != nil {

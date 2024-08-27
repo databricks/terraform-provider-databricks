@@ -74,7 +74,7 @@ func ResourceMwsBudget() common.Resource {
 			if err != nil {
 				return err
 			}
-			res, err := acc.Budgets.GetByBudgetId(ctx, d.Get("budget_configuration_id").(string))
+			res, err := acc.Budgets.GetByBudgetId(ctx, d.Id())
 			if err != nil {
 				return err
 			}
@@ -85,7 +85,7 @@ func ResourceMwsBudget() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = acc.Budgets.DeleteByBudgetId(ctx, d.Get("budget_configuration_id").(string))
+			err = acc.Budgets.DeleteByBudgetId(ctx, d.Id())
 			return err
 		},
 		Schema: s,

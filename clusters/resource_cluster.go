@@ -309,6 +309,17 @@ func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema)
 			return old == new
 		},
 	})
+	s.AddNewField("no_wait", &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "" && new == "false" {
+				return true
+			}
+			return old == new
+		},
+	})
 	s.AddNewField("state", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
@@ -414,11 +425,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err != nil {
 		return err
 	}
-	clusterInfo, err := clusterWaiter.GetWithTimeout(timeout)
-	if err != nil {
-		return err
-	}
-	d.SetId(clusterInfo.ClusterId)
+
+	d.SetId(clusterWaiter.ClusterId)
 	d.Set("cluster_id", d.Id())
 	isPinned, ok := d.GetOk("is_pinned")
 	if ok && isPinned.(bool) {
@@ -437,6 +445,20 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}); err != nil {
 			return err
 		}
+	}
+
+	// If there is a no_wait flag set to true, don't wait for the cluster to be created
+	noWait, ok := d.GetOk("no_wait")
+	if ok && noWait.(bool) {
+		return nil
+	}
+
+	clusterInfo, err := clusterWaiter.GetWithTimeout(timeout)
+	if err != nil {
+		return err
+	}
+
+	if len(cluster.Libraries) > 0 {
 		_, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 			ClusterID: d.Id(),
 			IsRunning: clusterInfo.IsRunningOrResizing(),
@@ -508,7 +530,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	for k := range clusterSchema {
 		// TODO: create a map if we'll add more non-cluster config parameters in the future
-		if k == "library" || k == "is_pinned" {
+		if k == "library" || k == "is_pinned" || k == "no_wait" {
 			continue
 		}
 		if d.HasChange(k) {
@@ -551,6 +573,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		for k := range clusterSchema {
 			if k == "library" ||
 				k == "is_pinned" ||
+				k == "no_wait" ||
 				k == "num_workers" ||
 				k == "autoscale" {
 				continue

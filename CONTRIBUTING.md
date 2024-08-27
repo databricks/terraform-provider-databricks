@@ -120,8 +120,8 @@ After installing the necessary software for building provider from sources, you 
 
 ## Package organization for Providers
 We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows: 
-- `common`: Contains the changes that `depends` on both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderServer`.
-- `internal`: Contains the changes `used by` both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderName`.
+- `providers`: Contains the changes that `depends` on both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderServer`.
+- `common`: Contains the changes `used by` both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `ProviderName`.
 - `pluginfw`: Contains the changes specific to Plugin Framework. This package shouldn't depend on sdkv2 or common.
 - `sdkv2`: Contains the changes specific to SDKv2. This package shouldn't depend on pluginfw or common.
 

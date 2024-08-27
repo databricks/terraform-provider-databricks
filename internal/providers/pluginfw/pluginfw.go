@@ -15,7 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/internal"
+	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -50,7 +50,7 @@ func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req prov
 }
 
 func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = internal.ProviderName
+	resp.TypeName = providercommon.ProviderName
 	resp.Version = common.Version()
 }
 

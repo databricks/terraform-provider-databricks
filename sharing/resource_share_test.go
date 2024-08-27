@@ -12,109 +12,79 @@ import (
 
 func TestDiffShareInfo(t *testing.T) {
 	empty := ShareInfo{
-		Name:    "b",
-		Objects: []SharedDataObject{},
+		ShareInfo: sharing.ShareInfo{
+			Name:    "b",
+			Objects: []sharing.SharedDataObject{},
+		},
 	}
 	firstShare := ShareInfo{
-		Name: "b",
-		Objects: []SharedDataObject{
-			{
-				Name:           "main.b",
-				DataObjectType: "TABLE",
-				Comment:        "c",
-			},
-			{
-				Name:           "main.a",
-				DataObjectType: "TABLE",
-				Comment:        "c",
-			},
-		},
+		ShareInfo: sharing.ShareInfo{
+			Name: "b",
+			Objects: []sharing.SharedDataObject{
+				{
+					Name:           "main.b",
+					DataObjectType: "TABLE",
+					Comment:        "c",
+				},
+				{
+					Name:           "main.a",
+					DataObjectType: "TABLE",
+					Comment:        "c",
+				},
+			}},
 	}
 	secondShare := ShareInfo{
-		Name: "b",
-		Objects: []SharedDataObject{
-			{
-				Name:           "main.c",
-				DataObjectType: "TABLE",
-				Comment:        "d",
-			},
-			{
-				Name:           "main.a",
-				DataObjectType: "TABLE",
-				Comment:        "c",
-			},
-		},
+		ShareInfo: sharing.ShareInfo{
+			Name: "b",
+			Objects: []sharing.SharedDataObject{
+				{
+					Name:           "main.c",
+					DataObjectType: "TABLE",
+					Comment:        "d",
+				},
+				{
+					Name:           "main.a",
+					DataObjectType: "TABLE",
+					Comment:        "c",
+				},
+			}},
 	}
 	thirdShare := ShareInfo{
-		Name: "b",
-		Objects: []SharedDataObject{
-			{
-				Name:           "main.c",
-				DataObjectType: "TABLE",
-				Comment:        "d",
-			},
-			{
-				Name:           "main.b",
-				DataObjectType: "TABLE",
-				Comment:        "d",
-			},
-		},
+		ShareInfo: sharing.ShareInfo{
+			Name: "b",
+			Objects: []sharing.SharedDataObject{
+				{
+					Name:           "main.c",
+					DataObjectType: "TABLE",
+					Comment:        "d",
+				},
+				{
+					Name:           "main.b",
+					DataObjectType: "TABLE",
+					Comment:        "d",
+				},
+			}},
 	}
 	fourthShare := ShareInfo{
-		Name: "d",
-		Objects: []SharedDataObject{
-			{
-				Name:           "main.b",
-				DataObjectType: "TABLE",
-				Comment:        "d",
-			},
-			{
-				Name:           "main.a",
-				DataObjectType: "TABLE",
-				Comment:        "c",
-			},
-		},
+		ShareInfo: sharing.ShareInfo{
+			Name: "d",
+			Objects: []sharing.SharedDataObject{
+				{
+					Name:           "main.b",
+					DataObjectType: "TABLE",
+					Comment:        "d",
+				},
+				{
+					Name:           "main.a",
+					DataObjectType: "TABLE",
+					Comment:        "c",
+				},
+			}},
 	}
-	diffAdd := []ShareDataChange{
+	diffAdd := []sharing.SharedDataObjectUpdate{
 		{
 			Action: ShareAdd,
-			DataObject: SharedDataObject{
-				Name:           "main.b",
-				DataObjectType: "TABLE",
-				Comment:        "c",
-			},
-		},
-		{
-			Action: ShareAdd,
-			DataObject: SharedDataObject{
-				Name:           "main.a",
-				DataObjectType: "TABLE",
-				Comment:        "c",
-			},
-		},
-	}
-	diffRemove := []ShareDataChange{
-		{
-			Action: ShareRemove,
-			DataObject: SharedDataObject{
-				Name:           "main.b",
-				DataObjectType: "TABLE",
-				Comment:        "c",
-			},
-		},
-		{
-			Action: ShareRemove,
-			DataObject: SharedDataObject{
-				Name:           "main.a",
-				DataObjectType: "TABLE",
-				Comment:        "c",
-			},
-		},
-	}
-	diff12 := []ShareDataChange{
-		{
-			Action: ShareRemove,
-			DataObject: SharedDataObject{
+			DataObject: &sharing.SharedDataObject{
 				Name:           "main.b",
 				DataObjectType: "TABLE",
 				Comment:        "c",
@@ -122,17 +92,53 @@ func TestDiffShareInfo(t *testing.T) {
 		},
 		{
 			Action: ShareAdd,
-			DataObject: SharedDataObject{
+			DataObject: &sharing.SharedDataObject{
+				Name:           "main.a",
+				DataObjectType: "TABLE",
+				Comment:        "c",
+			},
+		},
+	}
+	diffRemove := []sharing.SharedDataObjectUpdate{
+		{
+			Action: ShareRemove,
+			DataObject: &sharing.SharedDataObject{
+				Name:           "main.b",
+				DataObjectType: "TABLE",
+				Comment:        "c",
+			},
+		},
+		{
+			Action: ShareRemove,
+			DataObject: &sharing.SharedDataObject{
+				Name:           "main.a",
+				DataObjectType: "TABLE",
+				Comment:        "c",
+			},
+		},
+	}
+	diff12 := []sharing.SharedDataObjectUpdate{
+		{
+			Action: ShareRemove,
+			DataObject: &sharing.SharedDataObject{
+				Name:           "main.b",
+				DataObjectType: "TABLE",
+				Comment:        "c",
+			},
+		},
+		{
+			Action: ShareAdd,
+			DataObject: &sharing.SharedDataObject{
 				Name:           "main.c",
 				DataObjectType: "TABLE",
 				Comment:        "d",
 			},
 		},
 	}
-	diff13 := []ShareDataChange{
+	diff13 := []sharing.SharedDataObjectUpdate{
 		{
 			Action: ShareRemove,
-			DataObject: SharedDataObject{
+			DataObject: &sharing.SharedDataObject{
 				Name:           "main.a",
 				DataObjectType: "TABLE",
 				Comment:        "c",
@@ -140,7 +146,7 @@ func TestDiffShareInfo(t *testing.T) {
 		},
 		{
 			Action: ShareAdd,
-			DataObject: SharedDataObject{
+			DataObject: &sharing.SharedDataObject{
 				Name:           "main.c",
 				DataObjectType: "TABLE",
 				Comment:        "d",
@@ -148,24 +154,24 @@ func TestDiffShareInfo(t *testing.T) {
 		},
 		{
 			Action: ShareUpdate,
-			DataObject: SharedDataObject{
+			DataObject: &sharing.SharedDataObject{
 				Name:           "main.b",
 				DataObjectType: "TABLE",
 				Comment:        "d",
 			},
 		},
 	}
-	diff14 := []ShareDataChange{
+	diff14 := []sharing.SharedDataObjectUpdate{
 		{
 			Action: ShareUpdate,
-			DataObject: SharedDataObject{
+			DataObject: &sharing.SharedDataObject{
 				Name:           "main.b",
 				DataObjectType: "TABLE",
 				Comment:        "d",
 			},
 		},
 	}
-	assert.Equal(t, firstShare.Diff(firstShare), []ShareDataChange{}, "Should not have difference")
+	assert.Equal(t, firstShare.Diff(firstShare), []sharing.SharedDataObjectUpdate{}, "Should not have difference")
 	assert.Equal(t, empty.Diff(firstShare), diffAdd, "Should have 2 ADDs")
 	assert.Equal(t, firstShare.Diff(empty), diffRemove, "Should have 2 REMOVEs")
 	assert.Equal(t, firstShare.Diff(secondShare), diff12, "Should have 1 ADD and 1 REMOVE")
@@ -184,21 +190,24 @@ func TestCreateShare(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
-					Name: "a",
+					ShareInfo: sharing.ShareInfo{
+						Name: "a",
+					},
 				},
 				Response: ShareInfo{
-					Name: "a",
-				},
+					ShareInfo: sharing.ShareInfo{
+						Name: "a",
+					}},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/a",
-				ExpectedRequest: ShareUpdates{
+				ExpectedRequest: sharing.UpdateShare{
 					Owner: "admin",
-					Updates: []ShareDataChange{
+					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Name:           "main.a",
 								DataObjectType: "TABLE",
 								Comment:        "c",
@@ -206,7 +215,7 @@ func TestCreateShare(t *testing.T) {
 						},
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Name:           "main.b",
 								DataObjectType: "TABLE",
 								Comment:        "c",
@@ -215,27 +224,30 @@ func TestCreateShare(t *testing.T) {
 					},
 				},
 				Response: ShareInfo{
-					Name: "a",
+					ShareInfo: sharing.ShareInfo{
+						Name: "a",
+					},
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/a?include_shared_data=true",
 				Response: ShareInfo{
-					Name:  "a",
-					Owner: "admin",
-					Objects: []SharedDataObject{
-						{
-							Name:           "main.a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-						{
-							Name:           "main.b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-						},
-					},
+					ShareInfo: sharing.ShareInfo{
+						Name:  "a",
+						Owner: "admin",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "main.a",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+							},
+							{
+								Name:           "main.b",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+							},
+						}},
 				},
 			},
 		},
@@ -265,17 +277,18 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "abc",
-					Objects: []SharedDataObject{
-						{
-							Name:           "d",
-							DataObjectType: "TABLE",
-							Comment:        "d",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-					},
+					ShareInfo: sharing.ShareInfo{
+						Name: "abc",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "d",
+								DataObjectType: "TABLE",
+								Comment:        "d",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+						}},
 				},
 			},
 			{
@@ -288,11 +301,11 @@ func TestUpdateShare(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
-				ExpectedRequest: ShareUpdates{
-					Updates: []ShareDataChange{
+				ExpectedRequest: sharing.UpdateShare{
+					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "REMOVE",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Comment:        "d",
 								DataObjectType: "TABLE",
 								Name:           "d",
@@ -300,7 +313,7 @@ func TestUpdateShare(t *testing.T) {
 						},
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Comment:        "c",
 								DataObjectType: "TABLE",
 								Name:           "a",
@@ -308,7 +321,7 @@ func TestUpdateShare(t *testing.T) {
 						},
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Comment:        "c",
 								DataObjectType: "TABLE",
 								Name:           "b",
@@ -321,26 +334,27 @@ func TestUpdateShare(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name:  "abc",
-					Owner: "admin",
-					Objects: []SharedDataObject{
-						{
-							Name:           "a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-						{
-							Name:           "b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-					},
+					sharing.ShareInfo{
+						Name:  "abc",
+						Owner: "admin",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "a",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+							{
+								Name:           "b",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+						}},
 				},
 			},
 		},
@@ -375,17 +389,18 @@ func TestUpdateShareRollback(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "abc",
-					Objects: []SharedDataObject{
-						{
-							Name:           "d",
-							DataObjectType: "TABLE",
-							Comment:        "d",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-					},
+					sharing.ShareInfo{
+						Name: "abc",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "d",
+								DataObjectType: "TABLE",
+								Comment:        "d",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+						}},
 				},
 			},
 			{
@@ -398,11 +413,11 @@ func TestUpdateShareRollback(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
-				ExpectedRequest: ShareUpdates{
-					Updates: []ShareDataChange{
+				ExpectedRequest: sharing.UpdateShare{
+					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "REMOVE",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Comment:        "d",
 								DataObjectType: "TABLE",
 								Name:           "d",
@@ -410,7 +425,7 @@ func TestUpdateShareRollback(t *testing.T) {
 						},
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Comment:        "c",
 								DataObjectType: "TABLE",
 								Name:           "a",
@@ -418,7 +433,7 @@ func TestUpdateShareRollback(t *testing.T) {
 						},
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Comment:        "c",
 								DataObjectType: "TABLE",
 								Name:           "b",
@@ -443,26 +458,27 @@ func TestUpdateShareRollback(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name:  "abc",
-					Owner: "admin",
-					Objects: []SharedDataObject{
-						{
-							Name:           "a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-						{
-							Name:           "b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-					},
+					sharing.ShareInfo{
+						Name:  "abc",
+						Owner: "admin",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "a",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+							{
+								Name:           "b",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+						}},
 				},
 			},
 		},
@@ -499,35 +515,37 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "abc",
-					Objects: []SharedDataObject{
-						{
-							Name:           "d",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
+					sharing.ShareInfo{
+						Name: "abc",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "d",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
 						},
-					},
-				},
+					}},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "abc",
-					Objects: []SharedDataObject{
-						{
-							Name:           "d",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
+					sharing.ShareInfo{
+						Name: "abc",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "d",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
 						},
-					},
-				},
+					}},
 			},
 		},
 		ID:          "abc",
@@ -555,7 +573,9 @@ func TestCreateShare_ThrowError(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
-					Name: "a",
+					sharing.ShareInfo{
+						Name: "a",
+					},
 				},
 				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
@@ -591,20 +611,24 @@ func TestCreateShareButPatchFails(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.1/unity-catalog/shares",
 				ExpectedRequest: ShareInfo{
-					Name: "a",
+					sharing.ShareInfo{
+						Name: "a",
+					},
 				},
 				Response: ShareInfo{
-					Name: "a",
+					sharing.ShareInfo{
+						Name: "a",
+					},
 				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/a",
-				ExpectedRequest: ShareUpdates{
-					Updates: []ShareDataChange{
+				ExpectedRequest: sharing.UpdateShare{
+					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Name:           "main.a",
 								DataObjectType: "TABLE",
 								Comment:        "c",
@@ -612,7 +636,7 @@ func TestCreateShareButPatchFails(t *testing.T) {
 						},
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Name:           "main.b",
 								DataObjectType: "TABLE",
 								Comment:        "c",
@@ -659,27 +683,28 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "abc",
-					Objects: []SharedDataObject{
-						{
-							Name:           "a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "b",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-					},
+					sharing.ShareInfo{
+						Name: "abc",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "a",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "b",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+						}},
 				},
 			},
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.1/unity-catalog/shares/abc",
-				ExpectedRequest: ShareUpdates{
-					Updates: []ShareDataChange{
+				ExpectedRequest: sharing.UpdateShare{
+					Updates: []sharing.SharedDataObjectUpdate{
 						{
 							Action: "ADD",
-							DataObject: SharedDataObject{
+							DataObject: &sharing.SharedDataObject{
 								Comment:        "c",
 								DataObjectType: "TABLE",
 								Name:           "b",
@@ -692,25 +717,26 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/shares/abc?include_shared_data=true",
 				Response: ShareInfo{
-					Name: "abc",
-					Objects: []SharedDataObject{
-						{
-							Name:           "a",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-						{
-							Name:           "b",
-							DataObjectType: "TABLE",
-							Comment:        "c",
-							SharedAs:       "",
-							AddedAt:        0,
-							AddedBy:        "",
-						},
-					},
+					sharing.ShareInfo{
+						Name: "abc",
+						Objects: []sharing.SharedDataObject{
+							{
+								Name:           "a",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+							{
+								Name:           "b",
+								DataObjectType: "TABLE",
+								Comment:        "c",
+								SharedAs:       "",
+								AddedAt:        0,
+								AddedBy:        "",
+							},
+						}},
 				},
 			},
 		},

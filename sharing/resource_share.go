@@ -11,15 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type SharesAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-func NewSharesAPI(ctx context.Context, m any) SharesAPI {
-	return SharesAPI{m.(*common.DatabricksClient), context.WithValue(ctx, common.Api, common.API_2_1)}
-}
-
 const (
 	ShareAdd    = "ADD"
 	ShareRemove = "REMOVE"
@@ -27,35 +18,51 @@ const (
 )
 
 type ShareInfo struct {
-	Name      string             `json:"name" tf:"force_new"`
-	Owner     string             `json:"owner,omitempty" tf:"suppress_diff"`
-	Objects   []SharedDataObject `json:"objects,omitempty" tf:"alias:object"`
-	CreatedAt int64              `json:"created_at,omitempty" tf:"computed"`
-	CreatedBy string             `json:"created_by,omitempty" tf:"computed"`
+	sharing.ShareInfo
+}
+
+func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("name").SetForceNew()
+	s.SchemaPath("name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+	s.SchemaPath("owner").SetSuppressDiff()
+	s.SchemaPath("created_at").SetComputed()
+	s.SchemaPath("created_by").SetComputed()
+	s.SchemaPath("updated_at").SetComputed()
+	s.SchemaPath("updated_by").SetComputed()
+
+	s.SchemaPath("object", "shared_as").SetSuppressDiff()
+	s.SchemaPath("object", "cdf_enabled").SetSuppressDiff()
+	s.SchemaPath("object", "start_version").SetSuppressDiff()
+	s.SchemaPath("object", "history_data_sharing_status").SetSuppressDiff()
+	s.SchemaPath("object", "status").SetComputed()
+	s.SchemaPath("object", "added_at").SetComputed()
+	s.SchemaPath("object", "added_by").SetComputed()
+
+	return s
+}
+
+func (ShareInfo) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"sharing.ShareInfo": {
+			"objects": "object",
+		},
+	}
 }
 
 type SharedDataObject struct {
-	Name                     string      `json:"name"`
-	DataObjectType           string      `json:"data_object_type"`
-	Comment                  string      `json:"comment,omitempty"`
-	SharedAs                 string      `json:"shared_as,omitempty" tf:"suppress_diff"`
-	CDFEnabled               bool        `json:"cdf_enabled,omitempty" tf:"suppress_diff"`
-	StartVersion             int64       `json:"start_version,omitempty" tf:"suppress_diff"`
-	HistoryDataSharingStatus string      `json:"history_data_sharing_status,omitempty" tf:"suppress_diff"`
-	Partitions               []Partition `json:"partitions,omitempty" tf:"alias:partition"`
-	Status                   string      `json:"status,omitempty" tf:"computed"`
-	AddedAt                  int64       `json:"added_at,omitempty" tf:"computed"`
-	AddedBy                  string      `json:"added_by,omitempty" tf:"computed"`
+	sharing.SharedDataObject
+}
+
+func (SharedDataObject) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"sharing.SharedDataObject": {
+			"partitions": "partition",
+		},
+	}
 }
 
 type ShareDataChange struct {
-	Action     string           `json:"action"`
-	DataObject SharedDataObject `json:"data_object"`
-}
-
-type ShareUpdates struct {
-	Owner   string            `json:"owner,omitempty"`
-	Updates []ShareDataChange `json:"updates"`
+	sharing.SharedDataObjectUpdate
 }
 
 type Shares struct {
@@ -83,32 +90,21 @@ func (si *ShareInfo) suppressCDFEnabledDiff() {
 	//suppress diff for CDF Enabled if HistoryDataSharingStatus is enabled , as API does not accept both fields to be set
 	for i := range si.Objects {
 		if si.Objects[i].HistoryDataSharingStatus == "ENABLED" {
-			si.Objects[i].CDFEnabled = false
+			si.Objects[i].CdfEnabled = false
 		}
 	}
 }
 
-func (a SharesAPI) get(name string) (si ShareInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/shares/"+name+"?include_shared_data=true", nil, &si)
-	return
-}
-
-func (a SharesAPI) update(name string, su ShareUpdates) error {
-	if len(su.Updates) == 0 {
-		return nil
-	}
-	return a.client.Patch(a.context, "/unity-catalog/shares/"+name, su)
-}
-
-func (si ShareInfo) shareChanges(action string) ShareUpdates {
-	var changes []ShareDataChange
+func (si ShareInfo) shareChanges(action string) sharing.UpdateShare {
+	var changes []sharing.SharedDataObjectUpdate
 	for _, obj := range si.Objects {
-		changes = append(changes, ShareDataChange{
-			Action:     action,
-			DataObject: obj,
-		})
+		changes = append(changes, sharing.SharedDataObjectUpdate{
+			Action:     sharing.SharedDataObjectUpdateAction(action),
+			DataObject: &obj,
+		},
+		)
 	}
-	return ShareUpdates{
+	return sharing.UpdateShare{
 		Updates: changes,
 	}
 }
@@ -116,7 +112,7 @@ func (si ShareInfo) shareChanges(action string) ShareUpdates {
 func (si ShareInfo) resourceShareMap() map[string]SharedDataObject {
 	m := make(map[string]SharedDataObject, len(si.Objects))
 	for _, sdo := range si.Objects {
-		m[sdo.Name] = sdo
+		m[sdo.Name] = SharedDataObject{sdo}
 	}
 	return m
 }
@@ -129,22 +125,23 @@ func (sdo SharedDataObject) Equal(other SharedDataObject) bool {
 	other.AddedAt = sdo.AddedAt
 	other.AddedBy = sdo.AddedBy
 	other.Status = sdo.Status
+	other.ForceSendFields = sdo.ForceSendFields // TODO: is this the right thing to do?
 	return reflect.DeepEqual(sdo, other)
 }
 
-func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
+func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []sharing.SharedDataObjectUpdate {
 	beforeMap := beforeSi.resourceShareMap()
 	afterMap := afterSi.resourceShareMap()
-	changes := []ShareDataChange{}
+	changes := []sharing.SharedDataObjectUpdate{}
 	// not in after so remove
 	for _, beforeSdo := range beforeSi.Objects {
 		_, exists := afterMap[beforeSdo.Name]
 		if exists {
 			continue
 		}
-		changes = append(changes, ShareDataChange{
+		changes = append(changes, sharing.SharedDataObjectUpdate{
 			Action:     ShareRemove,
-			DataObject: beforeSdo,
+			DataObject: &beforeSdo,
 		})
 	}
 
@@ -153,29 +150,26 @@ func (beforeSi ShareInfo) Diff(afterSi ShareInfo) []ShareDataChange {
 	for _, afterSdo := range afterSi.Objects {
 		beforeSdo, exists := beforeMap[afterSdo.Name]
 		if exists {
-			if !beforeSdo.Equal(afterSdo) {
+			if !beforeSdo.Equal(SharedDataObject{afterSdo}) {
 				// do not send SharedAs
 				afterSdo.SharedAs = ""
-				changes = append(changes, ShareDataChange{
+				changes = append(changes, sharing.SharedDataObjectUpdate{
 					Action:     ShareUpdate,
-					DataObject: afterSdo,
+					DataObject: &afterSdo,
 				})
 			}
 			continue
 		}
-		changes = append(changes, ShareDataChange{
+		changes = append(changes, sharing.SharedDataObjectUpdate{
 			Action:     ShareAdd,
-			DataObject: afterSdo,
+			DataObject: &afterSdo,
 		})
 	}
 	return changes
 }
 
 func ResourceShare() common.Resource {
-	shareSchema := common.StructToSchema(ShareInfo{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
-		return m
-	})
+	shareSchema := common.StructToSchema(ShareInfo{}, nil)
 	return common.Resource{
 		Schema: shareSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -194,8 +188,9 @@ func ResourceShare() common.Resource {
 			var si ShareInfo
 			common.DataToStructPointer(d, shareSchema, &si)
 			shareChanges := si.shareChanges(ShareAdd)
+			shareChanges.Name = si.Name
 			shareChanges.Owner = si.Owner
-			if err := NewSharesAPI(ctx, c).update(si.Name, shareChanges); err != nil {
+			if _, err := w.Shares.Update(ctx, shareChanges); err != nil {
 				//delete orphaned share if update fails
 				if d_err := w.Shares.DeleteByName(ctx, si.Name); d_err != nil {
 					return d_err
@@ -222,23 +217,28 @@ func ResourceShare() common.Resource {
 			return common.StructToData(shareInfo, shareSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			beforeSi, err := NewSharesAPI(ctx, c).get(d.Id())
+			client, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
+
+			si, err := client.Shares.Get(ctx, sharing.GetShareRequest{
+				Name:              d.Id(),
+				IncludeSharedData: true,
+			})
+			if err != nil {
+				return err
+			}
+
+			var beforeSi = ShareInfo{*si}
 			beforeSi.sortSharesByName()
 			beforeSi.suppressCDFEnabledDiff()
 			var afterSi ShareInfo
 			common.DataToStructPointer(d, shareSchema, &afterSi)
 			changes := beforeSi.Diff(afterSi)
 
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-
 			if d.HasChange("owner") {
-				_, err = w.Shares.Update(ctx, sharing.UpdateShare{
+				_, err = client.Shares.Update(ctx, sharing.UpdateShare{
 					Name:  afterSi.Name,
 					Owner: afterSi.Owner,
 				})
@@ -251,14 +251,19 @@ func ResourceShare() common.Resource {
 				return nil
 			}
 
-			err = NewSharesAPI(ctx, c).update(d.Id(), ShareUpdates{
+			if len(changes) == 0 {
+				return nil
+			}
+
+			_, err = client.Shares.Update(ctx, sharing.UpdateShare{
+				Name:    d.Id(),
 				Updates: changes,
 			})
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					_, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
+					_, rollbackErr := client.Shares.Update(ctx, sharing.UpdateShare{
 						Name:  beforeSi.Name,
 						Owner: old.(string),
 					})

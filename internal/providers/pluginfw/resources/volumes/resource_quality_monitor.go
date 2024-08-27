@@ -1,4 +1,4 @@
-package resources
+package volumes
 
 import (
 	"context"

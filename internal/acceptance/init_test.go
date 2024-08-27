@@ -58,7 +58,7 @@ func unityAccountLevel(t *testing.T, steps ...LegacyStep) {
 	run(t, steps)
 }
 
-// A Step in a terraform acceptance test uisng Plugin Framework
+// A Step in a terraform acceptance test using Plugin Framework
 type Step struct {
 	// Terraform HCL for resources to materialize in this test step.
 	Template string
@@ -328,11 +328,34 @@ func runWithFixtureServer(t *testing.T, f ResourceFixturePluginFramework) error 
 		s.Client = client
 		defer server.Close()
 
+		config := client.Config
+		config.WithTesting()
+		if f.CommandMock != nil {
+			client.WithCommandMock(f.CommandMock)
+		}
+		if f.Azure {
+			config.AzureResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
+		}
+		if f.AzureSPN {
+			config.AzureClientID = "a"
+			config.AzureClientSecret = "b"
+			config.AzureTenantID = "c"
+		}
+		if f.Gcp {
+			config.GoogleServiceAccount = "sa@prj.iam.gserviceaccount.com"
+		}
+		if f.AccountID != "" {
+			config.AccountID = f.AccountID
+		}
+		f.setDatabricksEnvironmentForTest(client, server.URL)
+
 		protoV6ProviderFactories := map[string]func() (tfprotov6.ProviderServer, error){
 			"databricks": func() (tfprotov6.ProviderServer, error) {
 				ctx := context.Background()
 
+				// tanmaytodo
 				providerServer, err := provider.GetProviderServerWithConfiguredMockClient(ctx, s.Client)
+				// providerServer, err := provider.GetProviderServer(ctx)
 
 				if err != nil {
 					return nil, err

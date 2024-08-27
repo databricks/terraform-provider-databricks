@@ -38,7 +38,15 @@ func GetDatabricksProviderPluginFramework() provider.Provider {
 	return p
 }
 
+func GetDatabricksProviderPluginFrameworkWithConfiguredMockClient(client *common.DatabricksClient) provider.Provider {
+	p := &DatabricksProviderPluginFramework{
+		Client: client,
+	}
+	return p
+}
+
 type DatabricksProviderPluginFramework struct {
+	Client *common.DatabricksClient
 }
 
 var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
@@ -65,9 +73,11 @@ func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req pr
 }
 
 func (p *DatabricksProviderPluginFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	client := configureDatabricksClient_PluginFramework(ctx, req, resp)
-	resp.DataSourceData = client
-	resp.ResourceData = client
+	if p.Client == nil {
+		p.Client = configureDatabricksClient_PluginFramework(ctx, req, resp)
+	}
+	resp.DataSourceData = p.Client
+	resp.ResourceData = p.Client
 }
 
 func providerSchemaPluginFramework() schema.Schema {
@@ -96,7 +106,7 @@ func providerSchemaPluginFramework() schema.Schema {
 	}
 }
 
-func configureDatabricksClient_PluginFramework(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) any {
+func configureDatabricksClient_PluginFramework(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) *common.DatabricksClient {
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}

@@ -52,8 +52,7 @@ func GetProviderServerWithConfiguredMockClient(ctx context.Context, client *comm
 		log.Fatal(err)
 	}
 
-	pluginFrameworkProvider := GetDatabricksProviderPluginFramework()
-	// tanmaytodo pluginFrameworkProvider.Configure() ?
+	pluginFrameworkProvider := GetDatabricksProviderPluginFrameworkWithConfiguredMockClient(client)
 
 	providers := []func() tfprotov6.ProviderServer{
 		func() tfprotov6.ProviderServer {

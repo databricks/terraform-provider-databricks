@@ -128,6 +128,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_adls_gen1_mount":           storage.ResourceAzureAdlsGen1Mount().ToResource(),
 			"databricks_azure_adls_gen2_mount":           storage.ResourceAzureAdlsGen2Mount().ToResource(),
 			"databricks_azure_blob_mount":                storage.ResourceAzureBlobMount().ToResource(),
+			"databricks_mws_budget":                      mws.ResourceMwsBudget().ToResource(),
 			"databricks_catalog":                         catalog.ResourceCatalog().ToResource(),
 			"databricks_catalog_workspace_binding":       catalog.ResourceCatalogWorkspaceBinding().ToResource(),
 			"databricks_connection":                      catalog.ResourceConnection().ToResource(),

@@ -1,4 +1,4 @@
-package volumes
+package qualitymonitor
 
 import (
 	"context"

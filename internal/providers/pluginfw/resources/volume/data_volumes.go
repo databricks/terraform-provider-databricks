@@ -1,4 +1,4 @@
-package volumes
+package volume
 
 import (
 	"context"

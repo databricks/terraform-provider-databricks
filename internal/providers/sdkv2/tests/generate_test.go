@@ -1,4 +1,4 @@
-package provider
+package tests
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"testing"
 	"text/template"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -233,7 +234,7 @@ func TestGenerateTestCodeStubs(t *testing.T) {
 	t.Logf("Got %d unit tests in total. %v",
 		len(funcs), resourceTestStub{})
 	t.Skip()
-	p := DatabricksProvider()
+	p := sdkv2.DatabricksProvider()
 	for name, resource := range p.ResourcesMap {
 		if name != "databricks_group_instance_profile" {
 			continue

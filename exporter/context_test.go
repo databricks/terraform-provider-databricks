@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -373,7 +373,7 @@ func TestLoadingLastRun(t *testing.T) {
 }
 
 func TestGenerateResourceIdForWsObject(t *testing.T) {
-	p := provider.DatabricksProvider()
+	p := sdkv2.DatabricksProvider()
 	ic := &importContext{
 		Importables: resourcesMap,
 		Resources:   p.ResourcesMap,

@@ -26,10 +26,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	dlt_pipelines "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/policies"
 	"github.com/databricks/terraform-provider-databricks/pools"
-	"github.com/databricks/terraform-provider-databricks/provider"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -45,7 +45,7 @@ import (
 )
 
 func importContextForTest() *importContext {
-	p := provider.DatabricksProvider()
+	p := sdkv2.DatabricksProvider()
 	supportedResources := maps.Keys(resourcesMap)
 	return &importContext{
 		Importables:               resourcesMap,

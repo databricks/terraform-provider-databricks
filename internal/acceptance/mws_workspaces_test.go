@@ -11,7 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -378,14 +378,14 @@ func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 			spId := s.RootModule().Resources["databricks_service_principal.this"].Primary.ID
 			spAppId := s.RootModule().Resources["databricks_service_principal.this"].Primary.Attributes["application_id"]
 			spSecret := s.RootModule().Resources["databricks_service_principal_secret.this"].Primary.Attributes["secret"]
-			pr = provider.DatabricksProvider()
+			pr = sdkv2.DatabricksProvider()
 			rd := schema.TestResourceDataRaw(t, pr.Schema, map[string]interface{}{
 				"client_id":     spAppId,
 				"client_secret": spSecret,
 			})
 			fmt.Printf("client_id: %s, client_secret: %s\n", spAppId, spSecret)
 			pr.ConfigureContextFunc = func(ctx context.Context, c *schema.ResourceData) (interface{}, diag.Diagnostics) {
-				return provider.ConfigureDatabricksClient(ctx, rd)
+				return sdkv2.ConfigureDatabricksClient(ctx, rd)
 			}
 			logger.DefaultLogger = &logger.SimpleLogger{
 				Level: logger.LevelDebug,

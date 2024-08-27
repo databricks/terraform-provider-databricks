@@ -1,10 +1,14 @@
-package provider
+// Package providers contains the changes for both SDKv2 and Plugin Framework which are defined in their respective sub packages.
+//
+// Note: Top level files under providers package only contains the changes that depends on both internal/providers/sdkv2 and internal/providers/pluginfw packages
+package providers
 
 import (
 	"context"
 	"log"
 
-	pluginframeworkprovider "github.com/databricks/terraform-provider-databricks/internal/pluginframework/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
@@ -20,7 +24,7 @@ import (
 // Protocol v6 providers to be served together. The function returns the multiplexed
 // ProviderServer, or an error if any part of the process fails.
 func GetProviderServer(ctx context.Context) (tfprotov6.ProviderServer, error) {
-	sdkPluginProvider := DatabricksProvider()
+	sdkPluginProvider := sdkv2.DatabricksProvider()
 
 	upgradedSdkPluginProvider, err := tf5to6server.UpgradeServer(
 		context.Background(),
@@ -30,7 +34,7 @@ func GetProviderServer(ctx context.Context) (tfprotov6.ProviderServer, error) {
 		log.Fatal(err)
 	}
 
-	pluginFrameworkProvider := pluginframeworkprovider.GetDatabricksProviderPluginFramework()
+	pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework()
 
 	providers := []func() tfprotov6.ProviderServer{
 		func() tfprotov6.ProviderServer {

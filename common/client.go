@@ -108,6 +108,14 @@ func (c *DatabricksClient) setAccountId(accountId string) error {
 	return nil
 }
 
+func (c *DatabricksClient) GetAccountClient() (*databricks.AccountClient, diag.Diagnostics) {
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get account client", err.Error())}
+	}
+	return a, nil
+}
+
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()

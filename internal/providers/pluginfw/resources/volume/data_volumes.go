@@ -44,14 +44,13 @@ func (d *VolumesDataSource) Configure(_ context.Context, req datasource.Configur
 }
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	client := d.Client
-	w, err := client.WorkspaceClient()
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
+	w, diags := d.Client.GetWorkspaceClient()
+	if diags.HasError() {
 		return
 	}
+
 	var volumesList VolumesList
-	diags := req.Config.Get(ctx, &volumesList)
+	diags = req.Config.Get(ctx, &volumesList)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

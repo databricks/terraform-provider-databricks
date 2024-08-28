@@ -2,20 +2,19 @@ package volume
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func DataSourceVolumes() func() datasource.DataSource {
-	return func() datasource.DataSource {
-		return &VolumesDataSource{}
-	}
+func DataSourceVolumes() datasource.DataSource {
+	return &VolumesDataSource{}
 }
 
 var _ datasource.DataSource = &VolumesDataSource{}
@@ -36,25 +35,12 @@ func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.Metadat
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(VolumesList{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			return c
-		}),
+		Attributes: tfschema.DataSourceStructToSchemaMap(VolumesList{}, nil),
 	}
 }
 
-func (d *VolumesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*common.DatabricksClient)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *common.DatabricksClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-	d.Client = client
+func (d *VolumesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	d.Client = pluginfwcommon.ConfigureDataSource(req, resp)
 }
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -70,10 +56,9 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	volumes, err := w.Volumes.ListAll(ctx, catalog.ListVolumesRequest{
-		CatalogName: volumesList.CatalogName.ValueString(),
-		SchemaName:  volumesList.SchemaName.ValueString(),
-	})
+	var listVolumesRequest catalog.ListVolumesRequest
+	converters.TfSdkToGoSdkStruct(ctx, volumesList, &listVolumesRequest)
+	volumes, err := w.Volumes.ListAll(ctx, listVolumesRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get volumes for the catalog and schema", err.Error())
 		return

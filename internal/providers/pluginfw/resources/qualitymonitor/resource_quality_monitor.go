@@ -8,9 +8,11 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -20,29 +22,32 @@ import (
 
 const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
-func WaitForMonitor(w *databricks.WorkspaceClient, ctx context.Context, monitorName string) error {
-	return retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
-		endpoint, err := w.QualityMonitors.GetByTableName(ctx, monitorName)
+var _ resource.Resource = &QualityMonitorResource{}
+
+func ResourceQualityMonitor() resource.Resource {
+	return &QualityMonitorResource{}
+}
+
+func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor *catalog.MonitorInfo) diag.Diagnostics {
+	monitorName := monitor.TableName
+	err := retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
+		monitor, err := w.QualityMonitors.GetByTableName(ctx, monitorName)
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
 
-		switch endpoint.Status {
+		switch monitor.Status {
 		case catalog.MonitorInfoStatusMonitorStatusActive:
 			return nil
 		case catalog.MonitorInfoStatusMonitorStatusError, catalog.MonitorInfoStatusMonitorStatusFailed:
-			return retry.NonRetryableError(fmt.Errorf("monitor status retrund %s for monitor: %s", endpoint.Status, monitorName))
+			return retry.NonRetryableError(fmt.Errorf("monitor status retrund %s for monitor: %s", monitor.Status, monitorName))
 		}
 		return retry.RetryableError(fmt.Errorf("monitor %s is still pending", monitorName))
 	})
-}
-
-var _ resource.Resource = &QualityMonitorResource{}
-
-func ResourceQualityMonitor() func() resource.Resource {
-	return func() resource.Resource {
-		return &QualityMonitorResource{}
+	if err != nil {
+		return diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get Monitor", err.Error())}
 	}
+	return nil
 }
 
 type MonitorInfoExtended struct {
@@ -61,7 +66,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks Lakehouse Monitor. MonitorInfo struct is used to create the schema",
+		Description: "Terraform schema for Databricks Quality Monitor",
 		Attributes: tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 			c.SetRequired("assets_dir")
 			c.SetRequired("output_schema_name")
@@ -78,28 +83,16 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 }
 
 func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-	client, ok := req.ProviderData.(*common.DatabricksClient)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *common.DatabricksClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-	d.Client = client
+	d.Client = pluginfwcommon.ConfigureResource(req, resp)
 }
 
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	w, err := r.Client.WorkspaceClient()
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
+	w, diags := r.Client.GetWorkspaceClient()
+	if diags.HasError() {
 		return
 	}
 	var monitorInfoTfSDK MonitorInfoExtended
-	diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
+	diags = req.Plan.Get(ctx, &monitorInfoTfSDK)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -110,26 +103,19 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	if diags.HasError() {
 		return
 	}
-	endpoint, err := w.QualityMonitors.Create(ctx, createMonitorGoSDK)
+	monitor, err := w.QualityMonitors.Create(ctx, createMonitorGoSDK)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get created monitor", err.Error())
 		return
 	}
-	err = WaitForMonitor(w, ctx, endpoint.TableName)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to wait for newly created monitor", err.Error())
-		return
-	}
-
-	new_endpoint, err := w.QualityMonitors.GetByTableName(ctx, createMonitorGoSDK.TableName)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get newly created monitor", err.Error())
+	resp.Diagnostics.Append(waitForMonitor(ctx, w, monitor)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var newMonitorInfoTfSDK MonitorInfoExtended
-	diags = converters.GoSdkToTfSdkStruct(ctx, new_endpoint, &newMonitorInfoTfSDK)
-	if diags.HasError() {
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, monitor, &newMonitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -137,13 +123,13 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	w, err := r.Client.WorkspaceClient()
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
+	w, diags := r.Client.GetWorkspaceClient()
+	if diags.HasError() {
 		return
 	}
+
 	var getMonitor catalog_tf.GetQualityMonitorRequest
-	diags := req.State.GetAttribute(ctx, path.Root("table_name"), &getMonitor.TableName)
+	diags = req.State.GetAttribute(ctx, path.Root("table_name"), &getMonitor.TableName)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,13 +152,13 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	w, err := r.Client.WorkspaceClient()
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
+	w, diags := r.Client.GetWorkspaceClient()
+	if diags.HasError() {
 		return
 	}
+
 	var monitorInfoTfSDK MonitorInfoExtended
-	diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
+	diags = req.Plan.Get(ctx, &monitorInfoTfSDK)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -189,26 +175,18 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 	if diags.HasError() {
 		return
 	}
-	_, err = w.QualityMonitors.Update(ctx, updateMonitorGoSDK)
+	monitor, err := w.QualityMonitors.Update(ctx, updateMonitorGoSDK)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to update monitor", err.Error())
 		return
 	}
-	err = WaitForMonitor(w, ctx, updateMonitorGoSDK.TableName)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to wait for updated monitor", err.Error())
-		return
-	}
-
-	// Get the created monitor.
-	new_endpoint, err := w.QualityMonitors.GetByTableName(ctx, updateMonitorGoSDK.TableName)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get newly created monitor", err.Error())
+	resp.Diagnostics.Append(waitForMonitor(ctx, w, monitor)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var newMonitorInfoTfSDK MonitorInfoExtended
-	diags = converters.GoSdkToTfSdkStruct(ctx, new_endpoint, &newMonitorInfoTfSDK)
+	diags = converters.GoSdkToTfSdkStruct(ctx, monitor, &newMonitorInfoTfSDK)
 	if diags.HasError() {
 		return
 	}
@@ -217,18 +195,18 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	w, err := r.Client.WorkspaceClient()
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get workspace client", err.Error())
+	w, diags := r.Client.GetWorkspaceClient()
+	if diags.HasError() {
 		return
 	}
+
 	var deleteRequest catalog_tf.DeleteQualityMonitorRequest
-	diags := req.State.GetAttribute(ctx, path.Root("table_name"), &deleteRequest.TableName)
+	diags = req.State.GetAttribute(ctx, path.Root("table_name"), &deleteRequest.TableName)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	err = w.QualityMonitors.DeleteByTableName(ctx, deleteRequest.TableName.ValueString())
+	err := w.QualityMonitors.DeleteByTableName(ctx, deleteRequest.TableName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to delete monitor", err.Error())
 		return

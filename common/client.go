@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -54,6 +55,14 @@ type DatabricksClient struct {
 	cachedWorkspaceClient *databricks.WorkspaceClient
 	cachedAccountClient   *databricks.AccountClient
 	mu                    sync.Mutex
+}
+
+func (c *DatabricksClient) GetWorkspaceClient() (*databricks.WorkspaceClient, diag.Diagnostics) {
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get workspace client", err.Error())}
+	}
+	return w, nil
 }
 
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {

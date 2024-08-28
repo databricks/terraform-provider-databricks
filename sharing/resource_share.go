@@ -16,6 +16,7 @@ type ShareInfo struct {
 }
 
 func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("name").SetRequired()
 	s.SchemaPath("name").SetForceNew()
 	s.SchemaPath("name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 	s.SchemaPath("owner").SetSuppressDiff()
@@ -24,6 +25,8 @@ func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("updated_at").SetComputed()
 	s.SchemaPath("updated_by").SetComputed()
 
+	s.SchemaPath("object").SetRequired()
+	s.SchemaPath("object", "data_object_type").SetRequired()
 	s.SchemaPath("object", "shared_as").SetSuppressDiff()
 	s.SchemaPath("object", "cdf_enabled").SetSuppressDiff()
 	s.SchemaPath("object", "start_version").SetSuppressDiff()
@@ -31,6 +34,12 @@ func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("object", "status").SetComputed()
 	s.SchemaPath("object", "added_at").SetComputed()
 	s.SchemaPath("object", "added_by").SetComputed()
+
+	s.SchemaPath("object", "partition").SetMinItems(1)
+	s.SchemaPath("object", "partition", "value", "name").SetRequired()
+	s.SchemaPath("object", "partition", "value", "op").SetRequired()
+	s.SchemaPath("object", "partition", "value", "value").SetRequired()
+	s.SchemaPath("object", "partition", "value", "recipient_property_key").SetRequired()
 
 	return s
 }
@@ -42,6 +51,9 @@ func (ShareInfo) Aliases() map[string]map[string]string {
 		},
 		"sharing.SharedDataObject": {
 			"partitions": "partition",
+		},
+		"sharing.Parition": {
+			"values": "value",
 		},
 	}
 }

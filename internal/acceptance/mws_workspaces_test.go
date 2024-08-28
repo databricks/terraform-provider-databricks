@@ -11,11 +11,13 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/tokens"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -367,9 +369,9 @@ func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 		`
 
 	var pr *schema.Provider
-	providerFactory := map[string]func() (*schema.Provider, error){
-		"databricks": func() (*schema.Provider, error) {
-			return pr, nil
+	providerFactory := map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(pr))
 		},
 	}
 	accountLevel(t, step{
@@ -412,17 +414,17 @@ func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 		},
 	}, step{
 		// Tolerate existing token
-		Template:          workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
-		ProviderFactories: providerFactory,
+		Template:                 workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
 	}, step{
 		// Allow the token to be removed
-		Template:          workspaceTemplate(``) + servicePrincipal,
-		ProviderFactories: providerFactory,
+		Template:                 workspaceTemplate(``) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
 	}, step{
 		// Fail when adding the token back
-		Template:          workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
-		ProviderFactories: providerFactory,
-		ExpectError:       regexp.MustCompile(`cannot create token: the principal used by Databricks \(client ID .*\) is not authorized to create a token in this workspace`),
+		Template:                 workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
+		ExpectError:              regexp.MustCompile(`cannot create token: the principal used by Databricks \(client ID .*\) is not authorized to create a token in this workspace`),
 	}, step{
 		// Use the original provider for a final step to clean up the newly created service principal
 		Template: workspaceTemplate(``) + servicePrincipal,

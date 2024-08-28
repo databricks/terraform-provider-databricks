@@ -25,11 +25,10 @@ func (ShareInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("updated_by").SetComputed()
 
 	s.SchemaPath("object", "shared_as").SetSuppressDiff()
-	s.SchemaPath("object", "string_shared_as").SetComputed()
 	s.SchemaPath("object", "cdf_enabled").SetSuppressDiff()
 	s.SchemaPath("object", "start_version").SetSuppressDiff()
 	s.SchemaPath("object", "history_data_sharing_status").SetSuppressDiff()
-	s.SchemaPath("object", "status").SetReadOnly()
+	s.SchemaPath("object", "status").SetComputed()
 	s.SchemaPath("object", "added_at").SetComputed()
 	s.SchemaPath("object", "added_by").SetComputed()
 
@@ -43,9 +42,6 @@ func (ShareInfo) Aliases() map[string]map[string]string {
 		},
 		"sharing.SharedDataObject": {
 			"partitions": "partition",
-		},
-		"sharing.Partition": {
-			"values": "value",
 		},
 	}
 }

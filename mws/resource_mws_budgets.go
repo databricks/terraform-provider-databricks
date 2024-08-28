@@ -62,10 +62,6 @@ func ResourceMwsBudget() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = common.StructToData(req, s, d)
-			if err != nil {
-				return err
-			}
 			d.SetId(req.Budget.BudgetConfigurationId)
 			return nil
 		},

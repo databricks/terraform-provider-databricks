@@ -170,8 +170,9 @@ func run(t *testing.T, steps []step) {
 		thisStep := s
 		stepCheck := thisStep.Check
 		stepPreConfig := s.PreConfig
+		providerFactoryForStep := protoV6ProviderFactories
 		if thisStep.ProtoV6ProviderFactories != nil {
-			protoV6ProviderFactories = thisStep.ProtoV6ProviderFactories
+			providerFactoryForStep = thisStep.ProtoV6ProviderFactories
 		}
 		ts = append(ts, resource.TestStep{
 			PreConfig: func() {
@@ -195,7 +196,7 @@ func run(t *testing.T, steps []step) {
 			ImportState:               s.ImportState,
 			ImportStateVerify:         s.ImportStateVerify,
 			ExpectError:               s.ExpectError,
-			ProtoV6ProviderFactories:  protoV6ProviderFactories,
+			ProtoV6ProviderFactories:  providerFactoryForStep,
 			Check: func(state *terraform.State) error {
 				if stepCheck != nil {
 					return stepCheck(state)

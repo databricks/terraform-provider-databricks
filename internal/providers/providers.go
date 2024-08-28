@@ -22,6 +22,7 @@ type serverOptions struct {
 	pluginFrameworkProvider provider.Provider
 }
 
+// ServerOption is a common interface for overriding providers in GetProviderServer functino call.
 type ServerOption interface {
 	Apply(*serverOptions)
 }
@@ -34,7 +35,7 @@ func (o *sdkV2ProviderOption) Apply(options *serverOptions) {
 	options.sdkV2Provider = o.sdkV2Provider
 }
 
-// WithSdkV2Provider takes in a *schema.Provider from sdk v2 and returns a ServerOption.
+// WithSdkV2Provider allows overriding the SDKv2 provider used when creating a Terraform provider with muxing.
 // This is typically used in acceptance test for a test step to have a custom provider override.
 func WithSdkV2Provider(sdkV2Provider *schema.Provider) ServerOption {
 	return &sdkV2ProviderOption{sdkV2Provider: sdkV2Provider}
@@ -49,8 +50,9 @@ func WithSdkV2Provider(sdkV2Provider *schema.Provider) ServerOption {
 // Protocol v6 providers to be served together. The function returns the multiplexed
 // ProviderServer, or an error if any part of the process fails.
 //
-// The function takes in a list of ServerOption objects for acceptance test purposes where we can override
-// and create custom providers.
+// GetProviderServer constructs the Databricks Terraform provider server. By default, it combines the default
+// SDKv2-based provider and the default plugin framework-based provider using muxing.
+// The providers used by the muxed server can be overridden using ServerOptions.
 func GetProviderServer(ctx context.Context, options ...ServerOption) (tfprotov6.ProviderServer, error) {
 	serverOptions := serverOptions{}
 	for _, o := range options {

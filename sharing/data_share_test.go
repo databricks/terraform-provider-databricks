@@ -62,7 +62,7 @@ func TestShareData(t *testing.T) {
 			"cdf_enabled":                 false,
 			"status":                      "ACTIVE",
 			"history_data_sharing_status": "DISABLED",
-			"partitions":                  []interface{}{},
+			"partition":                   []interface{}{},
 		},
 		d.Get("object").(*schema.Set).List()[0])
 }

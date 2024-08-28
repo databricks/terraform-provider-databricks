@@ -3,24 +3,44 @@ package sharing
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-func DataSourceShare() common.Resource {
-	type ShareDetail struct {
-		Name      string                     `json:"name,omitempty" tf:"computed"`
-		Objects   []sharing.SharedDataObject `json:"objects,omitempty" tf:"computed,slice_set,alias:object"`
-		CreatedAt int64                      `json:"created_at,omitempty" tf:"computed"`
-		CreatedBy string                     `json:"created_by,omitempty" tf:"computed"`
-	}
-	return common.DataResource(ShareDetail{}, func(ctx context.Context, e any, c *common.DatabricksClient) error {
-		data := e.(*ShareDetail)
-		client, err := c.WorkspaceClient()
-		if err != nil {
-			return err
-		}
+type ShareDetail struct {
+	Name      string                     `json:"name,omitempty" tf:"computed"`
+	Objects   []sharing.SharedDataObject `json:"objects,omitempty" tf:"computed,slice_set,alias:object"`
+	CreatedAt int64                      `json:"created_at,omitempty" tf:"computed"`
+	CreatedBy string                     `json:"created_by,omitempty" tf:"computed"`
+}
 
+func (ShareDetail) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.SchemaPath("name").SetComputed()
+	s.SchemaPath("object", "added_at").SetComputed()
+	s.SchemaPath("object", "added_by").SetComputed()
+	s.SchemaPath("object", "data_object_type").SetRequired()
+	s.SchemaPath("object", "status").SetComputed()
+	s.SchemaPath("object", "partition", "value", "op").SetRequired()
+	s.SchemaPath("object", "partition", "value", "name").SetRequired()
+	s.SchemaPath("object", "partition", "value").SetMinItems(1)
+
+	return s
+}
+
+func (ShareDetail) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"sharing.SharedDataObject": {
+			"partitions": "partition",
+		},
+		"sharing.Partition": {
+			"values": "value",
+		},
+	}
+}
+
+func DataSourceShare() common.Resource {
+	return common.WorkspaceData(func(ctx context.Context, data *ShareDetail, client *databricks.WorkspaceClient) error {
 		share, err := client.Shares.Get(ctx, sharing.GetShareRequest{
 			Name:              data.Name,
 			IncludeSharedData: true,

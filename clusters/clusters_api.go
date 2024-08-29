@@ -14,8 +14,8 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // AutoScale is a struct the describes auto scaling for clusters

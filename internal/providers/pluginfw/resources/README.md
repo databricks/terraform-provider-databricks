@@ -11,24 +11,24 @@ Only Docs will stay under root docs/ directory.
 
 ## Code Convention
 1. Make sure the resource or data source implemented is of the right type. 
-```golang
-var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
-var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
-```
-2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()`.  
-3. Any method that returns diagnostics should be called inline while appending diagnostics. Example:
-```golang
-resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
-if resp.Diagnostics.HasError() {
-    return
-}
-```
-is preferred over the following:
-```golang
-diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
-if diags.HasError() {
-    resp.Diagnostics.Append(diags...)
-    return
-}
-```
-4. Any method returning error should directly be followed by appending that to the diagnostics. 
+    ```golang
+    var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
+    var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
+    ```
+2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()` respectively.  
+3. Any method that returns diagnostics should be called inline while appending diagnostics in response. Example:
+    ```golang
+    resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+    ```
+    is preferred over the following:
+    ```golang
+    diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
+    if diags.HasError() {
+        resp.Diagnostics.Append(diags...)
+        return
+    }
+    ```
+4. Any method returning an error should directly be followed by appending that to the diagnostics. 

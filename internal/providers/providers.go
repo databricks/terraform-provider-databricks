@@ -9,11 +9,37 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+type serverOptions struct {
+	sdkV2Provider           *schema.Provider
+	pluginFrameworkProvider provider.Provider
+}
+
+// ServerOption is a common interface for overriding providers in GetProviderServer functino call.
+type ServerOption interface {
+	Apply(*serverOptions)
+}
+
+type sdkV2ProviderOption struct {
+	sdkV2Provider *schema.Provider
+}
+
+func (o *sdkV2ProviderOption) Apply(options *serverOptions) {
+	options.sdkV2Provider = o.sdkV2Provider
+}
+
+// WithSdkV2Provider allows overriding the SDKv2 provider used when creating a Terraform provider with muxing.
+// This is typically used in acceptance test for a test step to have a custom provider override.
+func WithSdkV2Provider(sdkV2Provider *schema.Provider) ServerOption {
+	return &sdkV2ProviderOption{sdkV2Provider: sdkV2Provider}
+}
 
 // GetProviderServer initializes and returns a Terraform Protocol v6 ProviderServer.
 // The function begins by initializing the Databricks provider using the SDK plugin
@@ -23,8 +49,23 @@ import (
 // implementations are then combined using a multiplexing server, which allows multiple
 // Protocol v6 providers to be served together. The function returns the multiplexed
 // ProviderServer, or an error if any part of the process fails.
-func GetProviderServer(ctx context.Context) (tfprotov6.ProviderServer, error) {
-	sdkPluginProvider := sdkv2.DatabricksProvider()
+//
+// GetProviderServer constructs the Databricks Terraform provider server. By default, it combines the default
+// SDKv2-based provider and the default plugin framework-based provider using muxing.
+// The providers used by the muxed server can be overridden using ServerOptions.
+func GetProviderServer(ctx context.Context, options ...ServerOption) (tfprotov6.ProviderServer, error) {
+	serverOptions := serverOptions{}
+	for _, o := range options {
+		o.Apply(&serverOptions)
+	}
+	sdkPluginProvider := serverOptions.sdkV2Provider
+	if sdkPluginProvider == nil {
+		sdkPluginProvider = sdkv2.DatabricksProvider()
+	}
+	pluginFrameworkProvider := serverOptions.pluginFrameworkProvider
+	if pluginFrameworkProvider == nil {
+		pluginFrameworkProvider = pluginfw.GetDatabricksProviderPluginFramework()
+	}
 
 	upgradedSdkPluginProvider, err := tf5to6server.UpgradeServer(
 		context.Background(),
@@ -33,9 +74,6 @@ func GetProviderServer(ctx context.Context) (tfprotov6.ProviderServer, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	pluginFrameworkProvider := pluginfw.GetDatabricksProviderPluginFramework()
-
 	providers := []func() tfprotov6.ProviderServer{
 		func() tfprotov6.ProviderServer {
 			return upgradedSdkPluginProvider

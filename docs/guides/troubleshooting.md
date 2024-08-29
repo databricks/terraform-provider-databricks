@@ -215,4 +215,4 @@ There could be different reasons for this error:
 
 ### Provider "registry.terraform.io/databricks/databricks" planned an invalid value for ...: planned value ... for a non-computed attribute.
 
-Starting with version v1.51.0, the Terraform provider for Databricks supports `terraform` versions 1.0.0 and later. Older versions of `terraform`, such as v0.15.5, are known to erroneously generate this error. Check the version of `terraform` that you're using by running `terraform version` and upgrade it if necessary.
+Starting with version v1.51.0, the Terraform provider for Databricks supports `terraform` versions 1.1.5 and later. Older versions of `terraform`, such as v0.15.5, are known to erroneously generate this error. Check the version of `terraform` that you're using by running `terraform version` and upgrade it if necessary.

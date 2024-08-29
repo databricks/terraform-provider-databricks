@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -29,20 +30,20 @@ func ResourceQualityMonitor() resource.Resource {
 }
 
 func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor *catalog.MonitorInfo) diag.Diagnostics {
-	monitorName := monitor.TableName
 	err := retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
-		monitor, err := w.QualityMonitors.GetByTableName(ctx, monitorName)
+		newMonitor, err := w.QualityMonitors.GetByTableName(ctx, monitor.TableName)
+		*monitor = *newMonitor
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
 
-		switch monitor.Status {
+		switch newMonitor.Status {
 		case catalog.MonitorInfoStatusMonitorStatusActive:
 			return nil
 		case catalog.MonitorInfoStatusMonitorStatusError, catalog.MonitorInfoStatusMonitorStatusFailed:
-			return retry.NonRetryableError(fmt.Errorf("monitor status returned %s for monitor: %s", monitor.Status, monitorName))
+			return retry.NonRetryableError(fmt.Errorf("monitor status returned %s for monitor: %s", newMonitor.Status, newMonitor.TableName))
 		}
-		return retry.RetryableError(fmt.Errorf("monitor %s is still pending", monitorName))
+		return retry.RetryableError(fmt.Errorf("monitor %s is still pending", newMonitor.TableName))
 	})
 	if err != nil {
 		return diag.Diagnostics{diag.NewErrorDiagnostic("failed to get monitor", err.Error())}
@@ -205,7 +206,7 @@ func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 	err := w.QualityMonitors.DeleteByTableName(ctx, deleteRequest.TableName.ValueString())
-	if err != nil {
+	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete monitor", err.Error())
 	}
 }

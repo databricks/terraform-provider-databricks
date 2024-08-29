@@ -22,7 +22,7 @@ import (
 
 const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
-var _ resource.Resource = &QualityMonitorResource{}
+var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
 
 func ResourceQualityMonitor() resource.Resource {
 	return &QualityMonitorResource{}
@@ -40,12 +40,12 @@ func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor 
 		case catalog.MonitorInfoStatusMonitorStatusActive:
 			return nil
 		case catalog.MonitorInfoStatusMonitorStatusError, catalog.MonitorInfoStatusMonitorStatusFailed:
-			return retry.NonRetryableError(fmt.Errorf("monitor status retrund %s for monitor: %s", monitor.Status, monitorName))
+			return retry.NonRetryableError(fmt.Errorf("monitor status returned %s for monitor: %s", monitor.Status, monitorName))
 		}
 		return retry.RetryableError(fmt.Errorf("monitor %s is still pending", monitorName))
 	})
 	if err != nil {
-		return diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get Monitor", err.Error())}
+		return diag.Diagnostics{diag.NewErrorDiagnostic("failed to get monitor", err.Error())}
 	}
 	return nil
 }
@@ -83,29 +83,31 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 }
 
 func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	d.Client = pluginfwcommon.ConfigureResource(req, resp)
+	if d.Client == nil {
+		d.Client = pluginfwcommon.ConfigureResource(req, resp)
+	}
 }
 
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	w, diags := r.Client.GetWorkspaceClient()
-	if diags.HasError() {
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 	var monitorInfoTfSDK MonitorInfoExtended
-	diags = req.Plan.Get(ctx, &monitorInfoTfSDK)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var createMonitorGoSDK catalog.CreateMonitor
-	diags = converters.TfSdkToGoSdkStruct(ctx, monitorInfoTfSDK, &createMonitorGoSDK)
-	if diags.HasError() {
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, monitorInfoTfSDK, &createMonitorGoSDK)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 	monitor, err := w.QualityMonitors.Create(ctx, createMonitorGoSDK)
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to get created monitor", err.Error())
+		resp.Diagnostics.AddError("failed to get created monitor", err.Error())
 		return
 	}
 	resp.Diagnostics.Append(waitForMonitor(ctx, w, monitor)...)
@@ -124,60 +126,56 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	w, diags := r.Client.GetWorkspaceClient()
-	if diags.HasError() {
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var getMonitor catalog_tf.GetQualityMonitorRequest
-	diags = req.State.GetAttribute(ctx, path.Root("table_name"), &getMonitor.TableName)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("table_name"), &getMonitor.TableName)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	endpoint, err := w.QualityMonitors.GetByTableName(ctx, getMonitor.TableName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to get monitor", err.Error())
+		resp.Diagnostics.AddError("failed to get monitor", err.Error())
 		return
 	}
 	var monitorInfoTfSDK MonitorInfoExtended
-	diags = converters.GoSdkToTfSdkStruct(ctx, endpoint, &monitorInfoTfSDK)
-	if diags.HasError() {
-		return
-	}
-	diags = resp.State.Set(ctx, monitorInfoTfSDK)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, endpoint, &monitorInfoTfSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	w, diags := r.Client.GetWorkspaceClient()
-	if diags.HasError() {
-		return
-	}
-
-	var monitorInfoTfSDK MonitorInfoExtended
-	diags = req.Plan.Get(ctx, &monitorInfoTfSDK)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	var monitorInfoTfSDK MonitorInfoExtended
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	// Plan is not adding `dashboard_id`, but it is in the state.
-	diags = req.State.GetAttribute(ctx, path.Root("dashboard_id"), &monitorInfoTfSDK.DashboardId)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("dashboard_id"), &monitorInfoTfSDK.DashboardId)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var updateMonitorGoSDK catalog.UpdateMonitor
-	diags = converters.TfSdkToGoSdkStruct(ctx, monitorInfoTfSDK, &updateMonitorGoSDK)
-	if diags.HasError() {
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, monitorInfoTfSDK, &updateMonitorGoSDK)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 	monitor, err := w.QualityMonitors.Update(ctx, updateMonitorGoSDK)
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to update monitor", err.Error())
+		resp.Diagnostics.AddError("failed to update monitor", err.Error())
 		return
 	}
 	resp.Diagnostics.Append(waitForMonitor(ctx, w, monitor)...)
@@ -186,8 +184,8 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 	}
 
 	var newMonitorInfoTfSDK MonitorInfoExtended
-	diags = converters.GoSdkToTfSdkStruct(ctx, monitor, &newMonitorInfoTfSDK)
-	if diags.HasError() {
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, monitor, &newMonitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -196,19 +194,18 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	w, diags := r.Client.GetWorkspaceClient()
-	if diags.HasError() {
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var deleteRequest catalog_tf.DeleteQualityMonitorRequest
-	diags = req.State.GetAttribute(ctx, path.Root("table_name"), &deleteRequest.TableName)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("table_name"), &deleteRequest.TableName)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	err := w.QualityMonitors.DeleteByTableName(ctx, deleteRequest.TableName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to delete monitor", err.Error())
-		return
+		resp.Diagnostics.AddError("failed to delete monitor", err.Error())
 	}
 }

@@ -57,6 +57,8 @@ type DatabricksClient struct {
 	mu                    sync.Mutex
 }
 
+// GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if that fails.
+// This is used by resources and data sources that are developed over plugin framework.
 func (c *DatabricksClient) GetWorkspaceClient() (*databricks.WorkspaceClient, diag.Diagnostics) {
 	w, err := c.WorkspaceClient()
 	if err != nil {
@@ -108,6 +110,8 @@ func (c *DatabricksClient) setAccountId(accountId string) error {
 	return nil
 }
 
+// GetAccountClient returns the Databricks Account client or a diagnostics if that fails.
+// This is used by resources and data sources that are developed over plugin framework.
 func (c *DatabricksClient) GetAccountClient() (*databricks.AccountClient, diag.Diagnostics) {
 	a, err := c.AccountClient()
 	if err != nil {

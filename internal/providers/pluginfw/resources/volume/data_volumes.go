@@ -17,7 +17,7 @@ func DataSourceVolumes() datasource.DataSource {
 	return &VolumesDataSource{}
 }
 
-var _ datasource.DataSource = &VolumesDataSource{}
+var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
 
 type VolumesDataSource struct {
 	Client *common.DatabricksClient
@@ -40,7 +40,9 @@ func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 }
 
 func (d *VolumesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.Client = pluginfwcommon.ConfigureDataSource(req, resp)
+	if d.Client == nil {
+		d.Client = pluginfwcommon.ConfigureDataSource(req, resp)
+	}
 }
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

@@ -119,7 +119,8 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 - `sdkv2`: Contains the changes specific to SDKv2. This package shouldn't depend on pluginfw or common.
 
 ### Migrating resource to plugin framework
-Ideally there shouldn't be any behaviour change when migrating a resource or data source to either Go SDk or Plugin Framework. - Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
+Ideally there shouldn't be any behaviour change when migrating a resource or data source to either Go SDk or Plugin Framework.
+- Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
 - Integration tests shouldn't require any major changes.   
 
 

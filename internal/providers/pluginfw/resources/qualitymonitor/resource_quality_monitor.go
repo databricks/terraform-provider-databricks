@@ -141,6 +141,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
+			return
 		}
 		resp.Diagnostics.AddError("failed to get monitor", err.Error())
 		return

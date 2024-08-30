@@ -160,7 +160,7 @@ func run(t *testing.T, steps []step) {
 		if s.Template != "" {
 			stepConfig = environmentTemplate(t, s.Template, vars)
 		}
-		stepNum := i
+		stepNum := i + 1
 		thisStep := s
 		stepCheck := thisStep.Check
 		stepPreConfig := s.PreConfig

@@ -2,7 +2,9 @@ package volume
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -61,7 +63,10 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	converters.TfSdkToGoSdkStruct(ctx, volumesList, &listVolumesRequest)
 	volumes, err := w.Volumes.ListAll(ctx, listVolumesRequest)
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to get volumes for the catalog and schema", err.Error())
+		if apierr.IsMissing(err) {
+			resp.State.RemoveResource(ctx)
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Failed to get volumes for the catalog:%s and schema%s", listVolumesRequest.CatalogName, listVolumesRequest.SchemaName), err.Error())
 		return
 	}
 	for _, v := range volumes {

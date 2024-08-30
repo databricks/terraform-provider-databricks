@@ -49,7 +49,8 @@ func (d *VolumesDataSource) Configure(_ context.Context, req datasource.Configur
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	w, diags := d.Client.GetWorkspaceClient()
-	if diags.HasError() {
+	resp.Diagnostics.Append(diags)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

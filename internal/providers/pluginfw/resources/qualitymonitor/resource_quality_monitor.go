@@ -29,28 +29,6 @@ func ResourceQualityMonitor() resource.Resource {
 	return &QualityMonitorResource{}
 }
 
-func waitForMonitor2(ctx context.Context, w *databricks.WorkspaceClient, monitor *catalog.MonitorInfo) diag.Diagnostics {
-	err := retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
-		newMonitor, err := w.QualityMonitors.GetByTableName(ctx, monitor.TableName)
-		*monitor = *newMonitor
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		switch newMonitor.Status {
-		case catalog.MonitorInfoStatusMonitorStatusActive:
-			return nil
-		case catalog.MonitorInfoStatusMonitorStatusError, catalog.MonitorInfoStatusMonitorStatusFailed:
-			return retry.NonRetryableError(fmt.Errorf("monitor status returned %s for monitor: %s", newMonitor.Status, newMonitor.TableName))
-		}
-		return retry.RetryableError(fmt.Errorf("monitor %s is still pending", newMonitor.TableName))
-	})
-	if err != nil {
-		return diag.Diagnostics{diag.NewErrorDiagnostic("failed to get monitor", err.Error())}
-	}
-	return nil
-}
-
 func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor *catalog.MonitorInfo) diag.Diagnostics {
 	err := retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
 		newMonitor, err := w.QualityMonitors.GetByTableName(ctx, monitor.TableName)

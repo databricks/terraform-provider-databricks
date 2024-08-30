@@ -125,7 +125,7 @@ Ideally there shouldn't be any behaviour change when migrating a resource or dat
 
 
 ### Code Organization
-Each resource should go into it's separate package eg: `volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 
+Each resource and data source should be defined in package `internal/providers/pluginfw/resources/<resource>`, e.g.: `internal/providers/pluginfw/resources/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 
 
 Note: Only Docs will stay under root docs/ directory.
 

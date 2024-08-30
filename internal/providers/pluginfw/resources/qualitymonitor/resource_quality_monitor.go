@@ -7,6 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
@@ -30,24 +30,24 @@ func ResourceQualityMonitor() resource.Resource {
 }
 
 func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor *catalog.MonitorInfo) diag.Diagnostics {
-	err := retry.RetryContext(ctx, qualityMonitorDefaultProvisionTimeout, func() *retry.RetryError {
+	updatedMonitor, err := retries.Poll[catalog.MonitorInfo](ctx, qualityMonitorDefaultProvisionTimeout, func() (*catalog.MonitorInfo, *retries.Err) {
 		newMonitor, err := w.QualityMonitors.GetByTableName(ctx, monitor.TableName)
-		*monitor = *newMonitor
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return nil, retries.Halt(fmt.Errorf("failed to get monitor: %s", err))
 		}
 
 		switch newMonitor.Status {
 		case catalog.MonitorInfoStatusMonitorStatusActive:
-			return nil
+			return newMonitor, nil
 		case catalog.MonitorInfoStatusMonitorStatusError, catalog.MonitorInfoStatusMonitorStatusFailed:
-			return retry.NonRetryableError(fmt.Errorf("monitor status returned %s for monitor: %s", newMonitor.Status, newMonitor.TableName))
+			return nil, retries.Halt(fmt.Errorf("monitor status returned %s for monitor: %s", newMonitor.Status, newMonitor.TableName))
 		}
-		return retry.RetryableError(fmt.Errorf("monitor %s is still pending", newMonitor.TableName))
+		return nil, retries.Continue(fmt.Errorf("monitor %s is still pending", newMonitor.TableName))
 	})
 	if err != nil {
 		return diag.Diagnostics{diag.NewErrorDiagnostic("failed to get monitor", err.Error())}
 	}
+	*monitor = *updatedMonitor
 	return nil
 }
 

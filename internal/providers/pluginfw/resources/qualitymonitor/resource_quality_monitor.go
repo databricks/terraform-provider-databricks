@@ -107,7 +107,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	}
 	monitor, err := w.QualityMonitors.Create(ctx, createMonitorGoSDK)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to get created monitor", err.Error())
+		resp.Diagnostics.AddError("failed to create monitor", err.Error())
 		return
 	}
 	resp.Diagnostics.Append(waitForMonitor(ctx, w, monitor)...)

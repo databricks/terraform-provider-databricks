@@ -71,7 +71,6 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		Attributes: tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 			c.SetRequired("assets_dir")
 			c.SetRequired("output_schema_name")
-			c.SetRequired("table_name")
 			c.SetReadOnly("monitor_version")
 			c.SetReadOnly("drift_metrics_table_name")
 			c.SetReadOnly("profile_metrics_table_name")
@@ -84,7 +83,7 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 }
 
 func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if d.Client == nil {
+	if d.Client == nil && req.ProviderData != nil {
 		d.Client = pluginfwcommon.ConfigureResource(req, resp)
 	}
 }

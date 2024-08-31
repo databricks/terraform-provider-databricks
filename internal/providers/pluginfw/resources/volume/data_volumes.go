@@ -28,7 +28,7 @@ type VolumesDataSource struct {
 type VolumesList struct {
 	CatalogName types.String   `tfsdk:"catalog_name"`
 	SchemaName  types.String   `tfsdk:"schema_name"`
-	Ids         []types.String `tfsdk:"ids" tf:"computed,optional"`
+	Ids         []types.String `tfsdk:"ids" tf:"optional"`
 }
 
 func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -37,7 +37,10 @@ func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.Metadat
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(VolumesList{}, nil),
+		Attributes: tfschema.DataSourceStructToSchemaMap(VolumesList{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+			c.SetComputed("ids")
+			return c
+		}),
 	}
 }
 

@@ -108,3 +108,24 @@ func TestAccClusterResource_CreateAndUpdateAwsAttributes(t *testing.T) {
 		})
 	}
 }
+
+func TestAccClusterResource_CreateAndNoWait(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `data "databricks_spark_version" "latest" {
+		}
+		resource "databricks_cluster" "this" {
+			cluster_name = "nowait-{var.RANDOM}"
+			spark_version = data.databricks_spark_version.latest.id
+			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+			num_workers = 1
+			autotermination_minutes = 10
+			spark_conf = {
+				"spark.databricks.cluster.profile" = "serverless"
+			}
+			custom_tags = {
+				"ResourceClass" = "Serverless"
+			}
+			no_wait = true
+		}`,
+	})
+}

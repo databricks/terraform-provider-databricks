@@ -22,3 +22,4 @@ jobs:
           else 
             echo "OpenAPI SHA match"
           fi
+          make schema

@@ -13,7 +13,8 @@ jobs:
 
       - name: Run Make Schema
         run: |
-          if [ $(make schema) != "0" ]; then
+          val=$(make schema)
+          if [ $val != "0" ]; then
             echo "make schema failed"
             exit 1
           else 

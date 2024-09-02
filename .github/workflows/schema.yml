@@ -57,10 +57,12 @@ jobs:
 
       - name: Run make schema
         run: |
-          make schema
+          if ! make schema; then
+            echo "make schema failed, exiting with status 1"
+            exit 1
+          fi
         env:
           BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}
-        shell: bash
 
       - run: make diff-schema
         env:

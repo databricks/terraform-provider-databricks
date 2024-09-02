@@ -72,6 +72,7 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 			c.SetRequired("assets_dir")
 			c.SetRequired("output_schema_name")
 			c.SetReadOnly("monitor_version")
+			c.SetRequired("table_name")
 			c.SetReadOnly("drift_metrics_table_name")
 			c.SetReadOnly("profile_metrics_table_name")
 			c.SetReadOnly("status")

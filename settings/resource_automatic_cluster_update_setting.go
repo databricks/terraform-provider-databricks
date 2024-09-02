@@ -19,6 +19,7 @@ var automaticClusterUpdateFieldMask = strings.Join([]string{
 	"automatic_cluster_update_workspace.maintenance_window.week_day_based_schedule.window_start_time.hours",
 	"automatic_cluster_update_workspace.maintenance_window.week_day_based_schedule.window_start_time.minutes",
 }, ",")
+
 var automaticClusterUpdateSetting = workspaceSetting[settings.AutomaticClusterUpdateSetting]{
 	settingStruct: settings.AutomaticClusterUpdateSetting{},
 	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -32,6 +33,12 @@ var automaticClusterUpdateSetting = workspaceSetting[settings.AutomaticClusterUp
 	},
 	updateFunc: func(ctx context.Context, w *databricks.WorkspaceClient, t settings.AutomaticClusterUpdateSetting) (string, error) {
 		t.SettingName = "default"
+		t.AutomaticClusterUpdateWorkspace.ForceSendFields = []string{"Enabled", "RestartEvenIfNoUpdatesAvailable"}
+		if t.AutomaticClusterUpdateWorkspace.MaintenanceWindow != nil &&
+			t.AutomaticClusterUpdateWorkspace.MaintenanceWindow.WeekDayBasedSchedule != nil &&
+			t.AutomaticClusterUpdateWorkspace.MaintenanceWindow.WeekDayBasedSchedule.WindowStartTime != nil {
+			t.AutomaticClusterUpdateWorkspace.MaintenanceWindow.WeekDayBasedSchedule.WindowStartTime.ForceSendFields = []string{"Hours", "Minutes"}
+		}
 		res, err := w.Settings.AutomaticClusterUpdate().Update(ctx, settings.UpdateAutomaticClusterUpdateSettingRequest{
 			AllowMissing: true,
 			Setting:      t,
@@ -49,7 +56,8 @@ var automaticClusterUpdateSetting = workspaceSetting[settings.AutomaticClusterUp
 				Etag:        etag,
 				SettingName: "default",
 				AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
-					Enabled: false,
+					Enabled:         false,
+					ForceSendFields: []string{"Enabled"},
 				},
 			},
 			FieldMask: automaticClusterUpdateFieldMask,

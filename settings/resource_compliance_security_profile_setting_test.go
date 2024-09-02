@@ -25,6 +25,7 @@ func TestQueryCreateComplianceSecurityProfileSettingWithNoneStandard(t *testing.
 					ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
 						IsEnabled:           true,
 						ComplianceStandards: []settings.ComplianceStandard{"NONE"},
+						ForceSendFields:     []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
@@ -47,6 +48,7 @@ func TestQueryCreateComplianceSecurityProfileSettingWithNoneStandard(t *testing.
 					ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
 						IsEnabled:           true,
 						ComplianceStandards: []settings.ComplianceStandard{"NONE"},
+						ForceSendFields:     []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
@@ -136,6 +138,7 @@ func TestQueryUpdateComplianceSecurityProfileSetting(t *testing.T) {
 					ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
 						IsEnabled:           true,
 						ComplianceStandards: []settings.ComplianceStandard{"HIPAA", "PCI_DSS"},
+						ForceSendFields:     []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
@@ -192,6 +195,7 @@ func TestQueryUpdateComplianceSecurityProfileSettingWithConflict(t *testing.T) {
 					ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
 						IsEnabled:           true,
 						ComplianceStandards: []settings.ComplianceStandard{"HIPAA"},
+						ForceSendFields:     []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
@@ -214,6 +218,7 @@ func TestQueryUpdateComplianceSecurityProfileSettingWithConflict(t *testing.T) {
 					ComplianceSecurityProfileWorkspace: settings.ComplianceSecurityProfile{
 						IsEnabled:           true,
 						ComplianceStandards: []settings.ComplianceStandard{"HIPAA"},
+						ForceSendFields:     []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},

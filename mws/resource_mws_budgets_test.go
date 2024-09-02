@@ -28,7 +28,15 @@ func getTestBudget() *billing.BudgetConfiguration {
 			},
 		},
 		Filter: &billing.BudgetConfigurationFilter{
-			Tags: nil,
+			Tags: []billing.BudgetConfigurationFilterTagClause{
+				{
+					Key: "Environment",
+					Value: &billing.BudgetConfigurationFilterClause{
+						Operator: billing.BudgetConfigurationFilterOperatorIn,
+						Values:   []string{"Testing"},
+					},
+				},
+			},
 			WorkspaceId: &billing.BudgetConfigurationFilterWorkspaceIdClause{
 				Operator: billing.BudgetConfigurationFilterOperatorIn,
 				Values: []int64{
@@ -85,8 +93,16 @@ func TestResourceBudgetCreate(t *testing.T) {
 				target      = "me@databricks.com"
 			}
 		}
-	
+
 		filter {
+			tags {
+				key   = "Environment"
+				value {
+					operator = "IN"
+					values = ["Testing"]
+				}
+			}
+
 			workspace_id {
 				operator = "IN"
 				values   = [
@@ -97,4 +113,31 @@ func TestResourceBudgetCreate(t *testing.T) {
 		`,
 		Resource: ResourceMwsBudget(),
 	}.ApplyAndExpectData(t, nil) // ???
+}
+
+func TestResourceMwsBudgetRead(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockbudgetsAPI().EXPECT().
+				GetByBudgetId(mock.Anything, "budget_configuration_id").
+				Return(&billing.GetBudgetConfigurationResponse{Budget: getTestBudget()}, nil)
+		},
+		Resource:  ResourceMwsBudget(),
+		Read:      true,
+		New:       true,
+		AccountID: "account_id",
+		ID:        "account_id/budget_configuration_id",
+	}.ApplyAndExpectData(t, nil) // ???
+}
+
+func TestResourceMwsBudgetDelete(t *testing.T) {
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockbudgetsAPI().EXPECT().DeleteByBudgetId(mock.Anything, "budget_configuration_id").Return(nil)
+		},
+		Resource:  ResourceMwsBudget(),
+		AccountID: "account_id",
+		Delete:    true,
+		ID:        "account_id/budget_configuration_id",
+	}.ApplyAndExpectData(t, nil)
 }

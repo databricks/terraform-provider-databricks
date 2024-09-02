@@ -37,22 +37,24 @@ func ResourceMwsBudget() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			_, id, err := p.Unpack(d)
 			acc, err := c.AccountClient()
 			if err != nil {
 				return err
 			}
-			res, err := acc.Budgets.GetByBudgetId(ctx, d.Get("budget_configuration_id").(string))
+			res, err := acc.Budgets.GetByBudgetId(ctx, id)
 			if err != nil {
 				return err
 			}
 			return common.StructToData(res.Budget, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			_, id, err := p.Unpack(d)
 			acc, err := c.AccountClient()
 			if err != nil {
 				return err
 			}
-			return acc.Budgets.DeleteByBudgetId(ctx, d.Get("budget_configuration_id").(string))
+			return acc.Budgets.DeleteByBudgetId(ctx, id)
 		},
 		Schema: s,
 	}

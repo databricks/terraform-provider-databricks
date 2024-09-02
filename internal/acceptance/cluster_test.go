@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
@@ -165,13 +164,6 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 		workload_type {
 		    clients { }
 		}`),
-		Check: resource.ComposeAggregateTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "true"),
-			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "true"),
-		),
-	}, step{
-		Template: testAccClusterResourceWorkloadTypeTemplate(`
-		workload_type { }`),
 		Check: resource.ComposeAggregateTestCheckFunc(
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "true"),
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "true"),

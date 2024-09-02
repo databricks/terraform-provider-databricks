@@ -203,11 +203,14 @@ func ResourceShare() common.Resource {
 				Name:              d.Id(),
 				IncludeSharedData: true,
 			})
+			var si = ShareInfo{*shareInfo}
+			si.sortSharesByName()
+			si.suppressCDFEnabledDiff()
 			if err != nil {
 				return err
 			}
 
-			return common.StructToData(shareInfo, shareSchema, d)
+			return common.StructToData(si, shareSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			client, err := c.WorkspaceClient()

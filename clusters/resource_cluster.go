@@ -646,22 +646,17 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 			SetForceSendFieldsForCluster(&cluster, d)
 
 			err = retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {
-				waiter, err := clusters.Edit(ctx, cluster)
-				if err != nil {
-					var apiErr *apierr.APIError
-					// Only Running and Terminated clusters can be modified. In particular, autoscaling clusters cannot be modified
-					// while the resizing is ongoing. We retry in this case. Scaling can take several minutes.
-					if errors.As(err, &apiErr) && apiErr.ErrorCode == "INVALID_STATE" {
-						return retry.RetryableError(fmt.Errorf("cluster %s cannot be modified in its current state", clusterId))
-					}
-					return retry.NonRetryableError(err)
+				_, err = clusters.Edit(ctx, cluster)
+				if err == nil {
+					return nil
 				}
-				// If the update succeeded, we do not retry updating the cluster, but we do wait for the cluster to finish updating.
-				_, err = waiter.Get()
-				if err != nil {
-					return retry.NonRetryableError(err)
+				var apiErr *apierr.APIError
+				// Only Running and Terminated clusters can be modified. In particular, autoscaling clusters cannot be modified
+				// while the resizing is ongoing. We retry in this case. Scaling can take several minutes.
+				if errors.As(err, &apiErr) && apiErr.ErrorCode == "INVALID_STATE" {
+					return retry.RetryableError(fmt.Errorf("cluster %s cannot be modified in its current state", clusterId))
 				}
-				return nil
+				return retry.NonRetryableError(err)
 			})
 
 		}

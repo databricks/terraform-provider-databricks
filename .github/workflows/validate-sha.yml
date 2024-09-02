@@ -1,4 +1,4 @@
-name: Validate openapi sha
+name: Validate Schema Build
 
 on:
   pull_request:
@@ -11,15 +11,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate SHA
+      - name: Run Make Schema
         run: |
-          Version=$(go list -m -json github.com/databricks/databricks-sdk-go | jq -r ".Version")
-          OPENAPI_SHA_GO_SDK=$(curl https://raw.githubusercontent.com/databricks/databricks-sdk-go/$Version/.codegen/_openapi_sha)
-          OPENAPI_SHA=$(cat .codegen/_openapi_sha)
-          if [ "$OPENAPI_SHA_GO_SDK" != "$OPENAPI_SHA" ]; then
-            echo "OpenAPI SHA mismatch"
+          val=$(make schema)
+          if [ val != "0" ]; then
+            echo "make schema failed"
             exit 1
           else 
-            echo "OpenAPI SHA match"
+            echo "make schema passed"
           fi
-          make schema

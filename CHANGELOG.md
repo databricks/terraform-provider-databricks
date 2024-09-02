@@ -2,6 +2,10 @@
 
 ## [Release] Release v1.51.0
 
+### Breaking Changes
+
+With this release, only protocol version 6 will be supported which is compatible with terraform CLI version 1.1.5 and later. If you are using an older version of the terraform CLI, please upgrade it to use this and further releases of Databricks terraform provider.
+
 ### New Features and Improvements
 
  * Automatically create `parent_path` folder when creating `databricks_dashboard resource` if it doesn't exist ([#3778](https://github.com/databricks/terraform-provider-databricks/pull/3778)).

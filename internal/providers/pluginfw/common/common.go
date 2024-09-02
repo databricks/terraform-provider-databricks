@@ -12,6 +12,10 @@ import (
 // It returns the DatabricksClient if it can be successfully fetched from the ProviderData in the request;
 // otherwise, the error is appended to the diagnostics of the response.
 func ConfigureDataSource(req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) *common.DatabricksClient {
+	// Nil case for acceptance tests.
+	if req.ProviderData == nil {
+		return nil
+	}
 	client, ok := req.ProviderData.(*common.DatabricksClient)
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -27,6 +31,10 @@ func ConfigureDataSource(req datasource.ConfigureRequest, resp *datasource.Confi
 // It returns the DatabricksClient if it can be successfully fetched from the ProviderData in the request;
 // otherwise, the error is appended to the diagnostics of the response.
 func ConfigureResource(req resource.ConfigureRequest, resp *resource.ConfigureResponse) *common.DatabricksClient {
+	// Nil case for acceptance tests.
+	if req.ProviderData == nil {
+		return nil
+	}
 	client, ok := req.ProviderData.(*common.DatabricksClient)
 	if !ok {
 		resp.Diagnostics.AddError(

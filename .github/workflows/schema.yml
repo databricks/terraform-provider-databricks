@@ -55,9 +55,12 @@ jobs:
       - name: "Install jd"
         run: go install github.com/josephburnett/jd@v1.8.1
 
-      - run: make schema
+      - name: Run make schema
+        run: |
+          make schema
         env:
           BASE_COMMIT: ${{ github.event_name == 'pull_request' && github.base_ref || github.event.inputs.base }}
+        shell: bash
 
       - run: make diff-schema
         env:

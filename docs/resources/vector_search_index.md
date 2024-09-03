@@ -1,11 +1,11 @@
 ---
-subcategory: "Vector Search"
+subcategory: "Mosaic AI Vector Search"
 ---
 # databricks_vector_search_index Resource
 
 -> **Note** This resource could be only used on Unity Catalog-enabled workspace!
 
-This resource allows you to create [Vector Search Index](https://docs.databricks.com/en/generative-ai/create-query-vector-search.html) in Databricks.  Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Vector Search Index provides the ability to search data in the linked Delta Table.
+This resource allows you to create [Mosaic AI Vector Search Index](https://docs.databricks.com/en/generative-ai/create-query-vector-search.html) in Databricks.  Mosaic AI Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Mosaic AI Vector Search Index provides the ability to search data in the linked Delta Table.
 
 ## Example Usage
 
@@ -30,10 +30,10 @@ resource "databricks_vector_search_index" "sync" {
 
 The following arguments are supported (change of any parameter leads to recreation of the resource):
 
-* `name` - (required) Three-level name of the Vector Search Index to create (`catalog.schema.index_name`).
-* `endpoint_name` - (required) The name of the Vector Search Endpoint that will be used for indexing the data.
+* `name` - (required) Three-level name of the Mosaic AI Vector Search Index to create (`catalog.schema.index_name`).
+* `endpoint_name` - (required) The name of the Mosaic AI Vector Search Endpoint that will be used for indexing the data.
 * `primary_key` - (required) The column name that will be used as a primary key.
-* `index_type` - (required) Vector Search index type. Currently supported values are:
+* `index_type` - (required) Mosaic AI Vector Search index type. Currently supported values are:
   * `DELTA_SYNC`: An index that automatically syncs with a source Delta Table, automatically and incrementally updating the index as the underlying data in the Delta Table changes.
   * `DIRECT_ACCESS`: An index that supports the direct read and write of vectors and metadata through our REST and SDK APIs. With this model, the user manages index updates.
 * `delta_sync_index_spec` - (object) Specification for Delta Sync Index. Required if `index_type` is `DELTA_SYNC`.
@@ -72,7 +72,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource can be imported using the name of the Vector Search Index
+The resource can be imported using the name of the Mosaic AI Vector Search Index
 
 ```bash
 terraform import databricks_vector_search_index.this <index-name>

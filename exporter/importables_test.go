@@ -1828,23 +1828,25 @@ func TestImportShare(t *testing.T) {
 	d := tfsharing.ResourceShare().ToResource().TestResourceData()
 	scm := tfsharing.ResourceShare().Schema
 	share := tfsharing.ShareInfo{
-		Name: "stest",
-		Objects: []tfsharing.SharedDataObject{
-			{
-				DataObjectType: "TABLE",
-				Name:           "ctest.stest.table1",
-			},
-			{
-				DataObjectType: "MODEL",
-				Name:           "ctest.stest.model1",
-			},
-			{
-				DataObjectType: "VOLUME",
-				Name:           "ctest.stest.vol1",
-			},
-			{
-				DataObjectType: "NOTEBOOK",
-				Name:           "Test",
+		ShareInfo: sharing.ShareInfo{
+			Name: "stest",
+			Objects: []sharing.SharedDataObject{
+				{
+					DataObjectType: "TABLE",
+					Name:           "ctest.stest.table1",
+				},
+				{
+					DataObjectType: "MODEL",
+					Name:           "ctest.stest.model1",
+				},
+				{
+					DataObjectType: "VOLUME",
+					Name:           "ctest.stest.vol1",
+				},
+				{
+					DataObjectType: "NOTEBOOK",
+					Name:           "Test",
+				},
 			},
 		},
 	}

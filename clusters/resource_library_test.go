@@ -59,6 +59,26 @@ func TestLibraryCreate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestLibraryRead_ClusterDoesNotExist(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceLibrary(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: map[string]string{
+					"error_code": "INVALID_PARAMETER_VALUE",
+					"message":    "Cluster abc does not exist",
+				},
+				Status: 400,
+			},
+		},
+		Read:    true,
+		Removed: true,
+		ID:      "abc/whl:foo.whl",
+	}.ApplyNoError(t)
+}
+
 func TestLibraryDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceLibrary(),

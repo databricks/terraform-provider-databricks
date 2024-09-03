@@ -26,6 +26,7 @@ func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceCl
 			}
 			if apiErr.StatusCode != 404 && strings.Contains(apiErr.Message,
 				fmt.Sprintf("Cluster %s does not exist", wait.ClusterID)) {
+				apiErr.ErrorCode = "NOT_FOUND"
 				apiErr.StatusCode = 404
 			}
 			return resource.NonRetryableError(apiErr)

@@ -47,6 +47,23 @@ func ResourceMwsBudget() common.Resource {
 			}
 			return common.StructToData(res.Budget, s, d)
 		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var update billing.UpdateBudgetConfigurationBudget
+			_, id, err := p.Unpack(d)
+			common.DataToStructPointer(d, s, &update)
+			acc, err := c.AccountClient()
+			if err != nil {
+				return err
+			}
+			budget, err := acc.Budgets.Update(ctx, billing.UpdateBudgetConfigurationRequest{
+				Budget:   update,
+				BudgetId: id,
+			})
+			if err != nil {
+				return err
+			}
+			return common.StructToData(budget.Budget, s, d)
+		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, id, err := p.Unpack(d)
 			acc, err := c.AccountClient()

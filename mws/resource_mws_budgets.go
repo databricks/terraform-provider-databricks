@@ -16,12 +16,12 @@ func ResourceMwsBudget() common.Resource {
 		}
 		return m
 	})
-	p := common.NewPairSeparatedID("account_id", "budget_configuration_id", "/")
+	p := common.NewPairID("account_id", "budget_configuration_id")
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var create billing.CreateBudgetConfigurationBudget
 			common.DataToStructPointer(d, s, &create)
-			acc, err := c.AccountClientWithAccountIdFromConfig(d)
+			acc, err := c.AccountClient()
 			if err != nil {
 				return err
 			}
@@ -29,7 +29,6 @@ func ResourceMwsBudget() common.Resource {
 			if err != nil {
 				return err
 			}
-			d.SetId(budget.Budget.BudgetConfigurationId)
 			d.Set("budget_configuration_id", budget.Budget.BudgetConfigurationId)
 			d.Set("account_id", c.Config.AccountID)
 			common.StructToData(budget, s, d)

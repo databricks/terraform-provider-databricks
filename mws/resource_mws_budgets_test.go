@@ -126,7 +126,7 @@ func TestResourceMwsBudgetRead(t *testing.T) {
 		Read:      true,
 		New:       true,
 		AccountID: "account_id",
-		ID:        "account_id/budget_configuration_id",
+		ID:        "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, nil) // ???
 }
 
@@ -138,6 +138,6 @@ func TestResourceMwsBudgetDelete(t *testing.T) {
 		Resource:  ResourceMwsBudget(),
 		AccountID: "account_id",
 		Delete:    true,
-		ID:        "account_id/budget_configuration_id",
+		ID:        "account_id|budget_configuration_id",
 	}.ApplyAndExpectData(t, nil)
 }

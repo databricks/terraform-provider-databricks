@@ -23,7 +23,16 @@ var automaticClusterUpdateFieldMask = strings.Join([]string{
 var automaticClusterUpdateSetting = workspaceSetting[settings.AutomaticClusterUpdateSetting]{
 	settingStruct: settings.AutomaticClusterUpdateSetting{},
 	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		common.MustSchemaPath(s, "automatic_cluster_update_workspace", "enablement_details").Computed = true
+		common.CustomizeSchemaPath(s, "automatic_cluster_update_workspace", "enablement_details").SetReadOnly()
+		common.CustomizeSchemaPath(s, "automatic_cluster_update_workspace", "enabled").SetRequired()
+		common.CustomizeSchemaPath(s, "automatic_cluster_update_workspace", "maintenance_window",
+			"week_day_based_schedule", "window_start_time", "hours").SetRequired()
+		common.CustomizeSchemaPath(s, "automatic_cluster_update_workspace", "maintenance_window",
+			"week_day_based_schedule", "day_of_week").SetRequired()
+		common.CustomizeSchemaPath(s, "automatic_cluster_update_workspace", "maintenance_window",
+			"week_day_based_schedule", "frequency").SetRequired()
+		common.CustomizeSchemaPath(s, "automatic_cluster_update_workspace", "maintenance_window",
+			"week_day_based_schedule", "window_start_time", "minutes").SetRequired()
 		return s
 	},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.AutomaticClusterUpdateSetting, error) {

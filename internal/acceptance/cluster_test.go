@@ -171,8 +171,7 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 	}, step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(``),
 		Check: resource.ComposeAggregateTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "true"),
-			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "true"),
+			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.#", "0"),
 		),
 	})
 }

@@ -54,23 +54,8 @@ func (ShareInfo) Aliases() map[string]map[string]string {
 	}
 }
 
-type ShareDataChange struct {
-	sharing.SharedDataObjectUpdate
-}
-
 type Shares struct {
 	Shares []ShareInfo `json:"shares"`
-}
-
-type Partition struct {
-	Values []PartitionValue `json:"values" tf:"alias:value"`
-}
-
-type PartitionValue struct {
-	Name                 string `json:"name"`
-	Op                   string `json:"op"`
-	RecipientPropertyKey string `json:"recipient_property_key,omitempty"`
-	Value                string `json:"value,omitempty"`
 }
 
 func (si *ShareInfo) sortSharesByName() {

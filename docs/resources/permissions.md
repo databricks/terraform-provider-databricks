@@ -749,8 +749,8 @@ resource "databricks_group" "eng" {
 }
 
 resource "databricks_dashboard" "dashboard" {
-  display_name = "TF New Dashboard"
-  # ...
+    display_name = "TF New Dashboard"
+    # ...
 }
 
 

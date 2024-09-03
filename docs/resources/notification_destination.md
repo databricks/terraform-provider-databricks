@@ -11,62 +11,62 @@ This resource allows you to manage [Notification Destinations](https://docs.data
 
 ```hcl
 resource "databricks_notification_destination" "ndresource" {
-  display_name = "Notification Destination"
-  config {
-    email {
-      addresses = ["abc@gmail.com"]
+    display_name = "Notification Destination"
+    config {
+        email {
+            addresses = ["abc@gmail.com"]
+        }
     }
-  }
 }
 ```
 `Slack` notification destination:
 
 ```hcl
 resource "databricks_notification_destination" "ndresource" {
-  display_name = "Notification Destination"
-  config {
-    slack {
-      url = "https://hooks.slack.com/services/..."
+    display_name = "Notification Destination"
+    config {
+        slack {
+            url     = "https://hooks.slack.com/services/..."
+        }
     }
-  }
 }
 ```
 `PagerDuty` notification destination:
 
 ```hcl
 resource "databricks_notification_destination" "ndresource" {
-  display_name = "Notification Destination"
-  config {
-    pagerduty {
-      integration_key = "xxxxxx"
+    display_name = "Notification Destination"
+    config {
+        pagerduty {
+            integration_key = "xxxxxx"
+        }
     }
-  }
 }
 ```
 `Microsoft Teams` notification destination:
 
 ```hcl
 resource "databricks_notification_destination" "ndresource" {
-  display_name = "Notification Destination"
-  config {
-    microsoft_teams {
-      url = "https://outlook.office.com/webhook/..."
+    display_name = "Notification Destination"
+    config {
+        microsoft_teams {
+            url = "https://outlook.office.com/webhook/..."
+        }
     }
-  }
 }
 ```
 `Generic Webhook` notification destination:
 
 ```hcl
 resource "databricks_notification_destination" "ndresource" {
-  display_name = "Notification Destination"
-  config {
-    generic_webhook {
-      url      = "https://example.com/webhook"
-      username = "username" // Optional
-      password = "password" // Optional
+    display_name = "Notification Destination"
+    config {
+        generic_webhook {
+            url = "https://example.com/webhook"
+            username = "username" // Optional
+            password = "password" // Optional
+        }
     }
-  }
 }
 ```
 

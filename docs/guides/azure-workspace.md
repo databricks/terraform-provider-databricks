@@ -144,10 +144,6 @@ resource "azurerm_databricks_workspace" "this" {
     public_subnet_network_security_group_association_id  = azurerm_subnet_network_security_group_association.public.id
     private_subnet_network_security_group_association_id = azurerm_subnet_network_security_group_association.private.id
   }
-  depends_on = [
-    azurerm_subnet_network_security_group_association.public,
-    azurerm_subnet_network_security_group_association.private
-  ]
 }
 
 output "databricks_host" {

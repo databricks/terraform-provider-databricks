@@ -27,8 +27,9 @@ resource "databricks_compliance_security_profile_workspace_setting" "this" {
 
 The resource supports the following arguments:
 
-* `is_enabled` - (Required) Enable the Compliance Security Profile on the workspace
-* `compliance_standards` - (Required) Enable one or more compliance standards on the workspace, e.g. `HIPAA`, `PCI_DSS`, `FEDRAMP_MODERATE`
+- `compliance_security_profile_workspace` block with following attributes:
+  - `is_enabled` - (Required) Enable the Compliance Security Profile on the workspace
+  - `compliance_standards` - (Required) Enable one or more compliance standards on the workspace, e.g. `HIPAA`, `PCI_DSS`, `FEDRAMP_MODERATE`
 
 ## Import
 

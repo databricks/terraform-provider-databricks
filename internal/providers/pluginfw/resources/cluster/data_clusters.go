@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -61,6 +62,9 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
 	if err != nil {
+		if apierr.IsMissing(err) {
+			resp.State.RemoveResource(ctx)
+		}
 		resp.Diagnostics.AddError("failed to list clusters", err.Error())
 		return
 	}

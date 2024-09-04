@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -61,10 +62,12 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	if clusterInfo.Name.ValueString() != "" {
 		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
 		if err != nil {
+			if apierr.IsMissing(err) {
+				resp.State.RemoveResource(ctx)
+			}
 			resp.Diagnostics.AddError("failed to list clusters", err.Error())
 			return
 		}
@@ -86,6 +89,21 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			return
 		}
 		clusterInfo.ClusterInfo = &namedClusters[0]
-		resp.State.Set(ctx, clusterInfo)
+	} else if clusterInfo.ClusterId.ValueString() != "" {
+		cluster, err := w.Clusters.GetByClusterId(ctx, clusterInfo.ClusterId.ValueString())
+		if err != nil {
+			if apierr.IsMissing(err) {
+				resp.State.RemoveResource(ctx)
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("failed to get cluster with cluster id: %s", clusterInfo.ClusterId.ValueString()), err.Error())
+			return
+		}
+		converters.GoSdkToTfSdkStruct(ctx, cluster, clusterInfo.ClusterInfo)
+	} else {
+		resp.Diagnostics.AddError("you need to specify either `cluster_name` or `cluster_id`", "")
+		return
 	}
+	clusterInfo.Id = clusterInfo.ClusterInfo.ClusterId
+	clusterInfo.ClusterId = clusterInfo.ClusterInfo.ClusterId
+	resp.State.Set(ctx, clusterInfo)
 }

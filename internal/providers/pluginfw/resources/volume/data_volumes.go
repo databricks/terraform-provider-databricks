@@ -66,7 +66,6 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
-			return
 		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Failed to get volumes for the catalog:%s and schema%s", listVolumesRequest.CatalogName, listVolumesRequest.SchemaName), err.Error())
 		return

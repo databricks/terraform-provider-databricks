@@ -77,6 +77,8 @@ type Step struct {
 	ImportState               bool
 	ImportStateVerify         bool
 	ProtoV6ProviderFactories  map[string]func() (tfprotov6.ProviderServer, error)
+	// Necessary for ImportState
+	ResourceName string
 }
 
 func createUuid() string {

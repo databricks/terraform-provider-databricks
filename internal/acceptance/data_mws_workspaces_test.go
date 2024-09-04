@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccDataSourceMwsWorkspaces(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		data "databricks_mws_workspaces" "this" {
 		}`,

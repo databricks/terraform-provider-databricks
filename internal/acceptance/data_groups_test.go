@@ -34,7 +34,7 @@ func checkGroupsDataSourcePopulated(t *testing.T) func(s *terraform.State) error
 		assert.Equal(t, attr["display_names.#"], "3")
 
 		r_filtered, ok := s.Modules[0].Resources["data.databricks_groups.this"]
-		require.True(t, ok, "data.databricks_group.all has to be there")
+		require.True(t, ok, "data.databricks_group.this has to be there")
 		attr_filtered := r_filtered.Primary.Attributes
 		assert.Equal(t, attr_filtered["display_names.#"], "2")
 

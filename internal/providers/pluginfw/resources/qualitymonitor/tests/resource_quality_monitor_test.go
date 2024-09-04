@@ -1,4 +1,4 @@
-package qualitymonitor_test
+package tests
 
 import (
 	"os"

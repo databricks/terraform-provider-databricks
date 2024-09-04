@@ -1,4 +1,4 @@
-package volume_test
+package tests
 
 import (
 	"strconv"

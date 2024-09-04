@@ -17,7 +17,7 @@ func TestAccDataSourceClustersNoFilterPluginFramework(t *testing.T) {
 func TestAccDataSourceClustersWithFilterPluginFramework(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
-		data "databricks_clusters" "this" {
+		data "databricks_clusters_pluginframework" "this" {
 			cluster_name_contains = "Default"
 		}`,
 	})

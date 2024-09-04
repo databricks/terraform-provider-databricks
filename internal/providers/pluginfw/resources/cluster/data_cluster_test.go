@@ -14,7 +14,7 @@ func TestAccDataSourceClusterPluginFramework(t *testing.T) {
 		}
 		
 		output "cluster_info" {
-			value = data.databricks_cluster.this.cluster_info
+			value = data.databricks_cluster_pluginframework.this.cluster_info
 		}`,
 	})
 }

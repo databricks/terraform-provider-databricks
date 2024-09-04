@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func DataSourceClusters() datasource.DataSource {
@@ -23,9 +24,9 @@ type ClustersDataSource struct {
 }
 
 type ClustersInfo struct {
-	Id                  string   `json:"id,omitempty" tf:"computed"`
-	Ids                 []string `json:"ids,omitempty" tf:"computed,slice_set"`
-	ClusterNameContains string   `json:"cluster_name_contains,omitempty"`
+	Id                  types.String   `tfsdk:"id" tf:"optional"`
+	Ids                 []types.String `tfsdk:"ids" tf:"optional"`
+	ClusterNameContains types.String   `tfsdk:"cluster_name_contains" tf:"optional"`
 }
 
 func (d *ClustersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -34,7 +35,12 @@ func (d *ClustersDataSource) Metadata(ctx context.Context, req datasource.Metada
 
 func (d *ClustersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(ClustersInfo{}, nil),
+		Attributes: tfschema.DataSourceStructToSchemaMap(ClustersInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+			c.SetComputed("id")
+			c.SetComputed("ids")
+			c.SetComputed("cluster_name_contains")
+			return c
+		}),
 	}
 }
 
@@ -64,16 +70,16 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	ids := make([]string, 0, len(clusters))
-	name_contains := strings.ToLower(clustersInfo.ClusterNameContains)
+	ids := make([]types.String, 0, len(clusters))
+	name_contains := strings.ToLower(clustersInfo.ClusterNameContains.ValueString())
 	for _, v := range clusters {
 		match_name := strings.Contains(strings.ToLower(v.ClusterName), name_contains)
 		if name_contains != "" && !match_name {
 			continue
 		}
-		ids = append(ids, v.ClusterId)
+		ids = append(ids, types.StringValue(v.ClusterId))
 	}
 	clustersInfo.Ids = ids
-	clustersInfo.Id = "_"
+	clustersInfo.Id = types.StringValue("_")
 	resp.State.Set(ctx, clustersInfo)
 }

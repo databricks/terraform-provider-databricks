@@ -7,7 +7,9 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -24,10 +26,10 @@ type ClusterDataSource struct {
 }
 
 type ClusterInfo struct {
-	Id          types.String            `json:"id,omitempty" tf:"computed"`
-	ClusterId   types.String            `json:"cluster_id,omitempty" tf:"computed"`
-	Name        types.String            `json:"cluster_name,omitempty" tf:"computed"`
-	ClusterInfo *compute.ClusterDetails `json:"cluster_info,omitempty" tf:"computed"`
+	Id          types.String               `tfsdk:"id" tf:"optional"`
+	ClusterId   types.String               `tfsdk:"cluster_id" tf:"optional"`
+	Name        types.String               `tfsdk:"cluster_name" tf:"optional"`
+	ClusterInfo *compute_tf.ClusterDetails `tfsdk:"cluster_info" tf:"optional"`
 }
 
 func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -36,7 +38,13 @@ func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.Metadat
 
 func (d *ClusterDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(ClusterInfo{}, nil),
+		Attributes: tfschema.DataSourceStructToSchemaMap(ClusterInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+			c.SetComputed("id")
+			c.SetComputed("cluster_id")
+			c.SetComputed("cluster_name")
+			c.SetComputed("cluster_info")
+			return c
+		}),
 	}
 }
 
@@ -66,10 +74,12 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			resp.Diagnostics.AddError("failed to list clusters", err.Error())
 			return
 		}
-		namedClusters := []compute.ClusterDetails{}
-		for _, clst := range clusters {
+		var clustersTfSDK []compute_tf.ClusterDetails
+		converters.GoSdkToTfSdkStruct(ctx, clusters, clustersTfSDK)
+		namedClusters := []compute_tf.ClusterDetails{}
+		for _, clst := range clustersTfSDK {
 			cluster := clst
-			if cluster.ClusterName == clusterInfo.Name.ValueString() {
+			if cluster.ClusterName == clusterInfo.Name {
 				namedClusters = append(namedClusters, cluster)
 			}
 		}

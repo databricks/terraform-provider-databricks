@@ -36,28 +36,28 @@ func init() {
 	dbproviderlogger.SetTfLogger(dbproviderlogger.NewTfLogger(context.Background()))
 }
 
-func workspaceLevel(t *testing.T, steps ...step) {
+func WorkspaceLevel(t *testing.T, steps ...Step) {
 	loadWorkspaceEnv(t)
 	run(t, steps)
 }
 
-func accountLevel(t *testing.T, steps ...step) {
+func AccountLevel(t *testing.T, steps ...Step) {
 	loadAccountEnv(t)
 	run(t, steps)
 }
 
-func unityWorkspaceLevel(t *testing.T, steps ...step) {
+func UnityWorkspaceLevel(t *testing.T, steps ...Step) {
 	loadUcwsEnv(t)
 	run(t, steps)
 }
 
-func unityAccountLevel(t *testing.T, steps ...step) {
+func UnityAccountLevel(t *testing.T, steps ...Step) {
 	loadUcacctEnv(t)
 	run(t, steps)
 }
 
 // A step in a terraform acceptance test
-type step struct {
+type Step struct {
 	// Terraform HCL for resources to materialize in this test step.
 	Template string
 
@@ -132,7 +132,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 
 // Test wrapper over terraform testing framework. Multiple steps share the same
 // terraform state context.
-func run(t *testing.T, steps []step) {
+func run(t *testing.T, steps []Step) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")

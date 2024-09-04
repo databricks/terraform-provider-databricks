@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `resource "databricks_cluster_policy" "external_metastore" {
 			name = "Terraform policy {var.RANDOM}"
 			definition = jsonencode({
@@ -15,7 +15,7 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 				}
 			})
 		}`,
-	}, step{
+	}, Step{
 		// renaming to a new random name
 		Template: `resource "databricks_cluster_policy" "external_metastore" {
 			name = "Terraform policy {var.RANDOM}"
@@ -30,7 +30,7 @@ func TestAccClusterPolicyResourceFullLifecycle(t *testing.T) {
 }
 
 func TestAccClusterPolicyResourceOverrideBuiltIn(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `resource "databricks_cluster_policy" "personal_vm" {
 			name = "Personal Compute"
 			policy_family_id = "personal-vm"
@@ -46,7 +46,7 @@ func TestAccClusterPolicyResourceOverrideBuiltIn(t *testing.T) {
 }
 
 func TestAccClusterPolicyResourceOverrideNew(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `resource "databricks_cluster_policy" "policyoverrideempty" {
 			policy_family_id = "personal-vm"
 			name             = "Policy Override {var.RANDOM}"

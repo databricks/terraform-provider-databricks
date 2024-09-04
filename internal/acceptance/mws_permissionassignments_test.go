@@ -5,7 +5,7 @@ import (
 )
 
 func TestUcAccAssignGroupToWorkspace(t *testing.T) {
-	unityAccountLevel(t, step{
+	UnityAccountLevel(t, Step{
 		Template: `
 		resource "databricks_group" "this" {
 			display_name = "TF {var.RANDOM}"
@@ -15,7 +15,7 @@ func TestUcAccAssignGroupToWorkspace(t *testing.T) {
 			principal_id = databricks_group.this.id
 			permissions  = ["USER"]
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_group" "this" {
 			display_name = "TF {var.RANDOM}"
@@ -25,7 +25,7 @@ func TestUcAccAssignGroupToWorkspace(t *testing.T) {
 			principal_id = databricks_group.this.id
 			permissions  = ["ADMIN"]
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_group" "this" {
 			display_name = "TF {var.RANDOM}"
@@ -39,7 +39,7 @@ func TestUcAccAssignGroupToWorkspace(t *testing.T) {
 }
 
 func TestAccAssignSpnToWorkspace(t *testing.T) {
-	unityAccountLevel(t, step{
+	UnityAccountLevel(t, Step{
 		Template: `
 		resource "databricks_service_principal" "this" {
 			display_name = "TF {var.RANDOM}"

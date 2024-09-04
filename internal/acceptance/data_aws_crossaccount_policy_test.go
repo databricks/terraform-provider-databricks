@@ -9,7 +9,7 @@ import (
 
 func TestMwsAccDataSourceAwsCrossaccountPolicy(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET") // marker for AWS test env
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		data "databricks_aws_crossaccount_policy" "this" {
 		}`,

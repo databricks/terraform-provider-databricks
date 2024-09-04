@@ -8,7 +8,7 @@ import (
 )
 
 func TestUcAccDataSourceCurrentMetastore(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		data "databricks_current_metastore" "this" {
 		}`,

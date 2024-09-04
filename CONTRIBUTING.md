@@ -333,7 +333,7 @@ func TestExampleResourceCreate(t *testing.T) {
 
 ```go
 func TestAccSecretAclResource(t *testing.T) {
- workspaceLevel(t, step{
+ WorkspaceLevel(t, Step{
   Template: `
   resource "databricks_group" "ds" {
    display_name = "data-scientists-{var.RANDOM}"

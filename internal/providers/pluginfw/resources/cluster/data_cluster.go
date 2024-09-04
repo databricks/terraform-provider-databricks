@@ -27,7 +27,6 @@ type ClusterDataSource struct {
 }
 
 type ClusterInfo struct {
-	Id          types.String               `tfsdk:"id" tf:"optional,computed"`
 	ClusterId   types.String               `tfsdk:"cluster_id" tf:"optional,computed"`
 	Name        types.String               `tfsdk:"cluster_name" tf:"optional,computed"`
 	ClusterInfo *compute_tf.ClusterDetails `tfsdk:"cluster_info" tf:"optional,computed"`
@@ -103,7 +102,6 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		resp.Diagnostics.AddError("you need to specify either `cluster_name` or `cluster_id`", "")
 		return
 	}
-	clusterInfo.Id = clusterInfo.ClusterInfo.ClusterId
 	clusterInfo.ClusterId = clusterInfo.ClusterInfo.ClusterId
 	resp.State.Set(ctx, clusterInfo)
 }

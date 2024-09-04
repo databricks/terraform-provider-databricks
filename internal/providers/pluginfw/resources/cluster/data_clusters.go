@@ -25,7 +25,6 @@ type ClustersDataSource struct {
 }
 
 type ClustersInfo struct {
-	Id                  types.String   `tfsdk:"id" tf:"optional,computed"`
 	Ids                 []types.String `tfsdk:"ids" tf:"optional,computed"`
 	ClusterNameContains types.String   `tfsdk:"cluster_name_contains" tf:"optional"`
 }
@@ -79,6 +78,5 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 		ids = append(ids, types.StringValue(v.ClusterId))
 	}
 	clustersInfo.Ids = ids
-	clustersInfo.Id = types.StringValue("_")
 	resp.State.Set(ctx, clustersInfo)
 }

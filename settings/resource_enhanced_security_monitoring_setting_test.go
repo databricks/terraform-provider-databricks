@@ -23,7 +23,8 @@ func TestQueryCreateEnhancedSecurityMonitoringSetting(t *testing.T) {
 				Setting: settings.EnhancedSecurityMonitoringSetting{
 					Etag: "",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled: true,
+						IsEnabled:       true,
+						ForceSendFields: []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
@@ -44,7 +45,8 @@ func TestQueryCreateEnhancedSecurityMonitoringSetting(t *testing.T) {
 				Setting: settings.EnhancedSecurityMonitoringSetting{
 					Etag: "etag1",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled: true,
+						IsEnabled:       true,
+						ForceSendFields: []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
@@ -123,14 +125,16 @@ func TestQueryUpdateEnhancedSecurityMonitoringSetting(t *testing.T) {
 				Setting: settings.EnhancedSecurityMonitoringSetting{
 					Etag: "etag1",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled: true,
+						IsEnabled:       true,
+						ForceSendFields: []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
 			}).Return(&settings.EnhancedSecurityMonitoringSetting{
 				Etag: "etag2",
 				EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-					IsEnabled: true,
+					IsEnabled:       true,
+					ForceSendFields: []string{"IsEnabled"},
 				},
 				SettingName: "default",
 			}, nil)
@@ -173,7 +177,8 @@ func TestQueryUpdateEnhancedSecurityMonitoringSettingWithConflict(t *testing.T) 
 				Setting: settings.EnhancedSecurityMonitoringSetting{
 					Etag: "etag1",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled: true,
+						IsEnabled:       true,
+						ForceSendFields: []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
@@ -194,7 +199,8 @@ func TestQueryUpdateEnhancedSecurityMonitoringSettingWithConflict(t *testing.T) 
 				Setting: settings.EnhancedSecurityMonitoringSetting{
 					Etag: "etag2",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled: true,
+						IsEnabled:       true,
+						ForceSendFields: []string{"IsEnabled"},
 					},
 					SettingName: "default",
 				},
@@ -244,7 +250,8 @@ func TestQueryDeleteEnhancedSecurityMonitoringSetting(t *testing.T) {
 					Etag:        "etag1",
 					SettingName: "default",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled: false,
+						IsEnabled:       false,
+						ForceSendFields: []string{"IsEnabled"},
 					},
 				},
 			}).Return(&settings.EnhancedSecurityMonitoringSetting{
@@ -279,7 +286,8 @@ func TestQueryDeleteEnhancedSecurityMonitoringSettingWithConflict(t *testing.T) 
 					Etag:        "etag1",
 					SettingName: "default",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled: false,
+						IsEnabled:       false,
+						ForceSendFields: []string{"IsEnabled"},
 					},
 				},
 			}).Return(nil, &apierr.APIError{
@@ -300,7 +308,8 @@ func TestQueryDeleteEnhancedSecurityMonitoringSettingWithConflict(t *testing.T) 
 					Etag:        "etag2",
 					SettingName: "default",
 					EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-						IsEnabled: false,
+						IsEnabled:       false,
+						ForceSendFields: []string{"IsEnabled"},
 					},
 				},
 			}).Return(&settings.EnhancedSecurityMonitoringSetting{

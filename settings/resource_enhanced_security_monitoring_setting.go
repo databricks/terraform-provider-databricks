@@ -6,6 +6,8 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Enhanced Security Monitoring setting
@@ -14,6 +16,10 @@ var enhancedSecurityMonitoringFieldMask = strings.Join([]string{
 }, ",")
 var enhancedSecurityMonitoringSetting = workspaceSetting[settings.EnhancedSecurityMonitoringSetting]{
 	settingStruct: settings.EnhancedSecurityMonitoringSetting{},
+	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		common.CustomizeSchemaPath(s, "enhanced_security_monitoring_workspace", "is_enabled").SetRequired()
+		return s
+	},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.EnhancedSecurityMonitoringSetting, error) {
 		return w.Settings.EnhancedSecurityMonitoring().Get(ctx, settings.GetEnhancedSecurityMonitoringSettingRequest{
 			Etag: etag,
@@ -21,6 +27,7 @@ var enhancedSecurityMonitoringSetting = workspaceSetting[settings.EnhancedSecuri
 	},
 	updateFunc: func(ctx context.Context, w *databricks.WorkspaceClient, t settings.EnhancedSecurityMonitoringSetting) (string, error) {
 		t.SettingName = "default"
+		t.EnhancedSecurityMonitoringWorkspace.ForceSendFields = []string{"IsEnabled"}
 		res, err := w.Settings.EnhancedSecurityMonitoring().Update(ctx, settings.UpdateEnhancedSecurityMonitoringSettingRequest{
 			AllowMissing: true,
 			Setting:      t,
@@ -38,7 +45,8 @@ var enhancedSecurityMonitoringSetting = workspaceSetting[settings.EnhancedSecuri
 				Etag:        etag,
 				SettingName: "default",
 				EnhancedSecurityMonitoringWorkspace: settings.EnhancedSecurityMonitoring{
-					IsEnabled: false,
+					IsEnabled:       false,
+					ForceSendFields: []string{"IsEnabled"},
 				},
 			},
 			FieldMask: enhancedSecurityMonitoringFieldMask,

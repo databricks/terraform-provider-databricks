@@ -291,6 +291,8 @@ resource "databricks_permissions" "dlt_usage" {
 
 Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#notebook-permissions) for [databricks_notebook](notebook.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
 
+A notebook could be specified by using either `notebook_path` or `notebook_id` attribute.  The value for the `notebook_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_notebook` resource as shown below.
+
 ```hcl
 resource "databricks_group" "auto" {
   display_name = "Automation"
@@ -306,7 +308,7 @@ resource "databricks_notebook" "this" {
   language       = "PYTHON"
 }
 
-resource "databricks_permissions" "notebook_usage" {
+resource "databricks_permissions" "notebook_usage_by_path" {
   notebook_path = databricks_notebook.this.path
 
   access_control {
@@ -324,11 +326,34 @@ resource "databricks_permissions" "notebook_usage" {
     permission_level = "CAN_EDIT"
   }
 }
+
+resource "databricks_permissions" "notebook_usage_by_id" {
+  notebook_id = databricks_notebook.this.object_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
 ```
+
+-> **Note**: when importing a permissions resource, only the `notebook_id` is filled!
 
 ## Workspace file usage
 
 Valid permission levels for [databricks_workspace_file](workspace_file.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
+
+A workspace file could be specified by using either `workspace_file_path` or `workspace_file_id` attribute.  The value for the `workspace_file_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_workspace_file` resource as shown below.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -344,7 +369,7 @@ resource "databricks_workspace_file" "this" {
   path           = "/Production/ETL/Features.py"
 }
 
-resource "databricks_permissions" "workspace_file_usage" {
+resource "databricks_permissions" "workspace_file_usage_by_path" {
   workspace_file_path = databricks_workspace_file.this.path
 
   access_control {
@@ -362,33 +387,9 @@ resource "databricks_permissions" "workspace_file_usage" {
     permission_level = "CAN_EDIT"
   }
 }
-```
 
-## Folder usage
-
-Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_directory](directory.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
-
-- All users can list items in the folder without any permissions.
-- All users (or service principals) have `CAN_MANAGE` permission for items in the Workspace > Shared Icon Shared folder. You can grant `CAN_MANAGE` permission to notebooks and folders by moving them to the Shared Icon Shared folder.
-- All users (or service principals) have `CAN_MANAGE` permission for objects the user creates.
-- User home directory - The user (or service principal) has `CAN_MANAGE` permission. All other users (or service principals) can list their directories.
-
-```hcl
-resource "databricks_group" "auto" {
-  display_name = "Automation"
-}
-
-resource "databricks_group" "eng" {
-  display_name = "Engineering"
-}
-
-resource "databricks_directory" "this" {
-  path = "/Production/ETL"
-}
-
-resource "databricks_permissions" "folder_usage" {
-  directory_path = databricks_directory.this.path
-  depends_on     = [databricks_directory.this]
+resource "databricks_permissions" "workspace_file_usage_by_id" {
+  workspace_file_id = databricks_workspace_file.this.object_id
 
   access_control {
     group_name       = "users"
@@ -406,6 +407,74 @@ resource "databricks_permissions" "folder_usage" {
   }
 }
 ```
+
+-> **Note**: when importing a permissions resource, only the `workspace_file_id` is filled!
+
+## Folder usage
+
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html#folder-permissions) for folders of [databricks_directory](directory.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`. Notebooks and experiments in a folder inherit all permissions settings of that folder. For example, a user (or service principal) that has `CAN_RUN` permission on a folder has `CAN_RUN` permission on the notebooks in that folder.
+
+- All users can list items in the folder without any permissions.
+- All users (or service principals) have `CAN_MANAGE` permission for items in the Workspace > Shared Icon Shared folder. You can grant `CAN_MANAGE` permission to notebooks and folders by moving them to the Shared Icon Shared folder.
+- All users (or service principals) have `CAN_MANAGE` permission for objects the user creates.
+- User home directory - The user (or service principal) has `CAN_MANAGE` permission. All other users (or service principals) can list their directories.
+
+A folder could be specified by using either `directory_path` or `directory_id` attribute.  The value for the `directory_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_directory` resource as shown below.
+
+
+```hcl
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_directory" "this" {
+  path = "/Production/ETL"
+}
+
+resource "databricks_permissions" "folder_usage_by_path" {
+  directory_path = databricks_directory.this.path
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
+
+resource "databricks_permissions" "folder_usage_by_id" {
+  directory_id = databricks_directory.this.object_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_READ"
+  }
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_EDIT"
+  }
+}
+```
+
+-> **Note**: when importing a permissions resource, only the `directory_id` is filled!
 
 ## Repos usage
 
@@ -621,7 +690,11 @@ resource "databricks_permissions" "token_usage" {
 
 ## SQL warehouse usage
 
-[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have three possible permissions: `IS_OWNER`, `CAN_USE` and `CAN_MANAGE`:
+[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have four possible permissions: `CAN_USE`, `CAN_MONITOR`, `CAN_MANAGE` and `IS_OWNER`:
+
+- The creator of a warehouse has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a warehouse would revert ownership to the creator.
+- A warehouse must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the warehouse. Nothing would change, per se, if the warehouse was created through Terraform.
+- A warehouse cannot have a group as an owner.
 
 ```hcl
 data "databricks_current_user" "me" {}
@@ -662,9 +735,9 @@ resource "databricks_permissions" "endpoint_usage" {
 }
 ```
 
-## SQL Dashboard usage
+## Dashboard usage
 
-[SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
+[Dashboards](https://docs.databricks.com/en/dashboards/tutorials/manage-permissions.html) have four possible permissions: `CAN_READ`, `CAN_RUN`, `CAN_EDIT` and `CAN_MANAGE`:
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -675,7 +748,41 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "endpoint_usage" {
+resource "databricks_dashboard" "dashboard" {
+  display_name = "TF New Dashboard"
+  # ...
+}
+
+
+resource "databricks_permissions" "dashboard_usage" {
+  dashboard_id = databricks_dashboard.dashboard.id
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
+## Legacy SQL Dashboard usage
+
+[Legacy SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "auto" {
+  display_name = "Automation"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "sql_dashboard_usage" {
   sql_dashboard_id = "3244325"
 
   access_control {
@@ -705,7 +812,7 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "endpoint_usage" {
+resource "databricks_permissions" "query_usage" {
   sql_query_id = "3244325"
 
   access_control {
@@ -733,7 +840,7 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_permissions" "endpoint_usage" {
+resource "databricks_permissions" "alert_usage" {
   sql_alert_id = "3244325"
 
   access_control {
@@ -819,7 +926,7 @@ Exactly one of the below arguments is required:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - Canonical unique identifier for the permissions in form of `/object_type/object_id`.
+- `id` - Canonical unique identifier for the permissions in form of `/<object type>/<object id>`.
 - `object_type` - type of permissions.
 
 ## Import

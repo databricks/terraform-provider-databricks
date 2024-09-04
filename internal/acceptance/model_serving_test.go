@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 func TestAccModelServing(t *testing.T) {
@@ -97,7 +97,7 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 				config {
 					served_entities{
 						name = "pt_model"
-						entity_name = "system.ai.mistral_7b_instruct_v0_1"
+						entity_name = "system.ai.mistral_7b_instruct_v0_2"
 						entity_version = "1"
 						min_provisioned_throughput = 0
 						max_provisioned_throughput = 970
@@ -111,6 +111,133 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 				}
 			}
 		`, name),
+	}, step{
+		Template: fmt.Sprintf(`
+			resource "databricks_model_serving" "endpoint" {
+				name = "%s"
+				config {
+					served_entities{
+						name = "pt_model"
+						entity_name = "system.ai.mistral_7b_instruct_v0_2"
+						entity_version = "1"
+						min_provisioned_throughput = 970
+						max_provisioned_throughput = 1940
+					}
+					traffic_config {
+						routes {
+							served_model_name = "pt_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, name),
+	}, step{
+		Template: fmt.Sprintf(`
+			resource "databricks_model_serving" "endpoint" {
+				name = "%s"
+				config {
+					served_entities{
+						name = "pt_model"
+						entity_name = "system.ai.mistral_7b_instruct_v0_2"
+						entity_version = "1"
+						min_provisioned_throughput = 0
+						max_provisioned_throughput = 1940
+					}
+					traffic_config {
+						routes {
+							served_model_name = "pt_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, name),
 	},
+	)
+}
+
+func TestAccModelServingExternalModel(t *testing.T) {
+	loadWorkspaceEnv(t)
+	if isGcp(t) {
+		skipf(t)("not available on GCP")
+	}
+
+	name := fmt.Sprintf("terraform-test-model-serving-em-%s",
+		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	scope_name := fmt.Sprintf("terraform-test-secret-scope-%s",
+		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	workspaceLevel(t, step{
+		Template: fmt.Sprintf(`
+			resource "databricks_secret_scope" "scope" {
+				name = "%s"
+			}
+
+			resource "databricks_secret" "key" {
+				key          = "api_key"
+				string_value = "fake-secret"
+				scope        = databricks_secret_scope.scope.id
+			}
+
+			resource "databricks_model_serving" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						external_model {
+							provider = "anthropic"
+							name = "claude-2.0"
+							task = "llm/v1/chat"
+							anthropic_config {
+								anthropic_api_key = databricks_secret.key.config_reference
+							}
+						}
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, scope_name, name),
+	},
+		step{
+			Template: fmt.Sprintf(`
+			resource "databricks_secret_scope" "scope" {
+				name = "%s"
+			}
+
+			resource "databricks_secret" "key" {
+				key          = "api_key"
+				string_value = "fake-secret"
+				scope        = databricks_secret_scope.scope.id
+			}
+
+			resource "databricks_model_serving" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						external_model {
+							provider = "openai"
+							name = "gpt-4o"
+							task = "llm/v1/chat"
+							openai_config {
+								openai_api_key = databricks_secret.key.config_reference
+							}
+						}
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, scope_name, name),
+		},
 	)
 }

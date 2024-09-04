@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_assignment (Resource)
 
--> **Note** This resource could be only used with account-level provider!
+-> **Note** This resource could be used with account or workspace-level provider.
 
 A single [databricks_metastore](metastore.md) can be shared across Databricks workspaces, and each linked workspace has a consistent view of the data and a single set of access policies. You can only create a single metastore for each region in which your organization operates.
 
@@ -30,13 +30,13 @@ The following arguments are required:
 
 * `metastore_id` - Unique identifier of the parent Metastore
 * `workspace_id` - id of the workspace for the assignment
-* `default_catalog_name` - (Optional) Default catalog used for this assignment, default to `hive_metastore`
+* `default_catalog_name` - (Deprecated) Default catalog used for this assignment. Please use [databricks_default_namespace_setting](default_namespace_setting.md) instead.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - ID of this metastore assignment in form of `<metastore_id>|<metastore_id>`.
+* `id` - ID of this metastore assignment in form of `<workspace_id>|<metastore_id>`.
 
 ## Import
 

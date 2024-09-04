@@ -52,6 +52,5 @@ The following resources are often used in the same context:
 
 * [databricks_model_serving](model_serving.md) to serve this model on a Databricks serving endpoint.
 * [databricks_mlflow_experiment](mlflow_experiment.md) to manage [MLflow experiments](https://docs.databricks.com/data/data-sources/mlflow-experiment.html) in Databricks.
-* [databricks_table](tables.md) data to manage tables within Unity Catalog.
-* [databricks_schema](schemas.md) data to manage schemas within Unity Catalog.
-* [databricks_catalog](catalogs.md) data to manage catalogs within Unity Catalog.
+* [databricks_schema](schema.md) to manage schemas within Unity Catalog.
+* [databricks_catalog](catalog.md) to manage catalogs within Unity Catalog.

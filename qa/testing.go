@@ -26,9 +26,9 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -310,6 +310,12 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
 	if f.ExpectedDiff != nil {
+		// Users can specify that there is no diff by setting an empty but initialized map.
+		// resource.Diff returns nil if there is no diff.
+		if len(f.ExpectedDiff) == 0 {
+			assert.Nil(t, diff)
+			return nil, err
+		}
 		assert.Equal(t, f.ExpectedDiff, diff.Attributes)
 		return nil, err
 	}
@@ -335,7 +341,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		// this is a bit strange, but we'll fix it later
 		diags := execute(ctx, resourceData, client)
 		if diags != nil {
-			return resourceData, fmt.Errorf(diagsToString(diags))
+			return resourceData, errors.New(diagsToString(diags))
 		}
 	}
 	if resourceData.Id() == "" && !f.Removed {
@@ -458,7 +464,7 @@ func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCas
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := r.TestResourceData()
-		client.Config.AccountID = config["account_id"]
+		client.Config.WithTesting().AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue

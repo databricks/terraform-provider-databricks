@@ -19,18 +19,6 @@ resource "databricks_cluster" "cluster_with_table_access_control" {
 }
 ```
 
-It could be combined with creation of High-Concurrency and Single-Node clusters - in this case it should have corresponding `custom_tags` and `spark.databricks.cluster.profile` in Spark configuration as described in [documentation for `databricks_cluster` resource](cluster.md).
-
-The created cluster could be referred to by providing its ID as `cluster_id` property.
-
-
-```hcl
-resource "databricks_sql_permissions" "foo_table" {
-  cluster_id = databricks_cluster.cluster_name.id
-  #...
-}
-```
-
 It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
 ## Example Usage
@@ -60,11 +48,20 @@ resource "databricks_sql_permissions" "foo_table" {
 
 ## Argument Reference
 
+* `cluster_id` - (Optional) Id of an existing [databricks_cluster](cluster.md), where the appropriate `GRANT`/`REVOKE` commands are executed. This cluster must have the appropriate data security mode (`USER_ISOLATION` or `LEGACY_TABLE_ACL` specified). If no `cluster_id` is specified, a single-node TACL cluster named `terraform-table-acl` is automatically created.
+
+```hcl
+resource "databricks_sql_permissions" "foo_table" {
+  cluster_id = databricks_cluster.cluster_name.id
+  #...
+}
+```
+
 The following arguments are available to specify the data object you need to enforce access controls on. You must specify only one of those arguments (except for `table` and `view`), otherwise resource creation will fail.
 
 * `database` - Name of the database. Has default value of `default`.
-* `table` - Name of the table. Can be combined with `database`. 
-* `view` - Name of the view. Can be combined with `database`. 
+* `table` - Name of the table. Can be combined with `database`.
+* `view` - Name of the view. Can be combined with `database`.
 * `catalog` - (Boolean) If this access control for the entire catalog. Defaults to `false`.
 * `any_file` - (Boolean) If this access control for reading/writing any file. Defaults to `false`.
 * `anonymous_function` - (Boolean) If this access control for using anonymous function. Defaults to `false`.
@@ -100,7 +97,7 @@ The resource can be imported using a synthetic identifier. Examples of valid syn
 * `anonymous function/` - anonymous function. `/` suffix is mandatory.
 
 ```bash
-$ terraform import databricks_sql_permissions.foo /<object-type>/<object-name>
+terraform import databricks_sql_permissions.foo /<object-type>/<object-name>
 ```
 
 ## Related Resources

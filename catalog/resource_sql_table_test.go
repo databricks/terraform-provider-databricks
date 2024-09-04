@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
 )
@@ -126,7 +128,7 @@ func TestResourceSqlTableCreateStatement_Liquid(t *testing.T) {
 	assert.Contains(t, stmt, "USING DELTA")
 	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
-	assert.Contains(t, stmt, "CLUSTER BY (baz, bazz)")
+	assert.Contains(t, stmt, "CLUSTER BY (`baz`,`bazz`)")
 }
 
 func TestResourceSqlTableSerializeProperties(t *testing.T) {
@@ -509,6 +511,95 @@ func TestResourceSqlTableUpdateTableAndOwner(t *testing.T) {
 				ExpectedRequest: catalog.UpdateTableRequest{
 					Owner: "new groups",
 				},
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "bar", d.Get("name"))
+}
+
+func TestResourceSqlTableUpdateTableClusterKeys(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			assert.Equal(t, "ALTER TABLE `main`.`foo`.`bar` CLUSTER BY (`one`)", commandStr)
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "EXTERNAL"
+		data_source_format = "DELTA"
+		cluster_id         = "gone"
+		column {
+			name      = "one"
+			type      = "string"
+			comment   = "managed comment"
+			nullable  = false
+		}
+		column {
+			name      = "two"
+			type      = "string"
+			nullable  = false
+		}
+		cluster_keys = ["one"]
+		`,
+		InstanceState: map[string]string{
+			"name":               "bar",
+			"catalog_name":       "main",
+			"schema_name":        "foo",
+			"table_type":         "EXTERNAL",
+			"data_source_format": "DELTA",
+			"column.#":           "2",
+			"column.0.name":      "one",
+			"column.0.type":      "string",
+			"column.0.comment":   "old comment",
+			"column.0.nullable":  "false",
+			"column.1.name":      "two",
+			"column.1.type":      "string",
+			"column.1.nullable":  "false",
+		},
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ReuseRequest: true,
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageCredentialName: "somecred",
+					ColumnInfos: []SqlColumnInfo{
+						{
+							Name:     "one",
+							Type:     "string",
+							Comment:  "managed comment",
+							Nullable: false,
+						},
+						{
+							Name:     "two",
+							Type:     "string",
+							Nullable: false,
+						},
+					},
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "gone",
+				},
+				Status: 404,
 			},
 		}, createClusterForSql...),
 		Resource: ResourceSqlTable(),
@@ -1211,7 +1302,7 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 					WarehouseId:   "existingwarehouse",
 					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
 				},
-				Response: sql.ExecuteStatementResponse{
+				Response: sql.StatementResponse{
 					StatementId: "statement1",
 					Status: &sql.StatementStatus{
 						State: "SUCCEEDED",
@@ -1243,20 +1334,210 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
+	qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "MANAGED"
+		data_source_format = "DELTA"
+		warehouse_id       = "existingwarehouse"
+	  
+		column {
+		  name      = "id"
+		  type      = "int"
+		}
+		properties = {
+		  "delta.enableDeletionVectors" = "false"
+		}
+		`,
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/sql/statements/",
+				ExpectedRequest: sql.ExecuteStatementRequest{
+					Statement:     "CREATE TABLE `main`.`foo`.`bar` (`id` int)\nUSING DELTA\nTBLPROPERTIES ('delta.enableDeletionVectors'='false');",
+					WaitTimeout:   "50s",
+					WarehouseId:   "existingwarehouse",
+					OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+				},
+				Response: sql.StatementResponse{
+					StatementId: "statement1",
+					Status: &sql.StatementStatus{
+						State: "SUCCEEDED",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					Properties: map[string]string{
+						"one":                         "two",
+						"three":                       "four",
+						"delta.enableDeletionVectors": "false",
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceSqlTable(),
+	}.ApplyNoError(t)
+}
+
+func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {
+	testCases := []struct {
+		name          string
+		hcl           string
+		instanceState map[string]string
+		expectedDiff  map[string]*terraform.ResourceAttrDiff
+	}{
+		{
+			"existing resource with no properties or options",
+			"",
+			map[string]string{
+				"effective_properties.%": "0",
+			},
+			nil,
+		},
+		{
+			"existing resource with computed properties and options",
+			"",
+			map[string]string{
+				"effective_properties.%":                   "2",
+				"effective_properties.computedprop":        "computedvalue",
+				"effective_properties.option.computedprop": "computedvalue",
+			},
+			nil,
+		},
+		{
+			"existing resource with property and option",
+			`properties = {
+			    "myprop" = "myval"
+			}
+			options = {
+				"myopt" = "myval"
+			}`,
+			map[string]string{
+				"properties.%":                      "1",
+				"properties.myprop":                 "myval",
+				"options.%":                         "1",
+				"options.myopt":                     "myval",
+				"effective_properties.%":            "2",
+				"effective_properties.myprop":       "myval",
+				"effective_properties.option.myopt": "myval",
+			},
+			nil,
+		},
+		{
+			"existing resource with property and option and computed property and computed option",
+			`properties = {
+			    "myprop" = "myval"
+			}
+			options = {
+				"myopt" = "myval"
+			}`,
+			map[string]string{
+				"properties.%":                            "1",
+				"properties.myprop":                       "myval",
+				"options.%":                               "1",
+				"options.myopt":                           "myval",
+				"effective_properties.%":                  "4",
+				"effective_properties.myprop":             "myval",
+				"effective_properties.computedprop":       "computedval",
+				"effective_properties.option.myopt":       "myval",
+				"effective_properties.option.computedopt": "computedval",
+			},
+			nil,
+		},
+		{
+			"existing resource with conflicting property and option",
+			`properties = {
+			    "myprop" = "myval"
+			}
+			options = {
+			    "myopt" = "myval"
+			}
+			`,
+			map[string]string{
+				"properties.%":                      "1",
+				"properties.myprop":                 "myval",
+				"options.%":                         "1",
+				"options.myopt":                     "myval",
+				"effective_properties.%":            "2",
+				"effective_properties.myprop":       "otherval",
+				"effective_properties.option.myopt": "otherval",
+			},
+			map[string]*terraform.ResourceAttrDiff{
+				"effective_properties.myprop":       {New: "myval", Old: "otherval"},
+				"effective_properties.option.myopt": {New: "myval", Old: "otherval"},
+			},
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			instanceState := testCase.instanceState
+			if instanceState == nil {
+				instanceState = make(map[string]string)
+			}
+			instanceState["catalog_name"] = "main"
+			instanceState["schema_name"] = "default"
+			instanceState["table_type"] = "MANAGED"
+			instanceState["name"] = "mytable"
+			instanceState["cluster_id"] = "test-1234"
+			instanceState["column.#"] = "0"
+			instanceState["owner"] = "testuser"
+
+			expectedDiff := testCase.expectedDiff
+			if expectedDiff == nil {
+				expectedDiff = make(map[string]*terraform.ResourceAttrDiff)
+			}
+			qa.ResourceFixture{
+				HCL: `
+					catalog_name = "main"
+					schema_name  = "default"
+					table_type   = "MANAGED"
+					name         = "mytable"
+					cluster_id   = "test-1234"
+					owner        = "testuser"
+				` + testCase.hcl,
+				InstanceState: instanceState,
+				ExpectedDiff:  expectedDiff,
+				Resource:      ResourceSqlTable(),
+			}.ApplyNoError(t)
+		})
+	}
+}
+
 var baseClusterFixture = []qa.HTTPFixture{
 	{
 		Method:       "GET",
 		ReuseRequest: true,
-		Resource:     "/api/2.0/clusters/spark-versions",
-		Response: clusters.SparkVersionsList{
-			SparkVersions: []clusters.SparkVersion{
+		Resource:     "/api/2.1/clusters/spark-versions",
+		Response: compute.GetSparkVersionsResponse{
+			Versions: []compute.SparkVersion{
 				{
-					Version:     "7.1.x-cpu-ml-scala2.12",
-					Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					Key:  "7.1.x-cpu-ml-scala2.12",
+					Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
 				},
 				{
-					Version:     "7.3.x-scala2.12",
-					Description: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
+					Key:  "7.3.x-scala2.12",
+					Name: "7.3 LTS (includes Apache Spark 3.0.1, Scala 2.12)",
 				},
 			},
 		},
@@ -1264,7 +1545,7 @@ var baseClusterFixture = []qa.HTTPFixture{
 	{
 		Method:       "GET",
 		ReuseRequest: true,
-		Resource:     "/api/2.0/clusters/list-node-types",
+		Resource:     "/api/2.1/clusters/list-node-types",
 		Response: compute.ListNodeTypesResponse{
 			NodeTypes: []compute.NodeType{
 				{
@@ -1374,4 +1655,58 @@ func TestParseComment_unescapedquote(t *testing.T) {
 	cmt := "Comment with' unescaped quotes '"
 	prsd := parseComment(cmt)
 	assert.Equal(t, `Comment with\' unescaped quotes \'`, prsd)
+}
+
+func TestSqlTablesAPI_getTable_OptionsAndParametersProcessedCorrectly(t *testing.T) {
+	testCases := []struct {
+		name                        string
+		apiResponse                 SqlTableInfo
+		expectedEffectiveProperties map[string]string
+	}{
+		{
+			name:                        "no properties or options",
+			apiResponse:                 SqlTableInfo{},
+			expectedEffectiveProperties: nil,
+		},
+		{
+			name: "empty properties and options",
+			apiResponse: SqlTableInfo{
+				Properties: map[string]string{},
+			},
+			expectedEffectiveProperties: nil,
+		},
+		{
+			name: "properties and options",
+			apiResponse: SqlTableInfo{
+				// Options appear in Properties with a "option." prefix.
+				Properties: map[string]string{
+					"myprop":       "myval",
+					"option.myopt": "myval",
+				},
+			},
+			expectedEffectiveProperties: map[string]string{
+				"myprop":       "myval",
+				"option.myopt": "myval",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			client, _, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+				{
+					Method:   "GET",
+					Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+					Response: testCase.apiResponse,
+				},
+			})
+			assert.NoError(t, err)
+			api := NewSqlTablesAPI(context.Background(), client)
+			actual, err := api.getTable("main.foo.bar")
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.expectedEffectiveProperties, actual.EffectiveProperties)
+			assert.Nil(t, actual.Properties)
+			assert.Nil(t, actual.Options)
+		})
+	}
 }

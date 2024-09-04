@@ -1,4 +1,4 @@
-package provider
+package tests
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"testing"
 	"text/template"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -59,7 +60,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				{   // read log output for correct url...
 					Method:   "GET",
 					Resource: "/api/2.0/...", 
-					Response: apierr.APIErrorBody{
+					Response: common.APIErrorBody{
 						ErrorCode: "NOT_FOUND",
 						Message:   "Item not found",
 					},
@@ -79,7 +80,7 @@ func (stub *resourceTestStub) Reads(t *testing.T) {
 				{   // read log output for correct url...
 					Method:   "GET",
 					Resource: "/api/2.0/...", 
-					Response: apierr.APIErrorBody{
+					Response: common.APIErrorBody{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -120,7 +121,7 @@ func (stub *resourceTestStub) Creates(t *testing.T) {
 				{   // read log output for better stub url...
 					Method:   "POST",
 					Resource: "/api/2.0/...", 
-					Response: apierr.APIErrorBody{
+					Response: common.APIErrorBody{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -165,7 +166,7 @@ func (stub *resourceTestStub) Updates(t *testing.T) {
 				{   // read log output for better stub url...
 					Method:   "POST",
 					Resource: "/api/2.0/.../edit",
-					Response: apierr.APIErrorBody{
+					Response: common.APIErrorBody{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -212,7 +213,7 @@ func (stub *resourceTestStub) Deletes(t *testing.T) {
 				{
 					Method:   "POST",
 					Resource: "/api/2.0/.../delete",
-					Response: apierr.APIErrorBody{
+					Response: common.APIErrorBody{
 						ErrorCode: "INVALID_REQUEST",
 						Message:   "Internal error happened",
 					},
@@ -233,7 +234,7 @@ func TestGenerateTestCodeStubs(t *testing.T) {
 	t.Logf("Got %d unit tests in total. %v",
 		len(funcs), resourceTestStub{})
 	t.Skip()
-	p := DatabricksProvider()
+	p := sdkv2.DatabricksProvider()
 	for name, resource := range p.ResourcesMap {
 		if name != "databricks_group_instance_profile" {
 			continue

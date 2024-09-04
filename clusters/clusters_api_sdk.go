@@ -35,3 +35,12 @@ func StartClusterAndGetInfo(ctx context.Context, w *databricks.WorkspaceClient, 
 	}
 	return w.Clusters.StartByClusterIdAndWait(ctx, clusterID)
 }
+
+// LatestSparkVersionOrDefault returns Spark version matching the definition, or default in case of error
+func LatestSparkVersionOrDefault(ctx context.Context, w *databricks.WorkspaceClient, svr compute.SparkVersionRequest) string {
+	version, err := w.Clusters.SelectSparkVersion(ctx, svr)
+	if err != nil {
+		return "11.3.x-scala2.12"
+	}
+	return version
+}

@@ -89,7 +89,7 @@ Configuration must include one of `http_url_spec` or `job_spec` blocks, but not 
 
 ### job_spec
 
-* `access_token` - (Required) The personal access token used to authorize webhook's job runs.
+* `access_token` - (Required, Sensitive) The personal access token used to authorize webhook's job runs.
 * `job_id` - (Required) ID of the Databricks job that the webhook runs.
 * `workspace_url` - (Optional) URL of the workspace containing the job that this webhook runs. If not specified, the job’s workspace URL is assumed to be the same as the workspace where the webhook is created.
 
@@ -98,7 +98,7 @@ Configuration must include one of `http_url_spec` or `job_spec` blocks, but not 
 * `url` - (Required) External HTTPS URL called on event trigger (by using a POST request). Structure of payload depends on the event type, refer to [documentation](https://docs.databricks.com/applications/mlflow/model-registry-webhooks.html) for more details.
 * `authorization` - (Optional) Value of the authorization header that should be sent in the request sent by the wehbook.  It should be of the form `<auth type> <credentials>`, e.g. `Bearer <access_token>`. If set to an empty string, no authorization header will be included in the request.
 * `enable_ssl_verification` - (Optional) Enable/disable SSL certificate validation. Default is `true`. For self-signed certificates, this field must be `false` AND the destination server must disable certificate validation as well. For security purposes, it is encouraged to perform secret validation with the HMAC-encoded portion of the payload and acknowledge the risk associated with disabling hostname validation whereby it becomes more likely that requests can be maliciously routed to an unintended host.
-* `secret` - (Optional) Shared secret required for HMAC encoding payload. The HMAC-encoded payload will be sent in the header as `X-Databricks-Signature: encoded_payload`.
+* `secret` - (Optional, Sensitive) Shared secret required for HMAC encoding payload. The HMAC-encoded payload will be sent in the header as `X-Databricks-Signature: encoded_payload`.
 
 ## Attribute Reference
 

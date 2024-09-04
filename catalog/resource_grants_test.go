@@ -437,7 +437,7 @@ func TestPermissionsList_Diff_CaseSensitivePrincipal(t *testing.T) {
 			},
 		},
 	)
-	assert.Len(t, diff, 0)
+	assert.Len(t, diff, 2)
 }
 
 func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {

@@ -293,7 +293,7 @@ func TestUcAccFileUpdateServerChange(t *testing.T) {
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,
 		// We are modifying the resource during the check stage, which causes the TF validation to fail. Ignoring the error.
-		ExpectError: regexp.MustCompile(` the plan was not empty`),
+		ExpectError: regexp.MustCompile(` the refresh plan was not empty.`),
 		Check: resourceCheck("databricks_file.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
 			if err != nil {

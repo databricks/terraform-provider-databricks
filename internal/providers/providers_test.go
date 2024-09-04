@@ -1,4 +1,4 @@
-package provider
+package providers
 
 import (
 	"context"
@@ -8,90 +8,14 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type providerFixture struct {
-	host              string
-	token             string
-	username          string
-	password          string
-	configFile        string
-	profile           string
-	azureClientID     string
-	azureClientSecret string
-	azureTenantID     string
-	azureResourceID   string
-	authType          string
-	env               map[string]string
-	assertError       string
-	assertAuth        string
-	assertHost        string
-	assertAzure       bool
-}
-
-func (tt providerFixture) rawConfig() map[string]any {
-	rawConfig := map[string]any{}
-	if tt.host != "" {
-		rawConfig["host"] = tt.host
-	}
-	if tt.token != "" {
-		rawConfig["token"] = tt.token
-	}
-	if tt.username != "" {
-		rawConfig["username"] = tt.username
-	}
-	if tt.password != "" {
-		rawConfig["password"] = tt.password
-	}
-	if tt.configFile != "" {
-		rawConfig["config_file"] = tt.configFile
-	}
-	if tt.profile != "" {
-		rawConfig["profile"] = tt.profile
-	}
-	if tt.azureClientID != "" {
-		rawConfig["azure_client_id"] = tt.azureClientID
-	}
-	if tt.azureClientSecret != "" {
-		rawConfig["azure_client_secret"] = tt.azureClientSecret
-	}
-	if tt.azureTenantID != "" {
-		rawConfig["azure_tenant_id"] = tt.azureTenantID
-	}
-	if tt.azureResourceID != "" {
-		rawConfig["azure_workspace_resource_id"] = tt.azureResourceID
-	}
-	if tt.authType != "" {
-		rawConfig["auth_type"] = tt.authType
-	}
-	return rawConfig
-}
-
-func (tc providerFixture) apply(t *testing.T) *common.DatabricksClient {
-	c, err := configureProviderAndReturnClient(t, tc)
-	if tc.assertError != "" {
-		require.NotNilf(t, err, "Expected to have %s error", tc.assertError)
-		require.True(t, strings.HasPrefix(err.Error(), tc.assertError),
-			"Expected to have '%s' error, but got '%s'", tc.assertError, err)
-		return nil
-	}
-	if err != nil {
-		require.NoError(t, err)
-		return nil
-	}
-	assert.Equal(t, tc.assertAzure, c.IsAzure())
-	assert.Equal(t, tc.assertAuth, c.Config.AuthType)
-	assert.Equal(t, tc.assertHost, c.Config.Host)
-	return c
-}
 
 func TestConfig_NoParams(t *testing.T) {
 	if f, err := os.Stat("~/.databrickscfg"); err == nil && !f.IsDir() {
@@ -256,7 +180,7 @@ func TestConfig_PatFromDatabricksCfg(t *testing.T) {
 	providerFixture{
 		// loading with DEFAULT profile in databrickscfs
 		env: map[string]string{
-			"HOME": "../common/testdata",
+			"HOME": testDataPath,
 		},
 		assertHost: "https://dbc-XXXXXXXX-YYYY.cloud.databricks.com",
 		assertAuth: "pat",
@@ -267,7 +191,7 @@ func TestConfig_PatFromDatabricksCfg_NohostProfile(t *testing.T) {
 	providerFixture{
 		// loading with nohost profile in databrickscfs
 		env: map[string]string{
-			"HOME":                      "../common/testdata",
+			"HOME":                      testDataPath,
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
 		},
 		assertError: common.NoAuth +
@@ -280,7 +204,7 @@ func TestConfig_ConfigProfileAndToken(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_TOKEN":          "x",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
-			"HOME":                      "../common/testdata",
+			"HOME":                      testDataPath,
 		},
 		assertError: common.NoAuth +
 			". Config: token=***, profile=nohost. Env: DATABRICKS_TOKEN, DATABRICKS_CONFIG_PROFILE",
@@ -292,7 +216,7 @@ func TestConfig_ConfigProfileAndPassword(t *testing.T) {
 		env: map[string]string{
 			"DATABRICKS_USERNAME":       "x",
 			"DATABRICKS_CONFIG_PROFILE": "nohost",
-			"HOME":                      "../common/testdata",
+			"HOME":                      testDataPath,
 		},
 		assertError: "validate: more than one authorization method configured: basic and pat. " +
 			"Config: token=***, username=x, profile=nohost. Env: DATABRICKS_USERNAME, DATABRICKS_CONFIG_PROFILE",
@@ -302,7 +226,7 @@ func TestConfig_ConfigProfileAndPassword(t *testing.T) {
 var azResourceID = "/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c"
 
 func TestConfig_AzureCliHost(t *testing.T) {
-	p, _ := filepath.Abs("../common/testdata")
+	p, _ := filepath.Abs(testDataPath)
 	providerFixture{
 		// this test will skip ensureWorkspaceUrl
 		host:            "x",
@@ -312,14 +236,15 @@ func TestConfig_AzureCliHost(t *testing.T) {
 			"PATH": p,
 			"HOME": p,
 		},
-		assertAzure: true,
-		assertHost:  "https://x",
-		assertAuth:  "azure-cli",
+		assertAzure:   true,
+		assertHost:    "https://x",
+		assertAuth:    "azure-cli",
+		azureTenantID: "tenant-id",
 	}.apply(t)
 }
 
 func TestConfig_AzureCliHost_Fail(t *testing.T) {
-	p, _ := filepath.Abs("../common/testdata")
+	p, _ := filepath.Abs(testDataPath)
 	providerFixture{
 		azureResourceID: azResourceID,
 		env: map[string]string{
@@ -328,7 +253,7 @@ func TestConfig_AzureCliHost_Fail(t *testing.T) {
 			"HOME": p,
 			"FAIL": "yes",
 		},
-		assertError: "default auth: azure-cli: cannot get access token: This is just a failing script.",
+		assertError: "default auth: azure-cli: cannot get account info",
 	}.apply(t)
 }
 
@@ -338,14 +263,14 @@ func TestConfig_AzureCliHost_AzNotInstalled(t *testing.T) {
 		azureResourceID: azResourceID,
 		env: map[string]string{
 			"PATH": "whatever",
-			"HOME": "../common/testdata",
+			"HOME": "../../common/testdata",
 		},
 		assertError: common.NoAuth,
 	}.apply(t)
 }
 
 func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
-	p, _ := filepath.Abs("../common/testdata")
+	p, _ := filepath.Abs(testDataPath)
 	providerFixture{
 		azureResourceID: azResourceID,
 		token:           "x",
@@ -359,7 +284,7 @@ func TestConfig_AzureCliHost_PatConflict(t *testing.T) {
 }
 
 func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
-	p, _ := filepath.Abs("../common/testdata")
+	p, _ := filepath.Abs(testDataPath)
 	providerFixture{
 		// omit request to management endpoint to get workspace properties
 		azureResourceID: azResourceID,
@@ -369,14 +294,15 @@ func TestConfig_AzureCliHostAndResourceID(t *testing.T) {
 			"PATH": p,
 			"HOME": p,
 		},
-		assertAzure: true,
-		assertHost:  "https://x",
-		assertAuth:  "azure-cli",
+		assertAzure:   true,
+		azureTenantID: "tenant-id",
+		assertHost:    "https://x",
+		assertAuth:    "azure-cli",
 	}.apply(t)
 }
 
 func TestConfig_AzureAndPasswordConflict(t *testing.T) {
-	p, _ := filepath.Abs("../common/testdata")
+	p, _ := filepath.Abs(testDataPath)
 	providerFixture{
 		host:            "x",
 		azureResourceID: azResourceID,
@@ -393,7 +319,7 @@ func TestConfig_AzureAndPasswordConflict(t *testing.T) {
 func TestConfig_CorruptConfig(t *testing.T) {
 	providerFixture{
 		env: map[string]string{
-			"HOME": "../common/testdata/corrupt",
+			"HOME": testDataPath + "/corrupt",
 		},
 		assertError: common.NoAuth,
 	}.apply(t)
@@ -408,7 +334,7 @@ func shortLivedOAuthHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"access_token": "x", "token_type": "Bearer", "expires_in": 3}`)
 		return
-	} else if r.RequestURI == "/api/2.0/clusters/get?cluster_id=123" {
+	} else if r.RequestURI == "/api/2.1/clusters/get?cluster_id=123" {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, `{"cluster_id": "123"}`)
 		return
@@ -425,7 +351,7 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(shortLivedOAuthHandler))
 	defer ts.Close()
 
-	client := providerFixture{
+	testFixture := providerFixture{
 		env: map[string]string{
 			"DATABRICKS_HOST":          ts.URL,
 			"DATABRICKS_CLIENT_ID":     "x",
@@ -433,9 +359,18 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 		},
 		assertAuth: "oauth-m2m",
 		assertHost: ts.URL,
-	}.apply(t)
+	}
 
-	ws, err := client.WorkspaceClient()
+	client := testFixture.applyWithSDKv2(t)
+	testOAuthFetchesToken(t, client)
+
+	client = testFixture.applyWithPluginFramework(t)
+	testOAuthFetchesToken(t, client)
+
+}
+
+func testOAuthFetchesToken(t *testing.T, c *common.DatabricksClient) {
+	ws, err := c.WorkspaceClient()
 	require.NoError(t, err)
 	bgCtx := context.Background()
 	{
@@ -452,37 +387,11 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 	}
 }
 
-func configureProviderAndReturnClient(t *testing.T, tt providerFixture) (*common.DatabricksClient, error) {
-	for k, v := range tt.env {
-		t.Setenv(k, v)
-	}
-	p := DatabricksProvider()
-	ctx := context.Background()
-	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(tt.rawConfig()))
-	if len(diags) > 0 {
-		issues := []string{}
-		for _, d := range diags {
-			issues = append(issues, d.Summary)
-		}
-		return nil, fmt.Errorf(strings.Join(issues, ", "))
-	}
-	client := p.Meta().(*common.DatabricksClient)
-	r, err := http.NewRequest("GET", "", nil)
-	if err != nil {
-		return nil, err
-	}
-	err = client.Config.Authenticate(r)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
 type parseUserAgentTestCase struct {
 	name string
 	env  string
 	err  error
-	out  []userAgentExtra
+	out  []sdkv2.UserAgentExtra
 }
 
 func Test_ParseUserAgentExtra(t *testing.T) {
@@ -491,34 +400,34 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 			name: "single product",
 			env:  "databricks-cli/0.1.2",
 			err:  nil,
-			out: []userAgentExtra{
-				{"databricks-cli", "0.1.2"},
+			out: []sdkv2.UserAgentExtra{
+				{Key: "databricks-cli", Value: "0.1.2"},
 			},
 		},
 		{
 			name: "multiple products",
 			env:  "databricks-cli/0.1.2 custom-thing/0.0.1",
 			err:  nil,
-			out: []userAgentExtra{
-				{"databricks-cli", "0.1.2"},
-				{"custom-thing", "0.0.1"},
+			out: []sdkv2.UserAgentExtra{
+				{Key: "databricks-cli", Value: "0.1.2"},
+				{Key: "custom-thing", Value: "0.0.1"},
 			},
 		},
 		{
 			name: "multiple products with many separators",
 			env:  "\ta/0.0.1\tb/0.0.2 \t c/0.0.3",
 			err:  nil,
-			out: []userAgentExtra{
-				{"a", "0.0.1"},
-				{"b", "0.0.2"},
-				{"c", "0.0.3"},
+			out: []sdkv2.UserAgentExtra{
+				{Key: "a", Value: "0.0.1"},
+				{Key: "b", Value: "0.0.2"},
+				{Key: "c", Value: "0.0.3"},
 			},
 		},
 		{
 			name: "empty string",
 			env:  "",
 			err:  nil,
-			out:  []userAgentExtra{},
+			out:  []sdkv2.UserAgentExtra{},
 		},
 		{
 			name: "product with comment",
@@ -542,7 +451,7 @@ func Test_ParseUserAgentExtra(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			out, err := parseUserAgentExtra(tc.env)
+			out, err := sdkv2.ParseUserAgentExtra(tc.env)
 
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.out, out)

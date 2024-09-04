@@ -2,10 +2,10 @@ package scim
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
@@ -76,7 +76,7 @@ func TestResourceUserRead_Error(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Users/abc?attributes=userName,displayName,active,externalId,entitlements",
 				Status:   400,
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ScimDetail: "Something",
 					ScimStatus: "Else",
 				},
@@ -515,7 +515,7 @@ func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 					Path:      "/Repos/abc",
 					Recursive: true,
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/Repos/abc) doesn't exist.",
 				},
@@ -573,7 +573,7 @@ func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 					Path:      "/Users/abc",
 					Recursive: true,
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Path (/Users/abc) doesn't exist.",
 				},
@@ -632,7 +632,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/preview/scim/v2/Users?excludedAttributes=roles&filter=userName%20eq%20%22me%40example.com%22",
 			Status:   417,
-			Response: apierr.APIErrorBody{
+			Response: common.APIErrorBody{
 				Message: "cannot find user",
 			},
 		},
@@ -640,7 +640,7 @@ func TestCreateForceOverwriteCannotListUsers(t *testing.T) {
 		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", false)),
+			errors.New(userExistsErrorMessage("me@example.com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -661,7 +661,7 @@ func TestCreateForceOverwriteCannotListAccUsers(t *testing.T) {
 		d := ResourceUser().ToResource().TestResourceData()
 		d.Set("force", true)
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
+			errors.New(userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -702,7 +702,7 @@ func TestCreateForceOverwriteFindsAndSetsID(t *testing.T) {
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("Me@Example.Com", false)),
+			errors.New(userExistsErrorMessage("Me@Example.Com", false)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})
@@ -744,7 +744,7 @@ func TestCreateForceOverwriteFindsAndSetsAccID(t *testing.T) {
 		d.Set("force", true)
 		d.Set("user_name", "me@example.com")
 		err := createForceOverridesManuallyAddedUser(
-			fmt.Errorf(userExistsErrorMessage("me@example.com", true)),
+			errors.New(userExistsErrorMessage("me@example.com", true)),
 			d, NewUsersAPI(ctx, client), User{
 				UserName: "me@example.com",
 			})

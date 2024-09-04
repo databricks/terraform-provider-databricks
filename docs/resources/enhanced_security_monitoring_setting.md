@@ -25,7 +25,8 @@ resource "databricks_enhanced_security_monitoring_workspace_setting" "this" {
 
 The resource supports the following arguments:
 
-* `is_enabled` - (Required) Enable the Enhanced Security Monitoring on the workspace
+ - `enhanced_security_monitoring_workspace` block with following attributes:
+   - `is_enabled` - (Required) Enable the Enhanced Security Monitoring on the workspace
 
 ## Import
 

@@ -52,6 +52,12 @@
         }
       }
     ],
+    "notifications": [
+       {
+          "email_recipients": ["user@domain.com"],
+          "alerts": ["on-flow-failure", "on-update-failure"]
+       }
+    ],
     "name": "Test DLT",
     "photon": false,
     "storage": "dbfs:/pipelines/9ab12322-ccef-4539-8bf1-a43a95667dac",

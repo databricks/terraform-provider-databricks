@@ -7,7 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +20,7 @@ func assertEnableIpAccessList(t *testing.T, expected string) {
 	})
 	require.NoError(t, err)
 	assert.Len(t, *conf, 1)
-	assert.Equal(t, (*conf)["enableIpAccessLists"], expected)
+	assert.Equal(t, expected, (*conf)["enableIpAccessLists"])
 }
 
 func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
@@ -60,19 +60,21 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 		// Assert on server side error returned
 		ExpectError: regexp.MustCompile(`cannot update workspace conf: Invalid keys`),
 	}, step{
-		// Set enableIpAccessLists to true
+		// Set enableIpAccessLists to true with strange case and maxTokenLifetimeDays to verify
+		// failed deletion case
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
-					"enableIpAccessLists": "true"
+					"enableIpAccessLists": "TRue",
+					"maxTokenLifetimeDays": 90
 				}
 			}`,
 		Check: func(s *terraform.State) error {
 			// Assert server side configuration is updated
-			assertEnableIpAccessList(t, "true")
+			assertEnableIpAccessList(t, "TRue")
 
 			// Assert state is persisted
 			conf := s.RootModule().Resources["databricks_workspace_conf.this"]
-			assert.Equal(t, "true", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
+			assert.Equal(t, "TRue", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
 			return nil
 		},
 	})

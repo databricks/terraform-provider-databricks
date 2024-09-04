@@ -1,4 +1,7 @@
-package provider
+// Package sdkv2 contains the changes specific to the SDKv2
+//
+// Note: This package shouldn't depend on internal/providers/pluginfw or internal/providers
+package sdkv2
 
 import (
 	"context"
@@ -25,8 +28,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/dashboards"
+	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
-	tflogger "github.com/databricks/terraform-provider-databricks/logger"
+	"github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/mlflow"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions"
@@ -49,10 +54,10 @@ import (
 func init() {
 	// IMPORTANT: this line cannot be changed, because it's used for
 	// internal purposes at Databricks.
-	useragent.WithProduct("databricks-tf-provider", common.Version())
+	useragent.WithProduct(providercommon.ProviderName, common.Version())
 
 	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
-	out, err := parseUserAgentExtra(userAgentExtraEnv)
+	out, err := ParseUserAgentExtra(userAgentExtraEnv)
 
 	if err != nil {
 		panic(fmt.Errorf("failed to parse DATABRICKS_USER_AGENT_EXTRA: %s", err))
@@ -101,6 +106,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_notebook":                             workspace.DataSourceNotebook().ToResource(),
 			"databricks_notebook_paths":                       workspace.DataSourceNotebookPaths().ToResource(),
 			"databricks_pipelines":                            pipelines.DataSourcePipelines().ToResource(),
+			"databricks_schema":                               catalog.DataSourceSchema().ToResource(),
 			"databricks_schemas":                              catalog.DataSourceSchemas().ToResource(),
 			"databricks_service_principal":                    scim.DataSourceServicePrincipal().ToResource(),
 			"databricks_service_principals":                   scim.DataSourceServicePrincipals().ToResource(),
@@ -114,6 +120,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_table":                                catalog.DataSourceTable().ToResource(),
 			"databricks_tables":                               catalog.DataSourceTables().ToResource(),
 			"databricks_views":                                catalog.DataSourceViews().ToResource(),
+			"databricks_volume":                               catalog.DataSourceVolume().ToResource(),
 			"databricks_volumes":                              catalog.DataSourceVolumes().ToResource(),
 			"databricks_user":                                 scim.DataSourceUser().ToResource(),
 			"databricks_zones":                                clusters.DataSourceClusterZones().ToResource(),
@@ -130,6 +137,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_connection":                      catalog.ResourceConnection().ToResource(),
 			"databricks_cluster":                         clusters.ResourceCluster().ToResource(),
 			"databricks_cluster_policy":                  policies.ResourceClusterPolicy().ToResource(),
+			"databricks_dashboard":                       dashboards.ResourceDashboard().ToResource(),
 			"databricks_dbfs_file":                       storage.ResourceDbfsFile().ToResource(),
 			"databricks_directory":                       workspace.ResourceDirectory().ToResource(),
 			"databricks_entitlements":                    scim.ResourceEntitlements().ToResource(),
@@ -170,6 +178,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_vpc_endpoint":                mws.ResourceMwsVpcEndpoint().ToResource(),
 			"databricks_mws_workspaces":                  mws.ResourceMwsWorkspaces().ToResource(),
 			"databricks_notebook":                        workspace.ResourceNotebook().ToResource(),
+			"databricks_notification_destination":        settings.ResourceNotificationDestination().ToResource(),
 			"databricks_obo_token":                       tokens.ResourceOboToken().ToResource(),
 			"databricks_online_table":                    catalog.ResourceOnlineTable().ToResource(),
 			"databricks_permission_assignment":           access.ResourcePermissionAssignment().ToResource(),
@@ -207,6 +216,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_vector_search_endpoint":          vectorsearch.ResourceVectorSearchEndpoint().ToResource(),
 			"databricks_vector_search_index":             vectorsearch.ResourceVectorSearchIndex().ToResource(),
 			"databricks_volume":                          catalog.ResourceVolume().ToResource(),
+			"databricks_workspace_binding":               catalog.ResourceWorkspaceBinding().ToResource(),
 			"databricks_workspace_conf":                  workspace.ResourceWorkspaceConf().ToResource(),
 			"databricks_workspace_file":                  workspace.ResourceWorkspaceFile().ToResource(),
 		},
@@ -219,8 +229,8 @@ func DatabricksProvider() *schema.Provider {
 		if p.TerraformVersion != "" {
 			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 		}
-		tflogger.SetLogger()
-		return configureDatabricksClient(ctx, d)
+		logger.SetTfLogger(logger.NewTfLogger(ctx))
+		return ConfigureDatabricksClient(ctx, d)
 	}
 	common.AddContextToAllResources(p, "databricks")
 	return p
@@ -251,7 +261,7 @@ func providerSchema() map[string]*schema.Schema {
 	return ps
 }
 
-func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}
@@ -304,7 +314,7 @@ func configureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 	return pc, nil
 }
 
-type userAgentExtra struct {
+type UserAgentExtra struct {
 	Key   string
 	Value string
 }
@@ -317,8 +327,8 @@ type userAgentExtra struct {
 // tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
 var productRegexRfc9110 = regexp.MustCompile("^([!#$%&'*+\\-.^_`|~0-9A-Za-z]+)(/([!#$%&'*+\\-.^_`|~0-9A-Za-z]+))?$")
 
-func parseUserAgentExtra(env string) ([]userAgentExtra, error) {
-	out := []userAgentExtra{}
+func ParseUserAgentExtra(env string) ([]UserAgentExtra, error) {
+	out := []UserAgentExtra{}
 
 	products := strings.FieldsFunc(env, func(r rune) bool {
 		return unicode.IsSpace(r)
@@ -335,7 +345,7 @@ func parseUserAgentExtra(env string) ([]userAgentExtra, error) {
 			return nil, fmt.Errorf("product string must include version: %s", product)
 		}
 
-		out = append(out, userAgentExtra{
+		out = append(out, UserAgentExtra{
 			Key:   match[1],
 			Value: match[3],
 		})

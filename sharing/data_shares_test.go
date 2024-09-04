@@ -3,6 +3,7 @@ package sharing
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
@@ -11,21 +12,22 @@ func TestSharesData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/shares",
+				Resource: "/api/2.1/unity-catalog/shares?",
 				Response: Shares{
 					Shares: []ShareInfo{
 						{
-							Name: "a",
-							Objects: []SharedDataObject{
-								{
-									Name:           "a",
-									DataObjectType: "TABLE",
-									Comment:        "c",
+							sharing.ShareInfo{
+								Name: "a",
+								Objects: []sharing.SharedDataObject{
+									{
+										Name:           "a",
+										DataObjectType: "TABLE",
+										Comment:        "c",
+									},
 								},
-							},
-							CreatedAt: 0,
-							CreatedBy: "",
-						},
+								CreatedAt: 0,
+								CreatedBy: "",
+							}},
 					},
 				},
 			},

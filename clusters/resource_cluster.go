@@ -2,15 +2,18 @@ package clusters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/libraries"
@@ -140,7 +143,7 @@ func Validate(cluster any) error {
 	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
 	}
-	return fmt.Errorf(numWorkerErr)
+	return errors.New(numWorkerErr)
 }
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
@@ -267,13 +270,30 @@ func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster any) error {
 func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 	switch c := cluster.(type) {
 	case *compute.ClusterSpec:
+		// Used in jobs.
 		if c.Autoscale == nil {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
 		}
+		// Workload type is not relevant in jobs clusters.
 		return nil
 	case *compute.CreateCluster:
 		if c.Autoscale == nil {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
+		}
+		// If workload type is set by the user, the fields within Clients should always be sent.
+		// These default to true if not set.
+		if c.WorkloadType != nil {
+			c.WorkloadType.Clients.ForceSendFields = []string{"Jobs", "Notebooks"}
+		}
+		return nil
+	case *compute.EditCluster:
+		if c.Autoscale == nil {
+			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
+		}
+		// If workload type is set by the user, the fields within Clients should always be sent.
+		// These default to true if not set.
+		if c.WorkloadType != nil {
+			c.WorkloadType.Clients.ForceSendFields = []string{"Jobs", "Notebooks"}
 		}
 		return nil
 	default:
@@ -281,9 +301,13 @@ func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 	}
 }
 
+type LibraryWithAlias struct {
+	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+}
+
 type ClusterSpec struct {
 	compute.ClusterSpec
-	Libraries []compute.Library `json:"libraries,omitempty" tf:"slice_set,alias:library"`
+	LibraryWithAlias
 }
 
 func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
@@ -292,6 +316,17 @@ func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema)
 		Computed: true,
 	})
 	s.AddNewField("is_pinned", &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "" && new == "false" {
+				return true
+			}
+			return old == new
+		},
+	})
+	s.AddNewField("no_wait", &schema.Schema{
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  false,
@@ -407,11 +442,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err != nil {
 		return err
 	}
-	clusterInfo, err := clusterWaiter.GetWithTimeout(timeout)
-	if err != nil {
-		return err
-	}
-	d.SetId(clusterInfo.ClusterId)
+
+	d.SetId(clusterWaiter.ClusterId)
 	d.Set("cluster_id", d.Id())
 	isPinned, ok := d.GetOk("is_pinned")
 	if ok && isPinned.(bool) {
@@ -430,6 +462,20 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}); err != nil {
 			return err
 		}
+	}
+
+	// If there is a no_wait flag set to true, don't wait for the cluster to be created
+	noWait, ok := d.GetOk("no_wait")
+	if ok && noWait.(bool) {
+		return nil
+	}
+
+	clusterInfo, err := clusterWaiter.GetWithTimeout(timeout)
+	if err != nil {
+		return err
+	}
+
+	if len(cluster.Libraries) > 0 {
 		_, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 			ClusterID: d.Id(),
 			IsRunning: clusterInfo.IsRunningOrResizing(),
@@ -493,13 +539,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 		return err
 	}
 	libList := libsClusterStatus.ToLibraryList()
-	return common.StructToData(libList, clusterSchema, d)
+	return common.StructToData(LibraryWithAlias{
+		Libraries: libList.Libraries,
+	}, clusterSchema, d)
 }
 
 func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	for k := range clusterSchema {
 		// TODO: create a map if we'll add more non-cluster config parameters in the future
-		if k == "library" || k == "is_pinned" {
+		if k == "library" || k == "is_pinned" || k == "no_wait" {
 			continue
 		}
 		if d.HasChange(k) {
@@ -542,6 +590,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		for k := range clusterSchema {
 			if k == "library" ||
 				k == "is_pinned" ||
+				k == "no_wait" ||
 				k == "num_workers" ||
 				k == "autoscale" {
 				continue
@@ -594,11 +643,22 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
-			if err != nil {
-				return err
-			}
-			cluster.ForceSendFields = []string{"NumWorkers"}
-			_, err = clusters.Edit(ctx, cluster)
+			SetForceSendFieldsForCluster(&cluster, d)
+
+			err = retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {
+				_, err = clusters.Edit(ctx, cluster)
+				if err == nil {
+					return nil
+				}
+				var apiErr *apierr.APIError
+				// Only Running and Terminated clusters can be modified. In particular, autoscaling clusters cannot be modified
+				// while the resizing is ongoing. We retry in this case. Scaling can take several minutes.
+				if errors.As(err, &apiErr) && apiErr.ErrorCode == "INVALID_STATE" {
+					return retry.RetryableError(fmt.Errorf("cluster %s cannot be modified in its current state", clusterId))
+				}
+				return retry.NonRetryableError(err)
+			})
+
 		}
 		if err != nil {
 			return err
@@ -631,7 +691,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 
-	var clusterLibraries ClusterSpec
+	var clusterLibraries LibraryWithAlias
 	common.DataToStructPointer(d, clusterSchema, &clusterLibraries)
 	libsToInstall, libsToUninstall := libraries.GetLibrariesToInstallAndUninstall(clusterLibraries.Libraries, libsClusterStatus)
 

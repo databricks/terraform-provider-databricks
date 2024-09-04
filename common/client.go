@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,6 +21,12 @@ type cachedMe struct {
 	internalImpl iam.CurrentUserService
 	cachedUser   *iam.User
 	mu           sync.Mutex
+}
+
+func newCachedMe(inner iam.CurrentUserService) *cachedMe {
+	return &cachedMe{
+		internalImpl: inner,
+	}
 }
 
 func (a *cachedMe) Me(ctx context.Context) (*iam.User, error) {
@@ -50,6 +57,16 @@ type DatabricksClient struct {
 	mu                    sync.Mutex
 }
 
+// GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if that fails.
+// This is used by resources and data sources that are developed over plugin framework.
+func (c *DatabricksClient) GetWorkspaceClient() (*databricks.WorkspaceClient, diag.Diagnostics) {
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get workspace client", err.Error())}
+	}
+	return w, nil
+}
+
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -60,10 +77,7 @@ func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error
 	if err != nil {
 		return nil, err
 	}
-	internalImpl := w.CurrentUser.Impl()
-	w.CurrentUser.WithImpl(&cachedMe{
-		internalImpl: internalImpl,
-	})
+	w.CurrentUser = newCachedMe(w.CurrentUser)
 	c.cachedWorkspaceClient = w
 	return w, nil
 }
@@ -94,6 +108,16 @@ func (c *DatabricksClient) setAccountId(accountId string) error {
 	}
 	c.DatabricksClient.Config.AccountID = accountId
 	return nil
+}
+
+// GetAccountClient returns the Databricks Account client or a diagnostics if that fails.
+// This is used by resources and data sources that are developed over plugin framework.
+func (c *DatabricksClient) GetAccountClient() (*databricks.AccountClient, diag.Diagnostics) {
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get account client", err.Error())}
+	}
+	return a, nil
 }
 
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
@@ -263,21 +287,9 @@ func (c *DatabricksClient) ClientForHost(ctx context.Context, url string) (*Data
 	if err != nil {
 		return nil, fmt.Errorf("cannot authenticate parent client: %w", err)
 	}
-	cfg := &config.Config{
-		Host:                 url,
-		Username:             c.Config.Username,
-		Password:             c.Config.Password,
-		AuthType:             c.Config.AuthType,
-		Token:                c.Config.Token,
-		ClientID:             c.Config.ClientID,
-		ClientSecret:         c.Config.ClientSecret,
-		GoogleServiceAccount: c.Config.GoogleServiceAccount,
-		GoogleCredentials:    c.Config.GoogleCredentials,
-		InsecureSkipVerify:   c.Config.InsecureSkipVerify,
-		HTTPTimeoutSeconds:   c.Config.HTTPTimeoutSeconds,
-		DebugTruncateBytes:   c.Config.DebugTruncateBytes,
-		DebugHeaders:         c.Config.DebugHeaders,
-		RateLimitPerSecond:   c.Config.RateLimitPerSecond,
+	cfg, err := c.DatabricksClient.Config.NewWithWorkspaceHost(url)
+	if err != nil {
+		return nil, fmt.Errorf("cannot configure new client: %w", err)
 	}
 	client, err := client.New(cfg)
 	if err != nil {

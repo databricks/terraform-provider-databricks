@@ -9,12 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // AutoScale is a struct the describes auto scaling for clusters
@@ -574,6 +575,19 @@ type ClustersAPI struct {
 	context context.Context
 }
 
+// Temporary function to be used until all resources are migrated to Go SDK
+// Create a workspace client
+func (a ClustersAPI) WorkspaceClient() *databricks.WorkspaceClient {
+	client, _ := a.client.WorkspaceClient()
+	return client
+}
+
+// Temporary function to be used until all resources are migrated to Go SDK
+// Return a context
+func (a ClustersAPI) Context() context.Context {
+	return a.context
+}
+
 // Create creates a new Spark cluster and waits till it's running
 func (a ClustersAPI) Create(cluster Cluster) (info ClusterInfo, err error) {
 	var ci ClusterID
@@ -716,14 +730,12 @@ func wrapMissingClusterError(err error, id string) error {
 	// as is in the longer term, so that this keeps working.
 	if apiErr.ErrorCode == "INVALID_STATE" {
 		log.Printf("[WARN] assuming that cluster is removed on backend: %s", apiErr)
-		apiErr.StatusCode = 404
-		return apiErr
+		return databricks.ErrResourceDoesNotExist
 	}
 	// fix non-compliant error code
 	if strings.Contains(apiErr.Message,
 		fmt.Sprintf("Cluster %s does not exist", id)) {
-		apiErr.StatusCode = 404
-		return apiErr
+		return databricks.ErrResourceDoesNotExist
 	}
 	return err
 }
@@ -903,7 +915,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	r := Cluster{
 		NumWorkers:  1,
 		ClusterName: name,
-		SparkVersion: a.LatestSparkVersionOrDefault(SparkVersionRequest{
+		SparkVersion: LatestSparkVersionOrDefault(a.Context(), a.WorkspaceClient(), compute.SparkVersionRequest{
 			Latest:          true,
 			LongTermSupport: true,
 		}),

@@ -43,6 +43,13 @@ func TestAccJobTasks(t *testing.T) {
 					num_workers   = 0  // Setting it to zero intentionally to cover edge case.
 					spark_version = data.databricks_spark_version.latest.id
 					node_type_id  = data.databricks_node_type.smallest.id
+					custom_tags = {
+						"ResourceClass" = "SingleNode"
+					}
+					spark_conf = {
+						"spark.databricks.cluster.profile" : "singleNode"
+						"spark.master" : "local[*,4]"
+					}
 				}
 			}
 
@@ -404,5 +411,38 @@ func TestAccRemoveWebhooks(t *testing.T) {
 		Template: `
 		resource databricks_job test {}
 		`,
+	})
+}
+
+func TestAccPeriodicTrigger(t *testing.T) {
+	workspaceLevel(t, step{
+		Template: `
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+
+			trigger {
+				pause_status = "UNPAUSED"
+				periodic {
+					interval = 17
+					unit = "HOURS"
+				}
+			}
+		}`,
+		Check: resourceCheck("databricks_job.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+
+			jobID, err := strconv.ParseInt(id, 10, 64)
+			assert.NoError(t, err)
+
+			res, err := w.Jobs.GetByJobId(ctx, jobID)
+			assert.NoError(t, err)
+
+			assert.Equal(t, jobs.PauseStatus("UNPAUSED"), res.Settings.Trigger.PauseStatus)
+			assert.Equal(t, 17, res.Settings.Trigger.Periodic.Interval)
+			assert.Equal(t, jobs.PeriodicTriggerConfigurationTimeUnit("HOURS"), res.Settings.Trigger.Periodic.Unit)
+
+			return nil
+		}),
 	})
 }

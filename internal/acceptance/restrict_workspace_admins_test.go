@@ -8,7 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 		}
 	}
 	`
-	workspaceLevel(t, step{
+	unityWorkspaceLevel(t, step{
 		Template: template,
 		Check: resourceCheckWithState("databricks_restrict_workspace_admins_setting.this",
 			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {

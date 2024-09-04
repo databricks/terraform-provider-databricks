@@ -26,7 +26,7 @@ resource "databricks_external_location" "some" {
 }`
 
 func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
 			name = "name-abc"
@@ -36,7 +36,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
-	}, step{
+	}, Step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
 			name = "name-abc"
@@ -46,7 +46,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
-	}, step{
+	}, Step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
 			name = "name-abc"
@@ -57,7 +57,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
-	}, step{
+	}, Step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
 			name = "name-def"
@@ -72,7 +72,7 @@ func TestUcAccVolumesResourceWithoutInitialOwnerAWSFullLifecycle(t *testing.T) {
 }
 
 func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
 			name = "name-abc"
@@ -83,7 +83,7 @@ func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
-	}, step{
+	}, Step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
 			name = "name-abc"
@@ -94,7 +94,7 @@ func TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle(t *testing.T) {
 			volume_type = "EXTERNAL"
 			storage_location   = databricks_external_location.some.url
 		}`,
-	}, step{
+	}, Step{
 		Template: prefixTestTemplate + `
 		resource "databricks_volume" "this" {
 			name = "name-def"

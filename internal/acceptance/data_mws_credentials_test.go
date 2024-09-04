@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccDataSourceMwsCredentials(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		data "databricks_mws_credentials" "this" {
 		}`,

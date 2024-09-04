@@ -20,7 +20,7 @@ func checkStorageCredentialDataSourcePopulated(t *testing.T) func(s *terraform.S
 	}
 }
 func TestUcAccDataSourceStorageCredential(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_storage_credential" "external" {
 			name = "cred-{var.RANDOM}"

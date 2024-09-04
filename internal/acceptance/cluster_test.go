@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `data "databricks_spark_version" "latest" {
 		}
 		resource "databricks_cluster" "this" {
@@ -73,9 +73,9 @@ func singleNodeClusterTemplate(autoTerminationMinutes string) string {
 }
 
 func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: singleNodeClusterTemplate("10"),
-	}, step{
+	}, Step{
 		Template: singleNodeClusterTemplate("20"),
 	})
 }
@@ -103,16 +103,16 @@ func awsClusterTemplate(availability string) string {
 func TestAccClusterResource_CreateAndUpdateAwsAttributes(t *testing.T) {
 	loadWorkspaceEnv(t)
 	if isAws(t) {
-		workspaceLevel(t, step{
+		WorkspaceLevel(t, Step{
 			Template: awsClusterTemplate("SPOT"),
-		}, step{
+		}, Step{
 			Template: awsClusterTemplate("SPOT_WITH_FALLBACK"),
 		})
 	}
 }
 
 func TestAccClusterResource_CreateAndNoWait(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `data "databricks_spark_version" "latest" {
 		}
 		resource "databricks_cluster" "this" {
@@ -133,9 +133,9 @@ func TestAccClusterResource_CreateAndNoWait(t *testing.T) {
 }
 
 func TestAccClusterResource_WorkloadType(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(""),
-	}, step{
+	}, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(`
 		workload_type {
 		    clients {
@@ -147,7 +147,7 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "true"),
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "true"),
 		),
-	}, step{
+	}, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(`
 		workload_type {
 		    clients {
@@ -159,7 +159,7 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "false"),
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "false"),
 		),
-	}, step{
+	}, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(`
 		workload_type {
 		    clients { }
@@ -168,7 +168,7 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "true"),
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "true"),
 		),
-	}, step{
+	}, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(``),
 		Check: resource.ComposeAggregateTestCheckFunc(
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.#", "0"),

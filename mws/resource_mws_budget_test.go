@@ -22,7 +22,7 @@ func getTestBudget() *billing.BudgetConfiguration {
 						Target:     "me@databricks.com",
 					},
 				},
-				QuantityThreshold: "840",
+				QuantityThreshold: "840.840000000000000000",
 				QuantityType:      billing.AlertConfigurationQuantityTypeListPriceDollarsUsd,
 				TimePeriod:        billing.AlertConfigurationTimePeriodMonth,
 				TriggerType:       billing.AlertConfigurationTriggerTypeCumulativeSpendingExceeded,
@@ -87,7 +87,7 @@ func TestResourceBudgetCreate(t *testing.T) {
 			time_period         = "MONTH"
 			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED" 
 			quantity_type       = "LIST_PRICE_DOLLARS_USD"
-			quantity_threshold  = "840"
+			quantity_threshold  = "840.84"
 	
 			action_configurations {
 				action_type = "EMAIL_NOTIFICATION"
@@ -174,7 +174,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 			time_period         = "MONTH"
 			trigger_type        = "CUMULATIVE_SPENDING_EXCEEDED" 
 			quantity_type       = "LIST_PRICE_DOLLARS_USD"
-			quantity_threshold  = "840"
+			quantity_threshold  = "840.84"
 	
 			action_configurations {
 				action_type = "EMAIL_NOTIFICATION"

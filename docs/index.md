@@ -364,7 +364,7 @@ Follow the [Configuring OpenID Connect in Azure](https://docs.github.com/en/acti
 * `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal)
 resides. Alternatively, you can provide this value as an environment variable `ARM_TENANT_ID`.
 * `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
-* `auth_type` - (optional) This is the Authentication Type that is used for specifying the authenticate method.
+* `auth_type` - (required) This is the Authentication Type that is used for specifying the authenticate method. This is required for this authentication type.
 
 There are `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the [`azurerm` provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest).
 

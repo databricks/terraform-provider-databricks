@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccDataSourceWarehouse(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		data "databricks_sql_warehouse" "this" {
 			id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"

@@ -37,6 +37,9 @@ func ResourceMwsBudget() common.Resource {
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, id, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
 			acc, err := c.AccountClient()
 			if err != nil {
 				return err
@@ -50,6 +53,9 @@ func ResourceMwsBudget() common.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update billing.UpdateBudgetConfigurationBudget
 			_, id, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
 			common.DataToStructPointer(d, s, &update)
 			acc, err := c.AccountClient()
 			if err != nil {
@@ -66,6 +72,9 @@ func ResourceMwsBudget() common.Resource {
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			_, id, err := p.Unpack(d)
+			if err != nil {
+				return err
+			}
 			acc, err := c.AccountClient()
 			if err != nil {
 				return err

@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccDataSourceClustersNoFilter(t *testing.T) {
-	WorkspaceLevel(t, Step{
+	workspaceLevel(t, step{
 		Template: `
 		data "databricks_clusters" "this" {
 		} `,
@@ -13,26 +13,9 @@ func TestAccDataSourceClustersNoFilter(t *testing.T) {
 }
 
 func TestAccDataSourceClustersWithFilter(t *testing.T) {
-	WorkspaceLevel(t, Step{
+	workspaceLevel(t, step{
 		Template: `
 		data "databricks_clusters" "this" {
-			cluster_name_contains = "Default"
-		}`,
-	})
-}
-
-func TestAccDataSourceClustersNoFilterPluginFramework(t *testing.T) {
-	workspaceLevel(t, step{
-		Template: `
-		data "databricks_clusters_pluginframework" "this" {
-		} `,
-	})
-}
-
-func TestAccDataSourceClustersWithFilterPluginFramework(t *testing.T) {
-	workspaceLevel(t, step{
-		Template: `
-		data "databricks_clusters_pluginframework" "this" {
 			cluster_name_contains = "Default"
 		}`,
 	})

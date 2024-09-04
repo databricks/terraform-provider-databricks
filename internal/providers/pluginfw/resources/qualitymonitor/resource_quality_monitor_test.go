@@ -1,10 +1,12 @@
 package qualitymonitor_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 var commonPartQualityMonitoring = `resource "databricks_catalog" "sandbox" {
@@ -171,6 +173,23 @@ func TestUcAccQualityMonitorImportPluginFramework(t *testing.T) {
 				  problem_type = "PROBLEM_TYPE_REGRESSION"
 				} 
 			}
+
+			output "table_name" {
+				value = databricks_quality_monitor_pluginframework.testMonitorInference.table_name
+			}
 		`,
-	})
+	},
+		acceptance.Step{
+			ImportState:  true,
+			ResourceName: "databricks_quality_monitor_pluginframework.testMonitorInference",
+			ImportStateIdFunc: func(s *terraform.State) (string, error) {
+				// Fetch the output value of 'table_name' from the state
+				rs, ok := s.RootModule().Outputs["table_name"]
+				if !ok || rs.Value == "" {
+					return "", fmt.Errorf("table_name output not found in the first step")
+				}
+				return rs.Value.(string), nil
+			},
+		},
+	)
 }

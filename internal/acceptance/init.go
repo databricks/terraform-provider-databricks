@@ -75,6 +75,8 @@ type Step struct {
 	PreventDiskCleanup        bool
 	PreventPostDestroyRefresh bool
 	ImportState               bool
+	ImportStateId             string
+	ImportStateIdFunc         func(*terraform.State) (string, error)
 	ImportStateVerify         bool
 	ProtoV6ProviderFactories  map[string]func() (tfprotov6.ProviderServer, error)
 	// Necessary for ImportState
@@ -196,7 +198,10 @@ func run(t *testing.T, steps []Step) {
 			PreventDiskCleanup:        s.PreventDiskCleanup,
 			PreventPostDestroyRefresh: s.PreventPostDestroyRefresh,
 			ImportState:               s.ImportState,
+			ImportStateId:             s.ImportStateId,
+			ImportStateIdFunc:         s.ImportStateIdFunc,
 			ImportStateVerify:         s.ImportStateVerify,
+			ResourceName:              s.ResourceName,
 			ExpectError:               s.ExpectError,
 			ProtoV6ProviderFactories:  providerFactoryForStep,
 			Check: func(state *terraform.State) error {

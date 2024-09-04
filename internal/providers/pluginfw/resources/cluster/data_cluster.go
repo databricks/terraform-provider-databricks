@@ -26,10 +26,10 @@ type ClusterDataSource struct {
 }
 
 type ClusterInfo struct {
-	Id          types.String               `tfsdk:"id" tf:"optional"`
-	ClusterId   types.String               `tfsdk:"cluster_id" tf:"optional"`
-	Name        types.String               `tfsdk:"cluster_name" tf:"optional"`
-	ClusterInfo *compute_tf.ClusterDetails `tfsdk:"cluster_info" tf:"optional"`
+	Id          types.String               `tfsdk:"id" tf:"optional,computed"`
+	ClusterId   types.String               `tfsdk:"cluster_id" tf:"optional,computed"`
+	Name        types.String               `tfsdk:"cluster_name" tf:"optional,computed"`
+	ClusterInfo *compute_tf.ClusterDetails `tfsdk:"cluster_info" tf:"optional,computed"`
 }
 
 func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -38,13 +38,7 @@ func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.Metadat
 
 func (d *ClusterDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(ClusterInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			c.SetComputed("id")
-			c.SetComputed("cluster_id")
-			c.SetComputed("cluster_name")
-			c.SetComputed("cluster_info")
-			return c
-		}),
+		Attributes: tfschema.DataSourceStructToSchemaMap(ClusterInfo{}, nil),
 	}
 }
 

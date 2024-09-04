@@ -24,8 +24,8 @@ type ClustersDataSource struct {
 }
 
 type ClustersInfo struct {
-	Id                  types.String   `tfsdk:"id" tf:"optional"`
-	Ids                 []types.String `tfsdk:"ids" tf:"optional"`
+	Id                  types.String   `tfsdk:"id" tf:"optional,computed"`
+	Ids                 []types.String `tfsdk:"ids" tf:"optional,computed"`
 	ClusterNameContains types.String   `tfsdk:"cluster_name_contains" tf:"optional"`
 }
 
@@ -35,12 +35,7 @@ func (d *ClustersDataSource) Metadata(ctx context.Context, req datasource.Metada
 
 func (d *ClustersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(ClustersInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			c.SetComputed("id")
-			c.SetComputed("ids")
-			c.SetComputed("cluster_name_contains")
-			return c
-		}),
+		Attributes: tfschema.DataSourceStructToSchemaMap(ClustersInfo{}, nil),
 	}
 }
 

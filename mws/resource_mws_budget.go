@@ -31,7 +31,7 @@ func ResourceMwsBudget() common.Resource {
 			}
 			d.Set("budget_configuration_id", budget.Budget.BudgetConfigurationId)
 			d.Set("account_id", c.Config.AccountID)
-			common.StructToData(budget, s, d)
+			common.StructToData(budget.Budget, s, d)
 			p.Pack(d)
 			return nil
 		},
@@ -41,11 +41,11 @@ func ResourceMwsBudget() common.Resource {
 			if err != nil {
 				return err
 			}
-			res, err := acc.Budgets.GetByBudgetId(ctx, id)
+			budget, err := acc.Budgets.GetByBudgetId(ctx, id)
 			if err != nil {
 				return err
 			}
-			return common.StructToData(res.Budget, s, d)
+			return common.StructToData(budget.Budget, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update billing.UpdateBudgetConfigurationBudget

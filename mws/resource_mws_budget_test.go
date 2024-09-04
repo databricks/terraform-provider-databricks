@@ -18,16 +18,14 @@ func getTestBudget() *billing.BudgetConfiguration {
 			{
 				ActionConfigurations: []billing.ActionConfiguration{
 					{
-						ActionConfigurationId: "",
-						ActionType:            billing.ActionConfigurationTypeEmailNotification,
-						Target:                "me@databricks.com",
+						ActionType: billing.ActionConfigurationTypeEmailNotification,
+						Target:     "me@databricks.com",
 					},
 				},
-				AlertConfigurationId: "",
-				QuantityThreshold:    "840",
-				QuantityType:         billing.AlertConfigurationQuantityTypeListPriceDollarsUsd,
-				TimePeriod:           billing.AlertConfigurationTimePeriodMonth,
-				TriggerType:          billing.AlertConfigurationTriggerTypeCumulativeSpendingExceeded,
+				QuantityThreshold: "840",
+				QuantityType:      billing.AlertConfigurationQuantityTypeListPriceDollarsUsd,
+				TimePeriod:        billing.AlertConfigurationTimePeriodMonth,
+				TriggerType:       billing.AlertConfigurationTriggerTypeCumulativeSpendingExceeded,
 			},
 		},
 		Filter: &billing.BudgetConfigurationFilter{
@@ -62,14 +60,14 @@ func TestResourceBudgetCreate(t *testing.T) {
 						{
 							ActionConfigurations: []billing.CreateBudgetConfigurationBudgetActionConfigurations{
 								{
-									ActionType: billing.ActionConfigurationTypeEmailNotification,
-									Target:     "me@databricks.com",
+									ActionType: getTestBudget().AlertConfigurations[0].ActionConfigurations[0].ActionType,
+									Target:     getTestBudget().AlertConfigurations[0].ActionConfigurations[0].Target,
 								},
 							},
-							QuantityThreshold: "840",
-							QuantityType:      billing.AlertConfigurationQuantityTypeListPriceDollarsUsd,
-							TimePeriod:        billing.AlertConfigurationTimePeriodMonth,
-							TriggerType:       billing.AlertConfigurationTriggerTypeCumulativeSpendingExceeded,
+							QuantityThreshold: getTestBudget().AlertConfigurations[0].QuantityThreshold,
+							QuantityType:      getTestBudget().AlertConfigurations[0].QuantityType,
+							TimePeriod:        getTestBudget().AlertConfigurations[0].TimePeriod,
+							TriggerType:       getTestBudget().AlertConfigurations[0].TriggerType,
 						},
 					},
 					DisplayName: getTestBudget().DisplayName,

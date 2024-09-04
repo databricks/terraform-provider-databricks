@@ -53,10 +53,6 @@ func TestAccDataSourceJob(t *testing.T) {
 
 		data "databricks_job" "this" {
 			job_name = databricks_job.this.name
-		}
-		
-		output "cluster_workers" {
-			value = data.databricks_job.this.job_settings
 		}`,
 	})
 }

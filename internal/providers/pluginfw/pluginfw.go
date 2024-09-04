@@ -1,4 +1,7 @@
-package provider
+// Package pluginfw contains the changes specific to the plugin framework
+//
+// Note: This shouldn't depend on internal/providers/sdkv2 or internal/providers
+package pluginfw
 
 import (
 	"context"
@@ -12,6 +15,9 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -22,10 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
-
-func GetProviderName() string {
-	return "databricks-tf-provider"
-}
 
 func GetDatabricksProviderPluginFramework() provider.Provider {
 	p := &DatabricksProviderPluginFramework{}
@@ -38,11 +40,15 @@ type DatabricksProviderPluginFramework struct {
 var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		qualitymonitor.ResourceQualityMonitor,
+	}
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		volume.DataSourceVolumes,
+	}
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
@@ -50,7 +56,7 @@ func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req prov
 }
 
 func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = GetProviderName()
+	resp.TypeName = providercommon.ProviderName
 	resp.Version = common.Version()
 }
 

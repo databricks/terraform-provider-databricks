@@ -6,7 +6,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
-func TestAccDataSourceClusterPluginFramework(t *testing.T) {
+func TestAccDataSourceCluster(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		data "databricks_cluster_pluginframework" "this" {

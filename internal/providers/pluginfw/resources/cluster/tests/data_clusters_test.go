@@ -6,7 +6,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
-func TestAccDataSourceClustersNoFilterPluginFramework(t *testing.T) {
+func TestAccDataSourceClustersNoFilter(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		data "databricks_clusters_pluginframework" "this" {
@@ -14,7 +14,7 @@ func TestAccDataSourceClustersNoFilterPluginFramework(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceClustersWithFilterPluginFramework(t *testing.T) {
+func TestAccDataSourceClustersWithFilter(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		data "databricks_clusters_pluginframework" "this" {

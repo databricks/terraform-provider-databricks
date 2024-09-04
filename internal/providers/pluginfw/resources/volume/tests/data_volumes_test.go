@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func checkDataSourceVolumesPluginFrameworkPopulated(t *testing.T) func(s *terraform.State) error {
+func checkDataSourceVolumesPopulated(t *testing.T) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
 		_, ok := s.Modules[0].Resources["data.databricks_volumes_pluginframework.this"]
 		require.True(t, ok, "data.databricks_volumes_pluginframework.this has to be there")
@@ -20,7 +20,7 @@ func checkDataSourceVolumesPluginFrameworkPopulated(t *testing.T) func(s *terraf
 	}
 }
 
-func TestUcAccDataSourceVolumesPluginFramework(t *testing.T) {
+func TestUcAccDataSourceVolumes(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
@@ -54,6 +54,6 @@ func TestUcAccDataSourceVolumesPluginFramework(t *testing.T) {
 			value = length(data.databricks_volumes_pluginframework.this.ids)
 		}
 		`,
-		Check: checkDataSourceVolumesPluginFrameworkPopulated(t),
+		Check: checkDataSourceVolumesPopulated(t),
 	})
 }

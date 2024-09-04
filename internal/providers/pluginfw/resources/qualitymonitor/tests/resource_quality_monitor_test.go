@@ -48,7 +48,7 @@ resource "databricks_sql_table" "myInferenceTable" {
 
 `
 
-func TestUcAccQualityMonitorPluginFramework(t *testing.T) {
+func TestUcAccQualityMonitor(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		t.Skipf("databricks_quality_monitor resource is not available on GCP")
 	}
@@ -115,7 +115,7 @@ func TestUcAccQualityMonitorPluginFramework(t *testing.T) {
 	})
 }
 
-func TestUcAccUpdateQualityMonitorPluginFramework(t *testing.T) {
+func TestUcAccUpdateQualityMonitor(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		t.Skipf("databricks_quality_monitor resource is not available on GCP")
 	}

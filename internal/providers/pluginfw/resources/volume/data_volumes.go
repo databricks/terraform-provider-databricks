@@ -73,5 +73,5 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	for _, v := range volumes {
 		volumesList.Ids = append(volumesList.Ids, types.StringValue(v.FullName))
 	}
-	resp.State.Set(ctx, volumesList)
+	resp.Diagnostics.Append(resp.State.Set(ctx, volumesList)...)
 }

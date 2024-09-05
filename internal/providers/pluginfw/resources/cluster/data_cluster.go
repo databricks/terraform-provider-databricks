@@ -56,8 +56,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	var clusterInfo ClusterInfo
-	diags = req.Config.Get(ctx, &clusterInfo)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &clusterInfo)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -103,5 +102,5 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 	clusterInfo.ClusterId = clusterInfo.ClusterInfo.ClusterId
-	resp.State.Set(ctx, clusterInfo)
+	resp.Diagnostics.Append(resp.State.Set(ctx, clusterInfo)...)
 }

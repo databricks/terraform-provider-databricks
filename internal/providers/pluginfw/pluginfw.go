@@ -50,6 +50,7 @@ func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []f
 	return []func() datasource.DataSource{
 		volume.DataSourceVolumes,
 		cluster.DataSourceCluster,
+		cluster.DataSourceClusters,
 	}
 }
 

@@ -113,6 +113,10 @@ func ResourceMwsBudget() common.Resource {
 // To avoid drift, we convert the provided number to BigDecimal in string representation
 // when making requests to the API.
 func BigDecimalToString(input string) (string, error) {
+	if input == "" {
+		return "", fmt.Errorf("input cannot be empty")
+	}
+
 	if strings.Contains(input, ".") {
 		input = strings.TrimRight(input, "0")
 		input = strings.TrimSuffix(input, ".")
@@ -121,6 +125,10 @@ func BigDecimalToString(input string) (string, error) {
 }
 
 func StringToBigDecimal(input string) (string, error) {
+	if input == "" {
+		return "", fmt.Errorf("input cannot be empty")
+	}
+
 	if _, err := strconv.ParseFloat(input, 64); err != nil {
 		return "", fmt.Errorf("invalid input string")
 	}

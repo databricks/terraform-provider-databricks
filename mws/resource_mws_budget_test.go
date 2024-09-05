@@ -236,7 +236,7 @@ func TestResourceMwsBudget_BigDecimalToString(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "840.840000000000000001", v)
 
-	v, err = BigDecimalToString("")
+	_, err = BigDecimalToString("")
 	assert.Error(t, err)
 }
 

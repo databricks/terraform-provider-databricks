@@ -74,11 +74,14 @@ type Step struct {
 	PlanOnly                  bool
 	PreventDiskCleanup        bool
 	PreventPostDestroyRefresh bool
-	ImportState               bool
-	ImportStateId             string
-	ImportStateIdFunc         func(*terraform.State) (string, error)
-	ImportStateVerify         bool
-	ProtoV6ProviderFactories  map[string]func() (tfprotov6.ProviderServer, error)
+
+	// If true, will test the functionality of ImportState by importing the resource with ResourceName (must be set) and the ID of that resource.
+	// ID can be supplied with either ImportStateId or ImportStateIdFunc.
+	ImportState              bool
+	ImportStateId            string
+	ImportStateIdFunc        func(*terraform.State) (string, error)
+	ImportStateVerify        bool
+	ProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 	// Necessary for ImportState
 	ResourceName string
 }

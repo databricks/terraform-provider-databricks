@@ -30,6 +30,7 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 			continue
 		}
 		isOptional := fieldIsOptional(typeField)
+		isComputed := fieldIsComputed(typeField)
 		kind := typeField.Type.Kind()
 		value := field.Value
 		typeFieldType := typeField.Type
@@ -48,17 +49,44 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 			}
 			switch elemType {
 			case reflect.TypeOf(types.Bool{}):
-				scm[fieldName] = ListAttributeBuilder{ElementType: types.BoolType, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = ListAttributeBuilder{
+					ElementType: types.BoolType,
+					Optional:    isOptional,
+					Required:    !isOptional,
+					Computed:    isComputed,
+				}
 			case reflect.TypeOf(types.Int64{}):
-				scm[fieldName] = ListAttributeBuilder{ElementType: types.Int64Type, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = ListAttributeBuilder{
+					ElementType: types.Int64Type,
+					Optional:    isOptional,
+					Required:    !isOptional,
+					Computed:    isComputed,
+				}
 			case reflect.TypeOf(types.Float64{}):
-				scm[fieldName] = ListAttributeBuilder{ElementType: types.Float64Type, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = ListAttributeBuilder{
+					ElementType: types.Float64Type,
+					Optional:    isOptional,
+					Required:    !isOptional,
+					Computed:    isComputed,
+				}
 			case reflect.TypeOf(types.String{}):
-				scm[fieldName] = ListAttributeBuilder{ElementType: types.StringType, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = ListAttributeBuilder{
+					ElementType: types.StringType,
+					Optional:    isOptional,
+					Required:    !isOptional,
+					Computed:    isComputed,
+				}
 			default:
 				// Nested struct
 				nestedScm := typeToSchema(reflect.New(elemType).Elem())
-				scm[fieldName] = ListNestedAttributeBuilder{NestedObject: NestedAttributeObject{Attributes: nestedScm}, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = ListNestedAttributeBuilder{
+					NestedObject: NestedAttributeObject{
+						Attributes: nestedScm,
+					},
+					Optional: isOptional,
+					Required: !isOptional,
+					Computed: isComputed,
+				}
 			}
 		} else if kind == reflect.Map {
 			elemType := typeFieldType.Elem()
@@ -70,28 +98,71 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 			}
 			switch elemType {
 			case reflect.TypeOf(types.Bool{}):
-				scm[fieldName] = MapAttributeBuilder{ElementType: types.BoolType, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = MapAttributeBuilder{
+					ElementType: types.BoolType,
+					Optional:    isOptional,
+					Required:    !isOptional,
+					Computed:    isComputed,
+				}
 			case reflect.TypeOf(types.Int64{}):
-				scm[fieldName] = MapAttributeBuilder{ElementType: types.Int64Type, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = MapAttributeBuilder{
+					ElementType: types.Int64Type,
+					Optional:    isOptional,
+					Required:    !isOptional,
+					Computed:    isComputed,
+				}
 			case reflect.TypeOf(types.Float64{}):
-				scm[fieldName] = MapAttributeBuilder{ElementType: types.Float64Type, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = MapAttributeBuilder{
+					ElementType: types.Float64Type,
+					Optional:    isOptional,
+					Required:    !isOptional,
+					Computed:    isComputed,
+				}
 			case reflect.TypeOf(types.String{}):
-				scm[fieldName] = MapAttributeBuilder{ElementType: types.StringType, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = MapAttributeBuilder{
+					ElementType: types.StringType,
+					Optional:    isOptional,
+					Required:    !isOptional,
+					Computed:    isComputed,
+				}
 			default:
 				// Nested struct
 				nestedScm := typeToSchema(reflect.New(elemType).Elem())
-				scm[fieldName] = MapNestedAttributeBuilder{NestedObject: NestedAttributeObject{Attributes: nestedScm}, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = MapNestedAttributeBuilder{
+					NestedObject: NestedAttributeObject{
+						Attributes: nestedScm,
+					},
+					Optional: isOptional,
+					Required: !isOptional,
+					Computed: isComputed,
+				}
 			}
 		} else if kind == reflect.Struct {
 			switch value.Interface().(type) {
 			case types.Bool:
-				scm[fieldName] = BoolAttributeBuilder{Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = BoolAttributeBuilder{
+					Optional: isOptional,
+					Required: !isOptional,
+					Computed: isComputed,
+				}
 			case types.Int64:
-				scm[fieldName] = Int64AttributeBuilder{Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = Int64AttributeBuilder{
+					Optional: isOptional,
+					Required: !isOptional,
+					Computed: isComputed,
+				}
 			case types.Float64:
-				scm[fieldName] = Float64AttributeBuilder{Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = Float64AttributeBuilder{
+					Optional: isOptional,
+					Required: !isOptional,
+					Computed: isComputed,
+				}
 			case types.String:
-				scm[fieldName] = StringAttributeBuilder{Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = StringAttributeBuilder{
+					Optional: isOptional,
+					Required: !isOptional,
+					Computed: isComputed,
+				}
 			case types.List:
 				panic(fmt.Errorf("types.List should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage))
 			case types.Map:
@@ -101,13 +172,23 @@ func typeToSchema(v reflect.Value) map[string]AttributeBuilder {
 				elem := typeFieldType
 				sv := reflect.New(elem)
 				nestedScm := typeToSchema(sv)
-				scm[fieldName] = SingleNestedAttributeBuilder{Attributes: nestedScm, Optional: isOptional, Required: !isOptional}
+				scm[fieldName] = SingleNestedAttributeBuilder{
+					Attributes: nestedScm,
+					Optional:   isOptional,
+					Required:   !isOptional,
+					Computed:   isComputed,
+				}
 			}
 		} else {
 			panic(fmt.Errorf("unknown type for field: %s. %s", typeField.Name, common.TerraformBugErrorMessage))
 		}
 	}
 	return scm
+}
+
+func fieldIsComputed(field reflect.StructField) bool {
+	tagValue := field.Tag.Get("tf")
+	return strings.Contains(tagValue, "computed")
 }
 
 func fieldIsOptional(field reflect.StructField) bool {

@@ -22,7 +22,7 @@ Get groups whose displayName contains `foo` or displayName contains `bar`.:
 
 ```hcl
 data "databricks_groups" "this" {
-  filter = "displayName co "foo" or displayName co "bar""
+  filter = "displayName co \"foo\" or displayName co \"bar\""
 }
 
 output "foobar_groups" {
@@ -35,7 +35,7 @@ output "foobar_groups" {
 
 The following arguments are supported:
 
-* `filter` - (Optional) Query by which the results have to be filtered. Supported operators are equals(`eq`), contains(`co`), starts with(`sw`) and not equals(`ne`).
+* `filter` - (Optional) Query by which the results have to be filtered. See [API reference](https://docs.databricks.com/api/workspace/groups/list#filter).
 
 
 ## Attribute Reference

@@ -3,7 +3,10 @@ package scim
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestDataSourceGroups_Error(t *testing.T) {
@@ -18,37 +21,16 @@ func TestDataSourceGroups_Error(t *testing.T) {
 
 func TestDataSourceGroups(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: `/api/2.0/preview/scim/v2/Groups?count=100&startIndex=1`,
-				Response: GroupList{
-					TotalResults: 0,
-					ItemsPerPage: 0,
-					StartIndex:   1,
-					Resources: []Group{
-						{
-							DisplayName: "ds",
-							ID:          "eerste",
-						},
-						{
-							DisplayName: "product",
-							ID:          "abc",
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: `/api/2.0/preview/scim/v2/Groups?count=100&startIndex=3`,
-				Response: GroupList{
-					Resources: []Group{},
-				},
-			},
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockGroupsAPI().EXPECT()
+			e.ListAll(mock.Anything, iam.ListGroupsRequest{Attributes: "displayName", Count: 100}).Return(
+				[]iam.Group{
+					{DisplayName: "ds"}, {DisplayName: "product"},
+				}, nil)
 		},
+		Resource:    DataSourceGroups(),
 		Read:        true,
 		NonWritable: true,
-		Resource:    DataSourceGroups(),
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
 		"display_names": []string{
@@ -60,34 +42,17 @@ func TestDataSourceGroups(t *testing.T) {
 
 func TestDataSourceGroups_Filter(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: `/api/2.0/preview/scim/v2/Groups?count=100&filter=display_name+sw+%22prod%22&startIndex=1`,
-				Response: GroupList{
-					TotalResults: 0,
-					ItemsPerPage: 0,
-					StartIndex:   1,
-					Resources: []Group{
-						{
-							DisplayName: "product",
-							ID:          "abc",
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: `/api/2.0/preview/scim/v2/Groups?count=100&filter=display_name+sw+%22prod%22&startIndex=2`,
-				Response: GroupList{
-					Resources: []Group{},
-				},
-			},
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockGroupsAPI().EXPECT()
+			e.ListAll(mock.Anything, iam.ListGroupsRequest{Attributes: "displayName", Count: 100, Filter: "displayName sw \"prod\""}).Return(
+				[]iam.Group{
+					{DisplayName: "product"},
+				}, nil)
 		},
+		Resource:    DataSourceGroups(),
+		HCL:         `filter="displayName sw \"prod\""`,
 		Read:        true,
 		NonWritable: true,
-		Resource:    DataSourceGroups(),
-		HCL:         `filter="display_name sw \"prod\""`,
 		ID:          "_",
 	}.ApplyAndExpectData(t, map[string]any{
 		"display_names": []string{

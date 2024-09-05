@@ -16,10 +16,8 @@ func DataSourceGroups() common.Resource {
 	}
 
 	return common.WorkspaceData(func(ctx context.Context, data *groupData, w *databricks.WorkspaceClient) error {
-		groupSearch := iam.ListGroupsRequest{}
-		if data.DisplayNameFilter != "" {
-			groupSearch = iam.ListGroupsRequest{Filter: data.DisplayNameFilter, Count: 100}
-		}
+		groupSearch := iam.ListGroupsRequest{Attributes: "displayName", Count: 100}
+		groupSearch.Filter = data.DisplayNameFilter
 
 		groups, err := w.Groups.ListAll(ctx, groupSearch)
 		if err != nil {

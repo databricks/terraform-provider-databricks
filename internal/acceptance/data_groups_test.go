@@ -19,10 +19,21 @@ resource "databricks_group" "group3" {
 	display_name = "tf-groupbar-{var.RANDOM}"
 }
 
-#data "databricks_groups" "all" {}
+#data "databricks_groups" "all" {
+	depends_on = [
+		databricks_group.group1,
+		databricks_group.group2,
+		databricks_group.group3
+	]
+}
 
 data "databricks_groups" "this" {
 	filter = "displayName co \"foo\" or displayName co \"bar\""
+	depends_on = [
+		databricks_group.group1,
+		databricks_group.group2,
+		databricks_group.group3
+	]
 }
 `
 

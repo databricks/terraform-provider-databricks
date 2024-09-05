@@ -3,7 +3,7 @@ package acceptance
 import "testing"
 
 func TestMwsAccBudget(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `resource "databricks_mws_budget" "this" {
 			display_name = "tf-{var.RANDOM}"
 		

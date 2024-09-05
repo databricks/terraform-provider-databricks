@@ -7,7 +7,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"math/big"
+	"strconv"
 	"strings"
 )
 
@@ -28,7 +28,7 @@ func ResourceMwsBudget() common.Resource {
 			common.DataToStructPointer(d, s, &create)
 			for i := range create.AlertConfigurations {
 				var err error
-				create.AlertConfigurations[i].QuantityThreshold, err = stringToBigDecimal(create.AlertConfigurations[i].QuantityThreshold)
+				create.AlertConfigurations[i].QuantityThreshold, err = StringToBigDecimal(create.AlertConfigurations[i].QuantityThreshold)
 				if err != nil {
 					return err
 				}
@@ -61,7 +61,7 @@ func ResourceMwsBudget() common.Resource {
 				return err
 			}
 			for i := range budget.Budget.AlertConfigurations {
-				budget.Budget.AlertConfigurations[i].QuantityThreshold, err = bigDecimalToString(budget.Budget.AlertConfigurations[i].QuantityThreshold)
+				budget.Budget.AlertConfigurations[i].QuantityThreshold, err = BigDecimalToString(budget.Budget.AlertConfigurations[i].QuantityThreshold)
 				if err != nil {
 					return err
 				}
@@ -76,7 +76,7 @@ func ResourceMwsBudget() common.Resource {
 			}
 			common.DataToStructPointer(d, s, &update)
 			for i := range update.AlertConfigurations {
-				update.AlertConfigurations[i].QuantityThreshold, err = stringToBigDecimal(update.AlertConfigurations[i].QuantityThreshold)
+				update.AlertConfigurations[i].QuantityThreshold, err = StringToBigDecimal(update.AlertConfigurations[i].QuantityThreshold)
 				if err != nil {
 					return err
 				}
@@ -112,23 +112,30 @@ func ResourceMwsBudget() common.Resource {
 // API always return a BigDecimal for QuantityThreshold in string representation.
 // To avoid drift, we convert the provided number to BigDecimal in string representation
 // when making requests to the API.
-func bigDecimalToString(input string) (string, error) {
-	v := new(big.Rat)
-	if _, ok := v.SetString(input); !ok {
-		return "", fmt.Errorf("invalid input string")
+func BigDecimalToString(input string) (string, error) {
+	if strings.Contains(input, ".") {
+		input = strings.TrimRight(input, "0")
+		input = strings.TrimSuffix(input, ".")
 	}
-	s := v.FloatString(18)
-	s = strings.TrimRight(s, "0")
-	if strings.HasSuffix(s, ".") {
-		s = s[:len(s)-1]
-	}
-	return s, nil
+	return input, nil
 }
 
-func stringToBigDecimal(input string) (string, error) {
-	v := new(big.Rat)
-	if _, ok := v.SetString(input); !ok {
+func StringToBigDecimal(input string) (string, error) {
+	if _, err := strconv.ParseFloat(input, 64); err != nil {
 		return "", fmt.Errorf("invalid input string")
 	}
-	return v.FloatString(18), nil
+
+	if !strings.Contains(input, ".") {
+		return input + ".000000000000000000", nil
+	}
+
+	parts := strings.SplitN(input, ".", 2)
+	decimalPart := parts[1]
+
+	if len(decimalPart) < 18 {
+		decimalPart += strings.Repeat("0", 18-len(decimalPart))
+	} else {
+		decimalPart = decimalPart[:18]
+	}
+	return parts[0] + "." + decimalPart, nil
 }

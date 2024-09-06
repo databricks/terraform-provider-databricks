@@ -31,7 +31,7 @@ func TestMwsAccBudget(t *testing.T) {
 				workspace_id {
 					operator = "IN"
 					values   = [
-						{env.DUMMY_WORKSPACE_ID}
+						1234567890098765
 					]                              
 				}
 			}

@@ -64,7 +64,7 @@ func TestResourceBudgetCreate(t *testing.T) {
 									Target:     getTestBudget().AlertConfigurations[0].ActionConfigurations[0].Target,
 								},
 							},
-							QuantityThreshold: getTestBudget().AlertConfigurations[0].QuantityThreshold,
+							QuantityThreshold: "840.84",
 							QuantityType:      getTestBudget().AlertConfigurations[0].QuantityType,
 							TimePeriod:        getTestBudget().AlertConfigurations[0].TimePeriod,
 							TriggerType:       getTestBudget().AlertConfigurations[0].TriggerType,

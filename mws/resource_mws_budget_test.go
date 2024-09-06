@@ -147,8 +147,21 @@ func TestResourceBudgetUpdate(t *testing.T) {
 			api := a.GetMockbudgetsAPI().EXPECT()
 			api.Update(mock.Anything, billing.UpdateBudgetConfigurationRequest{
 				Budget: billing.UpdateBudgetConfigurationBudget{
-					AccountId:             getTestBudget().AccountId,
-					AlertConfigurations:   getTestBudget().AlertConfigurations,
+					AccountId: getTestBudget().AccountId,
+					AlertConfigurations: []billing.AlertConfiguration{
+						{
+							ActionConfigurations: []billing.ActionConfiguration{
+								{
+									ActionType: getTestBudget().AlertConfigurations[0].ActionConfigurations[0].ActionType,
+									Target:     getTestBudget().AlertConfigurations[0].ActionConfigurations[0].Target,
+								},
+							},
+							QuantityThreshold: "840.84",
+							QuantityType:      getTestBudget().AlertConfigurations[0].QuantityType,
+							TimePeriod:        getTestBudget().AlertConfigurations[0].TimePeriod,
+							TriggerType:       getTestBudget().AlertConfigurations[0].TriggerType,
+						},
+					},
 					BudgetConfigurationId: getTestBudget().BudgetConfigurationId,
 					DisplayName:           fmt.Sprintf("%s_update", getTestBudget().DisplayName),
 					Filter:                getTestBudget().Filter,

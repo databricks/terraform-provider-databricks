@@ -3,7 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_budget Resource
 
--> **Note** Initialize provider with `alias = "account"`, `host = "https://accounts.azuredatabricks.net"` and use `provider = databricks.account` for all `databricks_mws_*` resources.
+-> **Note** Initialize provider with `alias = "account"`, `host = "https://accounts.cloud.databricks.com"` and use `provider = databricks.account` for all `databricks_mws_*` resources.
 
 -> **Public Preview** This feature is available for AWS only, and is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 

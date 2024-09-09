@@ -24,6 +24,11 @@ type TestIntTfSdk struct {
 	Workers types.Int64 `tfsdk:"workers" tf:"optional"`
 }
 
+type TestComputedTfSdk struct {
+	ComputedTag  types.String `tfsdk:"computedtag" tf:"computed"`
+	MultipleTags types.String `tfsdk:"multipletags" tf:"computed,optional"`
+}
+
 type TestFloatTfSdk struct {
 	Float types.Float64 `tfsdk:"float" tf:"optional"`
 }
@@ -247,4 +252,15 @@ func TestStructToSchemaExpectedError(t *testing.T) {
 	for _, test := range error_tests {
 		t.Run(test.name, func(t *testing.T) { testStructToSchemaPanics(t, test.testStruct, test.expectedError) })
 	}
+}
+
+func TestComputedField(t *testing.T) {
+	// Test that ComputedTag field is computed and required
+	scm := ResourceStructToSchema(TestComputedTfSdk{}, nil)
+	assert.True(t, scm.Attributes["computedtag"].IsComputed())
+	assert.True(t, scm.Attributes["computedtag"].IsRequired())
+
+	// Test that MultipleTags field is computed and optional
+	assert.True(t, scm.Attributes["multipletags"].IsComputed())
+	assert.True(t, scm.Attributes["multipletags"].IsOptional())
 }

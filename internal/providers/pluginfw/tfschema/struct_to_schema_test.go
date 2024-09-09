@@ -27,6 +27,7 @@ type TestIntTfSdk struct {
 type TestComputedTfSdk struct {
 	ComputedTag  types.String `tfsdk:"computedtag" tf:"computed"`
 	MultipleTags types.String `tfsdk:"multipletags" tf:"computed,optional"`
+	NonComputed  types.String `tfsdk:"noncomputed" tf:"optional"`
 }
 
 type TestFloatTfSdk struct {
@@ -263,4 +264,7 @@ func TestComputedField(t *testing.T) {
 	// Test that MultipleTags field is computed and optional
 	assert.True(t, scm.Attributes["multipletags"].IsComputed())
 	assert.True(t, scm.Attributes["multipletags"].IsOptional())
+
+	// Test that NonComputed field is not computed
+	assert.True(t, !scm.Attributes["noncomputed"].IsComputed())
 }

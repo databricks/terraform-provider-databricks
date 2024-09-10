@@ -3,7 +3,7 @@ subcategory: "Mosaic AI Vector Search"
 ---
 # databricks_vector_search_index Resource
 
--> **Note** This resource could be only used on Unity Catalog-enabled workspace!
+-> **Note** This resource can only be used on a Unity Catalog-enabled workspace!
 
 This resource allows you to create [Mosaic AI Vector Search Index](https://docs.databricks.com/en/generative-ai/create-query-vector-search.html) in Databricks.  Mosaic AI Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Mosaic AI Vector Search Index provides the ability to search data in the linked Delta Table.
 

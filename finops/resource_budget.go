@@ -1,15 +1,16 @@
-package mws
+package finops
 
 import (
 	"context"
+	"strings"
+
 	"github.com/databricks/databricks-sdk-go/service/billing"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"strings"
 )
 
-func ResourceMwsBudget() common.Resource {
+func ResourceBudget() common.Resource {
 	s := common.StructToSchema(billing.BudgetConfiguration{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(m, "display_name").SetValidateFunc(validation.StringLenBetween(1, 128))
 		for _, p := range []string{"account_id", "budget_configuration_id", "create_time", "update_time"} {

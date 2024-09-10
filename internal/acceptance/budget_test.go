@@ -3,8 +3,9 @@ package acceptance
 import "testing"
 
 func TestMwsAccBudget(t *testing.T) {
+	loadAccountEnv(t)
 	AccountLevel(t, Step{
-		Template: `resource "databricks_mws_budget" "this" {
+		Template: `resource "databricks_budget" "this" {
 			display_name = "tf-{var.RANDOM}"
 		
 			alert_configurations {

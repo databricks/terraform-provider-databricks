@@ -1,12 +1,12 @@
-package mws
+package finops
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/billing"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
@@ -51,7 +51,7 @@ func getTestBudget() *billing.BudgetConfiguration {
 }
 
 func TestResourceBudgetCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			api := a.GetMockbudgetsAPI().EXPECT()
 			api.Create(mock.Anything, billing.CreateBudgetConfigurationRequest{
@@ -112,37 +112,37 @@ func TestResourceBudgetCreate(t *testing.T) {
 			}
 		}
 		`,
-		Resource: ResourceMwsBudget(),
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "account_id|budget_configuration_id", d.Id())
-	assert.Equal(t, "budget_name", d.Get("display_name"))
-	assert.Len(t, d.Get("alert_configurations"), 1)
-	assert.Len(t, d.Get("filter"), 1)
+		Resource: ResourceBudget(),
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":           "budget_name",
+		"id":                     "account_id|budget_configuration_id",
+		"alert_configurations.#": 1,
+		"filter.#":               1,
+	})
 }
 
 func TestResourceBudgetRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockbudgetsAPI().EXPECT().
 				GetByBudgetId(mock.Anything, "budget_configuration_id").
 				Return(&billing.GetBudgetConfigurationResponse{Budget: getTestBudget()}, nil)
 		},
-		Resource:  ResourceMwsBudget(),
+		Resource:  ResourceBudget(),
 		Read:      true,
 		New:       true,
 		AccountID: "account_id",
 		ID:        "account_id|budget_configuration_id",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "account_id|budget_configuration_id", d.Id())
-	assert.Equal(t, "budget_name", d.Get("display_name"))
-	assert.Len(t, d.Get("alert_configurations"), 1)
-	assert.Len(t, d.Get("filter"), 1)
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":           "budget_name",
+		"id":                     "account_id|budget_configuration_id",
+		"alert_configurations.#": 1,
+		"filter.#":               1,
+	})
 }
 
 func TestResourceBudgetUpdate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			api := a.GetMockbudgetsAPI().EXPECT()
 			api.Update(mock.Anything, billing.UpdateBudgetConfigurationRequest{
@@ -178,7 +178,7 @@ func TestResourceBudgetUpdate(t *testing.T) {
 				}}, nil,
 			)
 		},
-		Resource: ResourceMwsBudget(),
+		Resource: ResourceBudget(),
 		Update:   true,
 		HCL: `
 		display_name = "budget_name_update"
@@ -214,10 +214,10 @@ func TestResourceBudgetUpdate(t *testing.T) {
 		`,
 		AccountID: "account_id",
 		ID:        "account_id|budget_configuration_id",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "account_id|budget_configuration_id", d.Id())
-	assert.Equal(t, "budget_name_update", d.Get("display_name"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name": "budget_name_update",
+		"id":           "account_id|budget_configuration_id",
+	})
 }
 
 func TestResourceBudgetDelete(t *testing.T) {
@@ -225,7 +225,7 @@ func TestResourceBudgetDelete(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockbudgetsAPI().EXPECT().DeleteByBudgetId(mock.Anything, "budget_configuration_id").Return(nil)
 		},
-		Resource:  ResourceMwsBudget(),
+		Resource:  ResourceBudget(),
 		AccountID: "account_id",
 		Delete:    true,
 		ID:        "account_id|budget_configuration_id",

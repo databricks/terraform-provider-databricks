@@ -1,7 +1,7 @@
 ---
-subcategory: "Deployment"
+subcategory: "FinOps"
 ---
-# databricks_mws_budget Resource
+# databricks_budget Resource
 
 -> **Note** Initialize provider with `alias = "account"`, `host = "https://accounts.cloud.databricks.com"` and use `provider = databricks.account` for all `databricks_mws_*` resources.
 
@@ -12,7 +12,7 @@ This resource allows you to manage [Databricks Budgets](https://docs.databricks.
 ## Example Usage
 
 ```hcl
-resource "databricks_mws_budget" "this" {
+resource "databricks_budget" "this" {
   display_name = "databricks-workspace-budget"
 
   alert_configurations {
@@ -96,7 +96,7 @@ In addition to all arguments above, the following attributes are exported:
 This resource can be imported by Databricks account ID and Budget.
 
 ```sh
-terraform import databricks_mws_budget.this <account_id>|<budget_configuration_id>
+terraform import databricks_budget.this <account_id>|<budget_configuration_id>
 ```
 
 ## Related Resources

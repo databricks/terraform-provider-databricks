@@ -4,7 +4,7 @@ subcategory: "Settings"
 
 # databricks_compliance_security_profile_workspace_setting Resource
 
--> **Note** This resource could be only used with workspace-level provider!
+-> **Note** This resource can only be used with a workspace-level provider!
 
 -> **Note** This setting can NOT be disabled once it is enabled.
 

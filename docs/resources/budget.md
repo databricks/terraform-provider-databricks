@@ -3,9 +3,9 @@ subcategory: "FinOps"
 ---
 # databricks_budget Resource
 
--> **Note** Initialize provider with `alias = "account"`, `host = "https://accounts.cloud.databricks.com"` and use `provider = databricks.account` for all `databricks_mws_*` resources.
+-> **Note** Initialize provider with `alias = "account"`, and `host` pointing to the account URL, like, `host = "https://accounts.cloud.databricks.com"`. Use `provider = databricks.account` for all account-level resources.
 
--> **Public Preview** This feature is available for AWS only, and is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+-> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
 This resource allows you to manage [Databricks Budgets](https://docs.databricks.com/en/admin/account-settings/budgets.html).
 

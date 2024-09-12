@@ -101,7 +101,7 @@ func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, 
 	assert.True(t, reflect.DeepEqual(convertedTfSdkStruct, tfSdkStruct), fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
 }
 
-func TestTfSdkToGoSdkStructConversionFailure(t *testing.T) {
+func TestSdkToGoSdkStructConversionFailure(t *testing.T) {
 	tfSdkStruct := DummyTfSdk{}
 	goSdkStruct := DummyGoSdk{}
 	actualDiagnostics := TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, goSdkStruct)

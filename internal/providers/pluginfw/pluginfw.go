@@ -48,8 +48,8 @@ func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []fun
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		volume.DataSourceVolumes,
 		cluster.DataSourceCluster,
+		volume.DataSourceVolumes,
 	}
 }
 

@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
@@ -61,19 +62,22 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 	if clusterInfo.Name.ValueString() != "" {
-		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
+		clustersGoSDk, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
 		if err != nil {
-			if apierr.IsMissing(err) {
-				resp.State.RemoveResource(ctx)
-			}
 			resp.Diagnostics.AddError("failed to list clusters", err.Error())
 			return
 		}
 		var clustersTfSDK []compute_tf.ClusterDetails
-		converters.GoSdkToTfSdkStruct(ctx, clusters, clustersTfSDK)
+		for _, cluster := range clustersGoSDk {
+			var clusterDetails compute_tf.ClusterDetails
+			resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, clusterDetails)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			clustersTfSDK = append(clustersTfSDK, clusterDetails)
+		}
 		namedClusters := []compute_tf.ClusterDetails{}
-		for _, clst := range clustersTfSDK {
-			cluster := clst
+		for _, cluster := range clustersTfSDK {
 			if cluster.ClusterName == clusterInfo.Name {
 				namedClusters = append(namedClusters, cluster)
 			}
@@ -83,7 +87,11 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			return
 		}
 		if len(namedClusters) > 1 {
-			resp.Diagnostics.AddError(fmt.Sprintf("there is more than one cluster with name '%s'", clusterInfo.Name.ValueString()), "")
+			clusterIDs := []string{}
+			for _, cluster := range namedClusters {
+				clusterIDs = append(clusterIDs, cluster.ClusterId.ValueString())
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("there is more than one cluster with name '%s'", clusterInfo.Name.ValueString()), fmt.Sprintf("The IDs of those clusters are: %s. When specifying a cluster name, the name must be unique. Alternatively, specify the cluster by ID using the cluster_id attribute.", strings.Join(clusterIDs, ", ")))
 			return
 		}
 		clusterInfo.ClusterInfo = &namedClusters[0]
@@ -96,7 +104,12 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			resp.Diagnostics.AddError(fmt.Sprintf("failed to get cluster with cluster id: %s", clusterInfo.ClusterId.ValueString()), err.Error())
 			return
 		}
-		converters.GoSdkToTfSdkStruct(ctx, cluster, clusterInfo.ClusterInfo)
+		var clusterDetails compute_tf.ClusterDetails
+		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, clusterDetails)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		clusterInfo.ClusterInfo = &clusterDetails
 	} else {
 		resp.Diagnostics.AddError("you need to specify either `cluster_name` or `cluster_id`", "")
 		return

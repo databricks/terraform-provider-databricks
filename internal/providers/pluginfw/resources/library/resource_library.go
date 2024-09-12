@@ -3,7 +3,6 @@ package library
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
@@ -31,14 +30,6 @@ var _ resource.ResourceWithConfigure = &LibraryResource{}
 
 func ResourceLibrary() resource.Resource {
 	return &LibraryResource{}
-}
-
-func parseId(id string) (string, string, error) {
-	split := strings.SplitN(id, "/", 2)
-	if len(split) != 2 {
-		return "", "", fmt.Errorf("invalid library id format, %s", common.TerraformBugErrorMessage)
-	}
-	return split[0], split[1], nil
 }
 
 func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams compute.Wait, libraryRep string, libraryExtended *LibraryExtended) diag.Diagnostics {

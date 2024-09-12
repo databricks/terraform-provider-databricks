@@ -27,6 +27,16 @@ data "databricks_clusters" "all_shared" {
 ## Argument Reference
 
 * `cluster_name_contains` - (Optional) Only return [databricks_cluster](../resources/cluster.md#cluster_id) ids that match the given name string.
+* `filter_by` - (Optional) Filters to apply to the listed clusters. See [filter_by Configuration Block](#filter_by-configuration-block) below for details.
+
+### filter_by Configuration Block
+
+The `filter_by` block controls the filtering of the listed clusters. It supports the following arguments:
+
+* `cluster_sources` - (Optional) List of cluster sources to filter by. Possible values are `API`, `JOB`, `MODELS`, `PIPELINE`, `PIPELINE_MAINTENANCE`, `SQL`, and `UI`.
+* `cluster_states` - (Optional) List of cluster states to filter by. Possible values are `RUNNING`, `PENDING`, `RESIZING`, `RESTARTING`, `TERMINATING`, `TERMINATED`, `ERROR`, and `UNKNOWN`.
+* `is_pinned` - (Optional) Whether to filter by pinned clusters.
+* `policy_id` - (Optional) Filter by [databricks_cluster_policy](../resources/cluster_policy.md) id.
 
 ## Attribute Reference
 

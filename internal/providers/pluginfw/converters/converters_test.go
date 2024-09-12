@@ -12,6 +12,7 @@ import (
 
 type DummyTfSdk struct {
 	Enabled           types.Bool                  `tfsdk:"enabled" tf:"optional"`
+	Count             types.Int32                 `tfsdk:"count" tf:""`
 	Workers           types.Int64                 `tfsdk:"workers" tf:""`
 	Floats            types.Float64               `tfsdk:"floats" tf:""`
 	Description       types.String                `tfsdk:"description" tf:""`
@@ -64,6 +65,7 @@ type DummyNestedTfSdk struct {
 
 type DummyGoSdk struct {
 	Enabled           bool                        `json:"enabled"`
+	Count             int                         `json:"count"`
 	Workers           int64                       `json:"workers"`
 	Floats            float64                     `json:"floats"`
 	Description       string                      `json:"description"`
@@ -120,6 +122,11 @@ var tests = []struct {
 		DummyTfSdk{Workers: types.Int64Value(123)},
 		DummyGoSdk{Workers: 123, ForceSendFields: []string{"Workers"}},
 	},
+	// {
+	// 	"int conversion",
+	// 	DummyTfSdk{Count: types.Int32Value(123)},
+	// 	DummyGoSdk{Count: 123, ForceSendFields: []string{"Count"}},
+	// },
 	{
 		"float64 conversion",
 		DummyTfSdk{Floats: types.Float64Value(1.1)},

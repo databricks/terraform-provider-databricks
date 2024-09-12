@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -64,6 +65,37 @@ func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSc
 			return a.AddValidator(v.(validator.String))
 		default:
 			panic(fmt.Errorf("cannot add validator, attribute builder type is invalid: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
+	}
+
+	navigateSchemaWithCallback(&s.attr, cb, path...)
+
+	return s
+}
+
+func (s *CustomizableSchema) AddPlanModifier(v any, path ...string) *CustomizableSchema {
+	cb := func(attr AttributeBuilder) AttributeBuilder {
+		switch a := attr.(type) {
+		case BoolAttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.Bool))
+		case Float64AttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.Float64))
+		case Int64AttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.Int64))
+		case ListAttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.List))
+		case ListNestedAttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.List))
+		case MapAttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.Map))
+		case MapNestedAttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.Map))
+		case SingleNestedAttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.Object))
+		case StringAttributeBuilder:
+			return a.AddPlanModifier(v.(planmodifier.String))
+		default:
+			panic(fmt.Errorf("cannot add planmodifier, attribute builder type is invalid: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
 		}
 	}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -49,6 +50,20 @@ func (d *ClusterDataSource) Configure(_ context.Context, req datasource.Configur
 	}
 }
 
+func ValidateClustersList(ctx context.Context, clusters []compute_tf.ClusterDetails, clusterName string) diag.Diagnostics {
+	if len(clusters) == 0 {
+		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("there is no cluster with name '%s'", clusterName), "")}
+	}
+	if len(clusters) > 1 {
+		clusterIDs := []string{}
+		for _, cluster := range clusters {
+			clusterIDs = append(clusterIDs, cluster.ClusterId.ValueString())
+		}
+		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("there is more than one cluster with name '%s'", clusterName), fmt.Sprintf("The IDs of those clusters are: %s. When specifying a cluster name, the name must be unique. Alternatively, specify the cluster by ID using the cluster_id attribute.", strings.Join(clusterIDs, ", ")))}
+	}
+	return nil
+}
+
 func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
@@ -61,7 +76,9 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if clusterInfo.Name.ValueString() != "" {
+	clusterName := clusterInfo.Name.ValueString()
+	clusterId := clusterInfo.ClusterId.ValueString()
+	if clusterName != "" {
 		clustersGoSDk, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
 		if err != nil {
 			resp.Diagnostics.AddError("failed to list clusters", err.Error())
@@ -70,7 +87,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		var clustersTfSDK []compute_tf.ClusterDetails
 		for _, cluster := range clustersGoSDk {
 			var clusterDetails compute_tf.ClusterDetails
-			resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, clusterDetails)...)
+			resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &clusterDetails)...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -82,30 +99,22 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 				namedClusters = append(namedClusters, cluster)
 			}
 		}
-		if len(namedClusters) == 0 {
-			resp.Diagnostics.AddError(fmt.Sprintf("there is no cluster with name '%s'", clusterInfo.Name.ValueString()), "")
-			return
-		}
-		if len(namedClusters) > 1 {
-			clusterIDs := []string{}
-			for _, cluster := range namedClusters {
-				clusterIDs = append(clusterIDs, cluster.ClusterId.ValueString())
-			}
-			resp.Diagnostics.AddError(fmt.Sprintf("there is more than one cluster with name '%s'", clusterInfo.Name.ValueString()), fmt.Sprintf("The IDs of those clusters are: %s. When specifying a cluster name, the name must be unique. Alternatively, specify the cluster by ID using the cluster_id attribute.", strings.Join(clusterIDs, ", ")))
+		resp.Diagnostics.Append(ValidateClustersList(ctx, namedClusters, clusterName)...)
+		if resp.Diagnostics.HasError() {
 			return
 		}
 		clusterInfo.ClusterInfo = &namedClusters[0]
-	} else if clusterInfo.ClusterId.ValueString() != "" {
-		cluster, err := w.Clusters.GetByClusterId(ctx, clusterInfo.ClusterId.ValueString())
+	} else if clusterId != "" {
+		cluster, err := w.Clusters.GetByClusterId(ctx, clusterId)
 		if err != nil {
 			if apierr.IsMissing(err) {
 				resp.State.RemoveResource(ctx)
 			}
-			resp.Diagnostics.AddError(fmt.Sprintf("failed to get cluster with cluster id: %s", clusterInfo.ClusterId.ValueString()), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("failed to get cluster with cluster id: %s", clusterId), err.Error())
 			return
 		}
 		var clusterDetails compute_tf.ClusterDetails
-		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, clusterDetails)...)
+		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &clusterDetails)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}

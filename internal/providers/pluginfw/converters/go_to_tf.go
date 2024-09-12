@@ -13,8 +13,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 )
 
-var goSdkToTfSdkStructConversionFailureMessage = "gosdk to tfsdk struct conversion failure"
-var goSdkToTfSdkFieldConversionFailureMessage = "gosdk to tfsdk field conversion failure"
+const goSdkToTfSdkStructConversionFailureMessage = "gosdk to tfsdk struct conversion failure"
+const goSdkToTfSdkFieldConversionFailureMessage = "gosdk to tfsdk field conversion failure"
 
 // GoSdkToTfSdkStruct converts a gosdk struct into a tfsdk struct, with the folowing rules.
 //

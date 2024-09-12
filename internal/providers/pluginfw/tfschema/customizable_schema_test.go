@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
@@ -110,4 +111,13 @@ func TestCustomizeSchemaAddValidator(t *testing.T) {
 	})
 
 	assert.True(t, len(scm.Attributes["description"].(schema.StringAttribute).Validators) == 1)
+}
+
+func TestCustomizeSchemaAddPlanModifier(t *testing.T) {
+	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "description")
+		return c
+	})
+
+	assert.True(t, len(scm.Attributes["description"].(schema.StringAttribute).PlanModifiers) == 1)
 }

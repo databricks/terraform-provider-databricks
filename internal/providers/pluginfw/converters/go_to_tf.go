@@ -41,7 +41,7 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 	}
 
 	if destVal.Kind() != reflect.Ptr {
-		return diag.Diagnostics{diag.NewErrorDiagnostic("please provide a pointer for the tfsdk struct", goSdkToTfSdkStructConversionFailureMessage)}
+		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("please provide a pointer for the tfsdk struct, got %s", destVal.Type().Name()), goSdkToTfSdkStructConversionFailureMessage)}
 	}
 	destVal = destVal.Elem()
 

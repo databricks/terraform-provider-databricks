@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -98,6 +99,24 @@ func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, 
 	convertedTfSdkStruct := DummyTfSdk{}
 	assert.True(t, !GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct).HasError())
 	assert.True(t, reflect.DeepEqual(convertedTfSdkStruct, tfSdkStruct), fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
+}
+
+func TestTfSdkToGoSdkStructConversionFailure(t *testing.T) {
+	tfSdkStruct := DummyTfSdk{}
+	goSdkStruct := DummyGoSdk{}
+	actualDiagnostics := TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, goSdkStruct)
+	expectedDiagnostics := diag.Diagnostics{diag.NewErrorDiagnostic("please provide a pointer for the gosdk struct, got DummyGoSdk", tfSdkToGoSdkStructConversionFailureMessage)}
+	assert.True(t, actualDiagnostics.HasError())
+	assert.True(t, actualDiagnostics.Equal(expectedDiagnostics))
+}
+
+func TestGoSdkToTfSdkStructConversionFailure(t *testing.T) {
+	tfSdkStruct := DummyTfSdk{}
+	goSdkStruct := DummyGoSdk{}
+	actualDiagnostics := GoSdkToTfSdkStruct(context.Background(), goSdkStruct, tfSdkStruct)
+	expectedDiagnostics := diag.Diagnostics{diag.NewErrorDiagnostic("please provide a pointer for the tfsdk struct, got DummyTfSdk", goSdkToTfSdkStructConversionFailureMessage)}
+	assert.True(t, actualDiagnostics.HasError())
+	assert.True(t, actualDiagnostics.Equal(expectedDiagnostics))
 }
 
 var tests = []struct {

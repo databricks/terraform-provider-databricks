@@ -50,7 +50,7 @@ func (d *ClusterDataSource) Configure(_ context.Context, req datasource.Configur
 	}
 }
 
-func ValidateClustersList(ctx context.Context, clusters []compute_tf.ClusterDetails, clusterName string) diag.Diagnostics {
+func validateClustersList(ctx context.Context, clusters []compute_tf.ClusterDetails, clusterName string) diag.Diagnostics {
 	if len(clusters) == 0 {
 		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("there is no cluster with name '%s'", clusterName), "")}
 	}
@@ -99,7 +99,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 				namedClusters = append(namedClusters, cluster)
 			}
 		}
-		resp.Diagnostics.Append(ValidateClustersList(ctx, namedClusters, clusterName)...)
+		resp.Diagnostics.Append(validateClustersList(ctx, namedClusters, clusterName)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}

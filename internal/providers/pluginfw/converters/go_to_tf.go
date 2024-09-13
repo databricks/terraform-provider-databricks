@@ -114,7 +114,7 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 		} else {
 			destField.Set(reflect.ValueOf(types.BoolNull()))
 		}
-	case reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		// convert any kind of integer to int64
 		intVal := srcField.Convert(reflect.TypeOf(int64(0))).Int()
 		// check if the value is non-zero or if the field is in the forceSendFields list
@@ -123,7 +123,7 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 		} else {
 			destField.Set(reflect.ValueOf(types.Int64Null()))
 		}
-	case reflect.Float64:
+	case reflect.Float32, reflect.Float64:
 		// convert any kind of float to float64
 		float64Val := srcField.Convert(reflect.TypeOf(float64(0))).Float()
 		// check if the value is non-zero or if the field is in the forceSendFields list

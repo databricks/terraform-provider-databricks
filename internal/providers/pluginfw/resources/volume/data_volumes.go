@@ -28,7 +28,7 @@ type VolumesDataSource struct {
 type VolumesList struct {
 	CatalogName types.String   `tfsdk:"catalog_name"`
 	SchemaName  types.String   `tfsdk:"schema_name"`
-	Ids         []types.String `tfsdk:"ids" tf:"optional"`
+	Ids         []types.String `tfsdk:"ids" tf:"optional,computed"`
 }
 
 func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -37,10 +37,7 @@ func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.Metadat
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(VolumesList{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			c.SetComputed("ids")
-			return c
-		}),
+		Attributes: tfschema.DataSourceStructToSchemaMap(VolumesList{}, nil),
 	}
 }
 
@@ -69,13 +66,12 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
-			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Failed to get volumes for the catalog:%s and schema%s", listVolumesRequest.CatalogName, listVolumesRequest.SchemaName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to get volumes for the catalog:%s and schema%s", listVolumesRequest.CatalogName, listVolumesRequest.SchemaName), err.Error())
 		return
 	}
 	for _, v := range volumes {
 		volumesList.Ids = append(volumesList.Ids, types.StringValue(v.FullName))
 	}
-	resp.State.Set(ctx, volumesList)
+	resp.Diagnostics.Append(resp.State.Set(ctx, volumesList)...)
 }

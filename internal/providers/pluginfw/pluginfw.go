@@ -16,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/cluster"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/library"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
@@ -49,6 +50,7 @@ func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []fun
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		cluster.DataSourceCluster,
 		volume.DataSourceVolumes,
 	}
 }

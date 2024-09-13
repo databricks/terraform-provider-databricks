@@ -1,14 +1,12 @@
 ---
-page_title: Authenticate with OpenID Connect
+page_title: "Authenticate with OpenID Connect: Azure"
 ---
 
 # Authenticate with OpenID Connect
 
-OpenID Connect (OIDC) is an authentication protocol allowing users to authenticate to applications without managing long-lived credentials. The Terraform Provider for Databricks can leverage the Azure CLI to authenticate to Azure Databricks using OIDC. This guide will walk you through the steps to authenticate to Azure Databricks using OIDC on GitHub Actions and Azure DevOps.
+OpenID Connect (OIDC) is an authentication protocol allowing users to authenticate to applications without managing long-lived credentials. The Terraform Provider for Databricks can leverage OIDC to authenticate to Databricks accounts and workspaces. For Azure Databricks, the provider uses the Azure CLI to authenticate using OIDC. This guide will walk you through the steps to authenticate to Azure Databricks using OIDC on GitHub Actions and Azure DevOps.
 
 This guide assumes that you have an existing Azure Databricks workspace.
-
-OIDC is not yet supported for Databricks on AWS or GCP.
 
 ## GitHub Actions
 
@@ -83,6 +81,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
 
       - name: Azure login
         uses: azure/login@v2

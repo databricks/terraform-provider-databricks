@@ -40,12 +40,12 @@ func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{
 	}
 
 	if destVal.Kind() != reflect.Ptr {
-		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("please provide a pointer for the gosdk struct, got %s", destVal.Type().Name()), tfSdkToGoSdkStructConversionFailureMessage)}
+		return diag.Diagnostics{diag.NewErrorDiagnostic(tfSdkToGoSdkStructConversionFailureMessage, fmt.Sprintf("please provide a pointer for the gosdk struct, got %s", destVal.Type().Name()))}
 	}
 	destVal = destVal.Elem()
 
 	if srcVal.Kind() != reflect.Struct {
-		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("input should be structs, got %s,", srcVal.Type().Name()), tfSdkToGoSdkStructConversionFailureMessage)}
+		return diag.Diagnostics{diag.NewErrorDiagnostic(tfSdkToGoSdkStructConversionFailureMessage, fmt.Sprintf("input should be structs, got %s,", srcVal.Type().Name()))}
 	}
 
 	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
@@ -64,7 +64,7 @@ func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{
 
 		err := tfSdkToGoSdkSingleField(ctx, srcField, destField, srcFieldName, &forceSendFieldsField)
 		if err != nil {
-			return diag.Diagnostics{diag.NewErrorDiagnostic(err.Error(), tfSdkToGoSdkFieldConversionFailureMessage)}
+			return diag.Diagnostics{diag.NewErrorDiagnostic(tfSdkToGoSdkFieldConversionFailureMessage, err.Error())}
 		}
 	}
 

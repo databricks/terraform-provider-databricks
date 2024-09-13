@@ -105,7 +105,7 @@ func TestTfSdkToGoSdkStructConversionFailure(t *testing.T) {
 	tfSdkStruct := DummyTfSdk{}
 	goSdkStruct := DummyGoSdk{}
 	actualDiagnostics := TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, goSdkStruct)
-	expectedDiagnostics := diag.Diagnostics{diag.NewErrorDiagnostic("please provide a pointer for the gosdk struct, got DummyGoSdk", tfSdkToGoSdkStructConversionFailureMessage)}
+	expectedDiagnostics := diag.Diagnostics{diag.NewErrorDiagnostic(tfSdkToGoSdkStructConversionFailureMessage, "please provide a pointer for the gosdk struct, got DummyGoSdk")}
 	assert.True(t, actualDiagnostics.HasError())
 	assert.True(t, actualDiagnostics.Equal(expectedDiagnostics))
 }
@@ -114,7 +114,7 @@ func TestGoSdkToTfSdkStructConversionFailure(t *testing.T) {
 	tfSdkStruct := DummyTfSdk{}
 	goSdkStruct := DummyGoSdk{}
 	actualDiagnostics := GoSdkToTfSdkStruct(context.Background(), goSdkStruct, tfSdkStruct)
-	expectedDiagnostics := diag.Diagnostics{diag.NewErrorDiagnostic("please provide a pointer for the tfsdk struct, got DummyTfSdk", goSdkToTfSdkStructConversionFailureMessage)}
+	expectedDiagnostics := diag.Diagnostics{diag.NewErrorDiagnostic(goSdkToTfSdkStructConversionFailureMessage, "please provide a pointer for the tfsdk struct, got DummyTfSdk")}
 	assert.True(t, actualDiagnostics.HasError())
 	assert.True(t, actualDiagnostics.Equal(expectedDiagnostics))
 }

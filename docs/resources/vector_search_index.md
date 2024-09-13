@@ -3,7 +3,7 @@ subcategory: "Mosaic AI Vector Search"
 ---
 # databricks_vector_search_index Resource
 
--> **Note** This resource could be only used on Unity Catalog-enabled workspace!
+-> **Note** This resource can only be used on a Unity Catalog-enabled workspace!
 
 This resource allows you to create [Mosaic AI Vector Search Index](https://docs.databricks.com/en/generative-ai/create-query-vector-search.html) in Databricks.  Mosaic AI Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Mosaic AI Vector Search Index provides the ability to search data in the linked Delta Table.
 
@@ -38,6 +38,7 @@ The following arguments are supported (change of any parameter leads to recreati
   * `DIRECT_ACCESS`: An index that supports the direct read and write of vectors and metadata through our REST and SDK APIs. With this model, the user manages index updates.
 * `delta_sync_index_spec` - (object) Specification for Delta Sync Index. Required if `index_type` is `DELTA_SYNC`.
   * `source_table` (required) The name of the source table.
+  * `columns_to_sync` - (optional) list of columns to sync. If not specified, all columns are syncronized.
   * `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
 	* `name` - The name of the column
 	* `embedding_model_endpoint_name` - The name of the embedding model endpoint

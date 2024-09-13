@@ -124,5 +124,6 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 	clusterInfo.ClusterId = clusterInfo.ClusterInfo.ClusterId
+	clusterInfo.Name = clusterInfo.ClusterInfo.ClusterName
 	resp.Diagnostics.Append(resp.State.Set(ctx, clusterInfo)...)
 }

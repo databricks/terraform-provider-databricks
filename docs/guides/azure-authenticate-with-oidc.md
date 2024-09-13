@@ -4,7 +4,7 @@ page_title: "Authenticate with OpenID Connect: Azure"
 
 # Authenticate with OpenID Connect
 
-OpenID Connect (OIDC) is an authentication protocol allowing users to authenticate to applications without managing long-lived credentials. The Terraform Provider for Databricks can leverage OIDC to authenticate to Databricks accounts and workspaces. For Azure Databricks, the provider uses the Azure CLI to authenticate using OIDC. This guide will walk you through the steps to authenticate to Azure Databricks using OIDC on GitHub Actions and Azure DevOps.
+OpenID Connect (OIDC) is an authentication protocol allowing users to authenticate to applications without managing long-lived credentials. The Terraform Provider for Databricks can leverage OIDC to authenticate to Databricks accounts and workspaces. This guide will walk you through the steps to authenticate to Azure Databricks using OIDC on GitHub Actions and Azure DevOps.
 
 This guide assumes that you have an existing Azure Databricks workspace.
 
@@ -85,22 +85,12 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Azure CLI script
-        uses: azure/cli@v2
-        with:
-          azcliversion: latest
-          inlineScript: |
-            cd path/to/terraform/module
-            terraform init
-            terraform plan
-            terraform apply
+      - name: Apply Terraform
+        run: |
+          terraform init
+          terraform plan
+          terraform apply -auto-approve
+        working-directory: path/to/terraform/module
 ```
 
 ### (Optional) GitHub Actions Details
@@ -112,6 +102,8 @@ If the action runs without an environment context, the `subject` field should be
 If needed, it is also possible to configure the `subject` field for your organization or repository. See the [GitHub Actions OIDC documentation](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect) for more information about how to configure the `subject` field.
 
 ## Azure DevOps
+
+In Azure DevOps, you can use Workload Identity federation to authenticate to Azure Databricks using OIDC. This allows you to authenticate to Azure Databricks using federated credentials issued by Azure DevOps. Today, the Terraform Provider for Databricks leverages the Azure CLI to use workflow identity federation in Azure DevOps. This guide will walk you through the steps to authenticate to Azure Databricks using OIDC on Azure DevOps.
 
 ### Configure a service connection for your DevOps pipeline
 
@@ -175,10 +167,6 @@ To create a pipeline, make a `pipelines/deploy.yml` file in your repository.
 To authenticate to Azure Databricks using OIDC, use the `AzureCLI@2` task. This automatically authenticates the Azure CLI using the service connection you created earlier. The Terraform Provider for Databricks will detect the authenticated CLI and use it to authenticate to Azure Databricks.
 
 ```yaml
-variables:
-  DATABRICKS_HOST: "https://test-shard-dbc-6baa92c2-7251.dev.databricks.com/"
-  DATABRICKS_CLIENT_ID: "7aacab6a-d0be-4581-ac9c-2875e7796a18"
-
 steps:
   - task: Checkout@1
     displayName: "Checkout repository"
@@ -193,13 +181,14 @@ steps:
   - task: AzureCLI@2
     displayName: "TF init"
     inputs:
-      addSpnToEnvironment: true
       azureSubscription: <service-connection-name>
       scriptType: bash
       scriptLocation: inlineScript
       workingDirectory: "$(Pipeline.Workspace)/main/<repo>/path/to/terraform/module"
       inlineScript: |
         terraform init
+        terraform plan
+        terraform apply -auto-approve
 ```
 
 ## References

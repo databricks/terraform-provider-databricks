@@ -73,14 +73,6 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Library",
 		Attributes: tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			// c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "cluster_id")
-			// c.AddPlanModifier(objectplanmodifier.RequiresReplace(), "cran")
-			// c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "egg")
-			// c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "jar")
-			// c.AddPlanModifier(objectplanmodifier.RequiresReplace(), "maven")
-			// c.AddPlanModifier(objectplanmodifier.RequiresReplace(), "pypi")
-			// c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "requirements")
-			// c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "whl")
 			for field, attribute := range c.ToAttributeMap() {
 				switch attribute.(type) {
 				case tfschema.StringAttributeBuilder:

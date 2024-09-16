@@ -472,6 +472,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 
 	clusterInfo, err := clusterWaiter.GetWithTimeout(timeout)
 	if err != nil {
+		// In case of error or terminated state, WaitGetClusterRunning return an error and we cleanup the cluster before returning
+		resourceClusterDelete(ctx, d, c)
 		return err
 	}
 

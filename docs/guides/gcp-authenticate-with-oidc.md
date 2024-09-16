@@ -12,7 +12,7 @@ This guide assumes that you have an existing GCP Databricks workspace.
 
 ### Configure your service account and workload identity pool
 
-First, you need to create a service account and a workload identity pool. The pool is configured to allow clients using OIDC to assume the identity of the service account. The service account will be used to authenticate to Azure Databricks. You can create a service account using the `google` Terraform provider.
+First, you need to create a service account and a workload identity pool. The pool is configured to allow clients using OIDC to assume the identity of the service account. The service account will be used to authenticate to Databricks on GCP. You can create a service account using the `google` Terraform provider.
 
 ```hcl
 provider "google" {
@@ -97,7 +97,7 @@ To create a GitHub Action, make a `.github/workflows/deploy.yml` file in your re
 To authenticate to Databricks using OIDC, ensure that your action has the `id-token: write` permission. You can then authenticate to Google using the `google-github-actions/auth` action. Finally, run `terraform apply`.
 
 ```yaml
-name: Deploy to Azure Databricks
+name: Deploy to Databricks on GCP
 jobs:
   deploy:
     runs-on: ubuntu-latest

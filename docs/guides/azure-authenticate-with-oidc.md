@@ -107,7 +107,7 @@ In Azure DevOps, you can use Workload Identity federation to authenticate to Azu
 
 ### Configure a service connection for your DevOps pipeline
 
-First, you need to create a service connection with federated credentials. This service principal will be used to authenticate to Azure Databricks. You can create a service principal using the `azuread` Terraform provider.
+First, you need to create a service principal in Azure Entra ID with federated credentials. This principal will be used to authenticate to Azure Databricks. You can create it using the `azuread` Terraform provider with the following template:
 
 ```hcl
 provider "azurerm" {

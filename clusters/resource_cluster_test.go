@@ -164,6 +164,117 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceClusterCreateErrorFollowedByDeletion(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/permanent-delete",
+				ExpectedRequest: compute.PermanentDeleteCluster{
+					ClusterId: "abc",
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "failed to reach RUNNING, got TERMINATED")
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterCreateErrorFollowedByDeletionError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/permanent-delete",
+				ExpectedRequest: compute.PermanentDeleteCluster{
+					ClusterId: "abc",
+				},
+				Status: 500,
+				Response: common.APIErrorBody{
+					ErrorCode: "INTERNAL_ERROR",
+					Message:   "Internal error happened",
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "failed to create cluster: failed to reach RUNNING, got TERMINATED:  and failed to delete it during cleanup: Internal error happened")
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

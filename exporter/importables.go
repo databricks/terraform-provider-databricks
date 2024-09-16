@@ -327,7 +327,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			lastActiveMs := ic.getLastActiveMs()
-			nonInteractiveClusters := []string{"JOB", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
+			nonInteractiveClusters := []string{"JOB", "MODELS", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
 			for offset, c := range clusters {
 				if slices.Contains(nonInteractiveClusters, string(c.ClusterSource)) {
 					// TODO: Should we check cluster name as well?

@@ -11,14 +11,21 @@ import (
 
 func DataSourceDataUsers() common.Resource {
 
+	type UserInfo struct {
+		Id          string `json:"id,omitempty" tf:"computed"`
+		UserName    string `json:"user_name,omitempty" tf:"computed"`
+		DisplayName string `json:"display_name,omitempty" tf:"computed"`
+	}
+
 	type DataUsers struct {
-		Id                  string                   `json:"id,omitempty" tf:"computed"`
-		DisplayNameContains string                   `json:"display_name_contains,omitempty" tf:"computed"`
-		Users               []map[string]interface{} `json:"users,omitempty" tf:"computed"`
+		DisplayNameContains string     `json:"display_name_contains,omitempty" tf:"computed"`
+		Users               []UserInfo `json:"users,omitempty" tf:"computed"`
 	}
 
 	return common.AccountData(func(ctx context.Context, data *DataUsers, acc *databricks.AccountClient) error {
-		listRequest := iam.ListAccountUsersRequest{}
+		listRequest := iam.ListAccountUsersRequest{
+			Attributes: "id,userName,displayName",
+		}
 
 		if data.DisplayNameContains != "" {
 			listRequest.Filter = fmt.Sprintf("displayName co \"%s\"", data.DisplayNameContains)
@@ -34,13 +41,13 @@ func DataSourceDataUsers() common.Resource {
 			return fmt.Errorf("cannot find users with display name containing %s", data.DisplayNameContains)
 		}
 
-		var users []map[string]interface{}
+		var users []UserInfo
 
 		for _, u := range userList {
-			user := map[string]interface{}{
-				"id":           u.Id,
-				"user_name":    u.UserName,
-				"display_name": u.DisplayName,
+			user := UserInfo{
+				Id:          u.Id,
+				UserName:    u.UserName,
+				DisplayName: u.DisplayName,
 			}
 			users = append(users, user)
 		}

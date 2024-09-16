@@ -1474,6 +1474,34 @@ func TestListUcAllowListSuccess(t *testing.T) {
 	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
 	assert.NoError(t, err)
 	assert.Equal(t, len(ic.testEmits), 3)
+	// Test ignore function
+	d := tfcatalog.ResourceArtifactAllowlist().ToResource().TestResourceData()
+	d.MarkNewResource()
+	d.Set("id", "abc")
+	res := ic.Importables["databricks_artifact_allowlist"].Ignore(ic, &resource{
+		ID:   "abc",
+		Data: d,
+	})
+	assert.True(t, res)
+	assert.Contains(t, ic.ignoredResources, "databricks_artifact_allowlist. id=abc")
+	// Test ignore function, with blocks
+	err = common.StructToData(
+		tfcatalog.ArtifactAllowlistInfo{
+			ArtifactType: "INIT_SCRIPT",
+			ArtifactMatchers: []catalog.ArtifactMatcher{
+				{
+					Artifact:  "/Volumes/inits",
+					MatchType: "PREFIX_MATCH",
+				},
+			},
+		},
+		tfcatalog.ResourceArtifactAllowlist().Schema, d)
+	assert.NoError(t, err)
+	res = ic.Importables["databricks_artifact_allowlist"].Ignore(ic, &resource{
+		ID:   "abc",
+		Data: d,
+	})
+	assert.False(t, res)
 }
 
 func TestEmitSqlParent(t *testing.T) {

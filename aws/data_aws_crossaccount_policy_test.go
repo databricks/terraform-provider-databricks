@@ -29,7 +29,7 @@ func TestDataAwsCrossAccountCustomerManagedPolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 2365, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 2328, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsCrossAccountPolicy_WithPassRoles(t *testing.T) {
@@ -52,7 +52,6 @@ func TestDataAwsCrossAccountManagedPolicyRoles(t *testing.T) {
     {
       "Effect": "Allow",
       "Action": [
-        "ec2:AttachInternetGateway",
         "ec2:AssignPrivateIpAddresses",
         "ec2:CancelSpotInstanceRequests",
         "ec2:DescribeAvailabilityZones",
@@ -103,6 +102,7 @@ func TestDataAwsCrossAccountManagedPolicyRoles(t *testing.T) {
         "ec2:RevokeSecurityGroupIngress",
         "ec2:RunInstances",
         "ec2:TerminateInstances",
+        "ec2:AttachInternetGateway",
         "ec2:AllocateAddress",
         "ec2:AssociateDhcpOptions",
         "ec2:AssociateRouteTable",
@@ -178,7 +178,6 @@ func TestDataAwsCrossAccountCustomerManagedPolicyRoles(t *testing.T) {
     {
       "Effect": "Allow",
       "Action": [
-        "ec2:AttachInternetGateway",
         "ec2:AssignPrivateIpAddresses",
         "ec2:CancelSpotInstanceRequests",
         "ec2:DescribeAvailabilityZones",
@@ -279,7 +278,6 @@ func TestDataAwsCrossAccountRestrictedPolicyRoles(t *testing.T) {
     {
       "Effect": "Allow",
       "Action": [
-        "ec2:AttachInternetGateway",
         "ec2:AssignPrivateIpAddresses",
         "ec2:CancelSpotInstanceRequests",
         "ec2:DescribeAvailabilityZones",
@@ -529,7 +527,7 @@ func TestDataAwsCrossAccountRestrictedPolicy(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	j := d.Get("json")
-	assert.Lenf(t, j, 5762, "Strange length for policy: %s", j)
+	assert.Lenf(t, j, 5725, "Strange length for policy: %s", j)
 }
 
 func TestDataAwsCrossAccountInvalidPolicy(t *testing.T) {

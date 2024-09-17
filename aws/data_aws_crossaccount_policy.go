@@ -45,6 +45,10 @@ func DataAwsCrossaccountPolicy() common.Resource {
 		}
 		// non resource-based permissions
 		actions := []string{
+			"ec2:AllocateAddress",
+			"ec2:AssociateDhcpOptions",
+			"ec2:AssociateRouteTable",
+			"ec2:AttachInternetGateway",
 			"ec2:AssignPrivateIpAddresses",
 			"ec2:CancelSpotInstanceRequests",
 			"ec2:DescribeAvailabilityZones",

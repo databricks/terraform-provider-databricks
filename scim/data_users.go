@@ -19,6 +19,7 @@ func DataSourceDataUsers() common.Resource {
 
 	type DataUsers struct {
 		DisplayNameContains string     `json:"display_name_contains,omitempty" tf:"computed"`
+		UserNameContains    string     `json:"user_name_contains,omitempty" tf:"computed"`
 		Users               []UserInfo `json:"users,omitempty" tf:"computed"`
 	}
 
@@ -27,7 +28,13 @@ func DataSourceDataUsers() common.Resource {
 			Attributes: "id,userName,displayName",
 		}
 
-		if data.DisplayNameContains != "" {
+		if data.DisplayNameContains != "" && data.UserNameContains != "" {
+			return fmt.Errorf("exactly one of display_name_contains or user_name_contains should be specified, not both")
+		}
+
+		if data.UserNameContains != "" {
+			listRequest.Filter = fmt.Sprintf("userName co \"%s\"", data.UserNameContains)
+		} else if data.DisplayNameContains != "" {
 			listRequest.Filter = fmt.Sprintf("displayName co \"%s\"", data.DisplayNameContains)
 		}
 
@@ -38,7 +45,13 @@ func DataSourceDataUsers() common.Resource {
 		}
 
 		if len(userList) == 0 {
-			return fmt.Errorf("cannot find users with display name containing %s", data.DisplayNameContains)
+			if data.DisplayNameContains != "" {
+				return fmt.Errorf("cannot find users with display name containing %s", data.DisplayNameContains)
+			} else if data.UserNameContains != "" {
+				return fmt.Errorf("cannot find users with username containing %s", data.UserNameContains)
+			} else {
+				return fmt.Errorf("no users found")
+			}
 		}
 
 		var users []UserInfo

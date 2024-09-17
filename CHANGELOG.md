@@ -7,14 +7,12 @@
  * Add support for filters in `databricks_clusters` data source ([#4014](https://github.com/databricks/terraform-provider-databricks/pull/4014)).
  * Added `no_wait` option for clusters to skip waiting to start on cluster creation ([#3953](https://github.com/databricks/terraform-provider-databricks/pull/3953)).
  * Introduced Plugin Framework ([#3920](https://github.com/databricks/terraform-provider-databricks/pull/3920)).
- * Library plugin framework migration ([#3979](https://github.com/databricks/terraform-provider-databricks/pull/3979)).
 
 
 ### Bug Fixes
 
  * Add suppress diff for `azure_attributes.spot_bid_max_price` in `databricks_instance_pool` ([#3970](https://github.com/databricks/terraform-provider-databricks/pull/3970)).
  * Correctly send workload_type fields in `databricks_cluster` to allow users to disable usage in certain contexts ([#3972](https://github.com/databricks/terraform-provider-databricks/pull/3972)).
- * Fix `TestAccClusterResource_WorkloadType` ([#3989](https://github.com/databricks/terraform-provider-databricks/pull/3989)).
  * Fix `databricks_sql_table` treatment of properties ([#3925](https://github.com/databricks/terraform-provider-databricks/pull/3925)).
  * Force send fields for settings resources ([#3978](https://github.com/databricks/terraform-provider-databricks/pull/3978)).
  * Handle cluster deletion in `databricks_library` read ([#3909](https://github.com/databricks/terraform-provider-databricks/pull/3909)).
@@ -57,6 +55,8 @@
  * Move volumes test next to plugin framework data source ([#3995](https://github.com/databricks/terraform-provider-databricks/pull/3995)).
  * Refactor provider and related packages ([#3940](https://github.com/databricks/terraform-provider-databricks/pull/3940)).
  * Support import in acceptance test + adding import state for quality monitor ([#3994](https://github.com/databricks/terraform-provider-databricks/pull/3994)).
+ * Library plugin framework migration ([#3979](https://github.com/databricks/terraform-provider-databricks/pull/3979)).
+ * Fix `TestAccClusterResource_WorkloadType` ([#3989](https://github.com/databricks/terraform-provider-databricks/pull/3989)).
 
 
 ### Dependency Updates
@@ -68,6 +68,8 @@
 ### Exporter
 
  * Don't generate instance pools if the pool name is empty ([#3960](https://github.com/databricks/terraform-provider-databricks/pull/3960)).
+ * Expand list of non-interactive clusters ([#4023](https://github.com/databricks/terraform-provider-databricks/pull/4023)).
+ * Ignore databricks_artifact_allowlist with zero artifact_matcher blocks ([#4019](https://github.com/databricks/terraform-provider-databricks/pull/4019)).
 
 
 ## [Release] Release v1.51.0

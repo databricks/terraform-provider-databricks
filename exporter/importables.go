@@ -327,7 +327,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			lastActiveMs := ic.getLastActiveMs()
-			nonInteractiveClusters := []string{"JOB", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
+			nonInteractiveClusters := []string{"JOB", "MODELS", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
 			for offset, c := range clusters {
 				if slices.Contains(nonInteractiveClusters, string(c.ClusterSource)) {
 					// TODO: Should we check cluster name as well?
@@ -2517,6 +2517,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 			}
 			return nil
+		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			numBlocks := r.Data.Get("artifact_matcher.#").(int)
+			if numBlocks == 0 {
+				log.Printf("[WARN] Ignoring artifcat allowlist with ID %s", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_artifact_allowlist. id=%s", r.ID))
+			}
+			return numBlocks == 0
 		},
 		Depends: []reference{
 			{Path: "artifact_matcher.artifact", Resource: "databricks_volume", Match: "volume_path",

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -120,81 +121,10 @@ func urlPathForObjectID(objectID string) string {
 	return "/permissions" + objectID
 }
 
-// As described in https://github.com/databricks/terraform-provider-databricks/issues/1504,
-// certain object types require that we explicitly grant the calling user CAN_MANAGE
-// permissions when POSTing permissions changes through the REST API, to avoid accidentally
-// revoking the calling user's ability to manage the current object.
-func (a PermissionsAPI) shouldExplicitlyGrantCallingUserManagePermissions(objectID string) bool {
-	for _, prefix := range [...]string{"/registered-models/", "/clusters/", "/instance-pools/", "/serving-endpoints/", "/queries/", "/sql/warehouses"} {
-		if strings.HasPrefix(objectID, prefix) {
-			return true
-		}
-	}
-	return isDbsqlPermissionsWorkaroundNecessary(objectID)
-}
-
-func isOwnershipWorkaroundNecessary(objectID string) bool {
-	return strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/sql/warehouses")
-}
-
-func (a PermissionsAPI) getObjectCreator(objectID string) (string, error) {
-	w, err := a.client.WorkspaceClient()
-	if err != nil {
-		return "", err
-	}
-	if strings.HasPrefix(objectID, "/jobs") {
-		jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
-		if err != nil {
-			return "", err
-		}
-		job, err := w.Jobs.GetByJobId(a.context, jobId)
-		if err != nil {
-			return "", common.IgnoreNotFoundError(err)
-		}
-		return job.CreatorUserName, nil
-	} else if strings.HasPrefix(objectID, "/pipelines") {
-		pipeline, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
-		if err != nil {
-			return "", common.IgnoreNotFoundError(err)
-		}
-		return pipeline.CreatorUserName, nil
-	} else if strings.HasPrefix(objectID, "/sql/warehouses") {
-		warehouse, err := w.Warehouses.GetById(a.context, strings.ReplaceAll(objectID, "/sql/warehouses/", ""))
-		if err != nil {
-			return "", common.IgnoreNotFoundError(err)
-		}
-		return warehouse.CreatorName, nil
-	}
-	return "", nil
-}
-
-func (a PermissionsAPI) ensureCurrentUserCanManageObject(objectID string, objectACL AccessControlChangeList) (AccessControlChangeList, error) {
-	if !a.shouldExplicitlyGrantCallingUserManagePermissions(objectID) {
-		return objectACL, nil
-	}
-	w, err := a.client.WorkspaceClient()
-	if err != nil {
-		return objectACL, err
-	}
-	me, err := w.CurrentUser.Me(a.context)
-	if err != nil {
-		return objectACL, err
-	}
-	objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
-		UserName:        me.UserName,
-		PermissionLevel: "CAN_MANAGE",
-	})
-	return objectACL, nil
-}
-
 // Helper function for applying permissions changes. Ensures that
 // we select the correct HTTP method based on the object type and preserve the calling
 // user's ability to manage the specified object when applying permissions changes.
 func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) error {
-	objectACL, err := a.ensureCurrentUserCanManageObject(objectID, objectACL)
-	if err != nil {
-		return err
-	}
 	if isDbsqlPermissionsWorkaroundNecessary(objectID) {
 		// SQLA entities use POST for permission updates.
 		return a.client.Post(a.context, urlPathForObjectID(objectID), objectACL, nil)
@@ -204,8 +134,46 @@ func (a PermissionsAPI) put(objectID string, objectACL AccessControlChangeList) 
 }
 
 // safePutWithOwner is a workaround for the limitation where warehouse without owners cannot have IS_OWNER set
-func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL AccessControlChangeList, originalAcl []AccessControlChange) error {
-	err := a.put(objectID, objectACL)
+func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL AccessControlChangeList, getCurrentUser, getOwner func() (string, error)) error {
+	mapping, err := getResourcePermissions(objectID)
+	if mapping.shouldExplicitlyGrantCallingUserManagePermissions {
+		currentUser, err := getCurrentUser()
+		if err != nil {
+			return err
+		}
+		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+			UserName:        currentUser,
+			PermissionLevel: "CAN_MANAGE",
+		})
+	}
+	originalAcl := make([]AccessControlChange, len(objectACL.AccessControlList))
+	copy(originalAcl, objectACL.AccessControlList)
+	if err != nil {
+		return err
+	}
+	if mapping.hasOwnerPermissionLevel() {
+		owners := 0
+		for _, acl := range objectACL.AccessControlList {
+			if acl.PermissionLevel == "IS_OWNER" {
+				owners++
+			}
+		}
+		if owners == 0 {
+			// add owner if it's missing, otherwise automated planning might be difficult
+			owner, err := getOwner()
+			if err != nil {
+				return err
+			}
+			if owner == "" {
+				return nil
+			}
+			objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
+				UserName:        owner,
+				PermissionLevel: "IS_OWNER",
+			})
+		}
+	}
+	err = a.put(objectID, objectACL)
 	if err != nil {
 		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
 			objectACL.AccessControlList = originalAcl
@@ -216,74 +184,65 @@ func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL AccessContro
 	return nil
 }
 
+func (a PermissionsAPI) getCurrentUser() (string, error) {
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return "", err
+	}
+	me, err := w.CurrentUser.Me(a.context)
+	if err != nil {
+		return "", err
+	}
+	return me.UserName, nil
+}
+
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
-func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList) error {
-	if objectID == "/authorization/tokens" || objectID == "/registered-models/root" || objectID == "/directories/0" {
+func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeList, mapping resourcePermissions) error {
+	currentUser, err := a.getCurrentUser()
+	if err != nil {
+		return err
+	}
+	// this logic was moved from CustomizeDiff because of undeterministic auth behavior
+	// in the corner-case scenarios.
+	// see https://github.com/databricks/terraform-provider-databricks/issues/2052
+	err = mapping.validate(objectACL.AccessControlList, currentUser)
+	if err != nil {
+		return err
+	}
+	if mapping.requiresExplicitAdminPermissions(objectID) {
 		// Prevent "Cannot change permissions for group 'admins' to None."
 		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
 			GroupName:       "admins",
 			PermissionLevel: "CAN_MANAGE",
 		})
 	}
-	originalAcl := make([]AccessControlChange, len(objectACL.AccessControlList))
-	_ = copy(originalAcl, objectACL.AccessControlList)
-	if isOwnershipWorkaroundNecessary(objectID) {
-		owners := 0
-		for _, acl := range objectACL.AccessControlList {
-			if acl.PermissionLevel == "IS_OWNER" {
-				owners++
-			}
-		}
-		if owners == 0 {
-			w, err := a.client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			me, err := w.CurrentUser.Me(a.context)
-			if err != nil {
-				return err
-			}
-			// add owner if it's missing, otherwise automated planning might be difficult
-			objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChange{
-				UserName:        me.UserName,
-				PermissionLevel: "IS_OWNER",
-			})
-		}
-	}
-	return a.safePutWithOwner(objectID, objectACL, originalAcl)
+	getCurrentUser := func() (string, error) { return currentUser, nil }
+	return a.safePutWithOwner(objectID, objectACL, getCurrentUser, getCurrentUser)
 }
 
-// Delete gracefully removes permissions. Technically, it's using method named SetOrDelete, but here we do more
-func (a PermissionsAPI) Delete(objectID string) error {
+// Delete gracefully removes permissions of non-admin users. After this operation, the object is managed
+// by the current user and admin group.
+func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) error {
 	objectACL, err := a.Read(objectID)
 	if err != nil {
 		return err
 	}
 	accl := AccessControlChangeList{}
 	for _, acl := range objectACL.AccessControlList {
-		if acl.GroupName == "admins" && objectID != "/authorization/passwords" {
+		// When deleting permissions for a resource with explicit admin permissions, delete should remove
+		// admin permissions as well. Otherwise, admin permissions should be left as-is.
+		if acl.GroupName == "admins" && !mapping.allowAdminGroup {
 			if change, direct := acl.toAccessControlChange(); direct {
 				// keep everything direct for admin group
 				accl.AccessControlList = append(accl.AccessControlList, change)
 			}
 		}
 	}
-	originalAcl := make([]AccessControlChange, len(accl.AccessControlList))
-	_ = copy(originalAcl, accl.AccessControlList)
-	if isOwnershipWorkaroundNecessary(objectID) {
-		creator, err := a.getObjectCreator(objectID)
-		if err != nil {
-			return err
-		}
-		if creator == "" {
-			return nil
-		}
-		accl.AccessControlList = append(accl.AccessControlList, AccessControlChange{
-			UserName:        creator,
-			PermissionLevel: "IS_OWNER",
-		})
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return err
 	}
-	return a.safePutWithOwner(objectID, accl, originalAcl)
+	return a.safePutWithOwner(objectID, accl, a.getCurrentUser, func() (string, error) { return mapping.getObjectCreator(a.context, w, objectID) })
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
@@ -306,17 +265,149 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectACL, err error) {
 	return
 }
 
-// permissionsIDFieldMapping holds mapping
-type permissionsIDFieldMapping struct {
-	field, objectType, resourceType string
-
-	allowedPermissionLevels []string
-
+// resourcePermissions holds mapping
+type resourcePermissions struct {
+	// The top-level attribute name in the schema that holds the ID of the object
+	// e.g. "cluster_id" for a cluster
+	field string
+	// The value of the computed `object_type` field, set by the provider based on the
+	// resource type, e.g. "cluster" for a cluster
+	objectType string
+	// The name of the object in the ID of the TF resource, e.g. "clusters" for a cluster,
+	// where the ID would be /clusters/<cluster-id>
+	resourceType string
+	// The alternative name of the "path" attribute for this resource. E.g. "workspace_file_path" for a file.
+	// If not set, default is "<object_type>_path".
+	pathVariant string
+	// The allowed permission levels for this object type
+	allowedPermissionLevels map[string]permissionLevelOptions
+	// Allow users to set permissions for the admin group. This is only permitted for tokens and passwords
+	// permissions today
+	allowAdminGroup bool
+	// Whether the object requires explicit manage permissions for the calling user if not set.
+	// As described in https://github.com/databricks/terraform-provider-databricks/issues/1504,
+	// certain object types require that we explicitly grant the calling user CAN_MANAGE
+	// permissions when POSTing permissions changes through the REST API, to avoid accidentally
+	// revoking the calling user's ability to manage the current object.
+	shouldExplicitlyGrantCallingUserManagePermissions bool
+	// Returns the object ID for the given user-specified ID. This is necessary because permissions for
+	// some objects are done by path, whereas others are by ID. Those by path need to be converted to the
+	// internal object ID before being stored in the state.
 	idRetriever func(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error)
+	// Returns the creator of the object.
+	fetchObjectCreator func(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error)
+	// Returns whether the object requires explicit admin permissions. This is only true for tokens and passwords
+	explicitAdminPermissionCheck func(objectId string) bool
+}
+
+func (p resourcePermissions) getAllowedPermissionLevels(includeNonSettable bool) []string {
+	levels := make([]string, 0, len(p.allowedPermissionLevels))
+	for level := range p.allowedPermissionLevels {
+		if includeNonSettable || p.allowedPermissionLevels[level].currentUserSettable {
+			levels = append(levels, level)
+		}
+	}
+	sort.Strings(levels)
+	return levels
+}
+
+func (p resourcePermissions) hasOwnerPermissionLevel() bool {
+	_, ok := p.allowedPermissionLevels["IS_OWNER"]
+	return ok
+}
+
+func (p resourcePermissions) requiresExplicitAdminPermissions(id string) bool {
+	if p.explicitAdminPermissionCheck != nil {
+		return p.explicitAdminPermissionCheck(id)
+	}
+	return false
+}
+
+func (p resourcePermissions) getObjectCreator(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error) {
+	if p.fetchObjectCreator != nil {
+		return p.fetchObjectCreator(ctx, w, objectID)
+	}
+	return "", nil
+}
+
+func (p resourcePermissions) getPathVariant() string {
+	if p.pathVariant != "" {
+		return p.pathVariant
+	}
+	return p.objectType + "_path"
+}
+
+func (p resourcePermissions) validate(changes []AccessControlChange, currentUsername string) error {
+	for _, change := range changes {
+		// Check if the user is trying to set permissions for the admin group
+		if change.GroupName == "admins" && !p.allowAdminGroup {
+			return fmt.Errorf("it is not possible to modify admin permissions for %s resources", p.objectType)
+		}
+		// Check that the user is not preventing themselves from managing the object
+		if change.UserName == currentUsername {
+			return fmt.Errorf("it is not possible to decrease administrative permissions for the current user: %s", currentUsername)
+		}
+	}
+	return nil
+}
+
+func (p resourcePermissions) getID(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
+	id, err := p.idRetriever(ctx, w, id)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/%s/%s", p.resourceType, id), nil
+}
+
+// permissionLevelOptions indicates the properties of a permissions level. Today, the only property
+// is whether the current user can set the permission level for themselves.
+type permissionLevelOptions struct {
+	// Whether the current user can set the permission level for themselves.
+	currentUserSettable bool
+}
+
+func getResourcePermissions(objectId string) (resourcePermissions, error) {
+	objectParts := strings.Split(objectId, "/")
+	objectType := strings.Join(objectParts[1:len(objectParts)-1], "/")
+	for _, p := range permissionsResourceIDFields() {
+		if p.resourceType == objectType {
+			return p, nil
+		}
+	}
+	return resourcePermissions{}, fmt.Errorf("no permissions resource found for object type %s", objectType)
+}
+
+func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (resourcePermissions, string, error) {
+	allPermissions := permissionsResourceIDFields()
+	for _, mapping := range allPermissions {
+		if v, ok := d.GetOk(mapping.field); ok {
+			return mapping, v.(string), nil
+		}
+	}
+	allFields := make([]string, 0, len(allPermissions))
+	seen := make(map[string]struct{})
+	for _, mapping := range allPermissions {
+		if _, ok := seen[mapping.field]; ok {
+			continue
+		}
+		seen[mapping.field] = struct{}{}
+		allFields = append(allFields, mapping.field)
+	}
+	sort.Strings(allFields)
+	return resourcePermissions{}, "", fmt.Errorf("at least one type of resource identifier must be set; allowed fields: %s", strings.Join(allFields, ", "))
+}
+
+func getResourcePermissionsForObjectAcl(objectACL *ObjectACL) (resourcePermissions, string, error) {
+	for _, p := range permissionsResourceIDFields() {
+		if objectACL.isMatchingMapping(p) {
+			return p, objectACL.ObjectID, nil
+		}
+	}
+	return resourcePermissions{}, "", fmt.Errorf("unknown object type %s", objectACL.ObjectType)
 }
 
 // PermissionsResourceIDFields shows mapping of id columns to resource types
-func permissionsResourceIDFields() []permissionsIDFieldMapping {
+func permissionsResourceIDFields() []resourcePermissions {
 	SIMPLE := func(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error) {
 		return id, nil
 	}
@@ -327,31 +418,317 @@ func permissionsResourceIDFields() []permissionsIDFieldMapping {
 		}
 		return strconv.FormatInt(info.ObjectId, 10), nil
 	}
-	return []permissionsIDFieldMapping{
-		{"cluster_policy_id", "cluster-policy", "cluster-policies", []string{"CAN_USE"}, SIMPLE},
-		{"instance_pool_id", "instance-pool", "instance-pools", []string{"CAN_ATTACH_TO", "CAN_MANAGE"}, SIMPLE},
-		{"cluster_id", "cluster", "clusters", []string{"CAN_ATTACH_TO", "CAN_RESTART", "CAN_MANAGE"}, SIMPLE},
-		{"pipeline_id", "pipelines", "pipelines", []string{"CAN_VIEW", "CAN_RUN", "CAN_MANAGE", "IS_OWNER"}, SIMPLE},
-		{"job_id", "job", "jobs", []string{"CAN_VIEW", "CAN_MANAGE_RUN", "IS_OWNER", "CAN_MANAGE"}, SIMPLE},
-		{"notebook_id", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
-		{"notebook_path", "notebook", "notebooks", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
-		{"directory_id", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
-		{"directory_path", "directory", "directories", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
-		{"workspace_file_id", "file", "files", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
-		{"workspace_file_path", "file", "files", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
-		{"repo_id", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
-		{"repo_path", "repo", "repos", []string{"CAN_READ", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE"}, PATH},
-		{"authorization", "tokens", "authorization", []string{"CAN_USE"}, SIMPLE},
-		{"authorization", "passwords", "authorization", []string{"CAN_USE"}, SIMPLE},
-		{"sql_endpoint_id", "warehouses", "sql/warehouses", []string{"CAN_USE", "CAN_MANAGE", "CAN_MONITOR", "IS_OWNER"}, SIMPLE},
-		{"sql_dashboard_id", "dashboard", "sql/dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
-		{"sql_alert_id", "alert", "sql/alerts", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
-		{"sql_query_id", "query", "sql/queries", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_VIEW"}, SIMPLE},
-		{"dashboard_id", "dashboard", "dashboards", []string{"CAN_EDIT", "CAN_RUN", "CAN_MANAGE", "CAN_READ"}, SIMPLE},
-		{"experiment_id", "mlflowExperiment", "experiments", []string{"CAN_READ", "CAN_EDIT", "CAN_MANAGE"}, SIMPLE},
-		{"registered_model_id", "registered-model", "registered-models", []string{
-			"CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE"}, SIMPLE},
-		{"serving_endpoint_id", "serving-endpoint", "serving-endpoints", []string{"CAN_VIEW", "CAN_QUERY", "CAN_MANAGE"}, SIMPLE},
+	return []resourcePermissions{
+		{
+			field:        "cluster_policy_id",
+			objectType:   "cluster-policy",
+			resourceType: "cluster-policies",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_USE": {currentUserSettable: true},
+			},
+			idRetriever: SIMPLE,
+		},
+		{
+			field:        "instance_pool_id",
+			objectType:   "instance-pool",
+			resourceType: "instance-pools",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_ATTACH_TO": {currentUserSettable: false},
+				"CAN_MANAGE":    {currentUserSettable: true},
+			},
+			shouldExplicitlyGrantCallingUserManagePermissions: true,
+			idRetriever: SIMPLE,
+		},
+		{
+			field:        "cluster_id",
+			objectType:   "cluster",
+			resourceType: "clusters",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_ATTACH_TO": {currentUserSettable: false},
+				"CAN_RESTART":   {currentUserSettable: false},
+				"CAN_MANAGE":    {currentUserSettable: true},
+			},
+			shouldExplicitlyGrantCallingUserManagePermissions: true,
+			idRetriever: SIMPLE,
+		},
+		{
+			field:        "pipeline_id",
+			objectType:   "pipelines",
+			resourceType: "pipelines",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_VIEW":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+				"IS_OWNER":   {currentUserSettable: true},
+			},
+			idRetriever: SIMPLE,
+			fetchObjectCreator: func(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error) {
+				pipeline, err := w.Pipelines.GetByPipelineId(ctx, strings.ReplaceAll(objectID, "/pipelines/", ""))
+				if err != nil {
+					return "", common.IgnoreNotFoundError(err)
+				}
+				return pipeline.CreatorUserName, nil
+			},
+		},
+		{
+			field:        "job_id",
+			objectType:   "job",
+			resourceType: "jobs",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_VIEW":       {currentUserSettable: false},
+				"CAN_MANAGE_RUN": {currentUserSettable: false},
+				"IS_OWNER":       {currentUserSettable: true},
+				"CAN_MANAGE":     {currentUserSettable: true},
+			},
+			idRetriever: SIMPLE,
+			fetchObjectCreator: func(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error) {
+				jobId, err := strconv.ParseInt(strings.ReplaceAll(objectID, "/jobs/", ""), 10, 64)
+				if err != nil {
+					return "", err
+				}
+				job, err := w.Jobs.GetByJobId(ctx, jobId)
+				if err != nil {
+					return "", common.IgnoreNotFoundError(err)
+				}
+				return job.CreatorUserName, nil
+			},
+		},
+		{
+			field:        "notebook_id",
+			objectType:   "notebook",
+			resourceType: "notebooks",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: SIMPLE,
+		},
+		{
+			field:        "notebook_path",
+			objectType:   "notebook",
+			resourceType: "notebooks",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: PATH,
+		},
+		{
+			field:        "directory_id",
+			objectType:   "directory",
+			resourceType: "directories",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: SIMPLE,
+			explicitAdminPermissionCheck: func(objectId string) bool {
+				return objectId == "/directories/0"
+			},
+		},
+		{
+			field:        "directory_path",
+			objectType:   "directory",
+			resourceType: "directories",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: PATH,
+		},
+		{
+			field:        "workspace_file_id",
+			objectType:   "file",
+			resourceType: "files",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: SIMPLE,
+			pathVariant: "workspace_file_path",
+		},
+		{
+			field:        "workspace_file_path",
+			objectType:   "file",
+			resourceType: "files",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: PATH,
+			pathVariant: "workspace_file_path",
+		},
+		{
+			field:        "repo_id",
+			objectType:   "repo",
+			resourceType: "repos",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: SIMPLE,
+		},
+		{
+			field:        "repo_path",
+			objectType:   "repo",
+			resourceType: "repos",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: PATH,
+		},
+		{
+			field:        "authorization",
+			objectType:   "tokens",
+			resourceType: "authorization",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_USE":    {currentUserSettable: true},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			allowAdminGroup: true,
+			idRetriever:     SIMPLE,
+			explicitAdminPermissionCheck: func(objectId string) bool {
+				return objectId == "/authorization/tokens"
+			},
+		},
+		{
+			field:        "authorization",
+			objectType:   "passwords",
+			resourceType: "authorization",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_USE": {currentUserSettable: true},
+			},
+			allowAdminGroup: true,
+			idRetriever:     SIMPLE,
+		},
+		{
+			field:        "sql_endpoint_id",
+			objectType:   "warehouses",
+			resourceType: "sql/warehouses",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_USE":     {currentUserSettable: false},
+				"CAN_MANAGE":  {currentUserSettable: true},
+				"CAN_MONITOR": {currentUserSettable: false},
+				"IS_OWNER":    {currentUserSettable: true},
+			},
+			shouldExplicitlyGrantCallingUserManagePermissions: true,
+			idRetriever: SIMPLE,
+			fetchObjectCreator: func(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error) {
+				warehouse, err := w.Warehouses.GetById(ctx, strings.ReplaceAll(objectID, "/sql/warehouses/", ""))
+				if err != nil {
+					return "", common.IgnoreNotFoundError(err)
+				}
+				return warehouse.CreatorName, nil
+			},
+		},
+		{
+			field:        "sql_dashboard_id",
+			objectType:   "dashboard",
+			resourceType: "sql/dashboards",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+				"CAN_VIEW":   {currentUserSettable: false},
+			},
+			idRetriever: SIMPLE,
+			shouldExplicitlyGrantCallingUserManagePermissions: true,
+		},
+		{
+			field:        "sql_alert_id",
+			objectType:   "alert",
+			resourceType: "sql/alerts",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+				"CAN_VIEW":   {currentUserSettable: false},
+			},
+			idRetriever: SIMPLE,
+			shouldExplicitlyGrantCallingUserManagePermissions: true,
+		},
+		{
+			field:        "sql_query_id",
+			objectType:   "query",
+			resourceType: "sql/queries",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+				"CAN_VIEW":   {currentUserSettable: false},
+			},
+			shouldExplicitlyGrantCallingUserManagePermissions: true,
+			idRetriever: SIMPLE,
+		},
+		{
+			field:        "dashboard_id",
+			objectType:   "dashboard",
+			resourceType: "dashboards",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_RUN":    {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+				"CAN_READ":   {currentUserSettable: false},
+			},
+			idRetriever: SIMPLE,
+		},
+		{
+			field:        "experiment_id",
+			objectType:   "mlflowExperiment",
+			resourceType: "experiments",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":   {currentUserSettable: false},
+				"CAN_EDIT":   {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			idRetriever: SIMPLE,
+		},
+		{
+			field:        "registered_model_id",
+			objectType:   "registered-model",
+			resourceType: "registered-models",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_READ":                       {currentUserSettable: false},
+				"CAN_EDIT":                       {currentUserSettable: false},
+				"CAN_MANAGE_STAGING_VERSIONS":    {currentUserSettable: false},
+				"CAN_MANAGE_PRODUCTION_VERSIONS": {currentUserSettable: false},
+				"CAN_MANAGE":                     {currentUserSettable: true},
+			},
+			shouldExplicitlyGrantCallingUserManagePermissions: true,
+			idRetriever: SIMPLE,
+			explicitAdminPermissionCheck: func(objectId string) bool {
+				return objectId == "/registered-models/root"
+			},
+		},
+		{
+			field:        "serving_endpoint_id",
+			objectType:   "serving-endpoint",
+			resourceType: "serving-endpoints",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_VIEW":   {currentUserSettable: false},
+				"CAN_QUERY":  {currentUserSettable: false},
+				"CAN_MANAGE": {currentUserSettable: true},
+			},
+			shouldExplicitlyGrantCallingUserManagePermissions: true,
+			idRetriever: SIMPLE,
+		},
 	}
 }
 
@@ -361,7 +738,16 @@ type PermissionsEntity struct {
 	AccessControlList []AccessControlChange `json:"access_control" tf:"slice_set"`
 }
 
-func (oa *ObjectACL) isMatchingMapping(mapping permissionsIDFieldMapping) bool {
+func (p PermissionsEntity) containsUserOrServicePrincipal(name string) bool {
+	for _, ac := range p.AccessControlList {
+		if ac.UserName == name || ac.ServicePrincipalName == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (oa *ObjectACL) isMatchingMapping(mapping resourcePermissions) bool {
 	if mapping.objectType != oa.ObjectType {
 		return false
 	}
@@ -378,45 +764,38 @@ func (oa *ObjectACL) isMatchingMapping(mapping permissionsIDFieldMapping) bool {
 	return false
 }
 
-func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (PermissionsEntity, error) {
+func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, existing PermissionsEntity, me string) (PermissionsEntity, error) {
 	entity := PermissionsEntity{}
+	mapping, _, err := getResourcePermissionsForObjectAcl(oa)
+	if err != nil {
+		return entity, err
+	}
 	for _, accessControl := range oa.AccessControlList {
-		if accessControl.GroupName == "admins" && d.Id() != "/authorization/passwords" {
-			// not possible to lower admins permissions anywhere from CAN_MANAGE
+		if accessControl.GroupName == "admins" && !mapping.allowAdminGroup {
+			// admin permission is always returned but can only be explicitly set for certain resources
+			// For other resources, admin permissions are not included in the resource state.
 			continue
+		}
+		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
+			// If the user doesn't include an access_control block for themselves, do not include it in the state.
+			// On create/update, the provider will automatically include the current user in the access_control block
+			// for appropriate resources. Otherwise, it must be included in state to prevent configuration drift.
+			if !existing.containsUserOrServicePrincipal(me) {
+				continue
+			}
 		}
 		if change, direct := accessControl.toAccessControlChange(); direct {
 			entity.AccessControlList = append(entity.AccessControlList, change)
 		}
 	}
-	for _, mapping := range permissionsResourceIDFields() {
-		if !oa.isMatchingMapping(mapping) {
-			continue
-		}
-		entity.ObjectType = mapping.objectType
-		var pathVariant any
-		if mapping.objectType == "file" {
-			pathVariant = d.Get("workspace_file_path")
-		} else {
-			pathVariant = d.Get(mapping.objectType + "_path")
-		}
-		if pathVariant != nil && pathVariant.(string) != "" {
-			// we're not importing and it's a path... it's set, so let's not re-set it
-			return entity, nil
-		}
-		identifier := path.Base(oa.ObjectID)
-		return entity, d.Set(mapping.field, identifier)
+	entity.ObjectType = mapping.objectType
+	pathVariant := d.Get(mapping.getPathVariant())
+	if pathVariant != nil && pathVariant.(string) != "" {
+		// we're not importing and it's a path... it's set, so let's not re-set it
+		return entity, nil
 	}
-	return entity, fmt.Errorf("unknown object type %s", oa.ObjectType)
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
+	identifier := path.Base(oa.ObjectID)
+	return entity, d.Set(mapping.field, identifier)
 }
 
 // ResourcePermissions definition
@@ -441,19 +820,19 @@ func ResourcePermissions() common.Resource {
 	return common.Resource{
 		Schema: s,
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff) error {
+			mapping, _, err := getResourcePermissionsFromState(diff)
+			if err != nil {
+				// TODO: return error here
+				return nil
+			}
+			planned := PermissionsEntity{}
+			common.DiffToStructPointer(diff, s, &planned)
 			// Plan time validation for object permission levels
-			for _, mapping := range permissionsResourceIDFields() {
-				if _, ok := diff.GetOk(mapping.field); !ok {
-					continue
-				}
-				access_control_list := diff.Get("access_control").(*schema.Set).List()
-				for _, access_control := range access_control_list {
-					m := access_control.(map[string]any)
-					permission_level := m["permission_level"].(string)
-					if !stringInSlice(permission_level, mapping.allowedPermissionLevels) {
-						return fmt.Errorf(`permission_level %s is not supported with %s objects`,
-							permission_level, mapping.field)
-					}
+			for _, accessControl := range planned.AccessControlList {
+				permissionLevel := accessControl.PermissionLevel
+				if _, ok := mapping.allowedPermissionLevels[permissionLevel]; !ok {
+					return fmt.Errorf(`permission_level %s is not supported with %s objects; allowed levels: %s`,
+						permissionLevel, mapping.field, strings.Join(mapping.getAllowedPermissionLevels(false), ", "))
 				}
 			}
 			return nil
@@ -472,7 +851,9 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			entity, err := objectACL.ToPermissionsEntity(d, me.UserName)
+			var existing PermissionsEntity
+			common.DataToStructPointer(d, s, &existing)
+			entity, err := objectACL.ToPermissionsEntity(d, existing, me.UserName)
 			if err != nil {
 				return err
 			}
@@ -490,43 +871,40 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			for _, mapping := range permissionsResourceIDFields() {
-				if v, ok := d.GetOk(mapping.field); ok {
-					id, err := mapping.idRetriever(ctx, w, v.(string))
-					if err != nil {
-						return err
-					}
-					objectID := fmt.Sprintf("/%s/%s", mapping.resourceType, id)
-					// this logic was moved from CustomizeDiff because of undeterministic auth behavior
-					// in the corner-case scenarios.
-					// see https://github.com/databricks/terraform-provider-databricks/issues/2052
-					for _, v := range entity.AccessControlList {
-						if v.GroupName == "admins" && mapping.resourceType != "authorization" {
-							// should allow setting admins permissions for passwords and tokens usage
-							return fmt.Errorf("it is not possible to restrict any permissions from `admins`")
-						}
-					}
-					err = NewPermissionsAPI(ctx, c).Update(objectID, AccessControlChangeList{
-						AccessControlList: entity.AccessControlList,
-					})
-					if err != nil {
-						return err
-					}
-					d.SetId(objectID)
-					return nil
-				}
+			mapping, v, err := getResourcePermissionsFromState(d)
+			if err != nil {
+				return err
 			}
-			return errors.New("at least one type of resource identifiers must be set")
+			objectID, err := mapping.getID(ctx, w, v)
+			if err != nil {
+				return err
+			}
+			err = NewPermissionsAPI(ctx, c).Update(objectID, AccessControlChangeList{
+				AccessControlList: entity.AccessControlList,
+			}, mapping)
+			if err != nil {
+				return err
+			}
+			d.SetId(objectID)
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
+			mapping, err := getResourcePermissions(d.Id())
+			if err != nil {
+				return err
+			}
 			return NewPermissionsAPI(ctx, c).Update(d.Id(), AccessControlChangeList{
 				AccessControlList: entity.AccessControlList,
-			})
+			}, mapping)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewPermissionsAPI(ctx, c).Delete(d.Id())
+			mapping, err := getResourcePermissions(d.Id())
+			if err != nil {
+				return err
+			}
+			return NewPermissionsAPI(ctx, c).Delete(d.Id(), mapping)
 		},
 	}
 }

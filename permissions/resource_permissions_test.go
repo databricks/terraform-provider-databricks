@@ -455,7 +455,7 @@ func TestResourcePermissionsCustomizeDiff_ErrorOnCreate(t *testing.T) {
 		access_control {
 			permission_level = "WHATEVER"
 		}`,
-	}.ExpectError(t, "permission_level WHATEVER is not supported with cluster_id objects")
+	}.ExpectError(t, "permission_level WHATEVER is not supported with cluster_id objects; allowed levels: CAN_ATTACH_TO, CAN_MANAGE, CAN_RESTART")
 }
 
 func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
@@ -655,7 +655,7 @@ func TestResourcePermissionsCreate_invalid(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{me},
 		Resource: ResourcePermissions(),
 		Create:   true,
-	}.ExpectError(t, "at least one type of resource identifiers must be set")
+	}.ExpectError(t, "at least one type of resource identifier must be set; allowed fields: authorization, cluster_id, cluster_policy_id, dashboard_id, directory_id, directory_path, experiment_id, instance_pool_id, job_id, notebook_id, notebook_path, pipeline_id, registered_model_id, repo_id, repo_path, serving_endpoint_id, sql_alert_id, sql_dashboard_id, sql_endpoint_id, sql_query_id, workspace_file_id, workspace_file_path")
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
@@ -700,7 +700,7 @@ func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 		}
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "it is not possible to restrict any permissions from `admins`")
+	assert.EqualError(t, err, "it is not possible to modify admin permissions for cluster resources")
 }
 
 func TestResourcePermissionsCreate(t *testing.T) {
@@ -846,11 +846,11 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "IS_OWNER",
+							PermissionLevel: "CAN_MANAGE",
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							PermissionLevel: "IS_OWNER",
 						},
 					},
 				},
@@ -913,11 +913,11 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "IS_OWNER",
+							PermissionLevel: "CAN_MANAGE",
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							PermissionLevel: "IS_OWNER",
 						},
 					},
 				},
@@ -1279,7 +1279,7 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			},
 		},
 		Create: true,
-	}.ExpectError(t, "permission_level CAN_USE is not supported with cluster_id objects")
+	}.ExpectError(t, "permission_level CAN_USE is not supported with cluster_id objects; allowed levels: CAN_ATTACH_TO, CAN_MANAGE, CAN_RESTART")
 }
 
 func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
@@ -1392,6 +1392,13 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Me",
+			Response: scim.User{
+				UserName: "me",
+			},
+		},
+		{
 			Method:   "PUT",
 			Resource: "/api/2.0/permissions/authorization/tokens",
 			ExpectedRequest: AccessControlChangeList{
@@ -1409,6 +1416,7 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
+		mapping, _ := getResourcePermissions("/authorization/tokens")
 		err := p.Update("/authorization/tokens", AccessControlChangeList{
 			AccessControlList: []AccessControlChange{
 				{
@@ -1416,7 +1424,7 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 					PermissionLevel: "CAN_MANAGE",
 				},
 			},
-		})
+		}, mapping)
 		assert.NoError(t, err)
 	})
 }
@@ -1471,7 +1479,8 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/jobs/123")
+		mapping, _ := getResourcePermissions("/jobs/123")
+		err := p.Delete("/jobs/123", mapping)
 		assert.NoError(t, err)
 	})
 }
@@ -1513,7 +1522,8 @@ func TestShouldDeleteNonExistentJob(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/jobs/123")
+		mapping, _ := getResourcePermissions("/jobs/123")
+		err := p.Delete("/jobs/123", mapping)
 		assert.NoError(t, err)
 	})
 }
@@ -1568,13 +1578,14 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/pipelines/123")
+		mapping, _ := getResourcePermissions("/pipelines/123")
+		err := p.Delete("/pipelines/123", mapping)
 		assert.NoError(t, err)
 	})
 }
 
 func TestPathPermissionsResourceIDFields(t *testing.T) {
-	var m permissionsIDFieldMapping
+	var m resourcePermissions
 	for _, x := range permissionsResourceIDFields() {
 		if x.field == "notebook_path" {
 			m = x
@@ -1594,7 +1605,7 @@ func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
 				GroupName: "admins",
 			},
 		},
-	}).ToPermissionsEntity(ResourcePermissions().ToResource().TestResourceData(), "me")
+	}).ToPermissionsEntity(ResourcePermissions().ToResource().TestResourceData(), PermissionsEntity{}, "me")
 	assert.EqualError(t, err, "unknown object type bananas")
 }
 
@@ -1604,7 +1615,7 @@ func TestEntityAccessControlToAccessControlChange(t *testing.T) {
 }
 
 func TestCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourcePermissions(), qa.CornerCaseSkipCRUD("create"))
+	qa.ResourceCornerCases(t, ResourcePermissions(), qa.CornerCaseSkipCRUD("create"), qa.CornerCaseID("/clusters/x"))
 }
 
 func TestDeleteMissing(t *testing.T) {
@@ -1617,7 +1628,7 @@ func TestDeleteMissing(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := ResourcePermissions().ToResource()
 		d := p.TestResourceData()
-		d.SetId("x")
+		d.SetId("/clusters/x")
 		diags := p.DeleteContext(ctx, d, client)
 		assert.Nil(t, diags)
 	})

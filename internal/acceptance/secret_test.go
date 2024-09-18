@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccSecretResource(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_secret_scope" "this" {
 			name = "tf-scope-{var.RANDOM}"

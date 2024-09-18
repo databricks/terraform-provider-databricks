@@ -12,16 +12,16 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_notebook" "this" {
 			content_base64 = base64encode("# Databricks notebook source\nprint(1)")
@@ -51,7 +51,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 					return nil
 				}),
 		),
-	}, step{
+	}, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_notebook" "this" {
 			content_base64 = base64encode("# Databricks notebook source\nprint(1)")
@@ -89,7 +89,7 @@ func TestAccDatabricksPermissionsResourceFullLifecycle(t *testing.T) {
 
 func TestAccDatabricksReposPermissionsResourceFullLifecycle(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_repo" "this" {
 			url = "https://github.com/databrickslabs/tempo.git"
@@ -201,8 +201,8 @@ func TestAccDatabricksPermissionsForSqlWarehouses(t *testing.T) {
 		}
 	}`, randomName)
 
-	workspaceLevel(t,
-		step{
+	WorkspaceLevel(t,
+		Step{
 			Template: config1,
 			Check: resource.ComposeTestCheckFunc(
 				checkObjectType,
@@ -213,7 +213,7 @@ func TestAccDatabricksPermissionsForSqlWarehouses(t *testing.T) {
 				},
 			),
 		},
-		step{
+		Step{
 			Template: config2,
 			Check: func(s *terraform.State) error {
 				id := getPermissionId(s)

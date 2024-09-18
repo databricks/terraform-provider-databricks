@@ -231,7 +231,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `alert` - (Optional) block consisting of following fields:
   * `alert_id` - (Required) (String) identifier of the Databricks SQL Alert.
-  * `subscriptions` - (Required) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
+  * `subscriptions` - (Optional) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `file` - (Optional) block consisting of single string fields:
   * `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.
@@ -302,13 +302,13 @@ This block describes [an Environment](https://docs.databricks.com/en/compute/ser
   * `dependencies` - (list of strings) List of pip dependencies, as supported by the version of pip in this environment. Each dependency is a pip requirement file line.  See [API docs](https://docs.databricks.com/api/workspace/jobs/create#environments-spec-dependencies) for more information.
 
 ```hcl
-  environment {
-    spec {
-      dependencies = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
-      client       = "1"
-    }
-    environment_key = "Default"
+environment {
+  spec {
+    dependencies = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
+    client       = "1"
   }
+  environment_key = "Default"
+}
 ```
 
 #### depends_on Configuration Block

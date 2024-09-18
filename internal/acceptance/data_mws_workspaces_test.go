@@ -3,13 +3,13 @@ package acceptance
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"testing"
 )
 
 func TestAccDataSourceMwsWorkspaces(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		data "databricks_mws_workspaces" "this" {
 		}`,

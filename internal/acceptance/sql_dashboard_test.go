@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccDashboard(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_sql_dashboard" "d1" {
 			name = "tf-{var.RANDOM}-dashboard"

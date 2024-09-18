@@ -11,14 +11,14 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAccSecretScopeResource(t *testing.T) {
 	scope := qa.RandomName("tf-")
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_secret_scope" "my_scope" {
 			name = "%s"
@@ -45,7 +45,7 @@ func TestAccSecretScopeResource(t *testing.T) {
 				}),
 		),
 		ExpectNonEmptyPlan: true,
-	}, step{
+	}, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_secret_scope" "my_scope" {
 			name = "%s"
@@ -63,7 +63,7 @@ func TestAccSecretScopeResourceAkvWithSp(t *testing.T) {
 		t.Skipf("service principal isn't defined")
 	}
 
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_secret_scope" "my_scope" {
 			name = "tf-{var.RANDOM}"

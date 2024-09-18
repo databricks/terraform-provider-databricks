@@ -5,7 +5,6 @@
 - [Issues for new contributors](#issues-for-new-contributors)
 - [Contribution Workflow](#contribution-workflow)
 - [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
-- [Installing for Terraform 0.12](#installing-for-terraform-012)
 - [Installing from source](#installing-from-source)
 - [Contributing documentation](#contributing-documentation)
 - [Developing provider](#developing-provider)
@@ -20,13 +19,13 @@ We happily welcome contributions to the Databricks Terraform Provider. We use Gi
 
 ## Issues for new contributors
 
-New contributors should look for the following tags when searching for a first contribution to the Databricks code base. We strongly recommend that new contributors tackle “good first issue” projects first; this helps the contributor become familiar with the contribution workflow, and for the core devs to become acquainted with the contributor.
+New contributors should look for the following tags when searching for a first contribution to the Databricks code base. We strongly recommend that new contributors tackle "good first issue" projects first; this helps the contributor become familiar with the contribution workflow, and for the core devs to become acquainted with the contributor.
 
 [good first issue](https://github.com/databricks/terraform-provider-databricks/labels/good%20first%20issue)
 
 ## Contribution Workflow
 
-Code contributions—bug fixes, new development, test improvement—all follow a GitHub-centered workflow. To participate in Databricks Terraform provider development, set up a GitHub account. Then:
+Code contributions—bug fixes, new development, test improvement — all follow a GitHub-centered workflow. To participate in Databricks Terraform provider development, set up a GitHub account. Then:
 
 1. Fork the repo you plan to work on. Go to the project repo page and use the Fork button. This will create a copy of the repo, under your username. (For more details on how to fork a repository see [this guide](https://help.github.com/articles/fork-a-repo/).)
 
@@ -67,14 +66,6 @@ Additional git and GitHub resources:
 [Git documentation](https://git-scm.com/documentation)
 [Git development workflow](https://docs.scipy.org/doc/numpy/dev/development_workflow.html)
 [Resolving merge conflicts](https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/)
-
-## Installing for Terraform 0.12
-
-If you use Terraform 0.12, please execute the following curl command in your shell:
-
-```bash
-curl https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/godownloader-databricks-provider.sh | bash -s -- -b $HOME/.terraform.d/plugins
-```
 
 ## Installing from source
 
@@ -117,6 +108,60 @@ provider_installation {
 ```
 
 After installing the necessary software for building provider from sources, you should be able to run `make coverage` to run the tests and see the coverage.
+
+## Developing Resources or Data Sources using Plugin Framework 
+
+### Package organization for Providers
+We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows: 
+- `providers`: Contains the changes that `depends` on both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderServer`.
+- `common`: Contains the changes `used by` both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `ProviderName`.
+- `pluginfw`: Contains the changes specific to Plugin Framework. This package shouldn't depend on sdkv2 or common.
+- `sdkv2`: Contains the changes specific to SDKv2. This package shouldn't depend on pluginfw or common.
+
+### Migrating resource to plugin framework
+Ideally there shouldn't be any behaviour change when migrating a resource or data source to either Go SDk or Plugin Framework.
+- Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
+- Integration tests shouldn't require any major changes.   
+
+
+### Code Organization
+Each resource and data source should be defined in package `internal/providers/pluginfw/resources/<resource>`, e.g.: `internal/providers/pluginfw/resources/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 
+
+Note: Only Docs will stay under root docs/ directory.
+
+
+### Code Conventions
+1. Make sure the resource or data source implemented is of the right type:
+    ```golang
+    var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
+    var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
+    ```
+2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()` functions respectively.  
+3. Any method that returns only diagnostics should be called inline while appending diagnostics in response. Example:
+    ```golang
+    resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+    ```
+    is preferred over the following:
+    ```golang
+    diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
+    if diags.HasError() {
+        resp.Diagnostics.Append(diags...)
+        return
+    }
+    ```
+4. Any method returning an error should directly be followed by appending that to the diagnostics. 
+    ```golang
+    err := method()
+    if err != nil { 
+        resp.Diagnostics.AddError("message", err.Error())
+        return 
+    }
+    ```
+5. Any method returning a value alongside Diagnostics should also directly be followed by appending that to the diagnostics.
+
 
 ## Debugging
 
@@ -288,7 +333,7 @@ func TestExampleResourceCreate(t *testing.T) {
 
 ```go
 func TestAccSecretAclResource(t *testing.T) {
- workspaceLevel(t, step{
+ WorkspaceLevel(t, Step{
   Template: `
   resource "databricks_group" "ds" {
    display_name = "data-scientists-{var.RANDOM}"

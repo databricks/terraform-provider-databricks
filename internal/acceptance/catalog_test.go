@@ -7,7 +7,7 @@ import (
 
 func TestUcAccCatalog(t *testing.T) {
 	loadUcwsEnv(t)
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name         = "sandbox{var.RANDOM}"
@@ -21,7 +21,7 @@ func TestUcAccCatalog(t *testing.T) {
 }
 
 func TestUcAccCatalogIsolated(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -30,7 +30,7 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 				purpose = "testing"
 			}
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -40,7 +40,7 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 				purpose = "testing"
 			}
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -55,7 +55,7 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 
 func TestUcAccCatalogUpdate(t *testing.T) {
 	loadUcwsEnv(t)
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -65,7 +65,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			}
 			%s
 		}`, getPredictiveOptimizationSetting(t, true)),
-	}, step{
+	}, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -76,7 +76,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			%s
 			owner = "account users"
 		}`, getPredictiveOptimizationSetting(t, true)),
-	}, step{
+	}, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -87,7 +87,7 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			%s
 			owner = "{env.TEST_DATA_ENG_GROUP}"
 		}`, getPredictiveOptimizationSetting(t, true)),
-	}, step{
+	}, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"

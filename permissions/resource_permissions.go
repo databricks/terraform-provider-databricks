@@ -344,8 +344,9 @@ func (p resourcePermissions) validate(changes []AccessControlChange, currentUser
 			return fmt.Errorf("it is not possible to modify admin permissions for %s resources", p.objectType)
 		}
 		// Check that the user is not preventing themselves from managing the object
-		if change.UserName == currentUsername {
-			return fmt.Errorf("it is not possible to decrease administrative permissions for the current user: %s", currentUsername)
+		if change.UserName == currentUsername && !p.allowedPermissionLevels[change.PermissionLevel].currentUserSettable {
+			allowedLevels := p.getAllowedPermissionLevels(true)
+			return fmt.Errorf("cannot remove management permissions for the current user for %s, allowed levels: %s", p.objectType, strings.Join(allowedLevels, ", "))
 		}
 	}
 	return nil

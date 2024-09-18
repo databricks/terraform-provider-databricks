@@ -1586,7 +1586,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 
 func TestPathPermissionsResourceIDFields(t *testing.T) {
 	var m resourcePermissions
-	for _, x := range permissionsResourceIDFields() {
+	for _, x := range allResourcePermissions() {
 		if x.field == "notebook_path" {
 			m = x
 		}

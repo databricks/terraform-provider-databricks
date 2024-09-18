@@ -163,10 +163,22 @@ func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL AccessContro
 		if err != nil {
 			return err
 		}
-		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChangeApiRequest{
-			UserName:        currentUser,
-			PermissionLevel: "CAN_MANAGE",
-		})
+		// The validate() method called in Update() ensures that the current user's permissions are either CAN_MANAGE
+		// or IS_OWNER if they are specified. If the current user is not specified in the access control list, we add
+		// them with CAN_MANAGE permissions.
+		found := false
+		for _, acl := range objectACL.AccessControlList {
+			if acl.UserName == currentUser || acl.ServicePrincipalName == currentUser {
+				found = true
+				break
+			}
+		}
+		if !found {
+			objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChangeApiRequest{
+				UserName:        currentUser,
+				PermissionLevel: "CAN_MANAGE",
+			})
+		}
 	}
 	originalAcl := make([]AccessControlChangeApiRequest, len(objectACL.AccessControlList))
 	copy(originalAcl, objectACL.AccessControlList)
@@ -309,13 +321,13 @@ func (p PermissionsEntity) containsUserOrServicePrincipal(name string) bool {
 // ResourcePermissions definition
 func ResourcePermissions() common.Resource {
 	s := common.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		for _, mapping := range permissionsResourceIDFields() {
+		for _, mapping := range allResourcePermissions() {
 			s[mapping.field] = &schema.Schema{
 				ForceNew: true,
 				Type:     schema.TypeString,
 				Optional: true,
 			}
-			for _, m := range permissionsResourceIDFields() {
+			for _, m := range allResourcePermissions() {
 				if m.field == mapping.field {
 					continue
 				}

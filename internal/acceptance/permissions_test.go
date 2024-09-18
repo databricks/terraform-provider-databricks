@@ -149,9 +149,9 @@ func TestAccDatabricksPermissionsForSqlWarehouses(t *testing.T) {
 		require.NoError(t, err)
 
 		// Assert expected permission level is present
-		assert.Contains(t, warehousePermissions.AccessControlList, permissions.AccessControl{
+		assert.Contains(t, warehousePermissions.AccessControlList, permissions.AccessControlApiResponse{
 			GroupName: groupName,
-			AllPermissions: []permissions.Permission{
+			AllPermissions: []permissions.PermissionApiResponse{
 				{
 					PermissionLevel: permissionLevel,
 				},

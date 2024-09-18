@@ -221,7 +221,7 @@ func TestPermissions(t *testing.T) {
 
 	d.MarkNewResource()
 	err := common.StructToData(permissions.PermissionsEntity{
-		AccessControlList: []permissions.AccessControlChange{
+		AccessControlList: []permissions.AccessControlChangeApiRequest{
 			{
 				UserName: "a",
 			},

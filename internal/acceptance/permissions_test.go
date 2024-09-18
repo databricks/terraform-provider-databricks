@@ -226,7 +226,7 @@ func TestAccDatabricksPermissionsForSqlWarehouses(t *testing.T) {
 }
 
 func TestAccDatabricksPermissionsForJobs(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		data databricks_current_user me {}
 
@@ -242,7 +242,7 @@ func TestAccDatabricksPermissionsForJobs(t *testing.T) {
 			}
 		}
 		`,
-	}, step{
+	}, Step{
 		Template: `
 		data databricks_current_user me {}
 
@@ -267,7 +267,7 @@ func TestAccDatabricksPermissionsForJobs(t *testing.T) {
 			}
 		}
 		`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_job" "this" {
 			name = "{var.RANDOM}"

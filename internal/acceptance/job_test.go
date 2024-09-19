@@ -446,4 +446,3 @@ func TestAccPeriodicTrigger(t *testing.T) {
 		}),
 	})
 }
-

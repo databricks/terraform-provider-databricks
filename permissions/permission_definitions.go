@@ -486,9 +486,6 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_MANAGE": {isManagementPermission: true},
 				"CAN_READ":   {isManagementPermission: false},
 			},
-			idMatcher: func(objectID string) bool {
-				return strings.HasPrefix(objectID, "dashboards/")
-			},
 		},
 		{
 			field:        "experiment_id",

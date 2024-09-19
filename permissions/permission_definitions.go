@@ -94,13 +94,22 @@ func (p resourcePermissions) requiresExplicitAdminPermissions(id string) bool {
 	return false
 }
 
+type resourceStatus struct {
+	exists  bool
+	creator string
+}
+
 // getObjectCreator returns the creator of the object. If the object creator cannot be determined for this
 // resource type, an empty string is returned.
-func (p resourcePermissions) getObjectCreator(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error) {
+func (p resourcePermissions) getObjectStatus(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (resourceStatus, error) {
 	if p.fetchObjectCreator != nil {
-		return p.fetchObjectCreator(ctx, w, objectID)
+		creator, err := p.fetchObjectCreator(ctx, w, objectID)
+		if err != nil {
+			return resourceStatus{}, err
+		}
+		return resourceStatus{exists: creator != "", creator: creator}, nil
 	}
-	return "", nil
+	return resourceStatus{exists: true, creator: ""}, nil
 }
 
 // getPathVariant returns the name of the path attribute for this resource type.
@@ -218,34 +227,21 @@ func (p resourcePermissions) prepareCommon(changes []AccessControlChangeApiReque
 	return changes, nil
 }
 
-func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []AccessControlChangeApiRequest, getOwner func() (string, error)) ([]AccessControlChangeApiRequest, error) {
+func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []AccessControlChangeApiRequest, ownerOpt string) []AccessControlChangeApiRequest {
 	if !p.hasOwnerPermissionLevel() {
-		return objectACL, nil
+		return objectACL
 	}
-	owners := false
+
 	for _, acl := range objectACL {
 		if acl.PermissionLevel == "IS_OWNER" {
-			owners = true
-			break
+			return objectACL
 		}
 	}
 
-	// add owner if it's missing, otherwise automated planning might be difficult
-	if owners {
-		return objectACL, nil
-	}
-
-	owner, err := getOwner()
-	if err != nil {
-		return nil, err
-	}
-	if owner == "" {
-		return objectACL, nil
-	}
 	return append(objectACL, AccessControlChangeApiRequest{
-		UserName:        owner,
+		UserName:        ownerOpt,
 		PermissionLevel: "IS_OWNER",
-	}), nil
+	})
 }
 
 // permissionLevelOptions indicates the properties of a permissions level. Today, the only property
@@ -531,6 +527,9 @@ func allResourcePermissions() []resourcePermissions {
 			shouldExplicitlyGrantCallingUserManagePermissions: true,
 			makeRequestPath: SQL_REQUEST_PATH,
 			usePost:         true,
+			idMatcher: func(objectID string) bool {
+				return strings.HasPrefix(objectID, "dashboards/")
+			},
 		},
 		{
 			field:        "sql_alert_id",

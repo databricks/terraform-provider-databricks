@@ -159,12 +159,9 @@ func (a PermissionsAPI) put(mapping resourcePermissions, objectID string, access
 }
 
 // safePutWithOwner is a workaround for the limitation where warehouse without owners cannot have IS_OWNER set
-func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []AccessControlChangeApiRequest, mapping resourcePermissions, getOwner func() (string, error)) error {
-	withOwner, err := mapping.addOwnerPermissionIfNeeded(objectACL, getOwner)
-	if err != nil {
-		return err
-	}
-	err = a.put(mapping, objectID, withOwner)
+func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []AccessControlChangeApiRequest, mapping resourcePermissions, ownerOpt string) error {
+	withOwner := mapping.addOwnerPermissionIfNeeded(objectACL, ownerOpt)
+	err := a.put(mapping, objectID, withOwner)
 	if err != nil {
 		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
 			return a.put(mapping, objectID, objectACL)
@@ -196,8 +193,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL []AccessControlChangeA
 	if err != nil {
 		return err
 	}
-	cachedCurrentUser := func() (string, error) { return currentUser, nil }
-	return a.safePutWithOwner(objectID, accl, mapping, cachedCurrentUser)
+	return a.safePutWithOwner(objectID, accl, mapping, currentUser)
 }
 
 // Delete gracefully removes permissions of non-admin users. After this operation, the object is managed
@@ -212,14 +208,19 @@ func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) err
 	if err != nil {
 		return err
 	}
-	getObjectCreator := func() (string, error) {
-		w, err := a.client.WorkspaceClient()
-		if err != nil {
-			return "", err
-		}
-		return mapping.getObjectCreator(a.context, w, objectID)
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return err
 	}
-	return a.safePutWithOwner(objectID, accl, mapping, getObjectCreator)
+	resourceStatus, err := mapping.getObjectStatus(a.context, w, objectID)
+	if err != nil {
+		return err
+	}
+	// Do not bother resetting permissions for deleted resources
+	if !resourceStatus.exists {
+		return nil
+	}
+	return a.safePutWithOwner(objectID, accl, mapping, resourceStatus.creator)
 }
 
 // Read gets all relevant permissions for the object, including inherited ones

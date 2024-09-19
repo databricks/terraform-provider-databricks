@@ -189,6 +189,13 @@ func (a PermissionsAPI) Update(objectID string, objectACL []AccessControlChangeA
 	if err != nil {
 		return err
 	}
+	// this logic was moved from CustomizeDiff because of undeterministic auth behavior
+	// in the corner-case scenarios.
+	// see https://github.com/databricks/terraform-provider-databricks/issues/2052
+	err = mapping.validate(objectACL, currentUser)
+	if err != nil {
+		return err
+	}
 	accl, err := mapping.prepareForUpdate(objectID, objectACL, currentUser)
 	if err != nil {
 		return err

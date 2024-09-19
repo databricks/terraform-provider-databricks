@@ -80,27 +80,16 @@ func (p resourcePermissions) getAllowedPermissionLevels(includeNonManagementPerm
 	return levels
 }
 
-// hasOwnerPermissionLevel returns whether the owner permission level is allowed for this resource type.
-func (p resourcePermissions) hasOwnerPermissionLevel() bool {
-	_, ok := p.allowedPermissionLevels["IS_OWNER"]
-	return ok
-}
-
-// requiresExplicitAdminPermissions returns whether the object requires explicit admin permissions.
-func (p resourcePermissions) requiresExplicitAdminPermissions(id string) bool {
-	if p.explicitAdminPermissionCheck != nil {
-		return p.explicitAdminPermissionCheck(id)
-	}
-	return false
-}
-
+// resourceStatus captures the status of a resource with permissions. If the resource doesn't exist,
+// the provider will not try to update its permissions. Otherwise, the creator will be returned if
+// it can be determined for the given resource type.
 type resourceStatus struct {
 	exists  bool
 	creator string
 }
 
-// getObjectCreator returns the creator of the object. If the object creator cannot be determined for this
-// resource type, an empty string is returned.
+// getObjectStatus returns the creator of the object and whether the object exists. If the object creator cannot be determined for this
+// resource type, an empty string is returned. Resources without fetchObjectCreator are assumed to exist and have an unknown creator.
 func (p resourcePermissions) getObjectStatus(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (resourceStatus, error) {
 	if p.fetchObjectCreator != nil {
 		creator, err := p.fetchObjectCreator(ctx, w, objectID)
@@ -168,14 +157,7 @@ func (p resourcePermissions) getID(ctx context.Context, w *databricks.WorkspaceC
 }
 
 func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []AccessControlChangeApiRequest, currentUser string) ([]AccessControlChangeApiRequest, error) {
-	// this logic was moved from CustomizeDiff because of undeterministic auth behavior
-	// in the corner-case scenarios.
-	// see https://github.com/databricks/terraform-provider-databricks/issues/2052
-	err := p.validate(objectACL, currentUser)
-	if err != nil {
-		return nil, err
-	}
-	if p.requiresExplicitAdminPermissions(objectID) {
+	if p.explicitAdminPermissionCheck != nil && p.explicitAdminPermissionCheck(objectID) {
 		// Prevent "Cannot change permissions for group 'admins' to None."
 		objectACL = append(objectACL, AccessControlChangeApiRequest{
 			GroupName:       "admins",
@@ -228,7 +210,8 @@ func (p resourcePermissions) prepareCommon(changes []AccessControlChangeApiReque
 }
 
 func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []AccessControlChangeApiRequest, ownerOpt string) []AccessControlChangeApiRequest {
-	if !p.hasOwnerPermissionLevel() {
+	_, ok := p.allowedPermissionLevels["IS_OWNER"]
+	if !ok {
 		return objectACL
 	}
 

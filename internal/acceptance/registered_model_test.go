@@ -44,7 +44,7 @@ func TestUcAccRegisteredModel(t *testing.T) {
 				comment = "new comment"
 			}
 			data "databricks_registered_model" "model" {
-				full_name = databricks_registered_model.model.full_name
+				full_name = databricks_registered_model.model.id
 				include_model_versions = true
 			}
 			output "model" {

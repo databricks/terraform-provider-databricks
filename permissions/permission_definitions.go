@@ -158,6 +158,96 @@ func (p resourcePermissions) getID(ctx context.Context, w *databricks.WorkspaceC
 	return fmt.Sprintf("/%s/%s", p.resourceType, id), nil
 }
 
+func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []AccessControlChangeApiRequest, currentUser string) ([]AccessControlChangeApiRequest, error) {
+	// this logic was moved from CustomizeDiff because of undeterministic auth behavior
+	// in the corner-case scenarios.
+	// see https://github.com/databricks/terraform-provider-databricks/issues/2052
+	err := p.validate(objectACL, currentUser)
+	if err != nil {
+		return nil, err
+	}
+	if p.requiresExplicitAdminPermissions(objectID) {
+		// Prevent "Cannot change permissions for group 'admins' to None."
+		objectACL = append(objectACL, AccessControlChangeApiRequest{
+			GroupName:       "admins",
+			PermissionLevel: "CAN_MANAGE",
+		})
+	}
+	cachedCurrentUser := func() (string, error) { return currentUser, nil }
+	return p.prepareCommon(objectACL, cachedCurrentUser)
+}
+
+func (p resourcePermissions) prepareForDelete(objectACL ObjectAclApiResponse, getCurrentUser func() (string, error)) ([]AccessControlChangeApiRequest, error) {
+	accl := make([]AccessControlChangeApiRequest, 0, len(objectACL.AccessControlList))
+	for _, acl := range objectACL.AccessControlList {
+		// When deleting permissions for a resource with explicit admin permissions, delete should remove
+		// admin permissions as well. Otherwise, admin permissions should be left as-is.
+		if acl.GroupName == "admins" && !p.allowAdminGroup {
+			if change, direct := acl.toAccessControlChange(); direct {
+				// keep everything direct for admin group
+				accl = append(accl, change)
+			}
+		}
+	}
+	return p.prepareCommon(accl, getCurrentUser)
+}
+
+func (p resourcePermissions) prepareCommon(changes []AccessControlChangeApiRequest, getCurrentUser func() (string, error)) ([]AccessControlChangeApiRequest, error) {
+	if p.shouldExplicitlyGrantCallingUserManagePermissions {
+		currentUser, err := getCurrentUser()
+		if err != nil {
+			return nil, err
+		}
+		// The validate() method called in Update() ensures that the current user's permissions are either CAN_MANAGE
+		// or IS_OWNER if they are specified. If the current user is not specified in the access control list, we add
+		// them with CAN_MANAGE permissions.
+		found := false
+		for _, acl := range changes {
+			if acl.UserName == currentUser || acl.ServicePrincipalName == currentUser {
+				found = true
+				break
+			}
+		}
+		if !found {
+			changes = append(changes, AccessControlChangeApiRequest{
+				UserName:        currentUser,
+				PermissionLevel: "CAN_MANAGE",
+			})
+		}
+	}
+	return changes, nil
+}
+
+func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []AccessControlChangeApiRequest, getOwner func() (string, error)) ([]AccessControlChangeApiRequest, error) {
+	if !p.hasOwnerPermissionLevel() {
+		return objectACL, nil
+	}
+	owners := false
+	for _, acl := range objectACL {
+		if acl.PermissionLevel == "IS_OWNER" {
+			owners = true
+			break
+		}
+	}
+
+	// add owner if it's missing, otherwise automated planning might be difficult
+	if owners {
+		return objectACL, nil
+	}
+
+	owner, err := getOwner()
+	if err != nil {
+		return nil, err
+	}
+	if owner == "" {
+		return objectACL, nil
+	}
+	return append(objectACL, AccessControlChangeApiRequest{
+		UserName:        owner,
+		PermissionLevel: "IS_OWNER",
+	}), nil
+}
+
 // permissionLevelOptions indicates the properties of a permissions level. Today, the only property
 // is whether the current user can set the permission level for themselves.
 type permissionLevelOptions struct {

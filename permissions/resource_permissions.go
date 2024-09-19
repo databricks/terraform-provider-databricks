@@ -145,72 +145,28 @@ type PermissionsAPI struct {
 // Helper function for applying permissions changes. Ensures that
 // we select the correct HTTP method based on the object type and preserve the calling
 // user's ability to manage the specified object when applying permissions changes.
-func (a PermissionsAPI) put(mapping resourcePermissions, objectID string, objectACL AccessControlChangeListApiRequest) error {
+func (a PermissionsAPI) put(mapping resourcePermissions, objectID string, accessControlList []AccessControlChangeApiRequest) error {
+	req := AccessControlChangeListApiRequest{
+		AccessControlList: accessControlList,
+	}
 	urlPath := mapping.getRequestPath(objectID)
 	if mapping.usePost {
 		// SQLA entities use POST for permission updates.
-		return a.client.Post(a.context, urlPath, objectACL, nil)
+		return a.client.Post(a.context, urlPath, req, nil)
 	}
-	log.Printf("[DEBUG] PUT %s %v", objectID, objectACL)
-	return a.client.Put(a.context, urlPath, objectACL)
+	log.Printf("[DEBUG] PUT %s %v", objectID, req)
+	return a.client.Put(a.context, urlPath, req)
 }
 
 // safePutWithOwner is a workaround for the limitation where warehouse without owners cannot have IS_OWNER set
-func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL AccessControlChangeListApiRequest, getCurrentUser, getOwner func() (string, error)) error {
-	mapping, err := getResourcePermissions(objectID)
-	if mapping.shouldExplicitlyGrantCallingUserManagePermissions {
-		currentUser, err := getCurrentUser()
-		if err != nil {
-			return err
-		}
-		// The validate() method called in Update() ensures that the current user's permissions are either CAN_MANAGE
-		// or IS_OWNER if they are specified. If the current user is not specified in the access control list, we add
-		// them with CAN_MANAGE permissions.
-		found := false
-		for _, acl := range objectACL.AccessControlList {
-			if acl.UserName == currentUser || acl.ServicePrincipalName == currentUser {
-				found = true
-				break
-			}
-		}
-		if !found {
-			objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChangeApiRequest{
-				UserName:        currentUser,
-				PermissionLevel: "CAN_MANAGE",
-			})
-		}
-	}
-	originalAcl := make([]AccessControlChangeApiRequest, len(objectACL.AccessControlList))
-	copy(originalAcl, objectACL.AccessControlList)
+func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []AccessControlChangeApiRequest, mapping resourcePermissions, getOwner func() (string, error)) error {
+	withOwner, err := mapping.addOwnerPermissionIfNeeded(objectACL, getOwner)
 	if err != nil {
 		return err
 	}
-	if mapping.hasOwnerPermissionLevel() {
-		owners := 0
-		for _, acl := range objectACL.AccessControlList {
-			if acl.PermissionLevel == "IS_OWNER" {
-				owners++
-			}
-		}
-		if owners == 0 {
-			// add owner if it's missing, otherwise automated planning might be difficult
-			owner, err := getOwner()
-			if err != nil {
-				return err
-			}
-			if owner == "" {
-				return nil
-			}
-			objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChangeApiRequest{
-				UserName:        owner,
-				PermissionLevel: "IS_OWNER",
-			})
-		}
-	}
-	err = a.put(mapping, objectID, objectACL)
+	err = a.put(mapping, objectID, withOwner)
 	if err != nil {
 		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
-			objectACL.AccessControlList = originalAcl
 			return a.put(mapping, objectID, objectACL)
 		}
 		return err
@@ -231,52 +187,39 @@ func (a PermissionsAPI) getCurrentUser() (string, error) {
 }
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
-func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeListApiRequest, mapping resourcePermissions) error {
+func (a PermissionsAPI) Update(objectID string, objectACL []AccessControlChangeApiRequest, mapping resourcePermissions) error {
 	currentUser, err := a.getCurrentUser()
 	if err != nil {
 		return err
 	}
-	// this logic was moved from CustomizeDiff because of undeterministic auth behavior
-	// in the corner-case scenarios.
-	// see https://github.com/databricks/terraform-provider-databricks/issues/2052
-	err = mapping.validate(objectACL.AccessControlList, currentUser)
+	accl, err := mapping.prepareForUpdate(objectID, objectACL, currentUser)
 	if err != nil {
 		return err
 	}
-	if mapping.requiresExplicitAdminPermissions(objectID) {
-		// Prevent "Cannot change permissions for group 'admins' to None."
-		objectACL.AccessControlList = append(objectACL.AccessControlList, AccessControlChangeApiRequest{
-			GroupName:       "admins",
-			PermissionLevel: "CAN_MANAGE",
-		})
-	}
-	getCurrentUser := func() (string, error) { return currentUser, nil }
-	return a.safePutWithOwner(objectID, objectACL, getCurrentUser, getCurrentUser)
+	cachedCurrentUser := func() (string, error) { return currentUser, nil }
+	return a.safePutWithOwner(objectID, accl, mapping, cachedCurrentUser)
 }
 
 // Delete gracefully removes permissions of non-admin users. After this operation, the object is managed
-// by the current user and admin group.
+// by the current user and admin group. If the resource has IS_OWNER permissions, they are reset to the
+// object creator, if it can be determined.
 func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) error {
 	objectACL, err := a.Read(objectID)
 	if err != nil {
 		return err
 	}
-	accl := AccessControlChangeListApiRequest{}
-	for _, acl := range objectACL.AccessControlList {
-		// When deleting permissions for a resource with explicit admin permissions, delete should remove
-		// admin permissions as well. Otherwise, admin permissions should be left as-is.
-		if acl.GroupName == "admins" && !mapping.allowAdminGroup {
-			if change, direct := acl.toAccessControlChange(); direct {
-				// keep everything direct for admin group
-				accl.AccessControlList = append(accl.AccessControlList, change)
-			}
-		}
-	}
-	w, err := a.client.WorkspaceClient()
+	accl, err := mapping.prepareForDelete(objectACL, a.getCurrentUser)
 	if err != nil {
 		return err
 	}
-	return a.safePutWithOwner(objectID, accl, a.getCurrentUser, func() (string, error) { return mapping.getObjectCreator(a.context, w, objectID) })
+	getObjectCreator := func() (string, error) {
+		w, err := a.client.WorkspaceClient()
+		if err != nil {
+			return "", err
+		}
+		return mapping.getObjectCreator(a.context, w, objectID)
+	}
+	return a.safePutWithOwner(objectID, accl, mapping, getObjectCreator)
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
@@ -397,9 +340,7 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = NewPermissionsAPI(ctx, c).Update(objectID, AccessControlChangeListApiRequest{
-				AccessControlList: entity.AccessControlList,
-			}, mapping)
+			err = NewPermissionsAPI(ctx, c).Update(objectID, entity.AccessControlList, mapping)
 			if err != nil {
 				return err
 			}
@@ -413,9 +354,7 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			return NewPermissionsAPI(ctx, c).Update(d.Id(), AccessControlChangeListApiRequest{
-				AccessControlList: entity.AccessControlList,
-			}, mapping)
+			return NewPermissionsAPI(ctx, c).Update(d.Id(), entity.AccessControlList, mapping)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			mapping, err := getResourcePermissions(d.Id())

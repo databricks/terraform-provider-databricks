@@ -1417,12 +1417,10 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping, _ := getResourcePermissions("/authorization/tokens")
-		err := p.Update("/authorization/tokens", AccessControlChangeListApiRequest{
-			AccessControlList: []AccessControlChangeApiRequest{
-				{
-					UserName:        "me",
-					PermissionLevel: "CAN_MANAGE",
-				},
+		err := p.Update("/authorization/tokens", []AccessControlChangeApiRequest{
+			{
+				UserName:        "me",
+				PermissionLevel: "CAN_MANAGE",
 			},
 		}, mapping)
 		assert.NoError(t, err)

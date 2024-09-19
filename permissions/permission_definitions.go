@@ -201,7 +201,7 @@ func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (
 
 func getResourcePermissionsForObjectAcl(objectACL ObjectAclApiResponse) (resourcePermissions, string, error) {
 	for _, mapping := range allResourcePermissions() {
-		if mapping.objectType == objectACL.ObjectType || mapping.isTypeOf(objectACL.ObjectID) {
+		if mapping.objectType == objectACL.ObjectType && mapping.isTypeOf(objectACL.ObjectID) {
 			return mapping, objectACL.ObjectID, nil
 		}
 	}

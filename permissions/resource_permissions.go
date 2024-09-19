@@ -333,11 +333,11 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			mapping, v, err := getResourcePermissionsFromState(d)
+			mapping, id, err := getResourcePermissionsFromState(d)
 			if err != nil {
 				return err
 			}
-			objectID, err := mapping.getID(ctx, w, v)
+			objectID, err := mapping.getID(ctx, w, id)
 			if err != nil {
 				return err
 			}

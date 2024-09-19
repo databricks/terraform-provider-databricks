@@ -147,9 +147,9 @@ func (p resourcePermissions) validate(changes []AccessControlChangeApiRequest, c
 			return fmt.Errorf("it is not possible to modify admin permissions for %s resources", p.objectType)
 		}
 		// Check that the user is not preventing themselves from managing the object
-		if change.UserName == currentUsername && !p.allowedPermissionLevels[change.PermissionLevel].isManagementPermission {
-			allowedLevels := p.getAllowedPermissionLevels(false)
-			return fmt.Errorf("cannot remove management permissions for the current user for %s, allowed levels: %s", p.objectType, strings.Join(allowedLevels, ", "))
+		if (change.UserName == currentUsername || change.ServicePrincipalName == currentUsername) && !p.allowedPermissionLevels[change.PermissionLevel].isManagementPermission {
+			allowedLevelsForCurrentUser := p.getAllowedPermissionLevels(false)
+			return fmt.Errorf("cannot remove management permissions for the current user for %s, allowed levels: %s", p.objectType, strings.Join(allowedLevelsForCurrentUser, ", "))
 		}
 	}
 	return nil

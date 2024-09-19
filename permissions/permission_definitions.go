@@ -124,7 +124,10 @@ func (p resourcePermissions) isTypeOf(objectID string) bool {
 	if p.idMatcher != nil {
 		return p.idMatcher(objectID)
 	}
-	return strings.HasPrefix(objectID, "/"+p.resourceType)
+	if objectID != "" && objectID[0] == '/' {
+		return strings.HasPrefix(objectID[1:], p.resourceType)
+	}
+	return false
 }
 
 // validate checks that the user is not trying to set permissions for the admin group or remove their own management permissions.
@@ -435,9 +438,6 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_MANAGE": {isManagementPermission: true},
 				"CAN_VIEW":   {isManagementPermission: false},
 			},
-			idMatcher: func(objectID string) bool {
-				return strings.HasPrefix(objectID, "/dashboards/")
-			},
 			shouldExplicitlyGrantCallingUserManagePermissions: true,
 			makeRequestPath: SQL_REQUEST_PATH,
 			usePost:         true,
@@ -453,7 +453,7 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_VIEW":   {isManagementPermission: false},
 			},
 			idMatcher: func(objectID string) bool {
-				return strings.HasPrefix(objectID, "/alerts/")
+				return strings.HasPrefix(objectID, "alerts/")
 			},
 			shouldExplicitlyGrantCallingUserManagePermissions: true,
 			makeRequestPath: SQL_REQUEST_PATH,
@@ -471,7 +471,7 @@ func allResourcePermissions() []resourcePermissions {
 			},
 			shouldExplicitlyGrantCallingUserManagePermissions: true,
 			idMatcher: func(objectID string) bool {
-				return strings.HasPrefix(objectID, "/queries/")
+				return strings.HasPrefix(objectID, "queries/")
 			},
 			makeRequestPath: SQL_REQUEST_PATH,
 			usePost:         true,
@@ -485,6 +485,9 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_RUN":    {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 				"CAN_READ":   {isManagementPermission: false},
+			},
+			idMatcher: func(objectID string) bool {
+				return strings.HasPrefix(objectID, "dashboards/")
 			},
 		},
 		{

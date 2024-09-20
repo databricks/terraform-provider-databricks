@@ -37,6 +37,10 @@ type resourcePermissions struct {
 	// This is necessary because some objects have a different ID in the API response than the ID in the
 	// Terraform state. If unset, the default is to check whether the object ID starts with "/<resource_type>".
 	idMatcher func(objectID string) bool
+	// A custom matcher to check whether a given ID matches this resource type.
+	// Most resources can be determined by looking at the attribute name used to configure the permission, but
+	// tokens & passwords are special cases where the resource type is determined by the value of this attribute.
+	stateMatcher func(id string) bool
 
 	// Behavior Options and Customizations
 
@@ -241,11 +245,16 @@ type permissionLevelOptions struct {
 }
 
 // getResourcePermissions returns the resourcePermissions for the given object ID.
+// This ID must be the ID of the object in the Terraform state.
 func getResourcePermissions(objectId string) (resourcePermissions, error) {
 	objectParts := strings.Split(objectId, "/")
 	objectType := strings.Join(objectParts[1:len(objectParts)-1], "/")
 	for _, p := range allResourcePermissions() {
 		if p.resourceType == objectType {
+			id := objectParts[len(objectParts)-1]
+			if p.stateMatcher != nil && !p.stateMatcher(id) {
+				continue
+			}
 			return p, nil
 		}
 	}
@@ -257,7 +266,11 @@ func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (
 	allPermissions := allResourcePermissions()
 	for _, mapping := range allPermissions {
 		if v, ok := d.GetOk(mapping.field); ok {
-			return mapping, v.(string), nil
+			id := v.(string)
+			if mapping.stateMatcher != nil && !mapping.stateMatcher(id) {
+				continue
+			}
+			return mapping, id, nil
 		}
 	}
 	allFields := make([]string, 0, len(allPermissions))
@@ -470,6 +483,9 @@ func allResourcePermissions() []resourcePermissions {
 			field:        "authorization",
 			objectType:   "tokens",
 			resourceType: "authorization",
+			stateMatcher: func(id string) bool {
+				return id == "tokens"
+			},
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE":    {isManagementPermission: true},
 				"CAN_MANAGE": {isManagementPermission: true},
@@ -484,6 +500,9 @@ func allResourcePermissions() []resourcePermissions {
 			field:        "authorization",
 			objectType:   "passwords",
 			resourceType: "authorization",
+			stateMatcher: func(id string) bool {
+				return id == "passwords"
+			},
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE": {isManagementPermission: true},
 			},

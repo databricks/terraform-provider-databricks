@@ -859,8 +859,8 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
 				Response: ObjectAclApiResponse{
-					ObjectID:   "dashboards/abc",
-					ObjectType: "dashboard",
+					ObjectID:   "warehouses/abc",
+					ObjectType: "warehouses",
 					AccessControlList: []AccessControlApiResponse{
 						{
 							UserName:        TestingUser,
@@ -947,8 +947,8 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
 				Response: ObjectAclApiResponse{
-					ObjectID:   "dashboards/abc",
-					ObjectType: "dashboard",
+					ObjectID:   "warehouses/abc",
+					ObjectType: "warehouses",
 					AccessControlList: []AccessControlApiResponse{
 						{
 							UserName:        TestingUser,
@@ -1014,8 +1014,8 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
 				Response: ObjectAclApiResponse{
-					ObjectID:   "dashboards/abc",
-					ObjectType: "dashboard",
+					ObjectID:   "warehouses/abc",
+					ObjectType: "warehouses",
 					AccessControlList: []AccessControlApiResponse{
 						{
 							UserName:        TestingUser,

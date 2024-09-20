@@ -22,14 +22,10 @@ type ObjectAclApiResponse struct {
 	AccessControlList []AccessControlApiResponse `json:"access_control_list"`
 }
 
-func (oa ObjectAclApiResponse) ToPermissionsEntity(d *schema.ResourceData, existing PermissionsEntity, me string) (PermissionsEntity, error) {
+func (oa ObjectAclApiResponse) ToPermissionsEntity(d *schema.ResourceData, existing PermissionsEntity, me string, mapping resourcePermissions) (PermissionsEntity, error) {
 	entity := PermissionsEntity{}
-	mapping, _, err := getResourcePermissionsForObjectAcl(oa)
-	if err != nil {
-		return entity, err
-	}
 	for _, accessControl := range oa.AccessControlList {
-		if accessControl.GroupName == "admins" {
+		if accessControl.GroupName == "admins" && mapping.field != "authorization" {
 			// Admin permissions are not included in the resource state.
 			continue
 		}
@@ -206,7 +202,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL []AccessControlChangeA
 // by the current user and admin group. If the resource has IS_OWNER permissions, they are reset to the
 // object creator, if it can be determined.
 func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) error {
-	objectACL, err := a.Read(objectID)
+	objectACL, err := a.Read(objectID, mapping)
 	if err != nil {
 		return err
 	}
@@ -230,11 +226,7 @@ func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) err
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
-func (a PermissionsAPI) Read(objectID string) (objectACL ObjectAclApiResponse, err error) {
-	mapping, err := getResourcePermissions(objectID)
-	if err != nil {
-		return objectACL, err
-	}
+func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions) (objectACL ObjectAclApiResponse, err error) {
 	err = a.client.Get(a.context, mapping.getRequestPath(objectID), nil, &objectACL)
 	var apiErr *apierr.APIError
 	// https://github.com/databricks/terraform-provider-databricks/issues/1227
@@ -245,6 +237,9 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectAclApiResponse, e
 		apiErr.StatusCode = 404
 		err = apiErr
 		return
+	}
+	if err != nil {
+		return objectACL, err
 	}
 	return mapping.prepareResponse(objectID, objectACL)
 }
@@ -311,7 +306,11 @@ func ResourcePermissions() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			id := d.Id()
 			a := NewPermissionsAPI(ctx, c)
-			objectACL, err := a.Read(id)
+			mapping, err := getResourcePermissions(id)
+			if err != nil {
+				return err
+			}
+			objectACL, err := a.Read(id, mapping)
 			if err != nil {
 				return err
 			}
@@ -321,7 +320,7 @@ func ResourcePermissions() common.Resource {
 			}
 			var existing PermissionsEntity
 			common.DataToStructPointer(d, s, &existing)
-			entity, err := objectACL.ToPermissionsEntity(d, existing, me)
+			entity, err := objectACL.ToPermissionsEntity(d, existing, me, mapping)
 			if err != nil {
 				return err
 			}

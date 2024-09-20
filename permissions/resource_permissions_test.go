@@ -1596,14 +1596,14 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 }
 
 func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
-	_, err := (&ObjectAclApiResponse{
+	_, _, err := getResourcePermissionsForObjectAcl(ObjectAclApiResponse{
 		ObjectType: "bananas",
 		AccessControlList: []AccessControlApiResponse{
 			{
 				GroupName: "admins",
 			},
 		},
-	}).ToPermissionsEntity(ResourcePermissions().ToResource().TestResourceData(), PermissionsEntity{}, "me")
+	})
 	assert.EqualError(t, err, "unknown object type bananas")
 }
 

@@ -136,7 +136,7 @@ func (p resourcePermissions) isTypeOf(objectID string) bool {
 func (p resourcePermissions) validate(changes []AccessControlChangeApiRequest, currentUsername string) error {
 	for _, change := range changes {
 		// Check if the user is trying to set permissions for the admin group
-		if change.GroupName == "admins" {
+		if change.GroupName == "admins" && p.field != "authorization" {
 			return fmt.Errorf("it is not possible to modify admin permissions for %s resources", p.objectType)
 		}
 		// Check that the user is not preventing themselves from managing the object

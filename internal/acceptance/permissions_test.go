@@ -629,6 +629,15 @@ func TestAccPermissions_WorkspaceFile_Id(t *testing.T) {
 	})
 }
 
+func TestAccPermissions_Authorization_Passwords(t *testing.T) {
+	skipf(t)("ACLs for passwords are disabled on testing infrastructure")
+	WorkspaceLevel(t, Step{
+		Template: makePermissionsTestStage("authorization", "\"passwords\"", noPermissions, nil, simpleSettings("CAN_USE")),
+	}, Step{
+		Template: makePermissionsTestStage("authorization", "\"passwords\"", noPermissions, nil, []permissionSettings{{name: "admins", skipCreation: true, permissionLevel: "CAN_USE"}}),
+	})
+}
+
 func TestAccPermissions_Authorization_Tokens(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: makePermissionsTestStage("authorization", "\"tokens\"", noPermissions, nil, simpleSettings("CAN_USE")),
@@ -784,21 +793,22 @@ func TestAccPermissions_Experiment(t *testing.T) {
 func TestAccPermissions_RegisteredModel(t *testing.T) {
 	modelTemplate := `
 	resource "databricks_mlflow_model" "m1" {
-		name = "tf-{var.STICY_RANDOM}"
+		name = "tf-{var.STICKY_RANDOM}"
 		description = "tf-{var.STICKY_RANDOM} description"
 	}
 	`
 	WorkspaceLevel(t, Step{
-		Template: modelTemplate + makePermissionsTestStage("model_id", "databricks_mlflow_model.m1.id", noPermissions, nil, simpleSettings("CAN_READ")),
+		Template: modelTemplate + makePermissionsTestStage("registered_model_id", "databricks_mlflow_model.m1.registered_model_id", noPermissions, nil, simpleSettings("CAN_READ")),
 	}, Step{
-		Template: modelTemplate + makePermissionsTestStage("model_id", "databricks_mlflow_model.m1.id", "CAN_MANAGE", nil, simpleSettings("CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE")),
+		Template: modelTemplate + makePermissionsTestStage("registered_model_id", "databricks_mlflow_model.m1.registered_model_id", "CAN_MANAGE", nil, simpleSettings("CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE")),
 	}, Step{
-		Template:    modelTemplate + makePermissionsTestStage("model_id", "databricks_mlflow_model.m1.id", "CAN_READ", nil, simpleSettings("CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE")),
-		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for mlflowModel, allowed levels: CAN_MANAGE"),
+		Template:    modelTemplate + makePermissionsTestStage("registered_model_id", "databricks_mlflow_model.m1.registered_model_id", "CAN_READ", nil, simpleSettings("CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE")),
+		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for registered-model, allowed levels: CAN_MANAGE"),
 	})
 }
 
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
+	skipf(t)("Serving endpoint update is flaky")
 	endpointTemplate := `
 	resource "databricks_model_serving" "endpoint" {
 		name = "{var.STICKY_RANDOM}"

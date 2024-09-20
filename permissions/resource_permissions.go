@@ -23,6 +23,9 @@ type ObjectAclApiResponse struct {
 }
 
 func (oa ObjectAclApiResponse) ToPermissionsEntity(d *schema.ResourceData, existing PermissionsEntity, me string, mapping resourcePermissions) (PermissionsEntity, error) {
+	if oa.ObjectType != mapping.objectType {
+		return PermissionsEntity{}, fmt.Errorf("expected object type %s, got %s", mapping.objectType, oa.ObjectType)
+	}
 	entity := PermissionsEntity{}
 	for _, accessControl := range oa.AccessControlList {
 		if accessControl.GroupName == "admins" && mapping.field != "authorization" {

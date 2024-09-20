@@ -29,9 +29,8 @@ func (oa ObjectAclApiResponse) ToPermissionsEntity(d *schema.ResourceData, exist
 		return entity, err
 	}
 	for _, accessControl := range oa.AccessControlList {
-		if accessControl.GroupName == "admins" && !mapping.allowAdminGroup {
-			// admin permission is always returned but can only be explicitly set for certain resources
-			// For other resources, admin permissions are not included in the resource state.
+		if accessControl.GroupName == "admins" {
+			// Admin permissions are not included in the resource state.
 			continue
 		}
 		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
@@ -247,11 +246,7 @@ func (a PermissionsAPI) Read(objectID string) (objectACL ObjectAclApiResponse, e
 		err = apiErr
 		return
 	}
-	if strings.HasPrefix(objectID, "/dashboards/") {
-		// workaround for inconsistent API response returning object ID of file in the workspace
-		objectACL.ObjectID = objectID
-	}
-	return
+	return mapping.prepareResponse(objectID, objectACL)
 }
 
 // PermissionsEntity is the one used for resource metadata
@@ -302,6 +297,10 @@ func ResourcePermissions() common.Resource {
 			// Plan time validation for object permission levels
 			for _, accessControl := range planned.AccessControlList {
 				permissionLevel := accessControl.PermissionLevel
+				// No diff in permission level, so don't need to check.
+				if permissionLevel == "" {
+					continue
+				}
 				if _, ok := mapping.allowedPermissionLevels[permissionLevel]; !ok {
 					return fmt.Errorf(`permission_level %s is not supported with %s objects; allowed levels: %s`,
 						permissionLevel, mapping.field, strings.Join(mapping.getAllowedPermissionLevels(true), ", "))

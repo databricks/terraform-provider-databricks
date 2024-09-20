@@ -14,7 +14,7 @@ func TestAccDataSourceDataUsers(t *testing.T) {
 			display_name_contains = "testuser"
 		}`,
 		Check: func(s *terraform.State) error {
-			r, ok := s.RootModule().Resources["data.databricks_data_users.this"]
+			r, ok := s.RootModule().Resources["data.databricks_users.this"]
 			if !ok {
 				return fmt.Errorf("data not found in state")
 			}

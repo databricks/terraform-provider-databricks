@@ -76,7 +76,7 @@ func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
@@ -105,7 +105,7 @@ func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
 			comment = "this table is managed by terraform"
 			owner = "account users"
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"

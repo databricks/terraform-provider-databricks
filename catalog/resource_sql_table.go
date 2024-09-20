@@ -120,7 +120,7 @@ func parseComment(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(s, `\'`, `'`), `'`, `\'`)
 }
 
-func reconstrutIdentity(c *SqlColumnInfo) (IdentityColumn, error) {
+func reconstructIdentity(c *SqlColumnInfo) (IdentityColumn, error) {
 	if c.TypeJson == "" {
 		return "", nil
 	}

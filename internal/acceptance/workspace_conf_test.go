@@ -7,7 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +24,7 @@ func assertEnableIpAccessList(t *testing.T, expected string) {
 }
 
 func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `resource "databricks_workspace_conf" "this" {
 			custom_config = {
 				"enableIpAccessLists": true
@@ -34,7 +34,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			assertEnableIpAccessList(t, "true")
 			return nil
 		},
-	}, step{
+	}, Step{
 		// Set enableIpAccessLists to false
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
@@ -50,7 +50,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			assert.Equal(t, "false", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
 			return nil
 		},
-	}, step{
+	}, Step{
 		// Set invalid configuration
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
@@ -59,7 +59,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			}`,
 		// Assert on server side error returned
 		ExpectError: regexp.MustCompile(`cannot update workspace conf: Invalid keys`),
-	}, step{
+	}, Step{
 		// Set enableIpAccessLists to true with strange case and maxTokenLifetimeDays to verify
 		// failed deletion case
 		Template: `resource "databricks_workspace_conf" "this" {

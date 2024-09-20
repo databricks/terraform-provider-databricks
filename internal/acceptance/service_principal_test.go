@@ -8,7 +8,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const azureSpn = `resource "databricks_service_principal" "this" {
@@ -33,13 +33,13 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 		force_delete_home_dir = true
 	}`
 	var spId string
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: template,
 		Check: func(s *terraform.State) error {
 			spId = s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
 			return nil
 		},
-	}, step{
+	}, Step{
 		Template: template,
 		Destroy:  true,
 		Check: func(s *terraform.State) error {
@@ -69,13 +69,13 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 		force_delete_home_dir = false 
 	}`
 	var appId string
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: template,
 		Check: func(s *terraform.State) error {
 			appId = s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
 			return provisionHomeFolder(context.Background(), s, "databricks_service_principal.a", appId)
 		},
-	}, step{
+	}, Step{
 		Template: template,
 		Destroy:  true,
 		Check: func(s *terraform.State) error {
@@ -93,9 +93,9 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 func TestMwsAccServicePrincipalResourceOnAzure(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
 	azureSpnRenamed := strings.ReplaceAll(azureSpn, `"SPN `, `"SPN Renamed `)
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: azureSpn,
-	}, step{
+	}, Step{
 		Template: azureSpnRenamed,
 	})
 }
@@ -103,9 +103,9 @@ func TestMwsAccServicePrincipalResourceOnAzure(t *testing.T) {
 func TestAccServicePrincipalResourceOnAzure(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
 	azureSpnRenamed := strings.ReplaceAll(azureSpn, `"SPN `, `"SPN Renamed `)
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: azureSpn,
-	}, step{
+	}, Step{
 		Template: azureSpnRenamed,
 	})
 }
@@ -113,9 +113,9 @@ func TestAccServicePrincipalResourceOnAzure(t *testing.T) {
 func TestMwsAccServicePrincipalResourceOnAws(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET")
 	awsSpnRenamed := strings.ReplaceAll(awsSpn, `"SPN `, `"SPN Renamed `)
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: awsSpn,
-	}, step{
+	}, Step{
 		Template: awsSpnRenamed,
 	})
 }
@@ -123,9 +123,9 @@ func TestMwsAccServicePrincipalResourceOnAws(t *testing.T) {
 func TestAccServicePrincipalResourceOnAws(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
 	awsSpnRenamed := strings.ReplaceAll(awsSpn, `"SPN `, `"SPN Renamed `)
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: awsSpn,
-	}, step{
+	}, Step{
 		Template: awsSpnRenamed,
 	})
 }

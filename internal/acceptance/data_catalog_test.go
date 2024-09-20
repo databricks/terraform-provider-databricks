@@ -3,12 +3,12 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUcAccDataSourceCatalog(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name         = "sandbox{var.RANDOM}"

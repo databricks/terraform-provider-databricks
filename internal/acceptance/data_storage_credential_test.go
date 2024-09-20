@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +20,7 @@ func checkStorageCredentialDataSourcePopulated(t *testing.T) func(s *terraform.S
 	}
 }
 func TestUcAccDataSourceStorageCredential(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_storage_credential" "external" {
 			name = "cred-{var.RANDOM}"

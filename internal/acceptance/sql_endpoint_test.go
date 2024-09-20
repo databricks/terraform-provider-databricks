@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAccSQLEndpoint(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_sql_endpoint" "this" {
 			name = "tf-{var.RANDOM}"
@@ -25,7 +25,7 @@ func TestAccSQLEndpoint(t *testing.T) {
 				}
 			}
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_sql_endpoint" "that" {
 			name = "tf-{var.RANDOM}"

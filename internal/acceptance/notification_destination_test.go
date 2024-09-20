@@ -7,7 +7,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func checkND(t *testing.T, display_name string, config_type settings.Destination
 
 func TestAccNDEmail(t *testing.T) {
 	display_name := "Email Notification Destination - " + qa.RandomName()
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -44,7 +44,7 @@ func TestAccNDEmail(t *testing.T) {
 			}
 		}
 		`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -61,7 +61,7 @@ func TestAccNDEmail(t *testing.T) {
 
 func TestAccNDSlack(t *testing.T) {
 	display_name := "Notification Destination - " + qa.RandomName()
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -73,7 +73,7 @@ func TestAccNDSlack(t *testing.T) {
 		}
 		`,
 		Check: checkND(t, display_name, settings.DestinationTypeSlack),
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -90,7 +90,7 @@ func TestAccNDSlack(t *testing.T) {
 
 func TestAccNDMicrosoftTeams(t *testing.T) {
 	display_name := "Notification Destination - " + qa.RandomName()
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -101,7 +101,7 @@ func TestAccNDMicrosoftTeams(t *testing.T) {
 			}
 		}
 		`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -118,7 +118,7 @@ func TestAccNDMicrosoftTeams(t *testing.T) {
 
 func TestAccNDPagerduty(t *testing.T) {
 	display_name := "Notification Destination - " + qa.RandomName()
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -129,7 +129,7 @@ func TestAccNDPagerduty(t *testing.T) {
 			}
 		}
 		`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -146,7 +146,7 @@ func TestAccNDPagerduty(t *testing.T) {
 
 func TestAccNDGenericWebhook(t *testing.T) {
 	display_name := "Notification Destination - " + qa.RandomName()
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -158,7 +158,7 @@ func TestAccNDGenericWebhook(t *testing.T) {
 			}
 		}
 		`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -176,7 +176,7 @@ func TestAccNDGenericWebhook(t *testing.T) {
 
 func TestAccConfigTypeChange(t *testing.T) {
 	display_name := "Notification Destination - " + qa.RandomName()
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"
@@ -188,7 +188,7 @@ func TestAccConfigTypeChange(t *testing.T) {
 		}
 		`,
 		Check: checkND(t, display_name, settings.DestinationTypeSlack),
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_notification_destination" "this" {
 			display_name = "` + display_name + `"

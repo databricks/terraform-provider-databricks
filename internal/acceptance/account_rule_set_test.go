@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -32,7 +32,7 @@ func getServicePrincipalResource(t *testing.T) string {
 func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
 	loadAccountEnv(t)
 	spResource := getServicePrincipalResource(t)
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: spResource + `
 		resource "databricks_group" "this" {
 			display_name = "Group {var.RANDOM}"
@@ -69,7 +69,7 @@ func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
 
 func TestMwsAccAccountGroupRuleSetsFullLifeCycle(t *testing.T) {
 	username := qa.RandomEmail()
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_user" "this" {
 			user_name = "` + username + `"

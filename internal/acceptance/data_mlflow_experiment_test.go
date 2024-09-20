@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccDataSourceMlflowExperiment(t *testing.T) {
-	workspaceLevel(t,
-		step{
+	WorkspaceLevel(t,
+		Step{
 			Template: `
 				data "databricks_current_user" "me" {}
 
@@ -19,7 +19,7 @@ func TestAccDataSourceMlflowExperiment(t *testing.T) {
 				  description       = "My MLflow experiment description"
 				}`,
 		},
-		step{
+		Step{
 			Template: `
 				data "databricks_current_user" "me" {}
 
@@ -51,7 +51,7 @@ func TestAccDataSourceMlflowExperiment(t *testing.T) {
 				return nil
 			},
 		},
-		step{
+		Step{
 			Template: `
 				data "databricks_current_user" "me" {}
 

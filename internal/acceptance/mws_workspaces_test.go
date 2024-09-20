@@ -11,16 +11,18 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/provider"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/tokens"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMwsAccWorkspaces(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_credentials" "this" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -74,7 +76,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_credentials" "this" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -134,7 +136,7 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 				return nil
 			}),
 	},
-		step{
+		Step{
 			Template: `
 		resource "databricks_mws_credentials" "this" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -197,7 +199,7 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 }
 
 func TestMwsAccGcpWorkspaces(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -216,7 +218,7 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 	t.Skip()
 	// FIXME: flaky with `Secondary IP range (pods, svc) is already in use by another GKE cluster`
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_networks" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -253,7 +255,7 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpPscWorkspaces(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_networks" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -367,25 +369,25 @@ func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 		`
 
 	var pr *schema.Provider
-	providerFactory := map[string]func() (*schema.Provider, error){
-		"databricks": func() (*schema.Provider, error) {
-			return pr, nil
+	providerFactory := map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(pr))
 		},
 	}
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
 		Check: func(s *terraform.State) error {
 			spId := s.RootModule().Resources["databricks_service_principal.this"].Primary.ID
 			spAppId := s.RootModule().Resources["databricks_service_principal.this"].Primary.Attributes["application_id"]
 			spSecret := s.RootModule().Resources["databricks_service_principal_secret.this"].Primary.Attributes["secret"]
-			pr = provider.DatabricksProvider()
+			pr = sdkv2.DatabricksProvider()
 			rd := schema.TestResourceDataRaw(t, pr.Schema, map[string]interface{}{
 				"client_id":     spAppId,
 				"client_secret": spSecret,
 			})
 			fmt.Printf("client_id: %s, client_secret: %s\n", spAppId, spSecret)
 			pr.ConfigureContextFunc = func(ctx context.Context, c *schema.ResourceData) (interface{}, diag.Diagnostics) {
-				return provider.ConfigureDatabricksClient(ctx, rd)
+				return sdkv2.ConfigureDatabricksClient(ctx, rd)
 			}
 			logger.DefaultLogger = &logger.SimpleLogger{
 				Level: logger.LevelDebug,
@@ -410,20 +412,20 @@ func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 			}
 			return nil
 		},
-	}, step{
+	}, Step{
 		// Tolerate existing token
-		Template:          workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
-		ProviderFactories: providerFactory,
-	}, step{
+		Template:                 workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
+	}, Step{
 		// Allow the token to be removed
-		Template:          workspaceTemplate(``) + servicePrincipal,
-		ProviderFactories: providerFactory,
-	}, step{
+		Template:                 workspaceTemplate(``) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
+	}, Step{
 		// Fail when adding the token back
-		Template:          workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
-		ProviderFactories: providerFactory,
-		ExpectError:       regexp.MustCompile(`cannot create token: the principal used by Databricks \(client ID .*\) is not authorized to create a token in this workspace`),
-	}, step{
+		Template:                 workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
+		ExpectError:              regexp.MustCompile(`cannot create token: the principal used by Databricks \(client ID .*\) is not authorized to create a token in this workspace`),
+	}, Step{
 		// Use the original provider for a final step to clean up the newly created service principal
 		Template: workspaceTemplate(``) + servicePrincipal,
 	})

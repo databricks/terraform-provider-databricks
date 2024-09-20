@@ -212,3 +212,7 @@ There could be different reasons for this error:
 - Old version of Terraform provider is used - there were [problems reported](https://github.com/databricks/terraform-provider-databricks/issues/3023) with versions lower than 1.35.0, so try to upgrade your provider.
 - You use multiple provider instances in your code and don't specify that specific instance in your resource or data source - in this case, Terraform will try to use "default instance" that could be initialized from the `DEFAULT` profile in your `~/.databrickscfg` file if you have it.  Check that correct provider instance is used everywhere.
 - If you're using authentication data from `~/.databrickscfg` file, check that profile you're using has correct data - URL, client ID and secret.
+
+### Provider "registry.terraform.io/databricks/databricks" planned an invalid value for ...: planned value ... for a non-computed attribute.
+
+Starting with version v1.51.0, the Terraform provider for Databricks supports `terraform` versions 1.1.5 and later. Older versions of `terraform`, such as v0.15.5, are known to erroneously generate this error. Check the version of `terraform` that you're using by running `terraform version` and upgrade it if necessary.

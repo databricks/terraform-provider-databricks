@@ -8,7 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 		}
 	}
 	`
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: template,
 		Check: resourceCheckWithState("databricks_default_namespace_setting.this",
 			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
@@ -39,7 +39,7 @@ func TestAccDefaultNamespaceSetting(t *testing.T) {
 				return nil
 			}),
 	},
-		step{
+		Step{
 			Template: template,
 			Destroy:  true,
 			Check: resourceCheck("databricks_default_namespace_setting.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {

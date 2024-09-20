@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_workspace_binding Resource
 
--> **Note** This resource could be only used with workspace-level provider!
+-> **Note** This resource can only be used with a workspace-level provider!
 
 If you use workspaces to isolate user data access, you may want to limit access to catalog, external locations or storage credentials from specific workspaces in your account, also known as workspace binding
 
@@ -43,5 +43,5 @@ The following arguments are required:
 This resource can be imported by using combination of workspace ID, securable type and name:
 
 ```sh
-terraform import databricks_catalog_workspace_binding.this "<workspace_id>|<securable_type>|<securable_name>"
+terraform import databricks_workspace_binding.this "<workspace_id>|<securable_type>|<securable_name>"
 ```

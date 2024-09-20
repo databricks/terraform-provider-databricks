@@ -42,13 +42,13 @@ type resourcePermissions struct {
 
 	// The alternative name of the "path" attribute for this resource. E.g. "workspace_file_path" for a file.
 	// If not set, default is "<object_type>_path".
-	pathVariant          string
+	pathVariant string
 	// Customizers when handling create & update requests
 	updateAclCustomizers []aclUpdateCustomizer
 	// Customizers when handling delete requests
 	deleteAclCustomizers []aclUpdateCustomizer
 	// Customizers when handling read requests
-	readAclCustomizers   []aclReadCustomizer
+	readAclCustomizers []aclReadCustomizer
 
 	// Returns the creator of the object. Used when deleting databricks_permissions resources, when the
 	// creator of the object is restored as the owner.

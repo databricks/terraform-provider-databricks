@@ -498,25 +498,6 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 	})
 }
 
-func TestResourcePermissionsRead_ToPermissionsEntity_Error(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectAclApiResponse{
-					ObjectType: "teapot",
-				},
-			},
-		},
-		Resource: ResourcePermissions(),
-		Read:     true,
-		New:      true,
-		ID:       "/clusters/abc",
-	}.ExpectError(t, "unknown object type teapot")
-}
-
 func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

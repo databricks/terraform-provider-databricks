@@ -10,7 +10,7 @@ import (
 func TestAccDataSourceDataUsers(t *testing.T) {
 	accountLevel(t, step{
 		Template: `
-		data "databricks_data_users" "this" {
+		data "databricks_users" "this" {
 			display_name_contains = "testuser"
 		}`,
 		Check: func(s *terraform.State) error {

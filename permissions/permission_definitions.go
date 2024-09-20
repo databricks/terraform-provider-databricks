@@ -11,17 +11,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-type aclUpdateCustomizerContext struct {
-	getCurrentUser func() (string, error)
-	getId          func() string
-}
-type aclUpdateCustomizer func(ctx aclUpdateCustomizerContext, objectAcls []AccessControlChangeApiRequest) ([]AccessControlChangeApiRequest, error)
-
-type aclReadCustomizerContext struct {
-	getId func() string
-}
-type aclReadCustomizer func(ctx aclReadCustomizerContext, objectAcls ObjectAclApiResponse) (ObjectAclApiResponse, error)
-
 // resourcePermissions captures all the information needed to manage permissions for a given object type.
 type resourcePermissions struct {
 	// Mandatory Fields
@@ -54,8 +43,11 @@ type resourcePermissions struct {
 	// The alternative name of the "path" attribute for this resource. E.g. "workspace_file_path" for a file.
 	// If not set, default is "<object_type>_path".
 	pathVariant          string
+	// Customizers when handling create & update requests
 	updateAclCustomizers []aclUpdateCustomizer
+	// Customizers when handling delete requests
 	deleteAclCustomizers []aclUpdateCustomizer
+	// Customizers when handling read requests
 	readAclCustomizers   []aclReadCustomizer
 
 	// Returns the creator of the object. Used when deleting databricks_permissions resources, when the
@@ -135,11 +127,11 @@ func (p resourcePermissions) isTypeOf(objectID string) bool {
 // validate checks that the user is not trying to set permissions for the admin group or remove their own management permissions.
 func (p resourcePermissions) validate(changes []AccessControlChangeApiRequest, currentUsername string) error {
 	for _, change := range changes {
-		// Check if the user is trying to set permissions for the admin group
+		// Check if the user is trying to set permissions for the admin group outside of the tokens/passwords permissions.
 		if change.GroupName == "admins" && p.field != "authorization" {
 			return fmt.Errorf("it is not possible to modify admin permissions for %s resources", p.objectType)
 		}
-		// Check that the user is not preventing themselves from managing the object
+		// Check that the user is preventing themselves from managing the object
 		if (change.UserName == currentUsername || change.ServicePrincipalName == currentUsername) && !p.allowedPermissionLevels[change.PermissionLevel].isManagementPermission {
 			allowedLevelsForCurrentUser := p.getAllowedPermissionLevels(false)
 			return fmt.Errorf("cannot remove management permissions for the current user for %s, allowed levels: %s", p.objectType, strings.Join(allowedLevelsForCurrentUser, ", "))
@@ -160,6 +152,7 @@ func (p resourcePermissions) getID(ctx context.Context, w *databricks.WorkspaceC
 	return fmt.Sprintf("/%s/%s", p.resourceType, id), nil
 }
 
+// prepareForUpdate prepares the access control list for an update request by calling all update customizers.
 func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []AccessControlChangeApiRequest, currentUser string) ([]AccessControlChangeApiRequest, error) {
 	cachedCurrentUser := func() (string, error) { return currentUser, nil }
 	ctx := aclUpdateCustomizerContext{
@@ -176,6 +169,7 @@ func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []Acces
 	return objectACL, nil
 }
 
+// prepareForDelete prepares the access control list for a delete request by calling all delete customizers.
 func (p resourcePermissions) prepareForDelete(objectACL ObjectAclApiResponse, getCurrentUser func() (string, error)) ([]AccessControlChangeApiRequest, error) {
 	accl := make([]AccessControlChangeApiRequest, 0, len(objectACL.AccessControlList))
 	for _, acl := range objectACL.AccessControlList {
@@ -202,6 +196,7 @@ func (p resourcePermissions) prepareForDelete(objectACL ObjectAclApiResponse, ge
 	return accl, nil
 }
 
+// prepareResponse prepares the access control list for a read response by calling all read customizers.
 func (p resourcePermissions) prepareResponse(objectID string, objectACL ObjectAclApiResponse) (ObjectAclApiResponse, error) {
 	ctx := aclReadCustomizerContext{
 		getId: func() string { return objectID },
@@ -216,6 +211,7 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL ObjectAc
 	return objectACL, nil
 }
 
+// addOwnerPermissionIfNeeded adds the owner permission to the object ACL if the owner permission is allowed and not already set.
 func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []AccessControlChangeApiRequest, ownerOpt string) []AccessControlChangeApiRequest {
 	_, ok := p.allowedPermissionLevels["IS_OWNER"]
 	if !ok {
@@ -244,6 +240,7 @@ type permissionLevelOptions struct {
 	isManagementPermission bool
 }
 
+// getResourcePermissions returns the resourcePermissions for the given object ID.
 func getResourcePermissions(objectId string) (resourcePermissions, error) {
 	objectParts := strings.Split(objectId, "/")
 	objectType := strings.Join(objectParts[1:len(objectParts)-1], "/")
@@ -255,6 +252,7 @@ func getResourcePermissions(objectId string) (resourcePermissions, error) {
 	return resourcePermissions{}, fmt.Errorf("no permissions resource found for object type %s", objectType)
 }
 
+// getResourcePermissionsFromState returns the resourcePermissions for the given state.
 func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (resourcePermissions, string, error) {
 	allPermissions := allResourcePermissions()
 	for _, mapping := range allPermissions {
@@ -275,6 +273,7 @@ func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (
 	return resourcePermissions{}, "", fmt.Errorf("at least one type of resource identifier must be set; allowed fields: %s", strings.Join(allFields, ", "))
 }
 
+// getResourcePermissionsForObjectAcl returns the resourcePermissions for the given ObjectAclApiResponse.
 func getResourcePermissionsForObjectAcl(objectACL ObjectAclApiResponse) (resourcePermissions, string, error) {
 	for _, mapping := range allResourcePermissions() {
 		if mapping.objectType == objectACL.ObjectType && mapping.isTypeOf(objectACL.ObjectID) {

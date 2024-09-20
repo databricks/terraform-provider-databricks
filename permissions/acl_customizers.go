@@ -2,6 +2,25 @@ package permissions
 
 import "github.com/databricks/terraform-provider-databricks/common"
 
+// Context that is available to aclUpdateCustomizer implementations.
+type aclUpdateCustomizerContext struct {
+	getCurrentUser func() (string, error)
+	getId          func() string
+}
+
+// aclUpdateCustomizer is a function that modifies the access control list of an object before it is updated.
+type aclUpdateCustomizer func(ctx aclUpdateCustomizerContext, objectAcls []AccessControlChangeApiRequest) ([]AccessControlChangeApiRequest, error)
+
+// Context that is available to aclReadCustomizer implementations.
+type aclReadCustomizerContext struct {
+	getId func() string
+}
+
+// aclReadCustomizer is a function that modifies the access control list of an object after it is read.
+type aclReadCustomizer func(ctx aclReadCustomizerContext, objectAcls ObjectAclApiResponse) (ObjectAclApiResponse, error)
+
+// addAdminAclCustomizer adds an explicit CAN_MANAGE permission for the 'admins' group if explicitAdminPermissionCheck returns true
+// for the provided object ID.
 func addAdminAclCustomizer(explicitAdminPermissionCheck func(string) bool) aclUpdateCustomizer {
 	return func(ctx aclUpdateCustomizerContext, acl []AccessControlChangeApiRequest) ([]AccessControlChangeApiRequest, error) {
 		if explicitAdminPermissionCheck(ctx.getId()) {
@@ -44,6 +63,10 @@ func addCurrentUserAsManageCustomizer(ctx aclUpdateCustomizerContext, acl []Acce
 	return acl, nil
 }
 
+// Copies the username to service principal name if the username is a UUID.
+// The SQL permissions API only accepts usernames and determines on the backend if the provided username
+// is actually a service principal ID. The API puts service principal IDs in the username field, so we need
+// to copy the ID to the service_principal_name field when handling the response.
 func copyUserToServicePrincipalCustomizer(ctx aclReadCustomizerContext, objectAcls ObjectAclApiResponse) (ObjectAclApiResponse, error) {
 	for i, acl := range objectAcls.AccessControlList {
 		// If the username is a UUID, it's probably a service principal.
@@ -55,6 +78,10 @@ func copyUserToServicePrincipalCustomizer(ctx aclReadCustomizerContext, objectAc
 	return objectAcls, nil
 }
 
+// Copies the username to service principal name if the username is a UUID.
+// The SQL permissions API only accepts usernames and determines on the backend if the provided username
+// is actually a service principal ID. Users may still specify service_principal_id directly, so we need
+// to copy the ID to the user_name field before making a request.
 func copyServicePrincipalToUserCustomizer(ctx aclUpdateCustomizerContext, objectAcls []AccessControlChangeApiRequest) ([]AccessControlChangeApiRequest, error) {
 	acl := make([]AccessControlChangeApiRequest, 0, len(objectAcls))
 	for _, change := range objectAcls {

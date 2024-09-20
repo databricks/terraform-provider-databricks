@@ -9,7 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-func DataSourceDataUsers() common.Resource {
+func DataSourceUsers() common.Resource {
 
 	type UserInfo struct {
 		Id          string `json:"id,omitempty" tf:"computed"`

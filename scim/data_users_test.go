@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestDataSourceDataUsers_DisplayNameContains(t *testing.T) {
+func TestDataSourceUsers_DisplayNameContains(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
 			e := m.GetMockAccountUsersAPI()
@@ -32,7 +32,7 @@ func TestDataSourceDataUsers_DisplayNameContains(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:    DataSourceDataUsers(),
+		Resource:    DataSourceUsers(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -50,7 +50,7 @@ func TestDataSourceDataUsers_DisplayNameContains(t *testing.T) {
 	})
 }
 
-func TestDataSourceDataUsers_UserNameContains(t *testing.T) {
+func TestDataSourceUsers_UserNameContains(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
 			e := m.GetMockAccountUsersAPI()
@@ -72,7 +72,7 @@ func TestDataSourceDataUsers_UserNameContains(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:    DataSourceDataUsers(),
+		Resource:    DataSourceUsers(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -90,9 +90,9 @@ func TestDataSourceDataUsers_UserNameContains(t *testing.T) {
 	})
 }
 
-func TestDataSourceDataUsers_BothFiltersSpecified(t *testing.T) {
+func TestDataSourceUsers_BothFiltersSpecified(t *testing.T) {
 	qa.ResourceFixture{
-		Resource:    DataSourceDataUsers(),
+		Resource:    DataSourceUsers(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -103,7 +103,7 @@ func TestDataSourceDataUsers_BothFiltersSpecified(t *testing.T) {
 	}.ExpectError(t, "exactly one of display_name_contains or user_name_contains should be specified, not both")
 }
 
-func TestDataSourceDataUsersNoUsers(t *testing.T) {
+func TestDataSourceUsersNoUsers(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
 			e := m.GetMockAccountUsersAPI()
@@ -114,7 +114,7 @@ func TestDataSourceDataUsersNoUsers(t *testing.T) {
 						req.Attributes == "id,userName,displayName"
 				})).Return([]iam.User{}, nil)
 		},
-		Resource:    DataSourceDataUsers(),
+		Resource:    DataSourceUsers(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -124,7 +124,7 @@ func TestDataSourceDataUsersNoUsers(t *testing.T) {
 	}.ExpectError(t, "cannot find users with display name containing testuser")
 }
 
-func TestDataSourceDataUsersNoFilter(t *testing.T) {
+func TestDataSourceUsersNoFilter(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
 			e := m.GetMockAccountUsersAPI()
@@ -150,7 +150,7 @@ func TestDataSourceDataUsersNoFilter(t *testing.T) {
 				},
 			}, nil)
 		},
-		Resource:    DataSourceDataUsers(),
+		Resource:    DataSourceUsers(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
@@ -168,7 +168,7 @@ func TestDataSourceDataUsersNoFilter(t *testing.T) {
 	})
 }
 
-func TestDataSourceDataUsers_APIError(t *testing.T) {
+func TestDataSourceUsers_APIError(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
 			usersAPI := m.GetMockAccountUsersAPI()
@@ -177,7 +177,7 @@ func TestDataSourceDataUsers_APIError(t *testing.T) {
 				mock.Anything,
 			).Return(nil, fmt.Errorf("api error"))
 		},
-		Resource:    DataSourceDataUsers(),
+		Resource:    DataSourceUsers(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",

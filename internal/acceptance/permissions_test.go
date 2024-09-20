@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -20,6 +21,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func getId(id string) string {
+	idParts := strings.Split(id, "/")
+	return idParts[len(idParts)-1]
+}
 
 func TestAccPermissions_Notebook(t *testing.T) {
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -47,8 +53,8 @@ func TestAccPermissions_Notebook(t *testing.T) {
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
 					w := databricks.Must(databricks.NewWorkspaceClient())
 					permissions, err := w.Workspace.GetPermissions(ctx, workspace.GetWorkspaceObjectPermissionsRequest{
-						WorkspaceObjectId:   id,
-						WorkspaceObjectType: "notebook",
+						WorkspaceObjectId:   getId(id),
+						WorkspaceObjectType: "notebooks",
 					})
 					if err != nil {
 						return err
@@ -85,7 +91,7 @@ func TestAccPermissions_Notebook(t *testing.T) {
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
 				w := databricks.Must(databricks.NewWorkspaceClient())
 				permissions, err := w.Workspace.GetPermissions(ctx, workspace.GetWorkspaceObjectPermissionsRequest{
-					WorkspaceObjectId:   id,
+					WorkspaceObjectId:   getId(id),
 					WorkspaceObjectType: "notebook",
 				})
 				if err != nil {
@@ -129,7 +135,7 @@ func TestAccPermissions_Repo(t *testing.T) {
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
 					w := databricks.Must(databricks.NewWorkspaceClient())
 					permissions, err := w.Repos.GetPermissions(ctx, workspace.GetRepoPermissionsRequest{
-						RepoId: id,
+						RepoId: getId(id),
 					})
 					if err != nil {
 						return err
@@ -486,11 +492,9 @@ resource "databricks_pipeline" "this" {
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for pipelines, allowed levels: CAN_MANAGE, IS_OWNER"),
 	}, Step{
 		Template: policyTemplate,
-		Check: func(s *terraform.State) error {
-			pipelineState, ok := s.RootModule().Resources["databricks_pipeline.this"]
-			require.True(t, ok)
-			w := databricks.Must(databricks.NewWorkspaceClient())
-			id := pipelineState.Primary.ID
+		Check: resourceCheck("databricks_pipeline.this", func(ctx context.Context, c *common.DatabricksClient, id string) error {
+			w, err := c.WorkspaceClient()
+			assert.NoError(t, err)
 			pipeline, err := w.Pipelines.GetByPipelineId(context.Background(), id)
 			assert.NoError(t, err)
 			permissions, err := w.Pipelines.GetPermissionsByPipelineId(context.Background(), id)
@@ -507,7 +511,7 @@ resource "databricks_pipeline" "this" {
 				assert.Fail(t, "pipeline creator not found in permissions")
 			}
 			return nil
-		},
+		}),
 	})
 }
 
@@ -673,11 +677,9 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for warehouses, allowed levels: CAN_MANAGE, IS_OWNER"),
 	}, Step{
 		Template: sqlWarehouseTemplate,
-		Check: func(s *terraform.State) error {
-			warehouseState, ok := s.RootModule().Resources["databricks_sql_endpoint.this"]
-			require.True(t, ok)
-			w := databricks.Must(databricks.NewWorkspaceClient())
-			id := warehouseState.Primary.ID
+		Check: resourceCheck("databricks_sql_endpoint.this", func(ctx context.Context, c *common.DatabricksClient, id string) error {
+			w, err := c.WorkspaceClient()
+			assert.NoError(t, err)
 			warehouse, err := w.Warehouses.GetById(context.Background(), id)
 			assert.NoError(t, err)
 			permissions, err := w.Warehouses.GetPermissionsByWarehouseId(context.Background(), id)
@@ -694,7 +696,7 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 				assert.Fail(t, "pipeline creator not found in permissions")
 			}
 			return nil
-		},
+		}),
 	})
 }
 

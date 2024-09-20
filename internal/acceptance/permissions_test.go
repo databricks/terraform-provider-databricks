@@ -7,11 +7,10 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
-	"github.com/databricks/databricks-sdk-go/client"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/permissions"
 
@@ -46,7 +45,11 @@ func TestAccPermissions_Notebook(t *testing.T) {
 				"object_type", "notebook"),
 			resourceCheck("databricks_permissions.dummy",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
+					w := databricks.Must(databricks.NewWorkspaceClient())
+					permissions, err := w.Workspace.GetPermissions(ctx, workspace.GetWorkspaceObjectPermissionsRequest{
+						WorkspaceObjectId:   id,
+						WorkspaceObjectType: "notebook",
+					})
 					if err != nil {
 						return err
 					}
@@ -80,7 +83,11 @@ func TestAccPermissions_Notebook(t *testing.T) {
 		}`, randomName),
 		Check: resourceCheck("databricks_permissions.dummy",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
-				permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
+				w := databricks.Must(databricks.NewWorkspaceClient())
+				permissions, err := w.Workspace.GetPermissions(ctx, workspace.GetWorkspaceObjectPermissionsRequest{
+					WorkspaceObjectId:   id,
+					WorkspaceObjectType: "notebook",
+				})
 				if err != nil {
 					return err
 				}
@@ -120,7 +127,10 @@ func TestAccPermissions_Repo(t *testing.T) {
 				"object_type", "repo"),
 			resourceCheck("databricks_permissions.dummy",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					permissions, err := permissions.NewPermissionsAPI(ctx, client).Read(id)
+					w := databricks.Must(databricks.NewWorkspaceClient())
+					permissions, err := w.Repos.GetPermissions(ctx, workspace.GetRepoPermissionsRequest{
+						RepoId: id,
+					})
 					if err != nil {
 						return err
 					}
@@ -135,11 +145,6 @@ func TestAccPermissions_SqlWarehouse(t *testing.T) {
 	// Random string to annotate newly created groups
 	randomName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
-	// Create a client to query the permissions API
-	c, err := client.New(&config.Config{})
-	require.NoError(t, err)
-	permissionsClient := permissions.NewPermissionsAPI(context.Background(), &common.DatabricksClient{DatabricksClient: c})
-
 	// Validates export attribute "object_type" for the permissions resource
 	// is set to warehouses
 	checkObjectType := resource.TestCheckResourceAttr("databricks_permissions.this",
@@ -148,7 +153,8 @@ func TestAccPermissions_SqlWarehouse(t *testing.T) {
 	// Asserts value of a permission level for a group
 	assertPermissionLevel := func(t *testing.T, permissionId, groupName, permissionLevel string) {
 		// Query permissions on warehouse
-		warehousePermissions, err := permissionsClient.Read(permissionId)
+		w := databricks.Must(databricks.NewWorkspaceClient())
+		warehousePermissions, err := w.Warehouses.GetPermissionsByWarehouseId(context.Background(), permissionId)
 		require.NoError(t, err)
 
 		// Assert expected permission level is present

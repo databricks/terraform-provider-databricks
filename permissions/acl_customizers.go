@@ -1,6 +1,8 @@
 package permissions
 
-import "github.com/databricks/terraform-provider-databricks/common"
+import (
+	"github.com/databricks/databricks-sdk-go/service/iam"
+)
 
 // Context that is available to aclUpdateCustomizer implementations.
 type aclUpdateCustomizerContext struct {
@@ -9,7 +11,7 @@ type aclUpdateCustomizerContext struct {
 }
 
 // aclUpdateCustomizer is a function that modifies the access control list of an object before it is updated.
-type aclUpdateCustomizer func(ctx aclUpdateCustomizerContext, objectAcls []AccessControlChangeApiRequest) ([]AccessControlChangeApiRequest, error)
+type aclUpdateCustomizer func(ctx aclUpdateCustomizerContext, objectAcls []iam.AccessControlRequest) ([]iam.AccessControlRequest, error)
 
 // Context that is available to aclReadCustomizer implementations.
 type aclReadCustomizerContext struct {
@@ -17,15 +19,15 @@ type aclReadCustomizerContext struct {
 }
 
 // aclReadCustomizer is a function that modifies the access control list of an object after it is read.
-type aclReadCustomizer func(ctx aclReadCustomizerContext, objectAcls ObjectAclApiResponse) (ObjectAclApiResponse, error)
+type aclReadCustomizer func(ctx aclReadCustomizerContext, objectAcls *iam.ObjectPermissions) (*iam.ObjectPermissions, error)
 
 // addAdminAclCustomizer adds an explicit CAN_MANAGE permission for the 'admins' group if explicitAdminPermissionCheck returns true
 // for the provided object ID.
 func addAdminAclCustomizer(explicitAdminPermissionCheck func(string) bool) aclUpdateCustomizer {
-	return func(ctx aclUpdateCustomizerContext, acl []AccessControlChangeApiRequest) ([]AccessControlChangeApiRequest, error) {
+	return func(ctx aclUpdateCustomizerContext, acl []iam.AccessControlRequest) ([]iam.AccessControlRequest, error) {
 		if explicitAdminPermissionCheck(ctx.getId()) {
 			// Prevent "Cannot change permissions for group 'admins' to None."
-			acl = append(acl, AccessControlChangeApiRequest{
+			acl = append(acl, iam.AccessControlRequest{
 				GroupName:       "admins",
 				PermissionLevel: "CAN_MANAGE",
 			})
@@ -39,7 +41,7 @@ func addAdminAclCustomizer(explicitAdminPermissionCheck func(string) bool) aclUp
 // certain object types require that we explicitly grant the calling user CAN_MANAGE
 // permissions when POSTing permissions changes through the REST API, to avoid accidentally
 // revoking the calling user's ability to manage the current object.
-func addCurrentUserAsManageCustomizer(ctx aclUpdateCustomizerContext, acl []AccessControlChangeApiRequest) ([]AccessControlChangeApiRequest, error) {
+func addCurrentUserAsManageCustomizer(ctx aclUpdateCustomizerContext, acl []iam.AccessControlRequest) ([]iam.AccessControlRequest, error) {
 	currentUser, err := ctx.getCurrentUser()
 	if err != nil {
 		return nil, err
@@ -55,7 +57,7 @@ func addCurrentUserAsManageCustomizer(ctx aclUpdateCustomizerContext, acl []Acce
 		}
 	}
 	if !found {
-		acl = append(acl, AccessControlChangeApiRequest{
+		acl = append(acl, iam.AccessControlRequest{
 			UserName:        currentUser,
 			PermissionLevel: "CAN_MANAGE",
 		})
@@ -63,36 +65,14 @@ func addCurrentUserAsManageCustomizer(ctx aclUpdateCustomizerContext, acl []Acce
 	return acl, nil
 }
 
-// Copies the username to service principal name if the username is a UUID.
-// The SQL permissions API only accepts usernames and determines on the backend if the provided username
-// is actually a service principal ID. The API puts service principal IDs in the username field, so we need
-// to copy the ID to the service_principal_name field when handling the response.
-func copyUserToServicePrincipalCustomizer(ctx aclReadCustomizerContext, objectAcls ObjectAclApiResponse) (ObjectAclApiResponse, error) {
-	for i, acl := range objectAcls.AccessControlList {
-		// If the username is a UUID, it's probably a service principal.
-		if common.StringIsUUID(acl.UserName) {
-			objectAcls.AccessControlList[i].ServicePrincipalName = acl.UserName
-			objectAcls.AccessControlList[i].UserName = ""
+func removeAdminPermissionsCustomizer(ctx aclReadCustomizerContext, acl *iam.ObjectPermissions) (*iam.ObjectPermissions, error) {
+	// Remove all permissions for the 'admins' group.
+	filteredAcl := make([]iam.AccessControlResponse, 0, len(acl.AccessControlList))
+	for _, a := range acl.AccessControlList {
+		if a.GroupName != "admins" {
+			filteredAcl = append(filteredAcl, a)
 		}
 	}
-	return objectAcls, nil
-}
-
-// Copies the username to service principal name if the username is a UUID.
-// The SQL permissions API only accepts usernames and determines on the backend if the provided username
-// is actually a service principal ID. Users may still specify service_principal_id directly, so we need
-// to copy the ID to the user_name field before making a request.
-func copyServicePrincipalToUserCustomizer(ctx aclUpdateCustomizerContext, objectAcls []AccessControlChangeApiRequest) ([]AccessControlChangeApiRequest, error) {
-	acl := make([]AccessControlChangeApiRequest, 0, len(objectAcls))
-	for _, change := range objectAcls {
-		if change.ServicePrincipalName != "" {
-			acl = append(acl, AccessControlChangeApiRequest{
-				UserName:        change.ServicePrincipalName,
-				PermissionLevel: change.PermissionLevel,
-			})
-		} else {
-			acl = append(acl, change)
-		}
-	}
+	acl.AccessControlList = filteredAcl
 	return acl, nil
 }

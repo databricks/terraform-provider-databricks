@@ -7,6 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -32,28 +33,6 @@ var (
 	}
 )
 
-func TestEntityAccessControlChangeString(t *testing.T) {
-	assert.Equal(t, "me CAN_READ", AccessControlChangeApiRequest{
-		UserName:        "me",
-		PermissionLevel: "CAN_READ",
-	}.String())
-}
-
-func TestEntityAccessControlString(t *testing.T) {
-	assert.Equal(t, "me[CAN_READ (from [parent]) CAN_MANAGE]", AccessControlApiResponse{
-		UserName: "me",
-		AllPermissions: []PermissionApiResponse{
-			{
-				InheritedFromObject: []string{"parent"},
-				PermissionLevel:     "CAN_READ",
-			},
-			{
-				PermissionLevel: "CAN_MANAGE",
-			},
-		},
-	}.String())
-}
-
 func TestResourcePermissionsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -61,13 +40,13 @@ func TestResourcePermissionsRead(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/clusters/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/clusters/abc",
 					ObjectType: "cluster",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_READ",
 									Inherited:       false,
@@ -76,7 +55,7 @@ func TestResourcePermissionsRead(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -132,17 +111,17 @@ func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/registered-models/fakeuuid123",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/registered-models/fakeuuid123",
 					ObjectType: "registered-model",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -169,8 +148,8 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_READ",
@@ -185,17 +164,17 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/registered-models/fakeuuid123",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/registered-models/fakeuuid123",
 					ObjectType: "registered-model",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -228,8 +207,8 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_READ",
@@ -244,17 +223,17 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/registered-models/fakeuuid123",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/registered-models/fakeuuid123",
 					ObjectType: "registered-model",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -292,17 +271,17 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/registered-models/fakeuuid123",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/registered-models/fakeuuid123",
 					ObjectType: "registered-model",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -310,8 +289,8 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingAdminUser,
 							PermissionLevel: "CAN_MANAGE",
@@ -335,17 +314,17 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "dashboards/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "dashboards/abc",
 					ObjectType: "dashboard",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -372,17 +351,17 @@ func TestResourcePermissionsRead_Dashboard(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/dashboards/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "dashboards/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "dashboards/abc",
 					ObjectType: "dashboard",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -463,13 +442,13 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 		{
 			Method:   http.MethodGet,
 			Resource: "/api/2.0/permissions/clusters/abc",
-			Response: ObjectAclApiResponse{
-				ObjectID:   "/clusters/abc",
+			Response: &iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
 				ObjectType: "clusters",
-				AccessControlList: []AccessControlApiResponse{
+				AccessControlList: []iam.AccessControlResponse{
 					{
 						UserName: TestingUser,
-						AllPermissions: []PermissionApiResponse{
+						AllPermissions: []iam.Permission{
 							{
 								PermissionLevel: "CAN_READ",
 								Inherited:       false,
@@ -505,7 +484,7 @@ func TestResourcePermissionsRead_ToPermissionsEntity_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectAclApiResponse{
+				Response: &iam.ObjectPermissions{
 					ObjectType: "teapot",
 				},
 			},
@@ -524,8 +503,8 @@ func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/clusters/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/clusters/abc",
 					ObjectType: "cluster",
 				},
 			},
@@ -547,13 +526,13 @@ func TestResourcePermissionsDelete(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/clusters/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/clusters/abc",
 					ObjectType: "clusters",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_READ",
 									Inherited:       false,
@@ -562,7 +541,7 @@ func TestResourcePermissionsDelete(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -575,8 +554,8 @@ func TestResourcePermissionsDelete(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingAdminUser,
 							PermissionLevel: "CAN_MANAGE",
@@ -600,13 +579,13 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/clusters/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/clusters/abc",
 					ObjectType: "clusters",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_READ",
 									Inherited:       false,
@@ -615,7 +594,7 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -628,8 +607,8 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingAdminUser,
 							PermissionLevel: "CAN_MANAGE",
@@ -710,8 +689,8 @@ func TestResourcePermissionsCreate(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_ATTACH_TO",
@@ -726,13 +705,13 @@ func TestResourcePermissionsCreate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/clusters/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/clusters/abc",
 					ObjectType: "cluster",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_ATTACH_TO",
 									Inherited:       false,
@@ -741,7 +720,7 @@ func TestResourcePermissionsCreate(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -779,8 +758,8 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_RUN",
@@ -795,17 +774,17 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "dashboards/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "dashboards/abc",
 					ObjectType: "dashboard",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRun}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -838,8 +817,8 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
@@ -858,21 +837,21 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "warehouses/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "warehouses/abc",
 					ObjectType: "warehouses",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "IS_OWNER",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -905,8 +884,8 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
@@ -930,8 +909,8 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_USE",
@@ -946,21 +925,21 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "warehouses/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "warehouses/abc",
 					ObjectType: "warehouses",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "IS_OWNER",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -993,8 +972,8 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 			{
 				Method:   "PUT",
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingOwner,
 							PermissionLevel: "IS_OWNER",
@@ -1013,21 +992,21 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "warehouses/abc",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "warehouses/abc",
 					ObjectType: "warehouses",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 						{
 							UserName:        TestingOwner,
-							PermissionLevel: "IS_OWNER",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 						},
 					},
 				},
@@ -1121,8 +1100,8 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/notebooks/988765",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_READ",
@@ -1133,13 +1112,13 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/notebooks/988765",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/notebooks/988765",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/notebooks/988765",
 					ObjectType: "notebook",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_READ",
 									Inherited:       false,
@@ -1148,7 +1127,7 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -1195,8 +1174,8 @@ func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/files/988765",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_READ",
@@ -1207,13 +1186,13 @@ func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/files/988765",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/files/988765",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/files/988765",
 					ObjectType: "file",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_READ",
 									Inherited:       false,
@@ -1222,7 +1201,7 @@ func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -1323,13 +1302,13 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/jobs/9",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/jobs/9",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/jobs/9",
 					ObjectType: "job",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_VIEW",
 									Inherited:       false,
@@ -1338,7 +1317,7 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -1351,8 +1330,8 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/jobs/9",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_VIEW",
@@ -1401,8 +1380,8 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 		{
 			Method:   "PUT",
 			Resource: "/api/2.0/permissions/authorization/tokens",
-			ExpectedRequest: AccessControlChangeListApiRequest{
-				AccessControlList: []AccessControlChangeApiRequest{
+			ExpectedRequest: iam.PermissionsRequest{
+				AccessControlList: []iam.AccessControlRequest{
 					{
 						UserName:        "me",
 						PermissionLevel: "CAN_MANAGE",
@@ -1417,7 +1396,7 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping, _ := getResourcePermissions("/authorization/tokens")
-		err := p.Update("/authorization/tokens", []AccessControlChangeApiRequest{
+		err := p.Update("/authorization/tokens", []iam.AccessControlRequest{
 			{
 				UserName:        "me",
 				PermissionLevel: "CAN_MANAGE",
@@ -1432,13 +1411,13 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/permissions/jobs/123",
-			Response: ObjectAclApiResponse{
-				ObjectID:   "/jobs/123",
+			Response: &iam.ObjectPermissions{
+				ObjectId:   "/jobs/123",
 				ObjectType: "job",
-				AccessControlList: []AccessControlApiResponse{
+				AccessControlList: []iam.AccessControlResponse{
 					{
 						GroupName: "admins",
-						AllPermissions: []PermissionApiResponse{
+						AllPermissions: []iam.Permission{
 							{
 								PermissionLevel: "CAN_DO_EVERYTHING",
 								Inherited:       true,
@@ -1462,15 +1441,15 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 		{
 			Method:   "PUT",
 			Resource: "/api/2.0/permissions/jobs/123",
-			ExpectedRequest: ObjectAclApiResponse{
-				AccessControlList: []AccessControlApiResponse{
+			ExpectedRequest: &iam.ObjectPermissions{
+				AccessControlList: []iam.AccessControlResponse{
 					{
 						GroupName:       "admins",
-						PermissionLevel: "CAN_MANAGE",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 					{
 						UserName:        "creator@example.com",
-						PermissionLevel: "IS_OWNER",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 					},
 				},
 			},
@@ -1488,13 +1467,13 @@ func TestShouldDeleteNonExistentJob(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/permissions/jobs/123",
-			Response: ObjectAclApiResponse{
-				ObjectID:   "/jobs/123",
+			Response: &iam.ObjectPermissions{
+				ObjectId:   "/jobs/123",
 				ObjectType: "job",
-				AccessControlList: []AccessControlApiResponse{
+				AccessControlList: []iam.AccessControlResponse{
 					{
 						GroupName: "admins",
-						AllPermissions: []PermissionApiResponse{
+						AllPermissions: []iam.Permission{
 							{
 								PermissionLevel: "CAN_DO_EVERYTHING",
 								Inherited:       true,
@@ -1531,13 +1510,13 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/permissions/pipelines/123",
-			Response: ObjectAclApiResponse{
-				ObjectID:   "/pipelines/123",
+			Response: &iam.ObjectPermissions{
+				ObjectId:   "/pipelines/123",
 				ObjectType: "pipeline",
-				AccessControlList: []AccessControlApiResponse{
+				AccessControlList: []iam.AccessControlResponse{
 					{
 						GroupName: "admins",
-						AllPermissions: []PermissionApiResponse{
+						AllPermissions: []iam.Permission{
 							{
 								PermissionLevel: "CAN_DO_EVERYTHING",
 								Inherited:       true,
@@ -1561,15 +1540,15 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 		{
 			Method:   "PUT",
 			Resource: "/api/2.0/permissions/pipelines/123",
-			ExpectedRequest: ObjectAclApiResponse{
-				AccessControlList: []AccessControlApiResponse{
+			ExpectedRequest: &iam.ObjectPermissions{
+				AccessControlList: []iam.AccessControlResponse{
 					{
 						GroupName:       "admins",
-						PermissionLevel: "CAN_MANAGE",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 					{
 						UserName:        "creator@example.com",
-						PermissionLevel: "IS_OWNER",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 					},
 				},
 			},
@@ -1593,23 +1572,6 @@ func TestPathPermissionsResourceIDFields(t *testing.T) {
 	require.NoError(t, err)
 	_, err = m.idRetriever(context.Background(), w, "x")
 	assert.ErrorContains(t, err, "cannot load path x")
-}
-
-func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
-	_, _, err := getResourcePermissionsForObjectAcl(ObjectAclApiResponse{
-		ObjectType: "bananas",
-		AccessControlList: []AccessControlApiResponse{
-			{
-				GroupName: "admins",
-			},
-		},
-	})
-	assert.EqualError(t, err, "unknown object type bananas")
-}
-
-func TestEntityAccessControlToAccessControlChange(t *testing.T) {
-	_, res := AccessControlApiResponse{}.toAccessControlChange()
-	assert.False(t, res)
 }
 
 func TestCornerCases(t *testing.T) {
@@ -1647,8 +1609,8 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/repos/988765",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_READ",
@@ -1659,13 +1621,13 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/repos/988765",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/repos/988765",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/repos/988765",
 					ObjectType: "repo",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_READ",
 									Inherited:       false,
@@ -1674,7 +1636,7 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_RUN",
 									Inherited:       false,
@@ -1683,7 +1645,7 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -1723,8 +1685,8 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_RUN",
@@ -1739,17 +1701,17 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "queries/id111",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "queries/id111",
 					ObjectType: "query",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRun}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -1783,8 +1745,8 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_RUN",
@@ -1799,17 +1761,17 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "queries/id111",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "queries/id111",
 					ObjectType: "query",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRun}},
 						},
 						{
 							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},
@@ -1853,8 +1815,8 @@ func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/directories/123456",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_READ",
@@ -1865,13 +1827,13 @@ func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/directories/123456",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/directories/123456",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/directories/123456",
 					ObjectType: "directory",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName: TestingUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_READ",
 									Inherited:       false,
@@ -1880,7 +1842,7 @@ func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_RUN",
 									Inherited:       false,
@@ -1889,7 +1851,7 @@ func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 						},
 						{
 							UserName: TestingAdminUser,
-							AllPermissions: []PermissionApiResponse{
+							AllPermissions: []iam.Permission{
 								{
 									PermissionLevel: "CAN_MANAGE",
 									Inherited:       false,
@@ -1928,8 +1890,8 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/authorization/passwords",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							GroupName:       "admins",
 							PermissionLevel: "CAN_USE",
@@ -1940,13 +1902,13 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/authorization/passwords",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/authorization/passwords",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/authorization/passwords",
 					ObjectType: "passwords",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							GroupName:       "admins",
-							PermissionLevel: "CAN_USE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 						},
 					},
 				},
@@ -1977,8 +1939,8 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.0/permissions/directories/0",
-				ExpectedRequest: AccessControlChangeListApiRequest{
-					AccessControlList: []AccessControlChangeApiRequest{
+				ExpectedRequest: iam.PermissionsRequest{
+					AccessControlList: []iam.AccessControlRequest{
 						{
 							UserName:        TestingUser,
 							PermissionLevel: "CAN_READ",
@@ -1993,17 +1955,17 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/permissions/directories/0",
-				Response: ObjectAclApiResponse{
-					ObjectID:   "/directories/0",
+				Response: &iam.ObjectPermissions{
+					ObjectId:   "/directories/0",
 					ObjectType: "directory",
-					AccessControlList: []AccessControlApiResponse{
+					AccessControlList: []iam.AccessControlResponse{
 						{
 							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
 							GroupName:       "admins",
-							PermissionLevel: "CAN_MANAGE",
+							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
 				},

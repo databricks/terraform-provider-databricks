@@ -4,34 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"path"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ObjectAclApiResponse is a structure to generically describe access control.
-// It represents the responses from the permissions APIs.
-type ObjectAclApiResponse struct {
-	ObjectID          string                     `json:"object_id,omitempty"`
-	ObjectType        string                     `json:"object_type,omitempty"`
-	AccessControlList []AccessControlApiResponse `json:"access_control_list"`
-}
-
-func (oa ObjectAclApiResponse) ToPermissionsEntity(d *schema.ResourceData, existing PermissionsEntity, me string, mapping resourcePermissions) (PermissionsEntity, error) {
-	if oa.ObjectType != mapping.objectType {
-		return PermissionsEntity{}, fmt.Errorf("expected object type %s, got %s", mapping.objectType, oa.ObjectType)
-	}
+func toPermissionsEntity(oa *iam.ObjectPermissions, d *schema.ResourceData, existing PermissionsEntity, me string, mapping resourcePermissions) (PermissionsEntity, error) {
 	entity := PermissionsEntity{}
 	for _, accessControl := range oa.AccessControlList {
-		if accessControl.GroupName == "admins" && mapping.field != "authorization" {
-			// Admin permissions are not included in the resource state.
-			continue
-		}
 		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
 			// If the user doesn't include an access_control block for themselves, do not include it in the state.
 			// On create/update, the provider will automatically include the current user in the access_control block
@@ -40,9 +25,12 @@ func (oa ObjectAclApiResponse) ToPermissionsEntity(d *schema.ResourceData, exist
 				continue
 			}
 		}
-		if change, direct := accessControl.toAccessControlChange(); direct {
-			entity.AccessControlList = append(entity.AccessControlList, change)
-		}
+		entity.AccessControlList = append(entity.AccessControlList, iam.AccessControlRequest{
+			GroupName:            accessControl.GroupName,
+			UserName:             accessControl.UserName,
+			ServicePrincipalName: accessControl.ServicePrincipalName,
+			PermissionLevel:      accessControl.AllPermissions[0].PermissionLevel,
+		})
 	}
 	entity.ObjectType = mapping.objectType
 	pathVariant := d.Get(mapping.getPathVariant())
@@ -50,80 +38,8 @@ func (oa ObjectAclApiResponse) ToPermissionsEntity(d *schema.ResourceData, exist
 		// we're not importing and it's a path... it's set, so let's not re-set it
 		return entity, nil
 	}
-	identifier := path.Base(oa.ObjectID)
+	identifier := path.Base(oa.ObjectId)
 	return entity, d.Set(mapping.field, identifier)
-}
-
-// AccessControlApiResponse is a structure to describe user/group permissions.
-type AccessControlApiResponse struct {
-	UserName             string                  `json:"user_name,omitempty"`
-	GroupName            string                  `json:"group_name,omitempty"`
-	ServicePrincipalName string                  `json:"service_principal_name,omitempty"`
-	AllPermissions       []PermissionApiResponse `json:"all_permissions,omitempty"`
-
-	// SQLA entities don't use the `all_permissions` nesting, but rather a simple
-	// top level string with the permission level when retrieving permissions.
-	PermissionLevel string `json:"permission_level,omitempty"`
-}
-
-func (ac AccessControlApiResponse) toAccessControlChange() (AccessControlChangeApiRequest, bool) {
-	for _, permission := range ac.AllPermissions {
-		if permission.Inherited {
-			continue
-		}
-		return AccessControlChangeApiRequest{
-			PermissionLevel:      permission.PermissionLevel,
-			UserName:             ac.UserName,
-			GroupName:            ac.GroupName,
-			ServicePrincipalName: ac.ServicePrincipalName,
-		}, true
-	}
-	if ac.PermissionLevel != "" {
-		return AccessControlChangeApiRequest{
-			PermissionLevel:      ac.PermissionLevel,
-			UserName:             ac.UserName,
-			GroupName:            ac.GroupName,
-			ServicePrincipalName: ac.ServicePrincipalName,
-		}, true
-	}
-	return AccessControlChangeApiRequest{}, false
-}
-
-func (ac AccessControlApiResponse) String() string {
-	return fmt.Sprintf("%s%s%s%v", ac.GroupName, ac.UserName, ac.ServicePrincipalName, ac.AllPermissions)
-}
-
-// PermissionApiResponse is a structure to describe permission level
-type PermissionApiResponse struct {
-	PermissionLevel     string   `json:"permission_level"`
-	Inherited           bool     `json:"inherited,omitempty"`
-	InheritedFromObject []string `json:"inherited_from_object,omitempty"`
-}
-
-func (p PermissionApiResponse) String() string {
-	if len(p.InheritedFromObject) > 0 {
-		return fmt.Sprintf("%s (from %s)", p.PermissionLevel, p.InheritedFromObject)
-	}
-	return p.PermissionLevel
-}
-
-// AccessControlChangeListApiRequest is wrapper around ACL changes for REST API
-// This is the structure expected by the REST API when changing permissions.
-type AccessControlChangeListApiRequest struct {
-	AccessControlList []AccessControlChangeApiRequest `json:"access_control_list"`
-}
-
-// AccessControlChangeApiRequest is API wrapper for changing permissions
-type AccessControlChangeApiRequest struct {
-	UserName             string `json:"user_name,omitempty"`
-	GroupName            string `json:"group_name,omitempty"`
-	ServicePrincipalName string `json:"service_principal_name,omitempty"`
-	PermissionLevel      string `json:"permission_level"`
-}
-
-func (acc AccessControlChangeApiRequest) String() string {
-	return fmt.Sprintf("%v%v%v %s", acc.UserName, acc.GroupName, acc.ServicePrincipalName,
-		acc.PermissionLevel)
 }
 
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
@@ -140,29 +56,27 @@ type PermissionsAPI struct {
 	context context.Context
 }
 
-// Helper function for applying permissions changes. Ensures that
-// we select the correct HTTP method based on the object type and preserve the calling
-// user's ability to manage the specified object when applying permissions changes.
-func (a PermissionsAPI) put(mapping resourcePermissions, objectID string, accessControlList []AccessControlChangeApiRequest) error {
-	req := AccessControlChangeListApiRequest{
-		AccessControlList: accessControlList,
-	}
-	urlPath := mapping.getRequestPath(objectID)
-	if mapping.usePost {
-		// SQLA entities use POST for permission updates.
-		return a.client.Post(a.context, urlPath, req, nil)
-	}
-	log.Printf("[DEBUG] PUT %s %v", objectID, req)
-	return a.client.Put(a.context, urlPath, req)
-}
-
 // safePutWithOwner is a workaround for the limitation where warehouse without owners cannot have IS_OWNER set
-func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []AccessControlChangeApiRequest, mapping resourcePermissions, ownerOpt string) error {
+func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []iam.AccessControlRequest, mapping resourcePermissions, ownerOpt string) error {
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return err
+	}
+	idParts := strings.Split(objectID, "/")
+	id := idParts[len(idParts)-1]
 	withOwner := mapping.addOwnerPermissionIfNeeded(objectACL, ownerOpt)
-	err := a.put(mapping, objectID, withOwner)
+	_, err = w.Permissions.Set(a.context, iam.PermissionsRequest{
+		RequestObjectId:   id,
+		RequestObjectType: mapping.resourceType,
+		AccessControlList: withOwner,
+	})
 	if err != nil {
 		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
-			return a.put(mapping, objectID, objectACL)
+			_, err = w.Permissions.Set(a.context, iam.PermissionsRequest{
+				RequestObjectId:   objectID,
+				RequestObjectType: mapping.resourceType,
+				AccessControlList: objectACL,
+			})
 		}
 		return err
 	}
@@ -182,7 +96,7 @@ func (a PermissionsAPI) getCurrentUser() (string, error) {
 }
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
-func (a PermissionsAPI) Update(objectID string, objectACL []AccessControlChangeApiRequest, mapping resourcePermissions) error {
+func (a PermissionsAPI) Update(objectID string, objectACL []iam.AccessControlRequest, mapping resourcePermissions) error {
 	currentUser, err := a.getCurrentUser()
 	if err != nil {
 		return err
@@ -229,8 +143,17 @@ func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) err
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
-func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions) (objectACL ObjectAclApiResponse, err error) {
-	err = a.client.Get(a.context, mapping.getRequestPath(objectID), nil, &objectACL)
+func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions) (objectACL *iam.ObjectPermissions, err error) {
+	w, err := a.client.WorkspaceClient()
+	if err != nil {
+		return objectACL, err
+	}
+	idParts := strings.Split(objectID, "/")
+	id := idParts[len(idParts)-1]
+	permissions, err := w.Permissions.Get(a.context, iam.GetPermissionRequest{
+		RequestObjectId:   id,
+		RequestObjectType: mapping.resourceType,
+	})
 	var apiErr *apierr.APIError
 	// https://github.com/databricks/terraform-provider-databricks/issues/1227
 	// platform propagates INVALID_STATE error for auto-purged clusters in
@@ -244,13 +167,13 @@ func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions) (obje
 	if err != nil {
 		return objectACL, err
 	}
-	return mapping.prepareResponse(objectID, objectACL)
+	return mapping.prepareResponse(objectID, permissions)
 }
 
 // PermissionsEntity is the one used for resource metadata
 type PermissionsEntity struct {
-	ObjectType        string                          `json:"object_type,omitempty" tf:"computed"`
-	AccessControlList []AccessControlChangeApiRequest `json:"access_control" tf:"slice_set"`
+	ObjectType        string                     `json:"object_type,omitempty" tf:"computed"`
+	AccessControlList []iam.AccessControlRequest `json:"access_control" tf:"slice_set"`
 }
 
 func (p PermissionsEntity) containsUserOrServicePrincipal(name string) bool {
@@ -299,7 +222,7 @@ func ResourcePermissions() common.Resource {
 				if permissionLevel == "" {
 					continue
 				}
-				if _, ok := mapping.allowedPermissionLevels[permissionLevel]; !ok {
+				if _, ok := mapping.allowedPermissionLevels[string(permissionLevel)]; !ok {
 					return fmt.Errorf(`permission_level %s is not supported with %s objects; allowed levels: %s`,
 						permissionLevel, mapping.field, strings.Join(mapping.getAllowedPermissionLevels(true), ", "))
 				}
@@ -323,7 +246,7 @@ func ResourcePermissions() common.Resource {
 			}
 			var existing PermissionsEntity
 			common.DataToStructPointer(d, s, &existing)
-			entity, err := objectACL.ToPermissionsEntity(d, existing, me, mapping)
+			entity, err := toPermissionsEntity(objectACL, d, existing, me, mapping)
 			if err != nil {
 				return err
 			}

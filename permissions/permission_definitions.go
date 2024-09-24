@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
@@ -18,13 +19,13 @@ type resourcePermissions struct {
 	// The attribute name that users configure with the ID of the object to manage
 	// e.g. "cluster_id" for a cluster
 	field string
-	// The object type in the API response for this resource type, e.g. "cluster" for a cluster.
+	// The object type to use in the Permissions API, e.g. "cluster" for a cluster.
 	objectType string
 	// The name of the object in the ID of the TF resource, e.g. "clusters" for a cluster,
 	// where the ID would be /clusters/<cluster-id>. This should also match the prefix of the
 	// object ID in the API response, unless idMatcher is set.
 	resourceType string
-	// The allowed permission levels for this object type.
+	// The allowed permission levels for this object type and its options.
 	allowedPermissionLevels map[string]permissionLevelOptions
 
 	// ID Remapping Options
@@ -33,10 +34,6 @@ type resourcePermissions struct {
 	// some objects are done by path, whereas others are by ID. Those by path need to be converted to the
 	// internal object ID before being stored in the state. If not specified, the default ID is "/<resource_type>/<id>".
 	idRetriever func(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error)
-	// A custom matcher to check whether an object ID in the API response matches this resource type.
-	// This is necessary because some objects have a different ID in the API response than the ID in the
-	// Terraform state. If unset, the default is to check whether the object ID starts with "/<resource_type>".
-	idMatcher func(objectID string) bool
 	// A custom matcher to check whether a given ID matches this resource type.
 	// Most resources can be determined by looking at the attribute name used to configure the permission, but
 	// tokens & passwords are special cases where the resource type is determined by the value of this attribute.
@@ -47,25 +44,25 @@ type resourcePermissions struct {
 	// The alternative name of the "path" attribute for this resource. E.g. "workspace_file_path" for a file.
 	// If not set, default is "<object_type>_path".
 	pathVariant string
-	// Customizers when handling create & update requests
+	// Customizers when handling permission resource creation and update.
+	//
+	// Most resources that have a CAN_MANAGE permission level should add addCurrentUserAsManageCustomizer to this list
+	// to ensure that the user applying the template always has management permissions on the underlying resource.
 	updateAclCustomizers []aclUpdateCustomizer
-	// Customizers when handling delete requests
+	// Customizers when handling permission resource deletion.
+	//
+	// Most resources that have a CAN_MANAGE permission level should add addCurrentUserAsManageCustomizer to this list
+	// to ensure that the user applying the template always has management permissions on the underlying resource.
 	deleteAclCustomizers []aclUpdateCustomizer
-	// Customizers when handling read requests
+	// Customizers when handling permission resource read.
+	//
+	// Resources for which admins inherit permissions should add removeAdminPermissionsCustomizer to this list. This
+	// prevents the admin group from being included in the permissions when reading the state.
 	readAclCustomizers []aclReadCustomizer
 
 	// Returns the creator of the object. Used when deleting databricks_permissions resources, when the
 	// creator of the object is restored as the owner.
 	fetchObjectCreator func(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error)
-
-	// Request Options
-
-	// Returns the path for the object ID.
-	// If not set, the default is to use "/permissions/<object_id>"
-	makeRequestPath func(objectId string) string
-	// If true, use POST instead of PUT for permissions changes.
-	// By default, PUT is used for permissions changes.
-	usePost bool
 }
 
 // getAllowedPermissionLevels returns the list of permission levels that are allowed for this resource type.
@@ -109,34 +106,15 @@ func (p resourcePermissions) getPathVariant() string {
 	return p.objectType + "_path"
 }
 
-// getRequestPath returns the request URI path for the object ID.
-func (p resourcePermissions) getRequestPath(objectID string) string {
-	if p.makeRequestPath != nil {
-		return p.makeRequestPath(objectID)
-	}
-	return "/permissions" + objectID
-}
-
-// isTypeOf returns true if the object ID is the ID of a permission for this resourcePermission's resource type.
-func (p resourcePermissions) isTypeOf(objectID string) bool {
-	if p.idMatcher != nil {
-		return p.idMatcher(objectID)
-	}
-	if objectID != "" && objectID[0] == '/' {
-		return strings.HasPrefix(objectID[1:], p.resourceType)
-	}
-	return false
-}
-
 // validate checks that the user is not trying to set permissions for the admin group or remove their own management permissions.
-func (p resourcePermissions) validate(changes []AccessControlChangeApiRequest, currentUsername string) error {
+func (p resourcePermissions) validate(changes []iam.AccessControlRequest, currentUsername string) error {
 	for _, change := range changes {
 		// Check if the user is trying to set permissions for the admin group outside of the tokens/passwords permissions.
 		if change.GroupName == "admins" && p.field != "authorization" {
 			return fmt.Errorf("it is not possible to modify admin permissions for %s resources", p.objectType)
 		}
 		// Check that the user is preventing themselves from managing the object
-		if (change.UserName == currentUsername || change.ServicePrincipalName == currentUsername) && !p.allowedPermissionLevels[change.PermissionLevel].isManagementPermission {
+		if (change.UserName == currentUsername || change.ServicePrincipalName == currentUsername) && !p.allowedPermissionLevels[string(change.PermissionLevel)].isManagementPermission {
 			allowedLevelsForCurrentUser := p.getAllowedPermissionLevels(false)
 			return fmt.Errorf("cannot remove management permissions for the current user for %s, allowed levels: %s", p.objectType, strings.Join(allowedLevelsForCurrentUser, ", "))
 		}
@@ -157,7 +135,7 @@ func (p resourcePermissions) getID(ctx context.Context, w *databricks.WorkspaceC
 }
 
 // prepareForUpdate prepares the access control list for an update request by calling all update customizers.
-func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []AccessControlChangeApiRequest, currentUser string) ([]AccessControlChangeApiRequest, error) {
+func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []iam.AccessControlRequest, currentUser string) ([]iam.AccessControlRequest, error) {
 	cachedCurrentUser := func() (string, error) { return currentUser, nil }
 	ctx := aclUpdateCustomizerContext{
 		getCurrentUser: cachedCurrentUser,
@@ -174,21 +152,27 @@ func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []Acces
 }
 
 // prepareForDelete prepares the access control list for a delete request by calling all delete customizers.
-func (p resourcePermissions) prepareForDelete(objectACL ObjectAclApiResponse, getCurrentUser func() (string, error)) ([]AccessControlChangeApiRequest, error) {
-	accl := make([]AccessControlChangeApiRequest, 0, len(objectACL.AccessControlList))
+func (p resourcePermissions) prepareForDelete(objectACL *iam.ObjectPermissions, getCurrentUser func() (string, error)) ([]iam.AccessControlRequest, error) {
+	accl := make([]iam.AccessControlRequest, 0, len(objectACL.AccessControlList))
+	// By default, only admins have access to a resource when databricks_permissions for that resource are deleted.
 	for _, acl := range objectACL.AccessControlList {
-		// When deleting permissions for a resource with explicit admin permissions, delete should remove
-		// admin permissions as well. Otherwise, admin permissions should be left as-is.
-		if acl.GroupName == "admins" {
-			if change, direct := acl.toAccessControlChange(); direct {
+		if acl.GroupName != "admins" {
+			continue
+		}
+		for _, permission := range acl.AllPermissions {
+			if !permission.Inherited {
 				// keep everything direct for admin group
-				accl = append(accl, change)
+				accl = append(accl, iam.AccessControlRequest{
+					GroupName:       acl.GroupName,
+					PermissionLevel: permission.PermissionLevel,
+				})
+				break
 			}
 		}
 	}
 	ctx := aclUpdateCustomizerContext{
 		getCurrentUser: getCurrentUser,
-		getId:          func() string { return objectACL.ObjectID },
+		getId:          func() string { return objectACL.ObjectId },
 	}
 	var err error
 	for _, customizer := range p.deleteAclCustomizers {
@@ -201,7 +185,7 @@ func (p resourcePermissions) prepareForDelete(objectACL ObjectAclApiResponse, ge
 }
 
 // prepareResponse prepares the access control list for a read response by calling all read customizers.
-func (p resourcePermissions) prepareResponse(objectID string, objectACL ObjectAclApiResponse) (ObjectAclApiResponse, error) {
+func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.ObjectPermissions) (*iam.ObjectPermissions, error) {
 	ctx := aclReadCustomizerContext{
 		getId: func() string { return objectID },
 	}
@@ -209,14 +193,14 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL ObjectAc
 		var err error
 		objectACL, err = customizer(ctx, objectACL)
 		if err != nil {
-			return ObjectAclApiResponse{}, err
+			return nil, err
 		}
 	}
 	return objectACL, nil
 }
 
 // addOwnerPermissionIfNeeded adds the owner permission to the object ACL if the owner permission is allowed and not already set.
-func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []AccessControlChangeApiRequest, ownerOpt string) []AccessControlChangeApiRequest {
+func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []iam.AccessControlRequest, ownerOpt string) []iam.AccessControlRequest {
 	_, ok := p.allowedPermissionLevels["IS_OWNER"]
 	if !ok {
 		return objectACL
@@ -228,7 +212,7 @@ func (p resourcePermissions) addOwnerPermissionIfNeeded(objectACL []AccessContro
 		}
 	}
 
-	return append(objectACL, AccessControlChangeApiRequest{
+	return append(objectACL, iam.AccessControlRequest{
 		UserName:        ownerOpt,
 		PermissionLevel: "IS_OWNER",
 	})
@@ -287,15 +271,6 @@ func getResourcePermissionsFromState(d interface{ GetOk(string) (any, bool) }) (
 }
 
 // getResourcePermissionsForObjectAcl returns the resourcePermissions for the given ObjectAclApiResponse.
-func getResourcePermissionsForObjectAcl(objectACL ObjectAclApiResponse) (resourcePermissions, string, error) {
-	for _, mapping := range allResourcePermissions() {
-		if mapping.objectType == objectACL.ObjectType && mapping.isTypeOf(objectACL.ObjectID) {
-			return mapping, objectACL.ObjectID, nil
-		}
-	}
-	return resourcePermissions{}, "", fmt.Errorf("unknown object type %s", objectACL.ObjectType)
-}
-
 // allResourcePermissions is the list of all resource types that can be managed by the databricks_permissions resource.
 func allResourcePermissions() []resourcePermissions {
 	PATH := func(ctx context.Context, w *databricks.WorkspaceClient, path string) (string, error) {
@@ -305,9 +280,6 @@ func allResourcePermissions() []resourcePermissions {
 		}
 		return strconv.FormatInt(info.ObjectId, 10), nil
 	}
-	SQL_REQUEST_PATH := func(objectId string) string {
-		return "/preview/sql/permissions" + objectId[4:]
-	}
 	return []resourcePermissions{
 		{
 			field:        "cluster_policy_id",
@@ -316,6 +288,7 @@ func allResourcePermissions() []resourcePermissions {
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE": {isManagementPermission: true},
 			},
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "instance_pool_id",
@@ -327,6 +300,7 @@ func allResourcePermissions() []resourcePermissions {
 			},
 			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
 			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
+			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "cluster_id",
@@ -339,6 +313,7 @@ func allResourcePermissions() []resourcePermissions {
 			},
 			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
 			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
+			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "pipeline_id",
@@ -357,6 +332,7 @@ func allResourcePermissions() []resourcePermissions {
 				}
 				return pipeline.CreatorUserName, nil
 			},
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "job_id",
@@ -379,6 +355,7 @@ func allResourcePermissions() []resourcePermissions {
 				}
 				return job.CreatorUserName, nil
 			},
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "notebook_id",
@@ -390,6 +367,7 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "notebook_path",
@@ -401,7 +379,8 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
-			idRetriever: PATH,
+			idRetriever:        PATH,
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "directory_id",
@@ -418,6 +397,7 @@ func allResourcePermissions() []resourcePermissions {
 					return objectId == "/directories/0"
 				}),
 			},
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "directory_path",
@@ -429,7 +409,8 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
-			idRetriever: PATH,
+			idRetriever:        PATH,
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "workspace_file_id",
@@ -441,7 +422,8 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
-			pathVariant: "workspace_file_path",
+			pathVariant:        "workspace_file_path",
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "workspace_file_path",
@@ -453,8 +435,9 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
-			idRetriever: PATH,
-			pathVariant: "workspace_file_path",
+			idRetriever:        PATH,
+			pathVariant:        "workspace_file_path",
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "repo_id",
@@ -466,6 +449,7 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "repo_path",
@@ -477,7 +461,8 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
-			idRetriever: PATH,
+			idRetriever:        PATH,
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "authorization",
@@ -519,6 +504,7 @@ func allResourcePermissions() []resourcePermissions {
 			},
 			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
 			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
+			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 			fetchObjectCreator: func(ctx context.Context, w *databricks.WorkspaceClient, objectID string) (string, error) {
 				warehouse, err := w.Warehouses.GetById(ctx, strings.ReplaceAll(objectID, "/sql/warehouses/", ""))
 				if err != nil {
@@ -537,19 +523,9 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_MANAGE": {isManagementPermission: true},
 				"CAN_VIEW":   {isManagementPermission: false},
 			},
-			updateAclCustomizers: []aclUpdateCustomizer{
-				addCurrentUserAsManageCustomizer,
-				copyServicePrincipalToUserCustomizer,
-			},
+			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
 			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
-			readAclCustomizers: []aclReadCustomizer{
-				copyUserToServicePrincipalCustomizer,
-			},
-			makeRequestPath: SQL_REQUEST_PATH,
-			usePost:         true,
-			idMatcher: func(objectID string) bool {
-				return strings.HasPrefix(objectID, "dashboards/")
-			},
+			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "sql_alert_id",
@@ -561,19 +537,9 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_MANAGE": {isManagementPermission: true},
 				"CAN_VIEW":   {isManagementPermission: false},
 			},
-			idMatcher: func(objectID string) bool {
-				return strings.HasPrefix(objectID, "alerts/")
-			},
-			updateAclCustomizers: []aclUpdateCustomizer{
-				addCurrentUserAsManageCustomizer,
-				copyServicePrincipalToUserCustomizer,
-			},
+			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
 			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
-			readAclCustomizers: []aclReadCustomizer{
-				copyUserToServicePrincipalCustomizer,
-			},
-			makeRequestPath: SQL_REQUEST_PATH,
-			usePost:         true,
+			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "sql_query_id",
@@ -585,21 +551,9 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_MANAGE": {isManagementPermission: true},
 				"CAN_VIEW":   {isManagementPermission: false},
 			},
-			updateAclCustomizers: []aclUpdateCustomizer{
-				addCurrentUserAsManageCustomizer,
-				copyServicePrincipalToUserCustomizer,
-			},
-			deleteAclCustomizers: []aclUpdateCustomizer{
-				addCurrentUserAsManageCustomizer,
-			},
-			readAclCustomizers: []aclReadCustomizer{
-				copyUserToServicePrincipalCustomizer,
-			},
-			idMatcher: func(objectID string) bool {
-				return strings.HasPrefix(objectID, "queries/")
-			},
-			makeRequestPath: SQL_REQUEST_PATH,
-			usePost:         true,
+			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
+			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
+			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "dashboard_id",
@@ -612,10 +566,11 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_READ":   {isManagementPermission: false},
 			},
 			readAclCustomizers: []aclReadCustomizer{
-				func(ctx aclReadCustomizerContext, objectAcls ObjectAclApiResponse) (ObjectAclApiResponse, error) {
-					if strings.HasPrefix(objectAcls.ObjectID, "/dashboards/") {
+				removeAdminPermissionsCustomizer,
+				func(ctx aclReadCustomizerContext, objectAcls *iam.ObjectPermissions) (*iam.ObjectPermissions, error) {
+					if strings.HasPrefix(objectAcls.ObjectId, "/dashboards/") {
 						// workaround for inconsistent API response returning object ID of file in the workspace
-						objectAcls.ObjectID = ctx.getId()
+						objectAcls.ObjectId = ctx.getId()
 					}
 					return objectAcls, nil
 				},
@@ -630,6 +585,7 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
+			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "registered_model_id",
@@ -649,6 +605,7 @@ func allResourcePermissions() []resourcePermissions {
 				}),
 			},
 			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
+			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
 			field:        "serving_endpoint_id",
@@ -661,6 +618,7 @@ func allResourcePermissions() []resourcePermissions {
 			},
 			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
 			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
+			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 	}
 }

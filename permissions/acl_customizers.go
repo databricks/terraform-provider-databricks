@@ -20,7 +20,7 @@ type aclReadCustomizerContext struct {
 }
 
 // aclReadCustomizer is a function that modifies the access control list of an object after it is read.
-type aclReadCustomizer func(ctx aclReadCustomizerContext, objectAcls *iam.ObjectPermissions) (*iam.ObjectPermissions, error)
+type aclReadCustomizer func(ctx aclReadCustomizerContext, objectAcls iam.ObjectPermissions) iam.ObjectPermissions
 
 // addAdminAclCustomizer adds an explicit CAN_MANAGE permission for the 'admins' group if explicitAdminPermissionCheck returns true
 // for the provided object ID.
@@ -66,7 +66,7 @@ func addCurrentUserAsManageCustomizer(ctx aclUpdateCustomizerContext, acl []iam.
 	return acl, nil
 }
 
-func removeAdminPermissionsCustomizer(ctx aclReadCustomizerContext, acl *iam.ObjectPermissions) (*iam.ObjectPermissions, error) {
+func removeAdminPermissionsCustomizer(ctx aclReadCustomizerContext, acl iam.ObjectPermissions) iam.ObjectPermissions {
 	// Remove all permissions for the 'admins' group.
 	filteredAcl := make([]iam.AccessControlResponse, 0, len(acl.AccessControlList))
 	for _, a := range acl.AccessControlList {
@@ -75,7 +75,7 @@ func removeAdminPermissionsCustomizer(ctx aclReadCustomizerContext, acl *iam.Obj
 		}
 	}
 	acl.AccessControlList = filteredAcl
-	return acl, nil
+	return acl
 }
 
 func rewritePermissionForUpdate(old, new iam.PermissionLevel) aclUpdateCustomizer {
@@ -90,7 +90,7 @@ func rewritePermissionForUpdate(old, new iam.PermissionLevel) aclUpdateCustomize
 }
 
 func rewritePermissionForRead(old, new iam.PermissionLevel) aclReadCustomizer {
-	return func(ctx aclReadCustomizerContext, acl *iam.ObjectPermissions) (*iam.ObjectPermissions, error) {
+	return func(ctx aclReadCustomizerContext, acl iam.ObjectPermissions) iam.ObjectPermissions {
 		for i := range acl.AccessControlList {
 			for j := range acl.AccessControlList[i].AllPermissions {
 				if acl.AccessControlList[i].AllPermissions[j].PermissionLevel == old {
@@ -98,6 +98,6 @@ func rewritePermissionForRead(old, new iam.PermissionLevel) aclReadCustomizer {
 				}
 			}
 		}
-		return acl, nil
+		return acl
 	}
 }

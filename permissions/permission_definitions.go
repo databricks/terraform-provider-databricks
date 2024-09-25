@@ -205,15 +205,12 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 	if objectACL.ObjectType != p.objectType {
 		return PermissionsEntity{}, fmt.Errorf("expected object type %s, got %s", p.objectType, objectACL.ObjectType)
 	}
+	acl := *objectACL
 	for _, customizer := range p.readAclCustomizers {
-		var err error
-		objectACL, err = customizer(ctx, objectACL)
-		if err != nil {
-			return PermissionsEntity{}, err
-		}
+		acl = customizer(ctx, acl)
 	}
 	entity := PermissionsEntity{}
-	for _, accessControl := range objectACL.AccessControlList {
+	for _, accessControl := range acl.AccessControlList {
 		// If the user doesn't include an access_control block for themselves, do not include it in the state.
 		// On create/update, the provider will automatically include the current user in the access_control block
 		// for appropriate resources. Otherwise, it must be included in state to prevent configuration drift.
@@ -639,12 +636,12 @@ func allResourcePermissions() []resourcePermissions {
 			},
 			readAclCustomizers: []aclReadCustomizer{
 				removeAdminPermissionsCustomizer,
-				func(ctx aclReadCustomizerContext, objectAcls *iam.ObjectPermissions) (*iam.ObjectPermissions, error) {
+				func(ctx aclReadCustomizerContext, objectAcls iam.ObjectPermissions) iam.ObjectPermissions {
 					if strings.HasPrefix(objectAcls.ObjectId, "/dashboards/") {
 						// workaround for inconsistent API response returning object ID of file in the workspace
 						objectAcls.ObjectId = ctx.getId()
 					}
-					return objectAcls, nil
+					return objectAcls
 				},
 			},
 		},

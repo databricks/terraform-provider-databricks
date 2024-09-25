@@ -862,7 +862,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/clusters/test1",
+				Resource: "/api/2.0/permissions/clusters/test1?",
 				Response: getJSONObject("test-data/get-cluster-permissions-test1-response.json"),
 			},
 			{
@@ -913,7 +913,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/clusters/test2",
+				Resource: "/api/2.0/permissions/clusters/test2?",
 				Response: getJSONObject("test-data/get-cluster-permissions-test2-response.json"),
 			},
 			{
@@ -923,7 +923,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123?",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 			{
@@ -949,7 +949,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/clusters/awscluster",
+				Resource: "/api/2.0/permissions/clusters/awscluster?",
 				Response: getJSONObject("test-data/get-cluster-permissions-awscluster-response.json"),
 			},
 			{
@@ -971,7 +971,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1089,7 +1089,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/jobs/14",
+				Resource: "/api/2.0/permissions/jobs/14?",
 				Response: getJSONObject("test-data/get-job-permissions-14.json"),
 			},
 			{
@@ -1112,7 +1112,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1202,7 +1202,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123?",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 			{
@@ -1218,7 +1218,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1307,7 +1307,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/jobs/14",
+				Resource:     "/api/2.0/permissions/jobs/14?",
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 				ReuseRequest: true,
 			},
@@ -1331,7 +1331,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1470,7 +1470,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123?",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 			{
@@ -1486,7 +1486,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1777,7 +1777,7 @@ func TestImportingRepos(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/repos/121232342",
+				Resource: "/api/2.0/permissions/repos/121232342?",
 				Response: getJSONObject("test-data/get-repo-permissions.json"),
 			},
 		},
@@ -1902,7 +1902,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/directories/4451965692354143",
+				Resource: "/api/2.0/permissions/directories/4451965692354143?",
 				Response: getJSONObject("test-data/get-directory-permissions.json"),
 			},
 			{
@@ -1933,7 +1933,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/sql/warehouses/f562046bc1272886",
+				Resource: "/api/2.0/permissions/sql/warehouses/f562046bc1272886?",
 				Response: getJSONObject("test-data/get-sql-endpoint-permissions.json"),
 			},
 			{
@@ -1962,12 +1962,12 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/permissions/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc",
+				Resource: "/api/2.0/permissions/sql/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc?",
 				Response: getJSONObject("test-data/get-sql-query-permissions.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/permissions/dashboards/9cb0c8f5-6262-4a1f-a741-2181de76028f",
+				Resource: "/api/2.0/permissions/dbsql-dashboards/9cb0c8f5-6262-4a1f-a741-2181de76028f?",
 				Response: getJSONObject("test-data/get-sql-dashboard-permissions.json"),
 			},
 			{
@@ -1983,7 +1983,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/permissions/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9",
+				Resource: "/api/2.0/permissions/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9?",
 				Response: getJSONObject("test-data/get-sql-alert-permissions.json"),
 			},
 		},
@@ -2039,7 +2039,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/repos/123",
+				Resource: "/api/2.0/permissions/repos/123?",
 				Response: getJSONObject("test-data/get-repo-permissions.json"),
 			},
 			{
@@ -2085,12 +2085,12 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/pipelines/123",
+				Resource: "/api/2.0/permissions/pipelines/123?",
 				Response: getJSONObject("test-data/get-pipeline-permissions.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/notebooks/123",
+				Resource: "/api/2.0/permissions/notebooks/123?",
 				Response: getJSONObject("test-data/get-notebook-permissions.json"),
 			},
 			{
@@ -2169,7 +2169,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/files/789",
+				Resource: "/api/2.0/permissions/files/789?",
 				Response: getJSONObject("test-data/get-workspace-file-permissions.json"),
 			},
 		},
@@ -2257,7 +2257,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/pipelines/123",
+				Resource: "/api/2.0/permissions/pipelines/123?",
 				Response: getJSONObject("test-data/get-pipeline-permissions.json"),
 			},
 			{

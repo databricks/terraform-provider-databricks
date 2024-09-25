@@ -24,7 +24,7 @@ type resourcePermissions struct {
 	// The name of the object in the ID of the TF resource, e.g. "clusters" for a cluster,
 	// where the ID would be /clusters/<cluster-id>. This should also match the prefix of the
 	// object ID in the API response, unless idMatcher is set.
-	resourceType string
+	requestObjectType string
 	// The allowed permission levels for this object type and its options.
 	allowedPermissionLevels map[string]permissionLevelOptions
 
@@ -107,8 +107,8 @@ func (p resourcePermissions) getPathVariant() string {
 }
 
 // validate checks that the user is not trying to set permissions for the admin group or remove their own management permissions.
-func (p resourcePermissions) validate(changes []iam.AccessControlRequest, currentUsername string) error {
-	for _, change := range changes {
+func (p resourcePermissions) validate(entity PermissionsEntity, currentUsername string) error {
+	for _, change := range entity.AccessControlList {
 		// Check if the user is trying to set permissions for the admin group outside of the tokens/passwords permissions.
 		if change.GroupName == "admins" && p.field != "authorization" {
 			return fmt.Errorf("it is not possible to modify admin permissions for %s resources", p.objectType)
@@ -131,11 +131,11 @@ func (p resourcePermissions) getID(ctx context.Context, w *databricks.WorkspaceC
 			return "", err
 		}
 	}
-	return fmt.Sprintf("/%s/%s", p.resourceType, id), nil
+	return fmt.Sprintf("/%s/%s", p.requestObjectType, id), nil
 }
 
 // prepareForUpdate prepares the access control list for an update request by calling all update customizers.
-func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []iam.AccessControlRequest, currentUser string) ([]iam.AccessControlRequest, error) {
+func (p resourcePermissions) prepareForUpdate(objectID string, entity PermissionsEntity, currentUser string) (PermissionsEntity, error) {
 	cachedCurrentUser := func() (string, error) { return currentUser, nil }
 	ctx := aclUpdateCustomizerContext{
 		getCurrentUser: cachedCurrentUser,
@@ -143,12 +143,12 @@ func (p resourcePermissions) prepareForUpdate(objectID string, objectACL []iam.A
 	}
 	var err error
 	for _, customizer := range p.updateAclCustomizers {
-		objectACL, err = customizer(ctx, objectACL)
+		entity.AccessControlList, err = customizer(ctx, entity.AccessControlList)
 		if err != nil {
-			return nil, err
+			return PermissionsEntity{}, err
 		}
 	}
-	return objectACL, nil
+	return entity, nil
 }
 
 // prepareForDelete prepares the access control list for a delete request by calling all delete customizers.
@@ -185,18 +185,45 @@ func (p resourcePermissions) prepareForDelete(objectACL *iam.ObjectPermissions, 
 }
 
 // prepareResponse prepares the access control list for a read response by calling all read customizers.
-func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.ObjectPermissions) (*iam.ObjectPermissions, error) {
+//
+// If the user does not include an access_control block for themselves, it will not be included in the state. This
+// prevents diffs when the applying user is not included in the access_control block for the resource but is
+// added by addCurrentUserAsManageCustomizer.
+//
+// Read customizers are able to access the current state of the object in order to customize the response accordingly.
+// For example, the SQL API previously used CAN_VIEW for read-only permission, but the GA API uses CAN_READ. Users may
+// have CAN_VIEW in their resource configuration, so the read customizer will rewrite the response from CAN_READ to
+// CAN_VIEW to match the user's configuration.
+func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.ObjectPermissions, existing PermissionsEntity, me string) (PermissionsEntity, error) {
 	ctx := aclReadCustomizerContext{
-		getId: func() string { return objectID },
+		getId:                        func() string { return objectID },
+		getExistingPermissionsEntity: func() PermissionsEntity { return existing },
 	}
 	for _, customizer := range p.readAclCustomizers {
 		var err error
 		objectACL, err = customizer(ctx, objectACL)
 		if err != nil {
-			return nil, err
+			return PermissionsEntity{}, err
 		}
 	}
-	return objectACL, nil
+	entity := PermissionsEntity{}
+	for _, accessControl := range objectACL.AccessControlList {
+		// If the user doesn't include an access_control block for themselves, do not include it in the state.
+		// On create/update, the provider will automatically include the current user in the access_control block
+		// for appropriate resources. Otherwise, it must be included in state to prevent configuration drift.
+		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
+			if !existing.containsUserOrServicePrincipal(me) {
+				continue
+			}
+		}
+		entity.AccessControlList = append(entity.AccessControlList, iam.AccessControlRequest{
+			GroupName:            accessControl.GroupName,
+			UserName:             accessControl.UserName,
+			ServicePrincipalName: accessControl.ServicePrincipalName,
+			PermissionLevel:      accessControl.AllPermissions[0].PermissionLevel,
+		})
+	}
+	return entity, nil
 }
 
 // addOwnerPermissionIfNeeded adds the owner permission to the object ACL if the owner permission is allowed and not already set.
@@ -234,7 +261,7 @@ func getResourcePermissions(objectId string) (resourcePermissions, error) {
 	objectParts := strings.Split(objectId, "/")
 	objectType := strings.Join(objectParts[1:len(objectParts)-1], "/")
 	for _, p := range allResourcePermissions() {
-		if p.resourceType == objectType {
+		if p.requestObjectType == objectType {
 			id := objectParts[len(objectParts)-1]
 			if p.stateMatcher != nil && !p.stateMatcher(id) {
 				continue
@@ -282,18 +309,18 @@ func allResourcePermissions() []resourcePermissions {
 	}
 	return []resourcePermissions{
 		{
-			field:        "cluster_policy_id",
-			objectType:   "cluster-policy",
-			resourceType: "cluster-policies",
+			field:             "cluster_policy_id",
+			objectType:        "cluster-policy",
+			requestObjectType: "cluster-policies",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE": {isManagementPermission: true},
 			},
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "instance_pool_id",
-			objectType:   "instance-pool",
-			resourceType: "instance-pools",
+			field:             "instance_pool_id",
+			objectType:        "instance-pool",
+			requestObjectType: "instance-pools",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_ATTACH_TO": {isManagementPermission: false},
 				"CAN_MANAGE":    {isManagementPermission: true},
@@ -303,9 +330,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "cluster_id",
-			objectType:   "cluster",
-			resourceType: "clusters",
+			field:             "cluster_id",
+			objectType:        "cluster",
+			requestObjectType: "clusters",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_ATTACH_TO": {isManagementPermission: false},
 				"CAN_RESTART":   {isManagementPermission: false},
@@ -316,9 +343,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "pipeline_id",
-			objectType:   "pipelines",
-			resourceType: "pipelines",
+			field:             "pipeline_id",
+			objectType:        "pipelines",
+			requestObjectType: "pipelines",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_VIEW":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -335,9 +362,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "job_id",
-			objectType:   "job",
-			resourceType: "jobs",
+			field:             "job_id",
+			objectType:        "job",
+			requestObjectType: "jobs",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_VIEW":       {isManagementPermission: false},
 				"CAN_MANAGE_RUN": {isManagementPermission: false},
@@ -358,9 +385,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "notebook_id",
-			objectType:   "notebook",
-			resourceType: "notebooks",
+			field:             "notebook_id",
+			objectType:        "notebook",
+			requestObjectType: "notebooks",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -370,9 +397,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "notebook_path",
-			objectType:   "notebook",
-			resourceType: "notebooks",
+			field:             "notebook_path",
+			objectType:        "notebook",
+			requestObjectType: "notebooks",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -383,9 +410,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "directory_id",
-			objectType:   "directory",
-			resourceType: "directories",
+			field:             "directory_id",
+			objectType:        "directory",
+			requestObjectType: "directories",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -400,9 +427,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "directory_path",
-			objectType:   "directory",
-			resourceType: "directories",
+			field:             "directory_path",
+			objectType:        "directory",
+			requestObjectType: "directories",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -413,9 +440,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "workspace_file_id",
-			objectType:   "file",
-			resourceType: "files",
+			field:             "workspace_file_id",
+			objectType:        "file",
+			requestObjectType: "files",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -426,9 +453,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "workspace_file_path",
-			objectType:   "file",
-			resourceType: "files",
+			field:             "workspace_file_path",
+			objectType:        "file",
+			requestObjectType: "files",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -440,9 +467,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "repo_id",
-			objectType:   "repo",
-			resourceType: "repos",
+			field:             "repo_id",
+			objectType:        "repo",
+			requestObjectType: "repos",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -452,9 +479,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "repo_path",
-			objectType:   "repo",
-			resourceType: "repos",
+			field:             "repo_path",
+			objectType:        "repo",
+			requestObjectType: "repos",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -465,9 +492,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "authorization",
-			objectType:   "tokens",
-			resourceType: "authorization",
+			field:             "authorization",
+			objectType:        "tokens",
+			requestObjectType: "authorization",
 			stateMatcher: func(id string) bool {
 				return id == "tokens"
 			},
@@ -482,9 +509,9 @@ func allResourcePermissions() []resourcePermissions {
 			},
 		},
 		{
-			field:        "authorization",
-			objectType:   "passwords",
-			resourceType: "authorization",
+			field:             "authorization",
+			objectType:        "passwords",
+			requestObjectType: "authorization",
 			stateMatcher: func(id string) bool {
 				return id == "passwords"
 			},
@@ -493,9 +520,9 @@ func allResourcePermissions() []resourcePermissions {
 			},
 		},
 		{
-			field:        "sql_endpoint_id",
-			objectType:   "warehouses",
-			resourceType: "sql/warehouses",
+			field:             "sql_endpoint_id",
+			objectType:        "warehouses",
+			requestObjectType: "sql/warehouses",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE":     {isManagementPermission: false},
 				"CAN_MANAGE":  {isManagementPermission: true},
@@ -514,51 +541,81 @@ func allResourcePermissions() []resourcePermissions {
 			},
 		},
 		{
-			field:        "sql_dashboard_id",
-			objectType:   "dashboard",
-			resourceType: "sql/dashboards",
+			field:             "sql_dashboard_id",
+			objectType:        "dashboard",
+			requestObjectType: "dbsql-dashboards",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
-				"CAN_VIEW":   {isManagementPermission: false},
+				// This was originally called CAN_VIEW in the preview API, but was renamed to CAN_READ in the GA API.
+				"CAN_VIEW": {isManagementPermission: false},
 			},
-			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
-			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
-			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
+			updateAclCustomizers: []aclUpdateCustomizer{
+				addCurrentUserAsManageCustomizer,
+				rewritePermissionForUpdate("CAN_VIEW", "CAN_READ"),
+			},
+			deleteAclCustomizers: []aclUpdateCustomizer{
+				addCurrentUserAsManageCustomizer,
+				rewritePermissionForUpdate("CAN_VIEW", "CAN_READ"),
+			},
+			readAclCustomizers: []aclReadCustomizer{
+				removeAdminPermissionsCustomizer,
+				rewritePermissionForRead("CAN_READ", "CAN_VIEW"),
+			},
 		},
 		{
-			field:        "sql_alert_id",
-			objectType:   "alert",
-			resourceType: "sql/alerts",
+			field:             "sql_alert_id",
+			objectType:        "alert",
+			requestObjectType: "sql/alerts",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
-				"CAN_VIEW":   {isManagementPermission: false},
+				// This was originally called CAN_VIEW in the preview API, but was renamed to CAN_READ in the GA API.
+				"CAN_VIEW": {isManagementPermission: false},
 			},
-			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
-			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
-			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
+			updateAclCustomizers: []aclUpdateCustomizer{
+				addCurrentUserAsManageCustomizer,
+				rewritePermissionForUpdate("CAN_VIEW", "CAN_READ"),
+			},
+			deleteAclCustomizers: []aclUpdateCustomizer{
+				addCurrentUserAsManageCustomizer,
+				rewritePermissionForUpdate("CAN_VIEW", "CAN_READ"),
+			},
+			readAclCustomizers: []aclReadCustomizer{
+				removeAdminPermissionsCustomizer,
+				rewritePermissionForRead("CAN_READ", "CAN_VIEW"),
+			},
 		},
 		{
-			field:        "sql_query_id",
-			objectType:   "query",
-			resourceType: "sql/queries",
+			field:             "sql_query_id",
+			objectType:        "query",
+			requestObjectType: "sql/queries",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
-				"CAN_VIEW":   {isManagementPermission: false},
+				// This was originally called CAN_VIEW in the preview API, but was renamed to CAN_READ in the GA API.
+				"CAN_VIEW": {isManagementPermission: false},
 			},
-			updateAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
-			deleteAclCustomizers: []aclUpdateCustomizer{addCurrentUserAsManageCustomizer},
-			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
+			updateAclCustomizers: []aclUpdateCustomizer{
+				addCurrentUserAsManageCustomizer,
+				rewritePermissionForUpdate("CAN_VIEW", "CAN_READ"),
+			},
+			deleteAclCustomizers: []aclUpdateCustomizer{
+				addCurrentUserAsManageCustomizer,
+				rewritePermissionForUpdate("CAN_VIEW", "CAN_READ"),
+			},
+			readAclCustomizers: []aclReadCustomizer{
+				removeAdminPermissionsCustomizer,
+				rewritePermissionForRead("CAN_READ", "CAN_VIEW"),
+			},
 		},
 		{
-			field:        "dashboard_id",
-			objectType:   "dashboard",
-			resourceType: "dashboards",
+			field:             "dashboard_id",
+			objectType:        "dashboard",
+			requestObjectType: "dashboards",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_EDIT":   {isManagementPermission: false},
 				"CAN_RUN":    {isManagementPermission: false},
@@ -577,9 +634,9 @@ func allResourcePermissions() []resourcePermissions {
 			},
 		},
 		{
-			field:        "experiment_id",
-			objectType:   "mlflowExperiment",
-			resourceType: "experiments",
+			field:             "experiment_id",
+			objectType:        "mlflowExperiment",
+			requestObjectType: "experiments",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":   {isManagementPermission: false},
 				"CAN_EDIT":   {isManagementPermission: false},
@@ -588,9 +645,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "registered_model_id",
-			objectType:   "registered-model",
-			resourceType: "registered-models",
+			field:             "registered_model_id",
+			objectType:        "registered-model",
+			requestObjectType: "registered-models",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_READ":                       {isManagementPermission: false},
 				"CAN_EDIT":                       {isManagementPermission: false},
@@ -608,9 +665,9 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers:   []aclReadCustomizer{removeAdminPermissionsCustomizer},
 		},
 		{
-			field:        "serving_endpoint_id",
-			objectType:   "serving-endpoint",
-			resourceType: "serving-endpoints",
+			field:             "serving_endpoint_id",
+			objectType:        "serving-endpoint",
+			requestObjectType: "serving-endpoints",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_VIEW":   {isManagementPermission: false},
 				"CAN_QUERY":  {isManagementPermission: false},

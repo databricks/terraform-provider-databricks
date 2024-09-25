@@ -16,6 +16,7 @@ type aclUpdateCustomizer func(ctx aclUpdateCustomizerContext, objectAcls []iam.A
 // Context that is available to aclReadCustomizer implementations.
 type aclReadCustomizerContext struct {
 	getId func() string
+	getExistingPermissionsEntity func() PermissionsEntity
 }
 
 // aclReadCustomizer is a function that modifies the access control list of an object after it is read.
@@ -75,4 +76,28 @@ func removeAdminPermissionsCustomizer(ctx aclReadCustomizerContext, acl *iam.Obj
 	}
 	acl.AccessControlList = filteredAcl
 	return acl, nil
+}
+
+func rewritePermissionForUpdate(old, new iam.PermissionLevel) aclUpdateCustomizer {
+	return func(ctx aclUpdateCustomizerContext, acl []iam.AccessControlRequest) ([]iam.AccessControlRequest, error) {
+		for i := range acl {
+			if acl[i].PermissionLevel == old {
+				acl[i].PermissionLevel = new
+			}
+		}
+		return acl, nil
+	}
+}
+
+func rewritePermissionForRead(old, new iam.PermissionLevel) aclReadCustomizer {
+	return func(ctx aclReadCustomizerContext, acl *iam.ObjectPermissions) (*iam.ObjectPermissions, error) {
+		for i := range acl.AccessControlList {
+			for j := range acl.AccessControlList[i].AllPermissions {
+				if acl.AccessControlList[i].AllPermissions[j].PermissionLevel == old {
+					acl.AccessControlList[i].AllPermissions[j].PermissionLevel = new
+				}
+			}
+		}
+		return acl, nil
+	}
 }

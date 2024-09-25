@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -35,36 +38,35 @@ var (
 
 func TestResourcePermissionsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: &iam.ObjectPermissions{
-					ObjectId:   "/clusters/abc",
-					ObjectType: "cluster",
-					AccessControlList: []iam.AccessControlResponse{
-						{
-							UserName: TestingUser,
-							AllPermissions: []iam.Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []iam.Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -83,17 +85,16 @@ func TestResourcePermissionsRead(t *testing.T) {
 // https://github.com/databricks/terraform-provider-databricks/issues/1227
 func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Status:   400,
-				Response: apierr.APIError{
-					ErrorCode: "INVALID_STATE",
-					Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
-				},
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(nil, &apierr.APIError{
+				StatusCode: 400,
+				ErrorCode:  "INVALID_STATE",
+				Message:    "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
+			})
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -116,11 +117,11 @@ func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 					ObjectType: "registered-model",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -169,11 +170,11 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 					ObjectType: "registered-model",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -228,11 +229,11 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 					ObjectType: "registered-model",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -276,11 +277,11 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 					ObjectType: "registered-model",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -319,11 +320,11 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 					ObjectType: "dashboard",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -356,11 +357,11 @@ func TestResourcePermissionsRead_Dashboard(t *testing.T) {
 					ObjectType: "dashboard",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -779,11 +780,11 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 					ObjectType: "dashboard",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRun}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -842,15 +843,15 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 					ObjectType: "warehouses",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -930,15 +931,15 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
 					ObjectType: "warehouses",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -997,15 +998,15 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 					ObjectType: "warehouses",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 						{
-							UserName:        TestingOwner,
+							UserName:       TestingOwner,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 						},
 					},
@@ -1396,10 +1397,12 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping, _ := getResourcePermissions("/authorization/tokens")
-		err := p.Update("/authorization/tokens", []iam.AccessControlRequest{
-			{
-				UserName:        "me",
-				PermissionLevel: "CAN_MANAGE",
+		err := p.Update("/authorization/tokens", PermissionsEntity{
+			AccessControlList: []iam.AccessControlRequest{
+				{
+					UserName:        "me",
+					PermissionLevel: "CAN_MANAGE",
+				},
 			},
 		}, mapping)
 		assert.NoError(t, err)
@@ -1444,11 +1447,11 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testi
 			ExpectedRequest: &iam.ObjectPermissions{
 				AccessControlList: []iam.AccessControlResponse{
 					{
-						GroupName:       "admins",
+						GroupName:      "admins",
 						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 					{
-						UserName:        "creator@example.com",
+						UserName:       "creator@example.com",
 						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 					},
 				},
@@ -1543,11 +1546,11 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 			ExpectedRequest: &iam.ObjectPermissions{
 				AccessControlList: []iam.AccessControlResponse{
 					{
-						GroupName:       "admins",
+						GroupName:      "admins",
 						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 					{
-						UserName:        "creator@example.com",
+						UserName:       "creator@example.com",
 						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 					},
 				},
@@ -1706,11 +1709,11 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 					ObjectType: "query",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRun}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -1766,11 +1769,11 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 					ObjectType: "query",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRun}},
 						},
 						{
-							UserName:        TestingAdminUser,
+							UserName:       TestingAdminUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},
@@ -1907,7 +1910,7 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 					ObjectType: "passwords",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							GroupName:       "admins",
+							GroupName:      "admins",
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 						},
 					},
@@ -1960,11 +1963,11 @@ func TestResourcePermissionsRootDirectory(t *testing.T) {
 					ObjectType: "directory",
 					AccessControlList: []iam.AccessControlResponse{
 						{
-							UserName:        TestingUser,
+							UserName:       TestingUser,
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
 						},
 						{
-							GroupName:       "admins",
+							GroupName:      "admins",
 							AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 						},
 					},

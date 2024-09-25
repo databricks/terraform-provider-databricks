@@ -14,34 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func toPermissionsEntity(oa *iam.ObjectPermissions, d *schema.ResourceData, existing PermissionsEntity, me string, mapping resourcePermissions) (PermissionsEntity, error) {
-	entity := PermissionsEntity{}
-	for _, accessControl := range oa.AccessControlList {
-		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
-			// If the user doesn't include an access_control block for themselves, do not include it in the state.
-			// On create/update, the provider will automatically include the current user in the access_control block
-			// for appropriate resources. Otherwise, it must be included in state to prevent configuration drift.
-			if !existing.containsUserOrServicePrincipal(me) {
-				continue
-			}
-		}
-		entity.AccessControlList = append(entity.AccessControlList, iam.AccessControlRequest{
-			GroupName:            accessControl.GroupName,
-			UserName:             accessControl.UserName,
-			ServicePrincipalName: accessControl.ServicePrincipalName,
-			PermissionLevel:      accessControl.AllPermissions[0].PermissionLevel,
-		})
-	}
-	entity.ObjectType = mapping.objectType
-	pathVariant := d.Get(mapping.getPathVariant())
-	if pathVariant != nil && pathVariant.(string) != "" {
-		// we're not importing and it's a path... it's set, so let's not re-set it
-		return entity, nil
-	}
-	identifier := path.Base(oa.ObjectId)
-	return entity, d.Set(mapping.field, identifier)
-}
-
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
 func NewPermissionsAPI(ctx context.Context, m any) PermissionsAPI {
 	return PermissionsAPI{
@@ -67,14 +39,14 @@ func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []iam.Access
 	withOwner := mapping.addOwnerPermissionIfNeeded(objectACL, ownerOpt)
 	_, err = w.Permissions.Set(a.context, iam.PermissionsRequest{
 		RequestObjectId:   id,
-		RequestObjectType: mapping.resourceType,
+		RequestObjectType: mapping.requestObjectType,
 		AccessControlList: withOwner,
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
 			_, err = w.Permissions.Set(a.context, iam.PermissionsRequest{
 				RequestObjectId:   objectID,
-				RequestObjectType: mapping.resourceType,
+				RequestObjectType: mapping.requestObjectType,
 				AccessControlList: objectACL,
 			})
 		}
@@ -96,7 +68,7 @@ func (a PermissionsAPI) getCurrentUser() (string, error) {
 }
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
-func (a PermissionsAPI) Update(objectID string, objectACL []iam.AccessControlRequest, mapping resourcePermissions) error {
+func (a PermissionsAPI) Update(objectID string, entity PermissionsEntity, mapping resourcePermissions) error {
 	currentUser, err := a.getCurrentUser()
 	if err != nil {
 		return err
@@ -104,22 +76,22 @@ func (a PermissionsAPI) Update(objectID string, objectACL []iam.AccessControlReq
 	// this logic was moved from CustomizeDiff because of undeterministic auth behavior
 	// in the corner-case scenarios.
 	// see https://github.com/databricks/terraform-provider-databricks/issues/2052
-	err = mapping.validate(objectACL, currentUser)
+	err = mapping.validate(entity, currentUser)
 	if err != nil {
 		return err
 	}
-	accl, err := mapping.prepareForUpdate(objectID, objectACL, currentUser)
+	prepared, err := mapping.prepareForUpdate(objectID, entity, currentUser)
 	if err != nil {
 		return err
 	}
-	return a.safePutWithOwner(objectID, accl, mapping, currentUser)
+	return a.safePutWithOwner(objectID, prepared.AccessControlList, mapping, currentUser)
 }
 
 // Delete gracefully removes permissions of non-admin users. After this operation, the object is managed
 // by the current user and admin group. If the resource has IS_OWNER permissions, they are reset to the
 // object creator, if it can be determined.
 func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) error {
-	objectACL, err := a.Read(objectID, mapping)
+	objectACL, err := a.readRaw(objectID, mapping)
 	if err != nil {
 		return err
 	}
@@ -142,17 +114,16 @@ func (a PermissionsAPI) Delete(objectID string, mapping resourcePermissions) err
 	return a.safePutWithOwner(objectID, accl, mapping, resourceStatus.creator)
 }
 
-// Read gets all relevant permissions for the object, including inherited ones
-func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions) (objectACL *iam.ObjectPermissions, err error) {
+func (a PermissionsAPI) readRaw(objectID string, mapping resourcePermissions) (*iam.ObjectPermissions, error) {
 	w, err := a.client.WorkspaceClient()
 	if err != nil {
-		return objectACL, err
+		return nil, err
 	}
 	idParts := strings.Split(objectID, "/")
 	id := idParts[len(idParts)-1]
 	permissions, err := w.Permissions.Get(a.context, iam.GetPermissionRequest{
 		RequestObjectId:   id,
-		RequestObjectType: mapping.resourceType,
+		RequestObjectType: mapping.requestObjectType,
 	})
 	var apiErr *apierr.APIError
 	// https://github.com/databricks/terraform-provider-databricks/issues/1227
@@ -162,12 +133,20 @@ func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions) (obje
 	if errors.As(err, &apiErr) && strings.Contains(apiErr.Message, "Cannot access cluster") && apiErr.StatusCode == 400 {
 		apiErr.StatusCode = 404
 		err = apiErr
-		return
 	}
 	if err != nil {
-		return objectACL, err
+		return nil, err
 	}
-	return mapping.prepareResponse(objectID, permissions)
+	return permissions, nil
+}
+
+// Read gets all relevant permissions for the object, including inherited ones
+func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions, existing PermissionsEntity, me string) (PermissionsEntity, error) {
+	permissions, err := a.readRaw(objectID, mapping)
+	if err != nil {
+		return PermissionsEntity{}, err
+	}
+	return mapping.prepareResponse(objectID, permissions, existing, me)
 }
 
 // PermissionsEntity is the one used for resource metadata
@@ -236,17 +215,13 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			objectACL, err := a.Read(id, mapping)
-			if err != nil {
-				return err
-			}
+			var existing PermissionsEntity
+			common.DataToStructPointer(d, s, &existing)
 			me, err := a.getCurrentUser()
 			if err != nil {
 				return err
 			}
-			var existing PermissionsEntity
-			common.DataToStructPointer(d, s, &existing)
-			entity, err := toPermissionsEntity(objectACL, d, existing, me, mapping)
+			entity, err := a.Read(id, mapping, existing, me)
 			if err != nil {
 				return err
 			}
@@ -254,6 +229,14 @@ func ResourcePermissions() common.Resource {
 				// empty "modifiable" access control list is the same as resource absence
 				d.SetId("")
 				return nil
+			}
+			entity.ObjectType = mapping.objectType
+			pathVariant := d.Get(mapping.getPathVariant())
+			if pathVariant == nil || pathVariant.(string) == "" {
+				identifier := path.Base(id)
+				if err = d.Set(mapping.field, identifier); err != nil {
+					return err
+				}
 			}
 			return common.StructToData(entity, s, d)
 		},
@@ -272,7 +255,7 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			err = NewPermissionsAPI(ctx, c).Update(objectID, entity.AccessControlList, mapping)
+			err = NewPermissionsAPI(ctx, c).Update(objectID, entity, mapping)
 			if err != nil {
 				return err
 			}
@@ -286,7 +269,7 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			return NewPermissionsAPI(ctx, c).Update(d.Id(), entity.AccessControlList, mapping)
+			return NewPermissionsAPI(ctx, c).Update(d.Id(), entity, mapping)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			mapping, err := getResourcePermissions(d.Id())

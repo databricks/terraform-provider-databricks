@@ -34,6 +34,9 @@ type resourcePermissions struct {
 	// some objects are done by path, whereas others are by ID. Those by path need to be converted to the
 	// internal object ID before being stored in the state. If not specified, the default ID is "/<resource_type>/<id>".
 	idRetriever func(ctx context.Context, w *databricks.WorkspaceClient, id string) (string, error)
+	// By default, a resourcePermissions can be retrieved based on the structure of the ID, as described above.
+	// If this function is set, it will be used to determine whether the ID matches this resource type.
+	idMatcher func(id string) bool
 	// A custom matcher to check whether a given ID matches this resource type.
 	// Most resources can be determined by looking at the attribute name used to configure the permission, but
 	// tokens & passwords are special cases where the resource type is determined by the value of this attribute.
@@ -199,6 +202,9 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 		getId:                        func() string { return objectID },
 		getExistingPermissionsEntity: func() PermissionsEntity { return existing },
 	}
+	if objectACL.ObjectType != p.objectType {
+		return PermissionsEntity{}, fmt.Errorf("expected object type %s, got %s", p.objectType, objectACL.ObjectType)
+	}
 	for _, customizer := range p.readAclCustomizers {
 		var err error
 		objectACL, err = customizer(ctx, objectACL)
@@ -255,21 +261,21 @@ type permissionLevelOptions struct {
 	isManagementPermission bool
 }
 
-// getResourcePermissions returns the resourcePermissions for the given object ID.
-// This ID must be the ID of the object in the Terraform state.
-func getResourcePermissions(objectId string) (resourcePermissions, error) {
-	objectParts := strings.Split(objectId, "/")
-	objectType := strings.Join(objectParts[1:len(objectParts)-1], "/")
-	for _, p := range allResourcePermissions() {
-		if p.requestObjectType == objectType {
-			id := objectParts[len(objectParts)-1]
-			if p.stateMatcher != nil && !p.stateMatcher(id) {
-				continue
+func getResourcePermissionsFromId(id string) (resourcePermissions, error) {
+	idParts := strings.Split(id, "/")
+	objectType := strings.Join(idParts[1:len(idParts)-1], "/")
+	for _, mapping := range allResourcePermissions() {
+		if mapping.idMatcher != nil {
+			if mapping.idMatcher(id) {
+				return mapping, nil
 			}
-			return p, nil
+			continue
+		}
+		if mapping.requestObjectType == objectType {
+			return mapping, nil
 		}
 	}
-	return resourcePermissions{}, fmt.Errorf("no permissions resource found for object type %s", objectType)
+	return resourcePermissions{}, fmt.Errorf("resource type for %s not found", id)
 }
 
 // getResourcePermissionsFromState returns the resourcePermissions for the given state.
@@ -498,6 +504,9 @@ func allResourcePermissions() []resourcePermissions {
 			stateMatcher: func(id string) bool {
 				return id == "tokens"
 			},
+			idMatcher: func(id string) bool {
+				return id == "/authorization/tokens"
+			},
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE":    {isManagementPermission: true},
 				"CAN_MANAGE": {isManagementPermission: true},
@@ -514,6 +523,9 @@ func allResourcePermissions() []resourcePermissions {
 			requestObjectType: "authorization",
 			stateMatcher: func(id string) bool {
 				return id == "passwords"
+			},
+			idMatcher: func(id string) bool {
+				return id == "/authorization/passwords"
 			},
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE": {isManagementPermission: true},
@@ -550,6 +562,9 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_MANAGE": {isManagementPermission: true},
 				// This was originally called CAN_VIEW in the preview API, but was renamed to CAN_READ in the GA API.
 				"CAN_VIEW": {isManagementPermission: false},
+			},
+			idMatcher: func(id string) bool {
+				return strings.HasPrefix(id, "/dbsql-dashboards/") || strings.HasPrefix(id, "/sql/dashboards/")
 			},
 			updateAclCustomizers: []aclUpdateCustomizer{
 				addCurrentUserAsManageCustomizer,

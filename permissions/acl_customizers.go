@@ -15,7 +15,7 @@ type aclUpdateCustomizer func(ctx aclUpdateCustomizerContext, objectAcls []iam.A
 
 // Context that is available to aclReadCustomizer implementations.
 type aclReadCustomizerContext struct {
-	getId func() string
+	getId                        func() string
 	getExistingPermissionsEntity func() PermissionsEntity
 }
 

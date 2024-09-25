@@ -45,7 +45,7 @@ func (a PermissionsAPI) safePutWithOwner(objectID string, objectACL []iam.Access
 	if err != nil {
 		if strings.Contains(err.Error(), "with no existing owner must provide a new owner") {
 			_, err = w.Permissions.Set(a.context, iam.PermissionsRequest{
-				RequestObjectId:   objectID,
+				RequestObjectId:   id,
 				RequestObjectType: mapping.requestObjectType,
 				AccessControlList: objectACL,
 			})
@@ -210,9 +210,8 @@ func ResourcePermissions() common.Resource {
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			id := d.Id()
 			a := NewPermissionsAPI(ctx, c)
-			mapping, err := getResourcePermissions(id)
+			mapping, err := getResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
 			}
@@ -222,6 +221,7 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
+			id := d.Id()
 			entity, err := a.Read(id, mapping, existing, me)
 			if err != nil {
 				return err
@@ -248,11 +248,11 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			mapping, id, err := getResourcePermissionsFromState(d)
+			mapping, configuredValue, err := getResourcePermissionsFromState(d)
 			if err != nil {
 				return err
 			}
-			objectID, err := mapping.getID(ctx, w, id)
+			objectID, err := mapping.getID(ctx, w, configuredValue)
 			if err != nil {
 				return err
 			}
@@ -266,14 +266,14 @@ func ResourcePermissions() common.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var entity PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
-			mapping, err := getResourcePermissions(d.Id())
+			mapping, err := getResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
 			}
 			return NewPermissionsAPI(ctx, c).Update(d.Id(), entity, mapping)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			mapping, err := getResourcePermissions(d.Id())
+			mapping, err := getResourcePermissionsFromId(d.Id())
 			if err != nil {
 				return err
 			}

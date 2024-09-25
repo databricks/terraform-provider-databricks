@@ -132,6 +132,7 @@ func (a PermissionsAPI) readRaw(objectID string, mapping resourcePermissions) (*
 	// cross-package dependency on "clusters".
 	if errors.As(err, &apiErr) && strings.Contains(apiErr.Message, "Cannot access cluster") && apiErr.StatusCode == 400 {
 		apiErr.StatusCode = 404
+		apiErr.ErrorCode = "RESOURCE_DOES_NOT_EXIST"
 		err = apiErr
 	}
 	if err != nil {

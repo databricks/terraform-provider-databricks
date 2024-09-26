@@ -122,6 +122,8 @@ func shareChanges(si sharing.ShareInfo, action string) sharing.UpdateShare {
 		)
 	}
 	return sharing.UpdateShare{
+		Name:    si.Name,
+		Owner:   si.Owner,
 		Updates: changes,
 	}
 }
@@ -176,37 +178,35 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var shareInfoTfSDK ShareInfoExtended
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &shareInfoTfSDK)...)
+	var plan ShareInfoExtended
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var createShareGoSDK sharing.CreateShare
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, shareInfoTfSDK, &createShareGoSDK)...)
+	var planGoSDK sharing.ShareInfo
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &planGoSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	share, err := w.Shares.Create(ctx, createShareGoSDK)
+
+	var createShare sharing.CreateShare
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &createShare)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	shareInfo, err := w.Shares.Create(ctx, createShare)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create share", err.Error())
 		return
 	}
 
-	var shareInfoGoSDK sharing.ShareInfo
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, shareInfoTfSDK, &shareInfoGoSDK)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	shareChanges := shareChanges(planGoSDK, string(sharing.SharedDataObjectUpdateActionAdd))
 
-	shareChanges := shareChanges(shareInfoGoSDK, string(sharing.SharedDataObjectUpdateActionAdd))
-	shareChanges.Name = shareInfoTfSDK.Name.ValueString()
-	shareChanges.Owner = shareInfoTfSDK.Owner.ValueString()
-
-	updatedShareInfoGoSDK, err := w.Shares.Update(ctx, shareChanges)
+	updatedShareInfo, err := w.Shares.Update(ctx, shareChanges)
 	if err != nil {
 		// delete orphaned share if update fails
-		if d_err := w.Shares.DeleteByName(ctx, share.Name); d_err != nil {
+		if d_err := w.Shares.DeleteByName(ctx, shareInfo.Name); d_err != nil {
 			resp.Diagnostics.AddError("failed to delete orphaned share", d_err.Error())
 			return
 		}
@@ -214,17 +214,17 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	matchOrder(updatedShareInfoGoSDK.Objects, shareInfoGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
+	matchOrder(updatedShareInfo.Objects, planGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
 
-	var newShareInfoTfSDK ShareInfoExtended
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, updatedShareInfoGoSDK, &newShareInfoTfSDK)...)
+	var newState ShareInfoExtended
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, updatedShareInfo, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	newShareInfoTfSDK.Owner = shareInfoTfSDK.Owner
+	newState.Owner = plan.Owner
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, newShareInfoTfSDK)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -246,14 +246,14 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	var getShare sharing.GetShareRequest
-	getShare.IncludeSharedData = true
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &getShare.Name)...)
+	var getShareRequest sharing.GetShareRequest
+	getShareRequest.IncludeSharedData = true
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &getShareRequest.Name)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	shareInfo, err := w.Shares.Get(ctx, getShare)
+	shareInfo, err := w.Shares.Get(ctx, getShareRequest)
 	matchOrder(shareInfo.Objects, stateGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
 	suppressCDFEnabledDiff(shareInfo)
 
@@ -265,15 +265,16 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		resp.Diagnostics.AddError("failed to get share", err.Error())
 		return
 	}
-	var shareInfoTfSDK ShareInfoExtended
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, shareInfo, &shareInfoTfSDK)...)
+
+	var newState ShareInfoExtended
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, shareInfo, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// shareInfoTfSDK.OriginalValues = state.OriginalValues
+	// newState.OriginalValues = state.OriginalValues
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, shareInfoTfSDK)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -296,26 +297,26 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	var plannedShareInfoGoSDK sharing.ShareInfo
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &plannedShareInfoGoSDK)...)
+	var planGoSDK sharing.ShareInfo
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &planGoSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// get the share into a goSDK struct
-	var getShare sharing.GetShareRequest
-	getShare.Name = state.Name.ValueString()
-	getShare.IncludeSharedData = true
+	var getShareRequest sharing.GetShareRequest
+	getShareRequest.Name = state.Name.ValueString()
+	getShareRequest.IncludeSharedData = true
 
-	currentShareInfo, err := client.Shares.Get(ctx, getShare)
+	currentShareInfo, err := client.Shares.Get(ctx, getShareRequest)
 	if err != nil {
 		return
 	}
 
-	matchOrder(currentShareInfo.Objects, plannedShareInfoGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
+	matchOrder(currentShareInfo.Objects, planGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
 	suppressCDFEnabledDiff(currentShareInfo)
 
-	changes := diff(*currentShareInfo, plannedShareInfoGoSDK)
+	changes := diff(*currentShareInfo, planGoSDK)
 
 	// if owner has changed, update the share owner
 	if !plan.Owner.IsNull() {
@@ -373,12 +374,12 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	var deleteRequest sharing_tf.DeleteShareRequest
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &deleteRequest.Name)...)
+	var deleteShareRequest sharing_tf.DeleteShareRequest
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &deleteShareRequest.Name)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	err := w.Shares.DeleteByName(ctx, deleteRequest.Name.ValueString())
+	err := w.Shares.DeleteByName(ctx, deleteShareRequest.Name.ValueString())
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete share", err.Error())
 	}

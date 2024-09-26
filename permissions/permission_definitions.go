@@ -48,8 +48,9 @@ type resourcePermissions struct {
 	// The alternative name of the "path" attribute for this resource. E.g. "workspace_file_path" for a file.
 	// If not set, default is "<object_type>_path".
 	pathVariant string
-	// If true, the provider will allow the user to configure the "admins" group for this resource type.
-	// All resources besides passwords should set this to false.
+	// If true, the provider will allow the user to configure the "admins" group for this resource type. Otherwise,
+	// validation will fail if the user tries to configure the "admins" group, and admin configurations in API
+	// responses will be ignored. This should only be set to true for the "authorization = passwords" resource.
 	allowConfiguringAdmins bool
 	// Customizers when handling permission resource creation and update.
 	//

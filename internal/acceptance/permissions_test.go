@@ -523,7 +523,7 @@ func TestAccPermissions_Repo_Id(t *testing.T) {
 				group1Name := s.RootModule().Resources["databricks_group._0"].Primary.Attributes["display_name"]
 				assertContainsPermission(t, permissions, "group", group1Name, iam.PermissionLevelCanManage)
 				group2Name := s.RootModule().Resources["databricks_group._1"].Primary.Attributes["display_name"]
-				assertContainsPermission(t, permissions, "group", group2Name, iam.PermissionLevelCanRun)
+				assertContainsPermission(t, permissions, "group", group2Name, iam.PermissionLevelCanRead)
 				return nil
 			},
 		),

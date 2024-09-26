@@ -76,7 +76,7 @@ func (a PermissionsAPI) Update(objectID string, entity PermissionsEntity, mappin
 	// this logic was moved from CustomizeDiff because of undeterministic auth behavior
 	// in the corner-case scenarios.
 	// see https://github.com/databricks/terraform-provider-databricks/issues/2052
-	err = mapping.validate(entity, currentUser)
+	err = mapping.validate(a.context, entity, currentUser)
 	if err != nil {
 		return err
 	}

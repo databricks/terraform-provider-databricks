@@ -66,22 +66,10 @@ func addCurrentUserAsManageCustomizer(ctx aclUpdateCustomizerContext, acl []iam.
 	return acl, nil
 }
 
-func removeAdminPermissionsCustomizer(ctx aclReadCustomizerContext, acl iam.ObjectPermissions) iam.ObjectPermissions {
-	// Remove all permissions for the 'admins' group.
-	filteredAcl := make([]iam.AccessControlResponse, 0, len(acl.AccessControlList))
-	for _, a := range acl.AccessControlList {
-		if a.GroupName != "admins" {
-			filteredAcl = append(filteredAcl, a)
-		}
-	}
-	acl.AccessControlList = filteredAcl
-	return acl
-}
-
-func rewritePermissionForUpdate(old, new iam.PermissionLevel) aclUpdateCustomizer {
+func rewritePermissionForUpdate(mapping map[iam.PermissionLevel]iam.PermissionLevel) aclUpdateCustomizer {
 	return func(ctx aclUpdateCustomizerContext, acl []iam.AccessControlRequest) ([]iam.AccessControlRequest, error) {
 		for i := range acl {
-			if acl[i].PermissionLevel == old {
+			if new, ok := mapping[acl[i].PermissionLevel]; ok {
 				acl[i].PermissionLevel = new
 			}
 		}
@@ -89,12 +77,38 @@ func rewritePermissionForUpdate(old, new iam.PermissionLevel) aclUpdateCustomize
 	}
 }
 
-func rewritePermissionForRead(old, new iam.PermissionLevel) aclReadCustomizer {
+// Rewrites the permission level of the access control list of an object after it is read.
+// This is done only for resources in state where the permission level is equal to the replacement value
+// in the mapping. For example, the permissons endpoint used to use the "CAN_VIEW" permission level for
+// read-only access, but this was changed to "CAN_READ". Users who previously used "CAN_VIEW" should not
+// be forced to change to "CAN_READ". This customizer will rewrite "CAN_READ" to "CAN_VIEW" when the
+// user-specified value is CAN_VIEW and the API response is CAN_READ.
+func rewritePermissionForRead(mapping map[iam.PermissionLevel]iam.PermissionLevel) aclReadCustomizer {
+	findOriginalAcl := func(new iam.AccessControlResponse, original PermissionsEntity) (iam.AccessControlRequest, bool) {
+		for _, old := range original.AccessControlList {
+			if new.GroupName != "" && old.GroupName == new.GroupName {
+				return old, true
+			}
+			if new.UserName != "" && old.UserName == new.UserName {
+				return old, true
+			}
+			if new.ServicePrincipalName != "" && old.ServicePrincipalName == new.ServicePrincipalName {
+				return old, true
+			}
+		}
+		return iam.AccessControlRequest{}, false
+	}
 	return func(ctx aclReadCustomizerContext, acl iam.ObjectPermissions) iam.ObjectPermissions {
+		original := ctx.getExistingPermissionsEntity()
 		for i := range acl.AccessControlList {
+			inState, found := findOriginalAcl(acl.AccessControlList[i], original)
 			for j := range acl.AccessControlList[i].AllPermissions {
-				if acl.AccessControlList[i].AllPermissions[j].PermissionLevel == old {
-					acl.AccessControlList[i].AllPermissions[j].PermissionLevel = new
+				// If the original permission level is remapped to a replacement level, and the permission level
+				// in state is equal to the replacement level, we rewrite it to the replacement level.
+				original := acl.AccessControlList[i].AllPermissions[j].PermissionLevel
+				replacement, ok := mapping[original]
+				if ok && found && inState.PermissionLevel == replacement {
+					acl.AccessControlList[i].AllPermissions[j].PermissionLevel = replacement
 				}
 			}
 		}

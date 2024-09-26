@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/stretchr/testify/assert"
@@ -74,6 +75,13 @@ func currentPrincipalPermission(t *testing.T, permissionLevel string) func(*make
 	}
 }
 
+func currentPrincipalType(t *testing.T) string {
+	if isGcp(t) {
+		return "user"
+	}
+	return "service_principal"
+}
+
 func customPermission(name string, permissionSettings permissionSettings) func(*makePermissionsConfig) {
 	return func(config *makePermissionsConfig) {
 		switch name {
@@ -109,7 +117,7 @@ func makePermissionsTestStage(idAttribute, idValue string, permissionOptions ...
 			if !permission.skipCreation {
 				resources += fmt.Sprintf(`
 				resource "%s" "_%d" {
-					%s = "%s"
+					%s = "permissions-%s"
 				}`, resourceType, i, resourceNameAttribute, getName(i))
 			}
 			var name string
@@ -164,7 +172,7 @@ func assertContainsPermission(t *testing.T, permissions *iam.ObjectPermissions, 
 			}
 		}
 	}
-	assert.Fail(t, "permission not found for %s %s", principalType, name)
+	assert.Fail(t, fmt.Sprintf("permission not found for %s %s", principalType, name))
 }
 
 //
@@ -259,10 +267,10 @@ func TestAccPermissions_Job(t *testing.T) {
 	}, Step{
 		Template: template + makePermissionsTestStage("job_id", "databricks_job.this.id", currentPrincipalPermission(t, "IS_OWNER"), allPrincipalPermissions("CAN_VIEW", "CAN_MANAGE_RUN", "CAN_MANAGE")),
 	}, Step{
-		Template: template + makePermissionsTestStage("job_id", "databricks_job.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), userPermissions("IS_OWNER")),
-	}, Step{
 		Template:    template + makePermissionsTestStage("job_id", "databricks_job.this.id", currentPrincipalPermission(t, "CAN_MANAGE_RUN")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for job, allowed levels: CAN_MANAGE, IS_OWNER"),
+	}, Step{
+		Template: template + makePermissionsTestStage("job_id", "databricks_job.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), userPermissions("IS_OWNER")),
 	}, Step{
 		Template: template,
 		Check: func(s *terraform.State) error {
@@ -274,7 +282,7 @@ func TestAccPermissions_Job(t *testing.T) {
 			assert.NoError(t, err)
 			job, err := w.Jobs.GetByJobId(context.Background(), int64(idInt))
 			assert.NoError(t, err)
-			assertContainsPermission(t, permissions, "service_principal", job.CreatorUserName, iam.PermissionLevelIsOwner)
+			assertContainsPermission(t, permissions, currentPrincipalType(t), job.CreatorUserName, iam.PermissionLevelIsOwner)
 			return nil
 		},
 	})
@@ -305,10 +313,10 @@ func TestAccPermissions_Pipeline(t *testing.T) {
 	}, Step{
 		Template: policyTemplate + makePermissionsTestStage("pipeline_id", "databricks_pipeline.this.id", currentPrincipalPermission(t, "IS_OWNER"), allPrincipalPermissions("CAN_VIEW", "CAN_RUN", "CAN_MANAGE")),
 	}, Step{
-		Template: policyTemplate + makePermissionsTestStage("pipeline_id", "databricks_pipeline.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), userPermissions("IS_OWNER"), groupPermissions("CAN_VIEW", "CAN_RUN", "CAN_MANAGE")),
-	}, Step{
 		Template:    policyTemplate + makePermissionsTestStage("pipeline_id", "databricks_pipeline.this.id", currentPrincipalPermission(t, "CAN_RUN")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for pipelines, allowed levels: CAN_MANAGE, IS_OWNER"),
+	}, Step{
+		Template: policyTemplate + makePermissionsTestStage("pipeline_id", "databricks_pipeline.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), userPermissions("IS_OWNER"), groupPermissions("CAN_VIEW", "CAN_RUN", "CAN_MANAGE")),
 	}, Step{
 		Template: policyTemplate,
 		Check: resourceCheck("databricks_pipeline.this", func(ctx context.Context, c *common.DatabricksClient, id string) error {
@@ -318,7 +326,7 @@ func TestAccPermissions_Pipeline(t *testing.T) {
 			assert.NoError(t, err)
 			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "pipelines", id)
 			assert.NoError(t, err)
-			assertContainsPermission(t, permissions, "service_principal", pipeline.CreatorUserName, iam.PermissionLevelIsOwner)
+			assertContainsPermission(t, permissions, currentPrincipalType(t), pipeline.CreatorUserName, iam.PermissionLevelIsOwner)
 			return nil
 		}),
 	})
@@ -408,6 +416,47 @@ func TestAccPermissions_Directory_Id(t *testing.T) {
 	})
 }
 
+// This test exercises both by ID and by path permissions for the root directory. Testing them
+// concurrently would result in a race condition.
+func TestAccPermissions_Directory_RootDirectoryCorrectlyHandlesAdminUsers(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	expectedAclAfterDeletion := []iam.AccessControlResponse{
+		{
+			GroupName: "admins",
+			AllPermissions: []iam.Permission{
+				{
+					PermissionLevel: iam.PermissionLevelCanManage,
+					ForceSendFields: []string{"Inherited", "PermissionLevel"},
+				},
+			},
+			ForceSendFields: []string{"GroupName"},
+		},
+	}
+	WorkspaceLevel(t, Step{
+		Template: makePermissionsTestStage("directory_id", "\"0\"", groupPermissions("CAN_RUN")),
+	}, Step{
+		Template: `data databricks_current_user me {}`,
+		Check: func(s *terraform.State) error {
+			w := databricks.Must(databricks.NewWorkspaceClient())
+			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "directories", "0")
+			assert.NoError(t, err)
+			assert.Equal(t, expectedAclAfterDeletion, permissions.AccessControlList)
+			return nil
+		},
+	}, Step{
+		Template: makePermissionsTestStage("directory_path", "\"/\"", groupPermissions("CAN_RUN")),
+	}, Step{
+		Template: `data databricks_current_user me {}`,
+		Check: func(s *terraform.State) error {
+			w := databricks.Must(databricks.NewWorkspaceClient())
+			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "directories", "0")
+			assert.NoError(t, err)
+			assert.Equal(t, expectedAclAfterDeletion, permissions.AccessControlList)
+			return nil
+		},
+	})
+}
+
 func TestAccPermissions_WorkspaceFile_Path(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	workspaceFile := `
@@ -464,20 +513,20 @@ func TestAccPermissions_Repo_Id(t *testing.T) {
 		`
 	WorkspaceLevel(t, Step{
 		Template: template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", groupPermissions("CAN_MANAGE", "CAN_READ")),
-		// Check: resource.ComposeTestCheckFunc(
-		// 	resource.TestCheckResourceAttr("databricks_permissions.this", "object_type", "repo"),
-		// 	func(s *terraform.State) error {
-		// 		w := databricks.Must(databricks.NewWorkspaceClient())
-		// 		repoId := s.RootModule().Resources["databricks_repo.this"].Primary.ID
-		// 		permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "repos", repoId)
-		// 		assert.NoError(t, err)
-		// 		group1Name := s.RootModule().Resources["databricks_group._0"].Primary.Attributes["display_name"]
-		// 		assertContainsPermission(t, permissions, "group", group1Name, iam.PermissionLevelCanManage)
-		// 		group2Name := s.RootModule().Resources["databricks_group._1"].Primary.Attributes["display_name"]
-		// 		assertContainsPermission(t, permissions, "group", group2Name, iam.PermissionLevelCanRun)
-		// 		return nil
-		// 	},
-		// ),
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permissions.this", "object_type", "repo"),
+			func(s *terraform.State) error {
+				w := databricks.Must(databricks.NewWorkspaceClient())
+				repoId := s.RootModule().Resources["databricks_repo.this"].Primary.ID
+				permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "repos", repoId)
+				assert.NoError(t, err)
+				group1Name := s.RootModule().Resources["databricks_group._0"].Primary.Attributes["display_name"]
+				assertContainsPermission(t, permissions, "group", group1Name, iam.PermissionLevelCanManage)
+				group2Name := s.RootModule().Resources["databricks_group._1"].Primary.Attributes["display_name"]
+				assertContainsPermission(t, permissions, "group", group2Name, iam.PermissionLevelCanRun)
+				return nil
+			},
+		),
 	}, Step{
 		Template: template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
 	}, Step{
@@ -498,20 +547,20 @@ func TestAccPermissions_Repo_Path(t *testing.T) {
 		`
 	WorkspaceLevel(t, Step{
 		Template: template + makePermissionsTestStage("repo_path", "databricks_repo.this.path", groupPermissions("CAN_MANAGE", "CAN_RUN")),
-		// Check: resource.ComposeTestCheckFunc(
-		// 	resource.TestCheckResourceAttr("databricks_permissions.this", "object_type", "repo"),
-		// 	func(s *terraform.State) error {
-		// 		w := databricks.Must(databricks.NewWorkspaceClient())
-		// 		repoId := s.RootModule().Resources["databricks_repo.this"].Primary.ID
-		// 		permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "repos", repoId)
-		// 		assert.NoError(t, err)
-		// 		group1Name := s.RootModule().Resources["databricks_group._0"].Primary.Attributes["display_name"]
-		// 		assertContainsPermission(t, permissions, "group", group1Name, iam.PermissionLevelCanManage)
-		// 		group2Name := s.RootModule().Resources["databricks_group._1"].Primary.Attributes["display_name"]
-		// 		assertContainsPermission(t, permissions, "group", group2Name, iam.PermissionLevelCanRun)
-		// 		return nil
-		// 	},
-		// ),
+		Check: resource.ComposeTestCheckFunc(
+			resource.TestCheckResourceAttr("databricks_permissions.this", "object_type", "repo"),
+			func(s *terraform.State) error {
+				w := databricks.Must(databricks.NewWorkspaceClient())
+				repoId := s.RootModule().Resources["databricks_repo.this"].Primary.ID
+				permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "repos", repoId)
+				assert.NoError(t, err)
+				group1Name := s.RootModule().Resources["databricks_group._0"].Primary.Attributes["display_name"]
+				assertContainsPermission(t, permissions, "group", group1Name, iam.PermissionLevelCanManage)
+				group2Name := s.RootModule().Resources["databricks_group._1"].Primary.Attributes["display_name"]
+				assertContainsPermission(t, permissions, "group", group2Name, iam.PermissionLevelCanRun)
+				return nil
+			},
+		),
 	}, Step{
 		Template: template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
 	}, Step{
@@ -538,6 +587,26 @@ func TestAccPermissions_Authorization_Tokens(t *testing.T) {
 		Template: makePermissionsTestStage("authorization", "\"tokens\"", groupPermissions("CAN_USE")),
 	}, Step{
 		Template: makePermissionsTestStage("authorization", "\"tokens\"", customPermission("group", permissionSettings{ref: `"users"`, skipCreation: true, permissionLevel: "CAN_USE"})),
+	}, Step{
+		// Template needs to be non-empty
+		Template: "data databricks_current_user me {}",
+		Check: func(s *terraform.State) error {
+			w := databricks.Must(databricks.NewWorkspaceClient())
+			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "authorization", "tokens")
+			assert.NoError(t, err)
+			assert.Len(t, permissions.AccessControlList, 1)
+			assert.Equal(t, iam.AccessControlResponse{
+				GroupName: "admins",
+				AllPermissions: []iam.Permission{
+					{
+						PermissionLevel: iam.PermissionLevelCanManage,
+						ForceSendFields: []string{"Inherited", "PermissionLevel"},
+					},
+				},
+				ForceSendFields: []string{"GroupName"},
+			}, permissions.AccessControlList[0])
+			return nil
+		},
 	})
 }
 
@@ -548,15 +617,20 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 			name = "{var.STICKY_RANDOM}"
 			cluster_size = "2X-Small"
 		}`
-	// Note: ideally we could test making a new user the owner of the warehouse, but the new user
-	// needs cluster creation permissions, and the SCIM API doesn't provide get-after-put consistency,
-	// so this would introduce flakiness.
 	WorkspaceLevel(t, Step{
 		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
 	}, Step{
 		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", currentPrincipalPermission(t, "IS_OWNER"), allPrincipalPermissions("CAN_USE", "CAN_MANAGE", "CAN_MONITOR")),
-	}, Step{
-		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), servicePrincipalPermissions("IS_OWNER")),
+		// Note: ideally we could test making a new user/SP the owner of the warehouse, but the new user
+		// needs cluster creation permissions, and the SCIM API doesn't provide get-after-put consistency,
+		// so this would introduce flakiness.
+		// }, Step{
+		// 	Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), servicePrincipalPermissions("IS_OWNER")) + `
+		// 	    resource databricks_entitlements "this" {
+		// 			application_id = databricks_service_principal._0.application_id
+		// 			allow_cluster_create = true
+		// 		}
+		// 	`,
 	}, Step{
 		Template:    sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", currentPrincipalPermission(t, "CAN_USE")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for warehouses, allowed levels: CAN_MANAGE, IS_OWNER"),
@@ -569,7 +643,7 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 			assert.NoError(t, err)
 			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "warehouses", id)
 			assert.NoError(t, err)
-			assertContainsPermission(t, permissions, "service_principal", warehouse.CreatorName, iam.PermissionLevelIsOwner)
+			assertContainsPermission(t, permissions, currentPrincipalType(t), warehouse.CreatorName, iam.PermissionLevelIsOwner)
 			return nil
 		},
 	})
@@ -584,10 +658,10 @@ func TestAccPermissions_SqlDashboard(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", groupPermissions("CAN_VIEW")),
 	}, Step{
-		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_VIEW", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
-	}, Step{
 		Template:    dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_VIEW")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for dashboard, allowed levels: CAN_MANAGE"),
+	}, Step{
+		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_VIEW", "CAN_READ", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
 	})
 }
 
@@ -697,7 +771,6 @@ func TestAccPermissions_RegisteredModel(t *testing.T) {
 }
 
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
-	skipf(t)("Serving endpoint update is flaky")
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	endpointTemplate := `
 	resource "databricks_model_serving" "endpoint" {
@@ -720,8 +793,9 @@ func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	}`
 	WorkspaceLevel(t, Step{
 		Template: endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.id", groupPermissions("CAN_VIEW")),
-	}, Step{
-		Template: endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.id", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_VIEW", "CAN_QUERY", "CAN_MANAGE")),
+	// Updating a serving endpoint seems to be flaky, so we'll only test that we can't remove management permissions for the current user.
+	// }, Step{
+	// 	Template: endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.id", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_VIEW", "CAN_QUERY", "CAN_MANAGE")),
 	}, Step{
 		Template:    endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.id", currentPrincipalPermission(t, "CAN_VIEW"), groupPermissions("CAN_VIEW", "CAN_QUERY", "CAN_MANAGE")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for servingEndpoint, allowed levels: CAN_MANAGE"),

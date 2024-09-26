@@ -445,7 +445,9 @@ type CreateMetastore struct {
 }
 
 type CreateMetastoreAssignment struct {
-	// The name of the default catalog in the metastore.
+	// The name of the default catalog in the metastore. This field is
+	// depracted. Please use "Default Namespace API" to configure the default
+	// catalog for a Databricks workspace.
 	DefaultCatalogName types.String `tfsdk:"default_catalog_name" tf:""`
 	// The unique ID of the metastore.
 	MetastoreId types.String `tfsdk:"metastore_id" tf:""`
@@ -2105,6 +2107,21 @@ type ReadVolumeRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+type RegenerateDashboardRequest struct {
+	// Full name of the table.
+	TableName types.String `tfsdk:"-"`
+	// Optional argument to specify the warehouse for dashboard regeneration. If
+	// not specified, the first running warehouse will be used.
+	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+}
+
+type RegenerateDashboardResponse struct {
+	// Id of the regenerated monitoring dashboard.
+	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
+	// The directory where the regenerated dashboard is stored.
+	ParentFolder types.String `tfsdk:"parent_folder" tf:"optional"`
+}
+
 // Registered model alias.
 type RegisteredModelAlias struct {
 	// Name of the alias, e.g. 'champion' or 'latest_stable'
@@ -2510,7 +2527,9 @@ type UpdateMetastore struct {
 }
 
 type UpdateMetastoreAssignment struct {
-	// The name of the default catalog for the metastore.
+	// The name of the default catalog in the metastore. This field is
+	// depracted. Please use "Default Namespace API" to configure the default
+	// catalog for a Databricks workspace.
 	DefaultCatalogName types.String `tfsdk:"default_catalog_name" tf:"optional"`
 	// The unique ID of the metastore.
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`

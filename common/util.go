@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +12,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/databricks/databricks-sdk-go/apierr"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -86,4 +89,19 @@ func ReadSerializedJsonContent(jsonStr, filePath string) (serJSON string, md5Has
 	}
 	md5Hash = CalculateMd5Hash(content)
 	return string(content), md5Hash, nil
+}
+
+// Suppress the error if it is 404
+func IgnoreNotFoundError(err error) error {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
+		return err
+	}
+	if apiErr.StatusCode == 404 {
+		return nil
+	}
+	if strings.Contains(apiErr.Message, "does not exist") {
+		return nil
+	}
+	return err
 }

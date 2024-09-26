@@ -3,6 +3,7 @@ package clusters
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
@@ -101,5 +102,26 @@ func TestLibraryDelete(t *testing.T) {
 		},
 		Delete: true,
 		ID:     "abc/whl:foo.whl",
+	}.ApplyNoError(t)
+}
+
+func TestLibraryDeleteClusterNotFound(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceLibrary(),
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: apierr.APIError{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Cluster does not exist",
+				},
+				Status: 404,
+			},
+		},
+		Delete:  true,
+		Removed: true,
+		ID:      "abc/whl:foo.whl",
 	}.ApplyNoError(t)
 }

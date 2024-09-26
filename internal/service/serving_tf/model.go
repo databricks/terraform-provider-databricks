@@ -795,6 +795,10 @@ type ServedModelInput struct {
 	// ARN of the instance profile that the served model will use to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	// The maximum tokens per second that the endpoint can scale up to.
+	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput" tf:"optional"`
+	// The minimum tokens per second that the endpoint can scale down to.
+	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput" tf:"optional"`
 	// The name of the model in Databricks Model Registry to be served or if the
 	// model resides in Unity Catalog, the full name of model, in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
@@ -817,7 +821,7 @@ type ServedModelInput struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size will be 0.
-	WorkloadSize types.String `tfsdk:"workload_size" tf:""`
+	WorkloadSize types.String `tfsdk:"workload_size" tf:"optional"`
 	// The workload type of the served model. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is

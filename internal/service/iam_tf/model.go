@@ -178,9 +178,10 @@ type GetPermissionRequest struct {
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
-	// authorization, clusters, cluster-policies, dbsql-dashboards, directories,
-	// experiments, files, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
+	// directories, experiments, files, instance-pools, jobs, notebooks,
+	// pipelines, queries, registered-models, repos, serving-endpoints, or
+	// warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
@@ -609,9 +610,10 @@ type PermissionsRequest struct {
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
-	// authorization, clusters, cluster-policies, dbsql-dashboards, directories,
-	// experiments, files, instance-pools, jobs, notebooks, pipelines, queries,
-	// registered-models, repos, serving-endpoints, or warehouses.
+	// authorization, clusters, cluster-policies, dashboards, dbsql-dashboards,
+	// directories, experiments, files, instance-pools, jobs, notebooks,
+	// pipelines, queries, registered-models, repos, serving-endpoints, or
+	// warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
 }
 

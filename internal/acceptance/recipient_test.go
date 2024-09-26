@@ -6,7 +6,7 @@ import (
 )
 
 func TestUcAccCreateRecipientDb2Open(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_recipient" "db2open" {
 			name = "{var.RANDOM}-terraform-db2open-recipient"
@@ -22,7 +22,7 @@ func TestUcAccCreateRecipientDb2Open(t *testing.T) {
 }
 
 func TestUcAccCreateRecipientDb2DbAws(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_metastore" "recipient_metastore" {
 			name = "{var.RANDOM}-terraform-recipient-metastore"
@@ -46,13 +46,13 @@ func TestUcAccCreateRecipientDb2DbAws(t *testing.T) {
 }
 
 func TestUcAccUpdateRecipientDb2Open(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: recipientTemplateWithOwner("made by terraform", "account users"),
-	}, step{
+	}, Step{
 		Template: recipientTemplateWithOwner("made by terraform -- updated comment", "account users"),
-	}, step{
+	}, Step{
 		Template: recipientTemplateWithOwner("made by terraform -- updated comment", "{env.TEST_DATA_ENG_GROUP}"),
-	}, step{
+	}, Step{
 		Template: recipientTemplateWithOwner("made by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

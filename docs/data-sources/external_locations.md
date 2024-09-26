@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_external_locations Data Source
 
--> **Note** This data source could be only used with workspace-level provider!
+-> **Note** This data source can only be used with a workspace-level provider!
 
 Retrieves a list of [databricks_external_location](./external_location.md) objects, that were created by Terraform or manually, so that special handling could be applied.
 

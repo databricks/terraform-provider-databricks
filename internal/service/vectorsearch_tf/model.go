@@ -97,6 +97,11 @@ type DeleteIndexResponse struct {
 }
 
 type DeltaSyncVectorIndexSpecRequest struct {
+	// [Optional] Select the columns to sync with the vector index. If you leave
+	// this field blank, all columns from the source table are synced with the
+	// index. The primary key column and embedding source column or embedding
+	// vector column are always synced.
+	ColumnsToSync []types.String `tfsdk:"columns_to_sync" tf:"optional"`
 	// The columns that contain the embedding source.
 	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns" tf:"optional"`
 	// The columns that contain the embedding vectors. The format should be

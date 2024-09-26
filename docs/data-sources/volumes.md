@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_volumes Data Source
 
--> **Note** This data source could be only used with workspace-level provider!
+-> **Note** This data source can only be used with a workspace-level provider!
 
 Retrieves a list of [databricks_volume](../resources/volume.md) ids (full names), that were created by Terraform or manually.
 

@@ -21,13 +21,13 @@ func (e entitlement) String() string {
 	return fmt.Sprintf("%s = %t", e.name, e.value)
 }
 
-func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitlements []entitlement) step {
-	return func(entitlements []entitlement) step {
+func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitlements []entitlement) Step {
+	return func(entitlements []entitlement) Step {
 		entitlementsBuf := strings.Builder{}
 		for _, entitlement := range entitlements {
 			entitlementsBuf.WriteString(fmt.Sprintf("%s\n", entitlement.String()))
 		}
-		return step{
+		return Step{
 			Template: fmt.Sprintf(`
 			%s
 			resource "databricks_entitlements" "entitlements_users" {
@@ -56,10 +56,10 @@ func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitleme
 	}
 }
 
-func makeEntitlementsSteps(t *testing.T, r entitlementResource, entitlementsSteps [][]entitlement) []step {
+func makeEntitlementsSteps(t *testing.T, r entitlementResource, entitlementsSteps [][]entitlement) []Step {
 	r.setDisplayName(RandomName("entitlements-"))
 	makeEntitlementsStep := entitlementsStepBuilder(t, r)
-	steps := make([]step, len(entitlementsSteps))
+	steps := make([]Step, len(entitlementsSteps))
 	for i, entitlements := range entitlementsSteps {
 		steps[i] = makeEntitlementsStep(entitlements)
 	}
@@ -114,7 +114,7 @@ func TestAccEntitlementsAddToEmpty(t *testing.T) {
 				{"databricks_sql_access", true},
 			},
 		})
-		workspaceLevel(t, steps...)
+		WorkspaceLevel(t, steps...)
 	})
 }
 
@@ -135,7 +135,7 @@ func TestAccEntitlementsSetExplicitlyToFalse(t *testing.T) {
 				{"databricks_sql_access", false},
 			},
 		})
-		workspaceLevel(t, steps...)
+		WorkspaceLevel(t, steps...)
 	})
 }
 
@@ -150,7 +150,7 @@ func TestAccEntitlementsRemoveExisting(t *testing.T) {
 			},
 			{},
 		})
-		workspaceLevel(t, steps...)
+		WorkspaceLevel(t, steps...)
 	})
 }
 
@@ -164,6 +164,6 @@ func TestAccEntitlementsSomeTrueSomeFalse(t *testing.T) {
 				{"databricks_sql_access", true},
 			},
 		})
-		workspaceLevel(t, steps...)
+		WorkspaceLevel(t, steps...)
 	})
 }

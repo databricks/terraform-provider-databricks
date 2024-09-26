@@ -6,7 +6,7 @@ import (
 
 func TestMwsAccNetworks(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET") // marker for AWS test env
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_networks" "my_network" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -24,7 +24,7 @@ func TestMwsAccNetworks(t *testing.T) {
 }
 
 func TestMwsAccGcpPscNetworks(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_networks" "my_network" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"

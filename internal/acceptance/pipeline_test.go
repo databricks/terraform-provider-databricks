@@ -50,7 +50,7 @@ var (
 )
 
 func TestAccPipelineResource_CreatePipeline(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		locals {
 			name = "pipeline-acceptance-{var.RANDOM}"
@@ -95,7 +95,7 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 }
 
 func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		locals {
 			name = "pipeline-acceptance-aws-{var.STICKY_RANDOM}"
@@ -135,7 +135,7 @@ func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 			continuous = false
 		}
 		` + dltNotebookResource,
-	}, step{
+	}, Step{
 		Template: `
 		locals {
 			name = "pipeline-acceptance-aws-{var.STICKY_RANDOM}"
@@ -179,7 +179,7 @@ func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 }
 
 func TestAccPipelineResource_CreatePipelineWithoutWorkers(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		locals {
 			name = "pipeline-acceptance-{var.RANDOM}"
@@ -232,7 +232,7 @@ func TestAccPipelineResource_CreatePipelineWithoutWorkers(t *testing.T) {
 
 func TestAccPipelineResourcLastModified(t *testing.T) {
 	var lastModified int64
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		locals {
 			name = "pipeline-acceptance-{var.STICKY_RANDOM}"
@@ -284,7 +284,7 @@ func TestAccPipelineResourcLastModified(t *testing.T) {
 			lastModified = pipeline.LastModified
 			return nil
 		}),
-	}, step{
+	}, Step{
 		Template: `
 		locals {
 			name = "pipeline-acceptance-{var.STICKY_RANDOM}"

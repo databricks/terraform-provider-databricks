@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,5 +66,19 @@ func TestReadSerializedJsonContent(t *testing.T) {
 	os.WriteFile(fileName, []byte("hello"), 0644)
 	_, md5Hash, err = ReadSerializedJsonContent("", fileName)
 	assert.Equal(t, fmt.Sprintf("%x", md5.Sum([]byte("hello"))), md5Hash)
+	assert.NoError(t, err)
+}
+
+func TestIgnoreNotFoundError(t *testing.T) {
+	err := IgnoreNotFoundError(nil)
+	assert.NoError(t, err)
+
+	err = IgnoreNotFoundError(fmt.Errorf("error"))
+	assert.EqualError(t, err, "error")
+
+	err = IgnoreNotFoundError(apierr.NotFound("error"))
+	assert.NoError(t, err)
+
+	err = IgnoreNotFoundError(apierr.ReadError(403, fmt.Errorf("cluster xyz does not exist")))
 	assert.NoError(t, err)
 }

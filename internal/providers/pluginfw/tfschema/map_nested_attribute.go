@@ -3,6 +3,7 @@ package tfschema
 import (
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -15,6 +16,7 @@ type MapNestedAttributeBuilder struct {
 	Computed           bool
 	DeprecationMessage string
 	Validators         []validator.Map
+	PlanModifiers      []planmodifier.Map
 }
 
 func (a MapNestedAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
@@ -38,6 +40,7 @@ func (a MapNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 		DeprecationMessage: a.DeprecationMessage,
 		Computed:           a.Computed,
 		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
 	}
 }
 
@@ -92,5 +95,10 @@ func (a MapNestedAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
 
 func (a MapNestedAttributeBuilder) AddValidator(v validator.Map) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
+	return a
+}
+
+func (a MapNestedAttributeBuilder) AddPlanModifier(v planmodifier.Map) AttributeBuilder {
+	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

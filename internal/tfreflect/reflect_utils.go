@@ -1,6 +1,8 @@
 package tfreflect
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Field struct {
 	StructField reflect.StructField

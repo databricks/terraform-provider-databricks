@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_storage_credentials Data Source
 
--> **Note** This data source could be only used with workspace-level provider!
+-> **Note** This data source can only be used with a workspace-level provider!
 
 Retrieves a list of [databricks_storage_credential](./storage_credential.md) objects, that were created by Terraform or manually, so that special handling could be applied.
 

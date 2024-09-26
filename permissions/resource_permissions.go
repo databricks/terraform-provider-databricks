@@ -137,21 +137,6 @@ func isOwnershipWorkaroundNecessary(objectID string) bool {
 	return strings.HasPrefix(objectID, "/jobs") || strings.HasPrefix(objectID, "/pipelines") || strings.HasPrefix(objectID, "/sql/warehouses")
 }
 
-// Suppress the error if it is 404
-func ignoreNotFound(err error) error {
-	var apiErr *apierr.APIError
-	if !errors.As(err, &apiErr) {
-		return err
-	}
-	if apiErr.StatusCode == 404 {
-		return nil
-	}
-	if strings.Contains(apiErr.Message, "does not exist.") {
-		return nil
-	}
-	return err
-}
-
 func (a PermissionsAPI) getObjectCreator(objectID string) (string, error) {
 	w, err := a.client.WorkspaceClient()
 	if err != nil {
@@ -164,19 +149,19 @@ func (a PermissionsAPI) getObjectCreator(objectID string) (string, error) {
 		}
 		job, err := w.Jobs.GetByJobId(a.context, jobId)
 		if err != nil {
-			return "", ignoreNotFound(err)
+			return "", common.IgnoreNotFoundError(err)
 		}
 		return job.CreatorUserName, nil
 	} else if strings.HasPrefix(objectID, "/pipelines") {
 		pipeline, err := w.Pipelines.GetByPipelineId(a.context, strings.ReplaceAll(objectID, "/pipelines/", ""))
 		if err != nil {
-			return "", ignoreNotFound(err)
+			return "", common.IgnoreNotFoundError(err)
 		}
 		return pipeline.CreatorUserName, nil
 	} else if strings.HasPrefix(objectID, "/sql/warehouses") {
 		warehouse, err := w.Warehouses.GetById(a.context, strings.ReplaceAll(objectID, "/sql/warehouses/", ""))
 		if err != nil {
-			return "", ignoreNotFound(err)
+			return "", common.IgnoreNotFoundError(err)
 		}
 		return warehouse.CreatorName, nil
 	}

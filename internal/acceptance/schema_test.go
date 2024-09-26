@@ -16,7 +16,7 @@ const catalogTemplate = `
 `
 
 func TestUcAccSchema(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: catalogTemplate + `
 		data "databricks_catalogs" "all" {
 			depends_on = [databricks_catalog.sandbox]
@@ -102,13 +102,13 @@ func getPredictiveOptimizationSetting(t *testing.T, enabled bool) string {
 
 func TestUcAccSchemaUpdate(t *testing.T) {
 	loadUcwsEnv(t)
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform", "account users"),
-	}, step{
+	}, Step{
 		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment", "account users"),
-	}, step{
+	}, Step{
 		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment", "{env.TEST_DATA_ENG_GROUP}"),
-	}, step{
+	}, Step{
 		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

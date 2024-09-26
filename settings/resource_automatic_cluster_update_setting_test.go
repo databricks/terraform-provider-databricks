@@ -23,7 +23,8 @@ func TestQueryCreateAutomaticClusterUpdateSetting(t *testing.T) {
 				Setting: settings.AutomaticClusterUpdateSetting{
 					Etag: "",
 					AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
-						Enabled: true,
+						Enabled:         true,
+						ForceSendFields: []string{"Enabled", "RestartEvenIfNoUpdatesAvailable"},
 					},
 					SettingName: "default",
 				},
@@ -44,7 +45,8 @@ func TestQueryCreateAutomaticClusterUpdateSetting(t *testing.T) {
 				Setting: settings.AutomaticClusterUpdateSetting{
 					Etag: "etag1",
 					AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
-						Enabled: true,
+						Enabled:         true,
+						ForceSendFields: []string{"Enabled", "RestartEvenIfNoUpdatesAvailable"},
 					},
 					SettingName: "default",
 				},
@@ -150,14 +152,16 @@ func TestQueryUpdateAutomaticClusterUpdateSetting(t *testing.T) {
 					Etag: "etag1",
 					AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
 						Enabled:                         true,
+						ForceSendFields:                 []string{"Enabled", "RestartEvenIfNoUpdatesAvailable"},
 						RestartEvenIfNoUpdatesAvailable: true,
 						MaintenanceWindow: &settings.ClusterAutoRestartMessageMaintenanceWindow{
 							WeekDayBasedSchedule: &settings.ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule{
 								DayOfWeek: "MONDAY",
 								Frequency: "EVERY_WEEK",
 								WindowStartTime: &settings.ClusterAutoRestartMessageMaintenanceWindowWindowStartTime{
-									Hours:   1,
-									Minutes: 0,
+									Hours:           1,
+									Minutes:         0,
+									ForceSendFields: []string{"Hours", "Minutes"},
 								},
 							},
 						},
@@ -238,6 +242,7 @@ func TestQueryUpdateAutomaticClusterUpdateSettingWithConflict(t *testing.T) {
 					AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
 						Enabled:                         true,
 						RestartEvenIfNoUpdatesAvailable: true,
+						ForceSendFields:                 []string{"Enabled", "RestartEvenIfNoUpdatesAvailable"},
 					},
 					SettingName: "default",
 				},
@@ -260,6 +265,7 @@ func TestQueryUpdateAutomaticClusterUpdateSettingWithConflict(t *testing.T) {
 					AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
 						Enabled:                         true,
 						RestartEvenIfNoUpdatesAvailable: true,
+						ForceSendFields:                 []string{"Enabled", "RestartEvenIfNoUpdatesAvailable"},
 					},
 					SettingName: "default",
 				},
@@ -312,7 +318,8 @@ func TestQueryDeleteAutomaticClusterUpdateSetting(t *testing.T) {
 					Etag:        "etag1",
 					SettingName: "default",
 					AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
-						Enabled: false,
+						Enabled:         false,
+						ForceSendFields: []string{"Enabled"},
 					},
 				},
 			}).Return(&settings.AutomaticClusterUpdateSetting{
@@ -347,7 +354,8 @@ func TestQueryDeleteAutomaticClusterUpdateSettingWithConflict(t *testing.T) {
 					Etag:        "etag1",
 					SettingName: "default",
 					AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
-						Enabled: false,
+						Enabled:         false,
+						ForceSendFields: []string{"Enabled"},
 					},
 				},
 			}).Return(nil, &apierr.APIError{
@@ -368,7 +376,8 @@ func TestQueryDeleteAutomaticClusterUpdateSettingWithConflict(t *testing.T) {
 					Etag:        "etag2",
 					SettingName: "default",
 					AutomaticClusterUpdateWorkspace: settings.ClusterAutoRestartMessage{
-						Enabled: false,
+						Enabled:         false,
+						ForceSendFields: []string{"Enabled"},
 					},
 				},
 			}).Return(&settings.AutomaticClusterUpdateSetting{

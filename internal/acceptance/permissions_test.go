@@ -772,9 +772,7 @@ func TestAccPermissions_RegisteredModel(t *testing.T) {
 
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if !isAws(t) {
-		skipf(t)("Serving endpoints are only supported in AWS testing infrastructure")
-	}
+	skipf(t)("updating permissions for serving endpoints is flaky because the permissions API does not recognize newly-created endpoints")
 	endpointTemplate := `
 	resource "databricks_model_serving" "endpoint" {
 		name = "{var.STICKY_RANDOM}"

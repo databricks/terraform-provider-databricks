@@ -34,11 +34,12 @@ type makePermissionsConfig struct {
 	user             []permissionSettings
 }
 
-func servicePrincipalPermissions(permissionLevel ...string) func(*makePermissionsConfig) {
-	return func(config *makePermissionsConfig) {
-		config.servicePrincipal = simpleSettings(permissionLevel...)
-	}
-}
+// Not used today, so this fails linting, but we can uncomment it if needed in the future.
+// func servicePrincipalPermissions(permissionLevel ...string) func(*makePermissionsConfig) {
+// 	return func(config *makePermissionsConfig) {
+// 		config.servicePrincipal = simpleSettings(permissionLevel...)
+// 	}
+// }
 
 func groupPermissions(permissionLevel ...string) func(*makePermissionsConfig) {
 	return func(config *makePermissionsConfig) {

@@ -318,6 +318,13 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       "/sql/dashboards/abc",
+		HCL: `
+		sql_dashboard_id = "abc"
+		access_control {
+			user_name = "ben"
+			permission_level = "CAN_VIEW"
+		}
+		`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "/sql/dashboards/abc", d.Id())

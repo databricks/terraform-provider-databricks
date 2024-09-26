@@ -48,6 +48,9 @@ type resourcePermissions struct {
 	// The alternative name of the "path" attribute for this resource. E.g. "workspace_file_path" for a file.
 	// If not set, default is "<object_type>_path".
 	pathVariant string
+	// If true, the provider will allow the user to configure the "admins" group for this resource type.
+	// All resources besides passwords should set this to false.
+	allowConfiguringAdmins bool
 	// Customizers when handling permission resource creation and update.
 	//
 	// Most resources that have a CAN_MANAGE permission level should add addCurrentUserAsManageCustomizer to this list
@@ -114,7 +117,7 @@ func (p resourcePermissions) getPathVariant() string {
 func (p resourcePermissions) validate(ctx context.Context, entity PermissionsEntity, currentUsername string) error {
 	for _, change := range entity.AccessControlList {
 		// Prevent users from setting permissions for admins.
-		if change.GroupName == "admins" {
+		if change.GroupName == "admins" && !p.allowConfiguringAdmins {
 			return fmt.Errorf("it is not possible to modify admin permissions for %s resources", p.objectType)
 		}
 		// Check that the user is preventing themselves from managing the object
@@ -225,8 +228,8 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 				continue
 			}
 		}
-		// Admins always have permissions but users cannot configure them, so they should never appear in state.
-		if accessControl.GroupName == "admins" {
+		// Skip admin permissions for resources where users are not allowed to explicitly configure them.
+		if accessControl.GroupName == "admins" && !p.allowConfiguringAdmins {
 			continue
 		}
 		for _, permission := range accessControl.AllPermissions {
@@ -555,6 +558,7 @@ func allResourcePermissions() []resourcePermissions {
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE": {isManagementPermission: true},
 			},
+			allowConfiguringAdmins: true,
 		},
 		{
 			field:             "sql_endpoint_id",

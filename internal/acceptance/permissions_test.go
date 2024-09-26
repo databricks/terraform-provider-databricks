@@ -772,6 +772,9 @@ func TestAccPermissions_RegisteredModel(t *testing.T) {
 
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	if isGcp(t) {
+		skipf(t)("Serving endpoints are not supported in our GCP testing infrastructure")
+	}
 	endpointTemplate := `
 	resource "databricks_model_serving" "endpoint" {
 		name = "{var.STICKY_RANDOM}"
@@ -793,9 +796,9 @@ func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	}`
 	WorkspaceLevel(t, Step{
 		Template: endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.id", groupPermissions("CAN_VIEW")),
-	// Updating a serving endpoint seems to be flaky, so we'll only test that we can't remove management permissions for the current user.
-	// }, Step{
-	// 	Template: endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.id", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_VIEW", "CAN_QUERY", "CAN_MANAGE")),
+		// Updating a serving endpoint seems to be flaky, so we'll only test that we can't remove management permissions for the current user.
+		// }, Step{
+		// 	Template: endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.id", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_VIEW", "CAN_QUERY", "CAN_MANAGE")),
 	}, Step{
 		Template:    endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.id", currentPrincipalPermission(t, "CAN_VIEW"), groupPermissions("CAN_VIEW", "CAN_QUERY", "CAN_MANAGE")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for servingEndpoint, allowed levels: CAN_MANAGE"),

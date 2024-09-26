@@ -202,12 +202,12 @@ func (p resourcePermissions) prepareResponse(objectID string, objectACL *iam.Obj
 		getId:                        func() string { return objectID },
 		getExistingPermissionsEntity: func() PermissionsEntity { return existing },
 	}
-	if objectACL.ObjectType != p.objectType {
-		return PermissionsEntity{}, fmt.Errorf("expected object type %s, got %s", p.objectType, objectACL.ObjectType)
-	}
 	acl := *objectACL
 	for _, customizer := range p.readAclCustomizers {
 		acl = customizer(ctx, acl)
+	}
+	if acl.ObjectType != p.objectType {
+		return PermissionsEntity{}, fmt.Errorf("expected object type %s, got %s", p.objectType, objectACL.ObjectType)
 	}
 	entity := PermissionsEntity{}
 	for _, accessControl := range acl.AccessControlList {
@@ -574,6 +574,12 @@ func allResourcePermissions() []resourcePermissions {
 			readAclCustomizers: []aclReadCustomizer{
 				removeAdminPermissionsCustomizer,
 				rewritePermissionForRead("CAN_READ", "CAN_VIEW"),
+				func(ctx aclReadCustomizerContext, objectAcls iam.ObjectPermissions) iam.ObjectPermissions {
+					// The object type in the new API is "dbsql-dashboard", but for compatibility this should
+					// be "dashboard" in the state.
+					objectAcls.ObjectType = "dashboard"
+					return objectAcls
+				},
 			},
 		},
 		{

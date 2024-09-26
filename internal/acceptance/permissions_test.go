@@ -445,7 +445,7 @@ func TestAccPermissions_Directory_RootDirectoryCorrectlyHandlesAdminUsers(t *tes
 			return nil
 		},
 	}, Step{
-		Template: makePermissionsTestStage("directory_path", "\"/\"", groupPermissions("CAN_RUN")),
+		Template: makePermissionsTestStage("directory_path", "\"/\"", userPermissions("CAN_RUN")),
 	}, Step{
 		Template: `data databricks_current_user me {}`,
 		Check: func(s *terraform.State) error {

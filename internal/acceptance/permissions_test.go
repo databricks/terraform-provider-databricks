@@ -772,8 +772,8 @@ func TestAccPermissions_RegisteredModel(t *testing.T) {
 
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if isGcp(t) {
-		skipf(t)("Serving endpoints are not supported in our GCP testing infrastructure")
+	if !isAws(t) {
+		skipf(t)("Serving endpoints are only supported in AWS testing infrastructure")
 	}
 	endpointTemplate := `
 	resource "databricks_model_serving" "endpoint" {

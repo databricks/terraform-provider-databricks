@@ -27,11 +27,19 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo
+	// OriginalValues types.String `tfsdk:"original_values" tf:"computed,optional,sensitive"`
 }
 
-func sortSharesByName(si *sharing.ShareInfo) {
-	sort.Slice(si.Objects, func(i, j int) bool {
-		return si.Objects[i].Name < si.Objects[j].Name
+func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
+	// Create a map to store the index positions of each key in the reference slice.
+	orderMap := make(map[K]int)
+	for index, item := range reference {
+		orderMap[keyFunc(item)] = index
+	}
+
+	// Sort the target slice based on the order defined in the orderMap.
+	sort.Slice(target, func(i, j int) bool {
+		return orderMap[keyFunc(target[i])] < orderMap[keyFunc(target[j])]
 	})
 }
 
@@ -52,7 +60,7 @@ func resourceShareMap(si sharing.ShareInfo) map[string]sharing.SharedDataObject 
 	return m
 }
 
-func Equal(this sharing.SharedDataObject, other sharing.SharedDataObject) bool {
+func equal(this sharing.SharedDataObject, other sharing.SharedDataObject) bool {
 	if other.SharedAs == "" {
 		other.SharedAs = this.SharedAs
 	}
@@ -65,7 +73,7 @@ func Equal(this sharing.SharedDataObject, other sharing.SharedDataObject) bool {
 	return reflect.DeepEqual(this, other)
 }
 
-func Diff(beforeSi sharing.ShareInfo, afterSi sharing.ShareInfo) []sharing.SharedDataObjectUpdate {
+func diff(beforeSi sharing.ShareInfo, afterSi sharing.ShareInfo) []sharing.SharedDataObjectUpdate {
 	beforeMap := resourceShareMap(beforeSi)
 	afterMap := resourceShareMap(afterSi)
 	changes := []sharing.SharedDataObjectUpdate{}
@@ -86,7 +94,7 @@ func Diff(beforeSi sharing.ShareInfo, afterSi sharing.ShareInfo) []sharing.Share
 	for _, afterSdo := range afterSi.Objects {
 		beforeSdo, exists := beforeMap[afterSdo.Name]
 		if exists {
-			if !Equal(beforeSdo, afterSdo) {
+			if !equal(beforeSdo, afterSdo) {
 				// do not send SharedAs
 				afterSdo.SharedAs = ""
 				changes = append(changes, sharing.SharedDataObjectUpdate{
@@ -104,7 +112,7 @@ func Diff(beforeSi sharing.ShareInfo, afterSi sharing.ShareInfo) []sharing.Share
 	return changes
 }
 
-func shareChanges(ctx context.Context, si sharing.ShareInfo, action string) sharing.UpdateShare {
+func shareChanges(si sharing.ShareInfo, action string) sharing.UpdateShare {
 	var changes []sharing.SharedDataObjectUpdate
 	for _, obj := range si.Objects {
 		changes = append(changes, sharing.SharedDataObjectUpdate{
@@ -191,7 +199,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	shareChanges := shareChanges(ctx, shareInfoGoSDK, string(sharing.SharedDataObjectUpdateActionAdd))
+	shareChanges := shareChanges(shareInfoGoSDK, string(sharing.SharedDataObjectUpdateActionAdd))
 	shareChanges.Name = shareInfoTfSDK.Name.ValueString()
 	shareChanges.Owner = shareInfoTfSDK.Owner.ValueString()
 
@@ -205,6 +213,8 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		resp.Diagnostics.AddError("failed to update share", err.Error())
 		return
 	}
+
+	matchOrder(updatedShareInfoGoSDK.Objects, shareInfoGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
 
 	var newShareInfoTfSDK ShareInfoExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, updatedShareInfoGoSDK, &newShareInfoTfSDK)...)
@@ -224,6 +234,12 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	var stateGoSDK sharing.ShareInfo
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &stateGoSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -238,7 +254,7 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	shareInfo, err := w.Shares.Get(ctx, getShare)
-	sortSharesByName(shareInfo)
+	matchOrder(shareInfo.Objects, stateGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
 	suppressCDFEnabledDiff(shareInfo)
 
 	if err != nil {
@@ -296,9 +312,10 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	sortSharesByName(currentShareInfo)
+	matchOrder(currentShareInfo.Objects, plannedShareInfoGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
 	suppressCDFEnabledDiff(currentShareInfo)
-	changes := Diff(*currentShareInfo, plannedShareInfoGoSDK)
+
+	changes := diff(*currentShareInfo, plannedShareInfoGoSDK)
 
 	// if owner has changed, update the share owner
 	if !plan.Owner.IsNull() {

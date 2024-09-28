@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -64,6 +65,16 @@ func ResourceOnlineTable() common.Resource {
 			runTypes := []string{"spec.0.run_triggered", "spec.0.run_continuously"}
 			common.CustomizeSchemaPath(m, "spec", "run_triggered").SetAtLeastOneOf(runTypes).SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "spec", "run_continuously").SetAtLeastOneOf(runTypes).SetSuppressDiff()
+
+			m["no_wait"] = &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return true
+				},
+			}
+
 			return m
 		})
 
@@ -79,11 +90,15 @@ func ResourceOnlineTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			// this should be specified in the API Spec - filed a ticket to add it
-			err = waitForOnlineTableCreation(w, ctx, res.Name)
-			if err != nil {
-
-				return err
+			noWait := d.Get("no_wait").(bool)
+			if noWait {
+				log.Print("[INFO] Not waiting for online table creation")
+			} else {
+				// this should be specified in the API Spec - filed a ticket to add it
+				err = waitForOnlineTableCreation(w, ctx, res.Name)
+				if err != nil {
+					return err
+				}
 			}
 			d.SetId(res.Name)
 			return nil

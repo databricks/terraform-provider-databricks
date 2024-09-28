@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - object describing status of the online table:
   * `detailed_state` - The state of the online table.
   * `message` - A text description of the current state of the online table.
+* `no_wait` - optional boolean flag specifying if we shouldn't wait until table update is done.  **Note: there is a chance that table could be in failed state if something goes wrong, so use this flag carefully!**
 
 ## Import
 

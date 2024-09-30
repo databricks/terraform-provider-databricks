@@ -254,7 +254,7 @@ func (a PermissionsAPI) Update(objectID string, objectACL AccessControlChangeLis
 }
 
 // Delete gracefully removes permissions. Technically, it's using method named SetOrDelete, but here we do more
-func (a PermissionsAPI) Delete(objectID string) error {
+func (a PermissionsAPI) Delete(objectID string, d *schema.ResourceData) error {
 	objectACL, err := a.Read(objectID)
 	if err != nil {
 		return err
@@ -265,6 +265,21 @@ func (a PermissionsAPI) Delete(objectID string) error {
 			if change, direct := acl.toAccessControlChange(); direct {
 				// keep everything direct for admin group
 				accl.AccessControlList = append(accl.AccessControlList, change)
+			}
+		}
+
+		// handle special case when we add extra permission to a user home dir
+		if v, ok := d.GetOk("directory_path"); ok {
+			if v.(string) == fmt.Sprintf("/Users/%s", acl.UserName) {
+				for _, perm := range acl.AllPermissions {
+					if perm.PermissionLevel == "CAN_MANAGE" {
+						// we can not remove user's own home CAN_MANAGE
+						if change, direct := acl.toAccessControlChange(); direct {
+							accl.AccessControlList = append(accl.AccessControlList, change)
+							break
+						}
+					}
+				}
 			}
 		}
 	}
@@ -388,6 +403,18 @@ func (oa *ObjectACL) ToPermissionsEntity(d *schema.ResourceData, me string) (Per
 		if me == accessControl.UserName || me == accessControl.ServicePrincipalName {
 			// not possible to lower one's permissions anywhere from CAN_MANAGE
 			continue
+		}
+
+		// handle special case when we add extra permission to a user home dir
+		if v, ok := d.GetOk("directory_path"); ok {
+			if v.(string) == fmt.Sprintf("/Users/%s", accessControl.UserName) {
+				for _, perm := range accessControl.AllPermissions {
+					if perm.PermissionLevel == "CAN_MANAGE" {
+						// not possible to remove user's own home CAN_MANAGE
+						continue
+					}
+				}
+			}
 		}
 		if change, direct := accessControl.toAccessControlChange(); direct {
 			entity.AccessControlList = append(entity.AccessControlList, change)
@@ -518,7 +545,21 @@ func ResourcePermissions() common.Resource {
 							// should allow setting admins permissions for passwords and tokens usage
 							return fmt.Errorf("it is not possible to restrict any permissions from `admins`")
 						}
+
+						// handle special case when we add extra permission to a user home dir
+						// in this case CAN_MANAGE is an implicit permission
+						if dp, ok := d.GetOk("directory_path"); ok {
+							dpa := strings.Split(dp.(string), "/")
+							if dpa[1] == "Users" && len(dpa) == 3 {
+								// we can not remove user's own home CAN_MANAGE
+								entity.AccessControlList = append(entity.AccessControlList, AccessControlChange{
+									UserName:        dpa[2],
+									PermissionLevel: "CAN_MANAGE",
+								})
+							}
+						}
 					}
+
 					err = NewPermissionsAPI(ctx, c).Update(objectID, AccessControlChangeList{
 						AccessControlList: entity.AccessControlList,
 					})
@@ -539,7 +580,7 @@ func ResourcePermissions() common.Resource {
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return NewPermissionsAPI(ctx, c).Delete(d.Id())
+			return NewPermissionsAPI(ctx, c).Delete(d.Id(), d)
 		},
 	}
 }

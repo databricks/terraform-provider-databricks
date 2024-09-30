@@ -552,7 +552,7 @@ func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInf
 		if getColumnType(oldColMap["type"].(string)) != getColumnType(newColumnInfos[i].Type) {
 			return fmt.Errorf("changing the 'type' of an existing column is not supported")
 		}
-		if getColumnType(oldColMap["identity"].(string)) != getColumnType(newColumnInfos[i].Type) {
+		if oldColMap["identity"].(string) != string(newColumnInfos[i].Identity) {
 			return fmt.Errorf("changing the 'identity' type of an existing column is not supported")
 		}
 	}

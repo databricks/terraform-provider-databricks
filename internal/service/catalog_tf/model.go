@@ -88,6 +88,21 @@ type ArtifactMatcher struct {
 type AssignResponse struct {
 }
 
+// AWS temporary credentials for API authentication. Read more at
+// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
+type AwsCredentials struct {
+	// The access key ID that identifies the temporary credentials.
+	AccessKeyId types.String `tfsdk:"access_key_id" tf:"optional"`
+	// The Amazon Resource Name (ARN) of the S3 access point for temporary
+	// credentials related the external location.
+	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
+	// The secret access key that can be used to sign AWS API requests.
+	SecretAccessKey types.String `tfsdk:"secret_access_key" tf:"optional"`
+	// The token that users must pass to AWS API to use the temporary
+	// credentials.
+	SessionToken types.String `tfsdk:"session_token" tf:"optional"`
+}
+
 type AwsIamRoleRequest struct {
 	// The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.
 	RoleArn types.String `tfsdk:"role_arn" tf:""`
@@ -143,6 +158,13 @@ type AzureServicePrincipal struct {
 	// The directory ID corresponding to the Azure Active Directory (AAD) tenant
 	// of the application.
 	DirectoryId types.String `tfsdk:"directory_id" tf:""`
+}
+
+// Azure temporary credentials for API authentication. Read more at
+// https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
+type AzureUserDelegationSas struct {
+	// The signed URI (SAS Token) used to access blob services for a given path
+	SasToken types.String `tfsdk:"sas_token" tf:"optional"`
 }
 
 // Cancel refresh
@@ -404,7 +426,7 @@ type CreateFunction struct {
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties" tf:"optional"`
 	// Table function return parameters.
-	ReturnParams FunctionParameterInfos `tfsdk:"return_params" tf:""`
+	ReturnParams *FunctionParameterInfos `tfsdk:"return_params" tf:"optional"`
 	// Function language. When **EXTERNAL** is used, the language of the routine
 	// function should be specified in the __external_language__ field, and the
 	// __return_params__ of the function cannot be used (as **TABLE** return
@@ -414,7 +436,7 @@ type CreateFunction struct {
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition" tf:""`
 	// Function dependencies.
-	RoutineDependencies DependencyList `tfsdk:"routine_dependencies" tf:""`
+	RoutineDependencies *DependencyList `tfsdk:"routine_dependencies" tf:"optional"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:""`
 	// Function security type.
@@ -1018,6 +1040,42 @@ type FunctionParameterInfos struct {
 	Parameters []FunctionParameterInfo `tfsdk:"parameters" tf:"optional"`
 }
 
+// GCP temporary credentials for API authentication. Read more at
+// https://developers.google.com/identity/protocols/oauth2/service-account
+type GcpOauthToken struct {
+	OauthToken types.String `tfsdk:"oauth_token" tf:"optional"`
+}
+
+type GenerateTemporaryTableCredentialRequest struct {
+	// The operation performed against the table data, either READ or
+	// READ_WRITE. If READ_WRITE is specified, the credentials returned will
+	// have write permissions, otherwise, it will be read only.
+	Operation types.String `tfsdk:"operation" tf:"optional"`
+	// UUID of the table to read or write.
+	TableId types.String `tfsdk:"table_id" tf:"optional"`
+}
+
+type GenerateTemporaryTableCredentialResponse struct {
+	// AWS temporary credentials for API authentication. Read more at
+	// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
+	AwsTempCredentials *AwsCredentials `tfsdk:"aws_temp_credentials" tf:"optional"`
+	// Azure temporary credentials for API authentication. Read more at
+	// https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
+	AzureUserDelegationSas *AzureUserDelegationSas `tfsdk:"azure_user_delegation_sas" tf:"optional"`
+	// Server time when the credential will expire, in unix epoch milliseconds
+	// since January 1, 1970 at 00:00:00 UTC. The API client is advised to cache
+	// the credential given this expiration time.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
+	// GCP temporary credentials for API authentication. Read more at
+	// https://developers.google.com/identity/protocols/oauth2/service-account
+	GcpOauthToken *GcpOauthToken `tfsdk:"gcp_oauth_token" tf:"optional"`
+	// R2 temporary credentials for API authentication. Read more at
+	// https://developers.cloudflare.com/r2/api/s3/tokens/.
+	R2TempCredentials *R2Credentials `tfsdk:"r2_temp_credentials" tf:"optional"`
+	// The URL of the storage path accessible by the temporary credential.
+	Url types.String `tfsdk:"url" tf:"optional"`
+}
+
 // Gets the metastore assignment for a workspace
 type GetAccountMetastoreAssignmentRequest struct {
 	// Workspace ID.
@@ -1150,6 +1208,9 @@ type GetMetastoreSummaryResponse struct {
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds" tf:"optional"`
 	// The scope of Delta Sharing enabled for the metastore.
 	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope" tf:"optional"`
+	// Whether to allow non-DBR clients to directly access entities under the
+	// metastore.
+	ExternalAccessEnabled types.Bool `tfsdk:"external_access_enabled" tf:"optional"`
 	// Globally unique metastore ID across clouds and regions, of the form
 	// `cloud:region:metastore_id`.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
@@ -1262,6 +1323,8 @@ type GetTableRequest struct {
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether delta metadata should be included in the response.
 	IncludeDeltaMetadata types.Bool `tfsdk:"-"`
+	// Whether to include a manifest containing capabilities the table has.
+	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 }
 
 // Get catalog workspace bindings
@@ -1546,6 +1609,8 @@ type ListStorageCredentialsResponse struct {
 type ListSummariesRequest struct {
 	// Name of parent catalog for tables of interest.
 	CatalogName types.String `tfsdk:"-"`
+	// Whether to include a manifest containing capabilities the table has.
+	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 	// Maximum number of summaries for tables to return. If not set, the page
 	// length is set to a server configured value (10000, as of 1/5/2024). -
 	// when set to a value greater than 0, the page length is the minimum of
@@ -1606,6 +1671,8 @@ type ListTablesRequest struct {
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether delta metadata should be included in the response.
 	IncludeDeltaMetadata types.Bool `tfsdk:"-"`
+	// Whether to include a manifest containing capabilities the table has.
+	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 	// Maximum number of tables to return. If not set, all the tables are
 	// returned (not recommended). - when set to a value greater than 0, the
 	// page length is the minimum of this value and a server configured value; -
@@ -1693,6 +1760,9 @@ type MetastoreInfo struct {
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds" tf:"optional"`
 	// The scope of Delta Sharing enabled for the metastore.
 	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope" tf:"optional"`
+	// Whether to allow non-DBR clients to directly access entities under the
+	// metastore.
+	ExternalAccessEnabled types.Bool `tfsdk:"external_access_enabled" tf:"optional"`
 	// Globally unique metastore ID across clouds and regions, of the form
 	// `cloud:region:metastore_id`.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
@@ -2096,6 +2166,17 @@ type QuotaInfo struct {
 	QuotaLimit types.Int64 `tfsdk:"quota_limit" tf:"optional"`
 	// The name of the quota.
 	QuotaName types.String `tfsdk:"quota_name" tf:"optional"`
+}
+
+// R2 temporary credentials for API authentication. Read more at
+// https://developers.cloudflare.com/r2/api/s3/tokens/.
+type R2Credentials struct {
+	// The access key ID that identifies the temporary credentials.
+	AccessKeyId types.String `tfsdk:"access_key_id" tf:"optional"`
+	// The secret access key associated with the access key.
+	SecretAccessKey types.String `tfsdk:"secret_access_key" tf:"optional"`
+	// The generated JWT that users must pass to use the temporary credentials.
+	SessionToken types.String `tfsdk:"session_token" tf:"optional"`
 }
 
 // Get a Volume

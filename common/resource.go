@@ -440,6 +440,16 @@ func genericDatabricksData[T, P, C any](
 	}
 }
 
+// WorkspacePathPrefixDiffSuppress suppresses diffs for workspace paths where both sides
+// may or may not include the `/Workspace` prefix.
+//
+// This is the case for dashboards where at create time, the user may include the `/Workspace`
+// prefix for the `parent_path` field, but the read response will not include the prefix.
+func WorkspacePathPrefixDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	const prefix = "/Workspace"
+	return strings.TrimPrefix(old, prefix) == strings.TrimPrefix(new, prefix)
+}
+
 func EqualFoldDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	if strings.EqualFold(old, new) {
 		log.Printf("[INFO] Suppressing diff on %s", k)

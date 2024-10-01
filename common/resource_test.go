@@ -179,6 +179,14 @@ func TestCustomizeDiffRobustness(t *testing.T) {
 	assert.EqualError(t, err, "cannot customize diff for sample: panic: oops")
 }
 
+func TestWorkspacePathPrefixDiffSuppress(t *testing.T) {
+	assert.True(t, WorkspacePathPrefixDiffSuppress("k", "/Workspace/foo/bar", "/Workspace/foo/bar", nil))
+	assert.True(t, WorkspacePathPrefixDiffSuppress("k", "/Workspace/foo/bar", "/foo/bar", nil))
+	assert.True(t, WorkspacePathPrefixDiffSuppress("k", "/foo/bar", "/Workspace/foo/bar", nil))
+	assert.True(t, WorkspacePathPrefixDiffSuppress("k", "/foo/bar", "/foo/bar", nil))
+	assert.False(t, WorkspacePathPrefixDiffSuppress("k", "/Workspace/1", "/Workspace/2", nil))
+}
+
 func TestEqualFoldDiffSuppress(t *testing.T) {
 	assert.True(t, EqualFoldDiffSuppress("k", "A", "a", nil))
 	assert.False(t, EqualFoldDiffSuppress("k", "A", "A2", nil))

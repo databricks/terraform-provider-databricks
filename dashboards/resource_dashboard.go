@@ -42,7 +42,7 @@ func (Dashboard) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("md5").SetComputed()
 
 	// ForceNew fields
-	s.SchemaPath("parent_path").SetForceNew()
+	s.SchemaPath("parent_path").SetCustomSuppressDiff(common.WorkspacePathPrefixDiffSuppress).SetForceNew()
 
 	// ConflictsWith fields
 	s.SchemaPath("serialized_dashboard").SetConflictsWith([]string{"file_path"})

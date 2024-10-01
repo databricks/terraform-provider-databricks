@@ -771,6 +771,37 @@ func TestAccPermissions_RegisteredModel(t *testing.T) {
 	})
 }
 
+func TestAccPermissions_RegisteredModel_Root(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	WorkspaceLevel(t, Step{
+		Template: makePermissionsTestStage("registered_model_id", "\"root\"", groupPermissions("CAN_READ")),
+	}, Step{
+		Template: makePermissionsTestStage("registered_model_id", "\"root\"", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE")),
+	}, Step{
+		Template:    makePermissionsTestStage("registered_model_id", "\"root\"", currentPrincipalPermission(t, "CAN_READ"), groupPermissions("CAN_READ", "CAN_EDIT", "CAN_MANAGE_STAGING_VERSIONS", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE")),
+		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for registered-model, allowed levels: CAN_MANAGE"),
+	}, Step{
+		Template: "data databricks_current_user me {}",
+		Check: func(s *terraform.State) error {
+			w := databricks.Must(databricks.NewWorkspaceClient())
+			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "registered-models", "root")
+			assert.NoError(t, err)
+			assert.Len(t, permissions.AccessControlList, 1)
+			assert.Equal(t, iam.AccessControlResponse{
+				GroupName: "admins",
+				AllPermissions: []iam.Permission{
+					{
+						PermissionLevel: iam.PermissionLevelCanManage,
+						ForceSendFields: []string{"Inherited", "PermissionLevel"},
+					},
+				},
+				ForceSendFields: []string{"GroupName"},
+			}, permissions.AccessControlList[0])
+			return nil
+		},
+	})
+}
+
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	if isGcp(t) {

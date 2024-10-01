@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
@@ -1328,7 +1329,7 @@ func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
 		mapping := getResourcePermissions("authorization", "tokens")
-		err := p.Update("/authorization/tokens", PermissionsEntity{
+		err := p.Update("/authorization/tokens", entity.PermissionsEntity{
 			AccessControlList: []iam.AccessControlRequest{
 				{
 					UserName:        "me",

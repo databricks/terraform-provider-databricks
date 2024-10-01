@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -68,7 +69,7 @@ func (a PermissionsAPI) getCurrentUser() (string, error) {
 }
 
 // Update updates object permissions. Technically, it's using method named SetOrDelete, but here we do more
-func (a PermissionsAPI) Update(objectID string, entity PermissionsEntity, mapping resourcePermissions) error {
+func (a PermissionsAPI) Update(objectID string, entity entity.PermissionsEntity, mapping resourcePermissions) error {
 	currentUser, err := a.getCurrentUser()
 	if err != nil {
 		return err
@@ -142,32 +143,17 @@ func (a PermissionsAPI) readRaw(objectID string, mapping resourcePermissions) (*
 }
 
 // Read gets all relevant permissions for the object, including inherited ones
-func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions, existing PermissionsEntity, me string) (PermissionsEntity, error) {
+func (a PermissionsAPI) Read(objectID string, mapping resourcePermissions, existing entity.PermissionsEntity, me string) (entity.PermissionsEntity, error) {
 	permissions, err := a.readRaw(objectID, mapping)
 	if err != nil {
-		return PermissionsEntity{}, err
+		return entity.PermissionsEntity{}, err
 	}
 	return mapping.prepareResponse(objectID, permissions, existing, me)
 }
 
-// PermissionsEntity is the one used for resource metadata
-type PermissionsEntity struct {
-	ObjectType        string                     `json:"object_type,omitempty" tf:"computed"`
-	AccessControlList []iam.AccessControlRequest `json:"access_control" tf:"slice_set"`
-}
-
-func (p PermissionsEntity) containsUserOrServicePrincipal(name string) bool {
-	for _, ac := range p.AccessControlList {
-		if ac.UserName == name || ac.ServicePrincipalName == name {
-			return true
-		}
-	}
-	return false
-}
-
 // ResourcePermissions definition
 func ResourcePermissions() common.Resource {
-	s := common.StructToSchema(PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(entity.PermissionsEntity{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, mapping := range allResourcePermissions() {
 			s[mapping.field] = &schema.Schema{
 				ForceNew: true,
@@ -193,7 +179,7 @@ func ResourcePermissions() common.Resource {
 				// the original config is not specified.
 				return nil
 			}
-			planned := PermissionsEntity{}
+			planned := entity.PermissionsEntity{}
 			common.DiffToStructPointer(diff, s, &planned)
 			// Plan time validation for object permission levels
 			for _, accessControl := range planned.AccessControlList {
@@ -202,6 +188,8 @@ func ResourcePermissions() common.Resource {
 				if permissionLevel == "" {
 					continue
 				}
+				// TODO: only warn on unknown permission levels, as new levels may be released that the TF provider
+				// is not aware of.
 				if _, ok := mapping.allowedPermissionLevels[string(permissionLevel)]; !ok {
 					return fmt.Errorf(`permission_level %s is not supported with %s objects; allowed levels: %s`,
 						permissionLevel, mapping.field, strings.Join(mapping.getAllowedPermissionLevels(true), ", "))
@@ -215,7 +203,7 @@ func ResourcePermissions() common.Resource {
 			if err != nil {
 				return err
 			}
-			var existing PermissionsEntity
+			var existing entity.PermissionsEntity
 			common.DataToStructPointer(d, s, &existing)
 			me, err := a.getCurrentUser()
 			if err != nil {
@@ -242,7 +230,7 @@ func ResourcePermissions() common.Resource {
 			return common.StructToData(entity, s, d)
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var entity PermissionsEntity
+			var entity entity.PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -264,7 +252,7 @@ func ResourcePermissions() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var entity PermissionsEntity
+			var entity entity.PermissionsEntity
 			common.DataToStructPointer(d, s, &entity)
 			mapping, err := getResourcePermissionsFromId(d.Id())
 			if err != nil {

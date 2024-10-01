@@ -17,6 +17,10 @@ import (
 type App struct {
 	// The active deployment of the app.
 	ActiveDeployment *AppDeployment `tfsdk:"active_deployment" tf:"optional"`
+
+	AppStatus *ApplicationStatus `tfsdk:"app_status" tf:"optional"`
+
+	ComputeStatus *ComputeStatus `tfsdk:"compute_status" tf:"optional"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
 	// The email of the user that created the app.
@@ -32,8 +36,6 @@ type App struct {
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"optional"`
 
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
-
-	Status *AppStatus `tfsdk:"status" tf:"optional"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
 	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 	// The email of the user that last updated the app.
@@ -84,7 +86,7 @@ type AppDeployment struct {
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
 	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:""`
+	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
 	// Status and status message of the deployment
 	Status *AppDeploymentStatus `tfsdk:"status" tf:"optional"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
@@ -132,16 +134,25 @@ type AppPermissionsRequest struct {
 	AppName types.String `tfsdk:"-"`
 }
 
-type AppStatus struct {
-	// Message corresponding with the app state.
+type ApplicationStatus struct {
+	// Application status message
 	Message types.String `tfsdk:"message" tf:"optional"`
-	// State of the app.
+	// State of the application.
+	State types.String `tfsdk:"state" tf:"optional"`
+}
+
+type ComputeStatus struct {
+	// Compute status message
+	Message types.String `tfsdk:"message" tf:"optional"`
+	// State of the app compute.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 type CreateAppDeploymentRequest struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
+	// The unique id of the deployment.
+	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
 	// The mode of which the deployment will manage the source code.
 	Mode types.String `tfsdk:"mode" tf:"optional"`
 	// The workspace file system path of the source code used to create the app
@@ -151,7 +162,7 @@ type CreateAppDeploymentRequest struct {
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
 	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:""`
+	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
 }
 
 type CreateAppRequest struct {
@@ -166,9 +177,6 @@ type CreateAppRequest struct {
 type DeleteAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
-}
-
-type DeleteResponse struct {
 }
 
 // Get an app deployment
@@ -243,9 +251,6 @@ type StartAppRequest struct {
 type StopAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
-}
-
-type StopAppResponse struct {
 }
 
 type UpdateAppRequest struct {

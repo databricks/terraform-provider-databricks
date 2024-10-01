@@ -30,6 +30,85 @@ type Ai21LabsConfig struct {
 	Ai21labsApiKeyPlaintext types.String `tfsdk:"ai21labs_api_key_plaintext" tf:"optional"`
 }
 
+type AiGatewayConfig struct {
+	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
+	// in requests and responses.
+	Guardrails *AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
+	// Configuration for payload logging using inference tables. Use these
+	// tables to monitor and audit data being sent to and received from model
+	// APIs and to improve model quality.
+	InferenceTableConfig *AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
+	// Configuration for rate limits which can be set to limit endpoint traffic.
+	RateLimits []AiGatewayRateLimit `tfsdk:"rate_limits" tf:"optional"`
+	// Configuration to enable usage tracking using system tables. These tables
+	// allow you to monitor operational usage on endpoints and their associated
+	// costs.
+	UsageTrackingConfig *AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
+}
+
+type AiGatewayGuardrailParameters struct {
+	// List of invalid keywords. AI guardrail uses keyword or string matching to
+	// decide if the keyword exists in the request or response content.
+	InvalidKeywords []types.String `tfsdk:"invalid_keywords" tf:"optional"`
+	// Configuration for guardrail PII filter.
+	Pii *AiGatewayGuardrailPiiBehavior `tfsdk:"pii" tf:"optional"`
+	// Indicates whether the safety filter is enabled.
+	Safety types.Bool `tfsdk:"safety" tf:"optional"`
+	// The list of allowed topics. Given a chat request, this guardrail flags
+	// the request if its topic is not in the allowed topics.
+	ValidTopics []types.String `tfsdk:"valid_topics" tf:"optional"`
+}
+
+type AiGatewayGuardrailPiiBehavior struct {
+	// Behavior for PII filter. Currently only 'BLOCK' is supported. If 'BLOCK'
+	// is set for the input guardrail and the request contains PII, the request
+	// is not sent to the model server and 400 status code is returned; if
+	// 'BLOCK' is set for the output guardrail and the model response contains
+	// PII, the PII info in the response is redacted and 400 status code is
+	// returned.
+	Behavior types.String `tfsdk:"behavior" tf:""`
+}
+
+type AiGatewayGuardrails struct {
+	// Configuration for input guardrail filters.
+	Input *AiGatewayGuardrailParameters `tfsdk:"input" tf:"optional"`
+	// Configuration for output guardrail filters.
+	Output *AiGatewayGuardrailParameters `tfsdk:"output" tf:"optional"`
+}
+
+type AiGatewayInferenceTableConfig struct {
+	// The name of the catalog in Unity Catalog. Required when enabling
+	// inference tables. NOTE: On update, you have to disable inference table
+	// first in order to change the catalog name.
+	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	// Indicates whether the inference table is enabled.
+	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	// The name of the schema in Unity Catalog. Required when enabling inference
+	// tables. NOTE: On update, you have to disable inference table first in
+	// order to change the schema name.
+	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
+	// The prefix of the table in Unity Catalog. NOTE: On update, you have to
+	// disable inference table first in order to change the prefix name.
+	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
+}
+
+type AiGatewayRateLimit struct {
+	// Used to specify how many calls are allowed for a key within the
+	// renewal_period.
+	Calls types.Int64 `tfsdk:"calls" tf:""`
+	// Key field for a rate limit. Currently, only 'user' and 'endpoint' are
+	// supported, with 'endpoint' being the default if not specified.
+	Key types.String `tfsdk:"key" tf:"optional"`
+	// Renewal period field for a rate limit. Currently, only 'minute' is
+	// supported.
+	RenewalPeriod types.String `tfsdk:"renewal_period" tf:""`
+}
+
+type AiGatewayUsageTrackingConfig struct {
+	// Whether to enable usage tracking.
+	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+}
+
 type AmazonBedrockConfig struct {
 	// The Databricks secret key reference for an AWS access key ID with
 	// permissions to interact with Bedrock services. If you prefer to paste
@@ -147,14 +226,17 @@ type CohereConfig struct {
 }
 
 type CreateServingEndpoint struct {
+	// The AI Gateway configuration for the serving endpoint. NOTE: only
+	// external model endpoints are supported as of now.
+	AiGateway *AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
 	// The core config of the serving endpoint.
 	Config EndpointCoreConfigInput `tfsdk:"config" tf:""`
 	// The name of the serving endpoint. This field is required and must be
 	// unique across a Databricks workspace. An endpoint name can consist of
 	// alphanumeric characters, dashes, and underscores.
 	Name types.String `tfsdk:"name" tf:""`
-	// Rate limits to be applied to the serving endpoint. NOTE: only external
-	// and foundation model endpoints are supported as of now.
+	// Rate limits to be applied to the serving endpoint. NOTE: this field is
+	// deprecated, please use AI Gateway to manage rate limits.
 	RateLimits []RateLimit `tfsdk:"rate_limits" tf:"optional"`
 	// Enable route optimization for the serving endpoint.
 	RouteOptimized types.Bool `tfsdk:"route_optimized" tf:"optional"`
@@ -518,6 +600,42 @@ type PayloadTable struct {
 	Status types.String `tfsdk:"status" tf:"optional"`
 	// The status message of the payload table.
 	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+}
+
+// Update AI Gateway of a serving endpoint
+type PutAiGatewayRequest struct {
+	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
+	// in requests and responses.
+	Guardrails *AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
+	// Configuration for payload logging using inference tables. Use these
+	// tables to monitor and audit data being sent to and received from model
+	// APIs and to improve model quality.
+	InferenceTableConfig *AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
+	// The name of the serving endpoint whose AI Gateway is being updated. This
+	// field is required.
+	Name types.String `tfsdk:"-"`
+	// Configuration for rate limits which can be set to limit endpoint traffic.
+	RateLimits []AiGatewayRateLimit `tfsdk:"rate_limits" tf:"optional"`
+	// Configuration to enable usage tracking using system tables. These tables
+	// allow you to monitor operational usage on endpoints and their associated
+	// costs.
+	UsageTrackingConfig *AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
+}
+
+type PutAiGatewayResponse struct {
+	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
+	// in requests and responses.
+	Guardrails *AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
+	// Configuration for payload logging using inference tables. Use these
+	// tables to monitor and audit data being sent to and received from model
+	// APIs and to improve model quality .
+	InferenceTableConfig *AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
+	// Configuration for rate limits which can be set to limit endpoint traffic.
+	RateLimits []AiGatewayRateLimit `tfsdk:"rate_limits" tf:"optional"`
+	// Configuration to enable usage tracking using system tables. These tables
+	// allow you to monitor operational usage on endpoints and their associated
+	// costs.
+	UsageTrackingConfig *AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
 }
 
 // Update rate limits of a serving endpoint
@@ -914,6 +1032,9 @@ type ServerLogsResponse struct {
 }
 
 type ServingEndpoint struct {
+	// The AI Gateway configuration for the serving endpoint. NOTE: Only
+	// external model endpoints are currently supported.
+	AiGateway *AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
 	// The config that is currently being served by the endpoint.
 	Config *EndpointCoreConfigSummary `tfsdk:"config" tf:"optional"`
 	// The timestamp when the endpoint was created in Unix time.
@@ -960,6 +1081,9 @@ type ServingEndpointAccessControlResponse struct {
 }
 
 type ServingEndpointDetailed struct {
+	// The AI Gateway configuration for the serving endpoint. NOTE: Only
+	// external model endpoints are currently supported.
+	AiGateway *AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
 	// The config that is currently being served by the endpoint.
 	Config *EndpointCoreConfigOutput `tfsdk:"config" tf:"optional"`
 	// The timestamp when the endpoint was created in Unix time.

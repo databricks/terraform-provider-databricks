@@ -71,7 +71,7 @@ const preTestTemplateUpdate = `
 `
 
 func TestUcAccCreateShare(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: preTestTemplate + `		
 		resource "databricks_share" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
@@ -125,13 +125,13 @@ func shareTemplateWithOwner(comment string, owner string) string {
 }
 
 func TestUcAccUpdateShare(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("c", "account users"),
-	}, step{
+	}, Step{
 		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("e", "account users"),
-	}, step{
+	}, Step{
 		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("e", "{env.TEST_DATA_ENG_GROUP}"),
-	}, step{
+	}, Step{
 		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("f", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

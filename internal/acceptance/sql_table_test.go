@@ -14,7 +14,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
@@ -42,7 +42,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 			comment = "this table is managed by terraform"
 			owner = "account users"
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
@@ -72,8 +72,72 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 	})
 }
 
+func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	UnityWorkspaceLevel(t, Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				this      = "that"
+				something = "else"
+			}
+
+			column {
+				name      = "id"
+				type      = "bigint"
+				identity  = "default"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			comment = "this table is managed by terraform"
+			owner = "account users"
+		}`,
+	}, Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				that      = "this"
+				something = "else2"
+			}
+			
+			column {
+				name      = "id"
+				type      = "bigint"
+				identity  = "default"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			comment = "this table is managed by terraform..."
+		}`,
+	})
+}
+
 func TestUcAccResourceSqlTable_External(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_storage_credential" "external" {
 			name = "cred-{var.RANDOM}"
@@ -113,7 +177,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
@@ -164,7 +228,7 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_sql_endpoint" "this" {
 			name = "tf-{var.RANDOM}"
@@ -215,7 +279,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
@@ -246,7 +310,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 			cluster_keys = ["id"]
 			comment = "this table is managed by terraform"
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
@@ -320,9 +384,9 @@ func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "new_name", Type: "string", Nullable: true, Comment: "comment"}}),
 	})
 }
@@ -346,7 +410,7 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 	}
 	tableName := RandomName()
 	columnName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "0", []string{
 			"integer",
 			"long",
@@ -357,7 +421,7 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 			"dec",
 			"numeric",
 		}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "1", []string{
 			"INTEGER",
 			"LONG",
@@ -368,7 +432,7 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 			"DEC",
 			"NUMERIC",
 		}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName, columnName, "2", []string{
 			"int",
 			"bigint",
@@ -387,9 +451,9 @@ func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "new comment"}}),
 	})
 }
@@ -399,9 +463,9 @@ func TestUcAccResourceSqlTable_DropColumnNullable(t *testing.T) {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "comment"}}),
 	})
 }
@@ -411,9 +475,9 @@ func TestUcAccResourceSqlTable_MultipleColumnUpdates(t *testing.T) {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "new comment"}}),
 	})
 }
@@ -424,9 +488,9 @@ func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
 	}
 	tableName := RandomName()
 
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-	}, step{
+	}, Step{
 		Template:    constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "int", Nullable: true, Comment: "comment"}}),
 		ExpectError: typeUpdateErrorRegex,
 	})
@@ -437,12 +501,12 @@ func TestUcAccResourceSqlTable_DropColumn(t *testing.T) {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
 			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
 			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
 		}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	})
 }
@@ -452,13 +516,13 @@ func TestUcAccResourceSqlTable_DropMultipleColumns(t *testing.T) {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
 			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
 			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
 			{Name: "namethree", Type: "string", Nullable: true, Comment: "comment"},
 		}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
 	})
 }
@@ -468,9 +532,9 @@ func TestUcAccResourceSqlTable_AddColumn(t *testing.T) {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
 			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
 			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
@@ -483,9 +547,9 @@ func TestUcAccResourceSqlTable_AddMultipleColumns(t *testing.T) {
 		skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
 			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
 			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
@@ -500,9 +564,9 @@ func TestUcAccResourceSqlTable_AddColumnAndUpdateThrows(t *testing.T) {
 	}
 
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
-	}, step{
+	}, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
 			{Name: "name", Type: "string", Nullable: false, Comment: "new comment"},
 			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
@@ -517,12 +581,12 @@ func TestUcAccResourceSqlTable_DropColumnAndUpdateThrows(t *testing.T) {
 	}
 
 	tableName := RandomName()
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
 			{Name: "name", Type: "string", Nullable: true, Comment: "comment"},
 			{Name: "nametwo", Type: "string", Nullable: true, Comment: "comment"},
 		}),
-	}, step{
+	}, Step{
 		Template:    constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: false, Comment: "new comment"}}),
 		ExpectError: inlineAndMembershipChangeErrorRegex,
 	})

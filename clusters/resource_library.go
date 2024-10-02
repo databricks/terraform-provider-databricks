@@ -3,6 +3,7 @@ package clusters
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -79,6 +80,11 @@ func ResourceLibrary() common.Resource {
 				IsRefresh: true,
 			}, d.Timeout(schema.TimeoutRead))
 			if err != nil {
+				err = common.IgnoreNotFoundError(err)
+				if err == nil {
+					log.Printf("[WARN] %s is not found, ignoring it", clusterID)
+					d.SetId("")
+				}
 				return err
 			}
 			for _, v := range cll.LibraryStatuses {

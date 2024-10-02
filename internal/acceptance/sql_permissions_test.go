@@ -36,7 +36,7 @@ func TestAccTableACL(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, cr.Failed(), cr.Error())
 	})
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_sql_permissions" "this" {
 			table = "` + tableName + `"

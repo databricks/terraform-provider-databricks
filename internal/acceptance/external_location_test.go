@@ -44,7 +44,7 @@ func storageCredentialTemplateWithOwner(comment, owner string) string {
 }
 
 func TestUcAccExternalLocation(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_storage_credential" "external" {
 			name = "cred-{var.RANDOM}"
@@ -64,7 +64,7 @@ func TestUcAccExternalLocation(t *testing.T) {
 }
 
 func TestUcAccExternalLocationForceDestroy(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_storage_credential" "external" {
 			name = "cred-{var.RANDOM}"
@@ -85,19 +85,19 @@ func TestUcAccExternalLocationForceDestroy(t *testing.T) {
 }
 
 func TestUcAccExternalLocationUpdate(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: storageCredentialTemplateWithOwner("Managed by TF", "account users") +
 			externalLocationTemplateWithOwner("Managed by TF", "account users") +
 			grantsTemplateForExternalLocation,
-	}, step{
+	}, Step{
 		Template: storageCredentialTemplateWithOwner("Managed by TF -- Updated Comment", "account users") +
 			externalLocationTemplateWithOwner("Managed by TF -- Updated Comment", "account users") +
 			grantsTemplateForExternalLocation,
-	}, step{
+	}, Step{
 		Template: storageCredentialTemplateWithOwner("Managed by TF -- Updated Comment", "{env.TEST_DATA_ENG_GROUP}") +
 			externalLocationTemplateWithOwner("Managed by TF -- Updated Comment", "{env.TEST_DATA_ENG_GROUP}") +
 			grantsTemplateForExternalLocation,
-	}, step{
+	}, Step{
 		Template: storageCredentialTemplateWithOwner("Managed by TF -- Updated Comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}") +
 			externalLocationTemplateWithOwner("Managed by TF -- Updated Comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}") +
 			grantsTemplateForExternalLocation,

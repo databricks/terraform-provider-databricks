@@ -48,7 +48,7 @@ var (
 )
 
 func TestAccDataSourcePipelines(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		locals {
 			name = "pipeline-ds-acceptance-{var.RANDOM}"

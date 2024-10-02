@@ -83,7 +83,7 @@ type SqlDashboardTask struct {
 
 type SqlAlertTask struct {
 	AlertID            string            `json:"alert_id"`
-	Subscriptions      []SqlSubscription `json:"subscriptions"`
+	Subscriptions      []SqlSubscription `json:"subscriptions,omitempty"`
 	PauseSubscriptions bool              `json:"pause_subscriptions,omitempty"`
 }
 
@@ -623,9 +623,6 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 
 	s.SchemaPath("task", "python_wheel_task", "package_name").SetOptional()
 	s.SchemaPath("task", "for_each_task", "task", "python_wheel_task", "package_name").SetOptional()
-
-	s.SchemaPath("task", "sql_task", "alert", "subscriptions").SetRequired()
-	s.SchemaPath("task", "for_each_task", "task", "sql_task", "alert", "subscriptions").SetRequired()
 
 	s.SchemaPath("task", "new_cluster", "cluster_id").SetOptional()
 	s.SchemaPath("task", "for_each_task", "task", "new_cluster", "cluster_id").SetOptional()

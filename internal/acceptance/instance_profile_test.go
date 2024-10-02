@@ -7,9 +7,9 @@ import (
 // "databricks_instance_profile" is a singleton. To avoid multiple tests using this resource
 // from interfering with each other, we run them in sequence as steps of a single test.
 func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
-	workspaceLevel(t,
+	WorkspaceLevel(t,
 		// Assign instance profile to group
-		step{
+		Step{
 			Template: `
 		resource "databricks_instance_profile" "this" {
 			instance_profile_arn = "{env.DUMMY_EC2_INSTANCE_PROFILE}"
@@ -22,7 +22,7 @@ func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
 			instance_profile_id = databricks_instance_profile.this.id
 		}`},
 		// Assign instance profile to mount
-		step{
+		Step{
 			Template: `
 			resource "databricks_instance_profile" "this" {
 				instance_profile_arn = "{env.DUMMY_EC2_INSTANCE_PROFILE}"
@@ -37,7 +37,7 @@ func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
 			}`,
 		},
 		// ServicePrincipal resource on Aws with role
-		step{
+		Step{
 			Template: `
 			resource "databricks_service_principal" "this" {
 				display_name = "SPN {var.RANDOM}"

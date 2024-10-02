@@ -6,7 +6,7 @@ import (
 
 func TestAccDataSourceInstanceProfiles(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		data "databricks_instance_profiles" "this" {
 		}

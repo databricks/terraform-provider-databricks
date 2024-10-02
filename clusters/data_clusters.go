@@ -11,11 +11,14 @@ import (
 
 func DataSourceClusters() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
-		Id                  string   `json:"id,omitempty" tf:"computed"`
-		Ids                 []string `json:"ids,omitempty" tf:"computed,slice_set"`
-		ClusterNameContains string   `json:"cluster_name_contains,omitempty"`
+		Id                  string                        `json:"id,omitempty" tf:"computed"`
+		Ids                 []string                      `json:"ids,omitempty" tf:"computed,slice_set"`
+		ClusterNameContains string                        `json:"cluster_name_contains,omitempty"`
+		FilterBy            *compute.ListClustersFilterBy `json:"filter_by,omitempty"`
 	}, w *databricks.WorkspaceClient) error {
-		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
+		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{
+			FilterBy: data.FilterBy,
+		})
 		if err != nil {
 			return err
 		}

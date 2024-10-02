@@ -19,6 +19,8 @@ type CreatePipeline struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
 	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names" tf:"optional"`
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
@@ -103,6 +105,8 @@ type EditPipeline struct {
 	// If false, deployment will fail if name has changed and conflicts the name
 	// of another pipeline.
 	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names" tf:"optional"`
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
@@ -209,6 +213,8 @@ type GetPipelineResponse struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// The username of the pipeline creator.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	// Serverless budget policy ID of this pipeline.
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
 	// The health of a pipeline.
 	Health types.String `tfsdk:"health" tf:"optional"`
 	// The last time the pipeline settings were modified or created.
@@ -642,6 +648,8 @@ type PipelinePermissionsRequest struct {
 }
 
 type PipelineSpec struct {
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,

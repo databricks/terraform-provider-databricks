@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -56,6 +57,16 @@ type DatabricksClient struct {
 	mu                    sync.Mutex
 }
 
+// GetWorkspaceClient returns the Databricks WorkspaceClient or a diagnostics if that fails.
+// This is used by resources and data sources that are developed over plugin framework.
+func (c *DatabricksClient) GetWorkspaceClient() (*databricks.WorkspaceClient, diag.Diagnostics) {
+	w, err := c.WorkspaceClient()
+	if err != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get workspace client", err.Error())}
+	}
+	return w, nil
+}
+
 func (c *DatabricksClient) WorkspaceClient() (*databricks.WorkspaceClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -97,6 +108,16 @@ func (c *DatabricksClient) setAccountId(accountId string) error {
 	}
 	c.DatabricksClient.Config.AccountID = accountId
 	return nil
+}
+
+// GetAccountClient returns the Databricks Account client or a diagnostics if that fails.
+// This is used by resources and data sources that are developed over plugin framework.
+func (c *DatabricksClient) GetAccountClient() (*databricks.AccountClient, diag.Diagnostics) {
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, diag.Diagnostics{diag.NewErrorDiagnostic("Failed to get account client", err.Error())}
+	}
+	return a, nil
 }
 
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {

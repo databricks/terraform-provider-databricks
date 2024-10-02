@@ -197,6 +197,11 @@ func ResourceInstancePool() common.Resource {
 				clusters.AzureAvailabilityOnDemand,
 			}, false)
 		}
+		if v, err := common.SchemaPath(s, "azure_attributes", "spot_bid_max_price"); err == nil {
+			v.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+				return oldValue != "0" && newValue == "0"
+			}
+		}
 		if v, err := common.SchemaPath(s, "gcp_attributes", "gcp_availability"); err == nil {
 			v.Default = clusters.GcpAvailabilityOnDemand
 			v.ValidateFunc = validation.StringInSlice([]string{

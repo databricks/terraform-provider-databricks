@@ -164,6 +164,117 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceClusterCreateErrorFollowedByDeletion(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/permanent-delete",
+				ExpectedRequest: compute.PermanentDeleteCluster{
+					ClusterId: "abc",
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "failed to reach RUNNING, got TERMINATED")
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterCreateErrorFollowedByDeletionError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/permanent-delete",
+				ExpectedRequest: compute.PermanentDeleteCluster{
+					ClusterId: "abc",
+				},
+				Status: 500,
+				Response: common.APIErrorBody{
+					ErrorCode: "INTERNAL_ERROR",
+					Message:   "Internal error happened",
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "failed to create cluster: failed to reach RUNNING, got TERMINATED:  and failed to delete it during cleanup: Internal error happened")
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -426,6 +537,161 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 			"num_workers":             100,
 			"is_pinned":               false,
 			"runtime_engine":          "PHOTON",
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterCreateNoWait_WithLibraries(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.ClusterSpec{
+					NumWorkers:             100,
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 60,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateUnknown,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateUnknown,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/events",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
+					Limit:      1,
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
+				},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/libraries/install",
+				ExpectedRequest: compute.InstallLibraries{
+					ClusterId: "abc",
+					Libraries: []compute.Library{
+						{
+							Pypi: &compute.PythonPyPiLibrary{
+								Package: "seaborn==1.2.4",
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{
+						{
+							Library: &compute.Library{
+								Pypi: &compute.PythonPyPiLibrary{
+									Package: "seaborn==1.2.4",
+								},
+							},
+							Status: compute.LibraryInstallStatusPending,
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		HCL: `num_workers = 100
+		spark_version = "7.1-scala12"
+		node_type_id = "i3.xlarge"
+		no_wait = true
+
+		library {
+			pypi {
+				package = "seaborn==1.2.4"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterCreateNoWait(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.ClusterSpec{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateUnknown,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateUnknown,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/events",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
+					Limit:      1,
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
+				},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+			"is_pinned":               false,
+			"no_wait":                 true,
 		},
 	}.Apply(t)
 	assert.NoError(t, err)

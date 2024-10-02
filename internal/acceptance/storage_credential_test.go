@@ -7,7 +7,7 @@ import (
 func TestUcAccStorageCredential(t *testing.T) {
 	loadUcwsEnv(t)
 	if isAws(t) {
-		unityWorkspaceLevel(t, step{
+		UnityWorkspaceLevel(t, Step{
 			Template: `
 				resource "databricks_storage_credential" "external" {
 					name = "cred-{var.RANDOM}"
@@ -29,7 +29,7 @@ func TestUcAccStorageCredential(t *testing.T) {
 				}`,
 		})
 	} else if isGcp(t) {
-		unityWorkspaceLevel(t, step{
+		UnityWorkspaceLevel(t, Step{
 			Template: `
 				resource "databricks_storage_credential" "external" {
 					name = "cred-{var.RANDOM}"
@@ -42,7 +42,7 @@ func TestUcAccStorageCredential(t *testing.T) {
 }
 
 func TestAccStorageCredentialOwner(t *testing.T) {
-	unityAccountLevel(t, step{
+	UnityAccountLevel(t, Step{
 		Template: `
 			resource "databricks_service_principal" "test_acc_storage_credential_owner" {
 				display_name = "test_acc_storage_credential_owner {var.RANDOM}"

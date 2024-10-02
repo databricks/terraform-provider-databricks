@@ -381,30 +381,31 @@ func genericDatabricksData[T, P, C any](
 	var dummy T
 	var other P
 	otherFields := StructToSchema(other, nil)
-	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		// For WorkspaceData and AccountData, a single data type is used to represent all of the fields of
-		// the resource, so its configuration is correct. For the *WithParams methods, the SdkType parameter
-		// is copied directly from the resource definition, which means that all fields from that type are
-		// computed and optional, and the fields from OtherFields are overlaid on top of the schema generated
-		// by SdkType.
-		if hasOther {
-			for k := range m {
-				m[k].Computed = true
-				m[k].Required = false
-				m[k].Optional = true
-			}
-			for k, v := range otherFields {
-				m[k] = v
-			}
+
+	s := StructToSchema(dummy, nil)
+	// For WorkspaceData and AccountData, a single data type is used to represent all of the fields of
+	// the resource, so its configuration is correct. For the *WithParams methods, the SdkType parameter
+	// is copied directly from the resource definition, which means that all fields from that type are
+	// computed and optional, and the fields from OtherFields are overlaid on top of the schema generated
+	// by SdkType.
+	if hasOther {
+		for k := range s {
+			s[k].Computed = true
+			s[k].Required = false
+			s[k].Optional = true
 		}
-		// `id` attribute must be marked as computed, otherwise it's not set!
-		if v, ok := m["id"]; ok {
-			v.Computed = true
-			v.Required = false
+		for k, v := range otherFields {
+			s[k] = v
 		}
-		// allow c
-		return customizeSchemaFunc(m)
-	})
+	}
+	// `id` attribute must be marked as computed, otherwise it's not set!
+	if v, ok := s["id"]; ok {
+		v.Computed = true
+		v.Required = false
+	}
+	// allow c
+	s = customizeSchemaFunc(s)
+
 	return Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, client *DatabricksClient) (err error) {
@@ -437,6 +438,16 @@ func genericDatabricksData[T, P, C any](
 			return
 		},
 	}
+}
+
+// WorkspacePathPrefixDiffSuppress suppresses diffs for workspace paths where both sides
+// may or may not include the `/Workspace` prefix.
+//
+// This is the case for dashboards where at create time, the user may include the `/Workspace`
+// prefix for the `parent_path` field, but the read response will not include the prefix.
+func WorkspacePathPrefixDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	const prefix = "/Workspace"
+	return strings.TrimPrefix(old, prefix) == strings.TrimPrefix(new, prefix)
 }
 
 func EqualFoldDiffSuppress(k, old, new string, d *schema.ResourceData) bool {

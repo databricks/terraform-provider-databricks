@@ -3,6 +3,7 @@ package tfschema
 import (
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -13,6 +14,7 @@ type Int64AttributeBuilder struct {
 	Computed           bool
 	DeprecationMessage string
 	Validators         []validator.Int64
+	PlanModifiers      []planmodifier.Int64
 }
 
 func (a Int64AttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
@@ -34,6 +36,7 @@ func (a Int64AttributeBuilder) BuildResourceAttribute() schema.Attribute {
 		DeprecationMessage: a.DeprecationMessage,
 		Computed:           a.Computed,
 		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
 	}
 }
 
@@ -88,5 +91,10 @@ func (a Int64AttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
 
 func (a Int64AttributeBuilder) AddValidator(v validator.Int64) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
+	return a
+}
+
+func (a Int64AttributeBuilder) AddPlanModifier(v planmodifier.Int64) AttributeBuilder {
+	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

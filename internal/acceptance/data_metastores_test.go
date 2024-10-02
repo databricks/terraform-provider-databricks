@@ -8,7 +8,7 @@ import (
 )
 
 func TestUcAccDataSourceMetastores(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		data "databricks_metastores" "this" {
 		}`,

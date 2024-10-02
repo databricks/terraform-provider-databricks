@@ -32,7 +32,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/mws"
-	"github.com/databricks/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	tfpipelines "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	tfsettings "github.com/databricks/terraform-provider-databricks/settings"
@@ -243,6 +243,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				"inst_pool_"+ic.Importables["databricks_instance_pool"].Name(ic, r.Data))
 			return nil
 		},
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_instance_pool", "instance_pool_name"),
 	},
 	"databricks_instance_profile": {
 		Service: "access",
@@ -326,7 +327,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			lastActiveMs := ic.getLastActiveMs()
-			nonInteractiveClusters := []string{"JOB", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
+			nonInteractiveClusters := []string{"JOB", "MODELS", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
 			for offset, c := range clusters {
 				if slices.Contains(nonInteractiveClusters, string(c.ClusterSource)) {
 					// TODO: Should we check cluster name as well?
@@ -1183,7 +1184,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return (r.Data.Get("access_control.#").(int) == 0)
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var permissions permissions.PermissionsEntity
+			var permissions entity.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
 			common.DataToStructPointer(r.Data, s, &permissions)
 			for _, ac := range permissions.AccessControlList {
@@ -1724,7 +1725,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				"sql_query_"+ic.Importables["databricks_sql_query"].Name(ic, r.Data))
 			return nil
 		},
-		Ignore: generateIgnoreObjectWithoutName("databricks_sql_query"),
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_sql_query", "name"),
 		Depends: []reference{
 			{Path: "data_source_id", Resource: "databricks_sql_endpoint", Match: "data_source_id"},
 			{Path: "parameter.query.query_id", Resource: "databricks_sql_query", Match: "id"},
@@ -1770,7 +1771,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Ignore: generateIgnoreObjectWithoutName("databricks_sql_endpoint"),
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_sql_endpoint", "name"),
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 			switch pathString {
 			case "enable_serverless_compute":
@@ -1978,7 +1979,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				"sql_alert_"+ic.Importables["databricks_sql_alert"].Name(ic, r.Data))
 			return nil
 		},
-		Ignore: generateIgnoreObjectWithoutName("databricks_sql_alert"),
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_sql_alert", "name"),
 		Depends: []reference{
 			{Path: "query_id", Resource: "databricks_sql_query", Match: "id"},
 			{Path: "parent", Resource: "databricks_directory", Match: "object_id",
@@ -2517,6 +2518,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			numBlocks := r.Data.Get("artifact_matcher.#").(int)
+			if numBlocks == 0 {
+				log.Printf("[WARN] Ignoring artifcat allowlist with ID %s", r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_artifact_allowlist. id=%s", r.ID))
+			}
+			return numBlocks == 0
+		},
 		Depends: []reference{
 			{Path: "artifact_matcher.artifact", Resource: "databricks_volume", Match: "volume_path",
 				IsValidApproximation: isMatchingAllowListArtifact},
@@ -2605,7 +2614,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
-		Ignore: generateIgnoreObjectWithoutName("databricks_catalog"),
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_catalog", "name"),
 		Depends: []reference{
 			{Path: "connection_name", Resource: "databricks_connection", Match: "name"},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
@@ -2711,7 +2720,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
-		Ignore:          generateIgnoreObjectWithoutName("databricks_schema"),
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_schema", "name"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
@@ -2739,7 +2748,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
-		Ignore: generateIgnoreObjectWithoutName("databricks_volume"),
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_volume", "name"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
@@ -2763,7 +2772,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
-		Ignore: generateIgnoreObjectWithoutName("databricks_sql_table"),
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_sql_table", "name"),
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 			switch pathString {
 			case "storage_location":
@@ -3080,7 +3089,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
-		Ignore: generateIgnoreObjectWithoutName("databricks_registered_model"),
+		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_registered_model", "name"),
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "schema_name", Resource: "databricks_schema", Match: "name",
@@ -3483,7 +3492,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
-		Ignore:          generateIgnoreObjectWithoutName("databricks_online_table"),
+		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_online_table", "name"),
 		ShouldOmitField: shouldOmitForUnityCatalog,
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},

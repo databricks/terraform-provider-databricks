@@ -47,7 +47,7 @@ func checkUsersDataSourcePopulated(t *testing.T) func(s *terraform.State) error 
 }
 
 func TestAccDataSourceDataUsers(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: dataSourceTemplate,
 		Check:    checkUsersDataSourcePopulated(t),
 	})

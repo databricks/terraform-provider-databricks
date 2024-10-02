@@ -18,6 +18,8 @@ func ResourceBudget() common.Resource {
 		}
 		common.CustomizeSchemaPath(m, "alert_configurations", "alert_configuration_id").SetComputed()
 		common.CustomizeSchemaPath(m, "alert_configurations", "action_configurations", "action_configuration_id").SetComputed()
+		// We need SuppressDiff because API returns a string representation of BigDecimal with a lot
+		// of trailing 0s, etc.
 		common.CustomizeSchemaPath(m, "alert_configurations", "quantity_threshold").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 			normalize := func(v string) string {
 				if strings.Contains(v, ".") {

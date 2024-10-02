@@ -141,6 +141,16 @@ func TestResourceBudgetRead(t *testing.T) {
 	})
 }
 
+func TestResourceBudgetRead_UnpackError(t *testing.T) {
+	qa.ResourceFixture{
+		Resource:  ResourceBudget(),
+		Read:      true,
+		New:       true,
+		AccountID: "account_id",
+		ID:        "budget_configuration_id",
+	}.ExpectError(t, "invalid ID: budget_configuration_id")
+}
+
 func TestResourceBudgetUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {

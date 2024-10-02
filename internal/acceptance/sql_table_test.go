@@ -72,6 +72,70 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 	})
 }
 
+func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	UnityWorkspaceLevel(t, Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				this      = "that"
+				something = "else"
+			}
+
+			column {
+				name      = "id"
+				type      = "bigint"
+				identity  = "default"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			comment = "this table is managed by terraform"
+			owner = "account users"
+		}`,
+	}, Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				that      = "this"
+				something = "else2"
+			}
+			
+			column {
+				name      = "id"
+				type      = "bigint"
+				identity  = "default"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			comment = "this table is managed by terraform..."
+		}`,
+	})
+}
+
 func TestUcAccResourceSqlTable_External(t *testing.T) {
 	UnityWorkspaceLevel(t, Step{
 		Template: `

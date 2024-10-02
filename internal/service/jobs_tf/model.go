@@ -263,7 +263,11 @@ type CreateJob struct {
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
 	// A list of task execution environment specifications that can be
-	// referenced by tasks of this job.
+	// referenced by serverless tasks of this job. An environment is required to
+	// be present for serverless tasks. For serverless notebook tasks, the
+	// environment is accessible in the notebook environment panel. For other
+	// serverless tasks, the task environment is required to be specified using
+	// environment_key in the task settings.
 	Environments []JobEnvironment `tfsdk:"environment" tf:"optional"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -309,12 +313,12 @@ type CreateJob struct {
 	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
 	Queue *QueueSettings `tfsdk:"queue" tf:"optional"`
-	// Write-only setting, available only in Create/Update/Reset and Submit
-	// calls. Specifies the user or service principal that the job runs as. If
-	// not specified, the job runs as the user who created the job.
+	// Write-only setting. Specifies the user, service principal or group that
+	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
+	// user who created the job/pipeline.
 	//
-	// Only `user_name` or `service_principal_name` can be specified. If both
-	// are specified, an error is thrown.
+	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
+	// be specified. If not, an error is thrown.
 	RunAs *JobRunAs `tfsdk:"run_as" tf:"optional"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
@@ -827,12 +831,12 @@ type JobPermissionsRequest struct {
 	JobId types.String `tfsdk:"-"`
 }
 
-// Write-only setting, available only in Create/Update/Reset and Submit calls.
-// Specifies the user or service principal that the job runs as. If not
-// specified, the job runs as the user who created the job.
+// Write-only setting. Specifies the user, service principal or group that the
+// job/pipeline runs as. If not specified, the job/pipeline runs as the user who
+// created the job/pipeline.
 //
-// Only `user_name` or `service_principal_name` can be specified. If both are
-// specified, an error is thrown.
+// Exactly one of `user_name`, `service_principal_name`, `group_name` should be
+// specified. If not, an error is thrown.
 type JobRunAs struct {
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
@@ -861,7 +865,11 @@ type JobSettings struct {
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
 	// A list of task execution environment specifications that can be
-	// referenced by tasks of this job.
+	// referenced by serverless tasks of this job. An environment is required to
+	// be present for serverless tasks. For serverless notebook tasks, the
+	// environment is accessible in the notebook environment panel. For other
+	// serverless tasks, the task environment is required to be specified using
+	// environment_key in the task settings.
 	Environments []JobEnvironment `tfsdk:"environment" tf:"optional"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -907,12 +915,12 @@ type JobSettings struct {
 	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
 	Queue *QueueSettings `tfsdk:"queue" tf:"optional"`
-	// Write-only setting, available only in Create/Update/Reset and Submit
-	// calls. Specifies the user or service principal that the job runs as. If
-	// not specified, the job runs as the user who created the job.
+	// Write-only setting. Specifies the user, service principal or group that
+	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
+	// user who created the job/pipeline.
 	//
-	// Only `user_name` or `service_principal_name` can be specified. If both
-	// are specified, an error is thrown.
+	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
+	// be specified. If not, an error is thrown.
 	RunAs *JobRunAs `tfsdk:"run_as" tf:"optional"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI

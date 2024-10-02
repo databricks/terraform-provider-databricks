@@ -58,7 +58,7 @@ resource "databricks_permissions" "dashboard_usage" {
 	return templateString
 }
 
-// Altough EmbedCredentials is an optional field, please specify its value if you want to modify it.
+// Although EmbedCredentials is an optional field, please specify its value if you want to modify it.
 func (t *templateStruct) SetAttributes(mapper map[string]string) templateStruct {
 	// Switch case for each attribute. If it is set in the mapper, set it in the struct
 	if val, ok := mapper["display_name"]; ok {
@@ -489,5 +489,21 @@ func TestAccDashboardTestAll(t *testing.T) {
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			return nil
 		}),
+	})
+}
+
+func TestAccDashboardWithWorkspacePrefix(t *testing.T) {
+	var template templateStruct
+
+	// Test that the dashboard can use a /Workspace prefix on the parent path and not trigger recreation.
+	// If this does NOT work, the test fails with an error that the non-refresh plan is non-empty.
+
+	WorkspaceLevel(t, Step{
+		Template: makeTemplate(template.SetAttributes(map[string]string{
+			"display_name":         fmt.Sprintf("Test Dashboard - %s", qa.RandomName()),
+			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
+			"parent_path":          "/Workspace/Shared/provider-test",
+			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
+		})),
 	})
 }

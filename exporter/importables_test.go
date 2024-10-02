@@ -25,6 +25,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	dlt_pipelines "github.com/databricks/terraform-provider-databricks/pipelines"
@@ -220,8 +221,8 @@ func TestPermissions(t *testing.T) {
 	assert.Equal(t, "abc", name)
 
 	d.MarkNewResource()
-	err := common.StructToData(permissions.PermissionsEntity{
-		AccessControlList: []permissions.AccessControlChange{
+	err := common.StructToData(entity.PermissionsEntity{
+		AccessControlList: []iam.AccessControlRequest{
 			{
 				UserName: "a",
 			},

@@ -326,8 +326,14 @@ type ClusterAttributes struct {
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -526,8 +532,14 @@ type ClusterDetails struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -844,8 +856,14 @@ type ClusterSpec struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -1040,8 +1058,14 @@ type CreateCluster struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -1423,8 +1447,14 @@ type EditCluster struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -2963,8 +2993,14 @@ type UpdateClusterResource struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`

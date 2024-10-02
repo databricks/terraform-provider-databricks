@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - object describing status of the online table:
   * `detailed_state` - The state of the online table.
   * `message` - A text description of the current state of the online table.
+* `table_serving_url` - Data serving REST API URL for this table.
 
 ## Import
 

@@ -32,7 +32,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/mws"
-	"github.com/databricks/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	tfpipelines "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	tfsettings "github.com/databricks/terraform-provider-databricks/settings"
@@ -1184,7 +1184,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return (r.Data.Get("access_control.#").(int) == 0)
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var permissions permissions.PermissionsEntity
+			var permissions entity.PermissionsEntity
 			s := ic.Resources["databricks_permissions"].Schema
 			common.DataToStructPointer(r.Data, s, &permissions)
 			for _, ac := range permissions.AccessControlList {

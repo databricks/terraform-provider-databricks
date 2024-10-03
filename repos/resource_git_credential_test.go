@@ -250,7 +250,7 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
-				Response: workspace.GetCredentialsResponse{
+				Response: workspace.ListCredentialsResponse{
 					Credentials: []workspace.CredentialInfo{resp},
 				},
 			},
@@ -388,7 +388,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
-				Response: workspace.GetCredentialsResponse{
+				Response: workspace.ListCredentialsResponse{
 					Credentials: []workspace.CredentialInfo{resp},
 				},
 			},

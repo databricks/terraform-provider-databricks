@@ -25,6 +25,10 @@ type App struct {
 	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
 	// The email of the user that created the app.
 	Creator types.String `tfsdk:"creator" tf:"optional"`
+	// The default workspace file system path of the source code from which app
+	// deployment are created. This field tracks the workspace source code path
+	// of the last active deployment.
+	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path" tf:"optional"`
 	// The description of the app.
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// The name of the app. The name must contain only lowercase alphanumeric
@@ -32,6 +36,8 @@ type App struct {
 	Name types.String `tfsdk:"name" tf:""`
 	// The pending deployment of the app.
 	PendingDeployment *AppDeployment `tfsdk:"pending_deployment" tf:"optional"`
+	// Resources for the app.
+	Resources []AppResource `tfsdk:"resources" tf:"optional"`
 
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"optional"`
 
@@ -134,6 +140,55 @@ type AppPermissionsRequest struct {
 	AppName types.String `tfsdk:"-"`
 }
 
+type AppResource struct {
+	// Description of the App Resource.
+	Description types.String `tfsdk:"description" tf:"optional"`
+
+	Job *AppResourceJob `tfsdk:"job" tf:"optional"`
+	// Name of the App Resource.
+	Name types.String `tfsdk:"name" tf:""`
+
+	Secret *AppResourceSecret `tfsdk:"secret" tf:"optional"`
+
+	ServingEndpoint *AppResourceServingEndpoint `tfsdk:"serving_endpoint" tf:"optional"`
+
+	SqlWarehouse *AppResourceSqlWarehouse `tfsdk:"sql_warehouse" tf:"optional"`
+}
+
+type AppResourceJob struct {
+	// Id of the job to grant permission on.
+	Id types.String `tfsdk:"id" tf:""`
+	// Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE",
+	// "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW".
+	Permission types.String `tfsdk:"permission" tf:""`
+}
+
+type AppResourceSecret struct {
+	// Key of the secret to grant permission on.
+	Key types.String `tfsdk:"key" tf:""`
+	// Permission to grant on the secret scope. For secrets, only one permission
+	// is allowed. Permission must be one of: "READ", "WRITE", "MANAGE".
+	Permission types.String `tfsdk:"permission" tf:""`
+	// Scope of the secret to grant permission on.
+	Scope types.String `tfsdk:"scope" tf:""`
+}
+
+type AppResourceServingEndpoint struct {
+	// Name of the serving endpoint to grant permission on.
+	Name types.String `tfsdk:"name" tf:""`
+	// Permission to grant on the serving endpoint. Supported permissions are:
+	// "CAN_MANAGE", "CAN_QUERY", "CAN_VIEW".
+	Permission types.String `tfsdk:"permission" tf:""`
+}
+
+type AppResourceSqlWarehouse struct {
+	// Id of the SQL warehouse to grant permission on.
+	Id types.String `tfsdk:"id" tf:""`
+	// Permission to grant on the SQL warehouse. Supported permissions are:
+	// "CAN_MANAGE", "CAN_USE", "IS_OWNER".
+	Permission types.String `tfsdk:"permission" tf:""`
+}
+
 type ApplicationStatus struct {
 	// Application status message
 	Message types.String `tfsdk:"message" tf:"optional"`
@@ -171,6 +226,8 @@ type CreateAppRequest struct {
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name" tf:""`
+	// Resources for the app.
+	Resources []AppResource `tfsdk:"resources" tf:"optional"`
 }
 
 // Delete an app
@@ -259,4 +316,6 @@ type UpdateAppRequest struct {
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name" tf:""`
+	// Resources for the app.
+	Resources []AppResource `tfsdk:"resources" tf:"optional"`
 }

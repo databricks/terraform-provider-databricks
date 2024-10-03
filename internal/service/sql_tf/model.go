@@ -194,6 +194,8 @@ type CancelExecutionRequest struct {
 type CancelExecutionResponse struct {
 }
 
+// Configures the channel name and DBSQL version of the warehouse.
+// CHANNEL_NAME_CUSTOM should be chosen only when `dbsql_version` is specified.
 type Channel struct {
 	DbsqlVersion types.String `tfsdk:"dbsql_version" tf:"optional"`
 
@@ -347,7 +349,9 @@ type CreateWarehouseRequest struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
 	//
-	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
+	// Supported values: - Must be >= 0 mins for serverless warehouses - Must be
+	// == 0 or >= 10 mins for non-serverless warehouses - 0 indicates no
+	// autostop.
 	//
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`

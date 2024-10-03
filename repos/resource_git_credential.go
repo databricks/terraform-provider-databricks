@@ -12,7 +12,7 @@ import (
 )
 
 func ResourceGitCredential() common.Resource {
-	s := common.StructToSchema(workspace.CreateCredentials{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+	s := common.StructToSchema(workspace.CreateCredentialsRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["force"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -34,7 +34,7 @@ func ResourceGitCredential() common.Resource {
 				return err
 			}
 
-			var req workspace.CreateCredentials
+			var req workspace.CreateCredentialsRequest
 			common.DataToStructPointer(d, s, &req)
 			resp, err := w.GitCredentials.Create(ctx, req)
 
@@ -49,7 +49,7 @@ func ResourceGitCredential() common.Resource {
 				if len(creds) != 1 {
 					return fmt.Errorf("list of credentials is either empty or have more than one entry (%d)", len(creds))
 				}
-				var req workspace.UpdateCredentials
+				var req workspace.UpdateCredentialsRequest
 				common.DataToStructPointer(d, s, &req)
 				req.CredentialId = creds[0].CredentialId
 
@@ -71,7 +71,7 @@ func ResourceGitCredential() common.Resource {
 			if err != nil {
 				return err
 			}
-			resp, err := w.GitCredentials.Get(ctx, workspace.GetGitCredentialRequest{CredentialId: cred_id})
+			resp, err := w.GitCredentials.Get(ctx, workspace.GetCredentialsRequest{CredentialId: cred_id})
 			if err != nil {
 				return err
 			}
@@ -80,7 +80,7 @@ func ResourceGitCredential() common.Resource {
 			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var req workspace.UpdateCredentials
+			var req workspace.UpdateCredentialsRequest
 
 			common.DataToStructPointer(d, s, &req)
 			cred_id, err := strconv.ParseInt(d.Id(), 10, 64)

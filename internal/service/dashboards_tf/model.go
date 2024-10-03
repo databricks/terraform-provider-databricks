@@ -23,7 +23,12 @@ type CreateDashboardRequest struct {
 	// Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
 	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses.
+	// excluded in List Dashboards responses. Use the [get dashboard API] to
+	// retrieve an example response, which includes the `serialized_dashboard`
+	// field. This field provides the structure of the JSON string that
+	// represents the dashboard's layout and components.
+	//
+	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -81,11 +86,17 @@ type Dashboard struct {
 	// leading slash and no trailing slash. This field is excluded in List
 	// Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
-	// The workspace path of the dashboard asset, including the file name. This
+	// The workspace path of the dashboard asset, including the file name.
+	// Exported dashboards always have the file extension `.lvdash.json`. This
 	// field is excluded in List Dashboards responses.
 	Path types.String `tfsdk:"path" tf:"optional"`
 	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses.
+	// excluded in List Dashboards responses. Use the [get dashboard API] to
+	// retrieve an example response, which includes the `serialized_dashboard`
+	// field. This field provides the structure of the JSON string that
+	// represents the dashboard's layout and components.
+	//
+	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The timestamp of when the dashboard was last updated by the user. This
 	// field is excluded in List Dashboards responses.
@@ -213,9 +224,10 @@ type GenieMessage struct {
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id" tf:""`
 	// MesssageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
-	// metadata from the data sources. * `ASKING_AI`: Waiting for the LLM to
-	// respond to the users question. * `EXECUTING_QUERY`: Executing AI provided
-	// SQL query. Get the SQL query result by calling
+	// metadata from the data sources. * `FILTERING_CONTEXT`: Running smart
+	// context step to determine relevant context. * `ASKING_AI`: Waiting for
+	// the LLM to respond to the users question. * `EXECUTING_QUERY`: Executing
+	// AI provided SQL query. Get the SQL query result by calling
 	// [getMessageQueryResult](:method:genie/getMessageQueryResult) API.
 	// **Important: The message status will stay in the `EXECUTING_QUERY` until
 	// a client calls
@@ -510,7 +522,12 @@ type UpdateDashboardRequest struct {
 	// field is excluded in List Dashboards responses.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses.
+	// excluded in List Dashboards responses. Use the [get dashboard API] to
+	// retrieve an example response, which includes the `serialized_dashboard`
+	// field. This field provides the structure of the JSON string that
+	// represents the dashboard's layout and components.
+	//
+	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`

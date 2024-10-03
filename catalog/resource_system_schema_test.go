@@ -239,6 +239,41 @@ func TestSystemSchemaRead_Error(t *testing.T) {
 	assert.Equal(t, "abc|access", d.Id(), "Id should not be empty for error reads")
 }
 
+func TestSystemSchemaRead_NotEnabledOrExists(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
+				Response: catalog.GetMetastoreSummaryResponse{
+					MetastoreId: "abc",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas?",
+				Response: catalog.ListSystemSchemasResponse{
+					Schemas: []catalog.SystemSchemaInfo{
+						{
+							Schema: "access",
+							State:  catalog.SystemSchemaInfoStateAvailable,
+						},
+						{
+							Schema: "billing",
+							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceSystemSchema(),
+		Read:     true,
+		ID:       "abc|access",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "", d.Id(), "Id should be null if a schema is not enabled/does not exist")
+}
+
 func TestSystemSchemaDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

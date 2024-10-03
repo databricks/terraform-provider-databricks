@@ -97,6 +97,8 @@ func ResourceSystemSchema() common.Resource {
 					return nil
 				}
 			}
+			log.Printf(f"[WARN] %s is not enabled/does not exist, ignoring it", systemSchema)
+			d.SetId("")
 			return nil
 		},
 		Update: createOrUpdate,

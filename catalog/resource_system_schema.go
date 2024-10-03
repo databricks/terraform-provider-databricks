@@ -93,11 +93,20 @@ func ResourceSystemSchema() common.Resource {
 					if err != nil {
 						return err
 					}
+
+					// only track enabled schemas inline with rest of module
+					if schema.State != catalog.SystemSchemaInfoStateEnableCompleted &&
+						schema.State != catalog.SystemSchemaInfoStateEnableInitialized {
+						log.Printf("[WARN] %s is not enabled, ignoring it", schemaName)
+						d.SetId("")
+						return nil
+					}
+
 					d.Set("full_name", fmt.Sprintf("system.%s", schemaName))
 					return nil
 				}
 			}
-			log.Printf(f"[WARN] %s is not enabled/does not exist, ignoring it", systemSchema)
+			log.Printf("[WARN] %s does not exist, ignoring it", schemaName)
 			d.SetId("")
 			return nil
 		},

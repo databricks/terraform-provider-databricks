@@ -735,7 +735,8 @@ type JobDeployment struct {
 
 type JobEmailNotifications struct {
 	// If true, do not send email to recipients specified in `on_failure` if the
-	// run is skipped.
+	// run is skipped. This field is `deprecated`. Please use the
+	// `notification_settings.no_alert_for_skipped_runs` field.
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
 	// A list of email addresses to be notified when the duration of a run
 	// exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in
@@ -1274,7 +1275,7 @@ type RepairRun struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
-
+	// Controls whether the pipeline should perform a full refresh
 	PipelineParams *PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
@@ -1630,7 +1631,7 @@ type RunJobTask struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
-
+	// Controls whether the pipeline should perform a full refresh
 	PipelineParams *PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
@@ -1733,7 +1734,7 @@ type RunNow struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
-
+	// Controls whether the pipeline should perform a full refresh
 	PipelineParams *PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
@@ -1867,7 +1868,7 @@ type RunParameters struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
-
+	// Controls whether the pipeline should perform a full refresh
 	PipelineParams *PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
@@ -2613,7 +2614,8 @@ type TaskDependency struct {
 
 type TaskEmailNotifications struct {
 	// If true, do not send email to recipients specified in `on_failure` if the
-	// run is skipped.
+	// run is skipped. This field is `deprecated`. Please use the
+	// `notification_settings.no_alert_for_skipped_runs` field.
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
 	// A list of email addresses to be notified when the duration of a run
 	// exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in
@@ -2662,8 +2664,9 @@ type TaskNotificationSettings struct {
 type TerminationDetails struct {
 	// The code indicates why the run was terminated. Additional codes might be
 	// introduced in future releases. * `SUCCESS`: The run was completed
-	// successfully. * `CANCELED`: The run was canceled during execution by the
-	// Databricks platform; for example, if the maximum run duration was
+	// successfully. * `USER_CANCELED`: The run was successfully canceled during
+	// execution by a user. * `CANCELED`: The run was canceled during execution
+	// by the Databricks platform; for example, if the maximum run duration was
 	// exceeded. * `SKIPPED`: Run was never executed, for example, if the
 	// upstream task run failed, the dependency type condition was not met, or
 	// there were no material tasks to execute. * `INTERNAL_ERROR`: The run

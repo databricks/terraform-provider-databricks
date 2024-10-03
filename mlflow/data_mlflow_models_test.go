@@ -1,9 +1,10 @@
 package mlflow
 
 import (
+	"testing"
+
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/stretchr/testify/mock"
-	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/qa"

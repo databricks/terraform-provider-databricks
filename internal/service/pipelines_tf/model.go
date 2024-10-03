@@ -60,6 +60,10 @@ type CreatePipeline struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.
@@ -150,6 +154,10 @@ type EditPipeline struct {
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Unique identifier for this pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.
@@ -687,6 +695,10 @@ type PipelineSpec struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.

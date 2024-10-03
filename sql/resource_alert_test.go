@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestAlertCreate(t *testing.T) {
-	alertResponse := sql.Alert{
+var (
+	alertResponse = sql.Alert{
 		Id:            "7890",
 		QueryId:       "123456",
 		DisplayName:   "TF new alert",
@@ -29,6 +29,9 @@ func TestAlertCreate(t *testing.T) {
 			},
 		},
 	}
+)
+
+func TestAlertCreate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockAlertsAPI().EXPECT()
@@ -75,5 +78,33 @@ func TestAlertCreate(t *testing.T) {
 		"display_name":    "TF new alert",
 		"owner_user_name": "user@domain.com",
 	})
+}
 
+func TestAlertRead(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockAlertsAPI().EXPECT().GetById(mock.Anything, "7890").Return(&alertResponse, nil)
+		},
+		Resource: ResourceAlert(),
+		Read:     true,
+		ID:       "7890",
+		New:      true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":              "7890",
+		"query_id":        "123456",
+		"display_name":    "TF new alert",
+		"owner_user_name": "user@domain.com",
+	})
+}
+
+func TestAlertDelete(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockAlertsAPI().EXPECT().DeleteById(mock.Anything, "7890").Return(nil)
+		},
+		Resource: ResourceAlert(),
+		Delete:   true,
+		ID:       "7890",
+		New:      true,
+	}.ApplyNoError(t)
 }

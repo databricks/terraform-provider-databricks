@@ -23,7 +23,7 @@ func TestAccAlert(t *testing.T) {
 
 		resource "databricks_alert" "alert" {
 			query_id = databricks_sql_query.this.id
-			name = "tf-alert-{var.RANDOM}"
+			display_name = "tf-alert-{var.RANDOM}"
 			condition {
 			    op = "EQUAL"
 			    operand {
@@ -57,7 +57,7 @@ func TestAccAlert(t *testing.T) {
 
 		resource "databricks_alert" "alert" {
 			query_id = databricks_sql_query.this.id
-			name = "tf-alert-{var.RANDOM}"
+			display_name = "tf-alert-{var.RANDOM}"
 			condition {
 			    op = "GREATER_THAN"
 			    operand {

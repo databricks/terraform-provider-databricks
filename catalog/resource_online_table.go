@@ -81,7 +81,7 @@ func ResourceOnlineTable() common.Resource {
 				return err
 			}
 			// Note: We should set the id right after creation and before waiting for online table to be available.
-			// This is because in case when online table isn't availabe, we still should have that resource in the state.
+			// If the resource creation timeout is exceeded while waiting for the online table to be ready, this ensures the online table is persisted in the state.
 			d.SetId(res.Name)
 			// this should be specified in the API Spec - filed a ticket to add it
 			err = waitForOnlineTableCreation(w, ctx, res.Name)

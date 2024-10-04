@@ -22,9 +22,11 @@ type App struct {
 
 	ComputeStatus *ComputeStatus `tfsdk:"compute_status" tf:"optional"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime          types.String `tfsdk:"create_time" tf:"optional,computed"`
+	_OriginalCreateTime types.String `tfsdk:"create_time" tf:"optional,computed"`
 	// The email of the user that created the app.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator          types.String `tfsdk:"creator" tf:"optional,computed"`
+	_OriginalCreator types.String `tfsdk:"creator" tf:"optional,computed"`
 	// The default workspace file system path of the source code from which app
 	// deployment are created. This field tracks the workspace source code path
 	// of the last active deployment.
@@ -39,15 +41,20 @@ type App struct {
 	// Resources for the app.
 	Resources []AppResource `tfsdk:"resources" tf:"optional"`
 
-	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"optional"`
+	ServicePrincipalId          types.Int64 `tfsdk:"service_principal_id" tf:"optional,computed"`
+	_OriginalServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"optional,computed"`
 
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName          types.String `tfsdk:"service_principal_name" tf:"optional,computed"`
+	_OriginalServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional,computed"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime          types.String `tfsdk:"update_time" tf:"optional,computed"`
+	_OriginalUpdateTime types.String `tfsdk:"update_time" tf:"optional,computed"`
 	// The email of the user that last updated the app.
-	Updater types.String `tfsdk:"updater" tf:"optional"`
+	Updater          types.String `tfsdk:"updater" tf:"optional,computed"`
+	_OriginalUpdater types.String `tfsdk:"updater" tf:"optional,computed"`
 	// The URL of the app once it is deployed.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url          types.String `tfsdk:"url" tf:"optional,computed"`
+	_OriginalUrl types.String `tfsdk:"url" tf:"optional,computed"`
 }
 
 type AppAccessControlRequest struct {
@@ -76,9 +83,11 @@ type AppAccessControlResponse struct {
 
 type AppDeployment struct {
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime          types.String `tfsdk:"create_time" tf:"optional,computed"`
+	_OriginalCreateTime types.String `tfsdk:"create_time" tf:"optional,computed"`
 	// The email of the user creates the deployment.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator          types.String `tfsdk:"creator" tf:"optional,computed"`
+	_OriginalCreator types.String `tfsdk:"creator" tf:"optional,computed"`
 	// The deployment artifacts for an app.
 	DeploymentArtifacts *AppDeploymentArtifacts `tfsdk:"deployment_artifacts" tf:"optional"`
 	// The unique id of the deployment.
@@ -96,7 +105,8 @@ type AppDeployment struct {
 	// Status and status message of the deployment
 	Status *AppDeploymentStatus `tfsdk:"status" tf:"optional"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime          types.String `tfsdk:"update_time" tf:"optional,computed"`
+	_OriginalUpdateTime types.String `tfsdk:"update_time" tf:"optional,computed"`
 }
 
 type AppDeploymentArtifacts struct {
@@ -107,7 +117,8 @@ type AppDeploymentArtifacts struct {
 
 type AppDeploymentStatus struct {
 	// Message corresponding with the deployment state.
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message          types.String `tfsdk:"message" tf:"optional,computed"`
+	_OriginalMessage types.String `tfsdk:"message" tf:"optional,computed"`
 	// State of the deployment.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
@@ -191,14 +202,16 @@ type AppResourceSqlWarehouse struct {
 
 type ApplicationStatus struct {
 	// Application status message
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message          types.String `tfsdk:"message" tf:"optional,computed"`
+	_OriginalMessage types.String `tfsdk:"message" tf:"optional,computed"`
 	// State of the application.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 type ComputeStatus struct {
 	// Compute status message
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message          types.String `tfsdk:"message" tf:"optional,computed"`
+	_OriginalMessage types.String `tfsdk:"message" tf:"optional,computed"`
 	// State of the app compute.
 	State types.String `tfsdk:"state" tf:"optional"`
 }

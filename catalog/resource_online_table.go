@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const onlineTableDefaultProvisionTimeout = 45 * time.Minute
+const onlineTableDefaultProvisionTimeout = 90 * time.Minute
 
 func waitForOnlineTableCreation(w *databricks.WorkspaceClient, ctx context.Context, onlineTableName string) error {
 	return retry.RetryContext(ctx, onlineTableDefaultProvisionTimeout, func() *retry.RetryError {
@@ -80,13 +80,14 @@ func ResourceOnlineTable() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Note: We should set the id right after creation and before waiting for online table to be available.
+			// If the resource creation timeout is exceeded while waiting for the online table to be ready, this ensures the online table is persisted in the state.
+			d.SetId(res.Name)
 			// this should be specified in the API Spec - filed a ticket to add it
 			err = waitForOnlineTableCreation(w, ctx, res.Name)
 			if err != nil {
-
 				return err
 			}
-			d.SetId(res.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

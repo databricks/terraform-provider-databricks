@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccSqlAlert(t *testing.T) {
+func TestAccAlert(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_sql_query" "this" {
@@ -14,23 +14,31 @@ func TestAccSqlAlert(t *testing.T) {
 		}
 
         resource "databricks_permissions" "alert_usage" {
-			sql_alert_id = databricks_sql_alert.alert.id
+			sql_alert_id = databricks_alert.alert.id
 			access_control {
               group_name       = "users"
               permission_level = "CAN_RUN"
 			}
 		}
 
-		resource "databricks_sql_alert" "alert" {
+		resource "databricks_alert" "alert" {
 			query_id = databricks_sql_query.this.id
 			name = "tf-alert-{var.RANDOM}"
-			options {
-				column = "p1"
-				op = "=="
-				value = "2"
-				muted = false
+			condition {
+			    op = "EQUAL"
+			    operand {
+			      column {
+			        name = "p2"
+			      }
+			    }
+			    threshold {
+			      value {
+			        double_value = 2
+			      }
+			    }
 			}
-		}`,
+		}
+`,
 	}, Step{
 		Template: `
 		resource "databricks_sql_query" "this" {
@@ -40,21 +48,28 @@ func TestAccSqlAlert(t *testing.T) {
 		}
 
         resource "databricks_permissions" "alert_usage" {
-			sql_alert_id = databricks_sql_alert.alert.id
+			sql_alert_id = databricks_alert.alert.id
 			access_control {
               group_name       = "users"
               permission_level = "CAN_RUN"
 			}
 		}
 
-		resource "databricks_sql_alert" "alert" {
+		resource "databricks_alert" "alert" {
 			query_id = databricks_sql_query.this.id
 			name = "tf-alert-{var.RANDOM}"
-			options {
-				column = "p1"
-				op = ">="
-				value = "3"
-				muted = false
+			condition {
+			    op = "GREATER_THAN"
+			    operand {
+			      column {
+			        name = "p2"
+			      }
+			    }
+			    threshold {
+			      value {
+			        double_value = 3
+			      }
+			    }
 			}
 		}`,
 	})

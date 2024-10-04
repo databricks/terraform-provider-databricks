@@ -1,8 +1,10 @@
 package sql
 
 import (
+	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -29,16 +31,129 @@ var (
 			},
 		},
 	}
+	createHcl = `query_id = "123456"
+  display_name = "TF new alert"
+  condition {
+    op = "GREATER_THAN"
+    operand {
+      column {
+        name = "value"
+      }
+    }
+    threshold {
+      value {
+        double_value = 42
+      }
+    }
+  }`
+	createAlertRequest = sql.CreateAlertRequest{
+		Alert: &sql.CreateAlertRequestAlert{
+			QueryId:     "123456",
+			DisplayName: "TF new alert",
+			Condition: &sql.AlertCondition{
+				Op: "GREATER_THAN",
+				Operand: &sql.AlertConditionOperand{
+					Column: &sql.AlertOperandColumn{
+						Name: "value",
+					},
+				},
+				Threshold: &sql.AlertConditionThreshold{
+					Value: &sql.AlertOperandValue{
+						DoubleValue: 42,
+					},
+				},
+			},
+		}}
 )
 
 func TestAlertCreate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockAlertsAPI().EXPECT()
-			e.Create(mock.Anything, sql.CreateAlertRequest{
-				Alert: &sql.CreateAlertRequestAlert{
-					QueryId:     "123456",
-					DisplayName: "TF new alert",
+			e.Create(mock.Anything, createAlertRequest).Return(&alertResponse, nil)
+			e.GetById(mock.Anything, "7890").Return(&alertResponse, nil)
+		},
+		Resource: ResourceAlert(),
+		Create:   true,
+		HCL:      createHcl,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":              "7890",
+		"query_id":        "123456",
+		"display_name":    "TF new alert",
+		"owner_user_name": "user@domain.com",
+	})
+}
+
+func TestAlertCreate_Error(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockAlertsAPI().EXPECT()
+			e.Create(mock.Anything, createAlertRequest).Return(nil, &apierr.APIError{
+				StatusCode: http.StatusBadRequest,
+				Message:    "bad payload",
+			})
+		},
+		Resource: ResourceAlert(),
+		Create:   true,
+		HCL:      createHcl,
+	}.ExpectError(t, "bad payload")
+}
+
+func TestAlertRead_Import(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockAlertsAPI().EXPECT().GetById(mock.Anything, "7890").Return(&alertResponse, nil)
+		},
+		Resource: ResourceAlert(),
+		Read:     true,
+		ID:       "7890",
+		New:      true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":              "7890",
+		"query_id":        "123456",
+		"display_name":    "TF new alert",
+		"owner_user_name": "user@domain.com",
+	})
+}
+
+func TestAlertRead_Error(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockAlertsAPI().EXPECT().GetById(mock.Anything, "7890").Return(nil, &apierr.APIError{
+				StatusCode: http.StatusBadRequest,
+				Message:    "bad payload",
+			})
+		},
+		Resource: ResourceAlert(),
+		Read:     true,
+		ID:       "7890",
+		New:      true,
+	}.ExpectError(t, "bad payload")
+}
+
+func TestAlertDelete(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockAlertsAPI().EXPECT().DeleteById(mock.Anything, "7890").Return(nil)
+		},
+		Resource: ResourceAlert(),
+		Delete:   true,
+		ID:       "7890",
+		New:      true,
+	}.ApplyNoError(t)
+}
+
+func TestAlertUpdate(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockAlertsAPI().EXPECT()
+			e.Update(mock.Anything, sql.UpdateAlertRequest{
+				Id:         "7890",
+				UpdateMask: "display_name,query_id,seconds_to_retrigger,condition,custom_body,custom_subject,owner_user_name",
+				Alert: &sql.UpdateAlertRequestAlert{
+					QueryId:       "123456",
+					DisplayName:   "TF new alert",
+					OwnerUserName: "user@domain.com",
 					Condition: &sql.AlertCondition{
 						Op: "GREATER_THAN",
 						Operand: &sql.AlertConditionOperand{
@@ -56,9 +171,11 @@ func TestAlertCreate(t *testing.T) {
 			e.GetById(mock.Anything, "7890").Return(&alertResponse, nil)
 		},
 		Resource: ResourceAlert(),
-		Create:   true,
+		Update:   true,
+		ID:       "7890",
 		HCL: `query_id = "123456"
   display_name = "TF new alert"
+  owner_user_name = "user@domain.com"
   condition {
     op = "GREATER_THAN"
     operand {
@@ -78,33 +195,4 @@ func TestAlertCreate(t *testing.T) {
 		"display_name":    "TF new alert",
 		"owner_user_name": "user@domain.com",
 	})
-}
-
-func TestAlertRead(t *testing.T) {
-	qa.ResourceFixture{
-		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockAlertsAPI().EXPECT().GetById(mock.Anything, "7890").Return(&alertResponse, nil)
-		},
-		Resource: ResourceAlert(),
-		Read:     true,
-		ID:       "7890",
-		New:      true,
-	}.ApplyAndExpectData(t, map[string]any{
-		"id":              "7890",
-		"query_id":        "123456",
-		"display_name":    "TF new alert",
-		"owner_user_name": "user@domain.com",
-	})
-}
-
-func TestAlertDelete(t *testing.T) {
-	qa.ResourceFixture{
-		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			w.GetMockAlertsAPI().EXPECT().DeleteById(mock.Anything, "7890").Return(nil)
-		},
-		Resource: ResourceAlert(),
-		Delete:   true,
-		ID:       "7890",
-		New:      true,
-	}.ApplyNoError(t)
 }

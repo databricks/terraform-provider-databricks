@@ -5,7 +5,7 @@ subcategory: "Workspace"
 
 This resource allows you to manage [Databricks Git folders](https://docs.databricks.com/en/repos/index.html) (formerly known as Databricks Repos).
 
--> **Note** To create a Git folder from a private repository you need to configure Git token as described in the [documentation](https://docs.databricks.com/en/repos/index.html#configure-your-git-integration-with-databricks).  To set this token you can use [databricks_git_credential](git_credential.md) resource.
+-> To create a Git folder from a private repository you need to configure Git token as described in the [documentation](https://docs.databricks.com/en/repos/index.html#configure-your-git-integration-with-databricks).  To set this token you can use [databricks_git_credential](git_credential.md) resource.
 
 ## Example Usage
 
@@ -20,7 +20,7 @@ resource "databricks_repo" "nutter_in_home" {
 
 ## Argument Reference
 
--> **Note** Git folder in Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed repository won't be overwritten by Terraform, if there's no local changes to configuration. If Git folder in Databricks workspace is modified, application of configuration changes will fail.
+-> Git folder in Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed repository won't be overwritten by Terraform, if there's no local changes to configuration. If Git folder in Databricks workspace is modified, application of configuration changes will fail.
 
 The following arguments are supported:
 

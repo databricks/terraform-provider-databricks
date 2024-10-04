@@ -3,7 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_credentials Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
+-> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 This resource to configure the cross-account role for creation of new workspaces within AWS.
 

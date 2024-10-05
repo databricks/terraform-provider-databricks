@@ -49,7 +49,7 @@ resource "databricks_library" "app" {
 
 ## Argument Reference
 
--> **Note** DBFS files would only be changed, if Terraform stage did change. This means that any manual changes to managed file won't be overwritten by Terraform, if there's no local change.
+-> DBFS files would only be changed, if Terraform stage did change. This means that any manual changes to managed file won't be overwritten by Terraform, if there's no local change.
 
 The following arguments are supported:
 

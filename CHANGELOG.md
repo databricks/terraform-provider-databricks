@@ -1,5 +1,37 @@
 # Version changelog
 
+## [Release] Release v1.53.0
+
+### New Features and Improvements
+
+ * Add `databricks_budget` resource ([#3955](https://github.com/databricks/terraform-provider-databricks/pull/3955)).
+ * Add `databricks_mlflow_models` data source ([#3874](https://github.com/databricks/terraform-provider-databricks/pull/3874)).
+ * Add computed attribute `table_serving_url` to `databricks_online_table` ([#4048](https://github.com/databricks/terraform-provider-databricks/pull/4048)).
+ * Add support for Identity Column in `databricks_sql_table` ([#4035](https://github.com/databricks/terraform-provider-databricks/pull/4035)).
+
+
+### Bug Fixes
+
+ * Fix Permissions Dashboard Test ([#4071](https://github.com/databricks/terraform-provider-databricks/pull/4071)).
+ * Ignore presence or absence of `/Workspace` prefix for dashboard resource ([#4061](https://github.com/databricks/terraform-provider-databricks/pull/4061)).
+ * Refactor `databricks_permissions` and allow the current user to set their own permissions ([#3956](https://github.com/databricks/terraform-provider-databricks/pull/3956)).
+ * Set ID for online table resource if creation succeeds but it isn't available yet ([#4072](https://github.com/databricks/terraform-provider-databricks/pull/4072)).
+
+
+### Documentation
+
+ * Add guide for OIDC authentication ([#4016](https://github.com/databricks/terraform-provider-databricks/pull/4016)).
+ * Correctly use native markdown callouts supported by TF Registry ([#4073](https://github.com/databricks/terraform-provider-databricks/pull/4073)).
+ * Fixing links to `databricks_service_principal` in TF guides ([#4020](https://github.com/databricks/terraform-provider-databricks/pull/4020)).
+
+
+### Internal Changes
+
+ * Bump Go SDK to latest and generate TF structs  ([#4062](https://github.com/databricks/terraform-provider-databricks/pull/4062)).
+ * Skip Budget tests on GCP ([#4070](https://github.com/databricks/terraform-provider-databricks/pull/4070)).
+ * Update to latest OpenAPI spec and bump Go SDK ([#4069](https://github.com/databricks/terraform-provider-databricks/pull/4069)).
+
+
 ## [Release] Release v1.52.0
 
 ### New Features and Improvements

@@ -20,6 +20,7 @@
 
 ### Documentation
 
+ * Update CONTRIBUTING guide for plugin framework resources ([#4078](https://github.com/databricks/terraform-provider-databricks/pull/4078))
  * Add guide for OIDC authentication ([#4016](https://github.com/databricks/terraform-provider-databricks/pull/4016)).
  * Correctly use native markdown callouts supported by TF Registry ([#4073](https://github.com/databricks/terraform-provider-databricks/pull/4073)).
  * Fixing links to `databricks_service_principal` in TF guides ([#4020](https://github.com/databricks/terraform-provider-databricks/pull/4020)).

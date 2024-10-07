@@ -118,11 +118,26 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 - `pluginfw`: Contains the changes specific to Plugin Framework. This package shouldn't depend on sdkv2 or common.
 - `sdkv2`: Contains the changes specific to SDKv2. This package shouldn't depend on pluginfw or common.
 
+### Adding a new resource
+1. Check if the directory for this particular resource exists under `internal/providers/pluginfw/resources`, if not create the directory eg: `cluster`, `volume` etc...
+2. Create a file with resource_resource-name.go and write the CRUD methods, schema for that resource. For reference, please take a look at existing resources eg: `resource_quality_monitor.go`
+3. Create a file with resource_resource-name_acc_test.go and add integration tests here.
+4. Create a file with resource_resource-name_test.go and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: data_cluster_test.go 
+5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `Resources()` method. Please update the list so that it stays in alphabetically sorted order.
+6. Create a PR and send it for review. 
+
+### Adding a new data source
+1. Check if the directory for this particular resource exists under `internal/providers/pluginfw/resources`, if not create the directory eg: `cluster`, `volume` etc...
+2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`
+3. Create a file with `data_resource-name_acc_test.go` and add integration tests here.
+4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
+5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `DataSources()` method. Please update the list so that it stays in alphabetically sorted order.
+6. Create a PR and send it for review. 
+
 ### Migrating resource to plugin framework
 Ideally there shouldn't be any behaviour change when migrating a resource or data source to either Go SDk or Plugin Framework.
 - Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
-- Integration tests shouldn't require any major changes.   
-
+- Integration tests shouldn't require any major changes.
 
 ### Code Organization
 Each resource and data source should be defined in package `internal/providers/pluginfw/resources/<resource>`, e.g.: `internal/providers/pluginfw/resources/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 

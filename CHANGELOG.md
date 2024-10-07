@@ -12,7 +12,7 @@
 
 ### Bug Fixes
 
- * Fix Permissions Dashboard Test ([#4071](https://github.com/databricks/terraform-provider-databricks/pull/4071)).
+ * Add Sufficient Network Privileges to the Databricks Default Cross Account Policy ([#4027](https://github.com/databricks/terraform-provider-databricks/pull/4027))
  * Ignore presence or absence of `/Workspace` prefix for dashboard resource ([#4061](https://github.com/databricks/terraform-provider-databricks/pull/4061)).
  * Refactor `databricks_permissions` and allow the current user to set their own permissions ([#3956](https://github.com/databricks/terraform-provider-databricks/pull/3956)).
  * Set ID for online table resource if creation succeeds but it isn't available yet ([#4072](https://github.com/databricks/terraform-provider-databricks/pull/4072)).
@@ -27,6 +27,7 @@
 
 ### Internal Changes
 
+ * Fix Permissions Dashboard Test ([#4071](https://github.com/databricks/terraform-provider-databricks/pull/4071)).
  * Bump Go SDK to latest and generate TF structs  ([#4062](https://github.com/databricks/terraform-provider-databricks/pull/4062)).
  * Skip Budget tests on GCP ([#4070](https://github.com/databricks/terraform-provider-databricks/pull/4070)).
  * Update to latest OpenAPI spec and bump Go SDK ([#4069](https://github.com/databricks/terraform-provider-databricks/pull/4069)).

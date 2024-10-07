@@ -139,6 +139,7 @@ Ideally there shouldn't be any behaviour change when migrating a resource or dat
 - Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
 - Integration tests shouldn't require any major changes.
 
+
 ### Code Organization
 Each resource and data source should be defined in package `internal/providers/pluginfw/resources/<resource>`, e.g.: `internal/providers/pluginfw/resources/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 
 

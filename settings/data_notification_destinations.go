@@ -11,7 +11,6 @@ import (
 )
 
 func DataSourceNotificationDestinations() common.Resource {
-	// dest
 	type notificationDestination struct {
 		Id              string `json:"id,omitempty" tf:"computed"`
 		DisplayName     string `json:"display_name,omitempty" tf:"computed"`
@@ -24,17 +23,18 @@ func DataSourceNotificationDestinations() common.Resource {
 		NotificationDestinations []notificationDestination `json:"notification_destinations,omitempty" tf:"computed"`
 	}
 
+	validTypes := map[string]struct{}{
+		string(settings.DestinationTypeEmail):          {},
+		string(settings.DestinationTypeMicrosoftTeams): {},
+		string(settings.DestinationTypePagerduty):      {},
+		string(settings.DestinationTypeSlack):          {},
+		string(settings.DestinationTypeWebhook):        {},
+	}
+
 	return common.WorkspaceData(func(ctx context.Context, data *notificationDestinationsData, w *databricks.WorkspaceClient) error {
 
 		if data.Type != "" {
-			switch data.Type {
-			case
-				string(settings.DestinationTypeEmail),
-				string(settings.DestinationTypeMicrosoftTeams),
-				string(settings.DestinationTypePagerduty),
-				string(settings.DestinationTypeSlack),
-				string(settings.DestinationTypeWebhook):
-			default:
+			if _, valid := validTypes[data.Type]; !valid {
 				return fmt.Errorf("invalid type '%s'; valid types are EMAIL, MICROSOFT_TEAMS, PAGERDUTY, SLACK, WEBHOOK", data.Type)
 			}
 		}

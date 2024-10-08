@@ -63,7 +63,17 @@ func ResourceAlert() common.Resource {
 				return err
 			}
 			d.SetId(apiAlert.Id)
-			return nil
+			owner := d.Get("owner_user_name").(string)
+			if owner != "" {
+				_, err = w.Alerts.Update(ctx, sql.UpdateAlertRequest{
+					Alert: &sql.UpdateAlertRequestAlert{
+						OwnerUserName: owner,
+					},
+					Id:         apiAlert.Id,
+					UpdateMask: "owner_user_name",
+				})
+			}
+			return err
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -74,6 +84,10 @@ func ResourceAlert() common.Resource {
 			if err != nil {
 				log.Printf("[WARN] error getting alert by ID: %v", err)
 				return err
+			}
+			parentPath := d.Get("parent_path").(string)
+			if parentPath != "" && strings.HasPrefix(apiAlert.ParentPath, "/Workspace") && !strings.HasPrefix(parentPath, "/Workspace") {
+				apiAlert.ParentPath = strings.TrimPrefix(parentPath, "/Workspace")
 			}
 			return common.StructToData(apiAlert, s, d)
 		},

@@ -30,9 +30,12 @@ var (
 				},
 			},
 		},
+		ParentPath: "/Workspace/Shared/Alerts",
 	}
 	createHcl = `query_id = "123456"
   display_name = "TF new alert"
+  parent_path = "/Shared/Alerts"
+  owner_user_name = "user@domain.com"
   condition {
     op = "GREATER_THAN"
     operand {
@@ -50,6 +53,7 @@ var (
 		Alert: &sql.CreateAlertRequestAlert{
 			QueryId:     "123456",
 			DisplayName: "TF new alert",
+			ParentPath:  "/Shared/Alerts",
 			Condition: &sql.AlertCondition{
 				Op: "GREATER_THAN",
 				Operand: &sql.AlertConditionOperand{
@@ -71,6 +75,13 @@ func TestAlertCreate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockAlertsAPI().EXPECT()
 			e.Create(mock.Anything, createAlertRequest).Return(&alertResponse, nil)
+			e.Update(mock.Anything, sql.UpdateAlertRequest{
+				Id:         "7890",
+				UpdateMask: "owner_user_name",
+				Alert: &sql.UpdateAlertRequestAlert{
+					OwnerUserName: "user@domain.com",
+				},
+			}).Return(&alertResponse, nil)
 			e.GetById(mock.Anything, "7890").Return(&alertResponse, nil)
 		},
 		Resource: ResourceAlert(),

@@ -13,9 +13,11 @@ import (
 func ResourceAlert() common.Resource {
 	s := common.StructToSchema(sql.Alert{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		common.CustomizeSchemaPath(m, "condition").SetRequired()
-		// TODO: can we automatically generate it from SDK?
+		// TODO: can we automatically generate it from SDK? Or should we avoid validation at all?
 		common.CustomizeSchemaPath(m, "condition", "op").SetRequired().SetValidateFunc(validation.StringInSlice([]string{
 			"GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "EQUAL", "NOT_EQUAL", "IS_NULL"}, true))
+		common.CustomizeSchemaPath(m, "condition", "op").SetRequired()
+		common.CustomizeSchemaPath(m, "parent_path").SetCustomSuppressDiff(common.WorkspacePathPrefixDiffSuppress).SetForceNew()
 		common.CustomizeSchemaPath(m, "condition", "operand").SetRequired()
 		common.CustomizeSchemaPath(m, "condition", "operand", "column").SetRequired()
 		common.CustomizeSchemaPath(m, "condition", "operand", "column", "name").SetRequired()
@@ -26,7 +28,6 @@ func ResourceAlert() common.Resource {
 		// for _, f := range alof {
 		// 	common.CustomizeSchemaPath(m, "condition", "threshold", "value", f).SetAtLeastOneOf(alof)
 		// }
-		common.CustomizeSchemaPath(m, "condition", "op").SetRequired()
 		common.CustomizeSchemaPath(m, "id").SetReadOnly()
 		common.CustomizeSchemaPath(m, "create_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "lifecycle_state").SetReadOnly()
@@ -34,7 +35,6 @@ func ResourceAlert() common.Resource {
 		common.CustomizeSchemaPath(m, "trigger_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "update_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "owner_user_name").SetSuppressDiff()
-		common.CustomizeSchemaPath(m, "parent_path").SetSuppressDiff().SetForceNew()
 		common.CustomizeSchemaPath(m, "display_name").SetRequired()
 		common.CustomizeSchemaPath(m, "query_id").SetRequired()
 		return m

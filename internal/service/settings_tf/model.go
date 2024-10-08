@@ -888,15 +888,20 @@ type NccAzurePrivateEndpointRule struct {
 	// DISCONNECTED: Connection was removed by the private link resource owner,
 	// the private endpoint becomes informative and should be deleted for
 	// clean-up.
-	ConnectionState types.String `tfsdk:"connection_state" tf:"optional"`
+	ConnectionState          types.String `tfsdk:"connection_state" tf:"optional,computed"`
+	_OriginalConnectionState types.String `tfsdk:"connection_state" tf:"optional,computed"`
 	// Time in epoch milliseconds when this object was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional,computed"`
+	_OriginalCreationTime types.Int64 `tfsdk:"creation_time" tf:"optional,computed"`
 	// Whether this private endpoint is deactivated.
-	Deactivated types.Bool `tfsdk:"deactivated" tf:"optional"`
+	Deactivated          types.Bool `tfsdk:"deactivated" tf:"optional,computed"`
+	_OriginalDeactivated types.Bool `tfsdk:"deactivated" tf:"optional,computed"`
 	// Time in epoch milliseconds when this object was deactivated.
-	DeactivatedAt types.Int64 `tfsdk:"deactivated_at" tf:"optional"`
+	DeactivatedAt          types.Int64 `tfsdk:"deactivated_at" tf:"optional,computed"`
+	_OriginalDeactivatedAt types.Int64 `tfsdk:"deactivated_at" tf:"optional,computed"`
 	// The name of the Azure private endpoint resource.
-	EndpointName types.String `tfsdk:"endpoint_name" tf:"optional"`
+	EndpointName          types.String `tfsdk:"endpoint_name" tf:"optional,computed"`
+	_OriginalEndpointName types.String `tfsdk:"endpoint_name" tf:"optional,computed"`
 	// The sub-resource type (group ID) of the target resource. Note that to
 	// connect to workspace root storage (root DBFS), you need two endpoints,
 	// one for `blob` and one for `dfs`.
@@ -907,9 +912,11 @@ type NccAzurePrivateEndpointRule struct {
 	// The Azure resource ID of the target resource.
 	ResourceId types.String `tfsdk:"resource_id" tf:"optional"`
 	// The ID of a private endpoint rule.
-	RuleId types.String `tfsdk:"rule_id" tf:"optional"`
+	RuleId          types.String `tfsdk:"rule_id" tf:"optional,computed"`
+	_OriginalRuleId types.String `tfsdk:"rule_id" tf:"optional,computed"`
 	// Time in epoch milliseconds when this object was updated.
-	UpdatedTime types.Int64 `tfsdk:"updated_time" tf:"optional"`
+	UpdatedTime          types.Int64 `tfsdk:"updated_time" tf:"optional,computed"`
+	_OriginalUpdatedTime types.Int64 `tfsdk:"updated_time" tf:"optional,computed"`
 }
 
 // The stable Azure service endpoints. You can configure the firewall of your
@@ -931,7 +938,8 @@ type NccEgressConfig struct {
 	// The network connectivity rules that are applied by default without
 	// resource specific configurations. You can find the stable network
 	// information of your serverless compute resources here.
-	DefaultRules *NccEgressDefaultRules `tfsdk:"default_rules" tf:"optional"`
+	DefaultRules          *NccEgressDefaultRules `tfsdk:"default_rules" tf:"optional,computed"`
+	_OriginalDefaultRules *NccEgressDefaultRules `tfsdk:"default_rules" tf:"optional,computed"`
 	// The network connectivity rules that configured for each destinations.
 	// These rules override default rules.
 	TargetRules *NccEgressTargetRules `tfsdk:"target_rules" tf:"optional"`
@@ -961,7 +969,8 @@ type NetworkConnectivityConfiguration struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// Time in epoch milliseconds when this object was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional,computed"`
+	_OriginalCreationTime types.Int64 `tfsdk:"creation_time" tf:"optional,computed"`
 	// The network connectivity rules that apply to network traffic from your
 	// serverless compute resources.
 	EgressConfig *NccEgressConfig `tfsdk:"egress_config" tf:"optional"`
@@ -971,13 +980,15 @@ type NetworkConnectivityConfiguration struct {
 	// `^[0-9a-zA-Z-_]{3,30}$`.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Databricks network connectivity configuration ID.
-	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id" tf:"optional"`
+	NetworkConnectivityConfigId          types.String `tfsdk:"network_connectivity_config_id" tf:"optional,computed"`
+	_OriginalNetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id" tf:"optional,computed"`
 	// The region for the network connectivity configuration. Only workspaces in
 	// the same region can be attached to the network connectivity
 	// configuration.
 	Region types.String `tfsdk:"region" tf:"optional"`
 	// Time in epoch milliseconds when this object was updated.
-	UpdatedTime types.Int64 `tfsdk:"updated_time" tf:"optional"`
+	UpdatedTime          types.Int64 `tfsdk:"updated_time" tf:"optional,computed"`
+	_OriginalUpdatedTime types.Int64 `tfsdk:"updated_time" tf:"optional,computed"`
 }
 
 type NotificationDestination struct {

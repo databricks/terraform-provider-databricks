@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -12,6 +13,8 @@ import (
 
 func ResourceAlert() common.Resource {
 	s := common.StructToSchema(sql.Alert{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		common.CustomizeSchemaPath(m, "display_name").SetRequired()
+		common.CustomizeSchemaPath(m, "query_id").SetRequired()
 		common.CustomizeSchemaPath(m, "condition").SetRequired()
 		// TODO: can we automatically generate it from SDK? Or should we avoid validation at all?
 		common.CustomizeSchemaPath(m, "condition", "op").SetRequired().SetValidateFunc(validation.StringInSlice([]string{
@@ -21,22 +24,27 @@ func ResourceAlert() common.Resource {
 		common.CustomizeSchemaPath(m, "condition", "operand").SetRequired()
 		common.CustomizeSchemaPath(m, "condition", "operand", "column").SetRequired()
 		common.CustomizeSchemaPath(m, "condition", "operand", "column", "name").SetRequired()
+		common.CustomizeSchemaPath(m, "condition", "empty_result_state").SetValidateFunc(
+			validation.StringInSlice([]string{"UNKNOWN", "OK", "TRIGGERED"}, true))
 		// We may not need it for some conditions
 		// common.CustomizeSchemaPath(m, "condition", "threshold").SetRequired()
-		// common.CustomizeSchemaPath(m, "condition", "threshold", "value").SetRequired()
-		// alof := []string{"string_value", "double_value", "bool_value"}
-		// for _, f := range alof {
-		// 	common.CustomizeSchemaPath(m, "condition", "threshold", "value", f).SetAtLeastOneOf(alof)
-		// }
+		common.CustomizeSchemaPath(m, "condition", "threshold", "value").SetRequired()
+		alof := []string{
+			"condition.0.threshold.0.value.0.string_value",
+			"condition.0.threshold.0.value.0.double_value",
+			"condition.0.threshold.0.value.0.bool_value",
+		}
+		for _, f := range alof {
+			common.CustomizeSchemaPath(m, "condition", "threshold", "value",
+				strings.TrimPrefix(f, "condition.0.threshold.0.value.0.")).SetAtLeastOneOf(alof)
+		}
+		common.CustomizeSchemaPath(m, "owner_user_name").SetSuppressDiff()
 		common.CustomizeSchemaPath(m, "id").SetReadOnly()
 		common.CustomizeSchemaPath(m, "create_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "lifecycle_state").SetReadOnly()
 		common.CustomizeSchemaPath(m, "state").SetReadOnly()
 		common.CustomizeSchemaPath(m, "trigger_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "update_time").SetReadOnly()
-		common.CustomizeSchemaPath(m, "owner_user_name").SetSuppressDiff()
-		common.CustomizeSchemaPath(m, "display_name").SetRequired()
-		common.CustomizeSchemaPath(m, "query_id").SetRequired()
 		return m
 	})
 

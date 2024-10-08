@@ -722,6 +722,7 @@ func TestAccPermissions_Dashboard(t *testing.T) {
 			display_name = "TF New Dashboard"
 			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			parent_path = databricks_directory.this.path
+			serialized_dashboard = "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page\"}]}"
 		}
 		`
 	WorkspaceLevel(t, Step{

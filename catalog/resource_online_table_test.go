@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -108,7 +109,7 @@ func TestOnlineTableCreate_ErrorInWait(t *testing.T) {
 		},
 		Status: &catalog.OnlineTableStatus{DetailedState: catalog.OnlineTableStateOfflineFailed},
 	}
-	qa.ResourceFixture{
+	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockOnlineTablesAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateOnlineTableRequest{
@@ -124,7 +125,9 @@ func TestOnlineTableCreate_ErrorInWait(t *testing.T) {
 		Resource: ResourceOnlineTable(),
 		HCL:      onlineTableHcl,
 		Create:   true,
-	}.ExpectError(t, "online table status returned OFFLINE_FAILED for online table: main.default.online_table")
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "online table status returned OFFLINE_FAILED for online table: main.default.online_table")
+	assert.Equal(t, "main.default.online_table", d.Id())
 }
 
 func TestOnlineTableRead(t *testing.T) {

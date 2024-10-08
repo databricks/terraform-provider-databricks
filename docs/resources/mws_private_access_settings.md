@@ -11,7 +11,7 @@ It is strongly recommended that customers read the [Enable AWS Private Link](htt
 
 ## Databricks on AWS usage
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
+-> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 ```hcl
 resource "databricks_mws_private_access_settings" "pas" {
@@ -42,7 +42,7 @@ resource "databricks_mws_workspaces" "this" {
 
 ## Databricks on GCP usage
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.gcp.databricks.com"` and use `provider = databricks.mws`
+-> Initialize provider with `alias = "mws"`, `host  = "https://accounts.gcp.databricks.com"` and use `provider = databricks.mws`
 
 ```hcl
 resource "databricks_mws_workspaces" "this" {
@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 

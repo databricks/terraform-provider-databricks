@@ -55,7 +55,7 @@ func checkNotificationsDestinationsDataSourcePopulated(t *testing.T) func(s *ter
 }
 
 func TestWorkspaceDataSourceNotificationDestination(t *testing.T) {
-	workspaceLevel(t, Step{
+	WorkspaceLevel(t, Step{
 		Template: dataSourceTemplate,
 		Check:    checkNotificationsDestinationsDataSourcePopulated(t),
 	})

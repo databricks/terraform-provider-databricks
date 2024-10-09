@@ -27,10 +27,9 @@ type RegisteredModelDataSource struct {
 }
 
 type RegisteredModelData struct {
-	FullName             types.String                    `tfsdk:"full_name"`
-	IncludeModelVersions types.Bool                      `tfsdk:"include_model_versions" tf:"optional"`
-	ModelInfo            *catalog_tf.RegisteredModelInfo `tfsdk:"model_info" tf:"optional,computed"`
-	ModelVersions        []catalog_tf.ModelVersionInfo   `tfsdk:"model_versions" tf:"optional,computed"`
+	FullName       types.String                    `tfsdk:"full_name"`
+	IncludeAliases types.Bool                      `tfsdk:"include_aliases" tf:"optional"`
+	ModelInfo      *catalog_tf.RegisteredModelInfo `tfsdk:"model_info" tf:"optional,computed"`
 }
 
 func (d *RegisteredModelDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -65,7 +64,7 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 	modelFullName := registeredModel.FullName.ValueString()
 	modelInfoSdk, err := w.RegisteredModels.Get(ctx, catalog.GetRegisteredModelRequest{
 		FullName:       modelFullName,
-		IncludeAliases: true,
+		IncludeAliases: registeredModel.IncludeAliases.ValueBool(),
 	})
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -79,22 +78,9 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	registeredModel.ModelInfo = &modelInfo
-	registeredModel.ModelVersions = make([]catalog_tf.ModelVersionInfo, 0)
-	if registeredModel.IncludeModelVersions.ValueBool() {
-		modelVersions, err := w.ModelVersions.ListByFullName(ctx, modelFullName)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("failed to list model versions for registered model %s", modelFullName), err.Error())
-			return
-		}
-		for _, modelVersionSdk := range modelVersions.ModelVersions {
-			var modelVersion catalog_tf.ModelVersionInfo
-			resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, modelVersionSdk, &modelVersion)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			registeredModel.ModelVersions = append(registeredModel.ModelVersions, modelVersion)
-		}
+	if modelInfo.Aliases == nil {
+		modelInfo.Aliases = []catalog_tf.RegisteredModelAlias{}
 	}
+	registeredModel.ModelInfo = &modelInfo
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModel)...)
 }

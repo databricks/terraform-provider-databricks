@@ -3,7 +3,7 @@ subcategory: "Databricks SQL"
 ---
 # databricks_alert Resource
 
-This resource allows you to manage [Databricks SQL Alerts](https://docs.databricks.com/en/sql/user/alerts/index.html).  It supersedes [databricks_sql_alert](sql_alert.md) resource.
+This resource allows you to manage [Databricks SQL Alerts](https://docs.databricks.com/en/sql/user/alerts/index.html).  It supersedes [databricks_sql_alert](sql_alert.md) resource - see migration guide below for more details.
 
 ## Example Usage
 
@@ -72,6 +72,32 @@ In addition to all the arguments above, the following attributes are exported:
 * `create_time` - The timestamp string indicating when the alert was created.
 * `update_time` - The timestamp string indicating when the alert was updated.
 * `trigger_time` - The timestamp string when the alert was last triggered if the alert has been triggered before.
+
+## Migrating from `databricks_sql_alert` resource
+
+Under the hood, the new resource uses the same data as the `databricks_sql_alert`, but exposed via different API. This means that we can migrate existing alerts without recreating them.  This operation is done in few steps:
+
+* Record the ID of existing `databricks_sql_alert`, for example, by executing the `terraform state show databricks_sql_alert.alert` command.
+* Create the code for the new implementation performing following changes:
+  * the `name` attribute is now named `display_name`
+  * the `parent` (if exists) is renamed to `parent_path` attribute, and should be converted from `folders/object_id` to the actual path.
+  * `options` block is converted into `condition` block with the following changes:
+    * the value of `op` attribute should be converted from mathematical operator into string name, like, `>` is becoming `GREATER_THAN`, `==` is becoming `EQUAL`, etc.
+    * the `column` attribute is becoming `operand` block
+    * the `value` attribute is becoming `threshold` block.  **Please note that old implementation always used strings so you may have changes after import if you use `double_value` or `bool_value` inside the block.**
+  * the `rearm` attribute is renamed to `seconds_to_retrigger`.
+* Remove the old resource from the state with the `terraform state rm databricks_sql_alert.alert` command.
+* Import new resource with the `terraform import databricks_alert.alert <alert-id>` command.
+* Run the `terraform plan` command to check possible changes, like, value type change, etc.
+
+## Import
+
+This resource can be imported using alert ID:
+
+```bash
+terraform import databricks_alert.this <alert-id>
+```
+
 
 ## Related Resources
 

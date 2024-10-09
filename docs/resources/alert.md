@@ -21,9 +21,9 @@ resource "databricks_sql_query" "this" {
 }
 
 resource "databricks_alert" "alert" {
-  query_id = databricks_sql_query.this.id
+  query_id     = databricks_sql_query.this.id
   display_name = "TF new alert"
-  parent_path   = databricks_directory.shared_dir.path
+  parent_path  = databricks_directory.shared_dir.path
   condition {
     op = "GREATER_THAN"
     operand {
@@ -37,6 +37,7 @@ resource "databricks_alert" "alert" {
       }
     }
   }
+}
 ```
 
 ## Argument Reference
@@ -86,6 +87,46 @@ Under the hood, the new resource uses the same data as the `databricks_sql_alert
     * the `column` attribute is becoming `operand` block
     * the `value` attribute is becoming `threshold` block.  **Please note that old implementation always used strings so you may have changes after import if you use `double_value` or `bool_value` inside the block.**
   * the `rearm` attribute is renamed to `seconds_to_retrigger`.
+  
+For example, if we have the original `databricks_sql_alert` defined as:
+
+```hcl
+resource "databricks_sql_alert" "alert" {
+  query_id = databricks_sql_query.this.id
+  name     = "My Alert"
+  parent   = "folders/${databricks_directory.shared_dir.object_id}"
+  options {
+    column = "value"
+    op     = ">"
+    value  = "42"
+    muted  = false
+  }
+}
+```
+
+we'll have a new resource defined as:
+
+```hcl
+resource "databricks_alert" "alert" {
+  query_id     = databricks_sql_query.this.id
+  display_name = "My Alert"
+  parent_path  = databricks_directory.shared_dir.path
+  condition {
+    op = "GREATER_THAN"
+    operand {
+      column {
+        name = "value"
+      }
+    }
+    threshold {
+      value {
+        double_value = 42
+      }
+    }
+  }
+}
+```
+
 * Remove the old resource from the state with the `terraform state rm databricks_sql_alert.alert` command.
 * Import new resource with the `terraform import databricks_alert.alert <alert-id>` command.
 * Run the `terraform plan` command to check possible changes, like, value type change, etc.

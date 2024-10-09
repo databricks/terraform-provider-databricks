@@ -293,6 +293,7 @@ func TestUpdateExternalLocation(t *testing.T) {
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
 					Comment:        "def",
+					ReadOnly:       false,
 				},
 			},
 			{
@@ -320,6 +321,52 @@ func TestUpdateExternalLocation(t *testing.T) {
 		url = "s3://foo/bar"
 		credential_name = "bcd"
 		comment = "def"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				ExpectedRequest: catalog.UpdateExternalLocation{
+					Url:             "s3://foo/bar",
+					CredentialName:  "bcd",
+					Comment:         "def",
+					ReadOnly:        false,
+					ForceSendFields: []string{"ReadOnly"},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+					ReadOnly:       false,
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":            "abc",
+			"url":             "s3://foo/bar",
+			"credential_name": "abc",
+			"comment":         "def",
+			"read_only":       "true",
+		},
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		read_only = false
 		`,
 	}.ApplyNoError(t)
 }

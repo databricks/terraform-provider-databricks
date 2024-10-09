@@ -432,6 +432,54 @@ func TestUpdateStorageCredentials(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateStorageCredentialsFromReadOnly(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a",
+				ExpectedRequest: catalog.UpdateStorageCredential{
+					AwsIamRole: &catalog.AwsIamRoleRequest{
+						RoleArn: "CHANGED",
+					},
+					Comment:         "c",
+					ReadOnly:        false,
+					ForceSendFields: []string{"ReadOnly"},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/storage-credentials/a?",
+				Response: catalog.StorageCredentialInfo{
+					Name: "a",
+					AwsIamRole: &catalog.AwsIamRoleResponse{
+						RoleArn: "CHANGED",
+					},
+					MetastoreId: "d",
+					Comment:     "c",
+					ReadOnly:    false,
+				},
+			},
+		},
+		Resource: ResourceStorageCredential(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"name":      "a",
+			"comment":   "c",
+			"read_only": "true",
+		},
+		HCL: `
+		name = "a"
+		aws_iam_role {
+			role_arn = "CHANGED"
+		}
+		comment = "c"
+		read_only = false
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateStorageCredentialsWithOwnerOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

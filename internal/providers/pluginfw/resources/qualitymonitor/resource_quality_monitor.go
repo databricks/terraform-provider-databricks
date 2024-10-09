@@ -93,6 +93,7 @@ func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 func (d *QualityMonitorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("table_name"), req, resp)
 }
+
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()

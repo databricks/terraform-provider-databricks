@@ -40,7 +40,7 @@ func (a StringAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a StringAttributeBuilder) SetOptional() AttributeBuilder {
+func (a StringAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -49,7 +49,7 @@ func (a StringAttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetRequired() AttributeBuilder {
+func (a StringAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -58,7 +58,7 @@ func (a StringAttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetSensitive() AttributeBuilder {
+func (a StringAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -66,7 +66,7 @@ func (a StringAttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetComputed() AttributeBuilder {
+func (a StringAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -74,7 +74,7 @@ func (a StringAttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a StringAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -84,17 +84,17 @@ func (a StringAttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a StringAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a StringAttributeBuilder) AddValidator(v validator.String) AttributeBuilder {
+func (a StringAttributeBuilder) AddValidator(v validator.String) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a StringAttributeBuilder) AddPlanModifier(v planmodifier.String) AttributeBuilder {
+func (a StringAttributeBuilder) AddPlanModifier(v planmodifier.String) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

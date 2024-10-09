@@ -33,17 +33,17 @@ type Ai21LabsConfig struct {
 type AiGatewayConfig struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
-	Guardrails *AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
+	Guardrails []AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
 	// Configuration for payload logging using inference tables. Use these
 	// tables to monitor and audit data being sent to and received from model
 	// APIs and to improve model quality.
-	InferenceTableConfig *AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
+	InferenceTableConfig []AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
 	// Configuration for rate limits which can be set to limit endpoint traffic.
 	RateLimits []AiGatewayRateLimit `tfsdk:"rate_limits" tf:"optional"`
 	// Configuration to enable usage tracking using system tables. These tables
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
-	UsageTrackingConfig *AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
+	UsageTrackingConfig []AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
 }
 
 type AiGatewayGuardrailParameters struct {
@@ -51,7 +51,7 @@ type AiGatewayGuardrailParameters struct {
 	// decide if the keyword exists in the request or response content.
 	InvalidKeywords []types.String `tfsdk:"invalid_keywords" tf:"optional"`
 	// Configuration for guardrail PII filter.
-	Pii *AiGatewayGuardrailPiiBehavior `tfsdk:"pii" tf:"optional"`
+	Pii []AiGatewayGuardrailPiiBehavior `tfsdk:"pii" tf:"optional"`
 	// Indicates whether the safety filter is enabled.
 	Safety types.Bool `tfsdk:"safety" tf:"optional"`
 	// The list of allowed topics. Given a chat request, this guardrail flags
@@ -71,9 +71,9 @@ type AiGatewayGuardrailPiiBehavior struct {
 
 type AiGatewayGuardrails struct {
 	// Configuration for input guardrail filters.
-	Input *AiGatewayGuardrailParameters `tfsdk:"input" tf:"optional"`
+	Input []AiGatewayGuardrailParameters `tfsdk:"input" tf:"optional"`
 	// Configuration for output guardrail filters.
-	Output *AiGatewayGuardrailParameters `tfsdk:"output" tf:"optional"`
+	Output []AiGatewayGuardrailParameters `tfsdk:"output" tf:"optional"`
 }
 
 type AiGatewayInferenceTableConfig struct {
@@ -178,13 +178,13 @@ type AutoCaptureConfigOutput struct {
 	// The name of the schema in Unity Catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
 
-	State *AutoCaptureState `tfsdk:"state" tf:"optional"`
+	State []AutoCaptureState `tfsdk:"state" tf:"optional"`
 	// The prefix of the table in Unity Catalog.
 	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
 }
 
 type AutoCaptureState struct {
-	PayloadTable *PayloadTable `tfsdk:"payload_table" tf:"optional"`
+	PayloadTable []PayloadTable `tfsdk:"payload_table" tf:"optional"`
 }
 
 // Get build logs for a served model
@@ -228,9 +228,9 @@ type CohereConfig struct {
 type CreateServingEndpoint struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: only
 	// external model endpoints are supported as of now.
-	AiGateway *AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
+	AiGateway []AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
 	// The core config of the serving endpoint.
-	Config EndpointCoreConfigInput `tfsdk:"config" tf:""`
+	Config []EndpointCoreConfigInput `tfsdk:"config" tf:""`
 	// The name of the serving endpoint. This field is required and must be
 	// unique across a Databricks workspace. An endpoint name can consist of
 	// alphanumeric characters, dashes, and underscores.
@@ -293,7 +293,7 @@ type EmbeddingsV1ResponseEmbeddingElement struct {
 type EndpointCoreConfigInput struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig *AutoCaptureConfigInput `tfsdk:"auto_capture_config" tf:"optional"`
+	AutoCaptureConfig []AutoCaptureConfigInput `tfsdk:"auto_capture_config" tf:"optional"`
 	// The name of the serving endpoint to update. This field is required.
 	Name types.String `tfsdk:"-"`
 	// A list of served entities for the endpoint to serve. A serving endpoint
@@ -304,13 +304,13 @@ type EndpointCoreConfigInput struct {
 	ServedModels []ServedModelInput `tfsdk:"served_models" tf:"optional"`
 	// The traffic config defining how invocations to the serving endpoint
 	// should be routed.
-	TrafficConfig *TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
+	TrafficConfig []TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
 }
 
 type EndpointCoreConfigOutput struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig *AutoCaptureConfigOutput `tfsdk:"auto_capture_config" tf:"optional"`
+	AutoCaptureConfig []AutoCaptureConfigOutput `tfsdk:"auto_capture_config" tf:"optional"`
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version" tf:"optional"`
 	// The list of served entities under the serving endpoint config.
@@ -319,7 +319,7 @@ type EndpointCoreConfigOutput struct {
 	// the serving endpoint config.
 	ServedModels []ServedModelOutput `tfsdk:"served_models" tf:"optional"`
 	// The traffic configuration associated with the serving endpoint config.
-	TrafficConfig *TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
+	TrafficConfig []TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
 }
 
 type EndpointCoreConfigSummary struct {
@@ -333,7 +333,7 @@ type EndpointCoreConfigSummary struct {
 type EndpointPendingConfig struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig *AutoCaptureConfigOutput `tfsdk:"auto_capture_config" tf:"optional"`
+	AutoCaptureConfig []AutoCaptureConfigOutput `tfsdk:"auto_capture_config" tf:"optional"`
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version" tf:"optional"`
 	// The list of served entities belonging to the last issued update to the
@@ -346,7 +346,7 @@ type EndpointPendingConfig struct {
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// The traffic config defining how invocations to the serving endpoint
 	// should be routed.
-	TrafficConfig *TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
+	TrafficConfig []TrafficConfig `tfsdk:"traffic_config" tf:"optional"`
 }
 
 type EndpointState struct {
@@ -383,25 +383,25 @@ type ExportMetricsResponse struct {
 
 type ExternalModel struct {
 	// AI21Labs Config. Only required if the provider is 'ai21labs'.
-	Ai21labsConfig *Ai21LabsConfig `tfsdk:"ai21labs_config" tf:"optional"`
+	Ai21labsConfig []Ai21LabsConfig `tfsdk:"ai21labs_config" tf:"optional"`
 	// Amazon Bedrock Config. Only required if the provider is 'amazon-bedrock'.
-	AmazonBedrockConfig *AmazonBedrockConfig `tfsdk:"amazon_bedrock_config" tf:"optional"`
+	AmazonBedrockConfig []AmazonBedrockConfig `tfsdk:"amazon_bedrock_config" tf:"optional"`
 	// Anthropic Config. Only required if the provider is 'anthropic'.
-	AnthropicConfig *AnthropicConfig `tfsdk:"anthropic_config" tf:"optional"`
+	AnthropicConfig []AnthropicConfig `tfsdk:"anthropic_config" tf:"optional"`
 	// Cohere Config. Only required if the provider is 'cohere'.
-	CohereConfig *CohereConfig `tfsdk:"cohere_config" tf:"optional"`
+	CohereConfig []CohereConfig `tfsdk:"cohere_config" tf:"optional"`
 	// Databricks Model Serving Config. Only required if the provider is
 	// 'databricks-model-serving'.
-	DatabricksModelServingConfig *DatabricksModelServingConfig `tfsdk:"databricks_model_serving_config" tf:"optional"`
+	DatabricksModelServingConfig []DatabricksModelServingConfig `tfsdk:"databricks_model_serving_config" tf:"optional"`
 	// Google Cloud Vertex AI Config. Only required if the provider is
 	// 'google-cloud-vertex-ai'.
-	GoogleCloudVertexAiConfig *GoogleCloudVertexAiConfig `tfsdk:"google_cloud_vertex_ai_config" tf:"optional"`
+	GoogleCloudVertexAiConfig []GoogleCloudVertexAiConfig `tfsdk:"google_cloud_vertex_ai_config" tf:"optional"`
 	// The name of the external model.
 	Name types.String `tfsdk:"name" tf:""`
 	// OpenAI Config. Only required if the provider is 'openai'.
-	OpenaiConfig *OpenAiConfig `tfsdk:"openai_config" tf:"optional"`
+	OpenaiConfig []OpenAiConfig `tfsdk:"openai_config" tf:"optional"`
 	// PaLM Config. Only required if the provider is 'palm'.
-	PalmConfig *PaLmConfig `tfsdk:"palm_config" tf:"optional"`
+	PalmConfig []PaLmConfig `tfsdk:"palm_config" tf:"optional"`
 	// The name of the provider for the external model. Currently, the supported
 	// providers are 'ai21labs', 'anthropic', 'amazon-bedrock', 'cohere',
 	// 'databricks-model-serving', 'google-cloud-vertex-ai', 'openai', and
@@ -513,7 +513,7 @@ type LogsRequest struct {
 
 type ModelDataPlaneInfo struct {
 	// Information required to query DataPlane API 'query' endpoint.
-	QueryInfo *oauth2.DataPlaneInfo `tfsdk:"query_info" tf:"optional"`
+	QueryInfo oauth2.DataPlaneInfo `tfsdk:"query_info" tf:"optional"`
 }
 
 type OpenAiConfig struct {
@@ -606,11 +606,11 @@ type PayloadTable struct {
 type PutAiGatewayRequest struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
-	Guardrails *AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
+	Guardrails []AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
 	// Configuration for payload logging using inference tables. Use these
 	// tables to monitor and audit data being sent to and received from model
 	// APIs and to improve model quality.
-	InferenceTableConfig *AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
+	InferenceTableConfig []AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
 	// The name of the serving endpoint whose AI Gateway is being updated. This
 	// field is required.
 	Name types.String `tfsdk:"-"`
@@ -619,23 +619,23 @@ type PutAiGatewayRequest struct {
 	// Configuration to enable usage tracking using system tables. These tables
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
-	UsageTrackingConfig *AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
+	UsageTrackingConfig []AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
 }
 
 type PutAiGatewayResponse struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
-	Guardrails *AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
+	Guardrails []AiGatewayGuardrails `tfsdk:"guardrails" tf:"optional"`
 	// Configuration for payload logging using inference tables. Use these
 	// tables to monitor and audit data being sent to and received from model
 	// APIs and to improve model quality .
-	InferenceTableConfig *AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
+	InferenceTableConfig []AiGatewayInferenceTableConfig `tfsdk:"inference_table_config" tf:"optional"`
 	// Configuration for rate limits which can be set to limit endpoint traffic.
 	RateLimits []AiGatewayRateLimit `tfsdk:"rate_limits" tf:"optional"`
 	// Configuration to enable usage tracking using system tables. These tables
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
-	UsageTrackingConfig *AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
+	UsageTrackingConfig []AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional"`
 }
 
 // Update rate limits of a serving endpoint
@@ -656,7 +656,7 @@ type QueryEndpointInput struct {
 	// Pandas Dataframe input in the records orientation.
 	DataframeRecords []any `tfsdk:"dataframe_records" tf:"optional"`
 	// Pandas Dataframe input in the split orientation.
-	DataframeSplit *DataframeSplitInput `tfsdk:"dataframe_split" tf:"optional"`
+	DataframeSplit []DataframeSplitInput `tfsdk:"dataframe_split" tf:"optional"`
 	// The extra parameters field used ONLY for __completions, chat,__ and
 	// __embeddings external & foundation model__ serving endpoints. This is a
 	// map of strings and should only be used with other external/foundation
@@ -732,7 +732,7 @@ type QueryEndpointResponse struct {
 	// The usage object that may be returned by the __external/foundation
 	// model__ serving endpoint. This contains information about the number of
 	// tokens used in the prompt and response.
-	Usage *ExternalModelUsageElement `tfsdk:"usage" tf:"optional"`
+	Usage []ExternalModelUsageElement `tfsdk:"usage" tf:"optional"`
 }
 
 type RateLimit struct {
@@ -781,7 +781,7 @@ type ServedEntityInput struct {
 	// endpoint without external_model. If the endpoint is created without
 	// external_model, users cannot update it to add external_model later. The
 	// task type of all external models within an endpoint must be the same.
-	ExternalModel *ExternalModel `tfsdk:"external_model" tf:"optional"`
+	ExternalModel []ExternalModel `tfsdk:"external_model" tf:"optional"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
@@ -842,12 +842,12 @@ type ServedEntityOutput struct {
 	// foundation_model, and (entity_name, entity_version, workload_size,
 	// workload_type, and scale_to_zero_enabled) is returned based on the
 	// endpoint type.
-	ExternalModel *ExternalModel `tfsdk:"external_model" tf:"optional"`
+	ExternalModel []ExternalModel `tfsdk:"external_model" tf:"optional"`
 	// The foundation model that is served. NOTE: Only one of foundation_model,
 	// external_model, and (entity_name, entity_version, workload_size,
 	// workload_type, and scale_to_zero_enabled) is returned based on the
 	// endpoint type.
-	FoundationModel *FoundationModel `tfsdk:"foundation_model" tf:"optional"`
+	FoundationModel []FoundationModel `tfsdk:"foundation_model" tf:"optional"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
@@ -861,7 +861,7 @@ type ServedEntityOutput struct {
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:"optional"`
 	// Information corresponding to the state of the served entity.
-	State *ServedModelState `tfsdk:"state" tf:"optional"`
+	State []ServedModelState `tfsdk:"state" tf:"optional"`
 	// The workload size of the served entity. The workload size corresponds to
 	// a range of provisioned concurrency that the compute autoscales between. A
 	// single unit of provisioned concurrency can process one request at a time.
@@ -893,11 +893,11 @@ type ServedEntitySpec struct {
 	// The external model that is served. NOTE: Only one of external_model,
 	// foundation_model, and (entity_name, entity_version) is returned based on
 	// the endpoint type.
-	ExternalModel *ExternalModel `tfsdk:"external_model" tf:"optional"`
+	ExternalModel []ExternalModel `tfsdk:"external_model" tf:"optional"`
 	// The foundation model that is served. NOTE: Only one of foundation_model,
 	// external_model, and (entity_name, entity_version) is returned based on
 	// the endpoint type.
-	FoundationModel *FoundationModel `tfsdk:"foundation_model" tf:"optional"`
+	FoundationModel []FoundationModel `tfsdk:"foundation_model" tf:"optional"`
 	// The name of the served entity.
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
@@ -977,7 +977,7 @@ type ServedModelOutput struct {
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:"optional"`
 	// Information corresponding to the state of the Served Model.
-	State *ServedModelState `tfsdk:"state" tf:"optional"`
+	State []ServedModelState `tfsdk:"state" tf:"optional"`
 	// The workload size of the served model. The workload size corresponds to a
 	// range of provisioned concurrency that the compute will autoscale between.
 	// A single unit of provisioned concurrency can process one request at a
@@ -1034,9 +1034,9 @@ type ServerLogsResponse struct {
 type ServingEndpoint struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: Only
 	// external model endpoints are currently supported.
-	AiGateway *AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
+	AiGateway []AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
 	// The config that is currently being served by the endpoint.
-	Config *EndpointCoreConfigSummary `tfsdk:"config" tf:"optional"`
+	Config []EndpointCoreConfigSummary `tfsdk:"config" tf:"optional"`
 	// The timestamp when the endpoint was created in Unix time.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
 	// The email of the user who created the serving endpoint.
@@ -1049,7 +1049,7 @@ type ServingEndpoint struct {
 	// The name of the serving endpoint.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Information corresponding to the state of the serving endpoint.
-	State *EndpointState `tfsdk:"state" tf:"optional"`
+	State []EndpointState `tfsdk:"state" tf:"optional"`
 	// Tags attached to the serving endpoint.
 	Tags []EndpointTag `tfsdk:"tags" tf:"optional"`
 	// The task type of the serving endpoint.
@@ -1083,15 +1083,15 @@ type ServingEndpointAccessControlResponse struct {
 type ServingEndpointDetailed struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: Only
 	// external model endpoints are currently supported.
-	AiGateway *AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
+	AiGateway []AiGatewayConfig `tfsdk:"ai_gateway" tf:"optional"`
 	// The config that is currently being served by the endpoint.
-	Config *EndpointCoreConfigOutput `tfsdk:"config" tf:"optional"`
+	Config []EndpointCoreConfigOutput `tfsdk:"config" tf:"optional"`
 	// The timestamp when the endpoint was created in Unix time.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
 	// The email of the user who created the serving endpoint.
 	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// Information required to query DataPlane APIs.
-	DataPlaneInfo *ModelDataPlaneInfo `tfsdk:"data_plane_info" tf:"optional"`
+	DataPlaneInfo []ModelDataPlaneInfo `tfsdk:"data_plane_info" tf:"optional"`
 	// Endpoint invocation url if route optimization is enabled for endpoint
 	EndpointUrl types.String `tfsdk:"endpoint_url" tf:"optional"`
 	// System-generated ID of the endpoint. This is used to refer to the
@@ -1102,14 +1102,14 @@ type ServingEndpointDetailed struct {
 	// The name of the serving endpoint.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// The config that the endpoint is attempting to update to.
-	PendingConfig *EndpointPendingConfig `tfsdk:"pending_config" tf:"optional"`
+	PendingConfig []EndpointPendingConfig `tfsdk:"pending_config" tf:"optional"`
 	// The permission level of the principal making the request.
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// Boolean representing if route optimization has been enabled for the
 	// endpoint
 	RouteOptimized types.Bool `tfsdk:"route_optimized" tf:"optional"`
 	// Information corresponding to the state of the serving endpoint.
-	State *EndpointState `tfsdk:"state" tf:"optional"`
+	State []EndpointState `tfsdk:"state" tf:"optional"`
 	// Tags attached to the serving endpoint.
 	Tags []EndpointTag `tfsdk:"tags" tf:"optional"`
 	// The task type of the serving endpoint.
@@ -1157,7 +1157,7 @@ type V1ResponseChoiceElement struct {
 	// The logprobs returned only by the __completions__ endpoint.
 	Logprobs types.Int64 `tfsdk:"logprobs" tf:"optional"`
 	// The message response from the __chat__ endpoint.
-	Message *ChatMessage `tfsdk:"message" tf:"optional"`
+	Message []ChatMessage `tfsdk:"message" tf:"optional"`
 	// The text response from the __completions__ endpoint.
 	Text types.String `tfsdk:"text" tf:"optional"`
 }

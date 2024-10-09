@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -70,19 +71,29 @@ func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		for field, attribute := range c.ToAttributeMap().Attributes {
+			switch attribute.(type) {
+			case tfschema.StringAttributeBuilder:
+				c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
+			case tfschema.SingleNestedAttributeBuilder:
+				c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
+			}
+		}
+		for field, block := range c.ToAttributeMap().Blocks {
+			switch block.(type) {
+			case tfschema.ListNestedBlockBuilder:
+				c.AddPlanModifier(listplanmodifier.RequiresReplace(), field)
+			case tfschema.SingleNestedBlockBuilder:
+				c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
+			}
+		}
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Library",
-		Attributes: tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			for field, attribute := range c.ToAttributeMap() {
-				switch attribute.(type) {
-				case tfschema.StringAttributeBuilder:
-					c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
-				case tfschema.SingleNestedAttributeBuilder:
-					c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
-				}
-			}
-			return c
-		}),
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 

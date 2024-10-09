@@ -15,7 +15,7 @@ import (
 )
 
 type AutomaticClusterUpdateSetting struct {
-	AutomaticClusterUpdateWorkspace ClusterAutoRestartMessage `tfsdk:"automatic_cluster_update_workspace" tf:""`
+	AutomaticClusterUpdateWorkspace []ClusterAutoRestartMessage `tfsdk:"automatic_cluster_update_workspace" tf:""`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -46,9 +46,9 @@ type ClusterAutoRestartMessage struct {
 	// intended to use only for purposes like showing an error message to the
 	// customer with the additional details. For example, using these details we
 	// can check why exactly the feature is disabled for this customer.
-	EnablementDetails *ClusterAutoRestartMessageEnablementDetails `tfsdk:"enablement_details" tf:"optional"`
+	EnablementDetails []ClusterAutoRestartMessageEnablementDetails `tfsdk:"enablement_details" tf:"optional"`
 
-	MaintenanceWindow *ClusterAutoRestartMessageMaintenanceWindow `tfsdk:"maintenance_window" tf:"optional"`
+	MaintenanceWindow []ClusterAutoRestartMessageMaintenanceWindow `tfsdk:"maintenance_window" tf:"optional"`
 
 	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available" tf:"optional"`
 }
@@ -70,7 +70,7 @@ type ClusterAutoRestartMessageEnablementDetails struct {
 }
 
 type ClusterAutoRestartMessageMaintenanceWindow struct {
-	WeekDayBasedSchedule *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule `tfsdk:"week_day_based_schedule" tf:"optional"`
+	WeekDayBasedSchedule []ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule `tfsdk:"week_day_based_schedule" tf:"optional"`
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule struct {
@@ -78,7 +78,7 @@ type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule struct {
 
 	Frequency types.String `tfsdk:"frequency" tf:"optional"`
 
-	WindowStartTime *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime `tfsdk:"window_start_time" tf:"optional"`
+	WindowStartTime []ClusterAutoRestartMessageMaintenanceWindowWindowStartTime `tfsdk:"window_start_time" tf:"optional"`
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime struct {
@@ -97,7 +97,7 @@ type ComplianceSecurityProfile struct {
 
 type ComplianceSecurityProfileSetting struct {
 	// SHIELD feature: CSP
-	ComplianceSecurityProfileWorkspace ComplianceSecurityProfile `tfsdk:"compliance_security_profile_workspace" tf:""`
+	ComplianceSecurityProfileWorkspace []ComplianceSecurityProfile `tfsdk:"compliance_security_profile_workspace" tf:""`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -115,15 +115,15 @@ type ComplianceSecurityProfileSetting struct {
 }
 
 type Config struct {
-	Email *EmailConfig `tfsdk:"email" tf:"optional"`
+	Email []EmailConfig `tfsdk:"email" tf:"optional"`
 
-	GenericWebhook *GenericWebhookConfig `tfsdk:"generic_webhook" tf:"optional"`
+	GenericWebhook []GenericWebhookConfig `tfsdk:"generic_webhook" tf:"optional"`
 
-	MicrosoftTeams *MicrosoftTeamsConfig `tfsdk:"microsoft_teams" tf:"optional"`
+	MicrosoftTeams []MicrosoftTeamsConfig `tfsdk:"microsoft_teams" tf:"optional"`
 
-	Pagerduty *PagerdutyConfig `tfsdk:"pagerduty" tf:"optional"`
+	Pagerduty []PagerdutyConfig `tfsdk:"pagerduty" tf:"optional"`
 
-	Slack *SlackConfig `tfsdk:"slack" tf:"optional"`
+	Slack []SlackConfig `tfsdk:"slack" tf:"optional"`
 }
 
 // Details required to configure a block list or allow list.
@@ -143,7 +143,7 @@ type CreateIpAccessList struct {
 // An IP access list was successfully created.
 type CreateIpAccessListResponse struct {
 	// Definition of an IP Access list
-	IpAccessList *IpAccessListInfo `tfsdk:"ip_access_list" tf:"optional"`
+	IpAccessList []IpAccessListInfo `tfsdk:"ip_access_list" tf:"optional"`
 }
 
 type CreateNetworkConnectivityConfigRequest struct {
@@ -161,7 +161,7 @@ type CreateNetworkConnectivityConfigRequest struct {
 type CreateNotificationDestinationRequest struct {
 	// The configuration for the notification destination. Must wrap EXACTLY one
 	// of the nested configs.
-	Config *Config `tfsdk:"config" tf:"optional"`
+	Config []Config `tfsdk:"config" tf:"optional"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 }
@@ -178,7 +178,7 @@ type CreateOboTokenRequest struct {
 
 // An on-behalf token was successfully created for the service principal.
 type CreateOboTokenResponse struct {
-	TokenInfo *TokenInfo `tfsdk:"token_info" tf:"optional"`
+	TokenInfo []TokenInfo `tfsdk:"token_info" tf:"optional"`
 	// Value of the token.
 	TokenValue types.String `tfsdk:"token_value" tf:"optional"`
 }
@@ -205,7 +205,7 @@ type CreateTokenRequest struct {
 
 type CreateTokenResponse struct {
 	// The information for the new token.
-	TokenInfo *PublicTokenInfo `tfsdk:"token_info" tf:"optional"`
+	TokenInfo []PublicTokenInfo `tfsdk:"token_info" tf:"optional"`
 	// The value of the new token.
 	TokenValue types.String `tfsdk:"token_value" tf:"optional"`
 }
@@ -221,7 +221,7 @@ type CspEnablementAccount struct {
 
 type CspEnablementAccountSetting struct {
 	// Account level policy for CSP
-	CspEnablementAccount CspEnablementAccount `tfsdk:"csp_enablement_account" tf:""`
+	CspEnablementAccount []CspEnablementAccount `tfsdk:"csp_enablement_account" tf:""`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -257,7 +257,7 @@ type DefaultNamespaceSetting struct {
 	// PATCH request to identify the setting version you are updating.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 
-	Namespace StringMessage `tfsdk:"namespace" tf:""`
+	Namespace []StringMessage `tfsdk:"namespace" tf:""`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
@@ -430,7 +430,7 @@ type DeleteTokenManagementRequest struct {
 }
 
 type DisableLegacyAccess struct {
-	DisableLegacyAccess BooleanMessage `tfsdk:"disable_legacy_access" tf:""`
+	DisableLegacyAccess []BooleanMessage `tfsdk:"disable_legacy_access" tf:""`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -448,7 +448,7 @@ type DisableLegacyAccess struct {
 }
 
 type DisableLegacyFeatures struct {
-	DisableLegacyFeatures BooleanMessage `tfsdk:"disable_legacy_features" tf:""`
+	DisableLegacyFeatures []BooleanMessage `tfsdk:"disable_legacy_features" tf:""`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -480,7 +480,7 @@ type EnhancedSecurityMonitoring struct {
 
 type EnhancedSecurityMonitoringSetting struct {
 	// SHIELD feature: ESM
-	EnhancedSecurityMonitoringWorkspace EnhancedSecurityMonitoring `tfsdk:"enhanced_security_monitoring_workspace" tf:""`
+	EnhancedSecurityMonitoringWorkspace []EnhancedSecurityMonitoring `tfsdk:"enhanced_security_monitoring_workspace" tf:""`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -504,7 +504,7 @@ type EsmEnablementAccount struct {
 
 type EsmEnablementAccountSetting struct {
 	// Account level policy for ESM
-	EsmEnablementAccount EsmEnablementAccount `tfsdk:"esm_enablement_account" tf:""`
+	EsmEnablementAccount []EsmEnablementAccount `tfsdk:"esm_enablement_account" tf:""`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -539,7 +539,7 @@ type ExchangeToken struct {
 // Exchange a token with the IdP
 type ExchangeTokenRequest struct {
 	// The partition of Credentials store
-	PartitionId PartitionId `tfsdk:"partitionId" tf:""`
+	PartitionId []PartitionId `tfsdk:"partitionId" tf:""`
 	// Array of scopes for the token request.
 	Scopes []types.String `tfsdk:"scopes" tf:""`
 	// A list of token types being requested
@@ -554,7 +554,7 @@ type ExchangeTokenResponse struct {
 // An IP access list was successfully returned.
 type FetchIpAccessListResponse struct {
 	// Definition of an IP Access list
-	IpAccessList *IpAccessListInfo `tfsdk:"ip_access_list" tf:"optional"`
+	IpAccessList []IpAccessListInfo `tfsdk:"ip_access_list" tf:"optional"`
 }
 
 type GenericWebhookConfig struct {
@@ -682,7 +682,7 @@ type GetIpAccessListRequest struct {
 
 type GetIpAccessListResponse struct {
 	// Definition of an IP Access list
-	IpAccessList *IpAccessListInfo `tfsdk:"ip_access_list" tf:"optional"`
+	IpAccessList []IpAccessListInfo `tfsdk:"ip_access_list" tf:"optional"`
 }
 
 // IP access lists were successfully returned.
@@ -751,7 +751,7 @@ type GetTokenPermissionLevelsResponse struct {
 
 // Token with specified Token ID was successfully returned.
 type GetTokenResponse struct {
-	TokenInfo *TokenInfo `tfsdk:"token_info" tf:"optional"`
+	TokenInfo []TokenInfo `tfsdk:"token_info" tf:"optional"`
 }
 
 // Definition of an IP Access list
@@ -931,10 +931,10 @@ type NccEgressConfig struct {
 	// The network connectivity rules that are applied by default without
 	// resource specific configurations. You can find the stable network
 	// information of your serverless compute resources here.
-	DefaultRules *NccEgressDefaultRules `tfsdk:"default_rules" tf:"optional"`
+	DefaultRules []NccEgressDefaultRules `tfsdk:"default_rules" tf:"optional"`
 	// The network connectivity rules that configured for each destinations.
 	// These rules override default rules.
-	TargetRules *NccEgressTargetRules `tfsdk:"target_rules" tf:"optional"`
+	TargetRules []NccEgressTargetRules `tfsdk:"target_rules" tf:"optional"`
 }
 
 // The network connectivity rules that are applied by default without resource
@@ -944,11 +944,11 @@ type NccEgressDefaultRules struct {
 	// The stable AWS IP CIDR blocks. You can use these to configure the
 	// firewall of your resources to allow traffic from your Databricks
 	// workspace.
-	AwsStableIpRule *NccAwsStableIpRule `tfsdk:"aws_stable_ip_rule" tf:"optional"`
+	AwsStableIpRule []NccAwsStableIpRule `tfsdk:"aws_stable_ip_rule" tf:"optional"`
 	// The stable Azure service endpoints. You can configure the firewall of
 	// your Azure resources to allow traffic from your Databricks serverless
 	// compute resources.
-	AzureServiceEndpointRule *NccAzureServiceEndpointRule `tfsdk:"azure_service_endpoint_rule" tf:"optional"`
+	AzureServiceEndpointRule []NccAzureServiceEndpointRule `tfsdk:"azure_service_endpoint_rule" tf:"optional"`
 }
 
 // The network connectivity rules that configured for each destinations. These
@@ -964,7 +964,7 @@ type NetworkConnectivityConfiguration struct {
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// The network connectivity rules that apply to network traffic from your
 	// serverless compute resources.
-	EgressConfig *NccEgressConfig `tfsdk:"egress_config" tf:"optional"`
+	EgressConfig []NccEgressConfig `tfsdk:"egress_config" tf:"optional"`
 	// The name of the network connectivity configuration. The name can contain
 	// alphanumeric characters, hyphens, and underscores. The length must be
 	// between 3 and 30 characters. The name must match the regular expression
@@ -984,7 +984,7 @@ type NotificationDestination struct {
 	// The configuration for the notification destination. Will be exactly one
 	// of the nested configs. Only returns for users with workspace admin
 	// permissions.
-	Config *Config `tfsdk:"config" tf:"optional"`
+	Config []Config `tfsdk:"config" tf:"optional"`
 	// [Output-only] The type of the notification destination. The type can not
 	// be changed once set.
 	DestinationType types.String `tfsdk:"destination_type" tf:"optional"`
@@ -1028,7 +1028,7 @@ type PersonalComputeSetting struct {
 	// PATCH request to identify the setting version you are updating.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 
-	PersonalCompute PersonalComputeMessage `tfsdk:"personal_compute" tf:""`
+	PersonalCompute []PersonalComputeMessage `tfsdk:"personal_compute" tf:""`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
@@ -1085,7 +1085,7 @@ type RestrictWorkspaceAdminsSetting struct {
 	// PATCH request to identify the setting version you are updating.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 
-	RestrictWorkspaceAdmins RestrictWorkspaceAdminsMessage `tfsdk:"restrict_workspace_admins" tf:""`
+	RestrictWorkspaceAdmins []RestrictWorkspaceAdminsMessage `tfsdk:"restrict_workspace_admins" tf:""`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
@@ -1198,7 +1198,7 @@ type UpdateAutomaticClusterUpdateSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting AutomaticClusterUpdateSetting `tfsdk:"setting" tf:""`
+	Setting []AutomaticClusterUpdateSetting `tfsdk:"setting" tf:""`
 }
 
 // Details required to update a setting.
@@ -1212,7 +1212,7 @@ type UpdateComplianceSecurityProfileSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting ComplianceSecurityProfileSetting `tfsdk:"setting" tf:""`
+	Setting []ComplianceSecurityProfileSetting `tfsdk:"setting" tf:""`
 }
 
 // Details required to update a setting.
@@ -1226,7 +1226,7 @@ type UpdateCspEnablementAccountSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting CspEnablementAccountSetting `tfsdk:"setting" tf:""`
+	Setting []CspEnablementAccountSetting `tfsdk:"setting" tf:""`
 }
 
 // Details required to update a setting.
@@ -1248,7 +1248,7 @@ type UpdateDefaultNamespaceSettingRequest struct {
 	// assumed). This setting requires a restart of clusters and SQL warehouses
 	// to take effect. Additionally, the default namespace only applies when
 	// using Unity Catalog-enabled compute.
-	Setting DefaultNamespaceSetting `tfsdk:"setting" tf:""`
+	Setting []DefaultNamespaceSetting `tfsdk:"setting" tf:""`
 }
 
 // Details required to update a setting.
@@ -1262,7 +1262,7 @@ type UpdateDisableLegacyAccessRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting DisableLegacyAccess `tfsdk:"setting" tf:""`
+	Setting []DisableLegacyAccess `tfsdk:"setting" tf:""`
 }
 
 // Details required to update a setting.
@@ -1276,7 +1276,7 @@ type UpdateDisableLegacyFeaturesRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting DisableLegacyFeatures `tfsdk:"setting" tf:""`
+	Setting []DisableLegacyFeatures `tfsdk:"setting" tf:""`
 }
 
 // Details required to update a setting.
@@ -1290,7 +1290,7 @@ type UpdateEnhancedSecurityMonitoringSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting EnhancedSecurityMonitoringSetting `tfsdk:"setting" tf:""`
+	Setting []EnhancedSecurityMonitoringSetting `tfsdk:"setting" tf:""`
 }
 
 // Details required to update a setting.
@@ -1304,7 +1304,7 @@ type UpdateEsmEnablementAccountSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting EsmEnablementAccountSetting `tfsdk:"setting" tf:""`
+	Setting []EsmEnablementAccountSetting `tfsdk:"setting" tf:""`
 }
 
 // Details required to update an IP access list.
@@ -1329,7 +1329,7 @@ type UpdateIpAccessList struct {
 type UpdateNotificationDestinationRequest struct {
 	// The configuration for the notification destination. Must wrap EXACTLY one
 	// of the nested configs.
-	Config *Config `tfsdk:"config" tf:"optional"`
+	Config []Config `tfsdk:"config" tf:"optional"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 
@@ -1347,7 +1347,7 @@ type UpdatePersonalComputeSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting PersonalComputeSetting `tfsdk:"setting" tf:""`
+	Setting []PersonalComputeSetting `tfsdk:"setting" tf:""`
 }
 
 type UpdateResponse struct {
@@ -1364,5 +1364,5 @@ type UpdateRestrictWorkspaceAdminsSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting RestrictWorkspaceAdminsSetting `tfsdk:"setting" tf:""`
+	Setting []RestrictWorkspaceAdminsSetting `tfsdk:"setting" tf:""`
 }

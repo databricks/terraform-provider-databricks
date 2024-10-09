@@ -9,14 +9,9 @@ import (
 // We need this because in terraform plugin framework, the datasource schema and resource schema are in two separate packages.
 // This common interface prevents us from keeping two copies of StructToSchema and CustomizableSchema.
 type AttributeBuilder interface {
+	BaseSchemaBuilder
 	BuildDataSourceAttribute() dataschema.Attribute
 	BuildResourceAttribute() schema.Attribute
-	SetOptional() AttributeBuilder
-	SetRequired() AttributeBuilder
-	SetSensitive() AttributeBuilder
-	SetComputed() AttributeBuilder
-	SetReadOnly() AttributeBuilder
-	SetDeprecated(string) AttributeBuilder
 }
 
 // BuildDataSourceAttributeMap takes a map from string to AttributeBuilder and returns a map from string to datasource.schema.Attribute.

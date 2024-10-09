@@ -64,7 +64,7 @@ func TestCustomizeSchemaSetRequired(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, scm.Attributes["nested"].(schema.SingleNestedAttribute).Attributes["enabled"].IsRequired())
+	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["enabled"].IsRequired())
 }
 
 func TestCustomizeSchemaSetOptional(t *testing.T) {
@@ -82,7 +82,7 @@ func TestCustomizeSchemaSetSensitive(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, scm.Attributes["nested"].(schema.SingleNestedAttribute).Attributes["name"].IsSensitive())
+	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["name"].IsSensitive())
 }
 
 func TestCustomizeSchemaSetDeprecated(t *testing.T) {

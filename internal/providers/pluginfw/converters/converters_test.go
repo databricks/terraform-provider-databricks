@@ -17,7 +17,6 @@ type DummyTfSdk struct {
 	Floats            types.Float64               `tfsdk:"floats" tf:""`
 	Description       types.String                `tfsdk:"description" tf:""`
 	Tasks             types.String                `tfsdk:"task" tf:"optional"`
-	Nested            *DummyNestedTfSdk           `tfsdk:"nested" tf:"optional"`
 	NoPointerNested   DummyNestedTfSdk            `tfsdk:"no_pointer_nested" tf:"optional"`
 	NestedList        []DummyNestedTfSdk          `tfsdk:"nested_list" tf:"optional"`
 	NestedPointerList []*DummyNestedTfSdk         `tfsdk:"nested_pointer_list" tf:"optional"`
@@ -28,6 +27,8 @@ type DummyTfSdk struct {
 	EnumField         types.String                `tfsdk:"enum_field" tf:"optional"`
 	AdditionalField   types.String                `tfsdk:"additional_field" tf:"optional"`
 	DistinctField     types.String                `tfsdk:"distinct_field" tf:"optional"`
+	SliceStruct       []DummyNestedTfSdk          `tfsdk:"slice_struct" tf:"optional"`
+	SliceStructPtr    []DummyNestedTfSdk          `tfsdk:"slice_struct_ptr" tf:"optional"`
 	Irrelevant        types.String                `tfsdk:"-"`
 }
 
@@ -69,7 +70,6 @@ type DummyGoSdk struct {
 	Floats            float64                     `json:"floats"`
 	Description       string                      `json:"description"`
 	Tasks             string                      `json:"tasks"`
-	Nested            *DummyNestedGoSdk           `json:"nested"`
 	NoPointerNested   DummyNestedGoSdk            `json:"no_pointer_nested"`
 	NestedList        []DummyNestedGoSdk          `json:"nested_list"`
 	NestedPointerList []*DummyNestedGoSdk         `json:"nested_pointer_list"`
@@ -80,6 +80,8 @@ type DummyGoSdk struct {
 	EnumField         TestEnum                    `json:"enum_field"`
 	AdditionalField   string                      `json:"additional_field"`
 	DistinctField     string                      `json:"distinct_field"` // distinct field that the tfsdk struct doesn't have
+	SliceStruct       DummyNestedGoSdk            `json:"slice_struct"`
+	SliceStructPtr    *DummyNestedGoSdk           `json:"slice_struct_ptr"`
 	ForceSendFields   []string                    `json:"-"`
 }
 
@@ -187,18 +189,6 @@ var tests = []struct {
 		}},
 	},
 	{
-		"pointer conversion",
-		DummyTfSdk{Nested: &DummyNestedTfSdk{
-			Name:    types.StringValue("def"),
-			Enabled: types.BoolValue(true),
-		}},
-		DummyGoSdk{Nested: &DummyNestedGoSdk{
-			Name:            "def",
-			Enabled:         true,
-			ForceSendFields: []string{"Name", "Enabled"},
-		}},
-	},
-	{
 		"list conversion",
 		DummyTfSdk{Repeated: []types.Int64{types.Int64Value(12), types.Int64Value(34)}},
 		DummyGoSdk{Repeated: []int64{12, 34}},
@@ -256,6 +246,34 @@ var tests = []struct {
 				Enabled:         false,
 				ForceSendFields: []string{"Name", "Enabled"},
 			},
+		}},
+	},
+	{
+		"list representation of struct conversion", // we use list with one element in the tfsdk to represent struct in gosdk
+		DummyTfSdk{SliceStruct: []DummyNestedTfSdk{
+			{
+				Name:    types.StringValue("def"),
+				Enabled: types.BoolValue(true),
+			},
+		}},
+		DummyGoSdk{SliceStruct: DummyNestedGoSdk{
+			Name:            "def",
+			Enabled:         true,
+			ForceSendFields: []string{"Name", "Enabled"},
+		}},
+	},
+	{
+		"list representation of struct pointer conversion", // we use list with one element in the tfsdk to represent struct in gosdk
+		DummyTfSdk{SliceStructPtr: []DummyNestedTfSdk{
+			{
+				Name:    types.StringValue("def"),
+				Enabled: types.BoolValue(true),
+			},
+		}},
+		DummyGoSdk{SliceStructPtr: &DummyNestedGoSdk{
+			Name:            "def",
+			Enabled:         true,
+			ForceSendFields: []string{"Name", "Enabled"},
 		}},
 	},
 }

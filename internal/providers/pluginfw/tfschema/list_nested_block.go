@@ -7,44 +7,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-// MapNestedAttributteBuilder represents a map of complex (non-primitive) types.
-type MapNestedAttributeBuilder struct {
-	NestedObject       NestedAttributeObject
+// ListNestedBlockBuilder represents a list of complex (non-primitive) types.
+// To be compatible with our sdkv2 schema, all struct types in the gosdk are represented with this type.
+type ListNestedBlockBuilder struct {
+	NestedObject       NestedBlockObject
 	Optional           bool
 	Required           bool
 	Sensitive          bool
 	Computed           bool
 	DeprecationMessage string
-	Validators         []validator.Map
-	PlanModifiers      []planmodifier.Map
+	Validators         []validator.List
+	PlanModifiers      []planmodifier.List
 }
 
-func (a MapNestedAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
-	return dataschema.MapNestedAttribute{
+func (a ListNestedBlockBuilder) BuildDataSourceBlock() dataschema.Block {
+	return dataschema.ListNestedBlock{
 		NestedObject:       a.NestedObject.BuildDataSourceAttribute(),
-		Optional:           a.Optional,
-		Required:           a.Required,
-		Sensitive:          a.Sensitive,
 		DeprecationMessage: a.DeprecationMessage,
-		Computed:           a.Computed,
 		Validators:         a.Validators,
 	}
 }
 
-func (a MapNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
-	return schema.MapNestedAttribute{
+func (a ListNestedBlockBuilder) BuildResourceBlock() schema.Block {
+	return schema.ListNestedBlock{
 		NestedObject:       a.NestedObject.BuildResourceAttribute(),
-		Optional:           a.Optional,
-		Required:           a.Required,
-		Sensitive:          a.Sensitive,
 		DeprecationMessage: a.DeprecationMessage,
-		Computed:           a.Computed,
 		Validators:         a.Validators,
 		PlanModifiers:      a.PlanModifiers,
 	}
 }
 
-func (a MapNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
+func (a ListNestedBlockBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -53,7 +46,7 @@ func (a MapNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
+func (a ListNestedBlockBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -62,7 +55,7 @@ func (a MapNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
+func (a ListNestedBlockBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -70,7 +63,7 @@ func (a MapNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
+func (a ListNestedBlockBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -78,7 +71,7 @@ func (a MapNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
+func (a ListNestedBlockBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -88,17 +81,17 @@ func (a MapNestedAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
+func (a ListNestedBlockBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a MapNestedAttributeBuilder) AddValidator(v validator.Map) BaseSchemaBuilder {
+func (a ListNestedBlockBuilder) AddValidator(v validator.List) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a MapNestedAttributeBuilder) AddPlanModifier(v planmodifier.Map) BaseSchemaBuilder {
+func (a ListNestedBlockBuilder) AddPlanModifier(v planmodifier.List) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

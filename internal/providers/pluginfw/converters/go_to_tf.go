@@ -26,11 +26,13 @@ const goSdkToTfSdkFieldConversionFailureMessage = "gosdk to tfsdk field conversi
 //
 // NOTE:
 //
-//	If field name doesn't show up in ForceSendFields and the field is zero value, we set the null value on the tfsdk.
-//	types.list and types.map are not supported
-//	map keys should always be a string
-//	tfsdk structs use types.String for all enum values
-//	non-json fields will be omitted
+// # Structs in gosdk are represented as slices of structs in tfsdk, and pointers are removed
+//
+// If field name doesn't show up in ForceSendFields and the field is zero value, we set the null value on the tfsdk.
+// types.list and types.map are not supported
+// map keys should always be a string
+// tfsdk structs use types.String for all enum values
+// non-json fields will be omitted
 func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{}) diag.Diagnostics {
 
 	srcVal := reflect.ValueOf(gosdk)
@@ -100,10 +102,23 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			// Skip nils
 			return nil
 		}
-		destField.Set(reflect.New(destField.Type().Elem()))
+
+		var fieldToSetInterface any
+
+		if destField.Kind() == reflect.Slice {
+			sliceType := destField.Type()
+			newSlice := reflect.MakeSlice(sliceType, 1, 1)
+			newSlice.Index(0).Set(reflect.New(sliceType.Elem()).Elem())
+
+			destField.Set(newSlice)
+			fieldToSetInterface = newSlice.Index(0).Addr().Interface()
+		} else {
+			destField.Set(reflect.New(destField.Type().Elem()))
+			fieldToSetInterface = destField.Interface()
+		}
 
 		// Recursively populate the nested struct.
-		if GoSdkToTfSdkStruct(ctx, srcFieldValue, destField.Interface()).HasError() {
+		if GoSdkToTfSdkStruct(ctx, srcFieldValue, fieldToSetInterface).HasError() {
 			panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
 		}
 	case reflect.Bool:
@@ -151,9 +166,19 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			// Skip zeros
 			return nil
 		}
-		// resolve the nested struct by recursively calling the function
-		if GoSdkToTfSdkStruct(ctx, srcFieldValue, destField.Addr().Interface()).HasError() {
-			panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
+		if destField.Kind() == reflect.Slice {
+			// allocate a slice first
+			destSlice := reflect.MakeSlice(destField.Type(), 1, 1)
+			// resolve the nested struct by recursively calling the function
+			if GoSdkToTfSdkStruct(ctx, srcFieldValue, destSlice.Index(0).Addr().Interface()).HasError() {
+				panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
+			}
+			destField.Set(destSlice)
+		} else {
+			// resolve the nested struct by recursively calling the function
+			if GoSdkToTfSdkStruct(ctx, srcFieldValue, destField.Addr().Interface()).HasError() {
+				panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
+			}
 		}
 	case reflect.Slice:
 		if srcField.IsNil() {

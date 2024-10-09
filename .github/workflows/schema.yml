@@ -17,7 +17,9 @@ on:
 
 jobs:
   compute_diff:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: ubuntu-runners
+      labels: ubuntu-20.04-16core
 
     steps:
       # Check out the base commit first and the head commit second. diff-schema

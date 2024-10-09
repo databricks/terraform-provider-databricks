@@ -8,7 +8,9 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: ubuntu-runners
+      labels: ubuntu-20.04-16core
     # GitHub required checks are shared between PRs and the Merge Queue.
     # Since there is no PR title on Merge Queue, we need to trigger and
     # skip this test for Merge Queue to succeed.

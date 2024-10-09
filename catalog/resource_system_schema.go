@@ -97,9 +97,9 @@ func ResourceSystemSchema() common.Resource {
 					if schema.State != catalog.SystemSchemaInfoStateEnableCompleted &&
 						schema.State != catalog.SystemSchemaInfoStateEnableInitialized &&
 						schema.State != catalog.SystemSchemaInfoStateUnavailable {
-							log.Printf("[WARN] %s is not enabled, ignoring it", schemaName)
-							d.SetId("")
-							return nil
+						log.Printf("[WARN] %s is not enabled, ignoring it", schemaName)
+						d.SetId("")
+						return nil
 					}
 
 					d.Set("full_name", fmt.Sprintf("system.%s", schemaName))

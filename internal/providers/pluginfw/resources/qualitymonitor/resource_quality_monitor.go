@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+const resourceName = "quality_monitor"
+
 const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
 var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
@@ -62,7 +64,7 @@ type QualityMonitorResource struct {
 }
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "databricks_quality_monitor_pluginframework"
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -91,8 +93,8 @@ func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 func (d *QualityMonitorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("table_name"), req, resp)
 }
-
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -129,6 +131,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -159,6 +162,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -201,6 +205,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

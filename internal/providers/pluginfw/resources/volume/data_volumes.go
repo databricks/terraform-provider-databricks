@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+const dataSourceName = "volumes"
+
 func DataSourceVolumes() datasource.DataSource {
 	return &VolumesDataSource{}
 }
@@ -32,7 +34,7 @@ type VolumesList struct {
 }
 
 func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "databricks_volumes_pluginframework"
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceName)
 }
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -48,6 +50,7 @@ func (d *VolumesDataSource) Configure(_ context.Context, req datasource.Configur
 }
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx = pluginfwcommon.SetDataSourceNameInContext(ctx, dataSourceName)
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

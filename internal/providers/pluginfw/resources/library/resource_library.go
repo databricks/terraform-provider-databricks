@@ -24,6 +24,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 )
 
+const resourceName = "library"
 const libraryDefaultInstallationTimeout = 15 * time.Minute
 
 var _ resource.ResourceWithConfigure = &LibraryResource{}
@@ -66,7 +67,7 @@ type LibraryResource struct {
 }
 
 func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "databricks_library_pluginframework"
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
 }
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -93,6 +94,7 @@ func (r *LibraryResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -135,6 +137,7 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -168,10 +171,12 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	resp.Diagnostics.AddError("failed to update library", "updating library is not supported")
 }
 
 func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

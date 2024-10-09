@@ -1,8 +1,10 @@
 package common
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -44,4 +46,22 @@ func ConfigureResource(req resource.ConfigureRequest, resp *resource.ConfigureRe
 		return nil
 	}
 	return client
+}
+
+// GetDatabricksStagingName returns the resource name for a given resource with _pluginframework suffix.
+// Once a migrated resource is ready to be used as default, the Metadata method for that resource should be updated to use GetDatabricksProductionName.
+func GetDatabricksStagingName(name string) string {
+	return fmt.Sprintf("databricks_%s_pluginframework", name)
+}
+
+func GetDatabricksProductionName(name string) string {
+	return fmt.Sprintf("databricks_%s", name)
+}
+
+func SetResourceNameInContext(ctx context.Context, resourceName string) context.Context {
+	return useragent.InContext(ctx, "resource", resourceName)
+}
+
+func SetDataSourceNameInContext(ctx context.Context, dataSourceName string) context.Context {
+	return useragent.InContext(ctx, "data", dataSourceName)
 }

@@ -109,12 +109,74 @@ provider_installation {
 
 After installing the necessary software for building provider from sources, you should be able to run `make coverage` to run the tests and see the coverage.
 
-## Package organization for Providers
+## Developing Resources or Data Sources using Plugin Framework 
+
+### Package organization for Providers
 We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows: 
 - `providers`: Contains the changes that `depends` on both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderServer`.
 - `common`: Contains the changes `used by` both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `ProviderName`.
 - `pluginfw`: Contains the changes specific to Plugin Framework. This package shouldn't depend on sdkv2 or common.
 - `sdkv2`: Contains the changes specific to SDKv2. This package shouldn't depend on pluginfw or common.
+
+### Adding a new resource
+1. Check if the directory for this particular resource exists under `internal/providers/pluginfw/resources`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
+2. Create a file with resource_resource-name.go and write the CRUD methods, schema for that resource. For reference, please take a look at existing resources eg: `resource_quality_monitor.go`
+3. Create a file with `resource_resource-name_acc_test.go` and add integration tests here.
+4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
+5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `Resources()` method. Please update the list so that it stays in alphabetically sorted order.
+6. Create a PR and send it for review. 
+
+### Adding a new data source
+1. Check if the directory for this particular datasource exists under `internal/providers/pluginfw/resources`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
+2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`
+3. Create a file with `data_resource-name_acc_test.go` and add integration tests here.
+4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
+5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `DataSources()` method. Please update the list so that it stays in alphabetically sorted order.
+6. Create a PR and send it for review. 
+
+### Migrating resource to plugin framework
+Ideally there shouldn't be any behaviour change when migrating a resource or data source to either Go SDk or Plugin Framework.
+- Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
+- Integration tests shouldn't require any major changes.   
+
+
+### Code Organization
+Each resource and data source should be defined in package `internal/providers/pluginfw/resources/<resource>`, e.g.: `internal/providers/pluginfw/resources/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 
+
+Note: Only Docs will stay under root docs/ directory.
+
+
+### Code Conventions
+1. Make sure the resource or data source implemented is of the right type:
+    ```golang
+    var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
+    var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
+    ```
+2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()` functions respectively.  
+3. Any method that returns only diagnostics should be called inline while appending diagnostics in response. Example:
+    ```golang
+    resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+    ```
+    is preferred over the following:
+    ```golang
+    diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
+    if diags.HasError() {
+        resp.Diagnostics.Append(diags...)
+        return
+    }
+    ```
+4. Any method returning an error should directly be followed by appending that to the diagnostics. 
+    ```golang
+    err := method()
+    if err != nil { 
+        resp.Diagnostics.AddError("message", err.Error())
+        return 
+    }
+    ```
+5. Any method returning a value alongside Diagnostics should also directly be followed by appending that to the diagnostics.
 
 
 ## Debugging
@@ -287,7 +349,7 @@ func TestExampleResourceCreate(t *testing.T) {
 
 ```go
 func TestAccSecretAclResource(t *testing.T) {
- workspaceLevel(t, step{
+ WorkspaceLevel(t, Step{
   Template: `
   resource "databricks_group" "ds" {
    display_name = "data-scientists-{var.RANDOM}"

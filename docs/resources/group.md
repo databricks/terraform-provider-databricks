@@ -5,9 +5,9 @@ subcategory: "Security"
 
 This resource allows you to manage both [account groups and workspace-local groups](https://docs.databricks.com/administration-guide/users-groups/groups.html). You can use the [databricks_group_member resource](group_member.md) to assign Databricks users, [service principals](service_principal.md) as well as other groups as members of the group. This is useful if you are using an application to sync users & groups with SCIM API.
 
--> **Note** To assign an account level group to a workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
+-> To assign an account level group to a workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
 
--> **Note** Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level groups.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level groups.
+-> Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level groups.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level groups.
 
 To create account groups in the Databricks account, the provider must be configured accordingly. On AWS deployment with `host = "https://accounts.cloud.databricks.com"` and `account_id = "00000000-0000-0000-0000-000000000000"`. On Azure deployments `host = "https://accounts.azuredatabricks.net"`, `account_id = "00000000-0000-0000-0000-000000000000"` and using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) as authentication.
 

@@ -8,7 +8,7 @@ The `databricks_job` resource allows you to manage [Databricks Jobs](https://doc
 
 ## Example Usage
 
--> **Note** In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
+-> In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
 It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. A single task is defined with the `task` block containing one of the `*_task` blocks, `task_key`, and additional arguments described below.
 
@@ -142,7 +142,7 @@ This block describes individual tasks:
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 
--> **Note** If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
+-> If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
 
 #### condition_task Configuration Block
 
@@ -186,7 +186,7 @@ You also need to include a `git_source` block to configure the repository that c
 * `pipeline_id` - (Required) The pipeline's unique ID.
 * `full_refresh` - (Optional) (Bool) Specifies if there should be full refresh of the pipeline.
 
--> **Note** The following configuration blocks are only supported inside a `task` block
+-> The following configuration blocks are only supported inside a `task` block
 
 #### python_wheel_task Configuration Block
 
@@ -231,7 +231,7 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `alert` - (Optional) block consisting of following fields:
   * `alert_id` - (Required) (String) identifier of the Databricks SQL Alert.
-  * `subscriptions` - (Required) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
+  * `subscriptions` - (Optional) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `file` - (Optional) block consisting of single string fields:
   * `source` - (Optional) The source of the project. Possible values are `WORKSPACE` and `GIT`.
@@ -302,13 +302,13 @@ This block describes [an Environment](https://docs.databricks.com/en/compute/ser
   * `dependencies` - (list of strings) List of pip dependencies, as supported by the version of pip in this environment. Each dependency is a pip requirement file line.  See [API docs](https://docs.databricks.com/api/workspace/jobs/create#environments-spec-dependencies) for more information.
 
 ```hcl
-  environment {
-    spec {
-      dependencies = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
-      client       = "1"
-    }
-    environment_key = "Default"
+environment {
+  spec {
+    dependencies = ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
+    client       = "1"
   }
+  environment_key = "Default"
+}
 ```
 
 #### depends_on Configuration Block
@@ -318,7 +318,7 @@ This block describes upstream dependencies of a given task. For multiple upstrea
 * `task_key` - (Required) The name of the task this task depends on.
 * `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
 
--> **Note** Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
+-> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
 
 ### run_as Configuration Block
 
@@ -434,7 +434,7 @@ webhook_notifications {
 
 * `id` - ID of the system notification that is notified when an event defined in `webhook_notifications` is triggered.
 
--> **Note** The following configuration blocks can be standalone or nested inside a `task` block
+-> The following configuration blocks can be standalone or nested inside a `task` block
 
 ### notification_settings Configuration Block
 

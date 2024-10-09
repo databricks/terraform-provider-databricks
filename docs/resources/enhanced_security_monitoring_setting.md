@@ -4,7 +4,7 @@ subcategory: "Settings"
 
 # databricks_enhanced_security_monitoring_workspace_setting Resource
 
--> **Note** This resource could be only used with workspace-level provider!
+-> This resource can only be used with a workspace-level provider!
 
 The `databricks_enhanced_security_monitoring_workspace_setting` resource allows you to control whether enhanced security monitoring 
 is enabled for the current workspace. If the compliance security profile is enabled, this is automatically enabled. By default, 
@@ -25,7 +25,8 @@ resource "databricks_enhanced_security_monitoring_workspace_setting" "this" {
 
 The resource supports the following arguments:
 
-* `is_enabled` - (Required) Enable the Enhanced Security Monitoring on the workspace
+ - `enhanced_security_monitoring_workspace` block with following attributes:
+   - `is_enabled` - (Required) Enable the Enhanced Security Monitoring on the workspace
 
 ## Import
 

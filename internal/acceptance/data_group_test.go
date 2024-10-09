@@ -59,7 +59,7 @@ func checkGroupDataSourcePopulated(t *testing.T) func(s *terraform.State) error 
 
 func TestMwsAccGroupDataSplitMembers(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: groupDataSourceTemplate,
 		Check:    checkGroupDataSourcePopulated(t),
 	})
@@ -67,7 +67,7 @@ func TestMwsAccGroupDataSplitMembers(t *testing.T) {
 
 func TestAccGroupDataSplitMembers(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: groupDataSourceTemplate,
 		Check:    checkGroupDataSourcePopulated(t),
 	})

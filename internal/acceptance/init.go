@@ -36,28 +36,49 @@ func init() {
 	dbproviderlogger.SetTfLogger(dbproviderlogger.NewTfLogger(context.Background()))
 }
 
-func workspaceLevel(t *testing.T, steps ...step) {
+func WorkspaceLevel(t *testing.T, steps ...Step) {
 	loadWorkspaceEnv(t)
 	run(t, steps)
 }
 
-func accountLevel(t *testing.T, steps ...step) {
+func AccountLevel(t *testing.T, steps ...Step) {
 	loadAccountEnv(t)
 	run(t, steps)
 }
 
-func unityWorkspaceLevel(t *testing.T, steps ...step) {
+func UnityWorkspaceLevel(t *testing.T, steps ...Step) {
 	loadUcwsEnv(t)
 	run(t, steps)
 }
 
-func unityAccountLevel(t *testing.T, steps ...step) {
+func UnityAccountLevel(t *testing.T, steps ...Step) {
 	loadUcacctEnv(t)
 	run(t, steps)
 }
 
+// BuildImportStateIdFunc constructs a function that returns the id attribute of a target resouce from the terraform state.
+// This is a helper function for conveniently constructing the ImportStateIdFunc field for a test step.
+func BuildImportStateIdFunc(resourceId, attr string) func(*terraform.State) (string, error) {
+	return func(s *terraform.State) (string, error) {
+		// Find the resource in the Terraform state.
+		rs, ok := s.RootModule().Resources[resourceId]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resourceId)
+		}
+
+		// Access the attribute directly from the state.
+		targetAttr := rs.Primary.Attributes[attr]
+		if targetAttr == "" {
+			return "", fmt.Errorf("attribute '%s' not found or empty in the resource", attr)
+		}
+
+		// Return the found attribute or the ID needed for the import.
+		return targetAttr, nil
+	}
+}
+
 // A step in a terraform acceptance test
-type step struct {
+type Step struct {
 	// Terraform HCL for resources to materialize in this test step.
 	Template string
 
@@ -74,9 +95,17 @@ type step struct {
 	PlanOnly                  bool
 	PreventDiskCleanup        bool
 	PreventPostDestroyRefresh bool
-	ImportState               bool
-	ImportStateVerify         bool
-	ProtoV6ProviderFactories  map[string]func() (tfprotov6.ProviderServer, error)
+
+	// If true, will test the functionality of ImportState by importing the resource with ResourceName (must be set) and the ID of that resource.
+	// ID can be supplied with either ImportStateId or ImportStateIdFunc.
+	ImportState                          bool
+	ImportStateId                        string
+	ImportStateIdFunc                    func(*terraform.State) (string, error)
+	ImportStateVerify                    bool
+	ImportStateVerifyIdentifierAttribute string
+	ResourceName                         string
+
+	ProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 }
 
 func createUuid() string {
@@ -132,7 +161,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 
 // Test wrapper over terraform testing framework. Multiple steps share the same
 // terraform state context.
-func run(t *testing.T, steps []step) {
+func run(t *testing.T, steps []Step) {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
 		t.Skip("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
@@ -166,7 +195,7 @@ func run(t *testing.T, steps []step) {
 		if s.Template != "" {
 			stepConfig = environmentTemplate(t, s.Template, vars)
 		}
-		stepNum := i
+		stepNum := i + 1
 		thisStep := s
 		stepCheck := thisStep.Check
 		stepPreConfig := s.PreConfig
@@ -187,16 +216,20 @@ func run(t *testing.T, steps []step) {
 					stepPreConfig()
 				}
 			},
-			Config:                    stepConfig,
-			Destroy:                   s.Destroy,
-			ExpectNonEmptyPlan:        s.ExpectNonEmptyPlan,
-			PlanOnly:                  s.PlanOnly,
-			PreventDiskCleanup:        s.PreventDiskCleanup,
-			PreventPostDestroyRefresh: s.PreventPostDestroyRefresh,
-			ImportState:               s.ImportState,
-			ImportStateVerify:         s.ImportStateVerify,
-			ExpectError:               s.ExpectError,
-			ProtoV6ProviderFactories:  providerFactoryForStep,
+			Config:                               stepConfig,
+			Destroy:                              s.Destroy,
+			ExpectNonEmptyPlan:                   s.ExpectNonEmptyPlan,
+			PlanOnly:                             s.PlanOnly,
+			PreventDiskCleanup:                   s.PreventDiskCleanup,
+			PreventPostDestroyRefresh:            s.PreventPostDestroyRefresh,
+			ImportState:                          s.ImportState,
+			ImportStateId:                        s.ImportStateId,
+			ImportStateIdFunc:                    s.ImportStateIdFunc,
+			ImportStateVerify:                    s.ImportStateVerify,
+			ImportStateVerifyIdentifierAttribute: s.ImportStateVerifyIdentifierAttribute,
+			ResourceName:                         s.ResourceName,
+			ExpectError:                          s.ExpectError,
+			ProtoV6ProviderFactories:             providerFactoryForStep,
 			Check: func(state *terraform.State) error {
 				if stepCheck != nil {
 					return stepCheck(state)

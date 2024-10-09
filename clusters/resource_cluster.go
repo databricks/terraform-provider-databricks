@@ -270,13 +270,30 @@ func FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster any) error {
 func SetForceSendFieldsForCluster(cluster any, d *schema.ResourceData) error {
 	switch c := cluster.(type) {
 	case *compute.ClusterSpec:
+		// Used in jobs.
 		if c.Autoscale == nil {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
 		}
+		// Workload type is not relevant in jobs clusters.
 		return nil
 	case *compute.CreateCluster:
 		if c.Autoscale == nil {
 			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
+		}
+		// If workload type is set by the user, the fields within Clients should always be sent.
+		// These default to true if not set.
+		if c.WorkloadType != nil {
+			c.WorkloadType.Clients.ForceSendFields = []string{"Jobs", "Notebooks"}
+		}
+		return nil
+	case *compute.EditCluster:
+		if c.Autoscale == nil {
+			c.ForceSendFields = append(c.ForceSendFields, "NumWorkers")
+		}
+		// If workload type is set by the user, the fields within Clients should always be sent.
+		// These default to true if not set.
+		if c.WorkloadType != nil {
+			c.WorkloadType.Clients.ForceSendFields = []string{"Jobs", "Notebooks"}
 		}
 		return nil
 	default:
@@ -299,6 +316,17 @@ func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema)
 		Computed: true,
 	})
 	s.AddNewField("is_pinned", &schema.Schema{
+		Type:     schema.TypeBool,
+		Optional: true,
+		Default:  false,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "" && new == "false" {
+				return true
+			}
+			return old == new
+		},
+	})
+	s.AddNewField("no_wait", &schema.Schema{
 		Type:     schema.TypeBool,
 		Optional: true,
 		Default:  false,
@@ -414,11 +442,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	if err != nil {
 		return err
 	}
-	clusterInfo, err := clusterWaiter.GetWithTimeout(timeout)
-	if err != nil {
-		return err
-	}
-	d.SetId(clusterInfo.ClusterId)
+
+	d.SetId(clusterWaiter.ClusterId)
 	d.Set("cluster_id", d.Id())
 	isPinned, ok := d.GetOk("is_pinned")
 	if ok && isPinned.(bool) {
@@ -437,6 +462,25 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		}); err != nil {
 			return err
 		}
+	}
+
+	// If there is a no_wait flag set to true, don't wait for the cluster to be created
+	noWait, ok := d.GetOk("no_wait")
+	if ok && noWait.(bool) {
+		return nil
+	}
+
+	clusterInfo, err := clusterWaiter.GetWithTimeout(timeout)
+	if err != nil {
+		// In case of "ERROR" or "TERMINATED" state, WaitGetClusterRunning returns an error and we should delete the cluster before returning
+		deleteError := resourceClusterDelete(ctx, d, c)
+		if deleteError != nil {
+			return fmt.Errorf("failed to create cluster: %v and failed to delete it during cleanup: %v", err, deleteError)
+		}
+		return err
+	}
+
+	if len(cluster.Libraries) > 0 {
 		_, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, compute.Wait{
 			ClusterID: d.Id(),
 			IsRunning: clusterInfo.IsRunningOrResizing(),
@@ -508,7 +552,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.
 func hasClusterConfigChanged(d *schema.ResourceData) bool {
 	for k := range clusterSchema {
 		// TODO: create a map if we'll add more non-cluster config parameters in the future
-		if k == "library" || k == "is_pinned" {
+		if k == "library" || k == "is_pinned" || k == "no_wait" {
 			continue
 		}
 		if d.HasChange(k) {
@@ -551,6 +595,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 		for k := range clusterSchema {
 			if k == "library" ||
 				k == "is_pinned" ||
+				k == "no_wait" ||
 				k == "num_workers" ||
 				k == "autoscale" {
 				continue
@@ -603,10 +648,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 				Autoscale: cluster.Autoscale,
 			})
 		} else {
-			if err != nil {
-				return err
-			}
-			cluster.ForceSendFields = []string{"NumWorkers"}
+			SetForceSendFieldsForCluster(&cluster, d)
 
 			err = retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {
 				_, err = clusters.Edit(ctx, cluster)

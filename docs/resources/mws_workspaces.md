@@ -3,7 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_workspaces resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
+-> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
 
 ```hcl
 provider "databricks" {
@@ -14,7 +14,7 @@ provider "databricks" {
 
 This resource allows you to set up [workspaces on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1) or [workspaces on GCP](https://docs.gcp.databricks.com/administration-guide/account-settings-gcp/workspaces.html). Please follow this complete runnable example on [AWS](../guides/aws-workspace.md) or [GCP](../guides/gcp-workspace.md) with new VPC and new workspace setup.
 
--> **Note** On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
+-> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
 
 ## Example Usage
 
@@ -315,7 +315,7 @@ output "databricks_token" {
 
 ## Argument Reference
 
--> **Note** All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id`, `private_access_settings_id` on a running workspace.
+-> All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id`, `private_access_settings_id` on a running workspace.
 
 The following arguments are available:
 
@@ -342,7 +342,7 @@ The following arguments are available:
 
 You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
 
--> **Note** Tokens managed by `token {}` block are recreated when expired.
+-> Tokens managed by `token {}` block are recreated when expired.
 
 * `comment` - (Optional) Comment, that will appear in "User Settings / Access Tokens" page on Workspace UI. By default it's "Terraform PAT".
 * `lifetime_seconds` - (Optional) Token expiry lifetime. By default its 2592000 (30 days).
@@ -392,7 +392,7 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 

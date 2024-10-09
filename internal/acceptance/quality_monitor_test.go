@@ -50,7 +50,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		t.Skipf("databricks_quality_monitor resource is not available on GCP")
 	}
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: commonPartQualityMonitoring + `
 
 			resource "databricks_quality_monitor" "testMonitorInference" {
@@ -117,7 +117,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		t.Skipf("databricks_quality_monitor resource is not available on GCP")
 	}
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: commonPartQualityMonitoring + `
 			resource "databricks_quality_monitor" "testMonitorInference" {
 				table_name = databricks_sql_table.myInferenceTable.id
@@ -132,7 +132,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 				} 
 			}
 		`,
-	}, step{
+	}, Step{
 		Template: commonPartQualityMonitoring + `
 		resource "databricks_quality_monitor" "testMonitorInference" {
 			table_name = databricks_sql_table.myInferenceTable.id

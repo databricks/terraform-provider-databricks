@@ -5,7 +5,7 @@ subcategory: "Compute"
 
 This resource allows you to manage [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 
--> **Note** In case of [`Cannot access cluster ####-######-####### that was terminated or unpinned more than 30 days ago`](https://github.com/databricks/terraform-provider-databricks/issues/1197#issuecomment-1069386670) errors, please upgrade to v0.5.5 or later. If for some reason you cannot upgrade the version of provider, then the other viable option to unblock the apply pipeline is [`terraform state rm path.to.databricks_cluster.resource`](https://www.terraform.io/cli/commands/state/rm) command.
+-> In case of [`Cannot access cluster ####-######-####### that was terminated or unpinned more than 30 days ago`](https://github.com/databricks/terraform-provider-databricks/issues/1197#issuecomment-1069386670) errors, please upgrade to v0.5.5 or later. If for some reason you cannot upgrade the version of provider, then the other viable option to unblock the apply pipeline is [`terraform state rm path.to.databricks_cluster.resource`](https://www.terraform.io/cli/commands/state/rm) command.
 
 ```hcl
 data "databricks_node_type" "smallest" {
@@ -51,6 +51,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 * `custom_tags` - (Optional) Additional tags for cluster resources. Databricks will tag all cluster resources (e.g., AWS EC2 instances and EBS volumes) with these tags in addition to `default_tags`. If a custom cluster tag has the same name as a default cluster tag, the custom tag is prefixed with an `x_` when it is propagated.
 * `spark_conf` - (Optional) Map with key-value pairs to fine-tune Spark clusters, where you can provide custom [Spark configuration properties](https://spark.apache.org/docs/latest/configuration.html) in a cluster configuration.
 * `is_pinned` - (Optional) boolean value specifying if the cluster is pinned (not pinned by default). You must be a Databricks administrator to use this.  The pinned clusters' maximum number is [limited to 100](https://docs.databricks.com/clusters/clusters-manage.html#pin-a-cluster), so `apply` may fail if you have more than that (this number may change over time, so check Databricks documentation for actual number).
+* `no_wait` - (Optional) If true, the provider will not wait for the cluster to reach `RUNNING` state when creating the cluster, allowing cluster creation and library installation to continue asynchronously. Defaults to false (the provider will wait for cluster creation and library installation to succeed).
 
 The following example demonstrates how to create an autoscaling cluster with [Delta Cache](https://docs.databricks.com/delta/optimizations/delta-cache.html) enabled:
 
@@ -129,7 +130,7 @@ resource "databricks_cluster" "single_node" {
 
 ### (Legacy) High-Concurrency clusters
 
--> **Note** This is a legacy cluster type, not related to the real serverless compute. See [Clusters UI changes and cluster access modes](https://docs.databricks.com/archive/compute/cluster-ui-preview.html#legacy) for information on what access mode to use when creating new clusters.
+~> This is a legacy cluster type, not related to the real serverless compute. See [Clusters UI changes and cluster access modes](https://docs.databricks.com/archive/compute/cluster-ui-preview.html#legacy) for information on what access mode to use when creating new clusters.
 
 To create High-Concurrency cluster, following settings should be provided:
 
@@ -162,7 +163,7 @@ resource "databricks_cluster" "cluster_with_table_access_control" {
 
 To install libraries, one must specify each library in a separate configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.
 
--> **Note** Please consider using [databricks_library](library.md) resource for a more flexible setup.
+-> Please consider using [databricks_library](library.md) resource for a more flexible setup.
 
 Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 
@@ -483,7 +484,7 @@ resource "databricks_cluster" "this" {
 
 ### cluster_mount_info blocks (experimental)
 
--> **Note** The underlying API is experimental and may change in the future.
+~> The underlying API is experimental and may change in the future.
 
 It's possible to mount NFS (Network File System) resources into the Spark containers inside the cluster.  You can specify one or more `cluster_mount_info` blocks describing the mount. This block has following attributes:
 

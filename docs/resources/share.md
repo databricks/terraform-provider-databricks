@@ -3,7 +3,7 @@ subcategory: "Delta Sharing"
 ---
 # databricks_share Resource
 
--> **Note** This resource could be only used with workspace-level provider!
+-> This resource can only be used with a workspace-level provider!
 
 In Delta Sharing, a share is a read-only collection of tables and table partitions that a provider wants to share with one or more recipients. If your recipient uses a Unity Catalog-enabled Databricks workspace, you can also include notebook files, views (including dynamic views that restrict access at the row and column level), Unity Catalog volumes, and Unity Catalog models in a share.
 
@@ -11,7 +11,7 @@ In a Unity Catalog-enabled Databricks workspace, a share is a securable object r
 
 ## Example Usage
 
--> **Note** In Terraform configuration, it is recommended to define objects in alphabetical order of their `name` arguments, so that you get consistent and readable diff. Whenever objects are added or removed, or `name` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `object` blocks as an ordered list. Alternatively, `object` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
+-> In Terraform configuration, it is recommended to define objects in alphabetical order of their `name` arguments, so that you get consistent and readable diff. Whenever objects are added or removed, or `name` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `object` blocks as an ordered list. Alternatively, `object` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
 Creating a Delta Sharing share and add some existing tables to it
 

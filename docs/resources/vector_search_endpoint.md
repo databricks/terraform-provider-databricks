@@ -1,11 +1,11 @@
 ---
-subcategory: "Vector Search"
+subcategory: "Mosaic AI Vector Search"
 ---
 # databricks_vector_search_endpoint Resource
 
--> **Note** This resource could be only used on Unity Catalog-enabled workspace!
+-> This resource can only be used on a Unity Catalog-enabled workspace!
 
-This resource allows you to create [Vector Search Endpoint](https://docs.databricks.com/en/generative-ai/vector-search.html) in Databricks.  Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Vector Search Endpoint is used to create and access vector search indexes.
+This resource allows you to create [Mosaic AI Vector Search Endpoint](https://docs.databricks.com/en/generative-ai/vector-search.html) in Databricks.  Mosaic AI Vector Search is a serverless similarity search engine that allows you to store a vector representation of your data, including metadata, in a vector database.  The Mosaic AI Vector Search Endpoint is used to create and access vector search indexes.
 
 ## Example Usage
 
@@ -20,8 +20,8 @@ resource "databricks_vector_search_endpoint" "this" {
 
 The following arguments are supported (change of any parameter leads to recreation of the resource):
 
-* `name` - (Required) Name of the Vector Search Endpoint to create.
-* `endpoint_type` (Required) Type of Vector Search Endpoint.  Currently only accepting single value: `STANDARD` (See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values).
+* `name` - (Required) Name of the Mosaic AI Vector Search Endpoint to create.
+* `endpoint_type` (Required) Type of Mosaic AI Vector Search Endpoint.  Currently only accepting single value: `STANDARD` (See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values).
 
 ## Attribute Reference
 
@@ -40,7 +40,7 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Import
 
-The resource can be imported using the name of the Vector Search Endpoint
+The resource can be imported using the name of the Mosaic AI Vector Search Endpoint
 
 ```bash
 terraform import databricks_vector_search_endpoint.this <endpoint-name>

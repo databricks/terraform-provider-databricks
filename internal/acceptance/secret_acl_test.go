@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccSecretAclResource(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_group" "ds" {
 			display_name = "data-scientists-{var.RANDOM}"
@@ -52,7 +52,7 @@ func TestAccSecretAclResource(t *testing.T) {
 }
 
 func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_secret_scope" "app" {
 			name = "app-{var.RANDOM}"

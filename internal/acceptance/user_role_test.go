@@ -5,7 +5,7 @@ import (
 )
 
 func TestAccUserRole(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_user" "this" {
 			user_name = "{var.RANDOM}@example.com"

@@ -194,6 +194,8 @@ type CancelExecutionRequest struct {
 type CancelExecutionResponse struct {
 }
 
+// Configures the channel name and DBSQL version of the warehouse.
+// CHANNEL_NAME_CUSTOM should be chosen only when `dbsql_version` is specified.
 type Channel struct {
 	DbsqlVersion types.String `tfsdk:"dbsql_version" tf:"optional"`
 
@@ -206,15 +208,6 @@ type ChannelInfo struct {
 	DbsqlVersion types.String `tfsdk:"dbsql_version" tf:"optional"`
 	// Name of the channel
 	Name types.String `tfsdk:"name" tf:"optional"`
-}
-
-// Client code that triggered the request
-type ClientCallContext struct {
-	// File name that contains the last line that triggered the request.
-	FileName *EncodedText `tfsdk:"file_name" tf:"optional"`
-	// Last line number within a file or notebook cell that triggered the
-	// request.
-	LineNumber types.Int64 `tfsdk:"line_number" tf:"optional"`
 }
 
 type ColumnInfo struct {
@@ -356,7 +349,9 @@ type CreateWarehouseRequest struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
 	//
-	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
+	// Supported values: - Must be >= 0 mins for serverless warehouses - Must be
+	// == 0 or >= 10 mins for non-serverless warehouses - 0 indicates no
+	// autostop.
 	//
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
@@ -708,13 +703,6 @@ type EditWarehouseResponse struct {
 // Represents an empty message, similar to google.protobuf.Empty, which is not
 // available in the firm right now.
 type Empty struct {
-}
-
-type EncodedText struct {
-	// Carry text data in different form.
-	Encoding types.String `tfsdk:"encoding" tf:"optional"`
-	// text data
-	Text types.String `tfsdk:"text" tf:"optional"`
 }
 
 type EndpointConfPair struct {
@@ -1673,8 +1661,6 @@ type QueryInfo struct {
 	QueryEndTimeMs types.Int64 `tfsdk:"query_end_time_ms" tf:"optional"`
 	// The query ID.
 	QueryId types.String `tfsdk:"query_id" tf:"optional"`
-
-	QuerySource *QuerySource `tfsdk:"query_source" tf:"optional"`
 	// The time the query started.
 	QueryStartTimeMs types.Int64 `tfsdk:"query_start_time_ms" tf:"optional"`
 	// The text of the query.
@@ -1834,62 +1820,6 @@ type QueryPostContent struct {
 	Tags []types.String `tfsdk:"tags" tf:"optional"`
 }
 
-type QuerySource struct {
-	// UUID
-	AlertId types.String `tfsdk:"alert_id" tf:"optional"`
-	// Client code that triggered the request
-	ClientCallContext *ClientCallContext `tfsdk:"client_call_context" tf:"optional"`
-	// Id associated with a notebook cell
-	CommandId types.String `tfsdk:"command_id" tf:"optional"`
-	// Id associated with a notebook run or execution
-	CommandRunId types.String `tfsdk:"command_run_id" tf:"optional"`
-	// UUID
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
-	// UUID for Lakeview Dashboards, separate from DBSQL Dashboards
-	// (dashboard_id)
-	DashboardV3Id types.String `tfsdk:"dashboard_v3_id" tf:"optional"`
-
-	DriverInfo *QuerySourceDriverInfo `tfsdk:"driver_info" tf:"optional"`
-	// Spark service that received and processed the query
-	EntryPoint types.String `tfsdk:"entry_point" tf:"optional"`
-	// UUID for Genie space
-	GenieSpaceId types.String `tfsdk:"genie_space_id" tf:"optional"`
-
-	IsCloudFetch types.Bool `tfsdk:"is_cloud_fetch" tf:"optional"`
-
-	IsDatabricksSqlExecApi types.Bool `tfsdk:"is_databricks_sql_exec_api" tf:"optional"`
-
-	JobId types.String `tfsdk:"job_id" tf:"optional"`
-	// With background compute, jobs can be managed by different internal teams.
-	// When not specified, not a background compute job When specified and the
-	// value is not JOBS, it is a background compute job
-	JobManagedBy types.String `tfsdk:"job_managed_by" tf:"optional"`
-
-	NotebookId types.String `tfsdk:"notebook_id" tf:"optional"`
-	// String provided by a customer that'll help them identify the query
-	QueryTags types.String `tfsdk:"query_tags" tf:"optional"`
-	// Id associated with a job run or execution
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
-	// Id associated with a notebook cell run or execution
-	RunnableCommandId types.String `tfsdk:"runnable_command_id" tf:"optional"`
-
-	ScheduledBy types.String `tfsdk:"scheduled_by" tf:"optional"`
-
-	ServerlessChannelInfo *ServerlessChannelInfo `tfsdk:"serverless_channel_info" tf:"optional"`
-	// UUID
-	SourceQueryId types.String `tfsdk:"source_query_id" tf:"optional"`
-}
-
-type QuerySourceDriverInfo struct {
-	BiToolEntry types.String `tfsdk:"bi_tool_entry" tf:"optional"`
-
-	DriverName types.String `tfsdk:"driver_name" tf:"optional"`
-
-	SimbaBrandingVendor types.String `tfsdk:"simba_branding_vendor" tf:"optional"`
-
-	VersionNumber types.String `tfsdk:"version_number" tf:"optional"`
-}
-
 type RepeatedEndpointConfPairs struct {
 	// Deprecated: Use configuration_pairs
 	ConfigPair []EndpointConfPair `tfsdk:"config_pair" tf:"optional"`
@@ -1962,11 +1892,6 @@ type ResultSchema struct {
 	ColumnCount types.Int64 `tfsdk:"column_count" tf:"optional"`
 
 	Columns []ColumnInfo `tfsdk:"columns" tf:"optional"`
-}
-
-type ServerlessChannelInfo struct {
-	// Name of the Channel
-	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
 type ServiceError struct {

@@ -3,7 +3,7 @@ subcategory: "Log Delivery"
 ---
 # databricks_mws_log_delivery Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
+-> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 This resource configures the delivery of the two supported log types from Databricks workspaces: [billable usage logs](https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html) and [audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html).
 
@@ -150,7 +150,7 @@ Resource exports the following attributes:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 

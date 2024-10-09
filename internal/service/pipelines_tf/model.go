@@ -19,6 +19,8 @@ type CreatePipeline struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
 	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names" tf:"optional"`
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
@@ -58,6 +60,10 @@ type CreatePipeline struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.
@@ -103,6 +109,8 @@ type EditPipeline struct {
 	// If false, deployment will fail if name has changed and conflicts the name
 	// of another pipeline.
 	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names" tf:"optional"`
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
@@ -146,6 +154,10 @@ type EditPipeline struct {
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Unique identifier for this pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.
@@ -209,6 +221,8 @@ type GetPipelineResponse struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// The username of the pipeline creator.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	// Serverless budget policy ID of this pipeline.
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
 	// The health of a pipeline.
 	Health types.String `tfsdk:"health" tf:"optional"`
 	// The last time the pipeline settings were modified or created.
@@ -642,6 +656,8 @@ type PipelinePermissionsRequest struct {
 }
 
 type PipelineSpec struct {
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
@@ -679,6 +695,10 @@ type PipelineSpec struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.

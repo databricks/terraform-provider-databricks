@@ -487,9 +487,9 @@ func isMatchingAllowListArtifact(ic *importContext, res *resource, ra *resourceA
 	return ok && matchType.(string) == "PREFIX_MATCH" && (artifactType == "LIBRARY_JAR" || artifactType == "INIT_SCRIPT")
 }
 
-func generateIgnoreObjectWithoutName(resourceType string) func(ic *importContext, r *resource) bool {
+func generateIgnoreObjectWithEmptyAttributeValue(resourceType, attrName string) func(ic *importContext, r *resource) bool {
 	return func(ic *importContext, r *resource) bool {
-		res := (r.Data != nil && r.Data.Get("name").(string) == "")
+		res := (r.Data != nil && r.Data.Get(attrName).(string) == "")
 		if res {
 			ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", resourceType, r.ID))
 		}

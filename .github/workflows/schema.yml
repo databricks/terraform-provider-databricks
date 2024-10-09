@@ -18,8 +18,8 @@ on:
 jobs:
   compute_diff:
     runs-on:
-      group: ubuntu-runners
-      labels: ubuntu-20.04-16core
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
 
     steps:
       # Check out the base commit first and the head commit second. diff-schema

@@ -9,8 +9,8 @@ on:
 jobs:
   validate:
     runs-on:
-      group: ubuntu-runners
-      labels: ubuntu-20.04-16core
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
     # GitHub required checks are shared between PRs and the Merge Queue.
     # Since there is no PR title on Merge Queue, we need to trigger and
     # skip this test for Merge Queue to succeed.

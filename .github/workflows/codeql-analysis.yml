@@ -13,8 +13,8 @@ jobs:
   analyze:
     name: Analyze
     runs-on:
-      group: ubuntu-runners
-      labels: ubuntu-20.04-16core
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
 
     strategy:
       fail-fast: false

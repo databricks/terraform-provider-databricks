@@ -171,7 +171,6 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	ctx = pluginfwcommon.SetResourceNameInContext(ctx, resourceName)
 	resp.Diagnostics.AddError("failed to update library", "updating library is not supported")
 }
 

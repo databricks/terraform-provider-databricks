@@ -14,6 +14,8 @@ var (
 	IsData contextKey = 4
 	// apiVersion
 	Api contextKey = 5
+	// SDK used
+	Sdk contextKey = 6
 )
 
 type contextKey int

@@ -13,7 +13,8 @@ func TestSetUserAgentInResourceContext(t *testing.T) {
 	resourceKey := "resource"
 	resourceName := "test-resource"
 	actualContext := SetUserAgentInResourceContext(ctx, resourceName)
-	expectedContext := useragent.InContext(ctx, resourceKey, resourceName)
+	expectedContext := useragent.InContext(ctx, "sdk", "pluginframework")
+	expectedContext = useragent.InContext(expectedContext, resourceKey, resourceName)
 	assert.Equal(t, expectedContext, actualContext)
 }
 
@@ -22,6 +23,7 @@ func TestSetUserAgentInDataSourceContext(t *testing.T) {
 	dataSourceKey := "data"
 	dataSourceName := "test-datasource"
 	actualContext := SetUserAgentInDataSourceContext(ctx, dataSourceName)
-	expectedContext := useragent.InContext(ctx, dataSourceKey, dataSourceName)
+	expectedContext := useragent.InContext(ctx, "sdk", "pluginframework")
+	expectedContext = useragent.InContext(expectedContext, dataSourceKey, dataSourceName)
 	assert.Equal(t, expectedContext, actualContext)
 }

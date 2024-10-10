@@ -9,24 +9,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-// CustomizableSchema is a wrapper struct on top of AttributeBuilder that can be used to navigate through nested schema add customizations.
+// CustomizableSchema is a wrapper struct on top of BaseSchemaBuilder that can be used to navigate through nested schema add customizations.
 type CustomizableSchema struct {
 	attr BaseSchemaBuilder
 }
 
-// ConstructCustomizableSchema constructs a CustomizableSchema given a map from string to AttributeBuilder.
+// ConstructCustomizableSchema constructs a CustomizableSchema given a NestedBlockObject.
 func ConstructCustomizableSchema(nestedObject NestedBlockObject) *CustomizableSchema {
 	attr := AttributeBuilder(SingleNestedBlockBuilder{NestedObject: nestedObject})
 	return &CustomizableSchema{attr: attr}
 }
 
-// ToAttributeMap converts CustomizableSchema into a map from string to Attribute.
-func (s *CustomizableSchema) ToAttributeMap() NestedBlockObject {
-	return attributeToMap(&s.attr)
+// ToAttributeMap converts CustomizableSchema into BaseSchemaBuilder.
+func (s *CustomizableSchema) ToNestedBlockObject() NestedBlockObject {
+	return attributeToNestedBlockObject(&s.attr)
 }
 
 // attributeToMap converts AttributeBuilder into a map from string to AttributeBuilder.
-func attributeToMap(attr *BaseSchemaBuilder) NestedBlockObject {
+func attributeToNestedBlockObject(attr *BaseSchemaBuilder) NestedBlockObject {
 	var res = NestedBlockObject{}
 	switch attr := (*attr).(type) {
 	case SingleNestedAttributeBuilder:
@@ -177,28 +177,28 @@ func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 
 // navigateSchemaWithCallback navigates through schema attributes and executes callback on the target, panics if path does not exist or invalid.
 func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder) BaseSchemaBuilder, path ...string) (BaseSchemaBuilder, error) {
-	current_scm := s
+	currentScm := s
 	for i, p := range path {
-		m := attributeToMap(current_scm)
-		m_attr := m.Attributes
-		m_block := m.Blocks
+		m := attributeToNestedBlockObject(currentScm)
+		mAttr := m.Attributes
+		mBlock := m.Blocks
 
-		if v, ok := m_attr[p]; ok {
+		if v, ok := mAttr[p]; ok {
 			if i == len(path)-1 {
-				new_v := cb(v).(AttributeBuilder)
-				m_attr[p] = new_v
-				return m_attr[p], nil
+				newV := cb(v).(AttributeBuilder)
+				mAttr[p] = newV
+				return mAttr[p], nil
 			}
-			casted_v := v.(BaseSchemaBuilder)
-			current_scm = &casted_v
-		} else if v, ok := m_block[p]; ok {
+			castedV := v.(BaseSchemaBuilder)
+			currentScm = &castedV
+		} else if v, ok := mBlock[p]; ok {
 			if i == len(path)-1 {
-				new_v := cb(v).(BlockBuilder)
-				m_block[p] = new_v
-				return m_block[p], nil
+				newV := cb(v).(BlockBuilder)
+				mBlock[p] = newV
+				return mBlock[p], nil
 			}
-			casted_v := v.(BaseSchemaBuilder)
-			current_scm = &casted_v
+			castedV := v.(BaseSchemaBuilder)
+			currentScm = &castedV
 		} else {
 			return nil, fmt.Errorf("missing key %s", p)
 		}

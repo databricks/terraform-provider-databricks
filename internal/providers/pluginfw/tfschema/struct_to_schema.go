@@ -13,8 +13,8 @@ import (
 )
 
 func typeToSchema(v reflect.Value) NestedBlockObject {
-	scm_attr := map[string]AttributeBuilder{}
-	scm_block := map[string]BlockBuilder{}
+	scmAttr := map[string]AttributeBuilder{}
+	scmBlock := map[string]BlockBuilder{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
 		v = v.Elem()
@@ -50,28 +50,28 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 			}
 			switch elemType {
 			case reflect.TypeOf(types.Bool{}):
-				scm_attr[fieldName] = ListAttributeBuilder{
+				scmAttr[fieldName] = ListAttributeBuilder{
 					ElementType: types.BoolType,
 					Optional:    isOptional,
 					Required:    !isOptional,
 					Computed:    isComputed,
 				}
 			case reflect.TypeOf(types.Int64{}):
-				scm_attr[fieldName] = ListAttributeBuilder{
+				scmAttr[fieldName] = ListAttributeBuilder{
 					ElementType: types.Int64Type,
 					Optional:    isOptional,
 					Required:    !isOptional,
 					Computed:    isComputed,
 				}
 			case reflect.TypeOf(types.Float64{}):
-				scm_attr[fieldName] = ListAttributeBuilder{
+				scmAttr[fieldName] = ListAttributeBuilder{
 					ElementType: types.Float64Type,
 					Optional:    isOptional,
 					Required:    !isOptional,
 					Computed:    isComputed,
 				}
 			case reflect.TypeOf(types.String{}):
-				scm_attr[fieldName] = ListAttributeBuilder{
+				scmAttr[fieldName] = ListAttributeBuilder{
 					ElementType: types.StringType,
 					Optional:    isOptional,
 					Required:    !isOptional,
@@ -80,7 +80,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 			default:
 				// Nested struct
 				nestedScm := typeToSchema(reflect.New(elemType).Elem())
-				scm_block[fieldName] = ListNestedBlockBuilder{
+				scmBlock[fieldName] = ListNestedBlockBuilder{
 					NestedObject: NestedBlockObject{
 						Attributes: nestedScm.Attributes,
 						Blocks:     nestedScm.Blocks,
@@ -100,28 +100,28 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 			}
 			switch elemType {
 			case reflect.TypeOf(types.Bool{}):
-				scm_attr[fieldName] = MapAttributeBuilder{
+				scmAttr[fieldName] = MapAttributeBuilder{
 					ElementType: types.BoolType,
 					Optional:    isOptional,
 					Required:    !isOptional,
 					Computed:    isComputed,
 				}
 			case reflect.TypeOf(types.Int64{}):
-				scm_attr[fieldName] = MapAttributeBuilder{
+				scmAttr[fieldName] = MapAttributeBuilder{
 					ElementType: types.Int64Type,
 					Optional:    isOptional,
 					Required:    !isOptional,
 					Computed:    isComputed,
 				}
 			case reflect.TypeOf(types.Float64{}):
-				scm_attr[fieldName] = MapAttributeBuilder{
+				scmAttr[fieldName] = MapAttributeBuilder{
 					ElementType: types.Float64Type,
 					Optional:    isOptional,
 					Required:    !isOptional,
 					Computed:    isComputed,
 				}
 			case reflect.TypeOf(types.String{}):
-				scm_attr[fieldName] = MapAttributeBuilder{
+				scmAttr[fieldName] = MapAttributeBuilder{
 					ElementType: types.StringType,
 					Optional:    isOptional,
 					Required:    !isOptional,
@@ -130,7 +130,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 			default:
 				// Nested struct
 				nestedScm := typeToSchema(reflect.New(elemType).Elem())
-				scm_attr[fieldName] = MapNestedAttributeBuilder{
+				scmAttr[fieldName] = MapNestedAttributeBuilder{
 					NestedObject: NestedAttributeObject{
 						Attributes: nestedScm.Attributes,
 					},
@@ -142,25 +142,25 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 		} else if kind == reflect.Struct {
 			switch value.Interface().(type) {
 			case types.Bool:
-				scm_attr[fieldName] = BoolAttributeBuilder{
+				scmAttr[fieldName] = BoolAttributeBuilder{
 					Optional: isOptional,
 					Required: !isOptional,
 					Computed: isComputed,
 				}
 			case types.Int64:
-				scm_attr[fieldName] = Int64AttributeBuilder{
+				scmAttr[fieldName] = Int64AttributeBuilder{
 					Optional: isOptional,
 					Required: !isOptional,
 					Computed: isComputed,
 				}
 			case types.Float64:
-				scm_attr[fieldName] = Float64AttributeBuilder{
+				scmAttr[fieldName] = Float64AttributeBuilder{
 					Optional: isOptional,
 					Required: !isOptional,
 					Computed: isComputed,
 				}
 			case types.String:
-				scm_attr[fieldName] = StringAttributeBuilder{
+				scmAttr[fieldName] = StringAttributeBuilder{
 					Optional: isOptional,
 					Required: !isOptional,
 					Computed: isComputed,
@@ -174,7 +174,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 				elem := typeFieldType
 				sv := reflect.New(elem)
 				nestedScm := typeToSchema(sv)
-				scm_block[fieldName] = ListNestedBlockBuilder{
+				scmBlock[fieldName] = ListNestedBlockBuilder{
 					NestedObject: nestedScm,
 					Optional:     isOptional,
 					Required:     !isOptional,
@@ -185,7 +185,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 			panic(fmt.Errorf("unknown type for field: %s. %s", typeField.Name, common.TerraformBugErrorMessage))
 		}
 	}
-	return NestedBlockObject{Attributes: scm_attr, Blocks: scm_block}
+	return NestedBlockObject{Attributes: scmAttr, Blocks: scmBlock}
 }
 
 func fieldIsComputed(field reflect.StructField) bool {
@@ -210,26 +210,26 @@ func DataSourceStructToSchema(v any, customizeSchema func(CustomizableSchema) Cu
 	return dataschema.Schema{Attributes: attributes, Blocks: blocks}
 }
 
-// ResourceStructToSchemaMap returns a map from string to resource schema attributes using a tfsdk struct, with custoimzations applied.
+// ResourceStructToSchemaMap returns two maps from string to resource schema attributes and blocks using a tfsdk struct, with custoimzations applied.
 func ResourceStructToSchemaMap(v any, customizeSchema func(CustomizableSchema) CustomizableSchema) (map[string]schema.Attribute, map[string]schema.Block) {
-	attributes := typeToSchema(reflect.ValueOf(v))
+	nestedBlockObj := typeToSchema(reflect.ValueOf(v))
 
 	if customizeSchema != nil {
-		cs := customizeSchema(*ConstructCustomizableSchema(attributes))
-		return BuildResourceAttributeMap(cs.ToAttributeMap().Attributes), BuildResourceBlockMap(cs.ToAttributeMap().Blocks)
+		cs := customizeSchema(*ConstructCustomizableSchema(nestedBlockObj))
+		return BuildResourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildResourceBlockMap(cs.ToNestedBlockObject().Blocks)
 	} else {
-		return BuildResourceAttributeMap(attributes.Attributes), BuildResourceBlockMap(attributes.Blocks)
+		return BuildResourceAttributeMap(nestedBlockObj.Attributes), BuildResourceBlockMap(nestedBlockObj.Blocks)
 	}
 }
 
-// DataSourceStructToSchemaMap returns a map from string to data source schema attributes using a tfsdk struct, with custoimzations applied.
+// DataSourceStructToSchemaMap returns twp maps from string to data source schema attributes and blocks using a tfsdk struct, with custoimzations applied.
 func DataSourceStructToSchemaMap(v any, customizeSchema func(CustomizableSchema) CustomizableSchema) (map[string]dataschema.Attribute, map[string]dataschema.Block) {
-	attributes := typeToSchema(reflect.ValueOf(v))
+	nestedBlockObj := typeToSchema(reflect.ValueOf(v))
 
 	if customizeSchema != nil {
-		cs := customizeSchema(*ConstructCustomizableSchema(attributes))
-		return BuildDataSourceAttributeMap(cs.ToAttributeMap().Attributes), BuildDataSourceBlockMap(cs.ToAttributeMap().Blocks)
+		cs := customizeSchema(*ConstructCustomizableSchema(nestedBlockObj))
+		return BuildDataSourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildDataSourceBlockMap(cs.ToNestedBlockObject().Blocks)
 	} else {
-		return BuildDataSourceAttributeMap(attributes.Attributes), BuildDataSourceBlockMap(attributes.Blocks)
+		return BuildDataSourceAttributeMap(nestedBlockObj.Attributes), BuildDataSourceBlockMap(nestedBlockObj.Blocks)
 	}
 }

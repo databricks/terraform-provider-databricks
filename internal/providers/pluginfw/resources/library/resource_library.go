@@ -72,7 +72,7 @@ func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataReq
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		for field, attribute := range c.ToAttributeMap().Attributes {
+		for field, attribute := range c.ToNestedBlockObject().Attributes {
 			switch attribute.(type) {
 			case tfschema.StringAttributeBuilder:
 				c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
@@ -80,12 +80,10 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 				c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
 			}
 		}
-		for field, block := range c.ToAttributeMap().Blocks {
+		for field, block := range c.ToNestedBlockObject().Blocks {
 			switch block.(type) {
 			case tfschema.ListNestedBlockBuilder:
 				c.AddPlanModifier(listplanmodifier.RequiresReplace(), field)
-			case tfschema.SingleNestedBlockBuilder:
-				c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
 			}
 		}
 		return c

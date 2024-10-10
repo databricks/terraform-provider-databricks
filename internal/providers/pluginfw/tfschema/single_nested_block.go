@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-// SingleNestedBlockBuilder represents a list of complex (non-primitive) types.
+// SingleNestedBlockBuilder represents a single nested complex (non-primitive) type.
 type SingleNestedBlockBuilder struct {
 	NestedObject       NestedBlockObject
 	Optional           bool

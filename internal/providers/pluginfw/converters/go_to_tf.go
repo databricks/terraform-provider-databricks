@@ -166,19 +166,18 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			// Skip zeros
 			return nil
 		}
+		var dest any
 		if destField.Kind() == reflect.Slice {
 			// allocate a slice first
 			destSlice := reflect.MakeSlice(destField.Type(), 1, 1)
-			// resolve the nested struct by recursively calling the function
-			if GoSdkToTfSdkStruct(ctx, srcFieldValue, destSlice.Index(0).Addr().Interface()).HasError() {
-				panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
-			}
 			destField.Set(destSlice)
+			dest = destSlice.Index(0).Addr().Interface()
 		} else {
-			// resolve the nested struct by recursively calling the function
-			if GoSdkToTfSdkStruct(ctx, srcFieldValue, destField.Addr().Interface()).HasError() {
-				panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
-			}
+			dest = destField.Addr().Interface()
+		}
+		// resolve the nested struct by recursively calling the function
+		if GoSdkToTfSdkStruct(ctx, srcFieldValue, dest).HasError() {
+			panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
 		}
 	case reflect.Slice:
 		if srcField.IsNil() {

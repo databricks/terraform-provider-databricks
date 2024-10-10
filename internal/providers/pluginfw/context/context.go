@@ -7,14 +7,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/common"
 )
 
-const SdkName = "pluginframework"
+const sdkName = "pluginframework"
 
 func SetUserAgentInResourceContext(ctx context.Context, resourceName string) context.Context {
-	ctx = common.SetSDKInContext(ctx, SdkName)
+	ctx = common.SetSDKInContext(ctx, sdkName)
 	return useragent.InContext(ctx, "resource", resourceName)
 }
 
 func SetUserAgentInDataSourceContext(ctx context.Context, dataSourceName string) context.Context {
-	ctx = common.SetSDKInContext(ctx, SdkName)
+	ctx = common.SetSDKInContext(ctx, sdkName)
 	return useragent.InContext(ctx, "data", dataSourceName)
 }

@@ -5,9 +5,12 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/useragent"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+const sdkName = "sdkv2"
 
 // AddContextToAllResources ...
 func AddContextToAllResources(p *schema.Provider, prefix string) {
@@ -34,6 +37,7 @@ func (f op) addContext(k contextKey, v string) op {
 		case IsData:
 			ctx = useragent.InContext(ctx, "data", v)
 		}
+		ctx = common.SetSDKInContext(ctx, sdkName)
 		ctx = context.WithValue(ctx, k, v)
 		return f(ctx, d, m)
 	}

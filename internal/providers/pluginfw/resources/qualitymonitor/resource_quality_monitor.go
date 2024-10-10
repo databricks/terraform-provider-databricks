@@ -98,7 +98,7 @@ func (d *QualityMonitorResource) ImportState(ctx context.Context, req resource.I
 }
 
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	ctx = pluginfwcontext.SetResourceNameInContext(ctx, resourceName)
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -135,7 +135,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	ctx = pluginfwcontext.SetResourceNameInContext(ctx, resourceName)
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -166,7 +166,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	ctx = pluginfwcontext.SetResourceNameInContext(ctx, resourceName)
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -209,7 +209,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	ctx = pluginfwcontext.SetResourceNameInContext(ctx, resourceName)
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

@@ -53,7 +53,7 @@ func (d *VolumesDataSource) Configure(_ context.Context, req datasource.Configur
 }
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetDataSourceNameInContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

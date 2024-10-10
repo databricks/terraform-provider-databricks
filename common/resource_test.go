@@ -187,6 +187,15 @@ func TestWorkspacePathPrefixDiffSuppress(t *testing.T) {
 	assert.False(t, WorkspacePathPrefixDiffSuppress("k", "/Workspace/1", "/Workspace/2", nil))
 }
 
+func TestWorkspaceOrEmptyPathPrefixDiffSuppress(t *testing.T) {
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/Workspace/foo/bar", "/Workspace/foo/bar", nil))
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/Workspace/foo/bar", "/foo/bar", nil))
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/foo/bar", "/Workspace/foo/bar", nil))
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/foo/bar", "/foo/bar", nil))
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/foo/bar", "", nil))
+	assert.False(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/Workspace/1", "/Workspace/2", nil))
+}
+
 func TestEqualFoldDiffSuppress(t *testing.T) {
 	assert.True(t, EqualFoldDiffSuppress("k", "A", "a", nil))
 	assert.False(t, EqualFoldDiffSuppress("k", "A", "A2", nil))

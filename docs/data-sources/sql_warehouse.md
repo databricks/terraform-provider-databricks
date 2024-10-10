@@ -15,8 +15,8 @@ Retrieves information about a [databricks_sql_warehouse](../resources/sql_endpoi
 data "databricks_sql_warehouses" "all" {
 }
 
-data "databricks_sql_warehouse" "all" {
-  for_each = data.databricks_sql.warehouses.ids
+data "databricks_sql_warehouse" "this" {
+  for_each = data.databricks_sql_warehouses.all.ids
   id       = each.value
 }
 ```

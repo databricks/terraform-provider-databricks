@@ -19,6 +19,8 @@ type CreatePipeline struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
 	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names" tf:"optional"`
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
@@ -34,7 +36,7 @@ type CreatePipeline struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment *PipelineDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []PipelineDeployment `tfsdk:"deployment" tf:"optional"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 
@@ -42,14 +44,14 @@ type CreatePipeline struct {
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters *Filters `tfsdk:"filters" tf:"optional"`
+	Filters []Filters `tfsdk:"filters" tf:"optional"`
 	// The definition of a gateway pipeline to support CDC.
-	GatewayDefinition *IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
+	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition []IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -58,6 +60,10 @@ type CreatePipeline struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.
@@ -67,12 +73,12 @@ type CreatePipeline struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger *PipelineTrigger `tfsdk:"trigger" tf:"optional"`
+	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional"`
 }
 
 type CreatePipelineResponse struct {
 	// Only returned when dry_run is true.
-	EffectiveSettings *PipelineSpec `tfsdk:"effective_settings" tf:"optional"`
+	EffectiveSettings []PipelineSpec `tfsdk:"effective_settings" tf:"optional"`
 	// The unique identifier for the newly created pipeline. Only returned when
 	// dry_run is false.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
@@ -103,6 +109,8 @@ type EditPipeline struct {
 	// If false, deployment will fail if name has changed and conflicts the name
 	// of another pipeline.
 	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names" tf:"optional"`
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
@@ -118,7 +126,7 @@ type EditPipeline struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment *PipelineDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []PipelineDeployment `tfsdk:"deployment" tf:"optional"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 	// Pipeline product edition.
@@ -128,14 +136,14 @@ type EditPipeline struct {
 	// will fail with a conflict.
 	ExpectedLastModified types.Int64 `tfsdk:"expected_last_modified" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters *Filters `tfsdk:"filters" tf:"optional"`
+	Filters []Filters `tfsdk:"filters" tf:"optional"`
 	// The definition of a gateway pipeline to support CDC.
-	GatewayDefinition *IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
+	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition []IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -146,6 +154,10 @@ type EditPipeline struct {
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Unique identifier for this pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.
@@ -155,7 +167,7 @@ type EditPipeline struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger *PipelineTrigger `tfsdk:"trigger" tf:"optional"`
+	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional"`
 }
 
 type EditPipelineResponse struct {
@@ -209,6 +221,8 @@ type GetPipelineResponse struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// The username of the pipeline creator.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	// Serverless budget policy ID of this pipeline.
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
 	// The health of a pipeline.
 	Health types.String `tfsdk:"health" tf:"optional"`
 	// The last time the pipeline settings were modified or created.
@@ -224,7 +238,7 @@ type GetPipelineResponse struct {
 	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
 	// The pipeline specification. This field is not returned when called by
 	// `ListPipelines`.
-	Spec *PipelineSpec `tfsdk:"spec" tf:"optional"`
+	Spec []PipelineSpec `tfsdk:"spec" tf:"optional"`
 	// The pipeline state.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
@@ -239,14 +253,14 @@ type GetUpdateRequest struct {
 
 type GetUpdateResponse struct {
 	// The current update info.
-	Update *UpdateInfo `tfsdk:"update" tf:"optional"`
+	Update []UpdateInfo `tfsdk:"update" tf:"optional"`
 }
 
 type IngestionConfig struct {
 	// Select tables from a specific source schema.
-	Schema *SchemaSpec `tfsdk:"schema" tf:"optional"`
+	Schema []SchemaSpec `tfsdk:"schema" tf:"optional"`
 	// Select tables from a specific source table.
-	Table *TableSpec `tfsdk:"table" tf:"optional"`
+	Table []TableSpec `tfsdk:"table" tf:"optional"`
 }
 
 type IngestionGatewayPipelineDefinition struct {
@@ -280,7 +294,7 @@ type IngestionPipelineDefinition struct {
 	Objects []IngestionConfig `tfsdk:"objects" tf:"optional"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
-	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
+	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
 }
 
 // List pipeline events
@@ -464,20 +478,20 @@ type PipelineCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *PipelineClusterAutoscale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []PipelineClusterAutoscale `tfsdk:"autoscale" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes *compute.AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes compute.AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes *compute.AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes compute.AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Only dbfs destinations are supported. Only one destination
 	// can be specified for one cluster. If the conf is given, the logs will be
 	// delivered to the destination every `5 mins`. The destination of driver
 	// logs is `$destination/$clusterId/driver`, while the destination of
 	// executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf *compute.ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	ClusterLogConf compute.ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -499,12 +513,12 @@ type PipelineCluster struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes *compute.GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes compute.GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []compute.InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts compute.InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
 	// A label for the cluster specification, either `default` to configure the
@@ -579,7 +593,7 @@ type PipelineDeployment struct {
 
 type PipelineEvent struct {
 	// Information about an error captured by the event.
-	Error *ErrorDetail `tfsdk:"error" tf:"optional"`
+	Error []ErrorDetail `tfsdk:"error" tf:"optional"`
 	// The event type. Should always correspond to the details
 	EventType types.String `tfsdk:"event_type" tf:"optional"`
 	// A time-based, globally unique id.
@@ -591,9 +605,9 @@ type PipelineEvent struct {
 	// The display message associated with the event.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Describes where the event originates from.
-	Origin *Origin `tfsdk:"origin" tf:"optional"`
+	Origin []Origin `tfsdk:"origin" tf:"optional"`
 	// A sequencing object to identify and order events.
-	Sequence *Sequencing `tfsdk:"sequence" tf:"optional"`
+	Sequence []Sequencing `tfsdk:"sequence" tf:"optional"`
 	// The time of the event.
 	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
 }
@@ -601,14 +615,14 @@ type PipelineEvent struct {
 type PipelineLibrary struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
-	File *FileLibrary `tfsdk:"file" tf:"optional"`
+	File []FileLibrary `tfsdk:"file" tf:"optional"`
 	// URI of the jar to be installed. Currently only DBFS is supported.
 	Jar types.String `tfsdk:"jar" tf:"optional"`
 	// Specification of a maven library to be installed.
-	Maven *compute.MavenLibrary `tfsdk:"maven" tf:"optional"`
+	Maven compute.MavenLibrary `tfsdk:"maven" tf:"optional"`
 	// The path to a notebook that defines a pipeline and is stored in the
 	// Databricks workspace.
-	Notebook *NotebookLibrary `tfsdk:"notebook" tf:"optional"`
+	Notebook []NotebookLibrary `tfsdk:"notebook" tf:"optional"`
 	// URI of the whl to be installed.
 	Whl types.String `tfsdk:"whl" tf:"optional"`
 }
@@ -642,6 +656,8 @@ type PipelinePermissionsRequest struct {
 }
 
 type PipelineSpec struct {
+	// Budget policy of this pipeline.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
@@ -657,20 +673,20 @@ type PipelineSpec struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment *PipelineDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []PipelineDeployment `tfsdk:"deployment" tf:"optional"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters *Filters `tfsdk:"filters" tf:"optional"`
+	Filters []Filters `tfsdk:"filters" tf:"optional"`
 	// The definition of a gateway pipeline to support CDC.
-	GatewayDefinition *IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
+	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition []IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -679,6 +695,10 @@ type PipelineSpec struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// The default schema (database) where tables are read from or published to.
+	// The presence of this field implies that the pipeline is in direct
+	// publishing mode.
+	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
 	// DBFS root directory for storing checkpoints and tables.
@@ -688,7 +708,7 @@ type PipelineSpec struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger *PipelineTrigger `tfsdk:"trigger" tf:"optional"`
+	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional"`
 }
 
 type PipelineStateInfo struct {
@@ -713,9 +733,9 @@ type PipelineStateInfo struct {
 }
 
 type PipelineTrigger struct {
-	Cron *CronTrigger `tfsdk:"cron" tf:"optional"`
+	Cron []CronTrigger `tfsdk:"cron" tf:"optional"`
 
-	Manual *ManualTrigger `tfsdk:"manual" tf:"optional"`
+	Manual []ManualTrigger `tfsdk:"manual" tf:"optional"`
 }
 
 type SchemaSpec struct {
@@ -733,14 +753,14 @@ type SchemaSpec struct {
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in this schema and override the
 	// table_configuration defined in the IngestionPipelineDefinition object.
-	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
+	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
 }
 
 type Sequencing struct {
 	// A sequence number, unique and increasing within the control plane.
 	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no" tf:"optional"`
 	// the ID assigned by the data plane.
-	DataPlaneId *DataPlaneId `tfsdk:"data_plane_id" tf:"optional"`
+	DataPlaneId []DataPlaneId `tfsdk:"data_plane_id" tf:"optional"`
 }
 
 type SerializedException struct {
@@ -814,7 +834,7 @@ type TableSpec struct {
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the
 	// IngestionPipelineDefinition object and the SchemaSpec.
-	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
+	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
 }
 
 type TableSpecificConfig struct {
@@ -834,7 +854,7 @@ type UpdateInfo struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// The pipeline configuration with system defaults applied where unspecified
 	// by the user. Not returned by ListUpdates.
-	Config *PipelineSpec `tfsdk:"config" tf:"optional"`
+	Config []PipelineSpec `tfsdk:"config" tf:"optional"`
 	// The time when this update was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// If true, this update will reset all tables before running.

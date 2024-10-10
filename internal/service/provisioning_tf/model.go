@@ -15,7 +15,7 @@ import (
 )
 
 type AwsCredentials struct {
-	StsRole *StsRole `tfsdk:"sts_role" tf:"optional"`
+	StsRole []StsRole `tfsdk:"sts_role" tf:"optional"`
 }
 
 type AwsKeyInfo struct {
@@ -42,7 +42,7 @@ type AzureWorkspaceInfo struct {
 // The general workspace configurations that are specific to cloud providers.
 type CloudResourceContainer struct {
 	// The general workspace configurations that are specific to Google Cloud.
-	Gcp *CustomerFacingGcpCloudResourceContainer `tfsdk:"gcp" tf:"optional"`
+	Gcp []CustomerFacingGcpCloudResourceContainer `tfsdk:"gcp" tf:"optional"`
 }
 
 type CreateAwsKeyInfo struct {
@@ -59,11 +59,11 @@ type CreateAwsKeyInfo struct {
 }
 
 type CreateCredentialAwsCredentials struct {
-	StsRole *CreateCredentialStsRole `tfsdk:"sts_role" tf:"optional"`
+	StsRole []CreateCredentialStsRole `tfsdk:"sts_role" tf:"optional"`
 }
 
 type CreateCredentialRequest struct {
-	AwsCredentials CreateCredentialAwsCredentials `tfsdk:"aws_credentials" tf:""`
+	AwsCredentials []CreateCredentialAwsCredentials `tfsdk:"aws_credentials" tf:""`
 	// The human-readable name of the credential configuration object.
 	CredentialsName types.String `tfsdk:"credentials_name" tf:""`
 }
@@ -74,9 +74,9 @@ type CreateCredentialStsRole struct {
 }
 
 type CreateCustomerManagedKeyRequest struct {
-	AwsKeyInfo *CreateAwsKeyInfo `tfsdk:"aws_key_info" tf:"optional"`
+	AwsKeyInfo []CreateAwsKeyInfo `tfsdk:"aws_key_info" tf:"optional"`
 
-	GcpKeyInfo *CreateGcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional"`
+	GcpKeyInfo []CreateGcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional"`
 	// The cases that the key can be used for.
 	UseCases []types.String `tfsdk:"use_cases" tf:""`
 }
@@ -89,7 +89,7 @@ type CreateGcpKeyInfo struct {
 type CreateNetworkRequest struct {
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
-	GcpNetworkInfo *GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional"`
+	GcpNetworkInfo []GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional"`
 	// The human-readable name of the network configuration.
 	NetworkName types.String `tfsdk:"network_name" tf:""`
 	// IDs of one to five security groups associated with this network. Security
@@ -102,7 +102,7 @@ type CreateNetworkRequest struct {
 	// communication from this VPC over [AWS PrivateLink].
 	//
 	// [AWS PrivateLink]: https://aws.amazon.com/privatelink/
-	VpcEndpoints *NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional"`
+	VpcEndpoints []NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional"`
 	// The ID of the VPC associated with this network. VPC IDs can be used in
 	// multiple network configurations.
 	VpcId types.String `tfsdk:"vpc_id" tf:"optional"`
@@ -110,7 +110,7 @@ type CreateNetworkRequest struct {
 
 type CreateStorageConfigurationRequest struct {
 	// Root S3 bucket information.
-	RootBucketInfo RootBucketInfo `tfsdk:"root_bucket_info" tf:""`
+	RootBucketInfo []RootBucketInfo `tfsdk:"root_bucket_info" tf:""`
 	// The human-readable name of the storage configuration.
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name" tf:""`
 }
@@ -120,7 +120,7 @@ type CreateVpcEndpointRequest struct {
 	AwsVpcEndpointId types.String `tfsdk:"aws_vpc_endpoint_id" tf:"optional"`
 	// The Google Cloud specific information for this Private Service Connect
 	// endpoint.
-	GcpVpcEndpointInfo *GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional"`
+	GcpVpcEndpointInfo []GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional"`
 	// The AWS region in which this VPC endpoint object exists.
 	Region types.String `tfsdk:"region" tf:"optional"`
 	// The human-readable name of the storage configuration.
@@ -135,7 +135,7 @@ type CreateWorkspaceRequest struct {
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
 	// The general workspace configurations that are specific to cloud
 	// providers.
-	CloudResourceContainer *CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional"`
+	CloudResourceContainer []CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional"`
 	// ID of the workspace's credential configuration object.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The custom tags key-value pairing that is attached to this workspace. The
@@ -196,9 +196,9 @@ type CreateWorkspaceRequest struct {
 	// for a new workspace].
 	//
 	// [calculate subnet sizes for a new workspace]: https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/network-sizing.html
-	GcpManagedNetworkConfig *GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional"`
+	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional"`
 	// The configurations for the GKE cluster of a Databricks workspace.
-	GkeConfig *GkeConfig `tfsdk:"gke_config" tf:"optional"`
+	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
 	// account. For example, `us-east4`.
 	Location types.String `tfsdk:"location" tf:"optional"`
@@ -242,7 +242,7 @@ type Credential struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 
-	AwsCredentials *AwsCredentials `tfsdk:"aws_credentials" tf:"optional"`
+	AwsCredentials []AwsCredentials `tfsdk:"aws_credentials" tf:"optional"`
 	// Time in epoch milliseconds when the credential was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// Databricks credential configuration ID.
@@ -262,13 +262,13 @@ type CustomerManagedKey struct {
 	// The Databricks account ID that holds the customer-managed key.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 
-	AwsKeyInfo *AwsKeyInfo `tfsdk:"aws_key_info" tf:"optional"`
+	AwsKeyInfo []AwsKeyInfo `tfsdk:"aws_key_info" tf:"optional"`
 	// Time in epoch milliseconds when the customer key was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// ID of the encryption key configuration object.
 	CustomerManagedKeyId types.String `tfsdk:"customer_managed_key_id" tf:"optional"`
 
-	GcpKeyInfo *GcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional"`
+	GcpKeyInfo []GcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional"`
 	// The cases that the key can be used for.
 	UseCases []types.String `tfsdk:"use_cases" tf:"optional"`
 }
@@ -466,7 +466,7 @@ type Network struct {
 	ErrorMessages []NetworkHealth `tfsdk:"error_messages" tf:"optional"`
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
-	GcpNetworkInfo *GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional"`
+	GcpNetworkInfo []GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional"`
 	// The Databricks network configuration ID.
 	NetworkId types.String `tfsdk:"network_id" tf:"optional"`
 	// The human-readable name of the network configuration.
@@ -479,7 +479,7 @@ type Network struct {
 	// communication from this VPC over [AWS PrivateLink].
 	//
 	// [AWS PrivateLink]: https://aws.amazon.com/privatelink/
-	VpcEndpoints *NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional"`
+	VpcEndpoints []NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional"`
 	// The ID of the VPC associated with this network configuration. VPC IDs can
 	// be used in multiple networks.
 	VpcId types.String `tfsdk:"vpc_id" tf:"optional"`
@@ -564,7 +564,7 @@ type StorageConfiguration struct {
 	// Time in epoch milliseconds when the storage configuration was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// Root S3 bucket information.
-	RootBucketInfo *RootBucketInfo `tfsdk:"root_bucket_info" tf:"optional"`
+	RootBucketInfo []RootBucketInfo `tfsdk:"root_bucket_info" tf:"optional"`
 	// Databricks storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"storage_configuration_id" tf:"optional"`
 	// The human-readable name of the storage configuration.
@@ -668,7 +668,7 @@ type VpcEndpoint struct {
 	AwsVpcEndpointId types.String `tfsdk:"aws_vpc_endpoint_id" tf:"optional"`
 	// The Google Cloud specific information for this Private Service Connect
 	// endpoint.
-	GcpVpcEndpointInfo *GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional"`
+	GcpVpcEndpointInfo []GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional"`
 	// The AWS region in which this VPC endpoint object exists.
 	Region types.String `tfsdk:"region" tf:"optional"`
 	// The current state (such as `available` or `rejected`) of the VPC
@@ -696,12 +696,12 @@ type Workspace struct {
 	// The AWS region of the workspace data plane (for example, `us-west-2`).
 	AwsRegion types.String `tfsdk:"aws_region" tf:"optional"`
 
-	AzureWorkspaceInfo *AzureWorkspaceInfo `tfsdk:"azure_workspace_info" tf:"optional"`
+	AzureWorkspaceInfo []AzureWorkspaceInfo `tfsdk:"azure_workspace_info" tf:"optional"`
 	// The cloud name. This field always has the value `gcp`.
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
 	// The general workspace configurations that are specific to cloud
 	// providers.
-	CloudResourceContainer *CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional"`
+	CloudResourceContainer []CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional"`
 	// Time in epoch milliseconds when the workspace was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// ID of the workspace's credential configuration object.
@@ -741,9 +741,9 @@ type Workspace struct {
 	// for a new workspace].
 	//
 	// [calculate subnet sizes for a new workspace]: https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/network-sizing.html
-	GcpManagedNetworkConfig *GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional"`
+	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional"`
 	// The configurations for the GKE cluster of a Databricks workspace.
-	GkeConfig *GkeConfig `tfsdk:"gke_config" tf:"optional"`
+	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
 	// account (for example, `us-east4`).
 	Location types.String `tfsdk:"location" tf:"optional"`

@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -24,6 +26,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 )
 
+const resourceName = "library"
 const libraryDefaultInstallationTimeout = 15 * time.Minute
 
 var _ resource.ResourceWithConfigure = &LibraryResource{}
@@ -66,23 +69,31 @@ type LibraryResource struct {
 }
 
 func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "databricks_library_pluginframework"
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
 }
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		for field, attribute := range c.ToNestedBlockObject().Attributes {
+			switch attribute.(type) {
+			case tfschema.StringAttributeBuilder:
+				c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
+			case tfschema.SingleNestedAttributeBuilder:
+				c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
+			}
+		}
+		for field, block := range c.ToNestedBlockObject().Blocks {
+			switch block.(type) {
+			case tfschema.ListNestedBlockBuilder:
+				c.AddPlanModifier(listplanmodifier.RequiresReplace(), field)
+			}
+		}
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Library",
-		Attributes: tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			for field, attribute := range c.ToAttributeMap() {
-				switch attribute.(type) {
-				case tfschema.StringAttributeBuilder:
-					c.AddPlanModifier(stringplanmodifier.RequiresReplace(), field)
-				case tfschema.SingleNestedAttributeBuilder:
-					c.AddPlanModifier(objectplanmodifier.RequiresReplace(), field)
-				}
-			}
-			return c
-		}),
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 
@@ -93,6 +104,7 @@ func (r *LibraryResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -135,6 +147,7 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -172,6 +185,7 @@ func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

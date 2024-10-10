@@ -23,7 +23,12 @@ type CreateDashboardRequest struct {
 	// Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
 	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses.
+	// excluded in List Dashboards responses. Use the [get dashboard API] to
+	// retrieve an example response, which includes the `serialized_dashboard`
+	// field. This field provides the structure of the JSON string that
+	// represents the dashboard's layout and components.
+	//
+	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -32,7 +37,7 @@ type CreateDashboardRequest struct {
 type CreateScheduleRequest struct {
 	// The cron expression describing the frequency of the periodic refresh for
 	// this schedule.
-	CronSchedule CronSchedule `tfsdk:"cron_schedule" tf:""`
+	CronSchedule []CronSchedule `tfsdk:"cron_schedule" tf:""`
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
 	// The display name for schedule.
@@ -48,7 +53,7 @@ type CreateSubscriptionRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 	// Subscriber details for users and destinations to be added as subscribers
 	// to the schedule.
-	Subscriber Subscriber `tfsdk:"subscriber" tf:""`
+	Subscriber []Subscriber `tfsdk:"subscriber" tf:""`
 }
 
 type CronSchedule struct {
@@ -81,11 +86,17 @@ type Dashboard struct {
 	// leading slash and no trailing slash. This field is excluded in List
 	// Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
-	// The workspace path of the dashboard asset, including the file name. This
+	// The workspace path of the dashboard asset, including the file name.
+	// Exported dashboards always have the file extension `.lvdash.json`. This
 	// field is excluded in List Dashboards responses.
 	Path types.String `tfsdk:"path" tf:"optional"`
 	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses.
+	// excluded in List Dashboards responses. Use the [get dashboard API] to
+	// retrieve an example response, which includes the `serialized_dashboard`
+	// field. This field provides the structure of the JSON string that
+	// represents the dashboard's layout and components.
+	//
+	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The timestamp of when the dashboard was last updated by the user. This
 	// field is excluded in List Dashboards responses.
@@ -136,9 +147,9 @@ type ExecuteMessageQueryRequest struct {
 
 // Genie AI Response
 type GenieAttachment struct {
-	Query *QueryAttachment `tfsdk:"query" tf:"optional"`
+	Query []QueryAttachment `tfsdk:"query" tf:"optional"`
 
-	Text *TextAttachment `tfsdk:"text" tf:"optional"`
+	Text []TextAttachment `tfsdk:"text" tf:"optional"`
 }
 
 type GenieConversation struct {
@@ -190,7 +201,7 @@ type GenieGetMessageQueryResultRequest struct {
 type GenieGetMessageQueryResultResponse struct {
 	// SQL Statement Execution response. See [Get status, manifest, and result
 	// first chunk](:method:statementexecution/getstatement) for more details.
-	StatementResponse *sql.StatementResponse `tfsdk:"statement_response" tf:"optional"`
+	StatementResponse sql.StatementResponse `tfsdk:"statement_response" tf:"optional"`
 }
 
 type GenieMessage struct {
@@ -203,19 +214,20 @@ type GenieMessage struct {
 	// Timestamp when the message was created
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
 	// Error message if AI failed to respond to the message
-	Error *MessageError `tfsdk:"error" tf:"optional"`
+	Error []MessageError `tfsdk:"error" tf:"optional"`
 	// Message ID
 	Id types.String `tfsdk:"id" tf:""`
 	// Timestamp when the message was last updated
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// The result of SQL query if the message has a query attachment
-	QueryResult *Result `tfsdk:"query_result" tf:"optional"`
+	QueryResult []Result `tfsdk:"query_result" tf:"optional"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id" tf:""`
 	// MesssageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
-	// metadata from the data sources. * `ASKING_AI`: Waiting for the LLM to
-	// respond to the users question. * `EXECUTING_QUERY`: Executing AI provided
-	// SQL query. Get the SQL query result by calling
+	// metadata from the data sources. * `FILTERING_CONTEXT`: Running smart
+	// context step to determine relevant context. * `ASKING_AI`: Waiting for
+	// the LLM to respond to the users question. * `EXECUTING_QUERY`: Executing
+	// AI provided SQL query. Get the SQL query result by calling
 	// [getMessageQueryResult](:method:genie/getMessageQueryResult) API.
 	// **Important: The message status will stay in the `EXECUTING_QUERY` until
 	// a client calls
@@ -241,11 +253,11 @@ type GenieStartConversationMessageRequest struct {
 }
 
 type GenieStartConversationResponse struct {
-	Conversation *GenieConversation `tfsdk:"conversation" tf:"optional"`
+	Conversation []GenieConversation `tfsdk:"conversation" tf:"optional"`
 	// Conversation ID
 	ConversationId types.String `tfsdk:"conversation_id" tf:""`
 
-	Message *GenieMessage `tfsdk:"message" tf:"optional"`
+	Message []GenieMessage `tfsdk:"message" tf:"optional"`
 	// Message ID
 	MessageId types.String `tfsdk:"message_id" tf:""`
 }
@@ -415,7 +427,7 @@ type Schedule struct {
 	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
 	// The cron expression describing the frequency of the periodic refresh for
 	// this schedule.
-	CronSchedule CronSchedule `tfsdk:"cron_schedule" tf:""`
+	CronSchedule []CronSchedule `tfsdk:"cron_schedule" tf:""`
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
 	// The display name for schedule.
@@ -435,10 +447,10 @@ type Schedule struct {
 type Subscriber struct {
 	// The destination to receive the subscription email. This parameter is
 	// mutually exclusive with `user_subscriber`.
-	DestinationSubscriber *SubscriptionSubscriberDestination `tfsdk:"destination_subscriber" tf:"optional"`
+	DestinationSubscriber []SubscriptionSubscriberDestination `tfsdk:"destination_subscriber" tf:"optional"`
 	// The user to receive the subscription email. This parameter is mutually
 	// exclusive with `destination_subscriber`.
-	UserSubscriber *SubscriptionSubscriberUser `tfsdk:"user_subscriber" tf:"optional"`
+	UserSubscriber []SubscriptionSubscriberUser `tfsdk:"user_subscriber" tf:"optional"`
 }
 
 type Subscription struct {
@@ -457,7 +469,7 @@ type Subscription struct {
 	ScheduleId types.String `tfsdk:"schedule_id" tf:"optional"`
 	// Subscriber details for users and destinations to be added as subscribers
 	// to the schedule.
-	Subscriber Subscriber `tfsdk:"subscriber" tf:""`
+	Subscriber []Subscriber `tfsdk:"subscriber" tf:""`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"subscription_id" tf:"optional"`
 	// A timestamp indicating when the subscription was last updated.
@@ -510,7 +522,12 @@ type UpdateDashboardRequest struct {
 	// field is excluded in List Dashboards responses.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses.
+	// excluded in List Dashboards responses. Use the [get dashboard API] to
+	// retrieve an example response, which includes the `serialized_dashboard`
+	// field. This field provides the structure of the JSON string that
+	// represents the dashboard's layout and components.
+	//
+	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
 	// The warehouse ID used to run the dashboard.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -519,7 +536,7 @@ type UpdateDashboardRequest struct {
 type UpdateScheduleRequest struct {
 	// The cron expression describing the frequency of the periodic refresh for
 	// this schedule.
-	CronSchedule CronSchedule `tfsdk:"cron_schedule" tf:""`
+	CronSchedule []CronSchedule `tfsdk:"cron_schedule" tf:""`
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
 	// The display name for schedule.

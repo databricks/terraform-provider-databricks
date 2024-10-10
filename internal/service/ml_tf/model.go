@@ -94,7 +94,7 @@ type ApproveTransitionRequest struct {
 
 type ApproveTransitionRequestResponse struct {
 	// Activity recorded for the action.
-	Activity *Activity `tfsdk:"activity" tf:"optional"`
+	Activity []Activity `tfsdk:"activity" tf:"optional"`
 }
 
 // Comment details.
@@ -124,7 +124,7 @@ type CreateComment struct {
 
 type CreateCommentResponse struct {
 	// Comment details.
-	Comment *CommentObject `tfsdk:"comment" tf:"optional"`
+	Comment []CommentObject `tfsdk:"comment" tf:"optional"`
 }
 
 type CreateExperiment struct {
@@ -156,7 +156,7 @@ type CreateModelRequest struct {
 }
 
 type CreateModelResponse struct {
-	RegisteredModel *Model `tfsdk:"registered_model" tf:"optional"`
+	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional"`
 }
 
 type CreateModelVersionRequest struct {
@@ -178,7 +178,7 @@ type CreateModelVersionRequest struct {
 
 type CreateModelVersionResponse struct {
 	// Return new version number generated for this model in registry.
-	ModelVersion *ModelVersion `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional"`
 }
 
 type CreateRegistryWebhook struct {
@@ -219,9 +219,9 @@ type CreateRegistryWebhook struct {
 	// version be archived.
 	Events []types.String `tfsdk:"events" tf:""`
 
-	HttpUrlSpec *HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
 
-	JobSpec *JobSpec `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional"`
 	// Name of the model whose events would trigger this webhook.
 	ModelName types.String `tfsdk:"model_name" tf:"optional"`
 	// Enable or disable triggering the webhook, or put the webhook into test
@@ -250,7 +250,7 @@ type CreateRun struct {
 
 type CreateRunResponse struct {
 	// The newly created run.
-	Run *Run `tfsdk:"run" tf:"optional"`
+	Run []Run `tfsdk:"run" tf:"optional"`
 }
 
 type CreateTransitionRequest struct {
@@ -274,11 +274,11 @@ type CreateTransitionRequest struct {
 
 type CreateTransitionRequestResponse struct {
 	// Transition request details.
-	Request *TransitionRequest `tfsdk:"request" tf:"optional"`
+	Request []TransitionRequest `tfsdk:"request" tf:"optional"`
 }
 
 type CreateWebhookResponse struct {
-	Webhook *RegistryWebhook `tfsdk:"webhook" tf:"optional"`
+	Webhook []RegistryWebhook `tfsdk:"webhook" tf:"optional"`
 }
 
 type Dataset struct {
@@ -306,7 +306,7 @@ type Dataset struct {
 
 type DatasetInput struct {
 	// The dataset being used as a Run input.
-	Dataset *Dataset `tfsdk:"dataset" tf:"optional"`
+	Dataset []Dataset `tfsdk:"dataset" tf:"optional"`
 	// A list of tags for the dataset input, e.g. a “context” tag with value
 	// “training”
 	Tags []InputTag `tfsdk:"tags" tf:"optional"`
@@ -562,7 +562,7 @@ type GetExperimentRequest struct {
 
 type GetExperimentResponse struct {
 	// Experiment details.
-	Experiment *Experiment `tfsdk:"experiment" tf:"optional"`
+	Experiment []Experiment `tfsdk:"experiment" tf:"optional"`
 }
 
 // Get history of a given metric within a run
@@ -611,7 +611,7 @@ type GetModelRequest struct {
 }
 
 type GetModelResponse struct {
-	RegisteredModelDatabricks *ModelDatabricks `tfsdk:"registered_model_databricks" tf:"optional"`
+	RegisteredModelDatabricks []ModelDatabricks `tfsdk:"registered_model_databricks" tf:"optional"`
 }
 
 // Get a model version URI
@@ -636,7 +636,7 @@ type GetModelVersionRequest struct {
 }
 
 type GetModelVersionResponse struct {
-	ModelVersion *ModelVersion `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional"`
 }
 
 // Get registered model permission levels
@@ -668,7 +668,7 @@ type GetRunRequest struct {
 type GetRunResponse struct {
 	// Run metadata (name, start time, etc) and data (metrics, params, and
 	// tags).
-	Run *Run `tfsdk:"run" tf:"optional"`
+	Run []Run `tfsdk:"run" tf:"optional"`
 }
 
 type HttpUrlSpec struct {
@@ -1152,11 +1152,11 @@ type RegistryWebhook struct {
 	// version be archived.
 	Events []types.String `tfsdk:"events" tf:"optional"`
 
-	HttpUrlSpec *HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec" tf:"optional"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	JobSpec *JobSpecWithoutSecret `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpecWithoutSecret `tfsdk:"job_spec" tf:"optional"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// Name of the model whose events would trigger this webhook.
@@ -1193,7 +1193,7 @@ type RejectTransitionRequest struct {
 
 type RejectTransitionRequestResponse struct {
 	// Activity recorded for the action.
-	Activity *Activity `tfsdk:"activity" tf:"optional"`
+	Activity []Activity `tfsdk:"activity" tf:"optional"`
 }
 
 type RenameModelRequest struct {
@@ -1204,7 +1204,7 @@ type RenameModelRequest struct {
 }
 
 type RenameModelResponse struct {
-	RegisteredModel *Model `tfsdk:"registered_model" tf:"optional"`
+	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional"`
 }
 
 type RestoreExperiment struct {
@@ -1242,11 +1242,11 @@ type RestoreRunsResponse struct {
 
 type Run struct {
 	// Run data.
-	Data *RunData `tfsdk:"data" tf:"optional"`
+	Data []RunData `tfsdk:"data" tf:"optional"`
 	// Run metadata.
-	Info *RunInfo `tfsdk:"info" tf:"optional"`
+	Info []RunInfo `tfsdk:"info" tf:"optional"`
 	// Run inputs.
-	Inputs *RunInputs `tfsdk:"inputs" tf:"optional"`
+	Inputs []RunInputs `tfsdk:"inputs" tf:"optional"`
 }
 
 type RunData struct {
@@ -1497,7 +1497,7 @@ type TestRegistryWebhookRequest struct {
 
 type TestRegistryWebhookResponse struct {
 	// Test webhook response object.
-	Webhook *TestRegistryWebhook `tfsdk:"webhook" tf:"optional"`
+	Webhook []TestRegistryWebhook `tfsdk:"webhook" tf:"optional"`
 }
 
 type TransitionModelVersionStageDatabricks struct {
@@ -1546,7 +1546,7 @@ type TransitionRequest struct {
 }
 
 type TransitionStageResponse struct {
-	ModelVersion *ModelVersionDatabricks `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersionDatabricks `tfsdk:"model_version" tf:"optional"`
 }
 
 type UpdateComment struct {
@@ -1558,7 +1558,7 @@ type UpdateComment struct {
 
 type UpdateCommentResponse struct {
 	// Comment details.
-	Comment *CommentObject `tfsdk:"comment" tf:"optional"`
+	Comment []CommentObject `tfsdk:"comment" tf:"optional"`
 }
 
 type UpdateExperiment struct {
@@ -1632,11 +1632,11 @@ type UpdateRegistryWebhook struct {
 	// version be archived.
 	Events []types.String `tfsdk:"events" tf:"optional"`
 
-	HttpUrlSpec *HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:""`
 
-	JobSpec *JobSpec `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -1662,7 +1662,7 @@ type UpdateRun struct {
 
 type UpdateRunResponse struct {
 	// Updated metadata of the run.
-	RunInfo *RunInfo `tfsdk:"run_info" tf:"optional"`
+	RunInfo []RunInfo `tfsdk:"run_info" tf:"optional"`
 }
 
 type UpdateWebhookResponse struct {

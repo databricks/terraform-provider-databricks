@@ -103,6 +103,10 @@ func DataAwsCrossaccountPolicy() common.Resource {
 		// additional permissions for Databricks-managed VPC policy
 		if data.PolicyType == "managed" {
 			actions = append(actions, []string{
+				"ec2:AttachInternetGateway",
+				"ec2:AllocateAddress",
+				"ec2:AssociateDhcpOptions",
+				"ec2:AssociateRouteTable",
 				"ec2:CreateDhcpOptions",
 				"ec2:CreateInternetGateway",
 				"ec2:CreateNatGateway",

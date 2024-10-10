@@ -29,11 +29,11 @@ type AzureKeyVaultSecretScopeMetadata struct {
 	ResourceId types.String `tfsdk:"resource_id" tf:""`
 }
 
-type CreateCredentials struct {
+type CreateCredentialsRequest struct {
 	// Git provider. This field is case-insensitive. The available Git providers
-	// are gitHub, bitbucketCloud, gitLab, azureDevOpsServices,
-	// gitHubEnterprise, bitbucketServer, gitLabEnterpriseEdition and
-	// awsCodeCommit.
+	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer`, `gitLabEnterpriseEdition` and
+	// `awsCodeCommit`.
 	GitProvider types.String `tfsdk:"git_provider" tf:""`
 	// The username or email provided with your Git provider account, depending
 	// on which provider you are using. For GitHub, GitHub Enterprise Server, or
@@ -45,8 +45,7 @@ type CreateCredentials struct {
 	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
 	// The personal access token used to authenticate to the corresponding Git
 	// provider. For certain providers, support may exist for other types of
-	// scoped access tokens. [Learn more]. The personal access token used to
-	// authenticate to the corresponding Git
+	// scoped access tokens. [Learn more].
 	//
 	// [Learn more]: https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html
 	PersonalAccessToken types.String `tfsdk:"personal_access_token" tf:"optional"`
@@ -54,42 +53,52 @@ type CreateCredentials struct {
 
 type CreateCredentialsResponse struct {
 	// ID of the credential object in the workspace.
-	CredentialId types.Int64 `tfsdk:"credential_id" tf:"optional"`
-	// Git provider. This field is case-insensitive. The available Git providers
-	// are gitHub, bitbucketCloud, gitLab, azureDevOpsServices,
-	// gitHubEnterprise, bitbucketServer, gitLabEnterpriseEdition and
-	// awsCodeCommit.
-	GitProvider types.String `tfsdk:"git_provider" tf:"optional"`
-	// The username or email provided with your Git provider account, depending
-	// on which provider you are using. For GitHub, GitHub Enterprise Server, or
-	// Azure DevOps Services, either email or username may be used. For GitLab,
-	// GitLab Enterprise Edition, email must be used. For AWS CodeCommit,
-	// BitBucket or BitBucket Server, username must be used. For all other
-	// providers please see your provider's Personal Access Token authentication
-	// documentation to see what is supported.
+	CredentialId types.Int64 `tfsdk:"credential_id" tf:""`
+	// The Git provider associated with the credential.
+	GitProvider types.String `tfsdk:"git_provider" tf:""`
+	// The username or email provided with your Git provider account and
+	// associated with the credential.
 	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
 }
 
-type CreateRepo struct {
+type CreateRepoRequest struct {
 	// Desired path for the repo in the workspace. Almost any path in the
-	// workspace can be chosen. If repo is created in /Repos, path must be in
-	// the format /Repos/{folder}/{repo-name}.
+	// workspace can be chosen. If repo is created in `/Repos`, path must be in
+	// the format `/Repos/{folder}/{repo-name}`.
 	Path types.String `tfsdk:"path" tf:"optional"`
 	// Git provider. This field is case-insensitive. The available Git providers
-	// are gitHub, bitbucketCloud, gitLab, azureDevOpsServices,
-	// gitHubEnterprise, bitbucketServer, gitLabEnterpriseEdition and
-	// awsCodeCommit.
+	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer`, `gitLabEnterpriseEdition` and
+	// `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider" tf:""`
 	// If specified, the repo will be created with sparse checkout enabled. You
 	// cannot enable/disable sparse checkout after the repo is created.
-	SparseCheckout *SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
+	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
 	// URL of the Git repository to be linked.
 	Url types.String `tfsdk:"url" tf:""`
 }
 
+type CreateRepoResponse struct {
+	// Branch that the Git folder (repo) is checked out to.
+	Branch types.String `tfsdk:"branch" tf:"optional"`
+	// SHA-1 hash representing the commit ID of the current HEAD of the Git
+	// folder (repo).
+	HeadCommitId types.String `tfsdk:"head_commit_id" tf:"optional"`
+	// ID of the Git folder (repo) object in the workspace.
+	Id types.Int64 `tfsdk:"id" tf:"optional"`
+	// Path of the Git folder (repo) in the workspace.
+	Path types.String `tfsdk:"path" tf:"optional"`
+	// Git provider of the linked Git repository.
+	Provider types.String `tfsdk:"provider" tf:"optional"`
+	// Sparse checkout settings for the Git folder (repo).
+	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
+	// URL of the linked Git repository.
+	Url types.String `tfsdk:"url" tf:"optional"`
+}
+
 type CreateScope struct {
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
-	BackendAzureKeyvault *AzureKeyVaultSecretScopeMetadata `tfsdk:"backend_azure_keyvault" tf:"optional"`
+	BackendAzureKeyvault []AzureKeyVaultSecretScopeMetadata `tfsdk:"backend_azure_keyvault" tf:"optional"`
 	// The principal that is initially granted `MANAGE` permission to the
 	// created scope.
 	InitialManagePrincipal types.String `tfsdk:"initial_manage_principal" tf:"optional"`
@@ -105,19 +114,11 @@ type CreateScopeResponse struct {
 
 type CredentialInfo struct {
 	// ID of the credential object in the workspace.
-	CredentialId types.Int64 `tfsdk:"credential_id" tf:"optional"`
-	// Git provider. This field is case-insensitive. The available Git providers
-	// are gitHub, gitHubOAuth, bitbucketCloud, gitLab, azureDevOpsServices,
-	// gitHubEnterprise, bitbucketServer, gitLabEnterpriseEdition and
-	// awsCodeCommit.
+	CredentialId types.Int64 `tfsdk:"credential_id" tf:""`
+	// The Git provider associated with the credential.
 	GitProvider types.String `tfsdk:"git_provider" tf:"optional"`
-	// The username or email provided with your Git provider account, depending
-	// on which provider you are using. For GitHub, GitHub Enterprise Server, or
-	// Azure DevOps Services, either email or username may be used. For GitLab,
-	// GitLab Enterprise Edition, email must be used. For AWS CodeCommit,
-	// BitBucket or BitBucket Server, username must be used. For all other
-	// providers please see your provider's Personal Access Token authentication
-	// documentation to see what is supported.
+	// The username or email provided with your Git provider account and
+	// associated with the credential.
 	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
 }
 
@@ -142,15 +143,21 @@ type DeleteAclResponse struct {
 }
 
 // Delete a credential
-type DeleteGitCredentialRequest struct {
+type DeleteCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
 }
 
+type DeleteCredentialsResponse struct {
+}
+
 // Delete a repo
 type DeleteRepoRequest struct {
-	// The ID for the corresponding repo to access.
+	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
+}
+
+type DeleteRepoResponse struct {
 }
 
 type DeleteResponse struct {
@@ -212,14 +219,20 @@ type GetAclRequest struct {
 	Scope types.String `tfsdk:"-"`
 }
 
-type GetCredentialsResponse struct {
-	Credentials []CredentialInfo `tfsdk:"credentials" tf:"optional"`
-}
-
 // Get a credential entry
-type GetGitCredentialRequest struct {
+type GetCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
+}
+
+type GetCredentialsResponse struct {
+	// ID of the credential object in the workspace.
+	CredentialId types.Int64 `tfsdk:"credential_id" tf:""`
+	// The Git provider associated with the credential.
+	GitProvider types.String `tfsdk:"git_provider" tf:"optional"`
+	// The username or email provided with your Git provider account and
+	// associated with the credential.
+	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
 }
 
 // Get repo permission levels
@@ -241,8 +254,25 @@ type GetRepoPermissionsRequest struct {
 
 // Get a repo
 type GetRepoRequest struct {
-	// The ID for the corresponding repo to access.
+	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
+}
+
+type GetRepoResponse struct {
+	// Branch that the local version of the repo is checked out to.
+	Branch types.String `tfsdk:"branch" tf:"optional"`
+	// SHA-1 hash representing the commit ID of the current HEAD of the repo.
+	HeadCommitId types.String `tfsdk:"head_commit_id" tf:"optional"`
+	// ID of the Git folder (repo) object in the workspace.
+	Id types.Int64 `tfsdk:"id" tf:"optional"`
+	// Path of the Git folder (repo) in the workspace.
+	Path types.String `tfsdk:"path" tf:"optional"`
+	// Git provider of the linked Git repository.
+	Provider types.String `tfsdk:"provider" tf:"optional"`
+	// Sparse checkout settings for the Git folder (repo).
+	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
+	// URL of the linked Git repository.
+	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
 // Get a secret
@@ -334,6 +364,11 @@ type ListAclsResponse struct {
 	Items []AclItem `tfsdk:"items" tf:"optional"`
 }
 
+type ListCredentialsResponse struct {
+	// List of credentials.
+	Credentials []CredentialInfo `tfsdk:"credentials" tf:"optional"`
+}
+
 // Get repos
 type ListReposRequest struct {
 	// Token used to get the next page of results. If not specified, returns the
@@ -341,15 +376,16 @@ type ListReposRequest struct {
 	// results.
 	NextPageToken types.String `tfsdk:"-"`
 	// Filters repos that have paths starting with the given path prefix. If not
-	// provided repos from /Repos will be served.
+	// provided or when provided an effectively empty prefix (`/` or
+	// `/Workspace`) Git folders (repos) from `/Workspace/Repos` will be served.
 	PathPrefix types.String `tfsdk:"-"`
 }
 
 type ListReposResponse struct {
-	// Token that can be specified as a query parameter to the GET /repos
+	// Token that can be specified as a query parameter to the `GET /repos`
 	// endpoint to retrieve the next page of results.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
-
+	// List of Git folders (repos).
 	Repos []RepoInfo `tfsdk:"repos" tf:"optional"`
 }
 
@@ -467,25 +503,21 @@ type RepoAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+// Git folder (repo) information.
 type RepoInfo struct {
-	// Branch that the local version of the repo is checked out to.
+	// Name of the current git branch of the git folder (repo).
 	Branch types.String `tfsdk:"branch" tf:"optional"`
-	// SHA-1 hash representing the commit ID of the current HEAD of the repo.
+	// Current git commit id of the git folder (repo).
 	HeadCommitId types.String `tfsdk:"head_commit_id" tf:"optional"`
-	// ID of the repo object in the workspace.
+	// Id of the git folder (repo) in the Workspace.
 	Id types.Int64 `tfsdk:"id" tf:"optional"`
-	// Desired path for the repo in the workspace. Almost any path in the
-	// workspace can be chosen. If repo is created in /Repos, path must be in
-	// the format /Repos/{folder}/{repo-name}.
+	// Root path of the git folder (repo) in the Workspace.
 	Path types.String `tfsdk:"path" tf:"optional"`
-	// Git provider. This field is case-insensitive. The available Git providers
-	// are gitHub, bitbucketCloud, gitLab, azureDevOpsServices,
-	// gitHubEnterprise, bitbucketServer, gitLabEnterpriseEdition and
-	// awsCodeCommit.
+	// Git provider of the remote git repository, e.g. `gitHub`.
 	Provider types.String `tfsdk:"provider" tf:"optional"`
-
-	SparseCheckout *SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
-	// URL of the Git repository to be linked.
+	// Sparse checkout config for the git folder (repo).
+	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
+	// URL of the remote git repository.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
@@ -528,29 +560,37 @@ type SecretScope struct {
 	// The type of secret scope backend.
 	BackendType types.String `tfsdk:"backend_type" tf:"optional"`
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
-	KeyvaultMetadata *AzureKeyVaultSecretScopeMetadata `tfsdk:"keyvault_metadata" tf:"optional"`
+	KeyvaultMetadata []AzureKeyVaultSecretScopeMetadata `tfsdk:"keyvault_metadata" tf:"optional"`
 	// A unique name to identify the secret scope.
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
+// Sparse checkout configuration, it contains options like cone patterns.
 type SparseCheckout struct {
-	// List of patterns to include for sparse checkout.
+	// List of sparse checkout cone patterns, see [cone mode handling] for
+	// details.
+	//
+	// [cone mode handling]: https://git-scm.com/docs/git-sparse-checkout#_internalscone_mode_handling
 	Patterns []types.String `tfsdk:"patterns" tf:"optional"`
 }
 
+// Sparse checkout configuration, it contains options like cone patterns.
 type SparseCheckoutUpdate struct {
-	// List of patterns to include for sparse checkout.
+	// List of sparse checkout cone patterns, see [cone mode handling] for
+	// details.
+	//
+	// [cone mode handling]: https://git-scm.com/docs/git-sparse-checkout#_internalscone_mode_handling
 	Patterns []types.String `tfsdk:"patterns" tf:"optional"`
 }
 
-type UpdateCredentials struct {
+type UpdateCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
 	// Git provider. This field is case-insensitive. The available Git providers
-	// are gitHub, bitbucketCloud, gitLab, azureDevOpsServices,
-	// gitHubEnterprise, bitbucketServer, gitLabEnterpriseEdition and
-	// awsCodeCommit.
-	GitProvider types.String `tfsdk:"git_provider" tf:"optional"`
+	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer`, `gitLabEnterpriseEdition` and
+	// `awsCodeCommit`.
+	GitProvider types.String `tfsdk:"git_provider" tf:""`
 	// The username or email provided with your Git provider account, depending
 	// on which provider you are using. For GitHub, GitHub Enterprise Server, or
 	// Azure DevOps Services, either email or username may be used. For GitLab,
@@ -561,21 +601,23 @@ type UpdateCredentials struct {
 	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
 	// The personal access token used to authenticate to the corresponding Git
 	// provider. For certain providers, support may exist for other types of
-	// scoped access tokens. [Learn more]. The personal access token used to
-	// authenticate to the corresponding Git
+	// scoped access tokens. [Learn more].
 	//
 	// [Learn more]: https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html
 	PersonalAccessToken types.String `tfsdk:"personal_access_token" tf:"optional"`
 }
 
-type UpdateRepo struct {
+type UpdateCredentialsResponse struct {
+}
+
+type UpdateRepoRequest struct {
 	// Branch that the local version of the repo is checked out to.
 	Branch types.String `tfsdk:"branch" tf:"optional"`
-	// The ID for the corresponding repo to access.
+	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
 	// If specified, update the sparse checkout settings. The update will fail
 	// if sparse checkout is not enabled for the repo.
-	SparseCheckout *SparseCheckoutUpdate `tfsdk:"sparse_checkout" tf:"optional"`
+	SparseCheckout []SparseCheckoutUpdate `tfsdk:"sparse_checkout" tf:"optional"`
 	// Tag that the local version of the repo is checked out to. Updating the
 	// repo to a tag puts the repo in a detached HEAD state. Before committing
 	// new changes, you must update the repo to a branch instead of the detached
@@ -583,7 +625,7 @@ type UpdateRepo struct {
 	Tag types.String `tfsdk:"tag" tf:"optional"`
 }
 
-type UpdateResponse struct {
+type UpdateRepoResponse struct {
 }
 
 type WorkspaceObjectAccessControlRequest struct {

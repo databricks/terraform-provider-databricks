@@ -29,10 +29,10 @@ type CreateEndpoint struct {
 type CreateVectorIndexRequest struct {
 	// Specification for Delta Sync Index. Required if `index_type` is
 	// `DELTA_SYNC`.
-	DeltaSyncIndexSpec *DeltaSyncVectorIndexSpecRequest `tfsdk:"delta_sync_index_spec" tf:"optional"`
+	DeltaSyncIndexSpec []DeltaSyncVectorIndexSpecRequest `tfsdk:"delta_sync_index_spec" tf:"optional"`
 	// Specification for Direct Vector Access Index. Required if `index_type` is
 	// `DIRECT_ACCESS`.
-	DirectAccessIndexSpec *DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional"`
+	DirectAccessIndexSpec []DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional"`
 	// Name of the endpoint to be used for serving the index
 	EndpointName types.String `tfsdk:"endpoint_name" tf:""`
 	// There are 2 types of Vector Search indexes:
@@ -50,7 +50,7 @@ type CreateVectorIndexRequest struct {
 }
 
 type CreateVectorIndexResponse struct {
-	VectorIndex *VectorIndex `tfsdk:"vector_index" tf:"optional"`
+	VectorIndex []VectorIndex `tfsdk:"vector_index" tf:"optional"`
 }
 
 // Result of the upsert or delete operation.
@@ -73,7 +73,7 @@ type DeleteDataVectorIndexRequest struct {
 // Response to a delete data vector index request.
 type DeleteDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
-	Result *DeleteDataResult `tfsdk:"result" tf:"optional"`
+	Result []DeleteDataResult `tfsdk:"result" tf:"optional"`
 	// Status of the delete operation.
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
@@ -181,7 +181,7 @@ type EndpointInfo struct {
 	// Creator of the endpoint
 	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// Current status of the endpoint
-	EndpointStatus *EndpointStatus `tfsdk:"endpoint_status" tf:"optional"`
+	EndpointStatus []EndpointStatus `tfsdk:"endpoint_status" tf:"optional"`
 	// Type of endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type" tf:"optional"`
 	// Unique identifier of the endpoint
@@ -255,7 +255,7 @@ type MapStringValueEntry struct {
 	// Column name.
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// Column value, nullable.
-	Value *Value `tfsdk:"value" tf:"optional"`
+	Value []Value `tfsdk:"value" tf:"optional"`
 }
 
 type MiniVectorIndex struct {
@@ -315,13 +315,13 @@ type QueryVectorIndexRequest struct {
 
 type QueryVectorIndexResponse struct {
 	// Metadata about the result set.
-	Manifest *ResultManifest `tfsdk:"manifest" tf:"optional"`
+	Manifest []ResultManifest `tfsdk:"manifest" tf:"optional"`
 	// [Optional] Token that can be used in `QueryVectorIndexNextPage` API to
 	// get next page of results. If more than 1000 results satisfy the query,
 	// they are returned in groups of 1000. Empty value means no more results.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Data returned in the query result.
-	Result *ResultData `tfsdk:"result" tf:"optional"`
+	Result []ResultData `tfsdk:"result" tf:"optional"`
 }
 
 // Data returned in the query result.
@@ -392,7 +392,7 @@ type UpsertDataVectorIndexRequest struct {
 // Response to an upsert data vector index request.
 type UpsertDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
-	Result *UpsertDataResult `tfsdk:"result" tf:"optional"`
+	Result []UpsertDataResult `tfsdk:"result" tf:"optional"`
 	// Status of the upsert operation.
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
@@ -400,7 +400,7 @@ type UpsertDataVectorIndexResponse struct {
 type Value struct {
 	BoolValue types.Bool `tfsdk:"bool_value" tf:"optional"`
 
-	ListValue *ListValue `tfsdk:"list_value" tf:"optional"`
+	ListValue []ListValue `tfsdk:"list_value" tf:"optional"`
 
 	NullValue types.String `tfsdk:"null_value" tf:"optional"`
 
@@ -408,16 +408,16 @@ type Value struct {
 
 	StringValue types.String `tfsdk:"string_value" tf:"optional"`
 
-	StructValue *Struct `tfsdk:"struct_value" tf:"optional"`
+	StructValue []Struct `tfsdk:"struct_value" tf:"optional"`
 }
 
 type VectorIndex struct {
 	// The user who created the index.
 	Creator types.String `tfsdk:"creator" tf:"optional"`
 
-	DeltaSyncIndexSpec *DeltaSyncVectorIndexSpecResponse `tfsdk:"delta_sync_index_spec" tf:"optional"`
+	DeltaSyncIndexSpec []DeltaSyncVectorIndexSpecResponse `tfsdk:"delta_sync_index_spec" tf:"optional"`
 
-	DirectAccessIndexSpec *DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional"`
+	DirectAccessIndexSpec []DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name" tf:"optional"`
 	// There are 2 types of Vector Search indexes:
@@ -433,7 +433,7 @@ type VectorIndex struct {
 	// Primary key of the index
 	PrimaryKey types.String `tfsdk:"primary_key" tf:"optional"`
 
-	Status *VectorIndexStatus `tfsdk:"status" tf:"optional"`
+	Status []VectorIndexStatus `tfsdk:"status" tf:"optional"`
 }
 
 type VectorIndexStatus struct {

@@ -15,11 +15,11 @@ import (
 )
 
 type AccountsCreateMetastore struct {
-	MetastoreInfo *CreateMetastore `tfsdk:"metastore_info" tf:"optional"`
+	MetastoreInfo []CreateMetastore `tfsdk:"metastore_info" tf:"optional"`
 }
 
 type AccountsCreateMetastoreAssignment struct {
-	MetastoreAssignment *CreateMetastoreAssignment `tfsdk:"metastore_assignment" tf:"optional"`
+	MetastoreAssignment []CreateMetastoreAssignment `tfsdk:"metastore_assignment" tf:"optional"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 	// Workspace ID.
@@ -27,32 +27,32 @@ type AccountsCreateMetastoreAssignment struct {
 }
 
 type AccountsCreateStorageCredential struct {
-	CredentialInfo *CreateStorageCredential `tfsdk:"credential_info" tf:"optional"`
+	CredentialInfo []CreateStorageCredential `tfsdk:"credential_info" tf:"optional"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 }
 
 type AccountsMetastoreAssignment struct {
-	MetastoreAssignment *MetastoreAssignment `tfsdk:"metastore_assignment" tf:"optional"`
+	MetastoreAssignment []MetastoreAssignment `tfsdk:"metastore_assignment" tf:"optional"`
 }
 
 type AccountsMetastoreInfo struct {
-	MetastoreInfo *MetastoreInfo `tfsdk:"metastore_info" tf:"optional"`
+	MetastoreInfo []MetastoreInfo `tfsdk:"metastore_info" tf:"optional"`
 }
 
 type AccountsStorageCredentialInfo struct {
-	CredentialInfo *StorageCredentialInfo `tfsdk:"credential_info" tf:"optional"`
+	CredentialInfo []StorageCredentialInfo `tfsdk:"credential_info" tf:"optional"`
 }
 
 type AccountsUpdateMetastore struct {
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 
-	MetastoreInfo *UpdateMetastore `tfsdk:"metastore_info" tf:"optional"`
+	MetastoreInfo []UpdateMetastore `tfsdk:"metastore_info" tf:"optional"`
 }
 
 type AccountsUpdateMetastoreAssignment struct {
-	MetastoreAssignment *UpdateMetastoreAssignment `tfsdk:"metastore_assignment" tf:"optional"`
+	MetastoreAssignment []UpdateMetastoreAssignment `tfsdk:"metastore_assignment" tf:"optional"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 	// Workspace ID.
@@ -60,7 +60,7 @@ type AccountsUpdateMetastoreAssignment struct {
 }
 
 type AccountsUpdateStorageCredential struct {
-	CredentialInfo *UpdateStorageCredential `tfsdk:"credential_info" tf:"optional"`
+	CredentialInfo []UpdateStorageCredential `tfsdk:"credential_info" tf:"optional"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 	// Name of the storage credential.
@@ -86,6 +86,21 @@ type ArtifactMatcher struct {
 }
 
 type AssignResponse struct {
+}
+
+// AWS temporary credentials for API authentication. Read more at
+// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
+type AwsCredentials struct {
+	// The access key ID that identifies the temporary credentials.
+	AccessKeyId types.String `tfsdk:"access_key_id" tf:"optional"`
+	// The Amazon Resource Name (ARN) of the S3 access point for temporary
+	// credentials related the external location.
+	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
+	// The secret access key that can be used to sign AWS API requests.
+	SecretAccessKey types.String `tfsdk:"secret_access_key" tf:"optional"`
+	// The token that users must pass to AWS API to use the temporary
+	// credentials.
+	SessionToken types.String `tfsdk:"session_token" tf:"optional"`
 }
 
 type AwsIamRoleRequest struct {
@@ -145,6 +160,13 @@ type AzureServicePrincipal struct {
 	DirectoryId types.String `tfsdk:"directory_id" tf:""`
 }
 
+// Azure temporary credentials for API authentication. Read more at
+// https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
+type AzureUserDelegationSas struct {
+	// The signed URI (SAS Token) used to access blob services for a given path
+	SasToken types.String `tfsdk:"sas_token" tf:"optional"`
+}
+
 // Cancel refresh
 type CancelRefreshRequest struct {
 	// ID of the refresh.
@@ -172,7 +194,7 @@ type CatalogInfo struct {
 	// Username of catalog creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 
-	EffectivePredictiveOptimizationFlag *EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
+	EffectivePredictiveOptimizationFlag []EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
@@ -197,7 +219,7 @@ type CatalogInfo struct {
 	// remote sharing server.
 	ProviderName types.String `tfsdk:"provider_name" tf:"optional"`
 	// Status of an asynchronously provisioned resource.
-	ProvisioningInfo *ProvisioningInfo `tfsdk:"provisioning_info" tf:"optional"`
+	ProvisioningInfo []ProvisioningInfo `tfsdk:"provisioning_info" tf:"optional"`
 	// Kind of catalog securable.
 	SecurableKind types.String `tfsdk:"securable_kind" tf:"optional"`
 
@@ -227,7 +249,7 @@ type ColumnInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
-	Mask *ColumnMask `tfsdk:"mask" tf:"optional"`
+	Mask []ColumnMask `tfsdk:"mask" tf:"optional"`
 	// Name of Column.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Whether field may be Null (default: true).
@@ -287,7 +309,7 @@ type ConnectionInfo struct {
 	// connection.
 	Properties map[string]types.String `tfsdk:"properties" tf:"optional"`
 	// Status of an asynchronously provisioned resource.
-	ProvisioningInfo *ProvisioningInfo `tfsdk:"provisioning_info" tf:"optional"`
+	ProvisioningInfo []ProvisioningInfo `tfsdk:"provisioning_info" tf:"optional"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only" tf:"optional"`
 	// Kind of connection securable.
@@ -306,7 +328,7 @@ type ConnectionInfo struct {
 // ONLINE_CONTINUOUS_UPDATE or the ONLINE_UPDATING_PIPELINE_RESOURCES state.
 type ContinuousUpdateStatus struct {
 	// Progress of the initial data synchronization.
-	InitialPipelineSyncProgress *PipelineProgress `tfsdk:"initial_pipeline_sync_progress" tf:"optional"`
+	InitialPipelineSyncProgress []PipelineProgress `tfsdk:"initial_pipeline_sync_progress" tf:"optional"`
 	// The last source table Delta version that was synced to the online table.
 	// Note that this Delta version may not be completely synced to the online
 	// table yet.
@@ -362,7 +384,7 @@ type CreateExternalLocation struct {
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name" tf:""`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	EncryptionDetails []EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
@@ -392,7 +414,7 @@ type CreateFunction struct {
 	// Pretty printed function data type.
 	FullDataType types.String `tfsdk:"full_data_type" tf:""`
 
-	InputParams FunctionParameterInfos `tfsdk:"input_params" tf:""`
+	InputParams []FunctionParameterInfos `tfsdk:"input_params" tf:""`
 	// Whether the function is deterministic.
 	IsDeterministic types.Bool `tfsdk:"is_deterministic" tf:""`
 	// Function null call.
@@ -404,7 +426,7 @@ type CreateFunction struct {
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties" tf:"optional"`
 	// Table function return parameters.
-	ReturnParams FunctionParameterInfos `tfsdk:"return_params" tf:""`
+	ReturnParams []FunctionParameterInfos `tfsdk:"return_params" tf:"optional"`
 	// Function language. When **EXTERNAL** is used, the language of the routine
 	// function should be specified in the __external_language__ field, and the
 	// __return_params__ of the function cannot be used (as **TABLE** return
@@ -414,7 +436,7 @@ type CreateFunction struct {
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition" tf:""`
 	// Function dependencies.
-	RoutineDependencies DependencyList `tfsdk:"routine_dependencies" tf:""`
+	RoutineDependencies []DependencyList `tfsdk:"routine_dependencies" tf:"optional"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:""`
 	// Function security type.
@@ -429,7 +451,7 @@ type CreateFunction struct {
 
 type CreateFunctionRequest struct {
 	// Partial __FunctionInfo__ specifying the function to be created.
-	FunctionInfo CreateFunction `tfsdk:"function_info" tf:""`
+	FunctionInfo []CreateFunction `tfsdk:"function_info" tf:""`
 }
 
 type CreateMetastore struct {
@@ -467,15 +489,15 @@ type CreateMonitor struct {
 	// drift metrics (comparing metrics across time windows).
 	CustomMetrics []MonitorMetric `tfsdk:"custom_metrics" tf:"optional"`
 	// The data classification config for the monitor.
-	DataClassificationConfig *MonitorDataClassificationConfig `tfsdk:"data_classification_config" tf:"optional"`
+	DataClassificationConfig []MonitorDataClassificationConfig `tfsdk:"data_classification_config" tf:"optional"`
 	// Configuration for monitoring inference logs.
-	InferenceLog *MonitorInferenceLog `tfsdk:"inference_log" tf:"optional"`
+	InferenceLog []MonitorInferenceLog `tfsdk:"inference_log" tf:"optional"`
 	// The notification settings for the monitor.
-	Notifications *MonitorNotifications `tfsdk:"notifications" tf:"optional"`
+	Notifications []MonitorNotifications `tfsdk:"notifications" tf:"optional"`
 	// Schema where output metric tables are created.
 	OutputSchemaName types.String `tfsdk:"output_schema_name" tf:""`
 	// The schedule for automatically updating and refreshing metric tables.
-	Schedule *MonitorCronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []MonitorCronSchedule `tfsdk:"schedule" tf:"optional"`
 	// Whether to skip creating a default dashboard summarizing data quality
 	// metrics.
 	SkipBuiltinDashboard types.Bool `tfsdk:"skip_builtin_dashboard" tf:"optional"`
@@ -486,11 +508,11 @@ type CreateMonitor struct {
 	// slices.
 	SlicingExprs []types.String `tfsdk:"slicing_exprs" tf:"optional"`
 	// Configuration for monitoring snapshot tables.
-	Snapshot *MonitorSnapshot `tfsdk:"snapshot" tf:"optional"`
+	Snapshot []MonitorSnapshot `tfsdk:"snapshot" tf:"optional"`
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
 	// Configuration for monitoring time series tables.
-	TimeSeries *MonitorTimeSeries `tfsdk:"time_series" tf:"optional"`
+	TimeSeries []MonitorTimeSeries `tfsdk:"time_series" tf:"optional"`
 	// Optional argument to specify the warehouse for dashboard creation. If not
 	// specified, the first running warehouse will be used.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -501,7 +523,7 @@ type CreateOnlineTableRequest struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Specification of the online table.
-	Spec *OnlineTableSpec `tfsdk:"spec" tf:"optional"`
+	Spec []OnlineTableSpec `tfsdk:"spec" tf:"optional"`
 }
 
 type CreateRegisteredModelRequest struct {
@@ -536,17 +558,17 @@ type CreateSchema struct {
 
 type CreateStorageCredential struct {
 	// The AWS IAM role configuration.
-	AwsIamRole *AwsIamRoleRequest `tfsdk:"aws_iam_role" tf:"optional"`
+	AwsIamRole []AwsIamRoleRequest `tfsdk:"aws_iam_role" tf:"optional"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity *AzureManagedIdentityRequest `tfsdk:"azure_managed_identity" tf:"optional"`
+	AzureManagedIdentity []AzureManagedIdentityRequest `tfsdk:"azure_managed_identity" tf:"optional"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal *AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional"`
+	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional"`
 	// The Cloudflare API token configuration.
-	CloudflareApiToken *CloudflareApiToken `tfsdk:"cloudflare_api_token" tf:"optional"`
+	CloudflareApiToken []CloudflareApiToken `tfsdk:"cloudflare_api_token" tf:"optional"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The Databricks managed GCP service account configuration.
-	DatabricksGcpServiceAccount *DatabricksGcpServiceAccountRequest `tfsdk:"databricks_gcp_service_account" tf:"optional"`
+	DatabricksGcpServiceAccount []DatabricksGcpServiceAccountRequest `tfsdk:"databricks_gcp_service_account" tf:"optional"`
 	// The credential name. The name must be unique within the metastore.
 	Name types.String `tfsdk:"name" tf:""`
 	// Whether the storage credential is only usable for read operations.
@@ -560,7 +582,7 @@ type CreateTableConstraint struct {
 	// A table constraint, as defined by *one* of the following fields being
 	// set: __primary_key_constraint__, __foreign_key_constraint__,
 	// __named_table_constraint__.
-	Constraint TableConstraint `tfsdk:"constraint" tf:""`
+	Constraint []TableConstraint `tfsdk:"constraint" tf:""`
 	// The full name of the table referenced by the constraint.
 	FullNameArg types.String `tfsdk:"full_name_arg" tf:""`
 }
@@ -756,9 +778,9 @@ type DeltaRuntimePropertiesKvPairs struct {
 // field must be defined.
 type Dependency struct {
 	// A function that is dependent on a SQL object.
-	Function *FunctionDependency `tfsdk:"function" tf:"optional"`
+	Function []FunctionDependency `tfsdk:"function" tf:"optional"`
 	// A table that is dependent on a SQL object.
-	Table *TableDependency `tfsdk:"table" tf:"optional"`
+	Table []TableDependency `tfsdk:"table" tf:"optional"`
 }
 
 // A list of dependencies.
@@ -831,7 +853,7 @@ type EnableResponse struct {
 // Encryption options that apply to clients connecting to cloud storage.
 type EncryptionDetails struct {
 	// Server-Side Encryption properties for clients communicating with AWS s3.
-	SseEncryptionDetails *SseEncryptionDetails `tfsdk:"sse_encryption_details" tf:"optional"`
+	SseEncryptionDetails []SseEncryptionDetails `tfsdk:"sse_encryption_details" tf:"optional"`
 }
 
 // Get boolean reflecting if table exists
@@ -858,7 +880,7 @@ type ExternalLocationInfo struct {
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	EncryptionDetails []EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
@@ -942,7 +964,7 @@ type FunctionInfo struct {
 	// Id of Function, relative to parent schema.
 	FunctionId types.String `tfsdk:"function_id" tf:"optional"`
 
-	InputParams *FunctionParameterInfos `tfsdk:"input_params" tf:"optional"`
+	InputParams []FunctionParameterInfos `tfsdk:"input_params" tf:"optional"`
 	// Whether the function is deterministic.
 	IsDeterministic types.Bool `tfsdk:"is_deterministic" tf:"optional"`
 	// Function null call.
@@ -958,7 +980,7 @@ type FunctionInfo struct {
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties" tf:"optional"`
 	// Table function return parameters.
-	ReturnParams *FunctionParameterInfos `tfsdk:"return_params" tf:"optional"`
+	ReturnParams []FunctionParameterInfos `tfsdk:"return_params" tf:"optional"`
 	// Function language. When **EXTERNAL** is used, the language of the routine
 	// function should be specified in the __external_language__ field, and the
 	// __return_params__ of the function cannot be used (as **TABLE** return
@@ -968,7 +990,7 @@ type FunctionInfo struct {
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition" tf:"optional"`
 	// Function dependencies.
-	RoutineDependencies *DependencyList `tfsdk:"routine_dependencies" tf:"optional"`
+	RoutineDependencies []DependencyList `tfsdk:"routine_dependencies" tf:"optional"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
 	// Function security type.
@@ -1016,6 +1038,41 @@ type FunctionParameterInfos struct {
 	// The array of __FunctionParameterInfo__ definitions of the function's
 	// parameters.
 	Parameters []FunctionParameterInfo `tfsdk:"parameters" tf:"optional"`
+}
+
+// GCP temporary credentials for API authentication. Read more at
+// https://developers.google.com/identity/protocols/oauth2/service-account
+type GcpOauthToken struct {
+	OauthToken types.String `tfsdk:"oauth_token" tf:"optional"`
+}
+
+type GenerateTemporaryTableCredentialRequest struct {
+	// The operation performed against the table data, either READ or
+	// READ_WRITE. If READ_WRITE is specified, the credentials returned will
+	// have write permissions, otherwise, it will be read only.
+	Operation types.String `tfsdk:"operation" tf:"optional"`
+	// UUID of the table to read or write.
+	TableId types.String `tfsdk:"table_id" tf:"optional"`
+}
+
+type GenerateTemporaryTableCredentialResponse struct {
+	// AWS temporary credentials for API authentication. Read more at
+	// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
+	AwsTempCredentials []AwsCredentials `tfsdk:"aws_temp_credentials" tf:"optional"`
+	// Azure temporary credentials for API authentication. Read more at
+	// https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
+	AzureUserDelegationSas []AzureUserDelegationSas `tfsdk:"azure_user_delegation_sas" tf:"optional"`
+	// Server time when the credential will expire, in epoch milliseconds. The
+	// API client is advised to cache the credential given this expiration time.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
+	// GCP temporary credentials for API authentication. Read more at
+	// https://developers.google.com/identity/protocols/oauth2/service-account
+	GcpOauthToken []GcpOauthToken `tfsdk:"gcp_oauth_token" tf:"optional"`
+	// R2 temporary credentials for API authentication. Read more at
+	// https://developers.cloudflare.com/r2/api/s3/tokens/.
+	R2TempCredentials []R2Credentials `tfsdk:"r2_temp_credentials" tf:"optional"`
+	// The URL of the storage path accessible by the temporary credential.
+	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
 // Gets the metastore assignment for a workspace
@@ -1150,6 +1207,9 @@ type GetMetastoreSummaryResponse struct {
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds" tf:"optional"`
 	// The scope of Delta Sharing enabled for the metastore.
 	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope" tf:"optional"`
+	// Whether to allow non-DBR clients to directly access entities under the
+	// metastore.
+	ExternalAccessEnabled types.Bool `tfsdk:"external_access_enabled" tf:"optional"`
 	// Globally unique metastore ID across clouds and regions, of the form
 	// `cloud:region:metastore_id`.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
@@ -1216,7 +1276,7 @@ type GetQuotaRequest struct {
 
 type GetQuotaResponse struct {
 	// The returned QuotaInfo.
-	QuotaInfo *QuotaInfo `tfsdk:"quota_info" tf:"optional"`
+	QuotaInfo []QuotaInfo `tfsdk:"quota_info" tf:"optional"`
 }
 
 // Get refresh
@@ -1262,6 +1322,8 @@ type GetTableRequest struct {
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether delta metadata should be included in the response.
 	IncludeDeltaMetadata types.Bool `tfsdk:"-"`
+	// Whether to include a manifest containing capabilities the table has.
+	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 }
 
 // Get catalog workspace bindings
@@ -1546,6 +1608,8 @@ type ListStorageCredentialsResponse struct {
 type ListSummariesRequest struct {
 	// Name of parent catalog for tables of interest.
 	CatalogName types.String `tfsdk:"-"`
+	// Whether to include a manifest containing capabilities the table has.
+	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 	// Maximum number of summaries for tables to return. If not set, the page
 	// length is set to a server configured value (10000, as of 1/5/2024). -
 	// when set to a value greater than 0, the page length is the minimum of
@@ -1606,6 +1670,8 @@ type ListTablesRequest struct {
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether delta metadata should be included in the response.
 	IncludeDeltaMetadata types.Bool `tfsdk:"-"`
+	// Whether to include a manifest containing capabilities the table has.
+	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 	// Maximum number of tables to return. If not set, all the tables are
 	// returned (not recommended). - when set to a value greater than 0, the
 	// page length is the minimum of this value and a server configured value; -
@@ -1693,6 +1759,9 @@ type MetastoreInfo struct {
 	DeltaSharingRecipientTokenLifetimeInSeconds types.Int64 `tfsdk:"delta_sharing_recipient_token_lifetime_in_seconds" tf:"optional"`
 	// The scope of Delta Sharing enabled for the metastore.
 	DeltaSharingScope types.String `tfsdk:"delta_sharing_scope" tf:"optional"`
+	// Whether to allow non-DBR clients to directly access entities under the
+	// metastore.
+	ExternalAccessEnabled types.Bool `tfsdk:"external_access_enabled" tf:"optional"`
 	// Globally unique metastore ID across clouds and regions, of the form
 	// `cloud:region:metastore_id`.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
@@ -1742,7 +1811,7 @@ type ModelVersionInfo struct {
 	// parent schema
 	ModelName types.String `tfsdk:"model_name" tf:"optional"`
 	// Model version dependencies, for feature-store packaged models
-	ModelVersionDependencies *DependencyList `tfsdk:"model_version_dependencies" tf:"optional"`
+	ModelVersionDependencies []DependencyList `tfsdk:"model_version_dependencies" tf:"optional"`
 	// MLflow run ID used when creating the model version, if ``source`` was
 	// generated by an experiment run stored in an MLflow tracking server
 	RunId types.String `tfsdk:"run_id" tf:"optional"`
@@ -1841,26 +1910,26 @@ type MonitorInfo struct {
 	// if the monitor is in PENDING state.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
 	// The data classification config for the monitor.
-	DataClassificationConfig *MonitorDataClassificationConfig `tfsdk:"data_classification_config" tf:"optional"`
+	DataClassificationConfig []MonitorDataClassificationConfig `tfsdk:"data_classification_config" tf:"optional"`
 	// The full name of the drift metrics table. Format:
 	// __catalog_name__.__schema_name__.__table_name__.
 	DriftMetricsTableName types.String `tfsdk:"drift_metrics_table_name" tf:""`
 	// Configuration for monitoring inference logs.
-	InferenceLog *MonitorInferenceLog `tfsdk:"inference_log" tf:"optional"`
+	InferenceLog []MonitorInferenceLog `tfsdk:"inference_log" tf:"optional"`
 	// The latest failure message of the monitor (if any).
 	LatestMonitorFailureMsg types.String `tfsdk:"latest_monitor_failure_msg" tf:"optional"`
 	// The version of the monitor config (e.g. 1,2,3). If negative, the monitor
 	// may be corrupted.
 	MonitorVersion types.String `tfsdk:"monitor_version" tf:""`
 	// The notification settings for the monitor.
-	Notifications *MonitorNotifications `tfsdk:"notifications" tf:"optional"`
+	Notifications []MonitorNotifications `tfsdk:"notifications" tf:"optional"`
 	// Schema where output metric tables are created.
 	OutputSchemaName types.String `tfsdk:"output_schema_name" tf:"optional"`
 	// The full name of the profile metrics table. Format:
 	// __catalog_name__.__schema_name__.__table_name__.
 	ProfileMetricsTableName types.String `tfsdk:"profile_metrics_table_name" tf:""`
 	// The schedule for automatically updating and refreshing metric tables.
-	Schedule *MonitorCronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []MonitorCronSchedule `tfsdk:"schedule" tf:"optional"`
 	// List of column expressions to slice data with for targeted analysis. The
 	// data is grouped by each expression independently, resulting in a separate
 	// slice for each predicate and its complements. For high-cardinality
@@ -1868,14 +1937,14 @@ type MonitorInfo struct {
 	// slices.
 	SlicingExprs []types.String `tfsdk:"slicing_exprs" tf:"optional"`
 	// Configuration for monitoring snapshot tables.
-	Snapshot *MonitorSnapshot `tfsdk:"snapshot" tf:"optional"`
+	Snapshot []MonitorSnapshot `tfsdk:"snapshot" tf:"optional"`
 	// The status of the monitor.
 	Status types.String `tfsdk:"status" tf:""`
 	// The full name of the table to monitor. Format:
 	// __catalog_name__.__schema_name__.__table_name__.
 	TableName types.String `tfsdk:"table_name" tf:""`
 	// Configuration for monitoring time series tables.
-	TimeSeries *MonitorTimeSeries `tfsdk:"time_series" tf:"optional"`
+	TimeSeries []MonitorTimeSeries `tfsdk:"time_series" tf:"optional"`
 }
 
 type MonitorMetric struct {
@@ -1907,10 +1976,10 @@ type MonitorMetric struct {
 
 type MonitorNotifications struct {
 	// Who to send notifications to on monitor failure.
-	OnFailure *MonitorDestination `tfsdk:"on_failure" tf:"optional"`
+	OnFailure []MonitorDestination `tfsdk:"on_failure" tf:"optional"`
 	// Who to send notifications to when new data classification tags are
 	// detected.
-	OnNewClassificationTagDetected *MonitorDestination `tfsdk:"on_new_classification_tag_detected" tf:"optional"`
+	OnNewClassificationTagDetected []MonitorDestination `tfsdk:"on_new_classification_tag_detected" tf:"optional"`
 }
 
 type MonitorRefreshInfo struct {
@@ -1964,9 +2033,9 @@ type OnlineTable struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Specification of the online table.
-	Spec *OnlineTableSpec `tfsdk:"spec" tf:"optional"`
+	Spec []OnlineTableSpec `tfsdk:"spec" tf:"optional"`
 	// Online Table status
-	Status *OnlineTableStatus `tfsdk:"status" tf:"optional"`
+	Status []OnlineTableStatus `tfsdk:"status" tf:"optional"`
 	// Data serving REST API URL for this table
 	TableServingUrl types.String `tfsdk:"table_serving_url" tf:"optional"`
 }
@@ -1987,10 +2056,10 @@ type OnlineTableSpec struct {
 	// Primary Key columns to be used for data insert/update in the destination.
 	PrimaryKeyColumns []types.String `tfsdk:"primary_key_columns" tf:"optional"`
 	// Pipeline runs continuously after generating the initial data.
-	RunContinuously *OnlineTableSpecContinuousSchedulingPolicy `tfsdk:"run_continuously" tf:"optional"`
+	RunContinuously []OnlineTableSpecContinuousSchedulingPolicy `tfsdk:"run_continuously" tf:"optional"`
 	// Pipeline stops after generating the initial data and can be triggered
 	// later (manually, through a cron job or through data triggers)
-	RunTriggered *OnlineTableSpecTriggeredSchedulingPolicy `tfsdk:"run_triggered" tf:"optional"`
+	RunTriggered []OnlineTableSpecTriggeredSchedulingPolicy `tfsdk:"run_triggered" tf:"optional"`
 	// Three-part (catalog, schema, table) name of the source Delta table.
 	SourceTableFullName types.String `tfsdk:"source_table_full_name" tf:"optional"`
 	// Time series key to deduplicate (tie-break) rows with the same primary
@@ -2008,21 +2077,21 @@ type OnlineTableSpecTriggeredSchedulingPolicy struct {
 type OnlineTableStatus struct {
 	// Detailed status of an online table. Shown if the online table is in the
 	// ONLINE_CONTINUOUS_UPDATE or the ONLINE_UPDATING_PIPELINE_RESOURCES state.
-	ContinuousUpdateStatus *ContinuousUpdateStatus `tfsdk:"continuous_update_status" tf:"optional"`
+	ContinuousUpdateStatus []ContinuousUpdateStatus `tfsdk:"continuous_update_status" tf:"optional"`
 	// The state of the online table.
 	DetailedState types.String `tfsdk:"detailed_state" tf:"optional"`
 	// Detailed status of an online table. Shown if the online table is in the
 	// OFFLINE_FAILED or the ONLINE_PIPELINE_FAILED state.
-	FailedStatus *FailedStatus `tfsdk:"failed_status" tf:"optional"`
+	FailedStatus []FailedStatus `tfsdk:"failed_status" tf:"optional"`
 	// A text description of the current state of the online table.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Detailed status of an online table. Shown if the online table is in the
 	// PROVISIONING_PIPELINE_RESOURCES or the PROVISIONING_INITIAL_SNAPSHOT
 	// state.
-	ProvisioningStatus *ProvisioningStatus `tfsdk:"provisioning_status" tf:"optional"`
+	ProvisioningStatus []ProvisioningStatus `tfsdk:"provisioning_status" tf:"optional"`
 	// Detailed status of an online table. Shown if the online table is in the
 	// ONLINE_TRIGGERED_UPDATE or the ONLINE_NO_PENDING_UPDATE state.
-	TriggeredUpdateStatus *TriggeredUpdateStatus `tfsdk:"triggered_update_status" tf:"optional"`
+	TriggeredUpdateStatus []TriggeredUpdateStatus `tfsdk:"triggered_update_status" tf:"optional"`
 }
 
 type PermissionsChange struct {
@@ -2079,7 +2148,7 @@ type ProvisioningInfo struct {
 type ProvisioningStatus struct {
 	// Details about initial data synchronization. Only populated when in the
 	// PROVISIONING_INITIAL_SNAPSHOT state.
-	InitialPipelineSyncProgress *PipelineProgress `tfsdk:"initial_pipeline_sync_progress" tf:"optional"`
+	InitialPipelineSyncProgress []PipelineProgress `tfsdk:"initial_pipeline_sync_progress" tf:"optional"`
 }
 
 type QuotaInfo struct {
@@ -2096,6 +2165,17 @@ type QuotaInfo struct {
 	QuotaLimit types.Int64 `tfsdk:"quota_limit" tf:"optional"`
 	// The name of the quota.
 	QuotaName types.String `tfsdk:"quota_name" tf:"optional"`
+}
+
+// R2 temporary credentials for API authentication. Read more at
+// https://developers.cloudflare.com/r2/api/s3/tokens/.
+type R2Credentials struct {
+	// The access key ID that identifies the temporary credentials.
+	AccessKeyId types.String `tfsdk:"access_key_id" tf:"optional"`
+	// The secret access key associated with the access key.
+	SecretAccessKey types.String `tfsdk:"secret_access_key" tf:"optional"`
+	// The generated JWT that users must pass to use the temporary credentials.
+	SessionToken types.String `tfsdk:"session_token" tf:"optional"`
 }
 
 // Get a Volume
@@ -2188,7 +2268,7 @@ type SchemaInfo struct {
 	// Username of schema creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 
-	EffectivePredictiveOptimizationFlag *EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
+	EffectivePredictiveOptimizationFlag []EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
@@ -2241,13 +2321,13 @@ type SseEncryptionDetails struct {
 
 type StorageCredentialInfo struct {
 	// The AWS IAM role configuration.
-	AwsIamRole *AwsIamRoleResponse `tfsdk:"aws_iam_role" tf:"optional"`
+	AwsIamRole []AwsIamRoleResponse `tfsdk:"aws_iam_role" tf:"optional"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity *AzureManagedIdentityResponse `tfsdk:"azure_managed_identity" tf:"optional"`
+	AzureManagedIdentity []AzureManagedIdentityResponse `tfsdk:"azure_managed_identity" tf:"optional"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal *AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional"`
+	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional"`
 	// The Cloudflare API token configuration.
-	CloudflareApiToken *CloudflareApiToken `tfsdk:"cloudflare_api_token" tf:"optional"`
+	CloudflareApiToken []CloudflareApiToken `tfsdk:"cloudflare_api_token" tf:"optional"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Time at which this Credential was created, in epoch milliseconds.
@@ -2255,7 +2335,7 @@ type StorageCredentialInfo struct {
 	// Username of credential creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 	// The Databricks managed GCP service account configuration.
-	DatabricksGcpServiceAccount *DatabricksGcpServiceAccountResponse `tfsdk:"databricks_gcp_service_account" tf:"optional"`
+	DatabricksGcpServiceAccount []DatabricksGcpServiceAccountResponse `tfsdk:"databricks_gcp_service_account" tf:"optional"`
 	// The unique identifier of the credential.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
@@ -2290,11 +2370,11 @@ type SystemSchemaInfo struct {
 // __primary_key_constraint__, __foreign_key_constraint__,
 // __named_table_constraint__.
 type TableConstraint struct {
-	ForeignKeyConstraint *ForeignKeyConstraint `tfsdk:"foreign_key_constraint" tf:"optional"`
+	ForeignKeyConstraint []ForeignKeyConstraint `tfsdk:"foreign_key_constraint" tf:"optional"`
 
-	NamedTableConstraint *NamedTableConstraint `tfsdk:"named_table_constraint" tf:"optional"`
+	NamedTableConstraint []NamedTableConstraint `tfsdk:"named_table_constraint" tf:"optional"`
 
-	PrimaryKeyConstraint *PrimaryKeyConstraint `tfsdk:"primary_key_constraint" tf:"optional"`
+	PrimaryKeyConstraint []PrimaryKeyConstraint `tfsdk:"primary_key_constraint" tf:"optional"`
 }
 
 // A table that is dependent on a SQL object.
@@ -2334,14 +2414,14 @@ type TableInfo struct {
 	// omitted if table is not deleted.
 	DeletedAt types.Int64 `tfsdk:"deleted_at" tf:"optional"`
 	// Information pertaining to current state of the delta table.
-	DeltaRuntimePropertiesKvpairs *DeltaRuntimePropertiesKvPairs `tfsdk:"delta_runtime_properties_kvpairs" tf:"optional"`
+	DeltaRuntimePropertiesKvpairs []DeltaRuntimePropertiesKvPairs `tfsdk:"delta_runtime_properties_kvpairs" tf:"optional"`
 
-	EffectivePredictiveOptimizationFlag *EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
+	EffectivePredictiveOptimizationFlag []EffectivePredictiveOptimizationFlag `tfsdk:"effective_predictive_optimization_flag" tf:"optional"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	EncryptionDetails []EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
 	// Full name of table, in form of
 	// __catalog_name__.__schema_name__.__table_name__
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
@@ -2357,7 +2437,7 @@ type TableInfo struct {
 	// A map of key-value properties attached to the securable.
 	Properties map[string]types.String `tfsdk:"properties" tf:"optional"`
 
-	RowFilter *TableRowFilter `tfsdk:"row_filter" tf:"optional"`
+	RowFilter []TableRowFilter `tfsdk:"row_filter" tf:"optional"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
 	// List of schemes whose objects can be referenced without qualification.
@@ -2386,7 +2466,7 @@ type TableInfo struct {
 	// provided; - when DependencyList is an empty list, the dependency is
 	// provided but is empty; - when DependencyList is not an empty list,
 	// dependencies are provided and recorded.
-	ViewDependencies *DependencyList `tfsdk:"view_dependencies" tf:"optional"`
+	ViewDependencies []DependencyList `tfsdk:"view_dependencies" tf:"optional"`
 }
 
 type TableRowFilter struct {
@@ -2416,7 +2496,7 @@ type TriggeredUpdateStatus struct {
 	// table to the online table.
 	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
 	// Progress of the active data synchronization pipeline.
-	TriggeredUpdateProgress *PipelineProgress `tfsdk:"triggered_update_progress" tf:"optional"`
+	TriggeredUpdateProgress []PipelineProgress `tfsdk:"triggered_update_progress" tf:"optional"`
 }
 
 // Delete an assignment
@@ -2471,7 +2551,7 @@ type UpdateExternalLocation struct {
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	EncryptionDetails []EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
@@ -2559,15 +2639,15 @@ type UpdateMonitor struct {
 	// if the monitor is in PENDING state.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
 	// The data classification config for the monitor.
-	DataClassificationConfig *MonitorDataClassificationConfig `tfsdk:"data_classification_config" tf:"optional"`
+	DataClassificationConfig []MonitorDataClassificationConfig `tfsdk:"data_classification_config" tf:"optional"`
 	// Configuration for monitoring inference logs.
-	InferenceLog *MonitorInferenceLog `tfsdk:"inference_log" tf:"optional"`
+	InferenceLog []MonitorInferenceLog `tfsdk:"inference_log" tf:"optional"`
 	// The notification settings for the monitor.
-	Notifications *MonitorNotifications `tfsdk:"notifications" tf:"optional"`
+	Notifications []MonitorNotifications `tfsdk:"notifications" tf:"optional"`
 	// Schema where output metric tables are created.
 	OutputSchemaName types.String `tfsdk:"output_schema_name" tf:""`
 	// The schedule for automatically updating and refreshing metric tables.
-	Schedule *MonitorCronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []MonitorCronSchedule `tfsdk:"schedule" tf:"optional"`
 	// List of column expressions to slice data with for targeted analysis. The
 	// data is grouped by each expression independently, resulting in a separate
 	// slice for each predicate and its complements. For high-cardinality
@@ -2575,11 +2655,11 @@ type UpdateMonitor struct {
 	// slices.
 	SlicingExprs []types.String `tfsdk:"slicing_exprs" tf:"optional"`
 	// Configuration for monitoring snapshot tables.
-	Snapshot *MonitorSnapshot `tfsdk:"snapshot" tf:"optional"`
+	Snapshot []MonitorSnapshot `tfsdk:"snapshot" tf:"optional"`
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
 	// Configuration for monitoring time series tables.
-	TimeSeries *MonitorTimeSeries `tfsdk:"time_series" tf:"optional"`
+	TimeSeries []MonitorTimeSeries `tfsdk:"time_series" tf:"optional"`
 }
 
 type UpdatePermissions struct {
@@ -2623,17 +2703,17 @@ type UpdateSchema struct {
 
 type UpdateStorageCredential struct {
 	// The AWS IAM role configuration.
-	AwsIamRole *AwsIamRoleRequest `tfsdk:"aws_iam_role" tf:"optional"`
+	AwsIamRole []AwsIamRoleRequest `tfsdk:"aws_iam_role" tf:"optional"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity *AzureManagedIdentityResponse `tfsdk:"azure_managed_identity" tf:"optional"`
+	AzureManagedIdentity []AzureManagedIdentityResponse `tfsdk:"azure_managed_identity" tf:"optional"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal *AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional"`
+	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional"`
 	// The Cloudflare API token configuration.
-	CloudflareApiToken *CloudflareApiToken `tfsdk:"cloudflare_api_token" tf:"optional"`
+	CloudflareApiToken []CloudflareApiToken `tfsdk:"cloudflare_api_token" tf:"optional"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The Databricks managed GCP service account configuration.
-	DatabricksGcpServiceAccount *DatabricksGcpServiceAccountRequest `tfsdk:"databricks_gcp_service_account" tf:"optional"`
+	DatabricksGcpServiceAccount []DatabricksGcpServiceAccountRequest `tfsdk:"databricks_gcp_service_account" tf:"optional"`
 	// Force update even if there are dependent external locations or external
 	// tables.
 	Force types.Bool `tfsdk:"force" tf:"optional"`
@@ -2694,15 +2774,15 @@ type UpdateWorkspaceBindingsParameters struct {
 
 type ValidateStorageCredential struct {
 	// The AWS IAM role configuration.
-	AwsIamRole *AwsIamRoleRequest `tfsdk:"aws_iam_role" tf:"optional"`
+	AwsIamRole []AwsIamRoleRequest `tfsdk:"aws_iam_role" tf:"optional"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity *AzureManagedIdentityRequest `tfsdk:"azure_managed_identity" tf:"optional"`
+	AzureManagedIdentity []AzureManagedIdentityRequest `tfsdk:"azure_managed_identity" tf:"optional"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal *AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional"`
+	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional"`
 	// The Cloudflare API token configuration.
-	CloudflareApiToken *CloudflareApiToken `tfsdk:"cloudflare_api_token" tf:"optional"`
+	CloudflareApiToken []CloudflareApiToken `tfsdk:"cloudflare_api_token" tf:"optional"`
 	// The Databricks created GCP service account configuration.
-	DatabricksGcpServiceAccount *DatabricksGcpServiceAccountRequest `tfsdk:"databricks_gcp_service_account" tf:"optional"`
+	DatabricksGcpServiceAccount []DatabricksGcpServiceAccountRequest `tfsdk:"databricks_gcp_service_account" tf:"optional"`
 	// The name of an existing external location to validate.
 	ExternalLocationName types.String `tfsdk:"external_location_name" tf:"optional"`
 	// Whether the storage credential is only usable for read operations.
@@ -2745,7 +2825,7 @@ type VolumeInfo struct {
 	// The identifier of the user who created the volume
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails *EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
+	EncryptionDetails []EncryptionDetails `tfsdk:"encryption_details" tf:"optional"`
 	// The three-level (fully qualified) name of the volume
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// The unique identifier of the metastore

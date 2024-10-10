@@ -166,7 +166,7 @@ type AzureAttributes struct {
 	// mutated over the lifetime of a cluster.
 	FirstOnDemand types.Int64 `tfsdk:"first_on_demand" tf:"optional"`
 	// Defines values necessary to configure and run Azure Log Analytics agent
-	LogAnalyticsInfo *LogAnalyticsInfo `tfsdk:"log_analytics_info" tf:"optional"`
+	LogAnalyticsInfo []LogAnalyticsInfo `tfsdk:"log_analytics_info" tf:"optional"`
 	// The max bid price to be used for Azure spot instances. The Max price for
 	// the bid cannot be higher than the on-demand price of the instance. If not
 	// specified, the default value is -1, which specifies that the instance
@@ -245,17 +245,17 @@ type ClusterAttributes struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes *AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes *AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf *ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -292,7 +292,7 @@ type ClusterAttributes struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
+	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -310,7 +310,7 @@ type ClusterAttributes struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes *GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -326,8 +326,14 @@ type ClusterAttributes struct {
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -360,7 +366,7 @@ type ClusterAttributes struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType *WorkloadType `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional"`
 }
 
 type ClusterCompliance struct {
@@ -380,7 +386,7 @@ type ClusterDetails struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *AutoScale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -389,10 +395,10 @@ type ClusterDetails struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes *AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes *AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// Number of CPU cores available for this cluster. Note that this can be
 	// fractional, e.g. 7.5 cores, since certain node types are configured to
 	// share cores between Spark nodes on the same instance.
@@ -406,9 +412,9 @@ type ClusterDetails struct {
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf *ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
 	// Cluster log delivery status.
-	ClusterLogStatus *LogSyncStatus `tfsdk:"cluster_log_status" tf:"optional"`
+	ClusterLogStatus []LogSyncStatus `tfsdk:"cluster_log_status" tf:"optional"`
 	// Total amount of cluster memory, in megabytes
 	ClusterMemoryMb types.Int64 `tfsdk:"cluster_memory_mb" tf:"optional"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
@@ -467,11 +473,11 @@ type ClusterDetails struct {
 	// - Name: <Databricks internal use>
 	DefaultTags map[string]types.String `tfsdk:"default_tags" tf:"optional"`
 
-	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
+	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// Node on which the Spark driver resides. The driver node contains the
 	// Spark master and the Databricks application that manages the per-notebook
 	// Spark REPLs.
-	Driver *SparkNode `tfsdk:"driver" tf:"optional"`
+	Driver []SparkNode `tfsdk:"driver" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -491,7 +497,7 @@ type ClusterDetails struct {
 	Executors []SparkNode `tfsdk:"executors" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes *GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -526,8 +532,14 @@ type ClusterDetails struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -563,7 +575,7 @@ type ClusterDetails struct {
 	// or edit this cluster. The contents of `spec` can be used in the body of a
 	// create cluster request. This field might not be populated for older
 	// clusters. Note: not included in the response of the ListClusters API.
-	Spec *ClusterSpec `tfsdk:"spec" tf:"optional"`
+	Spec []ClusterSpec `tfsdk:"spec" tf:"optional"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
@@ -581,18 +593,18 @@ type ClusterDetails struct {
 	TerminatedTime types.Int64 `tfsdk:"terminated_time" tf:"optional"`
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
-	TerminationReason *TerminationReason `tfsdk:"termination_reason" tf:"optional"`
+	TerminationReason []TerminationReason `tfsdk:"termination_reason" tf:"optional"`
 
-	WorkloadType *WorkloadType `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional"`
 }
 
 type ClusterEvent struct {
 	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// <needs content added>
-	DataPlaneEventDetails *DataPlaneEventDetails `tfsdk:"data_plane_event_details" tf:"optional"`
+	DataPlaneEventDetails []DataPlaneEventDetails `tfsdk:"data_plane_event_details" tf:"optional"`
 	// <needs content added>
-	Details *EventDetails `tfsdk:"details" tf:"optional"`
+	Details []EventDetails `tfsdk:"details" tf:"optional"`
 	// The timestamp when the event occurred, stored as the number of
 	// milliseconds since the Unix epoch. If not provided, this will be assigned
 	// by the Timeline service.
@@ -611,13 +623,13 @@ type ClusterLibraryStatuses struct {
 type ClusterLogConf struct {
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
-	Dbfs *DbfsStorageInfo `tfsdk:"dbfs" tf:"optional"`
+	Dbfs []DbfsStorageInfo `tfsdk:"dbfs" tf:"optional"`
 	// destination and either the region or endpoint need to be provided. e.g.
 	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
 	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
-	S3 *S3StorageInfo `tfsdk:"s3" tf:"optional"`
+	S3 []S3StorageInfo `tfsdk:"s3" tf:"optional"`
 }
 
 type ClusterPermission struct {
@@ -721,7 +733,7 @@ type ClusterSize struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *AutoScale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -743,7 +755,7 @@ type ClusterSpec struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *AutoScale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -752,17 +764,17 @@ type ClusterSpec struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes *AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes *AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf *ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -799,7 +811,7 @@ type ClusterSpec struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
+	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -817,7 +829,7 @@ type ClusterSpec struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes *GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -844,8 +856,14 @@ type ClusterSpec struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -878,7 +896,7 @@ type ClusterSpec struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType *WorkloadType `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional"`
 }
 
 // Get status
@@ -910,7 +928,7 @@ type CommandStatusRequest struct {
 type CommandStatusResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Results *Results `tfsdk:"results" tf:"optional"`
+	Results []Results `tfsdk:"results" tf:"optional"`
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
@@ -936,7 +954,7 @@ type CreateCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *AutoScale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -945,20 +963,20 @@ type CreateCluster struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes *AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes *AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// When specified, this clones libraries from a source cluster during the
 	// creation of a new cluster.
-	CloneFrom *CloneCluster `tfsdk:"clone_from" tf:"optional"`
+	CloneFrom []CloneCluster `tfsdk:"clone_from" tf:"optional"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf *ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -995,7 +1013,7 @@ type CreateCluster struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
+	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -1013,7 +1031,7 @@ type CreateCluster struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes *GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -1040,8 +1058,14 @@ type CreateCluster struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -1074,7 +1098,7 @@ type CreateCluster struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType *WorkloadType `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional"`
 }
 
 type CreateClusterResponse struct {
@@ -1091,10 +1115,10 @@ type CreateContext struct {
 type CreateInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes *InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes *InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -1103,7 +1127,7 @@ type CreateInstancePool struct {
 	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec *DiskSpec `tfsdk:"disk_spec" tf:"optional"`
+	DiskSpec []DiskSpec `tfsdk:"disk_spec" tf:"optional"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -1112,7 +1136,7 @@ type CreateInstancePool struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes *InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -1290,7 +1314,7 @@ type DiskSpec struct {
 
 	DiskThroughput types.Int64 `tfsdk:"disk_throughput" tf:"optional"`
 	// The type of disks that will be launched with this cluster.
-	DiskType *DiskType `tfsdk:"disk_type" tf:"optional"`
+	DiskType []DiskType `tfsdk:"disk_type" tf:"optional"`
 }
 
 type DiskType struct {
@@ -1307,7 +1331,7 @@ type DockerBasicAuth struct {
 }
 
 type DockerImage struct {
-	BasicAuth *DockerBasicAuth `tfsdk:"basic_auth" tf:"optional"`
+	BasicAuth []DockerBasicAuth `tfsdk:"basic_auth" tf:"optional"`
 	// URL of the docker image.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -1320,7 +1344,7 @@ type EditCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *AutoScale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -1329,10 +1353,10 @@ type EditCluster struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes *AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes *AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// ID of the cluser
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// The configuration for delivering spark logs to a long-term storage
@@ -1341,7 +1365,7 @@ type EditCluster struct {
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf *ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -1378,7 +1402,7 @@ type EditCluster struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
+	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -1396,7 +1420,7 @@ type EditCluster struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes *GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -1423,8 +1447,14 @@ type EditCluster struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -1457,7 +1487,7 @@ type EditCluster struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType *WorkloadType `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional"`
 }
 
 type EditClusterResponse struct {
@@ -1582,11 +1612,11 @@ type Environment struct {
 type EventDetails struct {
 	// * For created clusters, the attributes of the cluster. * For edited
 	// clusters, the new attributes of the cluster.
-	Attributes *ClusterAttributes `tfsdk:"attributes" tf:"optional"`
+	Attributes []ClusterAttributes `tfsdk:"attributes" tf:"optional"`
 	// The cause of a change in target size.
 	Cause types.String `tfsdk:"cause" tf:"optional"`
 	// The actual cluster size that was set in the cluster creation or edit.
-	ClusterSize *ClusterSize `tfsdk:"cluster_size" tf:"optional"`
+	ClusterSize []ClusterSize `tfsdk:"cluster_size" tf:"optional"`
 	// The current number of vCPUs in the cluster.
 	CurrentNumVcpus types.Int64 `tfsdk:"current_num_vcpus" tf:"optional"`
 	// The current number of nodes in the cluster.
@@ -1604,7 +1634,7 @@ type EventDetails struct {
 	FreeSpace types.Int64 `tfsdk:"free_space" tf:"optional"`
 	// List of global and cluster init scripts associated with this cluster
 	// event.
-	InitScripts *InitScriptEventDetails `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts []InitScriptEventDetails `tfsdk:"init_scripts" tf:"optional"`
 	// Instance Id where the event originated from
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 	// Unique identifier of the specific job run associated with this cluster
@@ -1612,15 +1642,15 @@ type EventDetails struct {
 	// cluster name
 	JobRunName types.String `tfsdk:"job_run_name" tf:"optional"`
 	// The cluster attributes before a cluster was edited.
-	PreviousAttributes *ClusterAttributes `tfsdk:"previous_attributes" tf:"optional"`
+	PreviousAttributes []ClusterAttributes `tfsdk:"previous_attributes" tf:"optional"`
 	// The size of the cluster before an edit or resize.
-	PreviousClusterSize *ClusterSize `tfsdk:"previous_cluster_size" tf:"optional"`
+	PreviousClusterSize []ClusterSize `tfsdk:"previous_cluster_size" tf:"optional"`
 	// Previous disk size in bytes
 	PreviousDiskSize types.Int64 `tfsdk:"previous_disk_size" tf:"optional"`
 	// A termination reason: * On a TERMINATED event, this is the reason of the
 	// termination. * On a RESIZE_COMPLETE event, this indicates the reason that
 	// we failed to acquire some nodes.
-	Reason *TerminationReason `tfsdk:"reason" tf:"optional"`
+	Reason []TerminationReason `tfsdk:"reason" tf:"optional"`
 	// The targeted number of vCPUs in the cluster.
 	TargetNumVcpus types.Int64 `tfsdk:"target_num_vcpus" tf:"optional"`
 	// The targeted number of nodes in the cluster.
@@ -1761,7 +1791,7 @@ type GetEventsResponse struct {
 	Events []ClusterEvent `tfsdk:"events" tf:"optional"`
 	// The parameters required to retrieve the next page of events. Omitted if
 	// there are no more events to read.
-	NextPage *GetEvents `tfsdk:"next_page" tf:"optional"`
+	NextPage []GetEvents `tfsdk:"next_page" tf:"optional"`
 	// The total number of events filtered by the start_time, end_time, and
 	// event_types.
 	TotalCount types.Int64 `tfsdk:"total_count" tf:"optional"`
@@ -1776,10 +1806,10 @@ type GetGlobalInitScriptRequest struct {
 type GetInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes *InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes *InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -1799,7 +1829,7 @@ type GetInstancePool struct {
 	DefaultTags map[string]types.String `tfsdk:"default_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec *DiskSpec `tfsdk:"disk_spec" tf:"optional"`
+	DiskSpec []DiskSpec `tfsdk:"disk_spec" tf:"optional"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -1808,7 +1838,7 @@ type GetInstancePool struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes *InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -1844,9 +1874,9 @@ type GetInstancePool struct {
 	// Current state of the instance pool.
 	State types.String `tfsdk:"state" tf:"optional"`
 	// Usage statistics about the instance pool.
-	Stats *InstancePoolStats `tfsdk:"stats" tf:"optional"`
+	Stats []InstancePoolStats `tfsdk:"stats" tf:"optional"`
 	// Status of failed pending instances in the pool.
-	Status *InstancePoolStatus `tfsdk:"status" tf:"optional"`
+	Status []InstancePoolStatus `tfsdk:"status" tf:"optional"`
 }
 
 // Get instance pool permission levels
@@ -1999,35 +2029,35 @@ type InitScriptInfo struct {
 	// destination needs to be provided. e.g. `{ "abfss" : { "destination" :
 	// "abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>"
 	// } }
-	Abfss *Adlsgen2Info `tfsdk:"abfss" tf:"optional"`
+	Abfss []Adlsgen2Info `tfsdk:"abfss" tf:"optional"`
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
-	Dbfs *DbfsStorageInfo `tfsdk:"dbfs" tf:"optional"`
+	Dbfs []DbfsStorageInfo `tfsdk:"dbfs" tf:"optional"`
 	// destination needs to be provided. e.g. `{ "file" : { "destination" :
 	// "file:/my/local/file.sh" } }`
-	File *LocalFileInfo `tfsdk:"file" tf:"optional"`
+	File []LocalFileInfo `tfsdk:"file" tf:"optional"`
 	// destination needs to be provided. e.g. `{ "gcs": { "destination":
 	// "gs://my-bucket/file.sh" } }`
-	Gcs *GcsStorageInfo `tfsdk:"gcs" tf:"optional"`
+	Gcs []GcsStorageInfo `tfsdk:"gcs" tf:"optional"`
 	// destination and either the region or endpoint need to be provided. e.g.
 	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
 	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
-	S3 *S3StorageInfo `tfsdk:"s3" tf:"optional"`
+	S3 []S3StorageInfo `tfsdk:"s3" tf:"optional"`
 	// destination needs to be provided. e.g. `{ "volumes" : { "destination" :
 	// "/Volumes/my-init.sh" } }`
-	Volumes *VolumesStorageInfo `tfsdk:"volumes" tf:"optional"`
+	Volumes []VolumesStorageInfo `tfsdk:"volumes" tf:"optional"`
 	// destination needs to be provided. e.g. `{ "workspace" : { "destination" :
 	// "/Users/user1@databricks.com/my-init.sh" } }`
-	Workspace *WorkspaceStorageInfo `tfsdk:"workspace" tf:"optional"`
+	Workspace []WorkspaceStorageInfo `tfsdk:"workspace" tf:"optional"`
 }
 
 type InitScriptInfoAndExecutionDetails struct {
 	// Details about the script
-	ExecutionDetails *InitScriptExecutionDetails `tfsdk:"execution_details" tf:"optional"`
+	ExecutionDetails []InitScriptExecutionDetails `tfsdk:"execution_details" tf:"optional"`
 	// The script
-	Script *InitScriptInfo `tfsdk:"script" tf:"optional"`
+	Script []InitScriptInfo `tfsdk:"script" tf:"optional"`
 }
 
 type InstallLibraries struct {
@@ -2067,10 +2097,10 @@ type InstancePoolAccessControlResponse struct {
 type InstancePoolAndStats struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes *InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes *InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -2090,7 +2120,7 @@ type InstancePoolAndStats struct {
 	DefaultTags map[string]types.String `tfsdk:"default_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec *DiskSpec `tfsdk:"disk_spec" tf:"optional"`
+	DiskSpec []DiskSpec `tfsdk:"disk_spec" tf:"optional"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -2099,7 +2129,7 @@ type InstancePoolAndStats struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes *InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -2135,9 +2165,9 @@ type InstancePoolAndStats struct {
 	// Current state of the instance pool.
 	State types.String `tfsdk:"state" tf:"optional"`
 	// Usage statistics about the instance pool.
-	Stats *InstancePoolStats `tfsdk:"stats" tf:"optional"`
+	Stats []InstancePoolStats `tfsdk:"stats" tf:"optional"`
 	// Status of failed pending instances in the pool.
-	Status *InstancePoolStatus `tfsdk:"status" tf:"optional"`
+	Status []InstancePoolStatus `tfsdk:"status" tf:"optional"`
 }
 
 type InstancePoolAwsAttributes struct {
@@ -2284,7 +2314,7 @@ type InstanceProfile struct {
 
 type Library struct {
 	// Specification of a CRAN library to be installed as part of the library
-	Cran *RCranLibrary `tfsdk:"cran" tf:"optional"`
+	Cran []RCranLibrary `tfsdk:"cran" tf:"optional"`
 	// Deprecated. URI of the egg library to install. Installing Python egg
 	// files is deprecated and is not supported in Databricks Runtime 14.0 and
 	// above.
@@ -2299,10 +2329,10 @@ type Library struct {
 	Jar types.String `tfsdk:"jar" tf:"optional"`
 	// Specification of a maven library to be installed. For example: `{
 	// "coordinates": "org.jsoup:jsoup:1.7.2" }`
-	Maven *MavenLibrary `tfsdk:"maven" tf:"optional"`
+	Maven []MavenLibrary `tfsdk:"maven" tf:"optional"`
 	// Specification of a PyPi library to be installed. For example: `{
 	// "package": "simplejson" }`
-	Pypi *PythonPyPiLibrary `tfsdk:"pypi" tf:"optional"`
+	Pypi []PythonPyPiLibrary `tfsdk:"pypi" tf:"optional"`
 	// URI of the requirements.txt file to install. Only Workspace paths and
 	// Unity Catalog Volumes paths are supported. For example: `{
 	// "requirements": "/Workspace/path/to/requirements.txt" }` or `{
@@ -2324,7 +2354,7 @@ type LibraryFullStatus struct {
 	// libraries UI.
 	IsLibraryForAllClusters types.Bool `tfsdk:"is_library_for_all_clusters" tf:"optional"`
 	// Unique identifier for the library.
-	Library *Library `tfsdk:"library" tf:"optional"`
+	Library []Library `tfsdk:"library" tf:"optional"`
 	// All the info and warning messages that have occurred so far for this
 	// library.
 	Messages []types.String `tfsdk:"messages" tf:"optional"`
@@ -2395,7 +2425,7 @@ type ListClustersFilterBy struct {
 // List clusters
 type ListClustersRequest struct {
 	// Filters to apply to the list of clusters.
-	FilterBy *ListClustersFilterBy `tfsdk:"-"`
+	FilterBy []ListClustersFilterBy `tfsdk:"-"`
 	// Use this field to specify the maximum number of results to be returned by
 	// the server. The server may further constrain the maximum number of
 	// results returned in a single page.
@@ -2404,7 +2434,7 @@ type ListClustersRequest struct {
 	// to list the next or previous page of clusters respectively.
 	PageToken types.String `tfsdk:"-"`
 	// Sort the list of clusters by a specific criteria.
-	SortBy *ListClustersSortBy `tfsdk:"-"`
+	SortBy []ListClustersSortBy `tfsdk:"-"`
 }
 
 type ListClustersResponse struct {
@@ -2538,9 +2568,9 @@ type NodeType struct {
 	// Memory (in MB) available for this node type.
 	MemoryMb types.Int64 `tfsdk:"memory_mb" tf:""`
 
-	NodeInfo *CloudProviderNodeInfo `tfsdk:"node_info" tf:"optional"`
+	NodeInfo []CloudProviderNodeInfo `tfsdk:"node_info" tf:"optional"`
 
-	NodeInstanceType *NodeInstanceType `tfsdk:"node_instance_type" tf:"optional"`
+	NodeInstanceType []NodeInstanceType `tfsdk:"node_instance_type" tf:"optional"`
 	// Unique identifier for this node type.
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:""`
 	// Number of CPU cores available for this node type. Note that this can be
@@ -2679,7 +2709,7 @@ type ResizeCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *AutoScale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional"`
 	// The cluster to be resized.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// Number of worker nodes that this cluster should have. A cluster has one
@@ -2771,7 +2801,7 @@ type SparkNode struct {
 	// Globally unique identifier for the host instance from the cloud provider.
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 	// Attributes specific to AWS for a Spark node.
-	NodeAwsAttributes *SparkNodeAwsAttributes `tfsdk:"node_aws_attributes" tf:"optional"`
+	NodeAwsAttributes []SparkNodeAwsAttributes `tfsdk:"node_aws_attributes" tf:"optional"`
 	// Globally unique identifier for this node.
 	NodeId types.String `tfsdk:"node_id" tf:"optional"`
 	// Private IP address (typically a 10.x.x.x address) of the Spark node. Note
@@ -2847,7 +2877,7 @@ type UnpinClusterResponse struct {
 
 type UpdateCluster struct {
 	// The cluster to be updated.
-	Cluster *UpdateClusterResource `tfsdk:"cluster" tf:"optional"`
+	Cluster []UpdateClusterResource `tfsdk:"cluster" tf:"optional"`
 	// ID of the cluster.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// Specifies which fields of the cluster will be updated. This is required
@@ -2862,7 +2892,7 @@ type UpdateClusterResource struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *AutoScale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -2871,17 +2901,17 @@ type UpdateClusterResource struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes *AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes *AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf *ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -2918,7 +2948,7 @@ type UpdateClusterResource struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage *DockerImage `tfsdk:"docker_image" tf:"optional"`
+	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -2936,7 +2966,7 @@ type UpdateClusterResource struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes *GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -2963,8 +2993,14 @@ type UpdateClusterResource struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
-	// Decides which runtime engine to be use, e.g. Standard vs. Photon. If
-	// unspecified, the runtime engine is inferred from spark_version.
+	// Determines the cluster's runtime engine, either standard or Photon.
+	//
+	// This field is not compatible with legacy `spark_version` values that
+	// contain `-photon-`. Remove `-photon-` from the `spark_version` and set
+	// `runtime_engine` to `PHOTON`.
+	//
+	// If left unspecified, the runtime engine defaults to standard unless the
+	// spark_version contains -photon-, in which case Photon will be used.
 	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
 	// Single user name if data_security_mode is `SINGLE_USER`
 	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
@@ -2997,7 +3033,7 @@ type UpdateClusterResource struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType *WorkloadType `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional"`
 }
 
 type UpdateClusterResponse struct {
@@ -3013,7 +3049,7 @@ type VolumesStorageInfo struct {
 
 type WorkloadType struct {
 	// defined what type of clients can use the cluster. E.g. Notebooks, Jobs
-	Clients ClientsTypes `tfsdk:"clients" tf:""`
+	Clients []ClientsTypes `tfsdk:"clients" tf:""`
 }
 
 type WorkspaceStorageInfo struct {

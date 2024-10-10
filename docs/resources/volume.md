@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_volume (Resource)
 
--> **Public Preview** This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+-> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
--> **Note** This resource can only be used with a workspace-level provider!
+-> This resource can only be used with a workspace-level provider!
 
 Volumes are Unity Catalog objects representing a logical volume of storage in a cloud object storage location. Volumes provide capabilities for accessing, storing, governing, and organizing files. While tables provide governance over tabular datasets, volumes add governance over non-tabular datasets. You can use volumes to store and access files in any format, including structured, semi-structured, and unstructured data.
 

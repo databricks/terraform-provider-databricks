@@ -29,6 +29,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/dashboards"
+	"github.com/databricks/terraform-provider-databricks/finops"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/logger"
@@ -99,6 +100,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_metastores":                           catalog.DataSourceMetastores().ToResource(),
 			"databricks_mlflow_experiment":                    mlflow.DataSourceExperiment().ToResource(),
 			"databricks_mlflow_model":                         mlflow.DataSourceModel().ToResource(),
+			"databricks_mlflow_models":                        mlflow.DataSourceModels().ToResource(),
 			"databricks_mws_credentials":                      mws.DataSourceMwsCredentials().ToResource(),
 			"databricks_mws_workspaces":                       mws.DataSourceMwsWorkspaces().ToResource(),
 			"databricks_node_type":                            clusters.DataSourceNodeType().ToResource(),
@@ -131,6 +133,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_azure_adls_gen1_mount":           storage.ResourceAzureAdlsGen1Mount().ToResource(),
 			"databricks_azure_adls_gen2_mount":           storage.ResourceAzureAdlsGen2Mount().ToResource(),
 			"databricks_azure_blob_mount":                storage.ResourceAzureBlobMount().ToResource(),
+			"databricks_budget":                          finops.ResourceBudget().ToResource(),
 			"databricks_catalog":                         catalog.ResourceCatalog().ToResource(),
 			"databricks_catalog_workspace_binding":       catalog.ResourceCatalogWorkspaceBinding().ToResource(),
 			"databricks_connection":                      catalog.ResourceConnection().ToResource(),

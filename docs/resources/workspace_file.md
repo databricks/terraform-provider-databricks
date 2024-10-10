@@ -34,7 +34,7 @@ resource "databricks_workspace_file" "init_script" {
 
 ## Argument Reference
 
--> **Note** Files in Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed workspace files won't be overwritten by Terraform, if there's no local change to file sources. Workspace files are identified by their path, so changing file's name manually on the workspace and then applying Terraform state would result in creation of workspace file from Terraform state.
+-> Files in Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed workspace files won't be overwritten by Terraform, if there's no local change to file sources. Workspace files are identified by their path, so changing file's name manually on the workspace and then applying Terraform state would result in creation of workspace file from Terraform state.
 
 The size of a workspace file source code must not exceed a few megabytes. The following arguments are supported:
 

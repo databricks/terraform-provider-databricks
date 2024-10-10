@@ -26,7 +26,7 @@ func TestAccLibraryCreationPluginFramework(t *testing.T) {
 		}
 		resource "databricks_library_pluginframework" "new_library" {
 			cluster_id = databricks_cluster.this.id
-			pypi = {
+			pypi {
 				repo = "https://pypi.org/dummy"
 				package = "databricks-sdk"
 			}
@@ -56,7 +56,7 @@ func TestAccLibraryUpdatePluginFramework(t *testing.T) {
 				}
 				resource "databricks_library_pluginframework" "new_library" {
 					cluster_id = databricks_cluster.this.id
-					pypi = {
+					pypi {
 						repo = "https://pypi.org/simple"
 						package = "databricks-sdk"
 					}
@@ -82,7 +82,7 @@ func TestAccLibraryUpdatePluginFramework(t *testing.T) {
 			}
 			resource "databricks_library_pluginframework" "new_library" {
 				cluster_id = databricks_cluster.this.id
-				pypi = {
+				pypi {
 					package = "networkx"
 				}
 			}

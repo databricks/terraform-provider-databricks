@@ -44,7 +44,7 @@ func (a ListNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a ListNestedAttributeBuilder) SetOptional() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -53,7 +53,7 @@ func (a ListNestedAttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetRequired() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -62,7 +62,7 @@ func (a ListNestedAttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetSensitive() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -70,7 +70,7 @@ func (a ListNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetComputed() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -78,7 +78,7 @@ func (a ListNestedAttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -88,17 +88,17 @@ func (a ListNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a ListNestedAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a ListNestedAttributeBuilder) AddValidator(v validator.List) AttributeBuilder {
+func (a ListNestedAttributeBuilder) AddValidator(v validator.List) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a ListNestedAttributeBuilder) AddPlanModifier(v planmodifier.List) AttributeBuilder {
+func (a ListNestedAttributeBuilder) AddPlanModifier(v planmodifier.List) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

@@ -45,9 +45,9 @@ Finally, grant the service principal access to the workspace.
 
 ```hcl
 resource "azurerm_role_assignment" "example" {
-    scope                = "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Databricks/workspaces/<workspace>"
-    role_definition_name = "Contributor"
-    principal_id         = azuread_service_principal.example.id
+  scope                = "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Databricks/workspaces/<workspace>"
+  role_definition_name = "Contributor"
+  principal_id         = azuread_service_principal.example.id
 }
 ```
 
@@ -59,7 +59,7 @@ In your Terraform configuration, configure the Databricks provider to use the se
 provider "databricks" {
   azure_client_id = "<application-id>"
   azure_tenant_id = "<tenant-id>"
-  host = "https://<workspace-url>"
+  host            = "https://<workspace-url>"
 }
 ```
 
@@ -140,9 +140,9 @@ Finally, grant the service principal access to the workspace.
 
 ```hcl
 resource "azurerm_role_assignment" "example" {
-    scope                = "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Databricks/workspaces/<workspace>"
-    role_definition_name = "Contributor"
-    principal_id         = azuread_service_principal.example.id
+  scope                = "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Databricks/workspaces/<workspace>"
+  role_definition_name = "Contributor"
+  principal_id         = azuread_service_principal.example.id
 }
 ```
 
@@ -156,7 +156,7 @@ In your Terraform configuration, configure the Databricks provider to use the se
 provider "databricks" {
   azure_client_id = "<application-id>"
   azure_tenant_id = "<tenant-id>"
-  host = "https://<workspace-url>"
+  host            = "https://<workspace-url>"
 }
 ```
 

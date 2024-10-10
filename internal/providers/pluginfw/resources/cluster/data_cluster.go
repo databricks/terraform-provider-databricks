@@ -70,7 +70,7 @@ func validateClustersList(ctx context.Context, clusters []compute_tf.ClusterDeta
 }
 
 func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetDataSourceNameInContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

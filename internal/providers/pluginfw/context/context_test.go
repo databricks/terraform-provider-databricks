@@ -1,4 +1,4 @@
-package common
+package context
 
 import (
 	"context"
@@ -8,20 +8,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSetResourceNameInContext(t *testing.T) {
+func TestSetUserAgentInResourceContext(t *testing.T) {
 	ctx := context.Background()
 	resourceKey := "resource"
 	resourceName := "test-resource"
-	actualContext := SetResourceNameInContext(ctx, resourceName)
-	expectedContext := useragent.InContext(ctx, resourceKey, resourceName)
+	actualContext := SetUserAgentInResourceContext(ctx, resourceName)
+	expectedContext := useragent.InContext(ctx, "sdk", "pluginframework")
+	expectedContext = useragent.InContext(expectedContext, resourceKey, resourceName)
 	assert.Equal(t, expectedContext, actualContext)
 }
 
-func TestSetDataSourceNameInContext(t *testing.T) {
+func TestSetUserAgentInDataSourceContext(t *testing.T) {
 	ctx := context.Background()
 	dataSourceKey := "data"
 	dataSourceName := "test-datasource"
-	actualContext := SetDataSourceNameInContext(ctx, dataSourceName)
-	expectedContext := useragent.InContext(ctx, dataSourceKey, dataSourceName)
+	actualContext := SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	expectedContext := useragent.InContext(ctx, "sdk", "pluginframework")
+	expectedContext = useragent.InContext(expectedContext, dataSourceKey, dataSourceName)
 	assert.Equal(t, expectedContext, actualContext)
 }

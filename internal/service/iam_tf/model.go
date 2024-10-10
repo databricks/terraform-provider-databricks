@@ -263,7 +263,7 @@ type Group struct {
 
 	Members []ComplexValue `tfsdk:"members" tf:"optional"`
 	// Container for the group identifier. Workspace local versus account.
-	Meta *ResourceMeta `tfsdk:"meta" tf:"optional"`
+	Meta []ResourceMeta `tfsdk:"meta" tf:"optional"`
 	// Corresponds to AWS instance profile/arn role.
 	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
 	// The schema of the group.
@@ -584,7 +584,7 @@ type PermissionAssignment struct {
 	// The permissions level of the principal.
 	Permissions []types.String `tfsdk:"permissions" tf:"optional"`
 	// Information about the principal assigned to the workspace.
-	Principal *PrincipalOutput `tfsdk:"principal" tf:"optional"`
+	Principal []PrincipalOutput `tfsdk:"principal" tf:"optional"`
 }
 
 type PermissionAssignments struct {
@@ -694,7 +694,7 @@ type UpdateRuleSetRequest struct {
 	// Name of the rule set.
 	Name types.String `tfsdk:"name" tf:""`
 
-	RuleSet RuleSetUpdateRequest `tfsdk:"rule_set" tf:""`
+	RuleSet []RuleSetUpdateRequest `tfsdk:"rule_set" tf:""`
 }
 
 type UpdateWorkspaceAssignments struct {
@@ -736,7 +736,7 @@ type User struct {
 	// provided by the client will be ignored.
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Name *Name `tfsdk:"name" tf:"optional"`
+	Name []Name `tfsdk:"name" tf:"optional"`
 	// Corresponds to AWS instance profile/arn role.
 	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
 	// The schema of the user.

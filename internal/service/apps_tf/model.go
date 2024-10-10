@@ -16,11 +16,11 @@ import (
 
 type App struct {
 	// The active deployment of the app.
-	ActiveDeployment *AppDeployment `tfsdk:"active_deployment" tf:"optional"`
+	ActiveDeployment []AppDeployment `tfsdk:"active_deployment" tf:"optional"`
 
-	AppStatus *ApplicationStatus `tfsdk:"app_status" tf:"optional"`
+	AppStatus []ApplicationStatus `tfsdk:"app_status" tf:"optional"`
 
-	ComputeStatus *ComputeStatus `tfsdk:"compute_status" tf:"optional"`
+	ComputeStatus []ComputeStatus `tfsdk:"compute_status" tf:"optional"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
 	// The email of the user that created the app.
@@ -35,7 +35,7 @@ type App struct {
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name" tf:""`
 	// The pending deployment of the app.
-	PendingDeployment *AppDeployment `tfsdk:"pending_deployment" tf:"optional"`
+	PendingDeployment []AppDeployment `tfsdk:"pending_deployment" tf:"optional"`
 	// Resources for the app.
 	Resources []AppResource `tfsdk:"resources" tf:"optional"`
 
@@ -80,7 +80,7 @@ type AppDeployment struct {
 	// The email of the user creates the deployment.
 	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// The deployment artifacts for an app.
-	DeploymentArtifacts *AppDeploymentArtifacts `tfsdk:"deployment_artifacts" tf:"optional"`
+	DeploymentArtifacts []AppDeploymentArtifacts `tfsdk:"deployment_artifacts" tf:"optional"`
 	// The unique id of the deployment.
 	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
 	// The mode of which the deployment will manage the source code.
@@ -94,7 +94,7 @@ type AppDeployment struct {
 	// the deployment.
 	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
 	// Status and status message of the deployment
-	Status *AppDeploymentStatus `tfsdk:"status" tf:"optional"`
+	Status []AppDeploymentStatus `tfsdk:"status" tf:"optional"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
 	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 }
@@ -144,15 +144,15 @@ type AppResource struct {
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description" tf:"optional"`
 
-	Job *AppResourceJob `tfsdk:"job" tf:"optional"`
+	Job []AppResourceJob `tfsdk:"job" tf:"optional"`
 	// Name of the App Resource.
 	Name types.String `tfsdk:"name" tf:""`
 
-	Secret *AppResourceSecret `tfsdk:"secret" tf:"optional"`
+	Secret []AppResourceSecret `tfsdk:"secret" tf:"optional"`
 
-	ServingEndpoint *AppResourceServingEndpoint `tfsdk:"serving_endpoint" tf:"optional"`
+	ServingEndpoint []AppResourceServingEndpoint `tfsdk:"serving_endpoint" tf:"optional"`
 
-	SqlWarehouse *AppResourceSqlWarehouse `tfsdk:"sql_warehouse" tf:"optional"`
+	SqlWarehouse []AppResourceSqlWarehouse `tfsdk:"sql_warehouse" tf:"optional"`
 }
 
 type AppResourceJob struct {

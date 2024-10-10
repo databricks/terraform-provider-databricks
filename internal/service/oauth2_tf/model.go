@@ -26,7 +26,7 @@ type CreateCustomAppIntegration struct {
 	// offline_access, openid, profile, email.
 	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
 }
 
 type CreateCustomAppIntegrationOutput struct {
@@ -44,7 +44,7 @@ type CreatePublishedAppIntegration struct {
 	// tableau-deskop
 	AppId types.String `tfsdk:"app_id" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
 }
 
 type CreatePublishedAppIntegrationOutput struct {
@@ -128,7 +128,7 @@ type GetCustomAppIntegrationOutput struct {
 
 	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
 }
 
 // Get OAuth Custom App Integration
@@ -155,7 +155,7 @@ type GetPublishedAppIntegrationOutput struct {
 	// Display name of the published OAuth app
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
 }
 
 // Get OAuth Published App Integration
@@ -258,7 +258,7 @@ type UpdateCustomAppIntegration struct {
 	// integration
 	RedirectUrls []types.String `tfsdk:"redirect_urls" tf:"optional"`
 	// Token access policy to be updated in the custom OAuth app integration
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
 }
 
 type UpdateCustomAppIntegrationOutput struct {
@@ -267,7 +267,7 @@ type UpdateCustomAppIntegrationOutput struct {
 type UpdatePublishedAppIntegration struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// Token access policy to be updated in the published OAuth app integration
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
 }
 
 type UpdatePublishedAppIntegrationOutput struct {

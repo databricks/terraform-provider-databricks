@@ -38,8 +38,10 @@ func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.Metadat
 }
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(VolumesList{}, nil)
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(VolumesList{}, nil),
+		Attributes: attrs,
+		Blocks:     blocks,
 	}
 }
 

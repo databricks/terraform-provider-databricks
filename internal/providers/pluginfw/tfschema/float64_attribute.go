@@ -40,7 +40,7 @@ func (a Float64AttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a Float64AttributeBuilder) SetOptional() AttributeBuilder {
+func (a Float64AttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -49,7 +49,7 @@ func (a Float64AttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetRequired() AttributeBuilder {
+func (a Float64AttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -58,7 +58,7 @@ func (a Float64AttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetSensitive() AttributeBuilder {
+func (a Float64AttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -66,7 +66,7 @@ func (a Float64AttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetComputed() AttributeBuilder {
+func (a Float64AttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -74,7 +74,7 @@ func (a Float64AttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a Float64AttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -84,17 +84,17 @@ func (a Float64AttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a Float64AttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a Float64AttributeBuilder) AddValidator(v validator.Float64) AttributeBuilder {
+func (a Float64AttributeBuilder) AddValidator(v validator.Float64) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a Float64AttributeBuilder) AddPlanModifier(v planmodifier.Float64) AttributeBuilder {
+func (a Float64AttributeBuilder) AddPlanModifier(v planmodifier.Float64) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

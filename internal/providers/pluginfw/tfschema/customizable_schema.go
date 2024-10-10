@@ -9,41 +9,47 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-// CustomizableSchema is a wrapper struct on top of AttributeBuilder that can be used to navigate through nested schema add customizations.
+// CustomizableSchema is a wrapper struct on top of BaseSchemaBuilder that can be used to navigate through nested schema add customizations.
 type CustomizableSchema struct {
-	attr AttributeBuilder
+	attr BaseSchemaBuilder
 }
 
-// ConstructCustomizableSchema constructs a CustomizableSchema given a map from string to AttributeBuilder.
-func ConstructCustomizableSchema(attributes map[string]AttributeBuilder) *CustomizableSchema {
-	attr := AttributeBuilder(SingleNestedAttributeBuilder{Attributes: attributes})
+// ConstructCustomizableSchema constructs a CustomizableSchema given a NestedBlockObject.
+func ConstructCustomizableSchema(nestedObject NestedBlockObject) *CustomizableSchema {
+	attr := AttributeBuilder(SingleNestedBlockBuilder{NestedObject: nestedObject})
 	return &CustomizableSchema{attr: attr}
 }
 
-// ToAttributeMap converts CustomizableSchema into a map from string to Attribute.
-func (s *CustomizableSchema) ToAttributeMap() map[string]AttributeBuilder {
-	return attributeToMap(&s.attr)
+// ToAttributeMap converts CustomizableSchema into BaseSchemaBuilder.
+func (s *CustomizableSchema) ToNestedBlockObject() NestedBlockObject {
+	return attributeToNestedBlockObject(&s.attr)
 }
 
 // attributeToMap converts AttributeBuilder into a map from string to AttributeBuilder.
-func attributeToMap(attr *AttributeBuilder) map[string]AttributeBuilder {
-	var m map[string]AttributeBuilder
+func attributeToNestedBlockObject(attr *BaseSchemaBuilder) NestedBlockObject {
+	var res = NestedBlockObject{}
 	switch attr := (*attr).(type) {
 	case SingleNestedAttributeBuilder:
-		m = attr.Attributes
+		res.Attributes = attr.Attributes
 	case ListNestedAttributeBuilder:
-		m = attr.NestedObject.Attributes
+		res.Attributes = attr.NestedObject.Attributes
 	case MapNestedAttributeBuilder:
-		m = attr.NestedObject.Attributes
+		res.Attributes = attr.NestedObject.Attributes
+	case SingleNestedBlockBuilder:
+		res.Attributes = attr.NestedObject.Attributes
+		res.Blocks = attr.NestedObject.Blocks
+	case ListNestedBlockBuilder:
+		res.Attributes = attr.NestedObject.Attributes
+		res.Blocks = attr.NestedObject.Blocks
 	default:
 		panic(fmt.Errorf("cannot convert to map, attribute is not nested"))
 	}
 
-	return m
+	return res
 }
 
 func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSchema {
-	cb := func(attr AttributeBuilder) AttributeBuilder {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		switch a := attr.(type) {
 		case BoolAttributeBuilder:
 			return a.AddValidator(v.(validator.Bool))
@@ -74,7 +80,7 @@ func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSc
 }
 
 func (s *CustomizableSchema) AddPlanModifier(v any, path ...string) *CustomizableSchema {
-	cb := func(attr AttributeBuilder) AttributeBuilder {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		switch a := attr.(type) {
 		case BoolAttributeBuilder:
 			return a.AddPlanModifier(v.(planmodifier.Bool))
@@ -94,6 +100,10 @@ func (s *CustomizableSchema) AddPlanModifier(v any, path ...string) *Customizabl
 			return a.AddPlanModifier(v.(planmodifier.Object))
 		case StringAttributeBuilder:
 			return a.AddPlanModifier(v.(planmodifier.String))
+		case ListNestedBlockBuilder:
+			return a.AddPlanModifier(v.(planmodifier.List))
+		case SingleNestedBlockBuilder:
+			return a.AddPlanModifier(v.(planmodifier.Object))
 		default:
 			panic(fmt.Errorf("cannot add planmodifier, attribute builder type is invalid: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
 		}
@@ -105,7 +115,7 @@ func (s *CustomizableSchema) AddPlanModifier(v any, path ...string) *Customizabl
 }
 
 func (s *CustomizableSchema) SetOptional(path ...string) *CustomizableSchema {
-	cb := func(attr AttributeBuilder) AttributeBuilder {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		return attr.SetOptional()
 	}
 
@@ -115,7 +125,7 @@ func (s *CustomizableSchema) SetOptional(path ...string) *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetRequired(path ...string) *CustomizableSchema {
-	cb := func(attr AttributeBuilder) AttributeBuilder {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		return attr.SetRequired()
 	}
 
@@ -125,7 +135,7 @@ func (s *CustomizableSchema) SetRequired(path ...string) *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetSensitive(path ...string) *CustomizableSchema {
-	cb := func(attr AttributeBuilder) AttributeBuilder {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		return attr.SetSensitive()
 	}
 
@@ -134,7 +144,7 @@ func (s *CustomizableSchema) SetSensitive(path ...string) *CustomizableSchema {
 }
 
 func (s *CustomizableSchema) SetDeprecated(msg string, path ...string) *CustomizableSchema {
-	cb := func(attr AttributeBuilder) AttributeBuilder {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		return attr.SetDeprecated(msg)
 	}
 
@@ -144,7 +154,7 @@ func (s *CustomizableSchema) SetDeprecated(msg string, path ...string) *Customiz
 }
 
 func (s *CustomizableSchema) SetComputed(path ...string) *CustomizableSchema {
-	cb := func(attr AttributeBuilder) AttributeBuilder {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		return attr.SetComputed()
 	}
 
@@ -156,7 +166,7 @@ func (s *CustomizableSchema) SetComputed(path ...string) *CustomizableSchema {
 // This should be used for fields that are not user-configurable but are returned
 // by the platform.
 func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
-	cb := func(attr AttributeBuilder) AttributeBuilder {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		return attr.SetReadOnly()
 	}
 
@@ -166,21 +176,33 @@ func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 }
 
 // navigateSchemaWithCallback navigates through schema attributes and executes callback on the target, panics if path does not exist or invalid.
-func navigateSchemaWithCallback(s *AttributeBuilder, cb func(AttributeBuilder) AttributeBuilder, path ...string) (AttributeBuilder, error) {
-	current_scm := s
+func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder) BaseSchemaBuilder, path ...string) (BaseSchemaBuilder, error) {
+	currentScm := s
 	for i, p := range path {
-		m := attributeToMap(current_scm)
+		m := attributeToNestedBlockObject(currentScm)
+		mAttr := m.Attributes
+		mBlock := m.Blocks
 
-		v, ok := m[p]
-		if !ok {
+		if v, ok := mAttr[p]; ok {
+			if i == len(path)-1 {
+				newV := cb(v).(AttributeBuilder)
+				mAttr[p] = newV
+				return mAttr[p], nil
+			}
+			castedV := v.(BaseSchemaBuilder)
+			currentScm = &castedV
+		} else if v, ok := mBlock[p]; ok {
+			if i == len(path)-1 {
+				newV := cb(v).(BlockBuilder)
+				mBlock[p] = newV
+				return mBlock[p], nil
+			}
+			castedV := v.(BaseSchemaBuilder)
+			currentScm = &castedV
+		} else {
 			return nil, fmt.Errorf("missing key %s", p)
 		}
 
-		if i == len(path)-1 {
-			m[p] = cb(v)
-			return m[p], nil
-		}
-		current_scm = &v
 	}
 	return nil, fmt.Errorf("path %v is incomplete", path)
 }

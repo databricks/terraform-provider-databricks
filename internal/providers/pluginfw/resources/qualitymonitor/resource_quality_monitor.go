@@ -68,19 +68,21 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetRequired("assets_dir")
+		c.SetRequired("output_schema_name")
+		c.SetReadOnly("monitor_version")
+		c.SetReadOnly("drift_metrics_table_name")
+		c.SetReadOnly("profile_metrics_table_name")
+		c.SetReadOnly("status")
+		c.SetReadOnly("dashboard_id")
+		c.SetReadOnly("schedule", "pause_status")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Quality Monitor",
-		Attributes: tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			c.SetRequired("assets_dir")
-			c.SetRequired("output_schema_name")
-			c.SetReadOnly("monitor_version")
-			c.SetReadOnly("drift_metrics_table_name")
-			c.SetReadOnly("profile_metrics_table_name")
-			c.SetReadOnly("status")
-			c.SetReadOnly("dashboard_id")
-			c.SetReadOnly("schedule", "pause_status")
-			return c
-		}),
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 

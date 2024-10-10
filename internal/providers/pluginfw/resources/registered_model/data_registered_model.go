@@ -37,8 +37,10 @@ func (d *RegisteredModelDataSource) Metadata(ctx context.Context, req datasource
 }
 
 func (d *RegisteredModelDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(RegisteredModelData{}, nil)
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(RegisteredModelData{}, nil),
+		Attributes: attrs,
+		Blocks:     blocks,
 	}
 }
 

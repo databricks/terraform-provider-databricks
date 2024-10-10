@@ -16,75 +16,75 @@ import (
 
 type App struct {
 	// The active deployment of the app.
-	ActiveDeployment []AppDeployment `tfsdk:"active_deployment" tf:"optional"`
+	ActiveDeployment []AppDeployment `tfsdk:"active_deployment" tf:"optional,object"`
 
-	AppStatus []ApplicationStatus `tfsdk:"app_status" tf:"optional"`
+	AppStatus []ApplicationStatus `tfsdk:"app_status" tf:"optional,object"`
 
-	ComputeStatus []ComputeStatus `tfsdk:"compute_status" tf:"optional"`
+	ComputeStatus []ComputeStatus `tfsdk:"compute_status" tf:"optional,object"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime types.String `tfsdk:"create_time" tf:"optional,"`
 	// The email of the user that created the app.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator" tf:"optional,"`
 	// The default workspace file system path of the source code from which app
 	// deployment are created. This field tracks the workspace source code path
 	// of the last active deployment.
-	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path" tf:"optional"`
+	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path" tf:"optional,"`
 	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name" tf:""`
 	// The pending deployment of the app.
-	PendingDeployment []AppDeployment `tfsdk:"pending_deployment" tf:"optional"`
+	PendingDeployment []AppDeployment `tfsdk:"pending_deployment" tf:"optional,object"`
 	// Resources for the app.
-	Resources []AppResource `tfsdk:"resources" tf:"optional"`
+	Resources []AppResource `tfsdk:"resources" tf:"optional,"`
 
-	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"optional"`
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"optional,"`
 
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional,"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional,"`
 	// The email of the user that last updated the app.
-	Updater types.String `tfsdk:"updater" tf:"optional"`
+	Updater types.String `tfsdk:"updater" tf:"optional,"`
 	// The URL of the app once it is deployed.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url" tf:"optional,"`
 }
 
 type AppAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional,"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name" tf:"optional,"`
 }
 
 type AppAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []AppPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions []AppPermission `tfsdk:"all_permissions" tf:"optional,"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional,"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional,"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional,"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name" tf:"optional,"`
 }
 
 type AppDeployment struct {
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime types.String `tfsdk:"create_time" tf:"optional,"`
 	// The email of the user creates the deployment.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator" tf:"optional,"`
 	// The deployment artifacts for an app.
-	DeploymentArtifacts []AppDeploymentArtifacts `tfsdk:"deployment_artifacts" tf:"optional"`
+	DeploymentArtifacts []AppDeploymentArtifacts `tfsdk:"deployment_artifacts" tf:"optional,object"`
 	// The unique id of the deployment.
-	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
+	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional,"`
 	// The mode of which the deployment will manage the source code.
-	Mode types.String `tfsdk:"mode" tf:"optional"`
+	Mode types.String `tfsdk:"mode" tf:"optional,"`
 	// The workspace file system path of the source code used to create the app
 	// deployment. This is different from
 	// `deployment_artifacts.source_code_path`, which is the path used by the
@@ -92,67 +92,67 @@ type AppDeployment struct {
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
 	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
+	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional,"`
 	// Status and status message of the deployment
-	Status []AppDeploymentStatus `tfsdk:"status" tf:"optional"`
+	Status []AppDeploymentStatus `tfsdk:"status" tf:"optional,object"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.String `tfsdk:"update_time" tf:"optional,"`
 }
 
 type AppDeploymentArtifacts struct {
 	// The snapshotted workspace file system path of the source code loaded by
 	// the deployed app.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
+	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional,"`
 }
 
 type AppDeploymentStatus struct {
 	// Message corresponding with the deployment state.
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message" tf:"optional,"`
 	// State of the deployment.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional,"`
 }
 
 type AppPermission struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited" tf:"optional,"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 }
 
 type AppPermissions struct {
-	AccessControlList []AppAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList []AppAccessControlResponse `tfsdk:"access_control_list" tf:"optional,"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id" tf:"optional,"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type" tf:"optional,"`
 }
 
 type AppPermissionsDescription struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 }
 
 type AppPermissionsRequest struct {
-	AccessControlList []AppAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList []AppAccessControlRequest `tfsdk:"access_control_list" tf:"optional,"`
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
 }
 
 type AppResource struct {
 	// Description of the App Resource.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 
-	Job []AppResourceJob `tfsdk:"job" tf:"optional"`
+	Job []AppResourceJob `tfsdk:"job" tf:"optional,object"`
 	// Name of the App Resource.
 	Name types.String `tfsdk:"name" tf:""`
 
-	Secret []AppResourceSecret `tfsdk:"secret" tf:"optional"`
+	Secret []AppResourceSecret `tfsdk:"secret" tf:"optional,object"`
 
-	ServingEndpoint []AppResourceServingEndpoint `tfsdk:"serving_endpoint" tf:"optional"`
+	ServingEndpoint []AppResourceServingEndpoint `tfsdk:"serving_endpoint" tf:"optional,object"`
 
-	SqlWarehouse []AppResourceSqlWarehouse `tfsdk:"sql_warehouse" tf:"optional"`
+	SqlWarehouse []AppResourceSqlWarehouse `tfsdk:"sql_warehouse" tf:"optional,object"`
 }
 
 type AppResourceJob struct {
@@ -191,25 +191,25 @@ type AppResourceSqlWarehouse struct {
 
 type ApplicationStatus struct {
 	// Application status message
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message" tf:"optional,"`
 	// State of the application.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional,"`
 }
 
 type ComputeStatus struct {
 	// Compute status message
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message" tf:"optional,"`
 	// State of the app compute.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"optional,"`
 }
 
 type CreateAppDeploymentRequest struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
 	// The unique id of the deployment.
-	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
+	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional,"`
 	// The mode of which the deployment will manage the source code.
-	Mode types.String `tfsdk:"mode" tf:"optional"`
+	Mode types.String `tfsdk:"mode" tf:"optional,"`
 	// The workspace file system path of the source code used to create the app
 	// deployment. This is different from
 	// `deployment_artifacts.source_code_path`, which is the path used by the
@@ -217,17 +217,17 @@ type CreateAppDeploymentRequest struct {
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
 	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
+	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional,"`
 }
 
 type CreateAppRequest struct {
 	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name" tf:""`
 	// Resources for the app.
-	Resources []AppResource `tfsdk:"resources" tf:"optional"`
+	Resources []AppResource `tfsdk:"resources" tf:"optional,"`
 }
 
 // Delete an app
@@ -252,7 +252,7 @@ type GetAppPermissionLevelsRequest struct {
 
 type GetAppPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []AppPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels []AppPermissionsDescription `tfsdk:"permission_levels" tf:"optional,"`
 }
 
 // Get app permissions
@@ -280,9 +280,9 @@ type ListAppDeploymentsRequest struct {
 
 type ListAppDeploymentsResponse struct {
 	// Deployment history of the app.
-	AppDeployments []AppDeployment `tfsdk:"app_deployments" tf:"optional"`
+	AppDeployments []AppDeployment `tfsdk:"app_deployments" tf:"optional,"`
 	// Pagination token to request the next page of apps.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 }
 
 // List apps
@@ -295,9 +295,9 @@ type ListAppsRequest struct {
 }
 
 type ListAppsResponse struct {
-	Apps []App `tfsdk:"apps" tf:"optional"`
+	Apps []App `tfsdk:"apps" tf:"optional,"`
 	// Pagination token to request the next page of apps.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 }
 
 type StartAppRequest struct {
@@ -312,10 +312,10 @@ type StopAppRequest struct {
 
 type UpdateAppRequest struct {
 	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name" tf:""`
 	// Resources for the app.
-	Resources []AppResource `tfsdk:"resources" tf:"optional"`
+	Resources []AppResource `tfsdk:"resources" tf:"optional,"`
 }

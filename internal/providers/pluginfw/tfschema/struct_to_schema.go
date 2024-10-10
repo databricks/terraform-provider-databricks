@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -32,6 +33,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 		}
 		isOptional := fieldIsOptional(typeField)
 		isComputed := fieldIsComputed(typeField)
+		isObject := fieldIsAnObject(typeField)
 		kind := typeField.Type.Kind()
 		value := field.Value
 		typeFieldType := typeField.Type
@@ -80,14 +82,19 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 			default:
 				// Nested struct
 				nestedScm := typeToSchema(reflect.New(elemType).Elem())
+				var validators []validator.List
+				if isObject {
+					validators = append(validators, MaxItemsValidator(1))
+				}
 				scmBlock[fieldName] = ListNestedBlockBuilder{
 					NestedObject: NestedBlockObject{
 						Attributes: nestedScm.Attributes,
 						Blocks:     nestedScm.Blocks,
 					},
-					Optional: isOptional,
-					Required: !isOptional,
-					Computed: isComputed,
+					Optional:   isOptional,
+					Required:   !isOptional,
+					Computed:   isComputed,
+					Validators: validators,
 				}
 			}
 		} else if kind == reflect.Map {
@@ -191,6 +198,11 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 func fieldIsComputed(field reflect.StructField) bool {
 	tagValue := field.Tag.Get("tf")
 	return strings.Contains(tagValue, "computed")
+}
+
+func fieldIsAnObject(field reflect.StructField) bool {
+	tagValue := field.Tag.Get("tf")
+	return strings.Contains(tagValue, "object")
 }
 
 func fieldIsOptional(field reflect.StructField) bool {

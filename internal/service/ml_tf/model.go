@@ -30,11 +30,11 @@ type Activity struct {
 	//
 	// * `SYSTEM_TRANSITION`: For events performed as a side effect, such as
 	// archiving existing model versions in a stage.
-	ActivityType types.String `tfsdk:"activity_type" tf:"optional"`
+	ActivityType types.String `tfsdk:"activity_type" tf:"optional,"`
 	// User-provided comment associated with the activity.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment" tf:"optional,"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional,"`
 	// Source stage of the transition (if the activity is stage transition
 	// related). Valid values are:
 	//
@@ -45,16 +45,16 @@ type Activity struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	FromStage types.String `tfsdk:"from_stage" tf:"optional"`
+	FromStage types.String `tfsdk:"from_stage" tf:"optional,"`
 	// Unique identifier for the object.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id" tf:"optional,"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional,"`
 	// Comment made by system, for example explaining an activity of type
 	// `SYSTEM_TRANSITION`. It usually describes a side effect, such as a
 	// version being archived as part of another version's stage transition, and
 	// may not be returned for some activity types.
-	SystemComment types.String `tfsdk:"system_comment" tf:"optional"`
+	SystemComment types.String `tfsdk:"system_comment" tf:"optional,"`
 	// Target stage of the transition (if the activity is stage transition
 	// related). Valid values are:
 	//
@@ -65,9 +65,9 @@ type Activity struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	ToStage types.String `tfsdk:"to_stage" tf:"optional"`
+	ToStage types.String `tfsdk:"to_stage" tf:"optional,"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 }
 
 type ApproveTransitionRequest struct {
@@ -75,7 +75,7 @@ type ApproveTransitionRequest struct {
 	// stage.
 	ArchiveExistingVersions types.Bool `tfsdk:"archive_existing_versions" tf:""`
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment" tf:"optional,"`
 	// Name of the model.
 	Name types.String `tfsdk:"name" tf:""`
 	// Target stage of the transition. Valid values are:
@@ -94,23 +94,23 @@ type ApproveTransitionRequest struct {
 
 type ApproveTransitionRequestResponse struct {
 	// Activity recorded for the action.
-	Activity []Activity `tfsdk:"activity" tf:"optional"`
+	Activity []Activity `tfsdk:"activity" tf:"optional,object"`
 }
 
 // Comment details.
 type CommentObject struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions []types.String `tfsdk:"available_actions" tf:"optional"`
+	AvailableActions []types.String `tfsdk:"available_actions" tf:"optional,"`
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment" tf:"optional,"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional,"`
 	// Comment ID
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id" tf:"optional,"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional,"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 }
 
 type CreateComment struct {
@@ -124,13 +124,13 @@ type CreateComment struct {
 
 type CreateCommentResponse struct {
 	// Comment details.
-	Comment []CommentObject `tfsdk:"comment" tf:"optional"`
+	Comment []CommentObject `tfsdk:"comment" tf:"optional,object"`
 }
 
 type CreateExperiment struct {
 	// Location where all artifacts for the experiment are stored. If not
 	// provided, the remote server will select an appropriate default.
-	ArtifactLocation types.String `tfsdk:"artifact_location" tf:"optional"`
+	ArtifactLocation types.String `tfsdk:"artifact_location" tf:"optional,"`
 	// Experiment name.
 	Name types.String `tfsdk:"name" tf:""`
 	// A collection of tags to set on the experiment. Maximum tag size and
@@ -138,52 +138,52 @@ type CreateExperiment struct {
 	// backends are guaranteed to support tag keys up to 250 bytes in size and
 	// tag values up to 5000 bytes in size. All storage backends are also
 	// guaranteed to support up to 20 tags per request.
-	Tags []ExperimentTag `tfsdk:"tags" tf:"optional"`
+	Tags []ExperimentTag `tfsdk:"tags" tf:"optional,"`
 }
 
 type CreateExperimentResponse struct {
 	// Unique identifier for the experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional,"`
 }
 
 type CreateModelRequest struct {
 	// Optional description for registered model.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Register models under this name
 	Name types.String `tfsdk:"name" tf:""`
 	// Additional metadata for registered model.
-	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
+	Tags []ModelTag `tfsdk:"tags" tf:"optional,"`
 }
 
 type CreateModelResponse struct {
-	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional"`
+	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional,object"`
 }
 
 type CreateModelVersionRequest struct {
 	// Optional description for model version.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Register model under this name
 	Name types.String `tfsdk:"name" tf:""`
 	// MLflow run ID for correlation, if `source` was generated by an experiment
 	// run in MLflow tracking server
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// MLflow run link - this is the exact link of the run that generated this
 	// model version, potentially hosted at another instance of MLflow.
-	RunLink types.String `tfsdk:"run_link" tf:"optional"`
+	RunLink types.String `tfsdk:"run_link" tf:"optional,"`
 	// URI indicating the location of the model artifacts.
 	Source types.String `tfsdk:"source" tf:""`
 	// Additional metadata for model version.
-	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional"`
+	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional,"`
 }
 
 type CreateModelVersionResponse struct {
 	// Return new version number generated for this model in registry.
-	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional,object"`
 }
 
 type CreateRegistryWebhook struct {
 	// User-specified description for the webhook.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Events that can trigger a registry webhook: * `MODEL_VERSION_CREATED`: A
 	// new model version was created for the associated model.
 	//
@@ -219,11 +219,11 @@ type CreateRegistryWebhook struct {
 	// version be archived.
 	Events []types.String `tfsdk:"events" tf:""`
 
-	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional,object"`
 
-	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional,object"`
 	// Name of the model whose events would trigger this webhook.
-	ModelName types.String `tfsdk:"model_name" tf:"optional"`
+	ModelName types.String `tfsdk:"model_name" tf:"optional,"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -232,30 +232,30 @@ type CreateRegistryWebhook struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 }
 
 type CreateRun struct {
 	// ID of the associated experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional,"`
 	// Unix timestamp in milliseconds of when the run started.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time" tf:"optional,"`
 	// Additional metadata for run.
-	Tags []RunTag `tfsdk:"tags" tf:"optional"`
+	Tags []RunTag `tfsdk:"tags" tf:"optional,"`
 	// ID of the user executing the run. This field is deprecated as of MLflow
 	// 1.0, and will be removed in a future MLflow release. Use 'mlflow.user'
 	// tag instead.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 }
 
 type CreateRunResponse struct {
 	// The newly created run.
-	Run []Run `tfsdk:"run" tf:"optional"`
+	Run []Run `tfsdk:"run" tf:"optional,object"`
 }
 
 type CreateTransitionRequest struct {
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment" tf:"optional,"`
 	// Name of the model.
 	Name types.String `tfsdk:"name" tf:""`
 	// Target stage of the transition. Valid values are:
@@ -274,42 +274,42 @@ type CreateTransitionRequest struct {
 
 type CreateTransitionRequestResponse struct {
 	// Transition request details.
-	Request []TransitionRequest `tfsdk:"request" tf:"optional"`
+	Request []TransitionRequest `tfsdk:"request" tf:"optional,object"`
 }
 
 type CreateWebhookResponse struct {
-	Webhook []RegistryWebhook `tfsdk:"webhook" tf:"optional"`
+	Webhook []RegistryWebhook `tfsdk:"webhook" tf:"optional,object"`
 }
 
 type Dataset struct {
 	// Dataset digest, e.g. an md5 hash of the dataset that uniquely identifies
 	// it within datasets of the same name.
-	Digest types.String `tfsdk:"digest" tf:"optional"`
+	Digest types.String `tfsdk:"digest" tf:"optional,"`
 	// The name of the dataset. E.g. “my.uc.table@2” “nyc-taxi-dataset”,
 	// “fantastic-elk-3”
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name" tf:"optional,"`
 	// The profile of the dataset. Summary statistics for the dataset, such as
 	// the number of rows in a table, the mean / std / mode of each column in a
 	// table, or the number of elements in an array.
-	Profile types.String `tfsdk:"profile" tf:"optional"`
+	Profile types.String `tfsdk:"profile" tf:"optional,"`
 	// The schema of the dataset. E.g., MLflow ColSpec JSON for a dataframe,
 	// MLflow TensorSpec JSON for an ndarray, or another schema format.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema" tf:"optional,"`
 	// The type of the dataset source, e.g. ‘databricks-uc-table’,
 	// ‘DBFS’, ‘S3’, ...
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source" tf:"optional,"`
 	// Source information for the dataset. Note that the source may not exactly
 	// reproduce the dataset if it was transformed / modified before use with
 	// MLflow.
-	SourceType types.String `tfsdk:"source_type" tf:"optional"`
+	SourceType types.String `tfsdk:"source_type" tf:"optional,"`
 }
 
 type DatasetInput struct {
 	// The dataset being used as a Run input.
-	Dataset []Dataset `tfsdk:"dataset" tf:"optional"`
+	Dataset []Dataset `tfsdk:"dataset" tf:"optional,object"`
 	// A list of tags for the dataset input, e.g. a “context” tag with value
 	// “training”
-	Tags []InputTag `tfsdk:"tags" tf:"optional"`
+	Tags []InputTag `tfsdk:"tags" tf:"optional,"`
 }
 
 // Delete a comment
@@ -387,7 +387,7 @@ type DeleteRuns struct {
 	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
 	// An optional positive integer indicating the maximum number of runs to
 	// delete. The maximum allowed value for max_runs is 10000.
-	MaxRuns types.Int64 `tfsdk:"max_runs" tf:"optional"`
+	MaxRuns types.Int64 `tfsdk:"max_runs" tf:"optional,"`
 	// The maximum creation timestamp in milliseconds since the UNIX epoch for
 	// deleting runs. Only runs created prior to or at this timestamp are
 	// deleted.
@@ -396,7 +396,7 @@ type DeleteRuns struct {
 
 type DeleteRunsResponse struct {
 	// The number of runs deleted.
-	RunsDeleted types.Int64 `tfsdk:"runs_deleted" tf:"optional"`
+	RunsDeleted types.Int64 `tfsdk:"runs_deleted" tf:"optional,"`
 }
 
 type DeleteTag struct {
@@ -447,88 +447,88 @@ type DeleteWebhookResponse struct {
 
 type Experiment struct {
 	// Location where artifacts for the experiment are stored.
-	ArtifactLocation types.String `tfsdk:"artifact_location" tf:"optional"`
+	ArtifactLocation types.String `tfsdk:"artifact_location" tf:"optional,"`
 	// Creation time
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional,"`
 	// Unique identifier for the experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional,"`
 	// Last update time
-	LastUpdateTime types.Int64 `tfsdk:"last_update_time" tf:"optional"`
+	LastUpdateTime types.Int64 `tfsdk:"last_update_time" tf:"optional,"`
 	// Current life cycle stage of the experiment: "active" or "deleted".
 	// Deleted experiments are not returned by APIs.
-	LifecycleStage types.String `tfsdk:"lifecycle_stage" tf:"optional"`
+	LifecycleStage types.String `tfsdk:"lifecycle_stage" tf:"optional,"`
 	// Human readable name that identifies the experiment.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name" tf:"optional,"`
 	// Tags: Additional metadata key-value pairs.
-	Tags []ExperimentTag `tfsdk:"tags" tf:"optional"`
+	Tags []ExperimentTag `tfsdk:"tags" tf:"optional,"`
 }
 
 type ExperimentAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional,"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name" tf:"optional,"`
 }
 
 type ExperimentAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []ExperimentPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions []ExperimentPermission `tfsdk:"all_permissions" tf:"optional,"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional,"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional,"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional,"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name" tf:"optional,"`
 }
 
 type ExperimentPermission struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited" tf:"optional,"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 }
 
 type ExperimentPermissions struct {
-	AccessControlList []ExperimentAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList []ExperimentAccessControlResponse `tfsdk:"access_control_list" tf:"optional,"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id" tf:"optional,"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type" tf:"optional,"`
 }
 
 type ExperimentPermissionsDescription struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 }
 
 type ExperimentPermissionsRequest struct {
-	AccessControlList []ExperimentAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList []ExperimentAccessControlRequest `tfsdk:"access_control_list" tf:"optional,"`
 	// The experiment for which to get or manage permissions.
 	ExperimentId types.String `tfsdk:"-"`
 }
 
 type ExperimentTag struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional,"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value" tf:"optional,"`
 }
 
 type FileInfo struct {
 	// Size in bytes. Unset for directories.
-	FileSize types.Int64 `tfsdk:"file_size" tf:"optional"`
+	FileSize types.Int64 `tfsdk:"file_size" tf:"optional,"`
 	// Whether the path is a directory.
-	IsDir types.Bool `tfsdk:"is_dir" tf:"optional"`
+	IsDir types.Bool `tfsdk:"is_dir" tf:"optional,"`
 	// Path relative to the root artifact directory run.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path" tf:"optional,"`
 }
 
 // Get metadata
@@ -545,7 +545,7 @@ type GetExperimentPermissionLevelsRequest struct {
 
 type GetExperimentPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []ExperimentPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels []ExperimentPermissionsDescription `tfsdk:"permission_levels" tf:"optional,"`
 }
 
 // Get experiment permissions
@@ -562,7 +562,7 @@ type GetExperimentRequest struct {
 
 type GetExperimentResponse struct {
 	// Experiment details.
-	Experiment []Experiment `tfsdk:"experiment" tf:"optional"`
+	Experiment []Experiment `tfsdk:"experiment" tf:"optional,object"`
 }
 
 // Get history of a given metric within a run
@@ -586,22 +586,22 @@ type GetLatestVersionsRequest struct {
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name" tf:""`
 	// List of stages.
-	Stages []types.String `tfsdk:"stages" tf:"optional"`
+	Stages []types.String `tfsdk:"stages" tf:"optional,"`
 }
 
 type GetLatestVersionsResponse struct {
 	// Latest version models for each requests stage. Only return models with
 	// current `READY` status. If no `stages` provided, returns the latest
 	// version for each stage, including `"None"`.
-	ModelVersions []ModelVersion `tfsdk:"model_versions" tf:"optional"`
+	ModelVersions []ModelVersion `tfsdk:"model_versions" tf:"optional,"`
 }
 
 type GetMetricHistoryResponse struct {
 	// All logged values for this metric.
-	Metrics []Metric `tfsdk:"metrics" tf:"optional"`
+	Metrics []Metric `tfsdk:"metrics" tf:"optional,"`
 	// Token that can be used to retrieve the next page of metric history
 	// results
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 }
 
 // Get model
@@ -611,7 +611,7 @@ type GetModelRequest struct {
 }
 
 type GetModelResponse struct {
-	RegisteredModelDatabricks []ModelDatabricks `tfsdk:"registered_model_databricks" tf:"optional"`
+	RegisteredModelDatabricks []ModelDatabricks `tfsdk:"registered_model_databricks" tf:"optional,object"`
 }
 
 // Get a model version URI
@@ -624,7 +624,7 @@ type GetModelVersionDownloadUriRequest struct {
 
 type GetModelVersionDownloadUriResponse struct {
 	// URI corresponding to where artifacts for this model version are stored.
-	ArtifactUri types.String `tfsdk:"artifact_uri" tf:"optional"`
+	ArtifactUri types.String `tfsdk:"artifact_uri" tf:"optional,"`
 }
 
 // Get a model version
@@ -636,7 +636,7 @@ type GetModelVersionRequest struct {
 }
 
 type GetModelVersionResponse struct {
-	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional,object"`
 }
 
 // Get registered model permission levels
@@ -647,7 +647,7 @@ type GetRegisteredModelPermissionLevelsRequest struct {
 
 type GetRegisteredModelPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []RegisteredModelPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels []RegisteredModelPermissionsDescription `tfsdk:"permission_levels" tf:"optional,"`
 }
 
 // Get registered model permissions
@@ -668,7 +668,7 @@ type GetRunRequest struct {
 type GetRunResponse struct {
 	// Run metadata (name, start time, etc) and data (metrics, params, and
 	// tags).
-	Run []Run `tfsdk:"run" tf:"optional"`
+	Run []Run `tfsdk:"run" tf:"optional,object"`
 }
 
 type HttpUrlSpec struct {
@@ -676,7 +676,7 @@ type HttpUrlSpec struct {
 	// by the wehbook. It should be of the form `"<auth type> <credentials>"`.
 	// If set to an empty string, no authorization header will be included in
 	// the request.
-	Authorization types.String `tfsdk:"authorization" tf:"optional"`
+	Authorization types.String `tfsdk:"authorization" tf:"optional,"`
 	// Enable/disable SSL certificate validation. Default is true. For
 	// self-signed certificates, this field must be false AND the destination
 	// server must disable certificate validation as well. For security
@@ -684,11 +684,11 @@ type HttpUrlSpec struct {
 	// HMAC-encoded portion of the payload and acknowledge the risk associated
 	// with disabling hostname validation whereby it becomes more likely that
 	// requests can be maliciously routed to an unintended host.
-	EnableSslVerification types.Bool `tfsdk:"enable_ssl_verification" tf:"optional"`
+	EnableSslVerification types.Bool `tfsdk:"enable_ssl_verification" tf:"optional,"`
 	// Shared secret required for HMAC encoding payload. The HMAC-encoded
 	// payload will be sent in the header as: { "X-Databricks-Signature":
 	// $encoded_payload }.
-	Secret types.String `tfsdk:"secret" tf:"optional"`
+	Secret types.String `tfsdk:"secret" tf:"optional,"`
 	// External HTTPS URL called on event trigger (by using a POST request).
 	Url types.String `tfsdk:"url" tf:""`
 }
@@ -701,16 +701,16 @@ type HttpUrlSpecWithoutSecret struct {
 	// HMAC-encoded portion of the payload and acknowledge the risk associated
 	// with disabling hostname validation whereby it becomes more likely that
 	// requests can be maliciously routed to an unintended host.
-	EnableSslVerification types.Bool `tfsdk:"enable_ssl_verification" tf:"optional"`
+	EnableSslVerification types.Bool `tfsdk:"enable_ssl_verification" tf:"optional,"`
 	// External HTTPS URL called on event trigger (by using a POST request).
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url" tf:"optional,"`
 }
 
 type InputTag struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional,"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value" tf:"optional,"`
 }
 
 type JobSpec struct {
@@ -721,16 +721,16 @@ type JobSpec struct {
 	// URL of the workspace containing the job that this webhook runs. If not
 	// specified, the job’s workspace URL is assumed to be the same as the
 	// workspace where the webhook is created.
-	WorkspaceUrl types.String `tfsdk:"workspace_url" tf:"optional"`
+	WorkspaceUrl types.String `tfsdk:"workspace_url" tf:"optional,"`
 }
 
 type JobSpecWithoutSecret struct {
 	// ID of the job that the webhook runs.
-	JobId types.String `tfsdk:"job_id" tf:"optional"`
+	JobId types.String `tfsdk:"job_id" tf:"optional,"`
 	// URL of the workspace containing the job that this webhook runs. Defaults
 	// to the workspace URL in which the webhook is created. If not specified,
 	// the job’s workspace is assumed to be the same as the webhook’s.
-	WorkspaceUrl types.String `tfsdk:"workspace_url" tf:"optional"`
+	WorkspaceUrl types.String `tfsdk:"workspace_url" tf:"optional,"`
 }
 
 // Get all artifacts
@@ -754,11 +754,11 @@ type ListArtifactsRequest struct {
 
 type ListArtifactsResponse struct {
 	// File location and metadata for artifacts.
-	Files []FileInfo `tfsdk:"files" tf:"optional"`
+	Files []FileInfo `tfsdk:"files" tf:"optional,"`
 	// Token that can be used to retrieve the next page of artifact results
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 	// Root artifact directory for the run.
-	RootUri types.String `tfsdk:"root_uri" tf:"optional"`
+	RootUri types.String `tfsdk:"root_uri" tf:"optional,"`
 }
 
 // List experiments
@@ -779,10 +779,10 @@ type ListExperimentsRequest struct {
 type ListExperimentsResponse struct {
 	// Paginated Experiments beginning with the first item on the requested
 	// page.
-	Experiments []Experiment `tfsdk:"experiments" tf:"optional"`
+	Experiments []Experiment `tfsdk:"experiments" tf:"optional,"`
 	// Token that can be used to retrieve the next page of experiments. Empty
 	// token means no more experiment is available for retrieval.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 }
 
 // List models
@@ -795,16 +795,16 @@ type ListModelsRequest struct {
 
 type ListModelsResponse struct {
 	// Pagination token to request next page of models for the same query.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 
-	RegisteredModels []Model `tfsdk:"registered_models" tf:"optional"`
+	RegisteredModels []Model `tfsdk:"registered_models" tf:"optional,"`
 }
 
 type ListRegistryWebhooks struct {
 	// Token that can be used to retrieve the next page of artifact results
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 	// Array of registry webhooks.
-	Webhooks []RegistryWebhook `tfsdk:"webhooks" tf:"optional"`
+	Webhooks []RegistryWebhook `tfsdk:"webhooks" tf:"optional,"`
 }
 
 // List transition requests
@@ -817,7 +817,7 @@ type ListTransitionRequestsRequest struct {
 
 type ListTransitionRequestsResponse struct {
 	// Array of open transition requests.
-	Requests []Activity `tfsdk:"requests" tf:"optional"`
+	Requests []Activity `tfsdk:"requests" tf:"optional,"`
 }
 
 // List registry webhooks
@@ -836,15 +836,15 @@ type ListWebhooksRequest struct {
 type LogBatch struct {
 	// Metrics to log. A single request can contain up to 1000 metrics, and up
 	// to 1000 metrics, params, and tags in total.
-	Metrics []Metric `tfsdk:"metrics" tf:"optional"`
+	Metrics []Metric `tfsdk:"metrics" tf:"optional,"`
 	// Params to log. A single request can contain up to 100 params, and up to
 	// 1000 metrics, params, and tags in total.
-	Params []Param `tfsdk:"params" tf:"optional"`
+	Params []Param `tfsdk:"params" tf:"optional,"`
 	// ID of the run to log under
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// Tags to log. A single request can contain up to 100 tags, and up to 1000
 	// metrics, params, and tags in total.
-	Tags []RunTag `tfsdk:"tags" tf:"optional"`
+	Tags []RunTag `tfsdk:"tags" tf:"optional,"`
 }
 
 type LogBatchResponse struct {
@@ -852,9 +852,9 @@ type LogBatchResponse struct {
 
 type LogInputs struct {
 	// Dataset inputs
-	Datasets []DatasetInput `tfsdk:"datasets" tf:"optional"`
+	Datasets []DatasetInput `tfsdk:"datasets" tf:"optional,"`
 	// ID of the run to log under
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 }
 
 type LogInputsResponse struct {
@@ -864,12 +864,12 @@ type LogMetric struct {
 	// Name of the metric.
 	Key types.String `tfsdk:"key" tf:""`
 	// ID of the run under which to log the metric. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// [Deprecated, use run_id instead] ID of the run under which to log the
 	// metric. This field will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid" tf:"optional,"`
 	// Step at which to log the metric
-	Step types.Int64 `tfsdk:"step" tf:"optional"`
+	Step types.Int64 `tfsdk:"step" tf:"optional,"`
 	// Unix timestamp in milliseconds at the time metric was logged.
 	Timestamp types.Int64 `tfsdk:"timestamp" tf:""`
 	// Double value of the metric being logged.
@@ -881,9 +881,9 @@ type LogMetricResponse struct {
 
 type LogModel struct {
 	// MLmodel file in json format.
-	ModelJson types.String `tfsdk:"model_json" tf:"optional"`
+	ModelJson types.String `tfsdk:"model_json" tf:"optional,"`
 	// ID of the run to log under
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 }
 
 type LogModelResponse struct {
@@ -893,10 +893,10 @@ type LogParam struct {
 	// Name of the param. Maximum size is 255 bytes.
 	Key types.String `tfsdk:"key" tf:""`
 	// ID of the run under which to log the param. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// [Deprecated, use run_id instead] ID of the run under which to log the
 	// param. This field will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid" tf:"optional,"`
 	// String value of the param being logged. Maximum size is 500 bytes.
 	Value types.String `tfsdk:"value" tf:""`
 }
@@ -906,98 +906,98 @@ type LogParamResponse struct {
 
 type Metric struct {
 	// Key identifying this metric.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional,"`
 	// Step at which to log the metric.
-	Step types.Int64 `tfsdk:"step" tf:"optional"`
+	Step types.Int64 `tfsdk:"step" tf:"optional,"`
 	// The timestamp at which this metric was recorded.
-	Timestamp types.Int64 `tfsdk:"timestamp" tf:"optional"`
+	Timestamp types.Int64 `tfsdk:"timestamp" tf:"optional,"`
 	// Value associated with this metric.
-	Value types.Float64 `tfsdk:"value" tf:"optional"`
+	Value types.Float64 `tfsdk:"value" tf:"optional,"`
 }
 
 type Model struct {
 	// Timestamp recorded when this `registered_model` was created.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional,"`
 	// Description of this `registered_model`.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Timestamp recorded when metadata for this `registered_model` was last
 	// updated.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional,"`
 	// Collection of latest model versions for each stage. Only contains models
 	// with current `READY` status.
-	LatestVersions []ModelVersion `tfsdk:"latest_versions" tf:"optional"`
+	LatestVersions []ModelVersion `tfsdk:"latest_versions" tf:"optional,"`
 	// Unique name for the model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name" tf:"optional,"`
 	// Tags: Additional metadata key-value pairs for this `registered_model`.
-	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
+	Tags []ModelTag `tfsdk:"tags" tf:"optional,"`
 	// User that created this `registered_model`
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 }
 
 type ModelDatabricks struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional,"`
 	// User-specified description for the object.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Unique identifier for the object.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id" tf:"optional,"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional,"`
 	// Array of model versions, each the latest version for its stage.
-	LatestVersions []ModelVersion `tfsdk:"latest_versions" tf:"optional"`
+	LatestVersions []ModelVersion `tfsdk:"latest_versions" tf:"optional,"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name" tf:"optional,"`
 	// Permission level of the requesting user on the object. For what is
 	// allowed at each level, see [MLflow Model permissions](..).
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 	// Array of tags associated with the model.
-	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
+	Tags []ModelTag `tfsdk:"tags" tf:"optional,"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 }
 
 type ModelTag struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional,"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value" tf:"optional,"`
 }
 
 type ModelVersion struct {
 	// Timestamp recorded when this `model_version` was created.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional,"`
 	// Current stage for this `model_version`.
-	CurrentStage types.String `tfsdk:"current_stage" tf:"optional"`
+	CurrentStage types.String `tfsdk:"current_stage" tf:"optional,"`
 	// Description of this `model_version`.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Timestamp recorded when metadata for this `model_version` was last
 	// updated.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional,"`
 	// Unique name of the model
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name" tf:"optional,"`
 	// MLflow run ID used when creating `model_version`, if `source` was
 	// generated by an experiment run stored in MLflow tracking server.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// Run Link: Direct link to the run that generated this version
-	RunLink types.String `tfsdk:"run_link" tf:"optional"`
+	RunLink types.String `tfsdk:"run_link" tf:"optional,"`
 	// URI indicating the location of the source model artifacts, used when
 	// creating `model_version`
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source" tf:"optional,"`
 	// Current status of `model_version`
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 	// Details on current `status`, if it is pending or failed.
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message" tf:"optional,"`
 	// Tags: Additional metadata key-value pairs for this `model_version`.
-	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional"`
+	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional,"`
 	// User that created this `model_version`.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 	// Model's version number.
-	Version types.String `tfsdk:"version" tf:"optional"`
+	Version types.String `tfsdk:"version" tf:"optional,"`
 }
 
 type ModelVersionDatabricks struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional,"`
 	// Stage of the model version. Valid values are:
 	//
 	// * `None`: The initial stage of a model version.
@@ -1007,26 +1007,26 @@ type ModelVersionDatabricks struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	CurrentStage types.String `tfsdk:"current_stage" tf:"optional"`
+	CurrentStage types.String `tfsdk:"current_stage" tf:"optional,"`
 	// User-specified description for the object.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional,"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name" tf:"optional,"`
 	// Permission level of the requesting user on the object. For what is
 	// allowed at each level, see [MLflow Model permissions](..).
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 	// Unique identifier for the MLflow tracking run associated with the source
 	// model artifacts.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// URL of the run associated with the model artifacts. This field is set at
 	// model version creation time only for model versions whose source run is
 	// from a tracking server that is different from the registry server.
-	RunLink types.String `tfsdk:"run_link" tf:"optional"`
+	RunLink types.String `tfsdk:"run_link" tf:"optional,"`
 	// URI that indicates the location of the source model artifacts. This is
 	// used when creating the model version.
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source" tf:"optional,"`
 	// The status of the model version. Valid values are: *
 	// `PENDING_REGISTRATION`: Request to register a new model version is
 	// pending as server performs background tasks.
@@ -1035,88 +1035,88 @@ type ModelVersionDatabricks struct {
 	// failed.
 	//
 	// * `READY`: Model version is ready for use.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 	// Details on the current status, for example why registration failed.
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message" tf:"optional,"`
 	// Array of tags that are associated with the model version.
-	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional"`
+	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional,"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 	// Version of the model.
-	Version types.String `tfsdk:"version" tf:"optional"`
+	Version types.String `tfsdk:"version" tf:"optional,"`
 }
 
 type ModelVersionTag struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional,"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value" tf:"optional,"`
 }
 
 type Param struct {
 	// Key identifying this param.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional,"`
 	// Value associated with this param.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value" tf:"optional,"`
 }
 
 type RegisteredModelAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional,"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name" tf:"optional,"`
 }
 
 type RegisteredModelAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []RegisteredModelPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions []RegisteredModelPermission `tfsdk:"all_permissions" tf:"optional,"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional,"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name" tf:"optional,"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional,"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name" tf:"optional,"`
 }
 
 type RegisteredModelPermission struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited" tf:"optional,"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 }
 
 type RegisteredModelPermissions struct {
-	AccessControlList []RegisteredModelAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList []RegisteredModelAccessControlResponse `tfsdk:"access_control_list" tf:"optional,"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id" tf:"optional,"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type" tf:"optional,"`
 }
 
 type RegisteredModelPermissionsDescription struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional,"`
 }
 
 type RegisteredModelPermissionsRequest struct {
-	AccessControlList []RegisteredModelAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList []RegisteredModelAccessControlRequest `tfsdk:"access_control_list" tf:"optional,"`
 	// The registered model for which to get or manage permissions.
 	RegisteredModelId types.String `tfsdk:"-"`
 }
 
 type RegistryWebhook struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional,"`
 	// User-specified description for the webhook.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Events that can trigger a registry webhook: * `MODEL_VERSION_CREATED`: A
 	// new model version was created for the associated model.
 	//
@@ -1150,17 +1150,17 @@ type RegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events []types.String `tfsdk:"events" tf:"optional"`
+	Events []types.String `tfsdk:"events" tf:"optional,"`
 
-	HttpUrlSpec []HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec" tf:"optional,object"`
 	// Webhook ID
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id" tf:"optional,"`
 
-	JobSpec []JobSpecWithoutSecret `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpecWithoutSecret `tfsdk:"job_spec" tf:"optional,object"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional,"`
 	// Name of the model whose events would trigger this webhook.
-	ModelName types.String `tfsdk:"model_name" tf:"optional"`
+	ModelName types.String `tfsdk:"model_name" tf:"optional,"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -1169,12 +1169,12 @@ type RegistryWebhook struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 }
 
 type RejectTransitionRequest struct {
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment" tf:"optional,"`
 	// Name of the model.
 	Name types.String `tfsdk:"name" tf:""`
 	// Target stage of the transition. Valid values are:
@@ -1193,18 +1193,18 @@ type RejectTransitionRequest struct {
 
 type RejectTransitionRequestResponse struct {
 	// Activity recorded for the action.
-	Activity []Activity `tfsdk:"activity" tf:"optional"`
+	Activity []Activity `tfsdk:"activity" tf:"optional,object"`
 }
 
 type RenameModelRequest struct {
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name" tf:""`
 	// If provided, updates the name for this `registered_model`.
-	NewName types.String `tfsdk:"new_name" tf:"optional"`
+	NewName types.String `tfsdk:"new_name" tf:"optional,"`
 }
 
 type RenameModelResponse struct {
-	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional"`
+	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional,object"`
 }
 
 type RestoreExperiment struct {
@@ -1228,7 +1228,7 @@ type RestoreRuns struct {
 	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
 	// An optional positive integer indicating the maximum number of runs to
 	// restore. The maximum allowed value for max_runs is 10000.
-	MaxRuns types.Int64 `tfsdk:"max_runs" tf:"optional"`
+	MaxRuns types.Int64 `tfsdk:"max_runs" tf:"optional,"`
 	// The minimum deletion timestamp in milliseconds since the UNIX epoch for
 	// restoring runs. Only runs deleted no earlier than this timestamp are
 	// restored.
@@ -1237,25 +1237,25 @@ type RestoreRuns struct {
 
 type RestoreRunsResponse struct {
 	// The number of runs restored.
-	RunsRestored types.Int64 `tfsdk:"runs_restored" tf:"optional"`
+	RunsRestored types.Int64 `tfsdk:"runs_restored" tf:"optional,"`
 }
 
 type Run struct {
 	// Run data.
-	Data []RunData `tfsdk:"data" tf:"optional"`
+	Data []RunData `tfsdk:"data" tf:"optional,object"`
 	// Run metadata.
-	Info []RunInfo `tfsdk:"info" tf:"optional"`
+	Info []RunInfo `tfsdk:"info" tf:"optional,object"`
 	// Run inputs.
-	Inputs []RunInputs `tfsdk:"inputs" tf:"optional"`
+	Inputs []RunInputs `tfsdk:"inputs" tf:"optional,object"`
 }
 
 type RunData struct {
 	// Run metrics.
-	Metrics []Metric `tfsdk:"metrics" tf:"optional"`
+	Metrics []Metric `tfsdk:"metrics" tf:"optional,"`
 	// Run parameters.
-	Params []Param `tfsdk:"params" tf:"optional"`
+	Params []Param `tfsdk:"params" tf:"optional,"`
 	// Additional metadata key-value pairs.
-	Tags []RunTag `tfsdk:"tags" tf:"optional"`
+	Tags []RunTag `tfsdk:"tags" tf:"optional,"`
 }
 
 type RunInfo struct {
@@ -1263,64 +1263,64 @@ type RunInfo struct {
 	// local path (starting with "/"), or a distributed file system (DFS) path,
 	// like `s3://bucket/directory` or `dbfs:/my/directory`. If not set, the
 	// local `./mlruns` directory is chosen.
-	ArtifactUri types.String `tfsdk:"artifact_uri" tf:"optional"`
+	ArtifactUri types.String `tfsdk:"artifact_uri" tf:"optional,"`
 	// Unix timestamp of when the run ended in milliseconds.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time" tf:"optional,"`
 	// The experiment ID.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional,"`
 	// Current life cycle stage of the experiment : OneOf("active", "deleted")
-	LifecycleStage types.String `tfsdk:"lifecycle_stage" tf:"optional"`
+	LifecycleStage types.String `tfsdk:"lifecycle_stage" tf:"optional,"`
 	// Unique identifier for the run.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// [Deprecated, use run_id instead] Unique identifier for the run. This
 	// field will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid" tf:"optional,"`
 	// Unix timestamp of when the run started in milliseconds.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time" tf:"optional,"`
 	// Current status of the run.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 	// User who initiated the run. This field is deprecated as of MLflow 1.0,
 	// and will be removed in a future MLflow release. Use 'mlflow.user' tag
 	// instead.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 }
 
 type RunInputs struct {
 	// Run metrics.
-	DatasetInputs []DatasetInput `tfsdk:"dataset_inputs" tf:"optional"`
+	DatasetInputs []DatasetInput `tfsdk:"dataset_inputs" tf:"optional,"`
 }
 
 type RunTag struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional,"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value" tf:"optional,"`
 }
 
 type SearchExperiments struct {
 	// String representing a SQL filter condition (e.g. "name ILIKE
 	// 'my-experiment%'")
-	Filter types.String `tfsdk:"filter" tf:"optional"`
+	Filter types.String `tfsdk:"filter" tf:"optional,"`
 	// Maximum number of experiments desired. Max threshold is 3000.
-	MaxResults types.Int64 `tfsdk:"max_results" tf:"optional"`
+	MaxResults types.Int64 `tfsdk:"max_results" tf:"optional,"`
 	// List of columns for ordering search results, which can include experiment
 	// name and last updated timestamp with an optional "DESC" or "ASC"
 	// annotation, where "ASC" is the default. Tiebreaks are done by experiment
 	// id DESC.
-	OrderBy []types.String `tfsdk:"order_by" tf:"optional"`
+	OrderBy []types.String `tfsdk:"order_by" tf:"optional,"`
 	// Token indicating the page of experiments to fetch
-	PageToken types.String `tfsdk:"page_token" tf:"optional"`
+	PageToken types.String `tfsdk:"page_token" tf:"optional,"`
 	// Qualifier for type of experiments to be returned. If unspecified, return
 	// only active experiments.
-	ViewType types.String `tfsdk:"view_type" tf:"optional"`
+	ViewType types.String `tfsdk:"view_type" tf:"optional,"`
 }
 
 type SearchExperimentsResponse struct {
 	// Experiments that match the search criteria
-	Experiments []Experiment `tfsdk:"experiments" tf:"optional"`
+	Experiments []Experiment `tfsdk:"experiments" tf:"optional,"`
 	// Token that can be used to retrieve the next page of experiments. An empty
 	// token means that no more experiments are available for retrieval.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 }
 
 // Searches model versions
@@ -1341,10 +1341,10 @@ type SearchModelVersionsRequest struct {
 
 type SearchModelVersionsResponse struct {
 	// Models that match the search criteria
-	ModelVersions []ModelVersion `tfsdk:"model_versions" tf:"optional"`
+	ModelVersions []ModelVersion `tfsdk:"model_versions" tf:"optional,"`
 	// Pagination token to request next page of models for the same search
 	// query.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 }
 
 // Search models
@@ -1365,14 +1365,14 @@ type SearchModelsRequest struct {
 
 type SearchModelsResponse struct {
 	// Pagination token to request the next page of models.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 	// Registered Models that match the search criteria.
-	RegisteredModels []Model `tfsdk:"registered_models" tf:"optional"`
+	RegisteredModels []Model `tfsdk:"registered_models" tf:"optional,"`
 }
 
 type SearchRuns struct {
 	// List of experiment IDs to search over.
-	ExperimentIds []types.String `tfsdk:"experiment_ids" tf:"optional"`
+	ExperimentIds []types.String `tfsdk:"experiment_ids" tf:"optional,"`
 	// A filter expression over params, metrics, and tags, that allows returning
 	// a subset of runs. The syntax is a subset of SQL that supports ANDing
 	// together binary operations between a param, metric, or tag and a
@@ -1385,28 +1385,28 @@ type SearchRuns struct {
 	// and tags."user-name" = 'Tomas'`
 	//
 	// Supported operators are `=`, `!=`, `>`, `>=`, `<`, and `<=`.
-	Filter types.String `tfsdk:"filter" tf:"optional"`
+	Filter types.String `tfsdk:"filter" tf:"optional,"`
 	// Maximum number of runs desired. Max threshold is 50000
-	MaxResults types.Int64 `tfsdk:"max_results" tf:"optional"`
+	MaxResults types.Int64 `tfsdk:"max_results" tf:"optional,"`
 	// List of columns to be ordered by, including attributes, params, metrics,
 	// and tags with an optional "DESC" or "ASC" annotation, where "ASC" is the
 	// default. Example: ["params.input DESC", "metrics.alpha ASC",
 	// "metrics.rmse"] Tiebreaks are done by start_time DESC followed by run_id
 	// for runs with the same start time (and this is the default ordering
 	// criterion if order_by is not provided).
-	OrderBy []types.String `tfsdk:"order_by" tf:"optional"`
+	OrderBy []types.String `tfsdk:"order_by" tf:"optional,"`
 	// Token for the current page of runs.
-	PageToken types.String `tfsdk:"page_token" tf:"optional"`
+	PageToken types.String `tfsdk:"page_token" tf:"optional,"`
 	// Whether to display only active, only deleted, or all runs. Defaults to
 	// only active runs.
-	RunViewType types.String `tfsdk:"run_view_type" tf:"optional"`
+	RunViewType types.String `tfsdk:"run_view_type" tf:"optional,"`
 }
 
 type SearchRunsResponse struct {
 	// Token for the next page of runs.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 	// Runs that match the search criteria.
-	Runs []Run `tfsdk:"runs" tf:"optional"`
+	Runs []Run `tfsdk:"runs" tf:"optional,"`
 }
 
 type SetExperimentTag struct {
@@ -1465,10 +1465,10 @@ type SetTag struct {
 	// backends are guaranteed to support key values up to 250 bytes in size.
 	Key types.String `tfsdk:"key" tf:""`
 	// ID of the run under which to log the tag. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// [Deprecated, use run_id instead] ID of the run under which to log the
 	// tag. This field will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid" tf:"optional,"`
 	// String value of the tag being logged. Maximum size depends on storage
 	// backend. All storage backends are guaranteed to support key values up to
 	// 5000 bytes in size.
@@ -1481,23 +1481,23 @@ type SetTagResponse struct {
 // Test webhook response object.
 type TestRegistryWebhook struct {
 	// Body of the response from the webhook URL
-	Body types.String `tfsdk:"body" tf:"optional"`
+	Body types.String `tfsdk:"body" tf:"optional,"`
 	// Status code returned by the webhook URL
-	StatusCode types.Int64 `tfsdk:"status_code" tf:"optional"`
+	StatusCode types.Int64 `tfsdk:"status_code" tf:"optional,"`
 }
 
 type TestRegistryWebhookRequest struct {
 	// If `event` is specified, the test trigger uses the specified event. If
 	// `event` is not specified, the test trigger uses a randomly chosen event
 	// associated with the webhook.
-	Event types.String `tfsdk:"event" tf:"optional"`
+	Event types.String `tfsdk:"event" tf:"optional,"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:""`
 }
 
 type TestRegistryWebhookResponse struct {
 	// Test webhook response object.
-	Webhook []TestRegistryWebhook `tfsdk:"webhook" tf:"optional"`
+	Webhook []TestRegistryWebhook `tfsdk:"webhook" tf:"optional,object"`
 }
 
 type TransitionModelVersionStageDatabricks struct {
@@ -1505,7 +1505,7 @@ type TransitionModelVersionStageDatabricks struct {
 	// stage.
 	ArchiveExistingVersions types.Bool `tfsdk:"archive_existing_versions" tf:""`
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment" tf:"optional,"`
 	// Name of the model.
 	Name types.String `tfsdk:"name" tf:""`
 	// Target stage of the transition. Valid values are:
@@ -1525,11 +1525,11 @@ type TransitionModelVersionStageDatabricks struct {
 // Transition request details.
 type TransitionRequest struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions []types.String `tfsdk:"available_actions" tf:"optional"`
+	AvailableActions []types.String `tfsdk:"available_actions" tf:"optional,"`
 	// User-provided comment associated with the transition request.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment" tf:"optional,"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional,"`
 	// Target stage of the transition (if the activity is stage transition
 	// related). Valid values are:
 	//
@@ -1540,13 +1540,13 @@ type TransitionRequest struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	ToStage types.String `tfsdk:"to_stage" tf:"optional"`
+	ToStage types.String `tfsdk:"to_stage" tf:"optional,"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id" tf:"optional,"`
 }
 
 type TransitionStageResponse struct {
-	ModelVersion []ModelVersionDatabricks `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersionDatabricks `tfsdk:"model_version" tf:"optional,object"`
 }
 
 type UpdateComment struct {
@@ -1558,7 +1558,7 @@ type UpdateComment struct {
 
 type UpdateCommentResponse struct {
 	// Comment details.
-	Comment []CommentObject `tfsdk:"comment" tf:"optional"`
+	Comment []CommentObject `tfsdk:"comment" tf:"optional,object"`
 }
 
 type UpdateExperiment struct {
@@ -1566,7 +1566,7 @@ type UpdateExperiment struct {
 	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
 	// If provided, the experiment's name is changed to the new name. The new
 	// name must be unique.
-	NewName types.String `tfsdk:"new_name" tf:"optional"`
+	NewName types.String `tfsdk:"new_name" tf:"optional,"`
 }
 
 type UpdateExperimentResponse struct {
@@ -1574,7 +1574,7 @@ type UpdateExperimentResponse struct {
 
 type UpdateModelRequest struct {
 	// If provided, updates the description for this `registered_model`.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name" tf:""`
 }
@@ -1584,7 +1584,7 @@ type UpdateModelResponse struct {
 
 type UpdateModelVersionRequest struct {
 	// If provided, updates the description for this `registered_model`.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Name of the registered model
 	Name types.String `tfsdk:"name" tf:""`
 	// Model version number
@@ -1596,7 +1596,7 @@ type UpdateModelVersionResponse struct {
 
 type UpdateRegistryWebhook struct {
 	// User-specified description for the webhook.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description" tf:"optional,"`
 	// Events that can trigger a registry webhook: * `MODEL_VERSION_CREATED`: A
 	// new model version was created for the associated model.
 	//
@@ -1630,13 +1630,13 @@ type UpdateRegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events []types.String `tfsdk:"events" tf:"optional"`
+	Events []types.String `tfsdk:"events" tf:"optional,"`
 
-	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional,object"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:""`
 
-	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional,object"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -1645,24 +1645,24 @@ type UpdateRegistryWebhook struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 }
 
 type UpdateRun struct {
 	// Unix timestamp in milliseconds of when the run ended.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time" tf:"optional,"`
 	// ID of the run to update. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id" tf:"optional,"`
 	// [Deprecated, use run_id instead] ID of the run to update.. This field
 	// will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid" tf:"optional,"`
 	// Updated status of the run.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 }
 
 type UpdateRunResponse struct {
 	// Updated metadata of the run.
-	RunInfo []RunInfo `tfsdk:"run_info" tf:"optional"`
+	RunInfo []RunInfo `tfsdk:"run_info" tf:"optional,object"`
 }
 
 type UpdateWebhookResponse struct {

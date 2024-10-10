@@ -16,8 +16,8 @@ data "databricks_volumes" "all" {
   schema_name  = "things"
 }
 
-data "databricks_volume" {
-  for_each = data.datatbricks_volumes.all.ids
+data "databricks_volume" "this" {
+  for_each = data.databricks_volumes.all.ids
   name     = each.value
 }
 ```

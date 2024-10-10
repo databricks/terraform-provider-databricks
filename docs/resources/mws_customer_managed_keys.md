@@ -110,6 +110,8 @@ variable "databricks_cross_account_role" {
   description = "AWS ARN for the Databricks cross account role"
 }
 
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "databricks_storage_cmk" {
   version = "2012-10-17"
   statement {

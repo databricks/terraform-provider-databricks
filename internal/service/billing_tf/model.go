@@ -18,148 +18,148 @@ import (
 
 type ActionConfiguration struct {
 	// Databricks action configuration ID.
-	ActionConfigurationId types.String `tfsdk:"action_configuration_id" tf:"optional"`
+	ActionConfigurationId types.String `tfsdk:"action_configuration_id" tf:"optional,"`
 	// The type of the action.
-	ActionType types.String `tfsdk:"action_type" tf:"optional"`
+	ActionType types.String `tfsdk:"action_type" tf:"optional,"`
 	// Target for the action. For example, an email address.
-	Target types.String `tfsdk:"target" tf:"optional"`
+	Target types.String `tfsdk:"target" tf:"optional,"`
 }
 
 type AlertConfiguration struct {
 	// Configured actions for this alert. These define what happens when an
 	// alert enters a triggered state.
-	ActionConfigurations []ActionConfiguration `tfsdk:"action_configurations" tf:"optional"`
+	ActionConfigurations []ActionConfiguration `tfsdk:"action_configurations" tf:"optional,"`
 	// Databricks alert configuration ID.
-	AlertConfigurationId types.String `tfsdk:"alert_configuration_id" tf:"optional"`
+	AlertConfigurationId types.String `tfsdk:"alert_configuration_id" tf:"optional,"`
 	// The threshold for the budget alert to determine if it is in a triggered
 	// state. The number is evaluated based on `quantity_type`.
-	QuantityThreshold types.String `tfsdk:"quantity_threshold" tf:"optional"`
+	QuantityThreshold types.String `tfsdk:"quantity_threshold" tf:"optional,"`
 	// The way to calculate cost for this budget alert. This is what
 	// `quantity_threshold` is measured in.
-	QuantityType types.String `tfsdk:"quantity_type" tf:"optional"`
+	QuantityType types.String `tfsdk:"quantity_type" tf:"optional,"`
 	// The time window of usage data for the budget.
-	TimePeriod types.String `tfsdk:"time_period" tf:"optional"`
+	TimePeriod types.String `tfsdk:"time_period" tf:"optional,"`
 	// The evaluation method to determine when this budget alert is in a
 	// triggered state.
-	TriggerType types.String `tfsdk:"trigger_type" tf:"optional"`
+	TriggerType types.String `tfsdk:"trigger_type" tf:"optional,"`
 }
 
 type BudgetConfiguration struct {
 	// Databricks account ID.
-	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	AccountId types.String `tfsdk:"account_id" tf:"optional,"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
 	// must have exactly one alert configuration.
-	AlertConfigurations []AlertConfiguration `tfsdk:"alert_configurations" tf:"optional"`
+	AlertConfigurations []AlertConfiguration `tfsdk:"alert_configurations" tf:"optional,"`
 	// Databricks budget configuration ID.
-	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id" tf:"optional"`
+	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id" tf:"optional,"`
 	// Creation time of this budget configuration.
-	CreateTime types.Int64 `tfsdk:"create_time" tf:"optional"`
+	CreateTime types.Int64 `tfsdk:"create_time" tf:"optional,"`
 	// Human-readable name of budget configuration. Max Length: 128
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional,"`
 	// Configured filters for this budget. These are applied to your account's
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
 	// Update time of this budget configuration.
-	UpdateTime types.Int64 `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.Int64 `tfsdk:"update_time" tf:"optional,"`
 }
 
 type BudgetConfigurationFilter struct {
 	// A list of tag keys and values that will limit the budget to usage that
 	// includes those specific custom tags. Tags are case-sensitive and should
 	// be entered exactly as they appear in your usage data.
-	Tags []BudgetConfigurationFilterTagClause `tfsdk:"tags" tf:"optional"`
+	Tags []BudgetConfigurationFilterTagClause `tfsdk:"tags" tf:"optional,"`
 	// If provided, usage must match with the provided Databricks workspace IDs.
-	WorkspaceId []BudgetConfigurationFilterWorkspaceIdClause `tfsdk:"workspace_id" tf:"optional"`
+	WorkspaceId []BudgetConfigurationFilterWorkspaceIdClause `tfsdk:"workspace_id" tf:"optional,object"`
 }
 
 type BudgetConfigurationFilterClause struct {
-	Operator types.String `tfsdk:"operator" tf:"optional"`
+	Operator types.String `tfsdk:"operator" tf:"optional,"`
 
-	Values []types.String `tfsdk:"values" tf:"optional"`
+	Values []types.String `tfsdk:"values" tf:"optional,"`
 }
 
 type BudgetConfigurationFilterTagClause struct {
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key" tf:"optional,"`
 
-	Value []BudgetConfigurationFilterClause `tfsdk:"value" tf:"optional"`
+	Value []BudgetConfigurationFilterClause `tfsdk:"value" tf:"optional,object"`
 }
 
 type BudgetConfigurationFilterWorkspaceIdClause struct {
-	Operator types.String `tfsdk:"operator" tf:"optional"`
+	Operator types.String `tfsdk:"operator" tf:"optional,"`
 
-	Values []types.Int64 `tfsdk:"values" tf:"optional"`
+	Values []types.Int64 `tfsdk:"values" tf:"optional,"`
 }
 
 type CreateBillingUsageDashboardRequest struct {
 	// Workspace level usage dashboard shows usage data for the specified
 	// workspace ID. Global level usage dashboard shows usage data for all
 	// workspaces in the account.
-	DashboardType types.String `tfsdk:"dashboard_type" tf:"optional"`
+	DashboardType types.String `tfsdk:"dashboard_type" tf:"optional,"`
 	// The workspace ID of the workspace in which the usage dashboard is
 	// created.
-	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
+	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional,"`
 }
 
 type CreateBillingUsageDashboardResponse struct {
 	// The unique id of the usage dashboard.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
+	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional,"`
 }
 
 type CreateBudgetConfigurationBudget struct {
 	// Databricks account ID.
-	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	AccountId types.String `tfsdk:"account_id" tf:"optional,"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
 	// must have exactly one alert configuration.
-	AlertConfigurations []CreateBudgetConfigurationBudgetAlertConfigurations `tfsdk:"alert_configurations" tf:"optional"`
+	AlertConfigurations []CreateBudgetConfigurationBudgetAlertConfigurations `tfsdk:"alert_configurations" tf:"optional,"`
 	// Human-readable name of budget configuration. Max Length: 128
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional,"`
 	// Configured filters for this budget. These are applied to your account's
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
 }
 
 type CreateBudgetConfigurationBudgetActionConfigurations struct {
 	// The type of the action.
-	ActionType types.String `tfsdk:"action_type" tf:"optional"`
+	ActionType types.String `tfsdk:"action_type" tf:"optional,"`
 	// Target for the action. For example, an email address.
-	Target types.String `tfsdk:"target" tf:"optional"`
+	Target types.String `tfsdk:"target" tf:"optional,"`
 }
 
 type CreateBudgetConfigurationBudgetAlertConfigurations struct {
 	// Configured actions for this alert. These define what happens when an
 	// alert enters a triggered state.
-	ActionConfigurations []CreateBudgetConfigurationBudgetActionConfigurations `tfsdk:"action_configurations" tf:"optional"`
+	ActionConfigurations []CreateBudgetConfigurationBudgetActionConfigurations `tfsdk:"action_configurations" tf:"optional,"`
 	// The threshold for the budget alert to determine if it is in a triggered
 	// state. The number is evaluated based on `quantity_type`.
-	QuantityThreshold types.String `tfsdk:"quantity_threshold" tf:"optional"`
+	QuantityThreshold types.String `tfsdk:"quantity_threshold" tf:"optional,"`
 	// The way to calculate cost for this budget alert. This is what
 	// `quantity_threshold` is measured in.
-	QuantityType types.String `tfsdk:"quantity_type" tf:"optional"`
+	QuantityType types.String `tfsdk:"quantity_type" tf:"optional,"`
 	// The time window of usage data for the budget.
-	TimePeriod types.String `tfsdk:"time_period" tf:"optional"`
+	TimePeriod types.String `tfsdk:"time_period" tf:"optional,"`
 	// The evaluation method to determine when this budget alert is in a
 	// triggered state.
-	TriggerType types.String `tfsdk:"trigger_type" tf:"optional"`
+	TriggerType types.String `tfsdk:"trigger_type" tf:"optional,"`
 }
 
 type CreateBudgetConfigurationRequest struct {
 	// Properties of the new budget configuration.
-	Budget []CreateBudgetConfigurationBudget `tfsdk:"budget" tf:""`
+	Budget []CreateBudgetConfigurationBudget `tfsdk:"budget" tf:"object"`
 }
 
 type CreateBudgetConfigurationResponse struct {
 	// The created budget configuration.
-	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
 }
 
 type CreateLogDeliveryConfigurationParams struct {
 	// The optional human-readable name of the log delivery configuration.
 	// Defaults to empty.
-	ConfigName types.String `tfsdk:"config_name" tf:"optional"`
+	ConfigName types.String `tfsdk:"config_name" tf:"optional,"`
 	// The ID for a method:credentials/create that represents the AWS IAM role
 	// with policy and trust relationship as described in the main billable
 	// usage documentation page. See [Configure billable usage delivery].
@@ -170,12 +170,12 @@ type CreateLogDeliveryConfigurationParams struct {
 	// empty, which means that logs are delivered to the root of the bucket.
 	// This must be a valid S3 object key. This must not start or end with a
 	// slash character.
-	DeliveryPathPrefix types.String `tfsdk:"delivery_path_prefix" tf:"optional"`
+	DeliveryPathPrefix types.String `tfsdk:"delivery_path_prefix" tf:"optional,"`
 	// This field applies only if `log_type` is `BILLABLE_USAGE`. This is the
 	// optional start month and year for delivery, specified in `YYYY-MM`
 	// format. Defaults to current year and month. `BILLABLE_USAGE` logs are not
 	// available for usage before March 2019 (`2019-03`).
-	DeliveryStartTime types.String `tfsdk:"delivery_start_time" tf:"optional"`
+	DeliveryStartTime types.String `tfsdk:"delivery_start_time" tf:"optional,"`
 	// Log delivery type. Supported values are:
 	//
 	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
@@ -205,7 +205,7 @@ type CreateLogDeliveryConfigurationParams struct {
 	// the configuration](#operation/patch-log-delivery-config-status) later.
 	// Deletion of a configuration is not supported, so disable a log delivery
 	// configuration that is no longer needed.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 	// The ID for a method:storage/create that represents the S3 bucket with
 	// bucket policy as described in the main billable usage documentation page.
 	// See [Configure billable usage delivery].
@@ -225,7 +225,7 @@ type CreateLogDeliveryConfigurationParams struct {
 	// delivery won't include account level logs. For some types of Databricks
 	// deployments there is only one workspace per account ID, so this field is
 	// unnecessary.
-	WorkspaceIdsFilter []types.Int64 `tfsdk:"workspace_ids_filter" tf:"optional"`
+	WorkspaceIdsFilter []types.Int64 `tfsdk:"workspace_ids_filter" tf:"optional,"`
 }
 
 // Delete budget
@@ -268,9 +268,9 @@ type GetBillingUsageDashboardRequest struct {
 
 type GetBillingUsageDashboardResponse struct {
 	// The unique id of the usage dashboard.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
+	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional,"`
 	// The URL of the usage dashboard.
-	DashboardUrl types.String `tfsdk:"dashboard_url" tf:"optional"`
+	DashboardUrl types.String `tfsdk:"dashboard_url" tf:"optional,"`
 }
 
 // Get budget
@@ -280,7 +280,7 @@ type GetBudgetConfigurationRequest struct {
 }
 
 type GetBudgetConfigurationResponse struct {
-	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
 }
 
 // Get log delivery configuration
@@ -298,10 +298,10 @@ type ListBudgetConfigurationsRequest struct {
 }
 
 type ListBudgetConfigurationsResponse struct {
-	Budgets []BudgetConfiguration `tfsdk:"budgets" tf:"optional"`
+	Budgets []BudgetConfiguration `tfsdk:"budgets" tf:"optional,"`
 	// Token which can be sent as `page_token` to retrieve the next page of
 	// results. If this field is omitted, there are no subsequent budgets.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional,"`
 }
 
 // Get all log delivery configurations
@@ -316,33 +316,33 @@ type ListLogDeliveryRequest struct {
 
 type LogDeliveryConfiguration struct {
 	// The Databricks account ID that hosts the log delivery configuration.
-	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	AccountId types.String `tfsdk:"account_id" tf:"optional,"`
 	// Databricks log delivery configuration ID.
-	ConfigId types.String `tfsdk:"config_id" tf:"optional"`
+	ConfigId types.String `tfsdk:"config_id" tf:"optional,"`
 	// The optional human-readable name of the log delivery configuration.
 	// Defaults to empty.
-	ConfigName types.String `tfsdk:"config_name" tf:"optional"`
+	ConfigName types.String `tfsdk:"config_name" tf:"optional,"`
 	// Time in epoch milliseconds when the log delivery configuration was
 	// created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional,"`
 	// The ID for a method:credentials/create that represents the AWS IAM role
 	// with policy and trust relationship as described in the main billable
 	// usage documentation page. See [Configure billable usage delivery].
 	//
 	// [Configure billable usage delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
-	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
+	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional,"`
 	// The optional delivery path prefix within Amazon S3 storage. Defaults to
 	// empty, which means that logs are delivered to the root of the bucket.
 	// This must be a valid S3 object key. This must not start or end with a
 	// slash character.
-	DeliveryPathPrefix types.String `tfsdk:"delivery_path_prefix" tf:"optional"`
+	DeliveryPathPrefix types.String `tfsdk:"delivery_path_prefix" tf:"optional,"`
 	// This field applies only if `log_type` is `BILLABLE_USAGE`. This is the
 	// optional start month and year for delivery, specified in `YYYY-MM`
 	// format. Defaults to current year and month. `BILLABLE_USAGE` logs are not
 	// available for usage before March 2019 (`2019-03`).
-	DeliveryStartTime types.String `tfsdk:"delivery_start_time" tf:"optional"`
+	DeliveryStartTime types.String `tfsdk:"delivery_start_time" tf:"optional,"`
 	// Databricks log delivery status.
-	LogDeliveryStatus []LogDeliveryStatus `tfsdk:"log_delivery_status" tf:"optional"`
+	LogDeliveryStatus []LogDeliveryStatus `tfsdk:"log_delivery_status" tf:"optional,object"`
 	// Log delivery type. Supported values are:
 	//
 	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
@@ -355,7 +355,7 @@ type LogDeliveryConfiguration struct {
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
 	// [audit log delivery]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [billable usage log delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
-	LogType types.String `tfsdk:"log_type" tf:"optional"`
+	LogType types.String `tfsdk:"log_type" tf:"optional,"`
 	// The file type of log delivery.
 	//
 	// * If `log_type` is `BILLABLE_USAGE`, this value must be `CSV`. Only the
@@ -366,22 +366,22 @@ type LogDeliveryConfiguration struct {
 	//
 	// [Configuring audit logs]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
 	// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
-	OutputFormat types.String `tfsdk:"output_format" tf:"optional"`
+	OutputFormat types.String `tfsdk:"output_format" tf:"optional,"`
 	// Status of log delivery configuration. Set to `ENABLED` (enabled) or
 	// `DISABLED` (disabled). Defaults to `ENABLED`. You can [enable or disable
 	// the configuration](#operation/patch-log-delivery-config-status) later.
 	// Deletion of a configuration is not supported, so disable a log delivery
 	// configuration that is no longer needed.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 	// The ID for a method:storage/create that represents the S3 bucket with
 	// bucket policy as described in the main billable usage documentation page.
 	// See [Configure billable usage delivery].
 	//
 	// [Configure billable usage delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
-	StorageConfigurationId types.String `tfsdk:"storage_configuration_id" tf:"optional"`
+	StorageConfigurationId types.String `tfsdk:"storage_configuration_id" tf:"optional,"`
 	// Time in epoch milliseconds when the log delivery configuration was
 	// updated.
-	UpdateTime types.Int64 `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.Int64 `tfsdk:"update_time" tf:"optional,"`
 	// Optional filter that specifies workspace IDs to deliver logs for. By
 	// default the workspace filter is empty and log delivery applies at the
 	// account level, delivering workspace-level logs for all workspaces in your
@@ -395,19 +395,19 @@ type LogDeliveryConfiguration struct {
 	// delivery won't include account level logs. For some types of Databricks
 	// deployments there is only one workspace per account ID, so this field is
 	// unnecessary.
-	WorkspaceIdsFilter []types.Int64 `tfsdk:"workspace_ids_filter" tf:"optional"`
+	WorkspaceIdsFilter []types.Int64 `tfsdk:"workspace_ids_filter" tf:"optional,"`
 }
 
 // Databricks log delivery status.
 type LogDeliveryStatus struct {
 	// The UTC time for the latest log delivery attempt.
-	LastAttemptTime types.String `tfsdk:"last_attempt_time" tf:"optional"`
+	LastAttemptTime types.String `tfsdk:"last_attempt_time" tf:"optional,"`
 	// The UTC time for the latest successful log delivery.
-	LastSuccessfulAttemptTime types.String `tfsdk:"last_successful_attempt_time" tf:"optional"`
+	LastSuccessfulAttemptTime types.String `tfsdk:"last_successful_attempt_time" tf:"optional,"`
 	// Informative message about the latest log delivery attempt. If the log
 	// delivery fails with USER_FAILURE, error details will be provided for
 	// fixing misconfigurations in cloud permissions.
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message" tf:"optional,"`
 	// The status string for log delivery. Possible values are: * `CREATED`:
 	// There were no log delivery attempts since the config was created. *
 	// `SUCCEEDED`: The latest attempt of log delivery has succeeded completely.
@@ -418,7 +418,7 @@ type LogDeliveryStatus struct {
 	// `NOT_FOUND`: The log delivery status as the configuration has been
 	// disabled since the release of this feature or there are no workspaces in
 	// the account.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"optional,"`
 }
 
 type PatchStatusResponse struct {
@@ -426,32 +426,32 @@ type PatchStatusResponse struct {
 
 type UpdateBudgetConfigurationBudget struct {
 	// Databricks account ID.
-	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	AccountId types.String `tfsdk:"account_id" tf:"optional,"`
 	// Alerts to configure when this budget is in a triggered state. Budgets
 	// must have exactly one alert configuration.
-	AlertConfigurations []AlertConfiguration `tfsdk:"alert_configurations" tf:"optional"`
+	AlertConfigurations []AlertConfiguration `tfsdk:"alert_configurations" tf:"optional,"`
 	// Databricks budget configuration ID.
-	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id" tf:"optional"`
+	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id" tf:"optional,"`
 	// Human-readable name of budget configuration. Max Length: 128
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name" tf:"optional,"`
 	// Configured filters for this budget. These are applied to your account's
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
 }
 
 type UpdateBudgetConfigurationRequest struct {
 	// The updated budget. This will overwrite the budget specified by the
 	// budget ID.
-	Budget []UpdateBudgetConfigurationBudget `tfsdk:"budget" tf:""`
+	Budget []UpdateBudgetConfigurationBudget `tfsdk:"budget" tf:"object"`
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
 }
 
 type UpdateBudgetConfigurationResponse struct {
 	// The updated budget.
-	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
 }
 
 type UpdateLogDeliveryConfigurationStatusRequest struct {
@@ -466,13 +466,13 @@ type UpdateLogDeliveryConfigurationStatusRequest struct {
 }
 
 type WrappedCreateLogDeliveryConfiguration struct {
-	LogDeliveryConfiguration []CreateLogDeliveryConfigurationParams `tfsdk:"log_delivery_configuration" tf:"optional"`
+	LogDeliveryConfiguration []CreateLogDeliveryConfigurationParams `tfsdk:"log_delivery_configuration" tf:"optional,object"`
 }
 
 type WrappedLogDeliveryConfiguration struct {
-	LogDeliveryConfiguration []LogDeliveryConfiguration `tfsdk:"log_delivery_configuration" tf:"optional"`
+	LogDeliveryConfiguration []LogDeliveryConfiguration `tfsdk:"log_delivery_configuration" tf:"optional,object"`
 }
 
 type WrappedLogDeliveryConfigurations struct {
-	LogDeliveryConfigurations []LogDeliveryConfiguration `tfsdk:"log_delivery_configurations" tf:"optional"`
+	LogDeliveryConfigurations []LogDeliveryConfiguration `tfsdk:"log_delivery_configurations" tf:"optional,"`
 }

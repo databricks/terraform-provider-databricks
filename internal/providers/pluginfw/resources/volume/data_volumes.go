@@ -8,12 +8,15 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+const dataSourceName = "volumes"
 
 func DataSourceVolumes() datasource.DataSource {
 	return &VolumesDataSource{}
@@ -32,7 +35,7 @@ type VolumesList struct {
 }
 
 func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "databricks_volumes_pluginframework"
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceName)
 }
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -50,6 +53,7 @@ func (d *VolumesDataSource) Configure(_ context.Context, req datasource.Configur
 }
 
 func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx = pluginfwcontext.SetDataSourceNameInContext(ctx, dataSourceName)
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

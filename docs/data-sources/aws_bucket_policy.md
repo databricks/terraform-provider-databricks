@@ -10,12 +10,11 @@ This datasource configures a simple access policy for AWS S3 buckets, so that Da
 ```hcl
 resource "aws_s3_bucket" "this" {
   bucket        = "<unique_bucket_name>"
-  acl           = "private"
   force_destroy = true
 }
 
-data "databricks_aws_bucket_policy" "stuff" {
-  bucket_name = aws_s3_bucket.this.bucket
+data "databricks_aws_bucket_policy" "this" {
+  bucket = aws_s3_bucket.this.bucket
 }
 
 resource "aws_s3_bucket_policy" "this" {
@@ -29,7 +28,6 @@ Bucket policy with full access:
 ```hcl
 resource "aws_s3_bucket" "ds" {
   bucket        = "${var.prefix}-ds"
-  acl           = "private"
   force_destroy = true
   tags = merge(var.tags, {
     Name = "${var.prefix}-ds"

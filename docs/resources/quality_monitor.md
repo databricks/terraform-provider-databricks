@@ -36,7 +36,6 @@ resource "databricks_sql_table" "myTestTable" {
 
   column {
     name     = "timestamp"
-    position = 1
     type     = "int"
   }
 }

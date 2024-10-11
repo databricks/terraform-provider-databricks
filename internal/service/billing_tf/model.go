@@ -60,7 +60,7 @@ type BudgetConfiguration struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
 	// Update time of this budget configuration.
 	UpdateTime types.Int64 `tfsdk:"update_time" tf:"optional"`
 }
@@ -71,7 +71,7 @@ type BudgetConfigurationFilter struct {
 	// be entered exactly as they appear in your usage data.
 	Tags []BudgetConfigurationFilterTagClause `tfsdk:"tags" tf:"optional"`
 	// If provided, usage must match with the provided Databricks workspace IDs.
-	WorkspaceId []BudgetConfigurationFilterWorkspaceIdClause `tfsdk:"workspace_id" tf:"optional"`
+	WorkspaceId []BudgetConfigurationFilterWorkspaceIdClause `tfsdk:"workspace_id" tf:"optional,object"`
 }
 
 type BudgetConfigurationFilterClause struct {
@@ -83,7 +83,7 @@ type BudgetConfigurationFilterClause struct {
 type BudgetConfigurationFilterTagClause struct {
 	Key types.String `tfsdk:"key" tf:"optional"`
 
-	Value []BudgetConfigurationFilterClause `tfsdk:"value" tf:"optional"`
+	Value []BudgetConfigurationFilterClause `tfsdk:"value" tf:"optional,object"`
 }
 
 type BudgetConfigurationFilterWorkspaceIdClause struct {
@@ -119,7 +119,7 @@ type CreateBudgetConfigurationBudget struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
 }
 
 type CreateBudgetConfigurationBudgetActionConfigurations struct {
@@ -148,12 +148,12 @@ type CreateBudgetConfigurationBudgetAlertConfigurations struct {
 
 type CreateBudgetConfigurationRequest struct {
 	// Properties of the new budget configuration.
-	Budget []CreateBudgetConfigurationBudget `tfsdk:"budget" tf:""`
+	Budget []CreateBudgetConfigurationBudget `tfsdk:"budget" tf:"object"`
 }
 
 type CreateBudgetConfigurationResponse struct {
 	// The created budget configuration.
-	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
 }
 
 type CreateLogDeliveryConfigurationParams struct {
@@ -280,7 +280,7 @@ type GetBudgetConfigurationRequest struct {
 }
 
 type GetBudgetConfigurationResponse struct {
-	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
 }
 
 // Get log delivery configuration
@@ -342,7 +342,7 @@ type LogDeliveryConfiguration struct {
 	// available for usage before March 2019 (`2019-03`).
 	DeliveryStartTime types.String `tfsdk:"delivery_start_time" tf:"optional"`
 	// Databricks log delivery status.
-	LogDeliveryStatus []LogDeliveryStatus `tfsdk:"log_delivery_status" tf:"optional"`
+	LogDeliveryStatus []LogDeliveryStatus `tfsdk:"log_delivery_status" tf:"optional,object"`
 	// Log delivery type. Supported values are:
 	//
 	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
@@ -438,20 +438,20 @@ type UpdateBudgetConfigurationBudget struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
 }
 
 type UpdateBudgetConfigurationRequest struct {
 	// The updated budget. This will overwrite the budget specified by the
 	// budget ID.
-	Budget []UpdateBudgetConfigurationBudget `tfsdk:"budget" tf:""`
+	Budget []UpdateBudgetConfigurationBudget `tfsdk:"budget" tf:"object"`
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
 }
 
 type UpdateBudgetConfigurationResponse struct {
 	// The updated budget.
-	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
 }
 
 type UpdateLogDeliveryConfigurationStatusRequest struct {
@@ -466,11 +466,11 @@ type UpdateLogDeliveryConfigurationStatusRequest struct {
 }
 
 type WrappedCreateLogDeliveryConfiguration struct {
-	LogDeliveryConfiguration []CreateLogDeliveryConfigurationParams `tfsdk:"log_delivery_configuration" tf:"optional"`
+	LogDeliveryConfiguration []CreateLogDeliveryConfigurationParams `tfsdk:"log_delivery_configuration" tf:"optional,object"`
 }
 
 type WrappedLogDeliveryConfiguration struct {
-	LogDeliveryConfiguration []LogDeliveryConfiguration `tfsdk:"log_delivery_configuration" tf:"optional"`
+	LogDeliveryConfiguration []LogDeliveryConfiguration `tfsdk:"log_delivery_configuration" tf:"optional,object"`
 }
 
 type WrappedLogDeliveryConfigurations struct {

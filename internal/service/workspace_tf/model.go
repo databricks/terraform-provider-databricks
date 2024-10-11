@@ -73,7 +73,7 @@ type CreateRepoRequest struct {
 	Provider types.String `tfsdk:"provider" tf:""`
 	// If specified, the repo will be created with sparse checkout enabled. You
 	// cannot enable/disable sparse checkout after the repo is created.
-	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
+	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the Git repository to be linked.
 	Url types.String `tfsdk:"url" tf:""`
 }
@@ -91,14 +91,14 @@ type CreateRepoResponse struct {
 	// Git provider of the linked Git repository.
 	Provider types.String `tfsdk:"provider" tf:"optional"`
 	// Sparse checkout settings for the Git folder (repo).
-	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
+	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the linked Git repository.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
 type CreateScope struct {
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
-	BackendAzureKeyvault []AzureKeyVaultSecretScopeMetadata `tfsdk:"backend_azure_keyvault" tf:"optional"`
+	BackendAzureKeyvault []AzureKeyVaultSecretScopeMetadata `tfsdk:"backend_azure_keyvault" tf:"optional,object"`
 	// The principal that is initially granted `MANAGE` permission to the
 	// created scope.
 	InitialManagePrincipal types.String `tfsdk:"initial_manage_principal" tf:"optional"`
@@ -270,7 +270,7 @@ type GetRepoResponse struct {
 	// Git provider of the linked Git repository.
 	Provider types.String `tfsdk:"provider" tf:"optional"`
 	// Sparse checkout settings for the Git folder (repo).
-	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
+	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the linked Git repository.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -516,7 +516,7 @@ type RepoInfo struct {
 	// Git provider of the remote git repository, e.g. `gitHub`.
 	Provider types.String `tfsdk:"provider" tf:"optional"`
 	// Sparse checkout config for the git folder (repo).
-	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional"`
+	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the remote git repository.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -560,7 +560,7 @@ type SecretScope struct {
 	// The type of secret scope backend.
 	BackendType types.String `tfsdk:"backend_type" tf:"optional"`
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
-	KeyvaultMetadata []AzureKeyVaultSecretScopeMetadata `tfsdk:"keyvault_metadata" tf:"optional"`
+	KeyvaultMetadata []AzureKeyVaultSecretScopeMetadata `tfsdk:"keyvault_metadata" tf:"optional,object"`
 	// A unique name to identify the secret scope.
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
@@ -617,7 +617,7 @@ type UpdateRepoRequest struct {
 	RepoId types.Int64 `tfsdk:"-"`
 	// If specified, update the sparse checkout settings. The update will fail
 	// if sparse checkout is not enabled for the repo.
-	SparseCheckout []SparseCheckoutUpdate `tfsdk:"sparse_checkout" tf:"optional"`
+	SparseCheckout []SparseCheckoutUpdate `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// Tag that the local version of the repo is checked out to. Updating the
 	// repo to a tag puts the repo in a detached HEAD state. Before committing
 	// new changes, you must update the repo to a branch instead of the detached

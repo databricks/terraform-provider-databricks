@@ -26,7 +26,7 @@ type BaseJob struct {
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// Settings for this job and all of its runs. These settings can be updated
 	// using the `resetJob` method.
-	Settings []JobSettings `tfsdk:"settings" tf:"optional"`
+	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
 }
 
 type BaseRun struct {
@@ -47,10 +47,10 @@ type BaseRun struct {
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional"`
+	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional,object"`
 	// A snapshot of the job’s cluster specification when this run was
 	// created.
-	ClusterSpec []ClusterSpec `tfsdk:"cluster_spec" tf:"optional"`
+	ClusterSpec []ClusterSpec `tfsdk:"cluster_spec" tf:"optional,object"`
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
@@ -77,7 +77,7 @@ type BaseRun struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource []GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
@@ -98,7 +98,7 @@ type BaseRun struct {
 	// run_id of the original attempt; otherwise, it is the same as the run_id.
 	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id" tf:"optional"`
 	// The parameters used for this run.
-	OverridingParameters []RunParameters `tfsdk:"overriding_parameters" tf:"optional"`
+	OverridingParameters []RunParameters `tfsdk:"overriding_parameters" tf:"optional,object"`
 	// The time in milliseconds that the run has spent in the queue.
 	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
 	// The repair history of the run.
@@ -123,7 +123,7 @@ type BaseRun struct {
 	RunType types.String `tfsdk:"run_type" tf:"optional"`
 	// The cron schedule that triggered this run if it was triggered by the
 	// periodic scheduler.
-	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional,object"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
 	// on new clusters this is the cluster creation time, for runs that run on
 	// existing clusters this time should be very short. The duration of a task
@@ -138,9 +138,9 @@ type BaseRun struct {
 	// new cluster, this is the time the cluster creation call is issued.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// Deprecated. Please use the `status` field instead.
-	State []RunState `tfsdk:"state" tf:"optional"`
+	State []RunState `tfsdk:"state" tf:"optional,object"`
 	// The current status of the run
-	Status []RunStatus `tfsdk:"status" tf:"optional"`
+	Status []RunStatus `tfsdk:"status" tf:"optional,object"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
 	Tasks []RunTask `tfsdk:"tasks" tf:"optional"`
@@ -156,7 +156,7 @@ type BaseRun struct {
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
 	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 	// Additional details about what triggered the run
-	TriggerInfo []TriggerInfo `tfsdk:"trigger_info" tf:"optional"`
+	TriggerInfo []TriggerInfo `tfsdk:"trigger_info" tf:"optional,object"`
 }
 
 type CancelAllRuns struct {
@@ -213,7 +213,7 @@ type ClusterSpec struct {
 	Libraries compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
 }
 
 type ConditionTask struct {
@@ -248,9 +248,9 @@ type CreateJob struct {
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
-	Continuous []Continuous `tfsdk:"continuous" tf:"optional"`
+	Continuous []Continuous `tfsdk:"continuous" tf:"optional,object"`
 	// Deployment information for jobs managed by external sources.
-	Deployment []JobDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []JobDeployment `tfsdk:"deployment" tf:"optional,object"`
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description" tf:"optional"`
@@ -261,7 +261,7 @@ type CreateJob struct {
 	EditMode types.String `tfsdk:"edit_mode" tf:"optional"`
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
-	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// A list of task execution environment specifications that can be
 	// referenced by serverless tasks of this job. An environment is required to
 	// be present for serverless tasks. For serverless notebook tasks, the
@@ -283,9 +283,9 @@ type CreateJob struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource []GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health []JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
@@ -308,22 +308,22 @@ type CreateJob struct {
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// job.
-	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// Job-level parameter definitions
 	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
-	Queue []QueueSettings `tfsdk:"queue" tf:"optional"`
+	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
 	// Write-only setting. Specifies the user, service principal or group that
 	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
 	// user who created the job/pipeline.
 	//
 	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
 	// be specified. If not, an error is thrown.
-	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional"`
+	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
 	// or sending an API request to `runNow`.
-	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional,object"`
 	// A map of tags associated with the job. These are forwarded to the cluster
 	// as cluster tags for jobs clusters, and are subject to the same
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
@@ -337,10 +337,10 @@ type CreateJob struct {
 	// A configuration to trigger a run when certain conditions are met. The
 	// default behavior is that the job runs only when triggered by clicking
 	// “Run Now” in the Jobs UI or sending an API request to `runNow`.
-	Trigger []TriggerSettings `tfsdk:"trigger" tf:"optional"`
+	Trigger []TriggerSettings `tfsdk:"trigger" tf:"optional,object"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
-	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
 // Job was created successfully
@@ -467,7 +467,7 @@ type EnforcePolicyComplianceResponse struct {
 	// clusters. Updated job settings are derived by applying policy default
 	// values to the existing job clusters in order to satisfy policy
 	// requirements.
-	Settings []JobSettings `tfsdk:"settings" tf:"optional"`
+	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
 }
 
 // Run was exported successfully.
@@ -507,7 +507,7 @@ type ForEachStats struct {
 	// Sample of 3 most common error messages occurred during the iteration.
 	ErrorMessageStats []ForEachTaskErrorMessageStats `tfsdk:"error_message_stats" tf:"optional"`
 	// Describes stats of the iteration. Only latest retries are considered.
-	TaskRunStats []ForEachTaskTaskRunStats `tfsdk:"task_run_stats" tf:"optional"`
+	TaskRunStats []ForEachTaskTaskRunStats `tfsdk:"task_run_stats" tf:"optional,object"`
 }
 
 type ForEachTask struct {
@@ -519,7 +519,7 @@ type ForEachTask struct {
 	// an array parameter.
 	Inputs types.String `tfsdk:"inputs" tf:""`
 	// Configuration for the task that will be run for each element in the array
-	Task []Task `tfsdk:"task" tf:""`
+	Task []Task `tfsdk:"task" tf:"object"`
 }
 
 type ForEachTaskErrorMessageStats struct {
@@ -644,7 +644,7 @@ type GitSource struct {
 	GitProvider types.String `tfsdk:"git_provider" tf:""`
 	// Read-only state of the remote repository at the time the job was run.
 	// This field is only included on job runs.
-	GitSnapshot []GitSnapshot `tfsdk:"git_snapshot" tf:"optional"`
+	GitSnapshot []GitSnapshot `tfsdk:"git_snapshot" tf:"optional,object"`
 	// Name of the tag to be checked out and used by this job. This field cannot
 	// be specified in conjunction with git_branch or git_commit.
 	GitTag types.String `tfsdk:"tag" tf:"optional"`
@@ -652,7 +652,7 @@ type GitSource struct {
 	GitUrl types.String `tfsdk:"url" tf:""`
 	// The source of the job specification in the remote repository when the job
 	// is source controlled.
-	JobSource []JobSource `tfsdk:"job_source" tf:"optional"`
+	JobSource []JobSource `tfsdk:"job_source" tf:"optional,object"`
 }
 
 // Job was retrieved successfully.
@@ -675,7 +675,7 @@ type Job struct {
 	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
 	// Settings for this job and all of its runs. These settings can be updated
 	// using the `resetJob` method.
-	Settings []JobSettings `tfsdk:"settings" tf:"optional"`
+	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
 }
 
 type JobAccessControlRequest struct {
@@ -708,7 +708,7 @@ type JobCluster struct {
 	// determine which cluster to launch for the task execution.
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:""`
 	// If new_cluster, a description of a cluster that is created for each task.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:""`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"object"`
 }
 
 type JobCompliance struct {
@@ -775,7 +775,7 @@ type JobEnvironment struct {
 	// The environment entity used to preserve serverless environment side panel
 	// and jobs' environment for non-notebook task. In this minimal environment
 	// spec, only pip dependencies are supported.
-	Spec compute.Environment `tfsdk:"spec" tf:"optional"`
+	Spec compute.Environment `tfsdk:"spec" tf:"optional,object"`
 }
 
 type JobNotificationSettings struct {
@@ -851,9 +851,9 @@ type JobSettings struct {
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
-	Continuous []Continuous `tfsdk:"continuous" tf:"optional"`
+	Continuous []Continuous `tfsdk:"continuous" tf:"optional,object"`
 	// Deployment information for jobs managed by external sources.
-	Deployment []JobDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []JobDeployment `tfsdk:"deployment" tf:"optional,object"`
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description" tf:"optional"`
@@ -864,7 +864,7 @@ type JobSettings struct {
 	EditMode types.String `tfsdk:"edit_mode" tf:"optional"`
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
-	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// A list of task execution environment specifications that can be
 	// referenced by serverless tasks of this job. An environment is required to
 	// be present for serverless tasks. For serverless notebook tasks, the
@@ -886,9 +886,9 @@ type JobSettings struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource []GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health []JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
@@ -911,22 +911,22 @@ type JobSettings struct {
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// job.
-	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// Job-level parameter definitions
 	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
-	Queue []QueueSettings `tfsdk:"queue" tf:"optional"`
+	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
 	// Write-only setting. Specifies the user, service principal or group that
 	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
 	// user who created the job/pipeline.
 	//
 	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
 	// be specified. If not, an error is thrown.
-	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional"`
+	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
 	// or sending an API request to `runNow`.
-	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional,object"`
 	// A map of tags associated with the job. These are forwarded to the cluster
 	// as cluster tags for jobs clusters, and are subject to the same
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
@@ -940,10 +940,10 @@ type JobSettings struct {
 	// A configuration to trigger a run when certain conditions are met. The
 	// default behavior is that the job runs only when triggered by clicking
 	// “Run Now” in the Jobs UI or sending an API request to `runNow`.
-	Trigger []TriggerSettings `tfsdk:"trigger" tf:"optional"`
+	Trigger []TriggerSettings `tfsdk:"trigger" tf:"optional,object"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
-	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
 // The source of the job specification in the remote repository when the job is
@@ -1221,9 +1221,9 @@ type RepairHistoryItem struct {
 	// The start time of the (repaired) run.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// Deprecated. Please use the `status` field instead.
-	State []RunState `tfsdk:"state" tf:"optional"`
+	State []RunState `tfsdk:"state" tf:"optional,object"`
 	// The current status of the run
-	Status []RunStatus `tfsdk:"status" tf:"optional"`
+	Status []RunStatus `tfsdk:"status" tf:"optional,object"`
 	// The run IDs of the task runs that ran as part of this repair history
 	// item.
 	TaskRunIds []types.Int64 `tfsdk:"task_run_ids" tf:"optional"`
@@ -1276,7 +1276,7 @@ type RepairRun struct {
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
 	// Controls whether the pipeline should perform a full refresh
-	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
+	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
 	// A list of parameters for jobs with Python tasks, for example
@@ -1348,7 +1348,7 @@ type ResetJob struct {
 	//
 	// Changes to the field `JobBaseSettings.timeout_seconds` are applied to
 	// active runs. Changes to other fields are applied to future runs only.
-	NewSettings []JobSettings `tfsdk:"new_settings" tf:""`
+	NewSettings []JobSettings `tfsdk:"new_settings" tf:"object"`
 }
 
 type ResetResponse struct {
@@ -1389,25 +1389,25 @@ type ResolvedStringParamsValues struct {
 }
 
 type ResolvedValues struct {
-	ConditionTask []ResolvedConditionTaskValues `tfsdk:"condition_task" tf:"optional"`
+	ConditionTask []ResolvedConditionTaskValues `tfsdk:"condition_task" tf:"optional,object"`
 
-	DbtTask []ResolvedDbtTaskValues `tfsdk:"dbt_task" tf:"optional"`
+	DbtTask []ResolvedDbtTaskValues `tfsdk:"dbt_task" tf:"optional,object"`
 
-	NotebookTask []ResolvedNotebookTaskValues `tfsdk:"notebook_task" tf:"optional"`
+	NotebookTask []ResolvedNotebookTaskValues `tfsdk:"notebook_task" tf:"optional,object"`
 
-	PythonWheelTask []ResolvedPythonWheelTaskValues `tfsdk:"python_wheel_task" tf:"optional"`
+	PythonWheelTask []ResolvedPythonWheelTaskValues `tfsdk:"python_wheel_task" tf:"optional,object"`
 
-	RunJobTask []ResolvedRunJobTaskValues `tfsdk:"run_job_task" tf:"optional"`
+	RunJobTask []ResolvedRunJobTaskValues `tfsdk:"run_job_task" tf:"optional,object"`
 
-	SimulationTask []ResolvedParamPairValues `tfsdk:"simulation_task" tf:"optional"`
+	SimulationTask []ResolvedParamPairValues `tfsdk:"simulation_task" tf:"optional,object"`
 
-	SparkJarTask []ResolvedStringParamsValues `tfsdk:"spark_jar_task" tf:"optional"`
+	SparkJarTask []ResolvedStringParamsValues `tfsdk:"spark_jar_task" tf:"optional,object"`
 
-	SparkPythonTask []ResolvedStringParamsValues `tfsdk:"spark_python_task" tf:"optional"`
+	SparkPythonTask []ResolvedStringParamsValues `tfsdk:"spark_python_task" tf:"optional,object"`
 
-	SparkSubmitTask []ResolvedStringParamsValues `tfsdk:"spark_submit_task" tf:"optional"`
+	SparkSubmitTask []ResolvedStringParamsValues `tfsdk:"spark_submit_task" tf:"optional,object"`
 
-	SqlTask []ResolvedParamPairValues `tfsdk:"sql_task" tf:"optional"`
+	SqlTask []ResolvedParamPairValues `tfsdk:"sql_task" tf:"optional,object"`
 }
 
 // Run was retrieved successfully
@@ -1429,10 +1429,10 @@ type Run struct {
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional"`
+	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional,object"`
 	// A snapshot of the job’s cluster specification when this run was
 	// created.
-	ClusterSpec []ClusterSpec `tfsdk:"cluster_spec" tf:"optional"`
+	ClusterSpec []ClusterSpec `tfsdk:"cluster_spec" tf:"optional,object"`
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
@@ -1459,7 +1459,7 @@ type Run struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource []GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// Only populated by for-each iterations. The parent for-each task is
 	// located in tasks array.
 	Iterations []RunTask `tfsdk:"iterations" tf:"optional"`
@@ -1485,7 +1485,7 @@ type Run struct {
 	// run_id of the original attempt; otherwise, it is the same as the run_id.
 	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id" tf:"optional"`
 	// The parameters used for this run.
-	OverridingParameters []RunParameters `tfsdk:"overriding_parameters" tf:"optional"`
+	OverridingParameters []RunParameters `tfsdk:"overriding_parameters" tf:"optional,object"`
 	// A token that can be used to list the previous page of sub-resources.
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
 	// The time in milliseconds that the run has spent in the queue.
@@ -1512,7 +1512,7 @@ type Run struct {
 	RunType types.String `tfsdk:"run_type" tf:"optional"`
 	// The cron schedule that triggered this run if it was triggered by the
 	// periodic scheduler.
-	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional,object"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
 	// on new clusters this is the cluster creation time, for runs that run on
 	// existing clusters this time should be very short. The duration of a task
@@ -1527,9 +1527,9 @@ type Run struct {
 	// new cluster, this is the time the cluster creation call is issued.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// Deprecated. Please use the `status` field instead.
-	State []RunState `tfsdk:"state" tf:"optional"`
+	State []RunState `tfsdk:"state" tf:"optional,object"`
 	// The current status of the run
-	Status []RunStatus `tfsdk:"status" tf:"optional"`
+	Status []RunStatus `tfsdk:"status" tf:"optional,object"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
 	Tasks []RunTask `tfsdk:"tasks" tf:"optional"`
@@ -1545,7 +1545,7 @@ type Run struct {
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
 	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 	// Additional details about what triggered the run
-	TriggerInfo []TriggerInfo `tfsdk:"trigger_info" tf:"optional"`
+	TriggerInfo []TriggerInfo `tfsdk:"trigger_info" tf:"optional,object"`
 }
 
 type RunConditionTask struct {
@@ -1581,9 +1581,9 @@ type RunForEachTask struct {
 	Inputs types.String `tfsdk:"inputs" tf:""`
 	// Read only field. Populated for GetRun and ListRuns RPC calls and stores
 	// the execution stats of an For each task
-	Stats []ForEachStats `tfsdk:"stats" tf:"optional"`
+	Stats []ForEachStats `tfsdk:"stats" tf:"optional,object"`
 	// Configuration for the task that will be run for each element in the array
-	Task []Task `tfsdk:"task" tf:""`
+	Task []Task `tfsdk:"task" tf:"object"`
 }
 
 type RunJobOutput struct {
@@ -1632,7 +1632,7 @@ type RunJobTask struct {
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
 	// Controls whether the pipeline should perform a full refresh
-	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
+	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
 	// A list of parameters for jobs with Python tasks, for example
@@ -1735,7 +1735,7 @@ type RunNow struct {
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
 	// Controls whether the pipeline should perform a full refresh
-	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
+	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
 	// A list of parameters for jobs with Python tasks, for example
@@ -1757,7 +1757,7 @@ type RunNow struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	PythonParams []types.String `tfsdk:"python_params" tf:"optional"`
 	// The queue settings of the run.
-	Queue []QueueSettings `tfsdk:"queue" tf:"optional"`
+	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
 	// "org.apache.spark.examples.SparkPi"]`. The parameters are passed to
@@ -1795,7 +1795,7 @@ type RunNowResponse struct {
 // Run output was retrieved successfully.
 type RunOutput struct {
 	// The output of a dbt task, if available.
-	DbtOutput []DbtOutput `tfsdk:"dbt_output" tf:"optional"`
+	DbtOutput []DbtOutput `tfsdk:"dbt_output" tf:"optional,object"`
 	// An error message indicating why a task failed or why output is not
 	// available. The message is unstructured, and its exact format is subject
 	// to change.
@@ -1816,7 +1816,7 @@ type RunOutput struct {
 	// Whether the logs are truncated.
 	LogsTruncated types.Bool `tfsdk:"logs_truncated" tf:"optional"`
 	// All details of the run except for its output.
-	Metadata []Run `tfsdk:"metadata" tf:"optional"`
+	Metadata []Run `tfsdk:"metadata" tf:"optional,object"`
 	// The output of a notebook task, if available. A notebook task that
 	// terminates (either successfully or with a failure) without calling
 	// `dbutils.notebook.exit()` is considered to have an empty output. This
@@ -1825,11 +1825,11 @@ type RunOutput struct {
 	// the [ClusterLogConf] field to configure log storage for the job cluster.
 	//
 	// [ClusterLogConf]: https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterlogconf
-	NotebookOutput []NotebookOutput `tfsdk:"notebook_output" tf:"optional"`
+	NotebookOutput []NotebookOutput `tfsdk:"notebook_output" tf:"optional,object"`
 	// The output of a run job task, if available
-	RunJobOutput []RunJobOutput `tfsdk:"run_job_output" tf:"optional"`
+	RunJobOutput []RunJobOutput `tfsdk:"run_job_output" tf:"optional,object"`
 	// The output of a SQL task, if available.
-	SqlOutput []SqlOutput `tfsdk:"sql_output" tf:"optional"`
+	SqlOutput []SqlOutput `tfsdk:"sql_output" tf:"optional,object"`
 }
 
 type RunParameters struct {
@@ -1869,7 +1869,7 @@ type RunParameters struct {
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
 	// Controls whether the pipeline should perform a full refresh
-	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
+	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
 	// A list of parameters for jobs with Python tasks, for example
@@ -1936,12 +1936,12 @@ type RunState struct {
 // The current status of the run
 type RunStatus struct {
 	// If the run was queued, details about the reason for queuing the run.
-	QueueDetails []QueueDetails `tfsdk:"queue_details" tf:"optional"`
+	QueueDetails []QueueDetails `tfsdk:"queue_details" tf:"optional,object"`
 	// The current state of the run.
 	State types.String `tfsdk:"state" tf:"optional"`
 	// If the run is in a TERMINATING or TERMINATED state, details about the
 	// reason for terminating the run.
-	TerminationDetails []TerminationDetails `tfsdk:"termination_details" tf:"optional"`
+	TerminationDetails []TerminationDetails `tfsdk:"termination_details" tf:"optional,object"`
 }
 
 // Used when outputting a child run, in GetRun or ListRuns.
@@ -1963,15 +1963,15 @@ type RunTask struct {
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional"`
+	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional,object"`
 	// If condition_task, specifies a condition with an outcome that can be used
 	// to control the execution of other tasks. Does not require a cluster to
 	// execute and does not support retries or notifications.
-	ConditionTask []RunConditionTask `tfsdk:"condition_task" tf:"optional"`
+	ConditionTask []RunConditionTask `tfsdk:"condition_task" tf:"optional,object"`
 	// If dbt_task, indicates that this must execute a dbt task. It requires
 	// both Databricks SQL and the ability to use a serverless or a pro SQL
 	// warehouse.
-	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional"`
+	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional,object"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete successfully before
 	// executing this task. The key is `task_key`, and the value is the name
@@ -1981,7 +1981,7 @@ type RunTask struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
-	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
@@ -2004,7 +2004,7 @@ type RunTask struct {
 	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
 	// If for_each_task, indicates that this task must execute the nested task
 	// within it.
-	ForEachTask []RunForEachTask `tfsdk:"for_each_task" tf:"optional"`
+	ForEachTask []RunForEachTask `tfsdk:"for_each_task" tf:"optional,object"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks. If `git_source` is set,
@@ -2013,7 +2013,7 @@ type RunTask struct {
 	// `WORKSPACE` on the task. Note: dbt and SQL File tasks support only
 	// version-controlled sources. If dbt or SQL File tasks are used,
 	// `git_source` must be defined on the job.
-	GitSource []GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
 	// in `job.settings.job_clusters`.
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
@@ -2022,22 +2022,22 @@ type RunTask struct {
 	Libraries compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
 	// If notebook_task, indicates that this task must run a notebook. This
 	// field may not be specified in conjunction with spark_jar_task.
-	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional"`
+	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task run.
-	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// If pipeline_task, indicates that this task must execute a Pipeline.
-	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional"`
+	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional,object"`
 	// If python_wheel_task, indicates that this job must execute a PythonWheel.
-	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional"`
+	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional,object"`
 	// The time in milliseconds that the run has spent in the queue.
 	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
 	// Parameter values including resolved references
-	ResolvedValues []ResolvedValues `tfsdk:"resolved_values" tf:"optional"`
+	ResolvedValues []ResolvedValues `tfsdk:"resolved_values" tf:"optional,object"`
 	// The time in milliseconds it took the job run and all of its repairs to
 	// finish.
 	RunDuration types.Int64 `tfsdk:"run_duration" tf:"optional"`
@@ -2049,7 +2049,7 @@ type RunTask struct {
 	// possible values.
 	RunIf types.String `tfsdk:"run_if" tf:"optional"`
 	// If run_job_task, indicates that this task must execute another job.
-	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional"`
+	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional,object"`
 
 	RunPageUrl types.String `tfsdk:"run_page_url" tf:"optional"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
@@ -2061,9 +2061,9 @@ type RunTask struct {
 	// `run_duration` field.
 	SetupDuration types.Int64 `tfsdk:"setup_duration" tf:"optional"`
 	// If spark_jar_task, indicates that this task must run a JAR.
-	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional"`
+	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional,object"`
 	// If spark_python_task, indicates that this task must run a Python file.
-	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional"`
+	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional,object"`
 	// If `spark_submit_task`, indicates that this task must be launched by the
 	// spark submit script. This task can run only on new clusters.
 	//
@@ -2081,18 +2081,18 @@ type RunTask struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional"`
+	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional,object"`
 	// If sql_task, indicates that this job must execute a SQL task.
-	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional"`
+	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional,object"`
 	// The time at which this run was started in epoch milliseconds
 	// (milliseconds since 1/1/1970 UTC). This may not be the time when the job
 	// task starts executing, for example, if the job is scheduled to run on a
 	// new cluster, this is the time the cluster creation call is issued.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// Deprecated. Please use the `status` field instead.
-	State []RunState `tfsdk:"state" tf:"optional"`
+	State []RunState `tfsdk:"state" tf:"optional,object"`
 	// The current status of the run
-	Status []RunStatus `tfsdk:"status" tf:"optional"`
+	Status []RunStatus `tfsdk:"status" tf:"optional,object"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
@@ -2104,7 +2104,7 @@ type RunTask struct {
 	// A collection of system notification IDs to notify when the run begins or
 	// completes. The default behavior is to not send any system notifications.
 	// Task webhooks respect the task notification settings.
-	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
 type SparkJarTask struct {
@@ -2191,7 +2191,7 @@ type SqlDashboardWidgetOutput struct {
 	// Time (in epoch milliseconds) when execution of the SQL widget ends.
 	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
 	// The information about the error when execution fails.
-	Error []SqlOutputError `tfsdk:"error" tf:"optional"`
+	Error []SqlOutputError `tfsdk:"error" tf:"optional,object"`
 	// The link to find the output results.
 	OutputLink types.String `tfsdk:"output_link" tf:"optional"`
 	// Time (in epoch milliseconds) when execution of the SQL widget starts.
@@ -2206,11 +2206,11 @@ type SqlDashboardWidgetOutput struct {
 
 type SqlOutput struct {
 	// The output of a SQL alert task, if available.
-	AlertOutput []SqlAlertOutput `tfsdk:"alert_output" tf:"optional"`
+	AlertOutput []SqlAlertOutput `tfsdk:"alert_output" tf:"optional,object"`
 	// The output of a SQL dashboard task, if available.
-	DashboardOutput []SqlDashboardOutput `tfsdk:"dashboard_output" tf:"optional"`
+	DashboardOutput []SqlDashboardOutput `tfsdk:"dashboard_output" tf:"optional,object"`
 	// The output of a SQL query task, if available.
-	QueryOutput []SqlQueryOutput `tfsdk:"query_output" tf:"optional"`
+	QueryOutput []SqlQueryOutput `tfsdk:"query_output" tf:"optional,object"`
 }
 
 type SqlOutputError struct {
@@ -2238,17 +2238,17 @@ type SqlStatementOutput struct {
 
 type SqlTask struct {
 	// If alert, indicates that this job must refresh a SQL alert.
-	Alert []SqlTaskAlert `tfsdk:"alert" tf:"optional"`
+	Alert []SqlTaskAlert `tfsdk:"alert" tf:"optional,object"`
 	// If dashboard, indicates that this job must refresh a SQL dashboard.
-	Dashboard []SqlTaskDashboard `tfsdk:"dashboard" tf:"optional"`
+	Dashboard []SqlTaskDashboard `tfsdk:"dashboard" tf:"optional,object"`
 	// If file, indicates that this job runs a SQL file in a remote Git
 	// repository.
-	File []SqlTaskFile `tfsdk:"file" tf:"optional"`
+	File []SqlTaskFile `tfsdk:"file" tf:"optional,object"`
 	// Parameters to be used for each run of this job. The SQL alert task does
 	// not support custom parameters.
 	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
 	// If query, indicates that this job must execute a SQL query.
-	Query []SqlTaskQuery `tfsdk:"query" tf:"optional"`
+	Query []SqlTaskQuery `tfsdk:"query" tf:"optional,object"`
 	// The canonical identifier of the SQL warehouse. Recommended to use with
 	// serverless or pro SQL warehouses. Classic SQL warehouses are only
 	// supported for SQL alert, dashboard and query tasks and are limited to
@@ -2314,7 +2314,7 @@ type SubmitRun struct {
 	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// An optional set of email addresses notified when the run begins or
 	// completes.
-	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this run.
 	Environments []JobEnvironment `tfsdk:"environments" tf:"optional"`
@@ -2328,9 +2328,9 @@ type SubmitRun struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource []GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health []JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// An optional token that can be used to guarantee the idempotency of job
 	// run requests. If a run with the provided token already exists, the
 	// request does not create a new run but returns the ID of the existing run
@@ -2350,12 +2350,12 @@ type SubmitRun struct {
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// run.
-	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// The queue settings of the one-time run.
-	Queue []QueueSettings `tfsdk:"queue" tf:"optional"`
+	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
 	// Specifies the user or service principal that the job runs as. If not
 	// specified, the job runs as the user who submits the request.
-	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional"`
+	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional name for the run. The default value is `Untitled`.
 	RunName types.String `tfsdk:"run_name" tf:"optional"`
 
@@ -2365,7 +2365,7 @@ type SubmitRun struct {
 	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
 	// A collection of system notification IDs to notify when the run begins or
 	// completes.
-	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
 // Run was created and started successfully.
@@ -2378,11 +2378,11 @@ type SubmitTask struct {
 	// If condition_task, specifies a condition with an outcome that can be used
 	// to control the execution of other tasks. Does not require a cluster to
 	// execute and does not support retries or notifications.
-	ConditionTask []ConditionTask `tfsdk:"condition_task" tf:"optional"`
+	ConditionTask []ConditionTask `tfsdk:"condition_task" tf:"optional,object"`
 	// If dbt_task, indicates that this must execute a dbt task. It requires
 	// both Databricks SQL and the ability to use a serverless or a pro SQL
 	// warehouse.
-	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional"`
+	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional,object"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete successfully before
 	// executing this task. The key is `task_key`, and the value is the name
@@ -2392,7 +2392,7 @@ type SubmitTask struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
-	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
 	// serverless compute.
@@ -2404,37 +2404,37 @@ type SubmitTask struct {
 	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
 	// If for_each_task, indicates that this task must execute the nested task
 	// within it.
-	ForEachTask []ForEachTask `tfsdk:"for_each_task" tf:"optional"`
+	ForEachTask []ForEachTask `tfsdk:"for_each_task" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health []JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
 	Libraries compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
 	// If notebook_task, indicates that this task must run a notebook. This
 	// field may not be specified in conjunction with spark_jar_task.
-	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional"`
+	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task run.
-	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// If pipeline_task, indicates that this task must execute a Pipeline.
-	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional"`
+	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional,object"`
 	// If python_wheel_task, indicates that this job must execute a PythonWheel.
-	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional"`
+	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional,object"`
 	// An optional value indicating the condition that determines whether the
 	// task should be run once its dependencies have been completed. When
 	// omitted, defaults to `ALL_SUCCESS`. See :method:jobs/create for a list of
 	// possible values.
 	RunIf types.String `tfsdk:"run_if" tf:"optional"`
 	// If run_job_task, indicates that this task must execute another job.
-	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional"`
+	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional,object"`
 	// If spark_jar_task, indicates that this task must run a JAR.
-	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional"`
+	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional,object"`
 	// If spark_python_task, indicates that this task must run a Python file.
-	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional"`
+	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional,object"`
 	// If `spark_submit_task`, indicates that this task must be launched by the
 	// spark submit script. This task can run only on new clusters.
 	//
@@ -2452,9 +2452,9 @@ type SubmitTask struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional"`
+	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional,object"`
 	// If sql_task, indicates that this job must execute a SQL task.
-	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional"`
+	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional,object"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
@@ -2466,7 +2466,7 @@ type SubmitTask struct {
 	// A collection of system notification IDs to notify when the run begins or
 	// completes. The default behavior is to not send any system notifications.
 	// Task webhooks respect the task notification settings.
-	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
 type TableUpdateTriggerConfiguration struct {
@@ -2490,11 +2490,11 @@ type Task struct {
 	// If condition_task, specifies a condition with an outcome that can be used
 	// to control the execution of other tasks. Does not require a cluster to
 	// execute and does not support retries or notifications.
-	ConditionTask []ConditionTask `tfsdk:"condition_task" tf:"optional"`
+	ConditionTask []ConditionTask `tfsdk:"condition_task" tf:"optional,object"`
 	// If dbt_task, indicates that this must execute a dbt task. It requires
 	// both Databricks SQL and the ability to use a serverless or a pro SQL
 	// warehouse.
-	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional"`
+	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional,object"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete before executing this
 	// task. The task will run only if the `run_if` condition is true. The key
@@ -2507,7 +2507,7 @@ type Task struct {
 	// An optional set of email addresses that is notified when runs of this
 	// task begin or complete as well as when this task is deleted. The default
 	// behavior is to not send any emails.
-	EmailNotifications []TaskEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []TaskEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
 	// serverless compute.
@@ -2519,9 +2519,9 @@ type Task struct {
 	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
 	// If for_each_task, indicates that this task must execute the nested task
 	// within it.
-	ForEachTask []ForEachTask `tfsdk:"for_each_task" tf:"optional"`
+	ForEachTask []ForEachTask `tfsdk:"for_each_task" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health []JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
 	// in `job.settings.job_clusters`.
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
@@ -2539,18 +2539,18 @@ type Task struct {
 	MinRetryIntervalMillis types.Int64 `tfsdk:"min_retry_interval_millis" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
 	// If notebook_task, indicates that this task must run a notebook. This
 	// field may not be specified in conjunction with spark_jar_task.
-	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional"`
+	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task.
-	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// If pipeline_task, indicates that this task must execute a Pipeline.
-	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional"`
+	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional,object"`
 	// If python_wheel_task, indicates that this job must execute a PythonWheel.
-	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional"`
+	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional,object"`
 	// An optional policy to specify whether to retry a job when it times out.
 	// The default behavior is to not retry on timeout.
 	RetryOnTimeout types.Bool `tfsdk:"retry_on_timeout" tf:"optional"`
@@ -2565,11 +2565,11 @@ type Task struct {
 	// dependencies have failed
 	RunIf types.String `tfsdk:"run_if" tf:"optional"`
 	// If run_job_task, indicates that this task must execute another job.
-	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional"`
+	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional,object"`
 	// If spark_jar_task, indicates that this task must run a JAR.
-	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional"`
+	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional,object"`
 	// If spark_python_task, indicates that this task must run a Python file.
-	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional"`
+	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional,object"`
 	// If `spark_submit_task`, indicates that this task must be launched by the
 	// spark submit script. This task can run only on new clusters.
 	//
@@ -2587,9 +2587,9 @@ type Task struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional"`
+	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional,object"`
 	// If sql_task, indicates that this job must execute a SQL task.
-	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional"`
+	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional,object"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
@@ -2601,7 +2601,7 @@ type Task struct {
 	// A collection of system notification IDs to notify when runs of this task
 	// begin or complete. The default behavior is to not send any system
 	// notifications.
-	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
 type TaskDependency struct {
@@ -2730,15 +2730,15 @@ type TriggerInfo struct {
 
 type TriggerSettings struct {
 	// File arrival trigger settings.
-	FileArrival []FileArrivalTriggerConfiguration `tfsdk:"file_arrival" tf:"optional"`
+	FileArrival []FileArrivalTriggerConfiguration `tfsdk:"file_arrival" tf:"optional,object"`
 	// Whether this trigger is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 	// Periodic trigger settings.
-	Periodic []PeriodicTriggerConfiguration `tfsdk:"periodic" tf:"optional"`
+	Periodic []PeriodicTriggerConfiguration `tfsdk:"periodic" tf:"optional,object"`
 	// Old table trigger settings name. Deprecated in favor of `table_update`.
-	Table []TableUpdateTriggerConfiguration `tfsdk:"table" tf:"optional"`
+	Table []TableUpdateTriggerConfiguration `tfsdk:"table" tf:"optional,object"`
 
-	TableUpdate []TableUpdateTriggerConfiguration `tfsdk:"table_update" tf:"optional"`
+	TableUpdate []TableUpdateTriggerConfiguration `tfsdk:"table_update" tf:"optional,object"`
 }
 
 type UpdateJob struct {
@@ -2759,7 +2759,7 @@ type UpdateJob struct {
 	//
 	// Changes to the field `JobSettings.timeout_seconds` are applied to active
 	// runs. Changes to other fields are applied to future runs only.
-	NewSettings []JobSettings `tfsdk:"new_settings" tf:"optional"`
+	NewSettings []JobSettings `tfsdk:"new_settings" tf:"optional,object"`
 }
 
 type UpdateResponse struct {

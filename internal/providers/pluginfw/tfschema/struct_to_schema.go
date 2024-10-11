@@ -7,11 +7,18 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+type structTag struct {
+	optional     bool
+	computed     bool
+	singleObject bool
+}
 
 func typeToSchema(v reflect.Value) NestedBlockObject {
 	scmAttr := map[string]AttributeBuilder{}
@@ -31,9 +38,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 		if fieldName == "-" {
 			continue
 		}
-		isOptional := fieldIsOptional(typeField)
-		isComputed := fieldIsComputed(typeField)
-		isObject := fieldIsAnObject(typeField)
+		structTag := getStructTag(typeField)
 		kind := typeField.Type.Kind()
 		value := field.Value
 		typeFieldType := typeField.Type
@@ -54,46 +59,46 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 			case reflect.TypeOf(types.Bool{}):
 				scmAttr[fieldName] = ListAttributeBuilder{
 					ElementType: types.BoolType,
-					Optional:    isOptional,
-					Required:    !isOptional,
-					Computed:    isComputed,
+					Optional:    structTag.optional,
+					Required:    !structTag.optional,
+					Computed:    structTag.computed,
 				}
 			case reflect.TypeOf(types.Int64{}):
 				scmAttr[fieldName] = ListAttributeBuilder{
 					ElementType: types.Int64Type,
-					Optional:    isOptional,
-					Required:    !isOptional,
-					Computed:    isComputed,
+					Optional:    structTag.optional,
+					Required:    !structTag.optional,
+					Computed:    structTag.computed,
 				}
 			case reflect.TypeOf(types.Float64{}):
 				scmAttr[fieldName] = ListAttributeBuilder{
 					ElementType: types.Float64Type,
-					Optional:    isOptional,
-					Required:    !isOptional,
-					Computed:    isComputed,
+					Optional:    structTag.optional,
+					Required:    !structTag.optional,
+					Computed:    structTag.computed,
 				}
 			case reflect.TypeOf(types.String{}):
 				scmAttr[fieldName] = ListAttributeBuilder{
 					ElementType: types.StringType,
-					Optional:    isOptional,
-					Required:    !isOptional,
-					Computed:    isComputed,
+					Optional:    structTag.optional,
+					Required:    !structTag.optional,
+					Computed:    structTag.computed,
 				}
 			default:
 				// Nested struct
 				nestedScm := typeToSchema(reflect.New(elemType).Elem())
 				var validators []validator.List
-				if isObject {
-					validators = append(validators, MaxItemsValidator(1))
+				if structTag.singleObject {
+					validators = append(validators, listvalidator.SizeAtMost(1))
 				}
 				scmBlock[fieldName] = ListNestedBlockBuilder{
 					NestedObject: NestedBlockObject{
 						Attributes: nestedScm.Attributes,
 						Blocks:     nestedScm.Blocks,
 					},
-					Optional:   isOptional,
-					Required:   !isOptional,
-					Computed:   isComputed,
+					Optional:   structTag.optional,
+					Required:   !structTag.optional,
+					Computed:   structTag.computed,
 					Validators: validators,
 				}
 			}
@@ -109,30 +114,30 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 			case reflect.TypeOf(types.Bool{}):
 				scmAttr[fieldName] = MapAttributeBuilder{
 					ElementType: types.BoolType,
-					Optional:    isOptional,
-					Required:    !isOptional,
-					Computed:    isComputed,
+					Optional:    structTag.optional,
+					Required:    !structTag.optional,
+					Computed:    structTag.computed,
 				}
 			case reflect.TypeOf(types.Int64{}):
 				scmAttr[fieldName] = MapAttributeBuilder{
 					ElementType: types.Int64Type,
-					Optional:    isOptional,
-					Required:    !isOptional,
-					Computed:    isComputed,
+					Optional:    structTag.optional,
+					Required:    !structTag.optional,
+					Computed:    structTag.computed,
 				}
 			case reflect.TypeOf(types.Float64{}):
 				scmAttr[fieldName] = MapAttributeBuilder{
 					ElementType: types.Float64Type,
-					Optional:    isOptional,
-					Required:    !isOptional,
-					Computed:    isComputed,
+					Optional:    structTag.optional,
+					Required:    !structTag.optional,
+					Computed:    structTag.computed,
 				}
 			case reflect.TypeOf(types.String{}):
 				scmAttr[fieldName] = MapAttributeBuilder{
 					ElementType: types.StringType,
-					Optional:    isOptional,
-					Required:    !isOptional,
-					Computed:    isComputed,
+					Optional:    structTag.optional,
+					Required:    !structTag.optional,
+					Computed:    structTag.computed,
 				}
 			default:
 				// Nested struct
@@ -141,36 +146,36 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 					NestedObject: NestedAttributeObject{
 						Attributes: nestedScm.Attributes,
 					},
-					Optional: isOptional,
-					Required: !isOptional,
-					Computed: isComputed,
+					Optional: structTag.optional,
+					Required: !structTag.optional,
+					Computed: structTag.computed,
 				}
 			}
 		} else if kind == reflect.Struct {
 			switch value.Interface().(type) {
 			case types.Bool:
 				scmAttr[fieldName] = BoolAttributeBuilder{
-					Optional: isOptional,
-					Required: !isOptional,
-					Computed: isComputed,
+					Optional: structTag.optional,
+					Required: !structTag.optional,
+					Computed: structTag.computed,
 				}
 			case types.Int64:
 				scmAttr[fieldName] = Int64AttributeBuilder{
-					Optional: isOptional,
-					Required: !isOptional,
-					Computed: isComputed,
+					Optional: structTag.optional,
+					Required: !structTag.optional,
+					Computed: structTag.computed,
 				}
 			case types.Float64:
 				scmAttr[fieldName] = Float64AttributeBuilder{
-					Optional: isOptional,
-					Required: !isOptional,
-					Computed: isComputed,
+					Optional: structTag.optional,
+					Required: !structTag.optional,
+					Computed: structTag.computed,
 				}
 			case types.String:
 				scmAttr[fieldName] = StringAttributeBuilder{
-					Optional: isOptional,
-					Required: !isOptional,
-					Computed: isComputed,
+					Optional: structTag.optional,
+					Required: !structTag.optional,
+					Computed: structTag.computed,
 				}
 			case types.List:
 				panic(fmt.Errorf("types.List should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage))
@@ -183,9 +188,9 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 				nestedScm := typeToSchema(sv)
 				scmBlock[fieldName] = ListNestedBlockBuilder{
 					NestedObject: nestedScm,
-					Optional:     isOptional,
-					Required:     !isOptional,
-					Computed:     isComputed,
+					Optional:     structTag.optional,
+					Required:     !structTag.optional,
+					Computed:     structTag.computed,
 				}
 			}
 		} else {
@@ -195,19 +200,13 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 	return NestedBlockObject{Attributes: scmAttr, Blocks: scmBlock}
 }
 
-func fieldIsComputed(field reflect.StructField) bool {
+func getStructTag(field reflect.StructField) structTag {
 	tagValue := field.Tag.Get("tf")
-	return strings.Contains(tagValue, "computed")
-}
-
-func fieldIsAnObject(field reflect.StructField) bool {
-	tagValue := field.Tag.Get("tf")
-	return strings.Contains(tagValue, "object")
-}
-
-func fieldIsOptional(field reflect.StructField) bool {
-	tagValue := field.Tag.Get("tf")
-	return strings.Contains(tagValue, "optional")
+	return structTag{
+		optional:     strings.Contains(tagValue, "optional"),
+		computed:     strings.Contains(tagValue, "computed"),
+		singleObject: strings.Contains(tagValue, "object"),
+	}
 }
 
 // ResourceStructToSchema builds a resource schema from a tfsdk struct, with custoimzations applied.

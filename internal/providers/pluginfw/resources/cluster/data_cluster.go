@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
@@ -17,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+const dataSourceName = "cluster"
 
 func DataSourceCluster() datasource.DataSource {
 	return &ClusterDataSource{}
@@ -29,13 +32,13 @@ type ClusterDataSource struct {
 }
 
 type ClusterInfo struct {
-	ClusterId   types.String               `tfsdk:"cluster_id" tf:"optional,computed"`
-	Name        types.String               `tfsdk:"cluster_name" tf:"optional,computed"`
-	ClusterInfo *compute_tf.ClusterDetails `tfsdk:"cluster_info" tf:"optional,computed"`
+	ClusterId   types.String                `tfsdk:"cluster_id" tf:"optional,computed"`
+	Name        types.String                `tfsdk:"cluster_name" tf:"optional,computed"`
+	ClusterInfo []compute_tf.ClusterDetails `tfsdk:"cluster_info" tf:"optional,computed"`
 }
 
 func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "databricks_cluster_pluginframework"
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceName)
 }
 
 func (d *ClusterDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -67,6 +70,7 @@ func validateClustersList(ctx context.Context, clusters []compute_tf.ClusterDeta
 }
 
 func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -105,7 +109,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		clusterInfo.ClusterInfo = &namedClusters[0]
+		clusterInfo.ClusterInfo = namedClusters[0:1]
 	} else if clusterId != "" {
 		cluster, err := w.Clusters.GetByClusterId(ctx, clusterId)
 		if err != nil {
@@ -120,12 +124,12 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		clusterInfo.ClusterInfo = &clusterDetails
+		clusterInfo.ClusterInfo = []compute_tf.ClusterDetails{clusterDetails}
 	} else {
 		resp.Diagnostics.AddError("you need to specify either `cluster_name` or `cluster_id`", "")
 		return
 	}
-	clusterInfo.ClusterId = clusterInfo.ClusterInfo.ClusterId
-	clusterInfo.Name = clusterInfo.ClusterInfo.ClusterName
+	clusterInfo.ClusterId = clusterInfo.ClusterInfo[0].ClusterId
+	clusterInfo.Name = clusterInfo.ClusterInfo[0].ClusterName
 	resp.Diagnostics.Append(resp.State.Set(ctx, clusterInfo)...)
 }

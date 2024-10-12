@@ -27,9 +27,10 @@ type RegisteredModelDataSource struct {
 }
 
 type RegisteredModelData struct {
-	FullName       types.String                    `tfsdk:"full_name"`
-	IncludeAliases types.Bool                      `tfsdk:"include_aliases" tf:"optional"`
-	ModelInfo      *catalog_tf.RegisteredModelInfo `tfsdk:"model_info" tf:"optional,computed"`
+	FullName       types.String                     `tfsdk:"full_name"`
+	IncludeAliases types.Bool                       `tfsdk:"include_aliases" tf:"optional"`
+	IncludeBrowse  types.Bool                       `tfsdk:"include_browse" tf:"optional"`
+	ModelInfo      []catalog_tf.RegisteredModelInfo `tfsdk:"model_info" tf:"optional,computed"`
 }
 
 func (d *RegisteredModelDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -67,6 +68,7 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 	modelInfoSdk, err := w.RegisteredModels.Get(ctx, catalog.GetRegisteredModelRequest{
 		FullName:       modelFullName,
 		IncludeAliases: registeredModel.IncludeAliases.ValueBool(),
+		IncludeBrowse:  registeredModel.IncludeBrowse.ValueBool(),
 	})
 	if err != nil {
 		if apierr.IsMissing(err) {
@@ -83,6 +85,6 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 	if modelInfo.Aliases == nil {
 		modelInfo.Aliases = []catalog_tf.RegisteredModelAlias{}
 	}
-	registeredModel.ModelInfo = &modelInfo
+	registeredModel.ModelInfo = append(registeredModel.ModelInfo, modelInfo)
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModel)...)
 }

@@ -21,6 +21,7 @@ The following arguments are supported:
 
 * `full_name` - (Required, String) The fully-qualified name of the registered model (`catalog_name.schema_name.name`).
 * `include_aliases` - (Optional, Boolean) flag to specify if list of aliases should be included into output.
+* `include_browse` - (Optional, Boolean) flag to specify if include registered models in the response for which the principal can only access selective metadata for.
 
 ## Attribute Reference
 

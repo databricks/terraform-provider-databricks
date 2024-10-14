@@ -196,6 +196,9 @@ func ResourceStorageCredential() common.Resource {
 					return nil
 				}
 
+				if d.HasChange("read_only") {
+					update.ForceSendFields = append(update.ForceSendFields, "ReadOnly")
+				}
 				update.Owner = ""
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
@@ -240,6 +243,9 @@ func ResourceStorageCredential() common.Resource {
 					return nil
 				}
 
+				if d.HasChange("read_only") {
+					update.ForceSendFields = append(update.ForceSendFields, "ReadOnly")
+				}
 				update.Owner = ""
 				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {

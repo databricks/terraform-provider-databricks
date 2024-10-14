@@ -116,6 +116,9 @@ func ResourceExternalLocation() common.Resource {
 			if !d.HasChangeExcept("owner") {
 				return nil
 			}
+			if d.HasChange("read_only") {
+				updateExternalLocationRequest.ForceSendFields = append(updateExternalLocationRequest.ForceSendFields, "ReadOnly")
+			}
 
 			updateExternalLocationRequest.Owner = ""
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)

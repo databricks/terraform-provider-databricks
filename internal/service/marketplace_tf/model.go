@@ -21,7 +21,7 @@ type AddExchangeForListingRequest struct {
 }
 
 type AddExchangeForListingResponse struct {
-	ExchangeForListing *ExchangeListing `tfsdk:"exchange_for_listing" tf:"optional"`
+	ExchangeForListing []ExchangeListing `tfsdk:"exchange_for_listing" tf:"optional,object"`
 }
 
 // Get one batch of listings. One may specify up to 50 IDs per request.
@@ -59,7 +59,7 @@ type ContactInfo struct {
 }
 
 type CreateExchangeFilterRequest struct {
-	Filter ExchangeFilter `tfsdk:"filter" tf:""`
+	Filter []ExchangeFilter `tfsdk:"filter" tf:"object"`
 }
 
 type CreateExchangeFilterResponse struct {
@@ -67,7 +67,7 @@ type CreateExchangeFilterResponse struct {
 }
 
 type CreateExchangeRequest struct {
-	Exchange Exchange `tfsdk:"exchange" tf:""`
+	Exchange []Exchange `tfsdk:"exchange" tf:"object"`
 }
 
 type CreateExchangeResponse struct {
@@ -77,7 +77,7 @@ type CreateExchangeResponse struct {
 type CreateFileRequest struct {
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 
-	FileParent FileParent `tfsdk:"file_parent" tf:""`
+	FileParent []FileParent `tfsdk:"file_parent" tf:"object"`
 
 	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:""`
 
@@ -85,13 +85,13 @@ type CreateFileRequest struct {
 }
 
 type CreateFileResponse struct {
-	FileInfo *FileInfo `tfsdk:"file_info" tf:"optional"`
+	FileInfo []FileInfo `tfsdk:"file_info" tf:"optional,object"`
 	// Pre-signed POST URL to blob storage
 	UploadUrl types.String `tfsdk:"upload_url" tf:"optional"`
 }
 
 type CreateInstallationRequest struct {
-	AcceptedConsumerTerms *ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:"optional"`
+	AcceptedConsumerTerms []ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:"optional,object"`
 
 	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
 
@@ -99,13 +99,13 @@ type CreateInstallationRequest struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 	// for git repo installations
-	RepoDetail *RepoInstallation `tfsdk:"repo_detail" tf:"optional"`
+	RepoDetail []RepoInstallation `tfsdk:"repo_detail" tf:"optional,object"`
 
 	ShareName types.String `tfsdk:"share_name" tf:"optional"`
 }
 
 type CreateListingRequest struct {
-	Listing Listing `tfsdk:"listing" tf:""`
+	Listing []Listing `tfsdk:"listing" tf:"object"`
 }
 
 type CreateListingResponse struct {
@@ -114,7 +114,7 @@ type CreateListingResponse struct {
 
 // Data request messages also creates a lead (maybe)
 type CreatePersonalizationRequest struct {
-	AcceptedConsumerTerms ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:""`
+	AcceptedConsumerTerms []ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:"object"`
 
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
@@ -138,7 +138,7 @@ type CreatePersonalizationRequestResponse struct {
 }
 
 type CreateProviderRequest struct {
-	Provider ProviderInfo `tfsdk:"provider" tf:""`
+	Provider []ProviderInfo `tfsdk:"provider" tf:"object"`
 }
 
 type CreateProviderResponse struct {
@@ -264,7 +264,7 @@ type FileInfo struct {
 
 	DownloadLink types.String `tfsdk:"download_link" tf:"optional"`
 
-	FileParent *FileParent `tfsdk:"file_parent" tf:"optional"`
+	FileParent []FileParent `tfsdk:"file_parent" tf:"optional,object"`
 
 	Id types.String `tfsdk:"id" tf:"optional"`
 
@@ -292,7 +292,7 @@ type GetExchangeRequest struct {
 }
 
 type GetExchangeResponse struct {
-	Exchange *Exchange `tfsdk:"exchange" tf:"optional"`
+	Exchange []Exchange `tfsdk:"exchange" tf:"optional,object"`
 }
 
 // Get a file
@@ -301,7 +301,7 @@ type GetFileRequest struct {
 }
 
 type GetFileResponse struct {
-	FileInfo *FileInfo `tfsdk:"file_info" tf:"optional"`
+	FileInfo []FileInfo `tfsdk:"file_info" tf:"optional,object"`
 }
 
 type GetLatestVersionProviderAnalyticsDashboardResponse struct {
@@ -330,7 +330,7 @@ type GetListingRequest struct {
 }
 
 type GetListingResponse struct {
-	Listing *Listing `tfsdk:"listing" tf:"optional"`
+	Listing []Listing `tfsdk:"listing" tf:"optional,object"`
 }
 
 // List listings
@@ -361,11 +361,11 @@ type GetProviderRequest struct {
 }
 
 type GetProviderResponse struct {
-	Provider *ProviderInfo `tfsdk:"provider" tf:"optional"`
+	Provider []ProviderInfo `tfsdk:"provider" tf:"optional,object"`
 }
 
 type Installation struct {
-	Installation *InstallationDetail `tfsdk:"installation" tf:"optional"`
+	Installation []InstallationDetail `tfsdk:"installation" tf:"optional,object"`
 }
 
 type InstallationDetail struct {
@@ -391,7 +391,7 @@ type InstallationDetail struct {
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 
-	TokenDetail *TokenDetail `tfsdk:"token_detail" tf:"optional"`
+	TokenDetail []TokenDetail `tfsdk:"token_detail" tf:"optional,object"`
 
 	Tokens []TokenInfo `tfsdk:"tokens" tf:"optional"`
 }
@@ -467,7 +467,7 @@ type ListExchangesResponse struct {
 
 // List files
 type ListFilesRequest struct {
-	FileParent FileParent `tfsdk:"-"`
+	FileParent []FileParent `tfsdk:"-"`
 
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -578,11 +578,11 @@ type ListProvidersResponse struct {
 }
 
 type Listing struct {
-	Detail *ListingDetail `tfsdk:"detail" tf:"optional"`
+	Detail []ListingDetail `tfsdk:"detail" tf:"optional,object"`
 
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Next Number: 26
-	Summary ListingSummary `tfsdk:"summary" tf:""`
+	Summary []ListingSummary `tfsdk:"summary" tf:"object"`
 }
 
 type ListingDetail struct {
@@ -594,7 +594,7 @@ type ListingDetail struct {
 	// The starting date timestamp for when the data spans
 	CollectionDateStart types.Int64 `tfsdk:"collection_date_start" tf:"optional"`
 	// Smallest unit of time in the dataset
-	CollectionGranularity *DataRefreshInfo `tfsdk:"collection_granularity" tf:"optional"`
+	CollectionGranularity []DataRefreshInfo `tfsdk:"collection_granularity" tf:"optional,object"`
 	// Whether the dataset is free or paid
 	Cost types.String `tfsdk:"cost" tf:"optional"`
 	// Where/how the data is sourced
@@ -633,7 +633,7 @@ type ListingDetail struct {
 
 	TermsOfService types.String `tfsdk:"terms_of_service" tf:"optional"`
 	// How often data is updated
-	UpdateFrequency *DataRefreshInfo `tfsdk:"update_frequency" tf:"optional"`
+	UpdateFrequency []DataRefreshInfo `tfsdk:"update_frequency" tf:"optional,object"`
 }
 
 type ListingFulfillment struct {
@@ -643,9 +643,9 @@ type ListingFulfillment struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
-	RepoInfo *RepoInfo `tfsdk:"repo_info" tf:"optional"`
+	RepoInfo []RepoInfo `tfsdk:"repo_info" tf:"optional,object"`
 
-	ShareInfo *ShareInfo `tfsdk:"share_info" tf:"optional"`
+	ShareInfo []ShareInfo `tfsdk:"share_info" tf:"optional,object"`
 }
 
 type ListingSetting struct {
@@ -665,7 +665,7 @@ type ListingSummary struct {
 	ExchangeIds []types.String `tfsdk:"exchange_ids" tf:"optional"`
 	// if a git repo is being created, a listing will be initialized with this
 	// field as opposed to a share
-	GitRepo *RepoInfo `tfsdk:"git_repo" tf:"optional"`
+	GitRepo []RepoInfo `tfsdk:"git_repo" tf:"optional,object"`
 
 	ListingType types.String `tfsdk:"listingType" tf:""`
 
@@ -673,15 +673,15 @@ type ListingSummary struct {
 
 	ProviderId types.String `tfsdk:"provider_id" tf:"optional"`
 
-	ProviderRegion *RegionInfo `tfsdk:"provider_region" tf:"optional"`
+	ProviderRegion []RegionInfo `tfsdk:"provider_region" tf:"optional,object"`
 
 	PublishedAt types.Int64 `tfsdk:"published_at" tf:"optional"`
 
 	PublishedBy types.String `tfsdk:"published_by" tf:"optional"`
 
-	Setting *ListingSetting `tfsdk:"setting" tf:"optional"`
+	Setting []ListingSetting `tfsdk:"setting" tf:"optional,object"`
 
-	Share *ShareInfo `tfsdk:"share" tf:"optional"`
+	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
 	// Enums
 	Status types.String `tfsdk:"status" tf:"optional"`
 
@@ -705,10 +705,10 @@ type ListingTag struct {
 type PersonalizationRequest struct {
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
-	ConsumerRegion RegionInfo `tfsdk:"consumer_region" tf:""`
+	ConsumerRegion []RegionInfo `tfsdk:"consumer_region" tf:"object"`
 	// contact info for the consumer requesting data or performing a listing
 	// installation
-	ContactInfo *ContactInfo `tfsdk:"contact_info" tf:"optional"`
+	ContactInfo []ContactInfo `tfsdk:"contact_info" tf:"optional,object"`
 
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -728,7 +728,7 @@ type PersonalizationRequest struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
-	Share *ShareInfo `tfsdk:"share" tf:"optional"`
+	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 
@@ -870,27 +870,27 @@ type TokenInfo struct {
 }
 
 type UpdateExchangeFilterRequest struct {
-	Filter ExchangeFilter `tfsdk:"filter" tf:""`
+	Filter []ExchangeFilter `tfsdk:"filter" tf:"object"`
 
 	Id types.String `tfsdk:"-"`
 }
 
 type UpdateExchangeFilterResponse struct {
-	Filter *ExchangeFilter `tfsdk:"filter" tf:"optional"`
+	Filter []ExchangeFilter `tfsdk:"filter" tf:"optional,object"`
 }
 
 type UpdateExchangeRequest struct {
-	Exchange Exchange `tfsdk:"exchange" tf:""`
+	Exchange []Exchange `tfsdk:"exchange" tf:"object"`
 
 	Id types.String `tfsdk:"-"`
 }
 
 type UpdateExchangeResponse struct {
-	Exchange *Exchange `tfsdk:"exchange" tf:"optional"`
+	Exchange []Exchange `tfsdk:"exchange" tf:"optional,object"`
 }
 
 type UpdateInstallationRequest struct {
-	Installation InstallationDetail `tfsdk:"installation" tf:""`
+	Installation []InstallationDetail `tfsdk:"installation" tf:"object"`
 
 	InstallationId types.String `tfsdk:"-"`
 
@@ -900,17 +900,17 @@ type UpdateInstallationRequest struct {
 }
 
 type UpdateInstallationResponse struct {
-	Installation *InstallationDetail `tfsdk:"installation" tf:"optional"`
+	Installation []InstallationDetail `tfsdk:"installation" tf:"optional,object"`
 }
 
 type UpdateListingRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Listing Listing `tfsdk:"listing" tf:""`
+	Listing []Listing `tfsdk:"listing" tf:"object"`
 }
 
 type UpdateListingResponse struct {
-	Listing *Listing `tfsdk:"listing" tf:"optional"`
+	Listing []Listing `tfsdk:"listing" tf:"optional,object"`
 }
 
 type UpdatePersonalizationRequestRequest struct {
@@ -920,13 +920,13 @@ type UpdatePersonalizationRequestRequest struct {
 
 	RequestId types.String `tfsdk:"-"`
 
-	Share *ShareInfo `tfsdk:"share" tf:"optional"`
+	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
 
 	Status types.String `tfsdk:"status" tf:""`
 }
 
 type UpdatePersonalizationRequestResponse struct {
-	Request *PersonalizationRequest `tfsdk:"request" tf:"optional"`
+	Request []PersonalizationRequest `tfsdk:"request" tf:"optional,object"`
 }
 
 type UpdateProviderAnalyticsDashboardRequest struct {
@@ -950,9 +950,9 @@ type UpdateProviderAnalyticsDashboardResponse struct {
 type UpdateProviderRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Provider ProviderInfo `tfsdk:"provider" tf:""`
+	Provider []ProviderInfo `tfsdk:"provider" tf:"object"`
 }
 
 type UpdateProviderResponse struct {
-	Provider *ProviderInfo `tfsdk:"provider" tf:"optional"`
+	Provider []ProviderInfo `tfsdk:"provider" tf:"optional,object"`
 }

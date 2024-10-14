@@ -59,7 +59,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
-				inference_log = {
+				inference_log {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
 				  prediction_col = "prediction"
@@ -85,7 +85,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myTimeseries.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTimeseries.name}"
 				output_schema_name = databricks_schema.things.id
-				time_series = {
+				time_series {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
 				} 
@@ -108,7 +108,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.mySnapshot.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTimeseries.name}"
 				output_schema_name = databricks_schema.things.id
-				snapshot = {
+				snapshot {
 				} 
 			}
 		`,
@@ -125,7 +125,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
-				inference_log = {
+				inference_log {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
 				  prediction_col = "prediction"
@@ -140,7 +140,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 			table_name = databricks_sql_table.myInferenceTable.id
 			assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 			output_schema_name = databricks_schema.things.id
-			inference_log = {
+			inference_log {
 				granularities = ["1 hour"]
 				timestamp_col = "timestamp"
 				prediction_col = "prediction"
@@ -164,7 +164,7 @@ func TestUcAccQualityMonitorImportPluginFramework(t *testing.T) {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
-				inference_log = {
+				inference_log {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
 				  prediction_col = "prediction"

@@ -20,7 +20,7 @@ data "databricks_views" "things" {
 resource "databricks_grants" "things" {
   for_each = data.databricks_views.things.ids
 
-  view = each.value
+  table = each.value
 
   grant {
     principal  = "sensitive"

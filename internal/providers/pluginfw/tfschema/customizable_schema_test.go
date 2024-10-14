@@ -13,9 +13,10 @@ import (
 )
 
 type TestTfSdk struct {
-	Description types.String            `tfsdk:"description" tf:""`
-	Nested      *NestedTfSdk            `tfsdk:"nested" tf:"optional"`
-	Map         map[string]types.String `tfsdk:"map" tf:"optional"`
+	Description       types.String            `tfsdk:"description" tf:""`
+	Nested            *NestedTfSdk            `tfsdk:"nested" tf:"optional"`
+	NestedSliceObject []NestedTfSdk           `tfsdk:"nested_slice_object" tf:"optional,object"`
+	Map               map[string]types.String `tfsdk:"map" tf:"optional"`
 }
 
 type NestedTfSdk struct {
@@ -64,7 +65,7 @@ func TestCustomizeSchemaSetRequired(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, scm.Attributes["nested"].(schema.SingleNestedAttribute).Attributes["enabled"].IsRequired())
+	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["enabled"].IsRequired())
 }
 
 func TestCustomizeSchemaSetOptional(t *testing.T) {
@@ -82,7 +83,7 @@ func TestCustomizeSchemaSetSensitive(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, scm.Attributes["nested"].(schema.SingleNestedAttribute).Attributes["name"].IsSensitive())
+	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["name"].IsSensitive())
 }
 
 func TestCustomizeSchemaSetDeprecated(t *testing.T) {
@@ -120,4 +121,12 @@ func TestCustomizeSchemaAddPlanModifier(t *testing.T) {
 	})
 
 	assert.True(t, len(scm.Attributes["description"].(schema.StringAttribute).PlanModifiers) == 1)
+}
+
+func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
+	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+		return c
+	})
+
+	assert.True(t, len(scm.Blocks["nested_slice_object"].(schema.ListNestedBlock).Validators) == 1)
 }

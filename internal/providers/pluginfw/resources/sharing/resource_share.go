@@ -12,10 +12,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
@@ -27,7 +28,6 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo
-	// OriginalValues types.String `tfsdk:"original_values" tf:"computed,optional,sensitive"`
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
@@ -137,32 +137,25 @@ func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataReque
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetRequired("name")
+
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
+		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
+		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
+		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "object", "added_at")
+		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object", "added_by")
+
+		//c.AddValidator(listvalidator.SizeAtLeast(1), "object") // MinItems(1)
+		c.SetRequired("object", "data_object_type")
+		c.SetRequired("object", "partitions", "values", "op")
+		c.SetRequired("object", "partitions", "values", "name")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Share",
-		Attributes: tfschema.ResourceStructToSchemaMap(ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			c.SetRequired("name")
-			c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
-			// c.SetCustomSuppressDiff("name", common.EqualFoldDiffSuppress)
-			c.SetComputed("owner") // was originally SetSuppressDiff
-
-			c.SetComputed("created_at")
-			c.SetComputed("created_by")
-			c.SetComputed("updated_at")
-			c.SetComputed("updated_by")
-
-			c.AddValidator(listvalidator.SizeAtLeast(1), "objects") // MinItems(1)
-			c.SetRequired("objects", "data_object_type")
-			c.SetComputed("objects", "shared_as")                   // was originally SetSuppressDiff
-			c.SetComputed("objects", "cdf_enabled")                 // was originally SetSuppressDiff
-			c.SetComputed("objects", "start_version")               // was originally SetSuppressDiff
-			c.SetComputed("objects", "history_data_sharing_status") // was originally SetSuppressDiff
-			c.SetComputed("objects", "status")
-			c.SetComputed("objects", "added_at")
-			c.SetComputed("objects", "added_by")
-			c.SetRequired("objects", "partitions", "values", "op")
-			c.SetRequired("objects", "partitions", "values", "name")
-			return c
-		}),
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 
@@ -222,20 +215,24 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	newState.Owner = plan.Owner
+	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan.ShareInfo)
+	for i := range newState.Objects {
+		newState.Objects[i].SyncEffectiveFieldsDuringCreateOrUpdate(plan.Objects[i])
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state ShareInfoExtended
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	logger.SetTfLogger(logger.NewTfLogger(ctx))
+	var existingState ShareInfoExtended
+	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var stateGoSDK sharing.ShareInfo
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &stateGoSDK)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &stateGoSDK)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -272,7 +269,10 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	// newState.OriginalValues = state.OriginalValues
+	newState.SyncEffectiveFieldsDuringRead(existingState.ShareInfo)
+	for i := range newState.Objects {
+		newState.Objects[i].SyncEffectiveFieldsDuringRead(existingState.Objects[i])
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
@@ -284,7 +284,6 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	// get a workspace client
 	client, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -303,7 +302,6 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	// get the share into a goSDK struct
 	var getShareRequest sharing.GetShareRequest
 	getShareRequest.Name = state.Name.ValueString()
 	getShareRequest.IncludeSharedData = true
@@ -362,6 +360,11 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 			resp.Diagnostics.AddError("failed to update share", err.Error())
 		}
+	}
+
+	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan.ShareInfo)
+	for i := range state.Objects {
+		state.Objects[i].SyncEffectiveFieldsDuringCreateOrUpdate(plan.Objects[i])
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)

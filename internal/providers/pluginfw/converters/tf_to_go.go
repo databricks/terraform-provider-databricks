@@ -184,7 +184,7 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 			// This is the case for enum.
 
 			// Skip unset value.
-			if srcField.IsZero() {
+			if srcField.IsZero() || v.ValueString() == "" {
 				return
 			}
 

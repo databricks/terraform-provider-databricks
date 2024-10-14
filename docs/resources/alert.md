@@ -13,15 +13,15 @@ resource "databricks_directory" "shared_dir" {
 }
 
 # This will be replaced with new databricks_query resource
-resource "databricks_sql_query" "this" {
-  data_source_id = databricks_sql_endpoint.example.data_source_id
-  name           = "My Query Name"
-  query          = "SELECT 42 as value"
-  parent         = "folders/${databricks_directory.shared_dir.object_id}"
+resource "databricks_query" "this" {
+  warehouse_id = databricks_sql_endpoint.example.id
+  display_name = "My Query Name"
+  query_text   = "SELECT 42 as value"
+  parent_path  = databricks_directory.shared_dir.path
 }
 
 resource "databricks_alert" "alert" {
-  query_id     = databricks_sql_query.this.id
+  query_id     = databricks_query.this.id
   display_name = "TF new alert"
   parent_path  = databricks_directory.shared_dir.path
   condition {

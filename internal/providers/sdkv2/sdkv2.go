@@ -104,7 +104,6 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_mws_credentials":                      mws.DataSourceMwsCredentials().ToResource(),
 			"databricks_mws_workspaces":                       mws.DataSourceMwsWorkspaces().ToResource(),
 			"databricks_node_type":                            clusters.DataSourceNodeType().ToResource(),
-			"databricks_notification_destinations":            settings.DataSourceNotificationDestinations().ToResource(),
 			"databricks_notebook":                             workspace.DataSourceNotebook().ToResource(),
 			"databricks_notebook_paths":                       workspace.DataSourceNotebookPaths().ToResource(),
 			"databricks_pipelines":                            pipelines.DataSourcePipelines().ToResource(),

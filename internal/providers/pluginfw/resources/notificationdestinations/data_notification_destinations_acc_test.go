@@ -1,36 +1,15 @@
-package acceptance
+package notificationdestinations_test
 
 import (
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-const dataSourceTemplate = `
-	resource "databricks_notification_destination" "email_notification" {
-		display_name = "email notification destination"
-		config {
-			email {
-			addresses = ["abc@gmail.com"]
-			}
-		}
-	}
-
-	resource "databricks_notification_destination" "notification" {
-		display_name = "slack notification destination"
-		config {
-			slack {
-			url = "https://hooks.slack.com/services/..."
-			}
-		}
-	}
-
-	data "databricks_notification_destinations" "this" {}
-`
-
-func checkNotificationsDestinationsDataSourcePopulated(t *testing.T) func(s *terraform.State) error {
+func CheckDataSourceNotificationsPopulated(t *testing.T) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
 		ds, ok := s.Modules[0].Resources["data.databricks_notification_destinations.this"]
 		require.True(t, ok, "data.databricks_notification_destinations.this has to be there")
@@ -54,9 +33,29 @@ func checkNotificationsDestinationsDataSourcePopulated(t *testing.T) func(s *ter
 	}
 }
 
-func TestWorkspaceDataSourceNotificationDestination(t *testing.T) {
-	WorkspaceLevel(t, Step{
-		Template: dataSourceTemplate,
-		Check:    checkNotificationsDestinationsDataSourcePopulated(t),
+func TestAccNotificationsCreation(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+			resource "databricks_notification_destination" "email_notification" {
+				display_name = "email notification destination"
+				config {
+					email {
+					addresses = ["abc@gmail.com"]
+					}
+				}
+			}
+
+			resource "databricks_notification_destination" "notification" {
+				display_name = "slack notification destination"
+				config {
+					slack {
+					url = "https://hooks.slack.com/services/..."
+					}
+				}
+			}
+
+			data "databricks_notification_destinations" "this" {}
+		`,
+		Check: CheckDataSourceNotificationsPopulated(t),
 	})
 }

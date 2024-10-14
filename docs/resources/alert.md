@@ -131,6 +131,20 @@ resource "databricks_alert" "alert" {
 * Import new resource with the `terraform import databricks_alert.alert <alert-id>` command.
 * Run the `terraform plan` command to check possible changes, like, value type change, etc.
 
+## Access Control
+
+[databricks_permissions](permissions.md#sql-alert-usage) can control which groups or individual users can *Manage*, *Edit*, *Run* or *View* individual alerts.
+
+```hcl
+resource "databricks_permissions" "alert_usage" {
+  sql_alert_id = databricks_alert.alert.id
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_RUN"
+  }
+}
+```
+
 ## Import
 
 This resource can be imported using alert ID:
@@ -138,7 +152,6 @@ This resource can be imported using alert ID:
 ```bash
 terraform import databricks_alert.this <alert-id>
 ```
-
 
 ## Related Resources
 

@@ -95,7 +95,7 @@ func TestAlertCreate(t *testing.T) {
 	})
 }
 
-func TestAlertCreate_Error(t *testing.T) {
+func TestAlertCreate_BackendError(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockAlertsAPI().EXPECT()
@@ -108,6 +108,35 @@ func TestAlertCreate_Error(t *testing.T) {
 		Create:   true,
 		HCL:      createHcl,
 	}.ExpectError(t, "bad payload")
+}
+
+func TestAlertCreate_ErrorMultipleValues(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceAlert(),
+		Create:   true,
+		HCL: `query_id = "123456"
+  display_name = "TF new alert"
+  parent_path = "/Shared/Alerts"
+  owner_user_name = "user@domain.com"
+  condition {
+    op = "GREATER_THAN"
+    operand {
+      column {
+        name = "value"
+      }
+    }
+    threshold {
+      value {
+        double_value = 42
+      }
+    }
+    threshold {
+      value {
+        bool_value = 42
+      }
+    }
+}`,
+	}.ExpectError(t, "invalid config supplied. [condition.#.threshold] Too many list items")
 }
 
 func TestAlertRead_Import(t *testing.T) {

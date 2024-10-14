@@ -36,7 +36,7 @@ func ResourceAlert() common.Resource {
 		}
 		for _, f := range alof {
 			common.CustomizeSchemaPath(m, "condition", "threshold", "value",
-				strings.TrimPrefix(f, "condition.0.threshold.0.value.0.")).SetAtLeastOneOf(alof)
+				strings.TrimPrefix(f, "condition.0.threshold.0.value.0.")).SetExactlyOneOf(alof)
 		}
 		common.CustomizeSchemaPath(m, "owner_user_name").SetSuppressDiff()
 		common.CustomizeSchemaPath(m, "id").SetReadOnly()

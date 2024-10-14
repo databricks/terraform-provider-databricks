@@ -5,6 +5,7 @@ package workspace
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/docs"
 
@@ -30,6 +32,7 @@ func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.D
 		return fmt.Errorf("internal type casting error")
 	}
 	log.Printf("[DEBUG] Old workspace config: %v, new: %v", old, new)
+	removed := map[string]struct{}{}
 	patch := settings.WorkspaceConf{}
 
 	// Add new configuration keys
@@ -44,6 +47,7 @@ func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.D
 			continue
 		}
 		log.Printf("[DEBUG] Erasing configuration of %s", k)
+		removed[k] = struct{}{}
 		switch r := v.(type) {
 		default:
 			patch[k] = ""
@@ -63,7 +67,7 @@ func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.D
 	if err != nil {
 		return err
 	}
-	err = w.WorkspaceConf.SetStatus(ctx, patch)
+	err = SafeSetStatus(ctx, w, removed, patch)
 	if err != nil {
 		return err
 	}
@@ -121,7 +125,7 @@ func deleteWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.
 		case bool:
 			patch[k] = "false"
 		}
-		err = w.WorkspaceConf.SetStatus(ctx, patch)
+		err = SafeSetStatus(ctx, w, map[string]struct{}{k: {}}, patch)
 		// Tolerate errors like the following on deletion:
 		// cannot delete workspace conf: Some values are not allowed: {"enableGp3":"","enableIpAccessLists":""}
 		// The API for workspace conf is quite limited and doesn't support a generic "reset to original state"
@@ -134,6 +138,83 @@ func deleteWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.
 		}
 	}
 	return nil
+}
+
+func parseInvalidKeysFromError(err error) ([]string, error) {
+	var apiErr *apierr.APIError
+	// The workspace conf API returns an error with a message like "Invalid keys: [key1, key2, ...]"
+	// when some keys are invalid. We parse this message to get the list of invalid keys.
+	if errors.As(err, &apiErr) && strings.HasPrefix(apiErr.Message, "Invalid keys: ") {
+		invalidKeysStr := strings.TrimPrefix(apiErr.Message, "Invalid keys: ")
+		var invalidKeys []string
+		err = json.Unmarshal([]byte(invalidKeysStr), &invalidKeys)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse missing keys: %w", err)
+		}
+		return invalidKeys, nil
+	}
+	return nil, nil
+}
+
+// SafeGetStatus is a wrapper around the GetStatus API that tolerates invalid keys.
+// If any of the provided keys are not valid, the GetStatus API is called again with only the valid keys.
+// If all keys are invalid, an error is returned.
+func SafeGetStatus(ctx context.Context, w *databricks.WorkspaceClient, keys []string) (map[string]string, error) {
+	conf, err := w.WorkspaceConf.GetStatus(ctx, settings.GetStatusRequest{
+		Keys: strings.Join(keys, ","),
+	})
+	invalidKeys, parseErr := parseInvalidKeysFromError(err)
+	if parseErr != nil {
+		return nil, parseErr
+	} else if invalidKeys != nil {
+		tflog.Warn(ctx, fmt.Sprintf("the following keys are not supported by the api: %s. Remove these keys from the configuration to avoid this warning.", strings.Join(invalidKeys, ", ")))
+		// Request again but remove invalid keys
+		invalidKeysMap := make(map[string]struct{}, len(invalidKeys))
+		for _, k := range invalidKeys {
+			invalidKeysMap[k] = struct{}{}
+		}
+		validKeys := make([]string, 0, len(keys))
+		for _, k := range keys {
+			if _, ok := invalidKeysMap[k]; !ok {
+				validKeys = append(validKeys, k)
+			}
+		}
+		if len(validKeys) == 0 {
+			return nil, fmt.Errorf("failed to get workspace conf because all keys are invalid: %s", strings.Join(keys, ", "))
+		}
+		conf, err = w.WorkspaceConf.GetStatus(context.Background(), settings.GetStatusRequest{
+			Keys: strings.Join(validKeys, ","),
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	return *conf, nil
+}
+
+// SafeSetStatus is a wrapper around the SetStatus API that tolerates invalid keys.
+// If any of the provided keys are not valid, the removed map is checked to see if those keys are being removed.
+// If all keys are being removed, the error is ignored. Otherwise, an error is returned.
+func SafeSetStatus(ctx context.Context, w *databricks.WorkspaceClient, removed map[string]struct{}, newConf map[string]string) error {
+	err := w.WorkspaceConf.SetStatus(ctx, settings.WorkspaceConf(newConf))
+	invalidKeys, parseErr := parseInvalidKeysFromError(err)
+	if parseErr != nil {
+		return parseErr
+	} else if invalidKeys != nil {
+		// Tolerate the request if all invalid keys are present in the old map, indicating that they are being removed.
+		newInvalidKeys := make([]string, 0, len(invalidKeys))
+		for _, k := range invalidKeys {
+			if _, ok := removed[k]; !ok {
+				newInvalidKeys = append(newInvalidKeys, k)
+			}
+		}
+		if len(newInvalidKeys) > 0 {
+			return fmt.Errorf("failed to set workspace conf because some new keys are invalid: %s", strings.Join(newInvalidKeys, ", "))
+		}
+		tflog.Info(ctx, fmt.Sprintf("ignored the following invalid keys because they are being removed: %s", strings.Join(invalidKeys, ", ")))
+		return nil
+	}
+	return err
 }
 
 // ResourceWorkspaceConf maintains workspace configuration for specified keys
@@ -155,13 +236,11 @@ func ResourceWorkspaceConf() common.Resource {
 			if len(keys) == 0 {
 				return nil
 			}
-			remote, err := w.WorkspaceConf.GetStatus(ctx, settings.GetStatusRequest{
-				Keys: strings.Join(keys, ","),
-			})
+			remote, err := SafeGetStatus(ctx, w, keys)
 			if err != nil {
 				return err
 			}
-			for k, v := range *remote {
+			for k, v := range remote {
 				config[k] = v
 			}
 			log.Printf("[DEBUG] Setting new config to state: %v", config)

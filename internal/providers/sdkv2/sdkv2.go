@@ -189,6 +189,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_pipeline":                        pipelines.ResourcePipeline().ToResource(),
 			"databricks_provider":                        sharing.ResourceProvider().ToResource(),
 			"databricks_quality_monitor":                 catalog.ResourceQualityMonitor().ToResource(),
+			"databricks_query":                           sql.ResourceQuery().ToResource(),
 			"databricks_recipient":                       sharing.ResourceRecipient().ToResource(),
 			"databricks_registered_model":                catalog.ResourceRegisteredModel().ToResource(),
 			"databricks_repo":                            repos.ResourceRepo().ToResource(),

@@ -129,7 +129,7 @@ resource "databricks_alert" "alert" {
 
 * Remove the old resource from the state with the `terraform state rm databricks_sql_alert.alert` command.
 * Import new resource with the `terraform import databricks_alert.alert <alert-id>` command.
-* Run the `terraform plan` command to check possible changes, like, value type change, etc.
+* Run the `terraform plan` command to check possible changes, such as value type change, etc.
 
 ## Access Control
 

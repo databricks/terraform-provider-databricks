@@ -78,16 +78,17 @@ func TestUcAccCreateShare(t *testing.T) {
 		resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "account users"
-			objects = [{
+			object {
 				name = databricks_table.mytable.id
 				comment = "c"
 				data_object_type = "TABLE"
-         	}, {
+         	}
+			object {
 				name = databricks_table.mytable_2.id
 				cdf_enabled = false
 				comment = "c"
 				data_object_type = "TABLE"
-			}]					
+			}					
 		}
 
 		resource "databricks_recipient" "db2open" {
@@ -117,12 +118,12 @@ func shareTemplateWithOwner(comment string, owner string) string {
 		resource "databricks_share_pluginframework" "myshare" {
 			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
 			owner = "%s"
-			objects = [{
+			object {
 				name = databricks_table.mytable.id
 				comment = "%s"
 				data_object_type = "TABLE"
 				history_data_sharing_status = "DISABLED"
-			}]							
+			}							
 		}`, owner, comment)
 }
 

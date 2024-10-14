@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccQuery(t *testing.T) {
+func TestAccSqlQuery(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_sql_query" "q1" {

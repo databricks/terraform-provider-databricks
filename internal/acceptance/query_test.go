@@ -23,7 +23,7 @@ func TestAccQuery(t *testing.T) {
 `,
 	}, Step{
 		Template: `
-		resource "databricks_sql_query" "this" {
+		resource "databricks_query" "this" {
 			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			display_name = "tf-{var.RANDOM}"
 			query_text = "SELECT 1 AS p1, 2 as p2"

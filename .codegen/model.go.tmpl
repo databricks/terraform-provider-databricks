@@ -35,7 +35,7 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringCreateOrUpdate(plan {{
   {{- range .Fields -}}
   {{- if and .Entity.IsComputed (or .Entity.IsString .Entity.IsBool .Entity.IsInt64 .Entity.IsFloat64 .Entity.IsInt .Entity.Enum) -}}
   {{- if not (in $excluded .PascalName) -}}
-  newState.Effective_{{.PascalName}} = newState.{{.PascalName}}
+  newState.Effective{{.PascalName}} = newState.{{.PascalName}}
   newState.{{.PascalName}} = plan.{{.PascalName}}
   {{end}}
   {{end}}
@@ -53,7 +53,7 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
   {{- if .Entity.IsFloat64}}{{$type = "Float64"}}{{end}}
   {{- if .Entity.IsInt}}{{$type = "Int64"}}{{end}}
   {{- if .Entity.Enum}}{{$type = "String"}}{{end}}
-  if existingState.Effective_{{.PascalName}}.Value{{$type}}() == newState.{{.PascalName}}.Value{{$type}}() {
+  if existingState.Effective{{.PascalName}}.Value{{$type}}() == newState.{{.PascalName}}.Value{{$type}}() {
     newState.{{.PascalName}} = existingState.{{.PascalName}}
   }
   {{end}}
@@ -65,7 +65,7 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
 {{end}}
 
 {{- define "field" -}}
-{{if .effective}}Effective_{{end}}{{.field.PascalName}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
+{{if .effective}}Effective{{end}}{{.field.PascalName}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
 {{- end -}}
 
 {{- define "field-tag" -}}

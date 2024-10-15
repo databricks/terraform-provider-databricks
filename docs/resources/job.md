@@ -107,6 +107,7 @@ The resource supports the following arguments:
 * `notification_settings` - (Optional) An optional block controlling the notification settings on the job level [documented below](#notification_settings-configuration-block).
 * `health` - (Optional) An optional block that specifies the health conditions for the job [documented below](#health-configuration-block).
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
+* `budget_policy_id` - (Optional) The ID of the user-specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job.
 
 ### task Configuration Block
 

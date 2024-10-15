@@ -43,13 +43,31 @@ type AddInstanceProfile struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
 }
 
+func (newState *AddInstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddInstanceProfile) {
+}
+
+func (newState *AddInstanceProfile) SyncEffectiveFieldsDuringRead(existingState AddInstanceProfile) {
+}
+
 type AddResponse struct {
+}
+
+func (newState *AddResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddResponse) {
+}
+
+func (newState *AddResponse) SyncEffectiveFieldsDuringRead(existingState AddResponse) {
 }
 
 type Adlsgen2Info struct {
 	// abfss destination, e.g.
 	// `abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>`.
 	Destination types.String `tfsdk:"destination" tf:""`
+}
+
+func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringCreateOrUpdate(plan Adlsgen2Info) {
+}
+
+func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringRead(existingState Adlsgen2Info) {
 }
 
 type AutoScale struct {
@@ -61,6 +79,12 @@ type AutoScale struct {
 	// underutilized. It is also the initial number of workers the cluster will
 	// have after creation.
 	MinWorkers types.Int64 `tfsdk:"min_workers" tf:"optional"`
+}
+
+func (newState *AutoScale) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoScale) {
+}
+
+func (newState *AutoScale) SyncEffectiveFieldsDuringRead(existingState AutoScale) {
 }
 
 type AwsAttributes struct {
@@ -149,6 +173,12 @@ type AwsAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id" tf:"optional"`
 }
 
+func (newState *AwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsAttributes) {
+}
+
+func (newState *AwsAttributes) SyncEffectiveFieldsDuringRead(existingState AwsAttributes) {
+}
+
 type AzureAttributes struct {
 	// Availability type used for all subsequent nodes past the
 	// `first_on_demand` ones. Note: If `first_on_demand` is zero (which only
@@ -175,6 +205,12 @@ type AzureAttributes struct {
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price" tf:"optional"`
 }
 
+func (newState *AzureAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureAttributes) {
+}
+
+func (newState *AzureAttributes) SyncEffectiveFieldsDuringRead(existingState AzureAttributes) {
+}
+
 type CancelCommand struct {
 	ClusterId types.String `tfsdk:"clusterId" tf:"optional"`
 
@@ -183,7 +219,19 @@ type CancelCommand struct {
 	ContextId types.String `tfsdk:"contextId" tf:"optional"`
 }
 
+func (newState *CancelCommand) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelCommand) {
+}
+
+func (newState *CancelCommand) SyncEffectiveFieldsDuringRead(existingState CancelCommand) {
+}
+
 type CancelResponse struct {
+}
+
+func (newState *CancelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelResponse) {
+}
+
+func (newState *CancelResponse) SyncEffectiveFieldsDuringRead(existingState CancelResponse) {
 }
 
 type ChangeClusterOwner struct {
@@ -193,7 +241,19 @@ type ChangeClusterOwner struct {
 	OwnerUsername types.String `tfsdk:"owner_username" tf:""`
 }
 
+func (newState *ChangeClusterOwner) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChangeClusterOwner) {
+}
+
+func (newState *ChangeClusterOwner) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwner) {
+}
+
 type ChangeClusterOwnerResponse struct {
+}
+
+func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChangeClusterOwnerResponse) {
+}
+
+func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwnerResponse) {
 }
 
 type ClientsTypes struct {
@@ -203,13 +263,31 @@ type ClientsTypes struct {
 	Notebooks types.Bool `tfsdk:"notebooks" tf:"optional"`
 }
 
+func (newState *ClientsTypes) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClientsTypes) {
+}
+
+func (newState *ClientsTypes) SyncEffectiveFieldsDuringRead(existingState ClientsTypes) {
+}
+
 type CloneCluster struct {
 	// The cluster that is being cloned.
 	SourceClusterId types.String `tfsdk:"source_cluster_id" tf:""`
 }
 
+func (newState *CloneCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloneCluster) {
+}
+
+func (newState *CloneCluster) SyncEffectiveFieldsDuringRead(existingState CloneCluster) {
+}
+
 type CloudProviderNodeInfo struct {
 	Status []types.String `tfsdk:"status" tf:"optional"`
+}
+
+func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudProviderNodeInfo) {
+}
+
+func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringRead(existingState CloudProviderNodeInfo) {
 }
 
 type ClusterAccessControlRequest struct {
@@ -223,6 +301,12 @@ type ClusterAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAccessControlRequest) {
+}
+
+func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ClusterAccessControlRequest) {
+}
+
 type ClusterAccessControlResponse struct {
 	// All permissions.
 	AllPermissions []ClusterPermission `tfsdk:"all_permissions" tf:"optional"`
@@ -234,6 +318,12 @@ type ClusterAccessControlResponse struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *ClusterAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAccessControlResponse) {
+}
+
+func (newState *ClusterAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ClusterAccessControlResponse) {
 }
 
 type ClusterAttributes struct {
@@ -369,6 +459,12 @@ type ClusterAttributes struct {
 	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
 }
 
+func (newState *ClusterAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAttributes) {
+}
+
+func (newState *ClusterAttributes) SyncEffectiveFieldsDuringRead(existingState ClusterAttributes) {
+}
+
 type ClusterCompliance struct {
 	// Canonical unique identifier for a cluster.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -380,6 +476,12 @@ type ClusterCompliance struct {
 	// error is occurring. The values indicate an error message describing the
 	// policy validation error.
 	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
+}
+
+func (newState *ClusterCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterCompliance) {
+}
+
+func (newState *ClusterCompliance) SyncEffectiveFieldsDuringRead(existingState ClusterCompliance) {
 }
 
 type ClusterDetails struct {
@@ -598,6 +700,12 @@ type ClusterDetails struct {
 	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
 }
 
+func (newState *ClusterDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterDetails) {
+}
+
+func (newState *ClusterDetails) SyncEffectiveFieldsDuringRead(existingState ClusterDetails) {
+}
+
 type ClusterEvent struct {
 	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -613,11 +721,23 @@ type ClusterEvent struct {
 	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
+func (newState *ClusterEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterEvent) {
+}
+
+func (newState *ClusterEvent) SyncEffectiveFieldsDuringRead(existingState ClusterEvent) {
+}
+
 type ClusterLibraryStatuses struct {
 	// Unique identifier for the cluster.
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// Status of all libraries on the cluster.
 	LibraryStatuses []LibraryFullStatus `tfsdk:"library_statuses" tf:"optional"`
+}
+
+func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLibraryStatuses) {
+}
+
+func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringRead(existingState ClusterLibraryStatuses) {
 }
 
 type ClusterLogConf struct {
@@ -632,12 +752,24 @@ type ClusterLogConf struct {
 	S3 []S3StorageInfo `tfsdk:"s3" tf:"optional,object"`
 }
 
+func (newState *ClusterLogConf) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLogConf) {
+}
+
+func (newState *ClusterLogConf) SyncEffectiveFieldsDuringRead(existingState ClusterLogConf) {
+}
+
 type ClusterPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *ClusterPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermission) {
+}
+
+func (newState *ClusterPermission) SyncEffectiveFieldsDuringRead(existingState ClusterPermission) {
 }
 
 type ClusterPermissions struct {
@@ -648,16 +780,34 @@ type ClusterPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *ClusterPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissions) {
+}
+
+func (newState *ClusterPermissions) SyncEffectiveFieldsDuringRead(existingState ClusterPermissions) {
+}
+
 type ClusterPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissionsDescription) {
+}
+
+func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsDescription) {
+}
+
 type ClusterPermissionsRequest struct {
 	AccessControlList []ClusterAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The cluster for which to get or manage permissions.
 	ClusterId types.String `tfsdk:"-"`
+}
+
+func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissionsRequest) {
+}
+
+func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsRequest) {
 }
 
 type ClusterPolicyAccessControlRequest struct {
@@ -669,6 +819,12 @@ type ClusterPolicyAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlRequest) {
+}
+
+func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyAccessControlRequest) {
 }
 
 type ClusterPolicyAccessControlResponse struct {
@@ -684,12 +840,24 @@ type ClusterPolicyAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *ClusterPolicyAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlResponse) {
+}
+
+func (newState *ClusterPolicyAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyAccessControlResponse) {
+}
+
 type ClusterPolicyPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermission) {
+}
+
+func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermission) {
 }
 
 type ClusterPolicyPermissions struct {
@@ -700,16 +868,34 @@ type ClusterPolicyPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *ClusterPolicyPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissions) {
+}
+
+func (newState *ClusterPolicyPermissions) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissions) {
+}
+
 type ClusterPolicyPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissionsDescription) {
+}
+
+func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsDescription) {
+}
+
 type ClusterPolicyPermissionsRequest struct {
 	AccessControlList []ClusterPolicyAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-"`
+}
+
+func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissionsRequest) {
+}
+
+func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsRequest) {
 }
 
 // Represents a change to the cluster settings required for the cluster to
@@ -729,6 +915,12 @@ type ClusterSettingsChange struct {
 	PreviousValue types.String `tfsdk:"previous_value" tf:"optional"`
 }
 
+func (newState *ClusterSettingsChange) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSettingsChange) {
+}
+
+func (newState *ClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState ClusterSettingsChange) {
+}
+
 type ClusterSize struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
@@ -745,6 +937,12 @@ type ClusterSize struct {
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+}
+
+func (newState *ClusterSize) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSize) {
+}
+
+func (newState *ClusterSize) SyncEffectiveFieldsDuringRead(existingState ClusterSize) {
 }
 
 type ClusterSpec struct {
@@ -899,10 +1097,22 @@ type ClusterSpec struct {
 	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
 }
 
+func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
+}
+
+func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
+}
+
 // Get status
 type ClusterStatus struct {
 	// Unique identifier of the cluster whose status should be retrieved.
 	ClusterId types.String `tfsdk:"-"`
+}
+
+func (newState *ClusterStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterStatus) {
+}
+
+func (newState *ClusterStatus) SyncEffectiveFieldsDuringRead(existingState ClusterStatus) {
 }
 
 type Command struct {
@@ -916,6 +1126,12 @@ type Command struct {
 	Language types.String `tfsdk:"language" tf:"optional"`
 }
 
+func (newState *Command) SyncEffectiveFieldsDuringCreateOrUpdate(plan Command) {
+}
+
+func (newState *Command) SyncEffectiveFieldsDuringRead(existingState Command) {
+}
+
 // Get command info
 type CommandStatusRequest struct {
 	ClusterId types.String `tfsdk:"-"`
@@ -923,6 +1139,12 @@ type CommandStatusRequest struct {
 	CommandId types.String `tfsdk:"-"`
 
 	ContextId types.String `tfsdk:"-"`
+}
+
+func (newState *CommandStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CommandStatusRequest) {
+}
+
+func (newState *CommandStatusRequest) SyncEffectiveFieldsDuringRead(existingState CommandStatusRequest) {
 }
 
 type CommandStatusResponse struct {
@@ -933,6 +1155,12 @@ type CommandStatusResponse struct {
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
+func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CommandStatusResponse) {
+}
+
+func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringRead(existingState CommandStatusResponse) {
+}
+
 // Get status
 type ContextStatusRequest struct {
 	ClusterId types.String `tfsdk:"-"`
@@ -940,10 +1168,22 @@ type ContextStatusRequest struct {
 	ContextId types.String `tfsdk:"-"`
 }
 
+func (newState *ContextStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContextStatusRequest) {
+}
+
+func (newState *ContextStatusRequest) SyncEffectiveFieldsDuringRead(existingState ContextStatusRequest) {
+}
+
 type ContextStatusResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 
 	Status types.String `tfsdk:"status" tf:"optional"`
+}
+
+func (newState *ContextStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContextStatusResponse) {
+}
+
+func (newState *ContextStatusResponse) SyncEffectiveFieldsDuringRead(existingState ContextStatusResponse) {
 }
 
 type CreateCluster struct {
@@ -1101,8 +1341,20 @@ type CreateCluster struct {
 	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
 }
 
+func (newState *CreateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCluster) {
+}
+
+func (newState *CreateCluster) SyncEffectiveFieldsDuringRead(existingState CreateCluster) {
+}
+
 type CreateClusterResponse struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+}
+
+func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateClusterResponse) {
+}
+
+func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringRead(existingState CreateClusterResponse) {
 }
 
 type CreateContext struct {
@@ -1110,6 +1362,12 @@ type CreateContext struct {
 	ClusterId types.String `tfsdk:"clusterId" tf:"optional"`
 
 	Language types.String `tfsdk:"language" tf:"optional"`
+}
+
+func (newState *CreateContext) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateContext) {
+}
+
+func (newState *CreateContext) SyncEffectiveFieldsDuringRead(existingState CreateContext) {
 }
 
 type CreateInstancePool struct {
@@ -1169,9 +1427,21 @@ type CreateInstancePool struct {
 	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions" tf:"optional"`
 }
 
+func (newState *CreateInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePool) {
+}
+
+func (newState *CreateInstancePool) SyncEffectiveFieldsDuringRead(existingState CreateInstancePool) {
+}
+
 type CreateInstancePoolResponse struct {
 	// The ID of the created instance pool.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+}
+
+func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePoolResponse) {
+}
+
+func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState CreateInstancePoolResponse) {
 }
 
 type CreatePolicy struct {
@@ -1210,9 +1480,21 @@ type CreatePolicy struct {
 	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:"optional"`
 }
 
+func (newState *CreatePolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePolicy) {
+}
+
+func (newState *CreatePolicy) SyncEffectiveFieldsDuringRead(existingState CreatePolicy) {
+}
+
 type CreatePolicyResponse struct {
 	// Canonical unique identifier for the cluster policy.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+}
+
+func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePolicyResponse) {
+}
+
+func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringRead(existingState CreatePolicyResponse) {
 }
 
 type CreateResponse struct {
@@ -1220,8 +1502,20 @@ type CreateResponse struct {
 	ScriptId types.String `tfsdk:"script_id" tf:"optional"`
 }
 
+func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
+}
+
 type Created struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
+}
+
+func (newState *Created) SyncEffectiveFieldsDuringCreateOrUpdate(plan Created) {
+}
+
+func (newState *Created) SyncEffectiveFieldsDuringRead(existingState Created) {
 }
 
 type DataPlaneEventDetails struct {
@@ -1235,9 +1529,21 @@ type DataPlaneEventDetails struct {
 	Timestamp types.Int64 `tfsdk:"timestamp" tf:"optional"`
 }
 
+func (newState *DataPlaneEventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneEventDetails) {
+}
+
+func (newState *DataPlaneEventDetails) SyncEffectiveFieldsDuringRead(existingState DataPlaneEventDetails) {
+}
+
 type DbfsStorageInfo struct {
 	// dbfs destination, e.g. `dbfs:/my/path`
 	Destination types.String `tfsdk:"destination" tf:""`
+}
+
+func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbfsStorageInfo) {
+}
+
+func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringRead(existingState DbfsStorageInfo) {
 }
 
 type DeleteCluster struct {
@@ -1245,7 +1551,19 @@ type DeleteCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 }
 
+func (newState *DeleteCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCluster) {
+}
+
+func (newState *DeleteCluster) SyncEffectiveFieldsDuringRead(existingState DeleteCluster) {
+}
+
 type DeleteClusterResponse struct {
+}
+
+func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteClusterResponse) {
+}
+
+func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingState DeleteClusterResponse) {
 }
 
 // Delete init script
@@ -1254,12 +1572,30 @@ type DeleteGlobalInitScriptRequest struct {
 	ScriptId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteGlobalInitScriptRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteGlobalInitScriptRequest) {
+}
+
+func (newState *DeleteGlobalInitScriptRequest) SyncEffectiveFieldsDuringRead(existingState DeleteGlobalInitScriptRequest) {
+}
+
 type DeleteInstancePool struct {
 	// The instance pool to be terminated.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:""`
 }
 
+func (newState *DeleteInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstancePool) {
+}
+
+func (newState *DeleteInstancePool) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePool) {
+}
+
 type DeleteInstancePoolResponse struct {
+}
+
+func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstancePoolResponse) {
+}
+
+func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePoolResponse) {
 }
 
 type DeletePolicy struct {
@@ -1267,10 +1603,28 @@ type DeletePolicy struct {
 	PolicyId types.String `tfsdk:"policy_id" tf:""`
 }
 
+func (newState *DeletePolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePolicy) {
+}
+
+func (newState *DeletePolicy) SyncEffectiveFieldsDuringRead(existingState DeletePolicy) {
+}
+
 type DeletePolicyResponse struct {
 }
 
+func (newState *DeletePolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePolicyResponse) {
+}
+
+func (newState *DeletePolicyResponse) SyncEffectiveFieldsDuringRead(existingState DeletePolicyResponse) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 type DestroyContext struct {
@@ -1279,7 +1633,19 @@ type DestroyContext struct {
 	ContextId types.String `tfsdk:"contextId" tf:""`
 }
 
+func (newState *DestroyContext) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyContext) {
+}
+
+func (newState *DestroyContext) SyncEffectiveFieldsDuringRead(existingState DestroyContext) {
+}
+
 type DestroyResponse struct {
+}
+
+func (newState *DestroyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyResponse) {
+}
+
+func (newState *DestroyResponse) SyncEffectiveFieldsDuringRead(existingState DestroyResponse) {
 }
 
 type DiskSpec struct {
@@ -1317,10 +1683,22 @@ type DiskSpec struct {
 	DiskType []DiskType `tfsdk:"disk_type" tf:"optional,object"`
 }
 
+func (newState *DiskSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskSpec) {
+}
+
+func (newState *DiskSpec) SyncEffectiveFieldsDuringRead(existingState DiskSpec) {
+}
+
 type DiskType struct {
 	AzureDiskVolumeType types.String `tfsdk:"azure_disk_volume_type" tf:"optional"`
 
 	EbsVolumeType types.String `tfsdk:"ebs_volume_type" tf:"optional"`
+}
+
+func (newState *DiskType) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskType) {
+}
+
+func (newState *DiskType) SyncEffectiveFieldsDuringRead(existingState DiskType) {
 }
 
 type DockerBasicAuth struct {
@@ -1330,10 +1708,22 @@ type DockerBasicAuth struct {
 	Username types.String `tfsdk:"username" tf:"optional"`
 }
 
+func (newState *DockerBasicAuth) SyncEffectiveFieldsDuringCreateOrUpdate(plan DockerBasicAuth) {
+}
+
+func (newState *DockerBasicAuth) SyncEffectiveFieldsDuringRead(existingState DockerBasicAuth) {
+}
+
 type DockerImage struct {
 	BasicAuth []DockerBasicAuth `tfsdk:"basic_auth" tf:"optional,object"`
 	// URL of the docker image.
 	Url types.String `tfsdk:"url" tf:"optional"`
+}
+
+func (newState *DockerImage) SyncEffectiveFieldsDuringCreateOrUpdate(plan DockerImage) {
+}
+
+func (newState *DockerImage) SyncEffectiveFieldsDuringRead(existingState DockerImage) {
 }
 
 type EditCluster struct {
@@ -1490,7 +1880,19 @@ type EditCluster struct {
 	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
 }
 
+func (newState *EditCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditCluster) {
+}
+
+func (newState *EditCluster) SyncEffectiveFieldsDuringRead(existingState EditCluster) {
+}
+
 type EditClusterResponse struct {
+}
+
+func (newState *EditClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditClusterResponse) {
+}
+
+func (newState *EditClusterResponse) SyncEffectiveFieldsDuringRead(existingState EditClusterResponse) {
 }
 
 type EditInstancePool struct {
@@ -1527,7 +1929,19 @@ type EditInstancePool struct {
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:""`
 }
 
+func (newState *EditInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditInstancePool) {
+}
+
+func (newState *EditInstancePool) SyncEffectiveFieldsDuringRead(existingState EditInstancePool) {
+}
+
 type EditInstancePoolResponse struct {
+}
+
+func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditInstancePoolResponse) {
+}
+
+func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState EditInstancePoolResponse) {
 }
 
 type EditPolicy struct {
@@ -1568,10 +1982,28 @@ type EditPolicy struct {
 	PolicyId types.String `tfsdk:"policy_id" tf:""`
 }
 
+func (newState *EditPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPolicy) {
+}
+
+func (newState *EditPolicy) SyncEffectiveFieldsDuringRead(existingState EditPolicy) {
+}
+
 type EditPolicyResponse struct {
 }
 
+func (newState *EditPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPolicyResponse) {
+}
+
+func (newState *EditPolicyResponse) SyncEffectiveFieldsDuringRead(existingState EditPolicyResponse) {
+}
+
 type EditResponse struct {
+}
+
+func (newState *EditResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditResponse) {
+}
+
+func (newState *EditResponse) SyncEffectiveFieldsDuringRead(existingState EditResponse) {
 }
 
 type EnforceClusterComplianceRequest struct {
@@ -1582,6 +2014,12 @@ type EnforceClusterComplianceRequest struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
 }
 
+func (newState *EnforceClusterComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceRequest) {
+}
+
+func (newState *EnforceClusterComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceRequest) {
+}
+
 type EnforceClusterComplianceResponse struct {
 	// A list of changes that have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
@@ -1589,6 +2027,12 @@ type EnforceClusterComplianceResponse struct {
 	// Whether any changes have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
 	HasChanges types.Bool `tfsdk:"has_changes" tf:"optional"`
+}
+
+func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceResponse) {
+}
+
+func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceResponse) {
 }
 
 // The environment entity used to preserve serverless environment side panel and
@@ -1607,6 +2051,12 @@ type Environment struct {
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
 	Dependencies []types.String `tfsdk:"dependencies" tf:"optional"`
+}
+
+func (newState *Environment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Environment) {
+}
+
+func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environment) {
 }
 
 type EventDetails struct {
@@ -1660,6 +2110,12 @@ type EventDetails struct {
 	User types.String `tfsdk:"user" tf:"optional"`
 }
 
+func (newState *EventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan EventDetails) {
+}
+
+func (newState *EventDetails) SyncEffectiveFieldsDuringRead(existingState EventDetails) {
+}
+
 type GcpAttributes struct {
 	// This field determines whether the instance pool will contain preemptible
 	// VMs, on-demand VMs, or preemptible VMs with a fallback to on-demand VMs
@@ -1694,15 +2150,33 @@ type GcpAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id" tf:"optional"`
 }
 
+func (newState *GcpAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpAttributes) {
+}
+
+func (newState *GcpAttributes) SyncEffectiveFieldsDuringRead(existingState GcpAttributes) {
+}
+
 type GcsStorageInfo struct {
 	// GCS destination/URI, e.g. `gs://my-bucket/some-prefix`
 	Destination types.String `tfsdk:"destination" tf:""`
+}
+
+func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcsStorageInfo) {
+}
+
+func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringRead(existingState GcsStorageInfo) {
 }
 
 // Get cluster policy compliance
 type GetClusterComplianceRequest struct {
 	// The ID of the cluster to get the compliance status
 	ClusterId types.String `tfsdk:"-"`
+}
+
+func (newState *GetClusterComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterComplianceRequest) {
+}
+
+func (newState *GetClusterComplianceRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterComplianceRequest) {
 }
 
 type GetClusterComplianceResponse struct {
@@ -1717,15 +2191,33 @@ type GetClusterComplianceResponse struct {
 	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
 }
 
+func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterComplianceResponse) {
+}
+
+func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterComplianceResponse) {
+}
+
 // Get cluster permission levels
 type GetClusterPermissionLevelsRequest struct {
 	// The cluster for which to get or manage permissions.
 	ClusterId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsRequest) {
+}
+
+func (newState *GetClusterPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionLevelsRequest) {
+}
+
 type GetClusterPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []ClusterPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsResponse) {
+}
+
+func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionLevelsResponse) {
 }
 
 // Get cluster permissions
@@ -1734,15 +2226,33 @@ type GetClusterPermissionsRequest struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionsRequest) {
+}
+
+func (newState *GetClusterPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionsRequest) {
+}
+
 // Get cluster policy permission levels
 type GetClusterPolicyPermissionLevelsRequest struct {
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPolicyPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsRequest) {
+}
+
+func (newState *GetClusterPolicyPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsRequest) {
+}
+
 type GetClusterPolicyPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []ClusterPolicyPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetClusterPolicyPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsResponse) {
+}
+
+func (newState *GetClusterPolicyPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsResponse) {
 }
 
 // Get cluster policy permissions
@@ -1751,16 +2261,34 @@ type GetClusterPolicyPermissionsRequest struct {
 	ClusterPolicyId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionsRequest) {
+}
+
+func (newState *GetClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionsRequest) {
+}
+
 // Get a cluster policy
 type GetClusterPolicyRequest struct {
 	// Canonical unique identifier for the Cluster Policy.
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPolicyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyRequest) {
+}
+
+func (newState *GetClusterPolicyRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyRequest) {
+}
+
 // Get cluster info
 type GetClusterRequest struct {
 	// The cluster about which to retrieve information.
 	ClusterId types.String `tfsdk:"-"`
+}
+
+func (newState *GetClusterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterRequest) {
+}
+
+func (newState *GetClusterRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterRequest) {
 }
 
 type GetEvents struct {
@@ -1786,6 +2314,12 @@ type GetEvents struct {
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 }
 
+func (newState *GetEvents) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEvents) {
+}
+
+func (newState *GetEvents) SyncEffectiveFieldsDuringRead(existingState GetEvents) {
+}
+
 type GetEventsResponse struct {
 	// <content needs to be added>
 	Events []ClusterEvent `tfsdk:"events" tf:"optional"`
@@ -1797,10 +2331,22 @@ type GetEventsResponse struct {
 	TotalCount types.Int64 `tfsdk:"total_count" tf:"optional"`
 }
 
+func (newState *GetEventsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEventsResponse) {
+}
+
+func (newState *GetEventsResponse) SyncEffectiveFieldsDuringRead(existingState GetEventsResponse) {
+}
+
 // Get an init script
 type GetGlobalInitScriptRequest struct {
 	// The ID of the global init script.
 	ScriptId types.String `tfsdk:"-"`
+}
+
+func (newState *GetGlobalInitScriptRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetGlobalInitScriptRequest) {
+}
+
+func (newState *GetGlobalInitScriptRequest) SyncEffectiveFieldsDuringRead(existingState GetGlobalInitScriptRequest) {
 }
 
 type GetInstancePool struct {
@@ -1879,15 +2425,33 @@ type GetInstancePool struct {
 	Status []InstancePoolStatus `tfsdk:"status" tf:"optional,object"`
 }
 
+func (newState *GetInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePool) {
+}
+
+func (newState *GetInstancePool) SyncEffectiveFieldsDuringRead(existingState GetInstancePool) {
+}
+
 // Get instance pool permission levels
 type GetInstancePoolPermissionLevelsRequest struct {
 	// The instance pool for which to get or manage permissions.
 	InstancePoolId types.String `tfsdk:"-"`
 }
 
+func (newState *GetInstancePoolPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsRequest) {
+}
+
+func (newState *GetInstancePoolPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionLevelsRequest) {
+}
+
 type GetInstancePoolPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []InstancePoolPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsResponse) {
+}
+
+func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionLevelsResponse) {
 }
 
 // Get instance pool permissions
@@ -1896,10 +2460,22 @@ type GetInstancePoolPermissionsRequest struct {
 	InstancePoolId types.String `tfsdk:"-"`
 }
 
+func (newState *GetInstancePoolPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionsRequest) {
+}
+
+func (newState *GetInstancePoolPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionsRequest) {
+}
+
 // Get instance pool information
 type GetInstancePoolRequest struct {
 	// The canonical unique identifier for the instance pool.
 	InstancePoolId types.String `tfsdk:"-"`
+}
+
+func (newState *GetInstancePoolRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolRequest) {
+}
+
+func (newState *GetInstancePoolRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolRequest) {
 }
 
 // Get policy family information
@@ -1911,9 +2487,21 @@ type GetPolicyFamilyRequest struct {
 	Version types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetPolicyFamilyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyFamilyRequest) {
+}
+
+func (newState *GetPolicyFamilyRequest) SyncEffectiveFieldsDuringRead(existingState GetPolicyFamilyRequest) {
+}
+
 type GetSparkVersionsResponse struct {
 	// All the available Spark versions.
 	Versions []SparkVersion `tfsdk:"versions" tf:"optional"`
+}
+
+func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSparkVersionsResponse) {
+}
+
+func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringRead(existingState GetSparkVersionsResponse) {
 }
 
 type GlobalInitScriptCreateRequest struct {
@@ -1937,6 +2525,12 @@ type GlobalInitScriptCreateRequest struct {
 	Script types.String `tfsdk:"script" tf:""`
 }
 
+func (newState *GlobalInitScriptCreateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptCreateRequest) {
+}
+
+func (newState *GlobalInitScriptCreateRequest) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptCreateRequest) {
+}
+
 type GlobalInitScriptDetails struct {
 	// Time when the script was created, represented as a Unix timestamp in
 	// milliseconds.
@@ -1957,6 +2551,12 @@ type GlobalInitScriptDetails struct {
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 	// The username of the user who last updated the script
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+}
+
+func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetails) {
+}
+
+func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptDetails) {
 }
 
 type GlobalInitScriptDetailsWithContent struct {
@@ -1983,6 +2583,12 @@ type GlobalInitScriptDetailsWithContent struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *GlobalInitScriptDetailsWithContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetailsWithContent) {
+}
+
+func (newState *GlobalInitScriptDetailsWithContent) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptDetailsWithContent) {
+}
+
 type GlobalInitScriptUpdateRequest struct {
 	// Specifies whether the script is enabled. The script runs only if enabled.
 	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
@@ -2007,6 +2613,12 @@ type GlobalInitScriptUpdateRequest struct {
 	ScriptId types.String `tfsdk:"-"`
 }
 
+func (newState *GlobalInitScriptUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptUpdateRequest) {
+}
+
+func (newState *GlobalInitScriptUpdateRequest) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptUpdateRequest) {
+}
+
 type InitScriptEventDetails struct {
 	// The cluster scoped init scripts associated with this cluster event
 	Cluster []InitScriptInfoAndExecutionDetails `tfsdk:"cluster" tf:"optional"`
@@ -2016,6 +2628,12 @@ type InitScriptEventDetails struct {
 	ReportedForNode types.String `tfsdk:"reported_for_node" tf:"optional"`
 }
 
+func (newState *InitScriptEventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptEventDetails) {
+}
+
+func (newState *InitScriptEventDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptEventDetails) {
+}
+
 type InitScriptExecutionDetails struct {
 	// Addition details regarding errors.
 	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
@@ -2023,6 +2641,12 @@ type InitScriptExecutionDetails struct {
 	ExecutionDurationSeconds types.Int64 `tfsdk:"execution_duration_seconds" tf:"optional"`
 	// The current status of the script
 	Status types.String `tfsdk:"status" tf:"optional"`
+}
+
+func (newState *InitScriptExecutionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptExecutionDetails) {
+}
+
+func (newState *InitScriptExecutionDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptExecutionDetails) {
 }
 
 type InitScriptInfo struct {
@@ -2053,11 +2677,23 @@ type InitScriptInfo struct {
 	Workspace []WorkspaceStorageInfo `tfsdk:"workspace" tf:"optional,object"`
 }
 
+func (newState *InitScriptInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfo) {
+}
+
+func (newState *InitScriptInfo) SyncEffectiveFieldsDuringRead(existingState InitScriptInfo) {
+}
+
 type InitScriptInfoAndExecutionDetails struct {
 	// Details about the script
 	ExecutionDetails []InitScriptExecutionDetails `tfsdk:"execution_details" tf:"optional,object"`
 	// The script
 	Script []InitScriptInfo `tfsdk:"script" tf:"optional,object"`
+}
+
+func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfoAndExecutionDetails) {
+}
+
+func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptInfoAndExecutionDetails) {
 }
 
 type InstallLibraries struct {
@@ -2067,7 +2703,19 @@ type InstallLibraries struct {
 	Libraries []Library `tfsdk:"libraries" tf:""`
 }
 
+func (newState *InstallLibraries) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallLibraries) {
+}
+
+func (newState *InstallLibraries) SyncEffectiveFieldsDuringRead(existingState InstallLibraries) {
+}
+
 type InstallLibrariesResponse struct {
+}
+
+func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallLibrariesResponse) {
+}
+
+func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existingState InstallLibrariesResponse) {
 }
 
 type InstancePoolAccessControlRequest struct {
@@ -2081,6 +2729,12 @@ type InstancePoolAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlRequest) {
+}
+
+func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState InstancePoolAccessControlRequest) {
+}
+
 type InstancePoolAccessControlResponse struct {
 	// All permissions.
 	AllPermissions []InstancePoolPermission `tfsdk:"all_permissions" tf:"optional"`
@@ -2092,6 +2746,12 @@ type InstancePoolAccessControlResponse struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *InstancePoolAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlResponse) {
+}
+
+func (newState *InstancePoolAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState InstancePoolAccessControlResponse) {
 }
 
 type InstancePoolAndStats struct {
@@ -2170,6 +2830,12 @@ type InstancePoolAndStats struct {
 	Status []InstancePoolStatus `tfsdk:"status" tf:"optional,object"`
 }
 
+func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAndStats) {
+}
+
+func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringRead(existingState InstancePoolAndStats) {
+}
+
 type InstancePoolAwsAttributes struct {
 	// Availability type used for the spot nodes.
 	//
@@ -2202,6 +2868,12 @@ type InstancePoolAwsAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id" tf:"optional"`
 }
 
+func (newState *InstancePoolAwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAwsAttributes) {
+}
+
+func (newState *InstancePoolAwsAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolAwsAttributes) {
+}
+
 type InstancePoolAzureAttributes struct {
 	// Shows the Availability type used for the spot nodes.
 	//
@@ -2211,6 +2883,12 @@ type InstancePoolAzureAttributes struct {
 	// The default value and documentation here should be kept consistent with
 	// CommonConf.defaultSpotBidMaxPrice.
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price" tf:"optional"`
+}
+
+func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAzureAttributes) {
+}
+
+func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolAzureAttributes) {
 }
 
 type InstancePoolGcpAttributes struct {
@@ -2244,12 +2922,24 @@ type InstancePoolGcpAttributes struct {
 	ZoneId types.String `tfsdk:"zone_id" tf:"optional"`
 }
 
+func (newState *InstancePoolGcpAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolGcpAttributes) {
+}
+
+func (newState *InstancePoolGcpAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolGcpAttributes) {
+}
+
 type InstancePoolPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermission) {
+}
+
+func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermission) {
 }
 
 type InstancePoolPermissions struct {
@@ -2260,16 +2950,34 @@ type InstancePoolPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *InstancePoolPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissions) {
+}
+
+func (newState *InstancePoolPermissions) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissions) {
+}
+
 type InstancePoolPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissionsDescription) {
+}
+
+func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsDescription) {
+}
+
 type InstancePoolPermissionsRequest struct {
 	AccessControlList []InstancePoolAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The instance pool for which to get or manage permissions.
 	InstancePoolId types.String `tfsdk:"-"`
+}
+
+func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissionsRequest) {
+}
+
+func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsRequest) {
 }
 
 type InstancePoolStats struct {
@@ -2283,12 +2991,24 @@ type InstancePoolStats struct {
 	UsedCount types.Int64 `tfsdk:"used_count" tf:"optional"`
 }
 
+func (newState *InstancePoolStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolStats) {
+}
+
+func (newState *InstancePoolStats) SyncEffectiveFieldsDuringRead(existingState InstancePoolStats) {
+}
+
 type InstancePoolStatus struct {
 	// List of error messages for the failed pending instances. The
 	// pending_instance_errors follows FIFO with maximum length of the min_idle
 	// of the pool. The pending_instance_errors is emptied once the number of
 	// exiting available instances reaches the min_idle of the pool.
 	PendingInstanceErrors []PendingInstanceError `tfsdk:"pending_instance_errors" tf:"optional"`
+}
+
+func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolStatus) {
+}
+
+func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringRead(existingState InstancePoolStatus) {
 }
 
 type InstanceProfile struct {
@@ -2310,6 +3030,12 @@ type InstanceProfile struct {
 	// roles. Therefore it should always be used with authorization. This field
 	// is optional, the default value is `false`.
 	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile" tf:"optional"`
+}
+
+func (newState *InstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstanceProfile) {
+}
+
+func (newState *InstanceProfile) SyncEffectiveFieldsDuringRead(existingState InstanceProfile) {
 }
 
 type Library struct {
@@ -2348,6 +3074,12 @@ type Library struct {
 	Whl types.String `tfsdk:"whl" tf:"optional"`
 }
 
+func (newState *Library) SyncEffectiveFieldsDuringCreateOrUpdate(plan Library) {
+}
+
+func (newState *Library) SyncEffectiveFieldsDuringRead(existingState Library) {
+}
+
 // The status of the library on a specific cluster.
 type LibraryFullStatus struct {
 	// Whether the library was set to be installed on all clusters via the
@@ -2362,9 +3094,21 @@ type LibraryFullStatus struct {
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
+func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LibraryFullStatus) {
+}
+
+func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringRead(existingState LibraryFullStatus) {
+}
+
 type ListAllClusterLibraryStatusesResponse struct {
 	// A list of cluster statuses.
 	Statuses []ClusterLibraryStatuses `tfsdk:"statuses" tf:"optional"`
+}
+
+func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllClusterLibraryStatusesResponse) {
+}
+
+func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuringRead(existingState ListAllClusterLibraryStatusesResponse) {
 }
 
 type ListAvailableZonesResponse struct {
@@ -2373,6 +3117,12 @@ type ListAvailableZonesResponse struct {
 	DefaultZone types.String `tfsdk:"default_zone" tf:"optional"`
 	// The list of available zones (e.g., ['us-west-2c', 'us-east-2']).
 	Zones []types.String `tfsdk:"zones" tf:"optional"`
+}
+
+func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAvailableZonesResponse) {
+}
+
+func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringRead(existingState ListAvailableZonesResponse) {
 }
 
 // List cluster policy compliance
@@ -2388,6 +3138,12 @@ type ListClusterCompliancesRequest struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (newState *ListClusterCompliancesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterCompliancesRequest) {
+}
+
+func (newState *ListClusterCompliancesRequest) SyncEffectiveFieldsDuringRead(existingState ListClusterCompliancesRequest) {
+}
+
 type ListClusterCompliancesResponse struct {
 	// A list of clusters and their policy compliance statuses.
 	Clusters []ClusterCompliance `tfsdk:"clusters" tf:"optional"`
@@ -2398,6 +3154,12 @@ type ListClusterCompliancesResponse struct {
 	// of results. If the value is "", it means no further results for the
 	// request.
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+}
+
+func (newState *ListClusterCompliancesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterCompliancesResponse) {
+}
+
+func (newState *ListClusterCompliancesResponse) SyncEffectiveFieldsDuringRead(existingState ListClusterCompliancesResponse) {
 }
 
 // List cluster policies
@@ -2411,6 +3173,12 @@ type ListClusterPoliciesRequest struct {
 	SortOrder types.String `tfsdk:"-"`
 }
 
+func (newState *ListClusterPoliciesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterPoliciesRequest) {
+}
+
+func (newState *ListClusterPoliciesRequest) SyncEffectiveFieldsDuringRead(existingState ListClusterPoliciesRequest) {
+}
+
 type ListClustersFilterBy struct {
 	// The source of cluster creation.
 	ClusterSources []types.String `tfsdk:"cluster_sources" tf:"optional"`
@@ -2420,6 +3188,12 @@ type ListClustersFilterBy struct {
 	IsPinned types.Bool `tfsdk:"is_pinned" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+}
+
+func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersFilterBy) {
+}
+
+func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringRead(existingState ListClustersFilterBy) {
 }
 
 // List clusters
@@ -2437,6 +3211,12 @@ type ListClustersRequest struct {
 	SortBy []ListClustersSortBy `tfsdk:"-"`
 }
 
+func (newState *ListClustersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersRequest) {
+}
+
+func (newState *ListClustersRequest) SyncEffectiveFieldsDuringRead(existingState ListClustersRequest) {
+}
+
 type ListClustersResponse struct {
 	// <needs content added>
 	Clusters []ClusterDetails `tfsdk:"clusters" tf:"optional"`
@@ -2449,6 +3229,12 @@ type ListClustersResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
 }
 
+func (newState *ListClustersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersResponse) {
+}
+
+func (newState *ListClustersResponse) SyncEffectiveFieldsDuringRead(existingState ListClustersResponse) {
+}
+
 type ListClustersSortBy struct {
 	// The direction to sort by.
 	Direction types.String `tfsdk:"direction" tf:"optional"`
@@ -2458,12 +3244,30 @@ type ListClustersSortBy struct {
 	Field types.String `tfsdk:"field" tf:"optional"`
 }
 
+func (newState *ListClustersSortBy) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersSortBy) {
+}
+
+func (newState *ListClustersSortBy) SyncEffectiveFieldsDuringRead(existingState ListClustersSortBy) {
+}
+
 type ListGlobalInitScriptsResponse struct {
 	Scripts []GlobalInitScriptDetails `tfsdk:"scripts" tf:"optional"`
 }
 
+func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListGlobalInitScriptsResponse) {
+}
+
+func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringRead(existingState ListGlobalInitScriptsResponse) {
+}
+
 type ListInstancePools struct {
 	InstancePools []InstancePoolAndStats `tfsdk:"instance_pools" tf:"optional"`
+}
+
+func (newState *ListInstancePools) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstancePools) {
+}
+
+func (newState *ListInstancePools) SyncEffectiveFieldsDuringRead(existingState ListInstancePools) {
 }
 
 type ListInstanceProfilesResponse struct {
@@ -2471,14 +3275,32 @@ type ListInstanceProfilesResponse struct {
 	InstanceProfiles []InstanceProfile `tfsdk:"instance_profiles" tf:"optional"`
 }
 
+func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstanceProfilesResponse) {
+}
+
+func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringRead(existingState ListInstanceProfilesResponse) {
+}
+
 type ListNodeTypesResponse struct {
 	// The list of available Spark node types.
 	NodeTypes []NodeType `tfsdk:"node_types" tf:"optional"`
 }
 
+func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNodeTypesResponse) {
+}
+
+func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringRead(existingState ListNodeTypesResponse) {
+}
+
 type ListPoliciesResponse struct {
 	// List of policies.
 	Policies []Policy `tfsdk:"policies" tf:"optional"`
+}
+
+func (newState *ListPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPoliciesResponse) {
+}
+
+func (newState *ListPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListPoliciesResponse) {
 }
 
 // List policy families
@@ -2489,6 +3311,12 @@ type ListPolicyFamiliesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListPolicyFamiliesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesRequest) {
+}
+
+func (newState *ListPolicyFamiliesRequest) SyncEffectiveFieldsDuringRead(existingState ListPolicyFamiliesRequest) {
+}
+
 type ListPolicyFamiliesResponse struct {
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
@@ -2497,9 +3325,21 @@ type ListPolicyFamiliesResponse struct {
 	PolicyFamilies []PolicyFamily `tfsdk:"policy_families" tf:"optional"`
 }
 
+func (newState *ListPolicyFamiliesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesResponse) {
+}
+
+func (newState *ListPolicyFamiliesResponse) SyncEffectiveFieldsDuringRead(existingState ListPolicyFamiliesResponse) {
+}
+
 type LocalFileInfo struct {
 	// local file destination, e.g. `file:/my/local/file.sh`
 	Destination types.String `tfsdk:"destination" tf:""`
+}
+
+func (newState *LocalFileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan LocalFileInfo) {
+}
+
+func (newState *LocalFileInfo) SyncEffectiveFieldsDuringRead(existingState LocalFileInfo) {
 }
 
 type LogAnalyticsInfo struct {
@@ -2509,6 +3349,12 @@ type LogAnalyticsInfo struct {
 	LogAnalyticsWorkspaceId types.String `tfsdk:"log_analytics_workspace_id" tf:"optional"`
 }
 
+func (newState *LogAnalyticsInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogAnalyticsInfo) {
+}
+
+func (newState *LogAnalyticsInfo) SyncEffectiveFieldsDuringRead(existingState LogAnalyticsInfo) {
+}
+
 type LogSyncStatus struct {
 	// The timestamp of last attempt. If the last attempt fails,
 	// `last_exception` will contain the exception in the last attempt.
@@ -2516,6 +3362,12 @@ type LogSyncStatus struct {
 	// The exception thrown in the last attempt, it would be null (omitted in
 	// the response) if there is no exception in last attempted.
 	LastException types.String `tfsdk:"last_exception" tf:"optional"`
+}
+
+func (newState *LogSyncStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogSyncStatus) {
+}
+
+func (newState *LogSyncStatus) SyncEffectiveFieldsDuringRead(existingState LogSyncStatus) {
 }
 
 type MavenLibrary struct {
@@ -2532,6 +3384,12 @@ type MavenLibrary struct {
 	Repo types.String `tfsdk:"repo" tf:"optional"`
 }
 
+func (newState *MavenLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan MavenLibrary) {
+}
+
+func (newState *MavenLibrary) SyncEffectiveFieldsDuringRead(existingState MavenLibrary) {
+}
+
 type NodeInstanceType struct {
 	InstanceTypeId types.String `tfsdk:"instance_type_id" tf:"optional"`
 
@@ -2542,6 +3400,12 @@ type NodeInstanceType struct {
 	LocalNvmeDiskSizeGb types.Int64 `tfsdk:"local_nvme_disk_size_gb" tf:"optional"`
 
 	LocalNvmeDisks types.Int64 `tfsdk:"local_nvme_disks" tf:"optional"`
+}
+
+func (newState *NodeInstanceType) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeInstanceType) {
+}
+
+func (newState *NodeInstanceType) SyncEffectiveFieldsDuringRead(existingState NodeInstanceType) {
 }
 
 type NodeType struct {
@@ -2594,10 +3458,22 @@ type NodeType struct {
 	SupportsElasticDisk types.Bool `tfsdk:"supports_elastic_disk" tf:"optional"`
 }
 
+func (newState *NodeType) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeType) {
+}
+
+func (newState *NodeType) SyncEffectiveFieldsDuringRead(existingState NodeType) {
+}
+
 type PendingInstanceError struct {
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 
 	Message types.String `tfsdk:"message" tf:"optional"`
+}
+
+func (newState *PendingInstanceError) SyncEffectiveFieldsDuringCreateOrUpdate(plan PendingInstanceError) {
+}
+
+func (newState *PendingInstanceError) SyncEffectiveFieldsDuringRead(existingState PendingInstanceError) {
 }
 
 type PermanentDeleteCluster struct {
@@ -2605,7 +3481,19 @@ type PermanentDeleteCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 }
 
+func (newState *PermanentDeleteCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermanentDeleteCluster) {
+}
+
+func (newState *PermanentDeleteCluster) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteCluster) {
+}
+
 type PermanentDeleteClusterResponse struct {
+}
+
+func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermanentDeleteClusterResponse) {
+}
+
+func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteClusterResponse) {
 }
 
 type PinCluster struct {
@@ -2613,7 +3501,19 @@ type PinCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 }
 
+func (newState *PinCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PinCluster) {
+}
+
+func (newState *PinCluster) SyncEffectiveFieldsDuringRead(existingState PinCluster) {
+}
+
 type PinClusterResponse struct {
+}
+
+func (newState *PinClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PinClusterResponse) {
+}
+
+func (newState *PinClusterResponse) SyncEffectiveFieldsDuringRead(existingState PinClusterResponse) {
 }
 
 // Describes a Cluster Policy entity.
@@ -2665,6 +3565,12 @@ type Policy struct {
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
 }
 
+func (newState *Policy) SyncEffectiveFieldsDuringCreateOrUpdate(plan Policy) {
+}
+
+func (newState *Policy) SyncEffectiveFieldsDuringRead(existingState Policy) {
+}
+
 type PolicyFamily struct {
 	// Policy definition document expressed in [Databricks Cluster Policy
 	// Definition Language].
@@ -2679,6 +3585,12 @@ type PolicyFamily struct {
 	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:"optional"`
 }
 
+func (newState *PolicyFamily) SyncEffectiveFieldsDuringCreateOrUpdate(plan PolicyFamily) {
+}
+
+func (newState *PolicyFamily) SyncEffectiveFieldsDuringRead(existingState PolicyFamily) {
+}
+
 type PythonPyPiLibrary struct {
 	// The name of the pypi package to install. An optional exact version
 	// specification is also supported. Examples: "simplejson" and
@@ -2689,6 +3601,12 @@ type PythonPyPiLibrary struct {
 	Repo types.String `tfsdk:"repo" tf:"optional"`
 }
 
+func (newState *PythonPyPiLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan PythonPyPiLibrary) {
+}
+
+func (newState *PythonPyPiLibrary) SyncEffectiveFieldsDuringRead(existingState PythonPyPiLibrary) {
+}
+
 type RCranLibrary struct {
 	// The name of the CRAN package to install.
 	Package types.String `tfsdk:"package" tf:""`
@@ -2697,12 +3615,30 @@ type RCranLibrary struct {
 	Repo types.String `tfsdk:"repo" tf:"optional"`
 }
 
+func (newState *RCranLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan RCranLibrary) {
+}
+
+func (newState *RCranLibrary) SyncEffectiveFieldsDuringRead(existingState RCranLibrary) {
+}
+
 type RemoveInstanceProfile struct {
 	// The ARN of the instance profile to remove. This field is required.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:""`
 }
 
+func (newState *RemoveInstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveInstanceProfile) {
+}
+
+func (newState *RemoveInstanceProfile) SyncEffectiveFieldsDuringRead(existingState RemoveInstanceProfile) {
+}
+
 type RemoveResponse struct {
+}
+
+func (newState *RemoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveResponse) {
+}
+
+func (newState *RemoveResponse) SyncEffectiveFieldsDuringRead(existingState RemoveResponse) {
 }
 
 type ResizeCluster struct {
@@ -2725,7 +3661,19 @@ type ResizeCluster struct {
 	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
 }
 
+func (newState *ResizeCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResizeCluster) {
+}
+
+func (newState *ResizeCluster) SyncEffectiveFieldsDuringRead(existingState ResizeCluster) {
+}
+
 type ResizeClusterResponse struct {
+}
+
+func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResizeClusterResponse) {
+}
+
+func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringRead(existingState ResizeClusterResponse) {
 }
 
 type RestartCluster struct {
@@ -2735,7 +3683,19 @@ type RestartCluster struct {
 	RestartUser types.String `tfsdk:"restart_user" tf:"optional"`
 }
 
+func (newState *RestartCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartCluster) {
+}
+
+func (newState *RestartCluster) SyncEffectiveFieldsDuringRead(existingState RestartCluster) {
+}
+
 type RestartClusterResponse struct {
+}
+
+func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartClusterResponse) {
+}
+
+func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringRead(existingState RestartClusterResponse) {
 }
 
 type Results struct {
@@ -2760,6 +3720,12 @@ type Results struct {
 	Summary types.String `tfsdk:"summary" tf:"optional"`
 	// true if partial results are returned.
 	Truncated types.Bool `tfsdk:"truncated" tf:"optional"`
+}
+
+func (newState *Results) SyncEffectiveFieldsDuringCreateOrUpdate(plan Results) {
+}
+
+func (newState *Results) SyncEffectiveFieldsDuringRead(existingState Results) {
 }
 
 type S3StorageInfo struct {
@@ -2795,6 +3761,12 @@ type S3StorageInfo struct {
 	Region types.String `tfsdk:"region" tf:"optional"`
 }
 
+func (newState *S3StorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan S3StorageInfo) {
+}
+
+func (newState *S3StorageInfo) SyncEffectiveFieldsDuringRead(existingState S3StorageInfo) {
+}
+
 type SparkNode struct {
 	// The private IP address of the host instance.
 	HostPrivateIp types.String `tfsdk:"host_private_ip" tf:"optional"`
@@ -2823,9 +3795,21 @@ type SparkNode struct {
 	StartTimestamp types.Int64 `tfsdk:"start_timestamp" tf:"optional"`
 }
 
+func (newState *SparkNode) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkNode) {
+}
+
+func (newState *SparkNode) SyncEffectiveFieldsDuringRead(existingState SparkNode) {
+}
+
 type SparkNodeAwsAttributes struct {
 	// Whether this node is on an Amazon spot instance.
 	IsSpot types.Bool `tfsdk:"is_spot" tf:"optional"`
+}
+
+func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkNodeAwsAttributes) {
+}
+
+func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringRead(existingState SparkNodeAwsAttributes) {
 }
 
 type SparkVersion struct {
@@ -2839,12 +3823,30 @@ type SparkVersion struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
+func (newState *SparkVersion) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkVersion) {
+}
+
+func (newState *SparkVersion) SyncEffectiveFieldsDuringRead(existingState SparkVersion) {
+}
+
 type StartCluster struct {
 	// The cluster to be started.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 }
 
+func (newState *StartCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartCluster) {
+}
+
+func (newState *StartCluster) SyncEffectiveFieldsDuringRead(existingState StartCluster) {
+}
+
 type StartClusterResponse struct {
+}
+
+func (newState *StartClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartClusterResponse) {
+}
+
+func (newState *StartClusterResponse) SyncEffectiveFieldsDuringRead(existingState StartClusterResponse) {
 }
 
 type TerminationReason struct {
@@ -2857,6 +3859,12 @@ type TerminationReason struct {
 	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
+func (newState *TerminationReason) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationReason) {
+}
+
+func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState TerminationReason) {
+}
+
 type UninstallLibraries struct {
 	// Unique identifier for the cluster on which to uninstall these libraries.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -2864,7 +3872,19 @@ type UninstallLibraries struct {
 	Libraries []Library `tfsdk:"libraries" tf:""`
 }
 
+func (newState *UninstallLibraries) SyncEffectiveFieldsDuringCreateOrUpdate(plan UninstallLibraries) {
+}
+
+func (newState *UninstallLibraries) SyncEffectiveFieldsDuringRead(existingState UninstallLibraries) {
+}
+
 type UninstallLibrariesResponse struct {
+}
+
+func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UninstallLibrariesResponse) {
+}
+
+func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existingState UninstallLibrariesResponse) {
 }
 
 type UnpinCluster struct {
@@ -2872,7 +3892,19 @@ type UnpinCluster struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 }
 
+func (newState *UnpinCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpinCluster) {
+}
+
+func (newState *UnpinCluster) SyncEffectiveFieldsDuringRead(existingState UnpinCluster) {
+}
+
 type UnpinClusterResponse struct {
+}
+
+func (newState *UnpinClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpinClusterResponse) {
+}
+
+func (newState *UnpinClusterResponse) SyncEffectiveFieldsDuringRead(existingState UnpinClusterResponse) {
 }
 
 type UpdateCluster struct {
@@ -2886,6 +3918,12 @@ type UpdateCluster struct {
 	// spaces). To delete a field from a cluster configuration, add it to the
 	// `update_mask` string but omit it from the `cluster` object.
 	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+}
+
+func (newState *UpdateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCluster) {
+}
+
+func (newState *UpdateCluster) SyncEffectiveFieldsDuringRead(existingState UpdateCluster) {
 }
 
 type UpdateClusterResource struct {
@@ -3036,10 +4074,28 @@ type UpdateClusterResource struct {
 	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
 }
 
+func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateClusterResource) {
+}
+
+func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringRead(existingState UpdateClusterResource) {
+}
+
 type UpdateClusterResponse struct {
 }
 
+func (newState *UpdateClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateClusterResponse) {
+}
+
+func (newState *UpdateClusterResponse) SyncEffectiveFieldsDuringRead(existingState UpdateClusterResponse) {
+}
+
 type UpdateResponse struct {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
 type VolumesStorageInfo struct {
@@ -3047,13 +4103,31 @@ type VolumesStorageInfo struct {
 	Destination types.String `tfsdk:"destination" tf:""`
 }
 
+func (newState *VolumesStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan VolumesStorageInfo) {
+}
+
+func (newState *VolumesStorageInfo) SyncEffectiveFieldsDuringRead(existingState VolumesStorageInfo) {
+}
+
 type WorkloadType struct {
 	// defined what type of clients can use the cluster. E.g. Notebooks, Jobs
 	Clients []ClientsTypes `tfsdk:"clients" tf:"object"`
+}
+
+func (newState *WorkloadType) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkloadType) {
+}
+
+func (newState *WorkloadType) SyncEffectiveFieldsDuringRead(existingState WorkloadType) {
 }
 
 type WorkspaceStorageInfo struct {
 	// workspace files destination, e.g.
 	// `/Users/user1@databricks.com/my-init.sh`
 	Destination types.String `tfsdk:"destination" tf:""`
+}
+
+func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceStorageInfo) {
+}
+
+func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringRead(existingState WorkspaceStorageInfo) {
 }

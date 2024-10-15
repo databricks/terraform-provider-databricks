@@ -56,7 +56,7 @@ The following arguments are available:
       * `string_value` - string value to compare against string results.
       * `double_value` - double value to compare against integer and double results.
       * `bool_value` - boolean value (`true` or `false`) to compare against boolean results.
-  * `empty_result_state` - (Optional, String Enum) Alert state if result is empty (`UNKNOWN`, `OK`, `TRIGGERED`)
+  * `empty_result_state` - (Optional, String Enum) Alert state if the result is empty (`UNKNOWN`, `OK`, `TRIGGERED`)
 * `custom_subject` - (Optional, String) Custom subject of alert notification, if it exists. This includes email subject, Slack notification header, etc. See [Alerts API reference](https://docs.databricks.com/en/sql/user/alerts/index.html) for custom templating instructions.
 * `custom_body` - (Optional, String) Custom body of alert notification, if it exists. See [Alerts API reference](https://docs.databricks.com/en/sql/user/alerts/index.html) for custom templating instructions.
 * `parent_path` - (Optional, String) The path to a workspace folder containing the alert. The default is the user's home folder.  If changed, the alert will be recreated.
@@ -76,16 +76,16 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Migrating from `databricks_sql_alert` resource
 
-Under the hood, the new resource uses the same data as the `databricks_sql_alert`, but exposed via different API. This means that we can migrate existing alerts without recreating them.  This operation is done in few steps:
+Under the hood, the new resource uses the same data as the `databricks_sql_alert`, but is exposed via a different API. This means that we can migrate existing alerts without recreating them.  This operation is done in few steps:
 
 * Record the ID of existing `databricks_sql_alert`, for example, by executing the `terraform state show databricks_sql_alert.alert` command.
-* Create the code for the new implementation performing following changes:
+* Create the code for the new implementation by performing the following changes:
   * the `name` attribute is now named `display_name`
-  * the `parent` (if exists) is renamed to `parent_path` attribute, and should be converted from `folders/object_id` to the actual path.
-  * `options` block is converted into `condition` block with the following changes:
-    * the value of `op` attribute should be converted from mathematical operator into string name, like, `>` is becoming `GREATER_THAN`, `==` is becoming `EQUAL`, etc.
-    * the `column` attribute is becoming `operand` block
-    * the `value` attribute is becoming `threshold` block.  **Please note that old implementation always used strings so you may have changes after import if you use `double_value` or `bool_value` inside the block.**
+  * the `parent` (if exists) is renamed to `parent_path` attribute and should be converted from `folders/object_id` to the actual path.
+  * the `options` block is converted into the `condition` block with the following changes:
+    * the value of the `op` attribute should be converted from a mathematical operator into a string name, like, `>` is becoming `GREATER_THAN`, `==` is becoming `EQUAL`, etc.
+    * the `column` attribute is becoming the `operand` block
+    * the `value` attribute is becoming the `threshold` block.  **Please note that the old implementation always used strings so you may have changes after import if you use `double_value` or `bool_value` inside the block.**
   * the `rearm` attribute is renamed to `seconds_to_retrigger`.
   
 For example, if we have the original `databricks_sql_alert` defined as:
@@ -127,8 +127,41 @@ resource "databricks_alert" "alert" {
 }
 ```
 
+### For Terraform version >= 1.7.0
+
+Terraform 1.7 introduced the [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block in addition to the [import](https://developer.hashicorp.com/terraform/language/import) block introduced in Terraform 1.5.  Together they make import and removal of resources easier, avoiding manual execution of `terraform import` and `terraform state rm` commands.
+
+So with Terraform 1.7+, the migration looks as the following:
+
+* remove the old alert definition and replace it with the new one.
+* Adjust references, like, `databricks_permissions`.
+* Add `import` and `removed` blocks like this:
+
+```hcl
+import {
+  to = databricks_alert.alert
+  id = "<alert-id>"
+}
+
+removed {
+  from = databricks_sql_alert.alert
+
+  lifecycle {
+    destroy = false
+  }
+}
+```
+
+* Run the `terraform plan` command to check possible changes, such as value type change, etc.
+* Run the `terraform apply` command to apply changes.
+* Remove the `import` and `removed` blocks from the code.
+
+### For Terraform version < 1.7.0
+
+* Remove the old alert definition and replace it with the new one.
 * Remove the old resource from the state with the `terraform state rm databricks_sql_alert.alert` command.
 * Import new resource with the `terraform import databricks_alert.alert <alert-id>` command.
+* Adjust references, like, `databricks_permissions`.
 * Run the `terraform plan` command to check possible changes, such as value type change, etc.
 
 ## Access Control

@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
+const resourceName = "share"
+
 var _ resource.ResourceWithConfigure = &ShareResource{}
 
 func ResourceShare() resource.Resource {
@@ -133,7 +135,7 @@ type ShareResource struct {
 }
 
 func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "databricks_share_pluginframework"
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

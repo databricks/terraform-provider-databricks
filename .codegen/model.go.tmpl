@@ -34,12 +34,12 @@ type {{.PascalName}} struct {
 func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringCreateOrUpdate(plan {{.PascalName}}) {
   {{- range .Fields -}}
   {{- if and .Entity.IsComputed (or .Entity.IsString .Entity.IsBool .Entity.IsInt64 .Entity.IsFloat64 .Entity.IsInt .Entity.Enum) -}}
-  {{- if not (in $excluded .PascalName) -}}
+  {{- if not (in $excluded .PascalName)}}
   newState.Effective{{.PascalName}} = newState.{{.PascalName}}
   newState.{{.PascalName}} = plan.{{.PascalName}}
-  {{end}}
-  {{end}}
-  {{end}}
+  {{- end}}
+  {{- end}}
+  {{- end}}
 }
 
 func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.PascalName}}) {
@@ -56,9 +56,9 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
   if existingState.Effective{{.PascalName}}.Value{{$type}}() == newState.{{.PascalName}}.Value{{$type}}() {
     newState.{{.PascalName}} = existingState.{{.PascalName}}
   }
-  {{end}}
-  {{end}}
-  {{end}}
+  {{- end}}
+  {{- end}}
+  {{- end}}
 }
 
 {{end}}

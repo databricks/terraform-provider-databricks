@@ -1,7 +1,7 @@
 ---
 subcategory: "Workspace"
 ---
-# databricks_notification_destination Data Source
+# databricks_notification_destinations Data Source
 
 -> **NOTE** Ensure that the notification destinations you are attempting to retrieve have been created and are accessible within your workspace.
 
@@ -43,7 +43,7 @@ data "databricks_notification_destinations" "filtered_notification" {
 
 The following arguments are supported:
 
-* `display_name_contains` - (Optional) A substring to filter Notification Destinations by their display name. 
+* `display_name_contains` - (Optional) A **case-insensitive** substring to filter Notification Destinations by their display name. 
 * `type` - (Optional) The type of the Notification Destination to filter by. Valid values are: 
   * `EMAIL` - Filters Notification Destinations of type Email. 
   * `MICROSOFT_TEAMS` - Filters Notification Destinations of type Microsoft Teams. 
@@ -54,7 +54,10 @@ The following arguments are supported:
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
+
 * `notification_destinations` - A list of Notification Destinations matching the specified criteria. Each element contains the following attributes: 
     * `id` - The unique ID of the Notification Destination.
     * `display_name` - The display name of the Notification Destination.
     * `destination_type` - The type of the notification destination. Possible values are `EMAIL`, `MICROSOFT_TEAMS`, `PAGERDUTY`, `SLACK`, or `WEBHOOK`.
+
+If no matches are found, an empty list will be returned.

@@ -3,6 +3,7 @@ package notificationdestinations
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/settings"
@@ -28,19 +29,20 @@ type NotificationDestinationsDataSource struct {
 }
 
 type NotificationDestinationsInfo struct {
-	Id                       types.String                                     `tfsdk:"id" tf:"computed"`
 	DisplayNameContains      types.String                                     `tfsdk:"display_name_contains" tf:"optional"`
 	Type                     types.String                                     `tfsdk:"type" tf:"optional"`
 	NotificationDestinations []settings_tf.ListNotificationDestinationsResult `tfsdk:"notification_destinations" tf:"computed"`
 }
 
 func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "databricks_notification_destinations_pluginframework"
+	resp.TypeName = "databricks_notification_destinations"
 }
 
 func (d *NotificationDestinationsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(NotificationDestinationsInfo{}, nil)
 	resp.Schema = schema.Schema{
-		Attributes: tfschema.DataSourceStructToSchemaMap(NotificationDestinationsInfo{}, nil),
+		Attributes: attrs,
+		Blocks:     blocks,
 	}
 }
 
@@ -51,50 +53,41 @@ func (d *NotificationDestinationsDataSource) Configure(_ context.Context, req da
 }
 
 func validateType(notificationType string) diag.Diagnostics {
-	validTypes := map[string]struct{}{
-		string(settings.DestinationTypeEmail):          {},
-		string(settings.DestinationTypeMicrosoftTeams): {},
-		string(settings.DestinationTypePagerduty):      {},
-		string(settings.DestinationTypeSlack):          {},
-		string(settings.DestinationTypeWebhook):        {},
+	validTypes := []string{
+		string(settings.DestinationTypeEmail),
+		string(settings.DestinationTypeMicrosoftTeams),
+		string(settings.DestinationTypePagerduty),
+		string(settings.DestinationTypeSlack),
+		string(settings.DestinationTypeWebhook),
 	}
 
-	if _, valid := validTypes[notificationType]; !valid {
-		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("Invalid type '%s'; valid types are EMAIL, MICROSOFT_TEAMS, PAGERDUTY, SLACK, WEBHOOK.", notificationType), "")}
-	}
-	return nil
-}
-
-func validateLength(destinations []settings_tf.ListNotificationDestinationsResult) diag.Diagnostics {
-	if len(destinations) == 0 {
-		return diag.Diagnostics{diag.NewErrorDiagnostic("Could not find any notification destinations with the specified criteria.", "")}
+	if !slices.Contains(validTypes, notificationType) {
+		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("Invalid type '%s'; valid types are %s.", notificationType, strings.Join(validTypes, ", ")), "")}
 	}
 	return nil
 }
 
-func appendToResponse(resp *datasource.ReadResponse, diags diag.Diagnostics) bool {
+func AppendDiagAndCheckErrors(resp *datasource.ReadResponse, diags diag.Diagnostics) bool {
 	resp.Diagnostics.Append(diags...)
 	return resp.Diagnostics.HasError()
 }
 
 func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	w, diags := d.Client.GetWorkspaceClient()
-	if appendToResponse(resp, diags) {
+	if AppendDiagAndCheckErrors(resp, diags) {
 		return
 	}
 
 	var notificationInfo NotificationDestinationsInfo
-	if appendToResponse(resp, req.Config.Get(ctx, &notificationInfo)) {
+	if AppendDiagAndCheckErrors(resp, req.Config.Get(ctx, &notificationInfo)) {
 		return
 	}
 
 	notificationType := notificationInfo.Type.ValueString()
-	notificationDisplayName := notificationInfo.DisplayNameContains.ValueString()
+	notificationDisplayName := strings.ToLower(notificationInfo.DisplayNameContains.ValueString())
 
-	if notificationType != "" {
-		if appendToResponse(resp, validateType(notificationType)) {
-			return
-		}
+	if notificationType != "" && AppendDiagAndCheckErrors(resp, validateType(notificationType)) {
+		return
 	}
 
 	notificationsGoSdk, err := w.NotificationDestinations.ListAll(ctx, settings.ListNotificationDestinationsRequest{})
@@ -105,19 +98,15 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 
 	var notificationsTfSdk []settings_tf.ListNotificationDestinationsResult
 	for _, notification := range notificationsGoSdk {
-		if (notification.DestinationType.String() != notificationType) || (notificationDisplayName != "" && !strings.Contains(notification.DisplayName, notificationDisplayName)) {
+		if (notification.DestinationType.String() != notificationType) || (notificationDisplayName != "" && !strings.Contains(strings.ToLower(notification.DisplayName), notificationDisplayName)) {
 			continue
 		}
 
 		var notificationDestination settings_tf.ListNotificationDestinationsResult
-		if appendToResponse(resp, converters.GoSdkToTfSdkStruct(ctx, notification, &notificationDestination)) {
+		if AppendDiagAndCheckErrors(resp, converters.GoSdkToTfSdkStruct(ctx, notification, &notificationDestination)) {
 			return
 		}
 		notificationsTfSdk = append(notificationsTfSdk, notificationDestination)
-	}
-
-	if appendToResponse(resp, validateLength(notificationsTfSdk)) {
-		return
 	}
 
 	notificationInfo.NotificationDestinations = notificationsTfSdk

@@ -146,7 +146,6 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "object", "added_at")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object", "added_by")
 
-		//c.AddValidator(listvalidator.SizeAtLeast(1), "object") // MinItems(1)
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partitions", "values", "op")
 		c.SetRequired("object", "partitions", "values", "name")
@@ -221,6 +220,9 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -251,9 +253,6 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	shareInfo, err := w.Shares.Get(ctx, getShareRequest)
-	matchOrder(shareInfo.Objects, stateGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
-	suppressCDFEnabledDiff(shareInfo)
-
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
@@ -262,6 +261,9 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		resp.Diagnostics.AddError("failed to get share", err.Error())
 		return
 	}
+
+	matchOrder(shareInfo.Objects, stateGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
+	suppressCDFEnabledDiff(shareInfo)
 
 	var newState ShareInfoExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, shareInfo, &newState)...)
@@ -308,6 +310,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	currentShareInfo, err := client.Shares.Get(ctx, getShareRequest)
 	if err != nil {
+		resp.Diagnostics.AddError("failed to get current share info", err.Error())
 		return
 	}
 
@@ -328,7 +331,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 				return
 			}
 		} else {
-			resp.Diagnostics.AddError("failed to share owner", err.Error())
+			resp.Diagnostics.AddError("failed to update share owner", err.Error())
 			return
 		}
 	}
@@ -359,6 +362,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			}
 
 			resp.Diagnostics.AddError("failed to update share", err.Error())
+			return
 		}
 	}
 
@@ -385,5 +389,6 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	err := w.Shares.DeleteByName(ctx, deleteShareRequest.Name.ValueString())
 	if err != nil && !apierr.IsMissing(err) {
 		resp.Diagnostics.AddError("failed to delete share", err.Error())
+		return
 	}
 }

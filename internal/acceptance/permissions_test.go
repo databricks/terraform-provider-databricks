@@ -837,3 +837,42 @@ func TestAccPermissions_ServingEndpoint(t *testing.T) {
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for serving-endpoint, allowed levels: CAN_MANAGE"),
 	})
 }
+
+func TestAccPermissions_Alert(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	template := `
+		resource "databricks_sql_query" "this" {
+  			data_source_id = "78520023-ab69-44a4-84d0-4fda0c69ea91"
+  			name           = "Query {var.STICKY_RANDOM}"
+  			query          = "SELECT 42 as value"
+		}
+
+		resource "databricks_alert" "this" {
+  			query_id     = databricks_sql_query.this.id
+  			display_name = "Alert {var.STICKY_RANDOM}"
+			condition {
+    			op = "GREATER_THAN"
+    			operand {
+      				column {
+        				name = "value"
+      				}
+    			}
+    			threshold {
+      				value {
+        				double_value = 42
+      				}
+    			}
+  			}
+		}
+`
+	WorkspaceLevel(t, Step{
+		Template: template + makePermissionsTestStage("sql_alert_id", "databricks_alert.this.id",
+			groupPermissions("CAN_VIEW")),
+	}, Step{
+		Template: template + makePermissionsTestStage("sql_alert_id", "databricks_alert.this.id",
+			currentPrincipalPermission(t, "CAN_MANAGE"),
+			allPrincipalPermissions("CAN_VIEW", "CAN_RUN", "CAN_EDIT", "CAN_MANAGE")),
+	}, Step{
+		Template: template,
+	})
+}

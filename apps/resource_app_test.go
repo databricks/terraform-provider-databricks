@@ -11,6 +11,24 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
+func getTestAppDeployment(path string) *apps.AppDeployment {
+	return &apps.AppDeployment{
+		DeploymentId:   "01ef0bda89f21f08a8351f41e4a9b948",
+		SourceCodePath: path,
+		Mode:           "SNAPSHOT",
+		DeploymentArtifacts: &apps.AppDeploymentArtifacts{
+			SourceCodePath: "/Workspace/Users/9627a015-e892-43f7-9085-eec3892da408/src/01ef1a1ed75d1964b62234a35efa61fc",
+		},
+		Status: &apps.AppDeploymentStatus{
+			State:   "SUCCEEDED",
+			Message: "Deployment is in progress.",
+		},
+		CreateTime: "2019-08-24T14:15:22Z",
+		Creator:    "user@test.com",
+		UpdateTime: "2019-08-24T14:15:22Z",
+	}
+}
+
 func getTestApp(warehouseName, endpointName string) *apps.App {
 	return &apps.App{
 		Name:        "my-custom-app",
@@ -23,41 +41,13 @@ func getTestApp(warehouseName, endpointName string) *apps.App {
 			State:   "DEPLOYING",
 			Message: "Application is running.",
 		},
-		Url: "my-custom-app-123.cloud.databricksapps.com",
-		ActiveDeployment: &apps.AppDeployment{
-			DeploymentId:   "01ef0bda89f21f08a8351f41e4a9b948",
-			SourceCodePath: "/Workspace/user@test.com/my_custom_app",
-			Mode:           "SNAPSHOT",
-			DeploymentArtifacts: &apps.AppDeploymentArtifacts{
-				SourceCodePath: "/Workspace/Users/9627a015-e892-43f7-9085-eec3892da408/src/01ef1a1ed75d1964b62234a35efa61fc",
-			},
-			Status: &apps.AppDeploymentStatus{
-				State:   "SUCCEEDED",
-				Message: "Deployment is in progress.",
-			},
-			CreateTime: "2019-08-24T14:15:22Z",
-			Creator:    "user@test.com",
-			UpdateTime: "2019-08-24T14:15:22Z",
-		},
-		CreateTime: "2019-08-24T14:15:22Z",
-		Creator:    "user@test.com",
-		UpdateTime: "2019-08-24T14:15:22Z",
-		Updater:    "user@test.com",
-		PendingDeployment: &apps.AppDeployment{
-			DeploymentId:   "01ef0bda89f21f08a8351f41e4a9b948",
-			SourceCodePath: "/Workspace/user@test.com/my_custom_app",
-			Mode:           "SNAPSHOT",
-			DeploymentArtifacts: &apps.AppDeploymentArtifacts{
-				SourceCodePath: "/Workspace/Users/9627a015-e892-43f7-9085-eec3892da408/src/01ef1a1ed75d1964b62234a35efa61fc",
-			},
-			Status: &apps.AppDeploymentStatus{
-				State:   "SUCCEEDED",
-				Message: "Deployment is in progress.",
-			},
-			CreateTime: "2019-08-24T14:15:22Z",
-			Creator:    "user@test.com",
-			UpdateTime: "2019-08-24T14:15:22Z",
-		},
+		Url:               "my-custom-app-123.cloud.databricksapps.com",
+		ActiveDeployment:  getTestAppDeployment("/Workspace/user@test.com/my_custom_app"),
+		CreateTime:        "2019-08-24T14:15:22Z",
+		Creator:           "user@test.com",
+		UpdateTime:        "2019-08-24T14:15:22Z",
+		Updater:           "user@test.com",
+		PendingDeployment: getTestAppDeployment("/Workspace/user@test.com/my_custom_app"),
 		Resources: []apps.AppResource{
 			{
 				Name:        "api-key",
@@ -161,6 +151,11 @@ func TestResourceAppsCreate(t *testing.T) {
 					},
 				},
 			}).Return(&apps.WaitGetAppActive[apps.App]{Poll: poll.Simple(*getTestApp("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"))}, nil)
+			api.Deploy(mock.Anything, apps.CreateAppDeploymentRequest{
+				AppName:        "my-custom-app",
+				Mode:           "SNAPSHOT",
+				SourceCodePath: "/Workspace/user@test.com/my_custom_app",
+			}).Return(&apps.WaitGetDeploymentAppSucceeded[apps.AppDeployment]{Poll: poll.Simple(*getTestAppDeployment("/Workspace/user@test.com/my_custom_app"))}, nil)
 			api.GetByName(mock.Anything, "my-custom-app").Return(
 				getTestApp("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"), nil)
 		},
@@ -168,6 +163,8 @@ func TestResourceAppsCreate(t *testing.T) {
 		HCL: `
 		name = "my-custom-app"
 		description = "My app description."
+		source_code_path = "/Workspace/user@test.com/my_custom_app"
+		mode = "SNAPSHOT"
 		resources {
 			name = "api-key"
 			description = "API key for external service."
@@ -239,18 +236,27 @@ func TestResourceAppsUpdate(t *testing.T) {
 					},
 				},
 			}).Return(getTestApp("new_warehouse", "new_endpoint"), nil)
+			api.Deploy(mock.Anything, apps.CreateAppDeploymentRequest{
+				AppName:        "my-custom-app",
+				Mode:           "SNAPSHOT",
+				SourceCodePath: "/Workspace/user@test.com/my_new_custom_app",
+			}).Return(&apps.WaitGetDeploymentAppSucceeded[apps.AppDeployment]{Poll: poll.Simple(*getTestAppDeployment("/Workspace/user@test.com/my_new_custom_app"))}, nil)
 			api.GetByName(mock.Anything, "my-custom-app").
 				Return(getTestApp("new_warehouse", "new_endpoint"), nil)
 		},
 		Resource: ResourceApp(),
 		Update:   true,
 		InstanceState: map[string]string{
-			"name":        "my-custom-app",
-			"description": "My app description.",
+			"name":             "my-custom-app",
+			"description":      "My app description.",
+			"source_code_path": "/Workspace/user@test.com/my_custom_app",
+			"mode":             "SNAPSHOT",
 		},
 		HCL: `
 			name = "my-custom-app"
 			description = "My app description."
+			source_code_path = "/Workspace/user@test.com/my_new_custom_app"
+			mode = "SNAPSHOT"
 			resources {
 				name = "api-key"
 				description = "API key for external service."

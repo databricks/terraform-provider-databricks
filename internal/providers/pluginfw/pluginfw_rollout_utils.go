@@ -27,7 +27,7 @@ var migratedResourceMap = map[string]func() resource.Resource{
 
 // Map of data sources that have been migrated from SDK V2 to plugin framework
 var migratedDataSourceMap = map[string]func() datasource.DataSource{
-	"databricks_qualitymonitor":   cluster.DataSourceCluster,
+	"databricks_cluster":          cluster.DataSourceCluster,
 	"databricks_volumes":          volume.DataSourceVolumes,
 	"databricks_registered_model": registered_model.DataSourceRegisteredModel,
 }

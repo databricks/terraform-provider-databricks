@@ -81,8 +81,7 @@ func diff(beforeSi sharing.ShareInfo, afterSi sharing.ShareInfo) []sharing.Share
 	changes := []sharing.SharedDataObjectUpdate{}
 	// not in after so remove
 	for _, beforeSdo := range beforeSi.Objects {
-		_, exists := afterMap[beforeSdo.Name]
-		if exists {
+		if _, ok := afterMap[beforeSdo.Name]; ok {
 			continue
 		}
 		changes = append(changes, sharing.SharedDataObjectUpdate{
@@ -94,8 +93,7 @@ func diff(beforeSi sharing.ShareInfo, afterSi sharing.ShareInfo) []sharing.Share
 	// not in before so add
 	// if in before but diff then update
 	for _, afterSdo := range afterSi.Objects {
-		beforeSdo, exists := beforeMap[afterSdo.Name]
-		if exists {
+		if beforeSdo, ok := beforeMap[afterSdo.Name]; ok {
 			if !equal(beforeSdo, afterSdo) {
 				// do not send SharedAs
 				afterSdo.SharedAs = ""
@@ -344,26 +342,27 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
 		})
-		if err == nil {
-			resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, updatedShareInfo, &state)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		} else {
+
+		if err != nil {
+			resp.Diagnostics.AddError("failed to update share", err.Error())
+
 			rollbackShareInfo, rollbackErr := client.Shares.Update(ctx, sharing.UpdateShare{
 				Name:  currentShareInfo.Name,
 				Owner: currentShareInfo.Owner,
 			})
-			if rollbackErr == nil {
-				resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, rollbackShareInfo, &state)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-			} else {
+			if rollbackErr != nil {
 				resp.Diagnostics.AddError("failed to roll back", common.OwnerRollbackError(err, rollbackErr, currentShareInfo.Owner, plan.Owner.ValueString()).Error())
+				return
 			}
 
-			resp.Diagnostics.AddError("failed to update share", err.Error())
+			resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, rollbackShareInfo, &state)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+
+		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, updatedShareInfo, &state)...)
+		if resp.Diagnostics.HasError() {
 			return
 		}
 	}

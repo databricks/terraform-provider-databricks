@@ -101,6 +101,10 @@ func ResourceAlert() common.Resource {
 			if d.HasChange("owner_user_name") {
 				updateMask += ",owner_user_name"
 			}
+			if d.HasChange("notify_on_ok") {
+				updateMask += ",notify_on_ok"
+				a.ForceSendFields = append(a.ForceSendFields, "NotifyOnOk")
+			}
 			common.DataToStructPointer(d, s, &a)
 			_, err = w.Alerts.Update(ctx, sql.UpdateAlertRequest{
 				Alert:      &a,

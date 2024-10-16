@@ -189,7 +189,7 @@ func TestAlertUpdate(t *testing.T) {
 			e := w.GetMockAlertsAPI().EXPECT()
 			e.Update(mock.Anything, sql.UpdateAlertRequest{
 				Id:         "7890",
-				UpdateMask: "display_name,query_id,seconds_to_retrigger,condition,custom_body,custom_subject,owner_user_name",
+				UpdateMask: "display_name,query_id,seconds_to_retrigger,condition,custom_body,custom_subject,owner_user_name,notify_on_ok",
 				Alert: &sql.UpdateAlertRequestAlert{
 					QueryId:       "123456",
 					DisplayName:   "TF new alert",
@@ -207,12 +207,19 @@ func TestAlertUpdate(t *testing.T) {
 							},
 						},
 					},
+					ForceSendFields: []string{"NotifyOnOk"},
 				}}).Return(&alertResponse, nil)
 			e.GetById(mock.Anything, "7890").Return(&alertResponse, nil)
 		},
 		Resource: ResourceAlert(),
 		Update:   true,
 		ID:       "7890",
+		New:      true,
+		InstanceState: map[string]string{
+			"id":           "7890",
+			"query_id":     "123456",
+			"notify_on_ok": "true",
+		},
 		HCL: `query_id = "123456"
   display_name = "TF new alert"
   owner_user_name = "user@domain.com"

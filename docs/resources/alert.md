@@ -62,6 +62,7 @@ The following arguments are available:
 * `parent_path` - (Optional, String) The path to a workspace folder containing the alert. The default is the user's home folder.  If changed, the alert will be recreated.
 * `seconds_to_retrigger` - (Optional, Integer) Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered again. If 0 or not specified, the alert will not be triggered again.
 * `owner_user_name` - (Optional, String) Alert owner's username.
+* `notify_on_ok` - (Optional, Boolean) Whether to notify alert subscribers when alert returns back to normal.
 
 ## Attribute Reference
 

@@ -103,7 +103,7 @@ func getPluginFrameworkDataSourcesToRegister() []func() datasource.DataSource {
 // GetSdkV2ResourcesToRemove is a helper function to get the list of resources that are migrated away from sdkv2 to plugin framework
 func GetSdkV2ResourcesToRemove() []string {
 	resourcesToRemove := []string{}
-	for name, _ := range migratedResourceMap {
+	for name := range migratedResourceMap {
 		if !shouldUseSdkV2Resource(name) {
 			resourcesToRemove = append(resourcesToRemove, name)
 		}
@@ -114,7 +114,7 @@ func GetSdkV2ResourcesToRemove() []string {
 // GetSdkV2DataSourcesToRemove is a helper function to get the list of data sources that are migrated away from sdkv2 to plugin framework
 func GetSdkV2DataSourcesToRemove() []string {
 	dataSourcesToRemove := []string{}
-	for name, _ := range migratedDataSourceMap {
+	for name := range migratedDataSourceMap {
 		if !shouldUseSdkV2DataSource(name) {
 			dataSourcesToRemove = append(dataSourcesToRemove, name)
 		}

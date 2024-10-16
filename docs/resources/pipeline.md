@@ -83,6 +83,7 @@ The following arguments are supported:
 * `target` - The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
 * `edition` - optional name of the [product edition](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-concepts.html#editions). Supported values are: `CORE`, `PRO`, `ADVANCED` (default).  Not required when `serverless` is set to `true`.
 * `channel` - optional name of the release channel for Spark version used by DLT pipeline.  Supported values are: `CURRENT` (default) and `PREVIEW`.
+* `budget_policy_id` - optional string specifying ID of the budget policy for this DLT pipeline.
 * `allow_duplicate_names` - Optional boolean flag. If false, deployment will fail if name conflicts with that of another pipeline. default is `false`.
 * `deployment` - Deployment type of this pipeline. Supports following attributes:
   * `kind` - The deployment method that manages the pipeline.

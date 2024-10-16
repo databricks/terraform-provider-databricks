@@ -59,6 +59,7 @@ func ResourceOnlineTable() common.Resource {
 			common.CustomizeSchemaPath(m, "spec", "source_table_full_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 			common.CustomizeSchemaPath(m, "name").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(m, "status").SetReadOnly()
+			common.CustomizeSchemaPath(m, "unity_catalog_provisioning_state").SetReadOnly()
 			common.CustomizeSchemaPath(m, "table_serving_url").SetReadOnly()
 			common.CustomizeSchemaPath(m, "spec", "pipeline_id").SetReadOnly()
 

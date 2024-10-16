@@ -22,7 +22,7 @@ type CentralCleanRoomInfo struct {
 	// All collaborators who are in the clean room.
 	Collaborators []CleanRoomCollaboratorInfo `tfsdk:"collaborators" tf:"optional"`
 	// The collaborator who created the clean room.
-	Creator *CleanRoomCollaboratorInfo `tfsdk:"creator" tf:"optional"`
+	Creator []CleanRoomCollaboratorInfo `tfsdk:"creator" tf:"optional,object"`
 	// The cloud where clean room tasks will be run.
 	StationCloud types.String `tfsdk:"station_cloud" tf:"optional"`
 	// The region where clean room tasks will be run.
@@ -33,11 +33,11 @@ type CleanRoomAssetInfo struct {
 	// Time at which this asset was added, in epoch milliseconds.
 	AddedAt types.Int64 `tfsdk:"added_at" tf:"optional"`
 	// Details about the notebook asset.
-	NotebookInfo *CleanRoomNotebookInfo `tfsdk:"notebook_info" tf:"optional"`
+	NotebookInfo []CleanRoomNotebookInfo `tfsdk:"notebook_info" tf:"optional,object"`
 	// The collaborator who owns the asset.
-	Owner *CleanRoomCollaboratorInfo `tfsdk:"owner" tf:"optional"`
+	Owner []CleanRoomCollaboratorInfo `tfsdk:"owner" tf:"optional,object"`
 	// Details about the table asset.
-	TableInfo *CleanRoomTableInfo `tfsdk:"table_info" tf:"optional"`
+	TableInfo []CleanRoomTableInfo `tfsdk:"table_info" tf:"optional,object"`
 	// Time at which this asset was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 }
@@ -55,7 +55,7 @@ type CleanRoomCatalogUpdate struct {
 	// The name of the catalog to update assets.
 	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
 	// The updates to the assets in the catalog.
-	Updates *SharedDataObjectUpdate `tfsdk:"updates" tf:"optional"`
+	Updates []SharedDataObjectUpdate `tfsdk:"updates" tf:"optional,object"`
 }
 
 type CleanRoomCollaboratorInfo struct {
@@ -83,7 +83,7 @@ type CleanRoomInfo struct {
 	// Username of current owner of clean room.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Central clean room details.
-	RemoteDetailedInfo *CentralCleanRoomInfo `tfsdk:"remote_detailed_info" tf:"optional"`
+	RemoteDetailedInfo []CentralCleanRoomInfo `tfsdk:"remote_detailed_info" tf:"optional,object"`
 	// Time at which this clean room was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 	// Username of clean room updater.
@@ -115,7 +115,7 @@ type ColumnInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
-	Mask *ColumnMask `tfsdk:"mask" tf:"optional"`
+	Mask []ColumnMask `tfsdk:"mask" tf:"optional,object"`
 	// Name of Column.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Whether field may be Null (default: true).
@@ -154,7 +154,7 @@ type CreateCleanRoom struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"name" tf:""`
 	// Central clean room details.
-	RemoteDetailedInfo CentralCleanRoomInfo `tfsdk:"remote_detailed_info" tf:""`
+	RemoteDetailedInfo []CentralCleanRoomInfo `tfsdk:"remote_detailed_info" tf:"object"`
 }
 
 type CreateProvider struct {
@@ -182,13 +182,13 @@ type CreateRecipient struct {
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// IP Access List
-	IpAccessList *IpAccessList `tfsdk:"ip_access_list" tf:"optional"`
+	IpAccessList []IpAccessList `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Name of Recipient.
 	Name types.String `tfsdk:"name" tf:""`
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Recipient properties as map of string key-value pairs.
-	PropertiesKvpairs *SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional"`
+	PropertiesKvpairs []SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional,object"`
 	// The one-time sharing code provided by the data recipient. This field is
 	// required when the __authentication_type__ is **DATABRICKS**.
 	SharingCode types.String `tfsdk:"sharing_code" tf:"optional"`
@@ -447,7 +447,7 @@ type ProviderInfo struct {
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// The recipient profile. This field is only present when the
 	// authentication_type is `TOKEN`.
-	RecipientProfile *RecipientProfile `tfsdk:"recipient_profile" tf:"optional"`
+	RecipientProfile []RecipientProfile `tfsdk:"recipient_profile" tf:"optional,object"`
 	// This field is only present when the authentication_type is `TOKEN` or not
 	// provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str" tf:"optional"`
@@ -489,7 +489,7 @@ type RecipientInfo struct {
 	// __cloud__:__region__:__metastore-uuid__.
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id" tf:"optional"`
 	// IP Access List
-	IpAccessList *IpAccessList `tfsdk:"ip_access_list" tf:"optional"`
+	IpAccessList []IpAccessList `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Unique identifier of recipient's Unity Catalog metastore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
@@ -498,7 +498,7 @@ type RecipientInfo struct {
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Recipient properties as map of string key-value pairs.
-	PropertiesKvpairs *SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional"`
+	PropertiesKvpairs []SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional,object"`
 	// Cloud region of the recipient's Unity Catalog Metstore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**.
 	Region types.String `tfsdk:"region" tf:"optional"`
@@ -676,7 +676,7 @@ type SharedDataObjectUpdate struct {
 	// One of: **ADD**, **REMOVE**, **UPDATE**.
 	Action types.String `tfsdk:"action" tf:"optional"`
 	// The data object that is being added, removed, or updated.
-	DataObject *SharedDataObject `tfsdk:"data_object" tf:"optional"`
+	DataObject []SharedDataObject `tfsdk:"data_object" tf:"optional,object"`
 }
 
 type UpdateCleanRoom struct {
@@ -713,7 +713,7 @@ type UpdateRecipient struct {
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// IP Access List
-	IpAccessList *IpAccessList `tfsdk:"ip_access_list" tf:"optional"`
+	IpAccessList []IpAccessList `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
 	// New name for the recipient.
@@ -724,7 +724,7 @@ type UpdateRecipient struct {
 	// update request, the specified properties will override the existing
 	// properties. To add and remove properties, one would need to perform a
 	// read-modify-write.
-	PropertiesKvpairs *SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional"`
+	PropertiesKvpairs []SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional,object"`
 }
 
 type UpdateResponse struct {
@@ -747,7 +747,7 @@ type UpdateShare struct {
 
 type UpdateSharePermissions struct {
 	// Array of permission changes.
-	Changes []catalog.PermissionsChange `tfsdk:"changes" tf:"optional"`
+	Changes catalog.PermissionsChange `tfsdk:"changes" tf:"optional"`
 	// Maximum number of permissions to return. - when set to 0, the page length
 	// is set to a server configured value (recommended); - when set to a value
 	// greater than 0, the page length is the minimum of this value and a server

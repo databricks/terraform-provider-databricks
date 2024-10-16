@@ -232,6 +232,8 @@ There are four assignable [permission levels](https://docs.databricks.com/securi
 - Read [main documentation](https://docs.databricks.com/security/access-control/dlt-acl.html) for additional detail.
 
 ```hcl
+data "databricks_current_user" "me" {}
+
 resource "databricks_group" "eng" {
   display_name = "Engineering"
 }

@@ -18,20 +18,74 @@ import (
 	"github.com/databricks/databricks-sdk-go/marshal"
     "github.com/hashicorp/terraform-plugin-framework/types"
 )
+{{- $excluded := dict "ShareInfo"        (list "CreatedAt" "CreatedBy" "UpdatedAt" "UpdatedBy")
+                      "SharedDataObject" (list "AddedAt" "AddedBy" "Status") -}}
 {{range .Types}}
 {{- if or .Fields .IsEmpty}}
 {{.Comment "// " 80}}
 type {{.PascalName}} struct {
+    {{- $excluded := getOrDefault $excluded .PascalName (list) -}}
     {{- range .Fields}}
     {{.Comment "    // " 80}}
-    {{.PascalName}} {{template "type" .Entity}} `{{template "field-tag" . }}`{{end}}
+	{{- $data := dict "field" . "excluded" $excluded }}
+	{{template "field" $data}}{{if and .Entity.IsComputed (not (in $excluded .PascalName))}}{{ $data := dict "field" . "excluded" $excluded "effective" true }}{{printf "\n"}}{{template "field" $data}}{{end}}{{end}}
+}
+
+func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringCreateOrUpdate(plan {{.PascalName}}) {
+  {{- range .Fields -}}
+  {{- if and .Entity.IsComputed (or .Entity.IsString .Entity.IsBool .Entity.IsInt64 .Entity.IsFloat64 .Entity.IsInt .Entity.Enum) -}}
+  {{- if not (in $excluded .PascalName)}}
+  newState.Effective{{.PascalName}} = newState.{{.PascalName}}
+  newState.{{.PascalName}} = plan.{{.PascalName}}
+  {{- end}}
+  {{- end}}
+  {{- end}}
+}
+
+func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.PascalName}}) {
+  {{- range .Fields -}}
+  {{- if and .Entity.IsComputed (or .Entity.IsString .Entity.IsBool .Entity.IsInt64 .Entity.IsFloat64 .Entity.IsInt .Entity.Enum) -}}
+  {{- if not (in $excluded .PascalName) -}}
+  {{- $type := "" -}}
+  {{- if .Entity.IsString}}{{$type = "String"}}{{end}}
+  {{- if .Entity.IsBool}}{{$type = "Bool"}}{{end}}
+  {{- if .Entity.IsInt64}}{{$type = "Int64"}}{{end}}
+  {{- if .Entity.IsFloat64}}{{$type = "Float64"}}{{end}}
+  {{- if .Entity.IsInt}}{{$type = "Int64"}}{{end}}
+  {{- if .Entity.Enum}}{{$type = "String"}}{{end}}
+  if existingState.Effective{{.PascalName}}.Value{{$type}}() == newState.{{.PascalName}}.Value{{$type}}() {
+    newState.{{.PascalName}} = existingState.{{.PascalName}}
+  }
+  {{- end}}
+  {{- end}}
+  {{- end}}
 }
 
 {{end}}
 {{end}}
 
+{{- define "field" -}}
+{{if .effective}}Effective{{end}}{{.field.PascalName}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
+{{- end -}}
+
 {{- define "field-tag" -}}
-  {{if .IsJson}}tfsdk:"{{if and (ne .Entity.Terraform nil) (ne .Entity.Terraform.Alias "") }}{{.Entity.Terraform.Alias}}{{else}}{{.Name}}{{end}}" tf:"{{- $first := true -}}{{- if not .Required -}}{{- if not $first -}},{{end}}optional{{- $first = false -}}{{- end -}}{{- if .Entity.IsObject -}}{{- if not $first -}},{{end}}object{{- $first = false -}}{{- end -}}"{{else}}tfsdk:"-"{{end -}}
+    {{- $annotations := "" -}}
+	{{- if in .excluded .field.PascalName -}}
+		{{- $annotations = (printf "%scomputed,optional," $annotations) -}}
+	{{- else if .effective -}}
+		{{- $annotations = (printf "%scomputed,optional," $annotations) -}}
+	{{- else -}}
+		{{- if not .field.Required -}}
+ 	       {{- $annotations = (printf "%soptional," $annotations) -}}
+  	    {{- end -}}
+		{{- if .field.Entity.IsObject -}}
+ 	       {{- $annotations = (printf "%sobject," $annotations) -}}
+  	    {{- end -}}
+	{{- end -}}
+ 	{{- if gt (len $annotations) 0 -}}
+ 	   {{- $annotations = (printf "%s" (trimSuffix "," $annotations)) -}}
+ 	{{- end -}}
+	{{if .field.IsJson}}tfsdk:"{{if and (ne .field.Entity.Terraform nil) (ne .field.Entity.Terraform.Alias "") }}{{.field.Entity.Terraform.Alias}}{{else}}{{if .effective}}effective_{{end}}{{.field.Name}}{{end}}" tf:"{{$annotations}}"{{else}}tfsdk:"-"{{end -}}
 {{- end -}}
 
 {{- define "type" -}}

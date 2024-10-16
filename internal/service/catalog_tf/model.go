@@ -18,6 +18,12 @@ type AccountsCreateMetastore struct {
 	MetastoreInfo []CreateMetastore `tfsdk:"metastore_info" tf:"optional,object"`
 }
 
+func (newState *AccountsCreateMetastore) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateMetastore) {
+}
+
+func (newState *AccountsCreateMetastore) SyncEffectiveFieldsDuringRead(existingState AccountsCreateMetastore) {
+}
+
 type AccountsCreateMetastoreAssignment struct {
 	MetastoreAssignment []CreateMetastoreAssignment `tfsdk:"metastore_assignment" tf:"optional,object"`
 	// Unity Catalog metastore ID
@@ -26,22 +32,52 @@ type AccountsCreateMetastoreAssignment struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *AccountsCreateMetastoreAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateMetastoreAssignment) {
+}
+
+func (newState *AccountsCreateMetastoreAssignment) SyncEffectiveFieldsDuringRead(existingState AccountsCreateMetastoreAssignment) {
+}
+
 type AccountsCreateStorageCredential struct {
 	CredentialInfo []CreateStorageCredential `tfsdk:"credential_info" tf:"optional,object"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 }
 
+func (newState *AccountsCreateStorageCredential) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateStorageCredential) {
+}
+
+func (newState *AccountsCreateStorageCredential) SyncEffectiveFieldsDuringRead(existingState AccountsCreateStorageCredential) {
+}
+
 type AccountsMetastoreAssignment struct {
 	MetastoreAssignment []MetastoreAssignment `tfsdk:"metastore_assignment" tf:"optional,object"`
+}
+
+func (newState *AccountsMetastoreAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsMetastoreAssignment) {
+}
+
+func (newState *AccountsMetastoreAssignment) SyncEffectiveFieldsDuringRead(existingState AccountsMetastoreAssignment) {
 }
 
 type AccountsMetastoreInfo struct {
 	MetastoreInfo []MetastoreInfo `tfsdk:"metastore_info" tf:"optional,object"`
 }
 
+func (newState *AccountsMetastoreInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsMetastoreInfo) {
+}
+
+func (newState *AccountsMetastoreInfo) SyncEffectiveFieldsDuringRead(existingState AccountsMetastoreInfo) {
+}
+
 type AccountsStorageCredentialInfo struct {
 	CredentialInfo []StorageCredentialInfo `tfsdk:"credential_info" tf:"optional,object"`
+}
+
+func (newState *AccountsStorageCredentialInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsStorageCredentialInfo) {
+}
+
+func (newState *AccountsStorageCredentialInfo) SyncEffectiveFieldsDuringRead(existingState AccountsStorageCredentialInfo) {
 }
 
 type AccountsUpdateMetastore struct {
@@ -49,6 +85,12 @@ type AccountsUpdateMetastore struct {
 	MetastoreId types.String `tfsdk:"-"`
 
 	MetastoreInfo []UpdateMetastore `tfsdk:"metastore_info" tf:"optional,object"`
+}
+
+func (newState *AccountsUpdateMetastore) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateMetastore) {
+}
+
+func (newState *AccountsUpdateMetastore) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateMetastore) {
 }
 
 type AccountsUpdateMetastoreAssignment struct {
@@ -59,12 +101,24 @@ type AccountsUpdateMetastoreAssignment struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *AccountsUpdateMetastoreAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateMetastoreAssignment) {
+}
+
+func (newState *AccountsUpdateMetastoreAssignment) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateMetastoreAssignment) {
+}
+
 type AccountsUpdateStorageCredential struct {
 	CredentialInfo []UpdateStorageCredential `tfsdk:"credential_info" tf:"optional,object"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 	// Name of the storage credential.
 	StorageCredentialName types.String `tfsdk:"-"`
+}
+
+func (newState *AccountsUpdateStorageCredential) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateStorageCredential) {
+}
+
+func (newState *AccountsUpdateStorageCredential) SyncEffectiveFieldsDuringRead(existingState AccountsUpdateStorageCredential) {
 }
 
 type ArtifactAllowlistInfo struct {
@@ -78,6 +132,12 @@ type ArtifactAllowlistInfo struct {
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
 }
 
+func (newState *ArtifactAllowlistInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ArtifactAllowlistInfo) {
+}
+
+func (newState *ArtifactAllowlistInfo) SyncEffectiveFieldsDuringRead(existingState ArtifactAllowlistInfo) {
+}
+
 type ArtifactMatcher struct {
 	// The artifact path or maven coordinate
 	Artifact types.String `tfsdk:"artifact" tf:""`
@@ -85,7 +145,19 @@ type ArtifactMatcher struct {
 	MatchType types.String `tfsdk:"match_type" tf:""`
 }
 
+func (newState *ArtifactMatcher) SyncEffectiveFieldsDuringCreateOrUpdate(plan ArtifactMatcher) {
+}
+
+func (newState *ArtifactMatcher) SyncEffectiveFieldsDuringRead(existingState ArtifactMatcher) {
+}
+
 type AssignResponse struct {
+}
+
+func (newState *AssignResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AssignResponse) {
+}
+
+func (newState *AssignResponse) SyncEffectiveFieldsDuringRead(existingState AssignResponse) {
 }
 
 // AWS temporary credentials for API authentication. Read more at
@@ -103,9 +175,21 @@ type AwsCredentials struct {
 	SessionToken types.String `tfsdk:"session_token" tf:"optional"`
 }
 
+func (newState *AwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsCredentials) {
+}
+
+func (newState *AwsCredentials) SyncEffectiveFieldsDuringRead(existingState AwsCredentials) {
+}
+
 type AwsIamRoleRequest struct {
 	// The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.
 	RoleArn types.String `tfsdk:"role_arn" tf:""`
+}
+
+func (newState *AwsIamRoleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsIamRoleRequest) {
+}
+
+func (newState *AwsIamRoleRequest) SyncEffectiveFieldsDuringRead(existingState AwsIamRoleRequest) {
 }
 
 type AwsIamRoleResponse struct {
@@ -117,6 +201,12 @@ type AwsIamRoleResponse struct {
 	// The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks.
 	// This is the identity that is going to assume the AWS IAM role.
 	UnityCatalogIamArn types.String `tfsdk:"unity_catalog_iam_arn" tf:"optional"`
+}
+
+func (newState *AwsIamRoleResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsIamRoleResponse) {
+}
+
+func (newState *AwsIamRoleResponse) SyncEffectiveFieldsDuringRead(existingState AwsIamRoleResponse) {
 }
 
 type AzureManagedIdentityRequest struct {
@@ -131,6 +221,12 @@ type AzureManagedIdentityRequest struct {
 	// this field is not provided, then we assume the AzureManagedIdentity is
 	// for a system-assigned identity.
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id" tf:"optional"`
+}
+
+func (newState *AzureManagedIdentityRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureManagedIdentityRequest) {
+}
+
+func (newState *AzureManagedIdentityRequest) SyncEffectiveFieldsDuringRead(existingState AzureManagedIdentityRequest) {
 }
 
 type AzureManagedIdentityResponse struct {
@@ -149,6 +245,12 @@ type AzureManagedIdentityResponse struct {
 	ManagedIdentityId types.String `tfsdk:"managed_identity_id" tf:"optional"`
 }
 
+func (newState *AzureManagedIdentityResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureManagedIdentityResponse) {
+}
+
+func (newState *AzureManagedIdentityResponse) SyncEffectiveFieldsDuringRead(existingState AzureManagedIdentityResponse) {
+}
+
 type AzureServicePrincipal struct {
 	// The application ID of the application registration within the referenced
 	// AAD tenant.
@@ -160,11 +262,23 @@ type AzureServicePrincipal struct {
 	DirectoryId types.String `tfsdk:"directory_id" tf:""`
 }
 
+func (newState *AzureServicePrincipal) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureServicePrincipal) {
+}
+
+func (newState *AzureServicePrincipal) SyncEffectiveFieldsDuringRead(existingState AzureServicePrincipal) {
+}
+
 // Azure temporary credentials for API authentication. Read more at
 // https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
 type AzureUserDelegationSas struct {
 	// The signed URI (SAS Token) used to access blob services for a given path
 	SasToken types.String `tfsdk:"sas_token" tf:"optional"`
+}
+
+func (newState *AzureUserDelegationSas) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureUserDelegationSas) {
+}
+
+func (newState *AzureUserDelegationSas) SyncEffectiveFieldsDuringRead(existingState AzureUserDelegationSas) {
 }
 
 // Cancel refresh
@@ -175,7 +289,19 @@ type CancelRefreshRequest struct {
 	TableName types.String `tfsdk:"-"`
 }
 
+func (newState *CancelRefreshRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRefreshRequest) {
+}
+
+func (newState *CancelRefreshRequest) SyncEffectiveFieldsDuringRead(existingState CancelRefreshRequest) {
+}
+
 type CancelRefreshResponse struct {
+}
+
+func (newState *CancelRefreshResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRefreshResponse) {
+}
+
+func (newState *CancelRefreshResponse) SyncEffectiveFieldsDuringRead(existingState CancelRefreshResponse) {
 }
 
 type CatalogInfo struct {
@@ -236,6 +362,12 @@ type CatalogInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *CatalogInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CatalogInfo) {
+}
+
+func (newState *CatalogInfo) SyncEffectiveFieldsDuringRead(existingState CatalogInfo) {
+}
+
 type CloudflareApiToken struct {
 	// The Cloudflare access key id of the token.
 	AccessKeyId types.String `tfsdk:"access_key_id" tf:""`
@@ -243,6 +375,12 @@ type CloudflareApiToken struct {
 	AccountId types.String `tfsdk:"account_id" tf:""`
 	// The secret access token generated for the access key id
 	SecretAccessKey types.String `tfsdk:"secret_access_key" tf:""`
+}
+
+func (newState *CloudflareApiToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudflareApiToken) {
+}
+
+func (newState *CloudflareApiToken) SyncEffectiveFieldsDuringRead(existingState CloudflareApiToken) {
 }
 
 type ColumnInfo struct {
@@ -272,6 +410,12 @@ type ColumnInfo struct {
 	TypeText types.String `tfsdk:"type_text" tf:"optional"`
 }
 
+func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo) {
+}
+
+func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
+}
+
 type ColumnMask struct {
 	// The full name of the column mask SQL UDF.
 	FunctionName types.String `tfsdk:"function_name" tf:"optional"`
@@ -280,6 +424,12 @@ type ColumnMask struct {
 	// of the column being masked and the types of the rest of the args should
 	// match the types of columns in 'using_column_names'.
 	UsingColumnNames []types.String `tfsdk:"using_column_names" tf:"optional"`
+}
+
+func (newState *ColumnMask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnMask) {
+}
+
+func (newState *ColumnMask) SyncEffectiveFieldsDuringRead(existingState ColumnMask) {
 }
 
 type ConnectionInfo struct {
@@ -324,6 +474,12 @@ type ConnectionInfo struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *ConnectionInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConnectionInfo) {
+}
+
+func (newState *ConnectionInfo) SyncEffectiveFieldsDuringRead(existingState ConnectionInfo) {
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // ONLINE_CONTINUOUS_UPDATE or the ONLINE_UPDATING_PIPELINE_RESOURCES state.
 type ContinuousUpdateStatus struct {
@@ -336,6 +492,12 @@ type ContinuousUpdateStatus struct {
 	// The timestamp of the last time any data was synchronized from the source
 	// table to the online table.
 	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
+}
+
+func (newState *ContinuousUpdateStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContinuousUpdateStatus) {
+}
+
+func (newState *ContinuousUpdateStatus) SyncEffectiveFieldsDuringRead(existingState ContinuousUpdateStatus) {
 }
 
 type CreateCatalog struct {
@@ -360,6 +522,12 @@ type CreateCatalog struct {
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 }
 
+func (newState *CreateCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCatalog) {
+}
+
+func (newState *CreateCatalog) SyncEffectiveFieldsDuringRead(existingState CreateCatalog) {
+}
+
 type CreateConnection struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -374,6 +542,12 @@ type CreateConnection struct {
 	Properties map[string]types.String `tfsdk:"properties" tf:"optional"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only" tf:"optional"`
+}
+
+func (newState *CreateConnection) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateConnection) {
+}
+
+func (newState *CreateConnection) SyncEffectiveFieldsDuringRead(existingState CreateConnection) {
 }
 
 type CreateExternalLocation struct {
@@ -398,6 +572,12 @@ type CreateExternalLocation struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
 	// Path URL of the external location.
 	Url types.String `tfsdk:"url" tf:""`
+}
+
+func (newState *CreateExternalLocation) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExternalLocation) {
+}
+
+func (newState *CreateExternalLocation) SyncEffectiveFieldsDuringRead(existingState CreateExternalLocation) {
 }
 
 type CreateFunction struct {
@@ -449,9 +629,21 @@ type CreateFunction struct {
 	SqlPath types.String `tfsdk:"sql_path" tf:"optional"`
 }
 
+func (newState *CreateFunction) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFunction) {
+}
+
+func (newState *CreateFunction) SyncEffectiveFieldsDuringRead(existingState CreateFunction) {
+}
+
 type CreateFunctionRequest struct {
 	// Partial __FunctionInfo__ specifying the function to be created.
 	FunctionInfo []CreateFunction `tfsdk:"function_info" tf:"object"`
+}
+
+func (newState *CreateFunctionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFunctionRequest) {
+}
+
+func (newState *CreateFunctionRequest) SyncEffectiveFieldsDuringRead(existingState CreateFunctionRequest) {
 }
 
 type CreateMetastore struct {
@@ -466,6 +658,12 @@ type CreateMetastore struct {
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 }
 
+func (newState *CreateMetastore) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateMetastore) {
+}
+
+func (newState *CreateMetastore) SyncEffectiveFieldsDuringRead(existingState CreateMetastore) {
+}
+
 type CreateMetastoreAssignment struct {
 	// The name of the default catalog in the metastore. This field is
 	// depracted. Please use "Default Namespace API" to configure the default
@@ -475,6 +673,12 @@ type CreateMetastoreAssignment struct {
 	MetastoreId types.String `tfsdk:"metastore_id" tf:""`
 	// A workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *CreateMetastoreAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateMetastoreAssignment) {
+}
+
+func (newState *CreateMetastoreAssignment) SyncEffectiveFieldsDuringRead(existingState CreateMetastoreAssignment) {
 }
 
 type CreateMonitor struct {
@@ -518,12 +722,24 @@ type CreateMonitor struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *CreateMonitor) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateMonitor) {
+}
+
+func (newState *CreateMonitor) SyncEffectiveFieldsDuringRead(existingState CreateMonitor) {
+}
+
 // Online Table information.
 type CreateOnlineTableRequest struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Specification of the online table.
 	Spec []OnlineTableSpec `tfsdk:"spec" tf:"optional,object"`
+}
+
+func (newState *CreateOnlineTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOnlineTableRequest) {
+}
+
+func (newState *CreateOnlineTableRequest) SyncEffectiveFieldsDuringRead(existingState CreateOnlineTableRequest) {
 }
 
 type CreateRegisteredModelRequest struct {
@@ -540,7 +756,19 @@ type CreateRegisteredModelRequest struct {
 	StorageLocation types.String `tfsdk:"storage_location" tf:"optional"`
 }
 
+func (newState *CreateRegisteredModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRegisteredModelRequest) {
+}
+
+func (newState *CreateRegisteredModelRequest) SyncEffectiveFieldsDuringRead(existingState CreateRegisteredModelRequest) {
+}
+
 type CreateResponse struct {
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
 type CreateSchema struct {
@@ -554,6 +782,12 @@ type CreateSchema struct {
 	Properties map[string]types.String `tfsdk:"properties" tf:"optional"`
 	// Storage root URL for managed tables within schema.
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
+}
+
+func (newState *CreateSchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateSchema) {
+}
+
+func (newState *CreateSchema) SyncEffectiveFieldsDuringRead(existingState CreateSchema) {
 }
 
 type CreateStorageCredential struct {
@@ -578,6 +812,12 @@ type CreateStorageCredential struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
 }
 
+func (newState *CreateStorageCredential) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateStorageCredential) {
+}
+
+func (newState *CreateStorageCredential) SyncEffectiveFieldsDuringRead(existingState CreateStorageCredential) {
+}
+
 type CreateTableConstraint struct {
 	// A table constraint, as defined by *one* of the following fields being
 	// set: __primary_key_constraint__, __foreign_key_constraint__,
@@ -585,6 +825,12 @@ type CreateTableConstraint struct {
 	Constraint []TableConstraint `tfsdk:"constraint" tf:"object"`
 	// The full name of the table referenced by the constraint.
 	FullNameArg types.String `tfsdk:"full_name_arg" tf:""`
+}
+
+func (newState *CreateTableConstraint) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTableConstraint) {
+}
+
+func (newState *CreateTableConstraint) SyncEffectiveFieldsDuringRead(existingState CreateTableConstraint) {
 }
 
 type CreateVolumeRequestContent struct {
@@ -602,13 +848,31 @@ type CreateVolumeRequestContent struct {
 	VolumeType types.String `tfsdk:"volume_type" tf:""`
 }
 
+func (newState *CreateVolumeRequestContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVolumeRequestContent) {
+}
+
+func (newState *CreateVolumeRequestContent) SyncEffectiveFieldsDuringRead(existingState CreateVolumeRequestContent) {
+}
+
 // Currently assigned workspaces
 type CurrentWorkspaceBindings struct {
 	// A list of workspace IDs.
 	Workspaces []types.Int64 `tfsdk:"workspaces" tf:"optional"`
 }
 
+func (newState *CurrentWorkspaceBindings) SyncEffectiveFieldsDuringCreateOrUpdate(plan CurrentWorkspaceBindings) {
+}
+
+func (newState *CurrentWorkspaceBindings) SyncEffectiveFieldsDuringRead(existingState CurrentWorkspaceBindings) {
+}
+
 type DatabricksGcpServiceAccountRequest struct {
+}
+
+func (newState *DatabricksGcpServiceAccountRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabricksGcpServiceAccountRequest) {
+}
+
+func (newState *DatabricksGcpServiceAccountRequest) SyncEffectiveFieldsDuringRead(existingState DatabricksGcpServiceAccountRequest) {
 }
 
 type DatabricksGcpServiceAccountResponse struct {
@@ -619,6 +883,12 @@ type DatabricksGcpServiceAccountResponse struct {
 	Email types.String `tfsdk:"email" tf:"optional"`
 }
 
+func (newState *DatabricksGcpServiceAccountResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabricksGcpServiceAccountResponse) {
+}
+
+func (newState *DatabricksGcpServiceAccountResponse) SyncEffectiveFieldsDuringRead(existingState DatabricksGcpServiceAccountResponse) {
+}
+
 // Delete a metastore assignment
 type DeleteAccountMetastoreAssignmentRequest struct {
 	// Unity Catalog metastore ID
@@ -627,12 +897,24 @@ type DeleteAccountMetastoreAssignmentRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *DeleteAccountMetastoreAssignmentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAccountMetastoreAssignmentRequest) {
+}
+
+func (newState *DeleteAccountMetastoreAssignmentRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountMetastoreAssignmentRequest) {
+}
+
 // Delete a metastore
 type DeleteAccountMetastoreRequest struct {
 	// Force deletion even if the metastore is not empty. Default is false.
 	Force types.Bool `tfsdk:"-"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteAccountMetastoreRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAccountMetastoreRequest) {
+}
+
+func (newState *DeleteAccountMetastoreRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountMetastoreRequest) {
 }
 
 // Delete a storage credential
@@ -646,6 +928,12 @@ type DeleteAccountStorageCredentialRequest struct {
 	StorageCredentialName types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteAccountStorageCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAccountStorageCredentialRequest) {
+}
+
+func (newState *DeleteAccountStorageCredentialRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountStorageCredentialRequest) {
+}
+
 // Delete a Registered Model Alias
 type DeleteAliasRequest struct {
 	// The name of the alias
@@ -654,7 +942,19 @@ type DeleteAliasRequest struct {
 	FullName types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteAliasRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAliasRequest) {
+}
+
+func (newState *DeleteAliasRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAliasRequest) {
+}
+
 type DeleteAliasResponse struct {
+}
+
+func (newState *DeleteAliasResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAliasResponse) {
+}
+
+func (newState *DeleteAliasResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAliasResponse) {
 }
 
 // Delete a catalog
@@ -665,10 +965,22 @@ type DeleteCatalogRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteCatalogRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCatalogRequest) {
+}
+
+func (newState *DeleteCatalogRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCatalogRequest) {
+}
+
 // Delete a connection
 type DeleteConnectionRequest struct {
 	// The name of the connection to be deleted.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteConnectionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteConnectionRequest) {
+}
+
+func (newState *DeleteConnectionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteConnectionRequest) {
 }
 
 // Delete an external location
@@ -677,6 +989,12 @@ type DeleteExternalLocationRequest struct {
 	Force types.Bool `tfsdk:"-"`
 	// Name of the external location.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteExternalLocationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExternalLocationRequest) {
+}
+
+func (newState *DeleteExternalLocationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteExternalLocationRequest) {
 }
 
 // Delete a function
@@ -688,12 +1006,24 @@ type DeleteFunctionRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteFunctionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteFunctionRequest) {
+}
+
+func (newState *DeleteFunctionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteFunctionRequest) {
+}
+
 // Delete a metastore
 type DeleteMetastoreRequest struct {
 	// Force deletion even if the metastore is not empty. Default is false.
 	Force types.Bool `tfsdk:"-"`
 	// Unique ID of the metastore.
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteMetastoreRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteMetastoreRequest) {
+}
+
+func (newState *DeleteMetastoreRequest) SyncEffectiveFieldsDuringRead(existingState DeleteMetastoreRequest) {
 }
 
 // Delete a Model Version
@@ -704,10 +1034,22 @@ type DeleteModelVersionRequest struct {
 	Version types.Int64 `tfsdk:"-"`
 }
 
+func (newState *DeleteModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelVersionRequest) {
+}
+
+func (newState *DeleteModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionRequest) {
+}
+
 // Delete an Online Table
 type DeleteOnlineTableRequest struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteOnlineTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteOnlineTableRequest) {
+}
+
+func (newState *DeleteOnlineTableRequest) SyncEffectiveFieldsDuringRead(existingState DeleteOnlineTableRequest) {
 }
 
 // Delete a table monitor
@@ -716,13 +1058,31 @@ type DeleteQualityMonitorRequest struct {
 	TableName types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteQualityMonitorRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteQualityMonitorRequest) {
+}
+
+func (newState *DeleteQualityMonitorRequest) SyncEffectiveFieldsDuringRead(existingState DeleteQualityMonitorRequest) {
+}
+
 // Delete a Registered Model
 type DeleteRegisteredModelRequest struct {
 	// The three-level (fully qualified) name of the registered model
 	FullName types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteRegisteredModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRegisteredModelRequest) {
+}
+
+func (newState *DeleteRegisteredModelRequest) SyncEffectiveFieldsDuringRead(existingState DeleteRegisteredModelRequest) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 // Delete a schema
@@ -733,6 +1093,12 @@ type DeleteSchemaRequest struct {
 	FullName types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteSchemaRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSchemaRequest) {
+}
+
+func (newState *DeleteSchemaRequest) SyncEffectiveFieldsDuringRead(existingState DeleteSchemaRequest) {
+}
+
 // Delete a credential
 type DeleteStorageCredentialRequest struct {
 	// Force deletion even if there are dependent external locations or external
@@ -740,6 +1106,12 @@ type DeleteStorageCredentialRequest struct {
 	Force types.Bool `tfsdk:"-"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteStorageCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteStorageCredentialRequest) {
+}
+
+func (newState *DeleteStorageCredentialRequest) SyncEffectiveFieldsDuringRead(existingState DeleteStorageCredentialRequest) {
 }
 
 // Delete a table constraint
@@ -754,10 +1126,22 @@ type DeleteTableConstraintRequest struct {
 	FullName types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteTableConstraintRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTableConstraintRequest) {
+}
+
+func (newState *DeleteTableConstraintRequest) SyncEffectiveFieldsDuringRead(existingState DeleteTableConstraintRequest) {
+}
+
 // Delete a table
 type DeleteTableRequest struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTableRequest) {
+}
+
+func (newState *DeleteTableRequest) SyncEffectiveFieldsDuringRead(existingState DeleteTableRequest) {
 }
 
 // Delete a Volume
@@ -766,12 +1150,24 @@ type DeleteVolumeRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteVolumeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteVolumeRequest) {
+}
+
+func (newState *DeleteVolumeRequest) SyncEffectiveFieldsDuringRead(existingState DeleteVolumeRequest) {
+}
+
 // Properties pertaining to the current state of the delta table as given by the
 // commit server. This does not contain **delta.*** (input) properties in
 // __TableInfo.properties__.
 type DeltaRuntimePropertiesKvPairs struct {
 	// A map of key-value properties attached to the securable.
 	DeltaRuntimeProperties map[string]types.String `tfsdk:"delta_runtime_properties" tf:""`
+}
+
+func (newState *DeltaRuntimePropertiesKvPairs) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaRuntimePropertiesKvPairs) {
+}
+
+func (newState *DeltaRuntimePropertiesKvPairs) SyncEffectiveFieldsDuringRead(existingState DeltaRuntimePropertiesKvPairs) {
 }
 
 // A dependency of a SQL object. Either the __table__ field or the __function__
@@ -783,10 +1179,22 @@ type Dependency struct {
 	Table []TableDependency `tfsdk:"table" tf:"optional,object"`
 }
 
+func (newState *Dependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dependency) {
+}
+
+func (newState *Dependency) SyncEffectiveFieldsDuringRead(existingState Dependency) {
+}
+
 // A list of dependencies.
 type DependencyList struct {
 	// Array of dependencies.
 	Dependencies []Dependency `tfsdk:"dependencies" tf:"optional"`
+}
+
+func (newState *DependencyList) SyncEffectiveFieldsDuringCreateOrUpdate(plan DependencyList) {
+}
+
+func (newState *DependencyList) SyncEffectiveFieldsDuringRead(existingState DependencyList) {
 }
 
 // Disable a system schema
@@ -797,13 +1205,31 @@ type DisableRequest struct {
 	SchemaName types.String `tfsdk:"-"`
 }
 
+func (newState *DisableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableRequest) {
+}
+
+func (newState *DisableRequest) SyncEffectiveFieldsDuringRead(existingState DisableRequest) {
+}
+
 type DisableResponse struct {
+}
+
+func (newState *DisableResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableResponse) {
+}
+
+func (newState *DisableResponse) SyncEffectiveFieldsDuringRead(existingState DisableResponse) {
 }
 
 type EffectivePermissionsList struct {
 	// The privileges conveyed to each principal (either directly or via
 	// inheritance)
 	PrivilegeAssignments []EffectivePrivilegeAssignment `tfsdk:"privilege_assignments" tf:"optional"`
+}
+
+func (newState *EffectivePermissionsList) SyncEffectiveFieldsDuringCreateOrUpdate(plan EffectivePermissionsList) {
+}
+
+func (newState *EffectivePermissionsList) SyncEffectiveFieldsDuringRead(existingState EffectivePermissionsList) {
 }
 
 type EffectivePredictiveOptimizationFlag struct {
@@ -816,6 +1242,12 @@ type EffectivePredictiveOptimizationFlag struct {
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	Value types.String `tfsdk:"value" tf:""`
+}
+
+func (newState *EffectivePredictiveOptimizationFlag) SyncEffectiveFieldsDuringCreateOrUpdate(plan EffectivePredictiveOptimizationFlag) {
+}
+
+func (newState *EffectivePredictiveOptimizationFlag) SyncEffectiveFieldsDuringRead(existingState EffectivePredictiveOptimizationFlag) {
 }
 
 type EffectivePrivilege struct {
@@ -831,12 +1263,24 @@ type EffectivePrivilege struct {
 	Privilege types.String `tfsdk:"privilege" tf:"optional"`
 }
 
+func (newState *EffectivePrivilege) SyncEffectiveFieldsDuringCreateOrUpdate(plan EffectivePrivilege) {
+}
+
+func (newState *EffectivePrivilege) SyncEffectiveFieldsDuringRead(existingState EffectivePrivilege) {
+}
+
 type EffectivePrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal" tf:"optional"`
 	// The privileges conveyed to the principal (either directly or via
 	// inheritance).
 	Privileges []EffectivePrivilege `tfsdk:"privileges" tf:"optional"`
+}
+
+func (newState *EffectivePrivilegeAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan EffectivePrivilegeAssignment) {
+}
+
+func (newState *EffectivePrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState EffectivePrivilegeAssignment) {
 }
 
 // Enable a system schema
@@ -847,7 +1291,19 @@ type EnableRequest struct {
 	SchemaName types.String `tfsdk:"-"`
 }
 
+func (newState *EnableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableRequest) {
+}
+
+func (newState *EnableRequest) SyncEffectiveFieldsDuringRead(existingState EnableRequest) {
+}
+
 type EnableResponse struct {
+}
+
+func (newState *EnableResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableResponse) {
+}
+
+func (newState *EnableResponse) SyncEffectiveFieldsDuringRead(existingState EnableResponse) {
 }
 
 // Encryption options that apply to clients connecting to cloud storage.
@@ -856,10 +1312,22 @@ type EncryptionDetails struct {
 	SseEncryptionDetails []SseEncryptionDetails `tfsdk:"sse_encryption_details" tf:"optional,object"`
 }
 
+func (newState *EncryptionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan EncryptionDetails) {
+}
+
+func (newState *EncryptionDetails) SyncEffectiveFieldsDuringRead(existingState EncryptionDetails) {
+}
+
 // Get boolean reflecting if table exists
 type ExistsRequest struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
+}
+
+func (newState *ExistsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExistsRequest) {
+}
+
+func (newState *ExistsRequest) SyncEffectiveFieldsDuringRead(existingState ExistsRequest) {
 }
 
 type ExternalLocationInfo struct {
@@ -905,6 +1373,12 @@ type ExternalLocationInfo struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *ExternalLocationInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLocationInfo) {
+}
+
+func (newState *ExternalLocationInfo) SyncEffectiveFieldsDuringRead(existingState ExternalLocationInfo) {
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // OFFLINE_FAILED or the ONLINE_PIPELINE_FAILED state.
 type FailedStatus struct {
@@ -919,6 +1393,12 @@ type FailedStatus struct {
 	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
 }
 
+func (newState *FailedStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan FailedStatus) {
+}
+
+func (newState *FailedStatus) SyncEffectiveFieldsDuringRead(existingState FailedStatus) {
+}
+
 type ForeignKeyConstraint struct {
 	// Column names for this constraint.
 	ChildColumns []types.String `tfsdk:"child_columns" tf:""`
@@ -930,11 +1410,23 @@ type ForeignKeyConstraint struct {
 	ParentTable types.String `tfsdk:"parent_table" tf:""`
 }
 
+func (newState *ForeignKeyConstraint) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForeignKeyConstraint) {
+}
+
+func (newState *ForeignKeyConstraint) SyncEffectiveFieldsDuringRead(existingState ForeignKeyConstraint) {
+}
+
 // A function that is dependent on a SQL object.
 type FunctionDependency struct {
 	// Full name of the dependent function, in the form of
 	// __catalog_name__.__schema_name__.__function_name__.
 	FunctionFullName types.String `tfsdk:"function_full_name" tf:""`
+}
+
+func (newState *FunctionDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan FunctionDependency) {
+}
+
+func (newState *FunctionDependency) SyncEffectiveFieldsDuringRead(existingState FunctionDependency) {
 }
 
 type FunctionInfo struct {
@@ -1007,6 +1499,12 @@ type FunctionInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *FunctionInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FunctionInfo) {
+}
+
+func (newState *FunctionInfo) SyncEffectiveFieldsDuringRead(existingState FunctionInfo) {
+}
+
 type FunctionParameterInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -1034,16 +1532,34 @@ type FunctionParameterInfo struct {
 	TypeText types.String `tfsdk:"type_text" tf:""`
 }
 
+func (newState *FunctionParameterInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FunctionParameterInfo) {
+}
+
+func (newState *FunctionParameterInfo) SyncEffectiveFieldsDuringRead(existingState FunctionParameterInfo) {
+}
+
 type FunctionParameterInfos struct {
 	// The array of __FunctionParameterInfo__ definitions of the function's
 	// parameters.
 	Parameters []FunctionParameterInfo `tfsdk:"parameters" tf:"optional"`
 }
 
+func (newState *FunctionParameterInfos) SyncEffectiveFieldsDuringCreateOrUpdate(plan FunctionParameterInfos) {
+}
+
+func (newState *FunctionParameterInfos) SyncEffectiveFieldsDuringRead(existingState FunctionParameterInfos) {
+}
+
 // GCP temporary credentials for API authentication. Read more at
 // https://developers.google.com/identity/protocols/oauth2/service-account
 type GcpOauthToken struct {
 	OauthToken types.String `tfsdk:"oauth_token" tf:"optional"`
+}
+
+func (newState *GcpOauthToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpOauthToken) {
+}
+
+func (newState *GcpOauthToken) SyncEffectiveFieldsDuringRead(existingState GcpOauthToken) {
 }
 
 type GenerateTemporaryTableCredentialRequest struct {
@@ -1053,6 +1569,12 @@ type GenerateTemporaryTableCredentialRequest struct {
 	Operation types.String `tfsdk:"operation" tf:"optional"`
 	// UUID of the table to read or write.
 	TableId types.String `tfsdk:"table_id" tf:"optional"`
+}
+
+func (newState *GenerateTemporaryTableCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryTableCredentialRequest) {
+}
+
+func (newState *GenerateTemporaryTableCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryTableCredentialRequest) {
 }
 
 type GenerateTemporaryTableCredentialResponse struct {
@@ -1075,16 +1597,34 @@ type GenerateTemporaryTableCredentialResponse struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *GenerateTemporaryTableCredentialResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryTableCredentialResponse) {
+}
+
+func (newState *GenerateTemporaryTableCredentialResponse) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryTableCredentialResponse) {
+}
+
 // Gets the metastore assignment for a workspace
 type GetAccountMetastoreAssignmentRequest struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetAccountMetastoreAssignmentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAccountMetastoreAssignmentRequest) {
+}
+
+func (newState *GetAccountMetastoreAssignmentRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountMetastoreAssignmentRequest) {
+}
+
 // Get a metastore
 type GetAccountMetastoreRequest struct {
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
+}
+
+func (newState *GetAccountMetastoreRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAccountMetastoreRequest) {
+}
+
+func (newState *GetAccountMetastoreRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountMetastoreRequest) {
 }
 
 // Gets the named storage credential
@@ -1095,10 +1635,22 @@ type GetAccountStorageCredentialRequest struct {
 	StorageCredentialName types.String `tfsdk:"-"`
 }
 
+func (newState *GetAccountStorageCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAccountStorageCredentialRequest) {
+}
+
+func (newState *GetAccountStorageCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountStorageCredentialRequest) {
+}
+
 // Get an artifact allowlist
 type GetArtifactAllowlistRequest struct {
 	// The artifact type of the allowlist.
 	ArtifactType types.String `tfsdk:"-"`
+}
+
+func (newState *GetArtifactAllowlistRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetArtifactAllowlistRequest) {
+}
+
+func (newState *GetArtifactAllowlistRequest) SyncEffectiveFieldsDuringRead(existingState GetArtifactAllowlistRequest) {
 }
 
 // Get securable workspace bindings
@@ -1118,6 +1670,12 @@ type GetBindingsRequest struct {
 	SecurableType types.String `tfsdk:"-"`
 }
 
+func (newState *GetBindingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBindingsRequest) {
+}
+
+func (newState *GetBindingsRequest) SyncEffectiveFieldsDuringRead(existingState GetBindingsRequest) {
+}
+
 // Get Model Version By Alias
 type GetByAliasRequest struct {
 	// The name of the alias
@@ -1129,6 +1687,12 @@ type GetByAliasRequest struct {
 	IncludeAliases types.Bool `tfsdk:"-"`
 }
 
+func (newState *GetByAliasRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetByAliasRequest) {
+}
+
+func (newState *GetByAliasRequest) SyncEffectiveFieldsDuringRead(existingState GetByAliasRequest) {
+}
+
 // Get a catalog
 type GetCatalogRequest struct {
 	// Whether to include catalogs in the response for which the principal can
@@ -1138,10 +1702,22 @@ type GetCatalogRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *GetCatalogRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCatalogRequest) {
+}
+
+func (newState *GetCatalogRequest) SyncEffectiveFieldsDuringRead(existingState GetCatalogRequest) {
+}
+
 // Get a connection
 type GetConnectionRequest struct {
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *GetConnectionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetConnectionRequest) {
+}
+
+func (newState *GetConnectionRequest) SyncEffectiveFieldsDuringRead(existingState GetConnectionRequest) {
 }
 
 // Get effective permissions
@@ -1155,6 +1731,12 @@ type GetEffectiveRequest struct {
 	SecurableType types.String `tfsdk:"-"`
 }
 
+func (newState *GetEffectiveRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEffectiveRequest) {
+}
+
+func (newState *GetEffectiveRequest) SyncEffectiveFieldsDuringRead(existingState GetEffectiveRequest) {
+}
+
 // Get an external location
 type GetExternalLocationRequest struct {
 	// Whether to include external locations in the response for which the
@@ -1162,6 +1744,12 @@ type GetExternalLocationRequest struct {
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Name of the external location.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *GetExternalLocationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExternalLocationRequest) {
+}
+
+func (newState *GetExternalLocationRequest) SyncEffectiveFieldsDuringRead(existingState GetExternalLocationRequest) {
 }
 
 // Get a function
@@ -1172,6 +1760,12 @@ type GetFunctionRequest struct {
 	// The fully-qualified name of the function (of the form
 	// __catalog_name__.__schema_name__.__function__name__).
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *GetFunctionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetFunctionRequest) {
+}
+
+func (newState *GetFunctionRequest) SyncEffectiveFieldsDuringRead(existingState GetFunctionRequest) {
 }
 
 // Get permissions
@@ -1185,10 +1779,22 @@ type GetGrantRequest struct {
 	SecurableType types.String `tfsdk:"-"`
 }
 
+func (newState *GetGrantRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetGrantRequest) {
+}
+
+func (newState *GetGrantRequest) SyncEffectiveFieldsDuringRead(existingState GetGrantRequest) {
+}
+
 // Get a metastore
 type GetMetastoreRequest struct {
 	// Unique ID of the metastore.
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *GetMetastoreRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetMetastoreRequest) {
+}
+
+func (newState *GetMetastoreRequest) SyncEffectiveFieldsDuringRead(existingState GetMetastoreRequest) {
 }
 
 type GetMetastoreSummaryResponse struct {
@@ -1236,6 +1842,12 @@ type GetMetastoreSummaryResponse struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *GetMetastoreSummaryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetMetastoreSummaryResponse) {
+}
+
+func (newState *GetMetastoreSummaryResponse) SyncEffectiveFieldsDuringRead(existingState GetMetastoreSummaryResponse) {
+}
+
 // Get a Model Version
 type GetModelVersionRequest struct {
 	// The three-level (fully qualified) name of the model version
@@ -1250,16 +1862,34 @@ type GetModelVersionRequest struct {
 	Version types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelVersionRequest) {
+}
+
+func (newState *GetModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState GetModelVersionRequest) {
+}
+
 // Get an Online Table
 type GetOnlineTableRequest struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *GetOnlineTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetOnlineTableRequest) {
+}
+
+func (newState *GetOnlineTableRequest) SyncEffectiveFieldsDuringRead(existingState GetOnlineTableRequest) {
+}
+
 // Get a table monitor
 type GetQualityMonitorRequest struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
+}
+
+func (newState *GetQualityMonitorRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetQualityMonitorRequest) {
+}
+
+func (newState *GetQualityMonitorRequest) SyncEffectiveFieldsDuringRead(existingState GetQualityMonitorRequest) {
 }
 
 // Get information for a single resource quota.
@@ -1274,9 +1904,21 @@ type GetQuotaRequest struct {
 	QuotaName types.String `tfsdk:"-"`
 }
 
+func (newState *GetQuotaRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetQuotaRequest) {
+}
+
+func (newState *GetQuotaRequest) SyncEffectiveFieldsDuringRead(existingState GetQuotaRequest) {
+}
+
 type GetQuotaResponse struct {
 	// The returned QuotaInfo.
 	QuotaInfo []QuotaInfo `tfsdk:"quota_info" tf:"optional,object"`
+}
+
+func (newState *GetQuotaResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetQuotaResponse) {
+}
+
+func (newState *GetQuotaResponse) SyncEffectiveFieldsDuringRead(existingState GetQuotaResponse) {
 }
 
 // Get refresh
@@ -1285,6 +1927,12 @@ type GetRefreshRequest struct {
 	RefreshId types.String `tfsdk:"-"`
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
+}
+
+func (newState *GetRefreshRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRefreshRequest) {
+}
+
+func (newState *GetRefreshRequest) SyncEffectiveFieldsDuringRead(existingState GetRefreshRequest) {
 }
 
 // Get a Registered Model
@@ -1298,6 +1946,12 @@ type GetRegisteredModelRequest struct {
 	IncludeBrowse types.Bool `tfsdk:"-"`
 }
 
+func (newState *GetRegisteredModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRegisteredModelRequest) {
+}
+
+func (newState *GetRegisteredModelRequest) SyncEffectiveFieldsDuringRead(existingState GetRegisteredModelRequest) {
+}
+
 // Get a schema
 type GetSchemaRequest struct {
 	// Full name of the schema.
@@ -1307,10 +1961,22 @@ type GetSchemaRequest struct {
 	IncludeBrowse types.Bool `tfsdk:"-"`
 }
 
+func (newState *GetSchemaRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSchemaRequest) {
+}
+
+func (newState *GetSchemaRequest) SyncEffectiveFieldsDuringRead(existingState GetSchemaRequest) {
+}
+
 // Get a credential
 type GetStorageCredentialRequest struct {
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *GetStorageCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetStorageCredentialRequest) {
+}
+
+func (newState *GetStorageCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GetStorageCredentialRequest) {
 }
 
 // Get a table
@@ -1326,10 +1992,22 @@ type GetTableRequest struct {
 	IncludeManifestCapabilities types.Bool `tfsdk:"-"`
 }
 
+func (newState *GetTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetTableRequest) {
+}
+
+func (newState *GetTableRequest) SyncEffectiveFieldsDuringRead(existingState GetTableRequest) {
+}
+
 // Get catalog workspace bindings
 type GetWorkspaceBindingRequest struct {
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *GetWorkspaceBindingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceBindingRequest) {
+}
+
+func (newState *GetWorkspaceBindingRequest) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceBindingRequest) {
 }
 
 // Get all workspaces assigned to a metastore
@@ -1338,9 +2016,21 @@ type ListAccountMetastoreAssignmentsRequest struct {
 	MetastoreId types.String `tfsdk:"-"`
 }
 
+func (newState *ListAccountMetastoreAssignmentsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAccountMetastoreAssignmentsRequest) {
+}
+
+func (newState *ListAccountMetastoreAssignmentsRequest) SyncEffectiveFieldsDuringRead(existingState ListAccountMetastoreAssignmentsRequest) {
+}
+
 // The list of workspaces to which the given metastore is assigned.
 type ListAccountMetastoreAssignmentsResponse struct {
 	WorkspaceIds []types.Int64 `tfsdk:"workspace_ids" tf:"optional"`
+}
+
+func (newState *ListAccountMetastoreAssignmentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAccountMetastoreAssignmentsResponse) {
+}
+
+func (newState *ListAccountMetastoreAssignmentsResponse) SyncEffectiveFieldsDuringRead(existingState ListAccountMetastoreAssignmentsResponse) {
 }
 
 // Get all storage credentials assigned to a metastore
@@ -1349,9 +2039,21 @@ type ListAccountStorageCredentialsRequest struct {
 	MetastoreId types.String `tfsdk:"-"`
 }
 
+func (newState *ListAccountStorageCredentialsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAccountStorageCredentialsRequest) {
+}
+
+func (newState *ListAccountStorageCredentialsRequest) SyncEffectiveFieldsDuringRead(existingState ListAccountStorageCredentialsRequest) {
+}
+
 type ListAccountStorageCredentialsResponse struct {
 	// An array of metastore storage credentials.
 	StorageCredentials []StorageCredentialInfo `tfsdk:"storage_credentials" tf:"optional"`
+}
+
+func (newState *ListAccountStorageCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAccountStorageCredentialsResponse) {
+}
+
+func (newState *ListAccountStorageCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState ListAccountStorageCredentialsResponse) {
 }
 
 // List catalogs
@@ -1373,6 +2075,12 @@ type ListCatalogsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListCatalogsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCatalogsRequest) {
+}
+
+func (newState *ListCatalogsRequest) SyncEffectiveFieldsDuringRead(existingState ListCatalogsRequest) {
+}
+
 type ListCatalogsResponse struct {
 	// An array of catalog information objects.
 	Catalogs []CatalogInfo `tfsdk:"catalogs" tf:"optional"`
@@ -1380,6 +2088,12 @@ type ListCatalogsResponse struct {
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListCatalogsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCatalogsResponse) {
+}
+
+func (newState *ListCatalogsResponse) SyncEffectiveFieldsDuringRead(existingState ListCatalogsResponse) {
 }
 
 // List connections
@@ -1395,6 +2109,12 @@ type ListConnectionsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListConnectionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListConnectionsRequest) {
+}
+
+func (newState *ListConnectionsRequest) SyncEffectiveFieldsDuringRead(existingState ListConnectionsRequest) {
+}
+
 type ListConnectionsResponse struct {
 	// An array of connection information objects.
 	Connections []ConnectionInfo `tfsdk:"connections" tf:"optional"`
@@ -1402,6 +2122,12 @@ type ListConnectionsResponse struct {
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListConnectionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListConnectionsResponse) {
+}
+
+func (newState *ListConnectionsResponse) SyncEffectiveFieldsDuringRead(existingState ListConnectionsResponse) {
 }
 
 // List external locations
@@ -1420,6 +2146,12 @@ type ListExternalLocationsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListExternalLocationsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExternalLocationsRequest) {
+}
+
+func (newState *ListExternalLocationsRequest) SyncEffectiveFieldsDuringRead(existingState ListExternalLocationsRequest) {
+}
+
 type ListExternalLocationsResponse struct {
 	// An array of external locations.
 	ExternalLocations []ExternalLocationInfo `tfsdk:"external_locations" tf:"optional"`
@@ -1427,6 +2159,12 @@ type ListExternalLocationsResponse struct {
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListExternalLocationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExternalLocationsResponse) {
+}
+
+func (newState *ListExternalLocationsResponse) SyncEffectiveFieldsDuringRead(existingState ListExternalLocationsResponse) {
 }
 
 // List functions
@@ -1449,6 +2187,12 @@ type ListFunctionsRequest struct {
 	SchemaName types.String `tfsdk:"-"`
 }
 
+func (newState *ListFunctionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFunctionsRequest) {
+}
+
+func (newState *ListFunctionsRequest) SyncEffectiveFieldsDuringRead(existingState ListFunctionsRequest) {
+}
+
 type ListFunctionsResponse struct {
 	// An array of function information objects.
 	Functions []FunctionInfo `tfsdk:"functions" tf:"optional"`
@@ -1458,9 +2202,21 @@ type ListFunctionsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+func (newState *ListFunctionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFunctionsResponse) {
+}
+
+func (newState *ListFunctionsResponse) SyncEffectiveFieldsDuringRead(existingState ListFunctionsResponse) {
+}
+
 type ListMetastoresResponse struct {
 	// An array of metastore information objects.
 	Metastores []MetastoreInfo `tfsdk:"metastores" tf:"optional"`
+}
+
+func (newState *ListMetastoresResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListMetastoresResponse) {
+}
+
+func (newState *ListMetastoresResponse) SyncEffectiveFieldsDuringRead(existingState ListMetastoresResponse) {
 }
 
 // List Model Versions
@@ -1483,6 +2239,12 @@ type ListModelVersionsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListModelVersionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListModelVersionsRequest) {
+}
+
+func (newState *ListModelVersionsRequest) SyncEffectiveFieldsDuringRead(existingState ListModelVersionsRequest) {
+}
+
 type ListModelVersionsResponse struct {
 	ModelVersions []ModelVersionInfo `tfsdk:"model_versions" tf:"optional"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
@@ -1491,12 +2253,24 @@ type ListModelVersionsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+func (newState *ListModelVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListModelVersionsResponse) {
+}
+
+func (newState *ListModelVersionsResponse) SyncEffectiveFieldsDuringRead(existingState ListModelVersionsResponse) {
+}
+
 // List all resource quotas under a metastore.
 type ListQuotasRequest struct {
 	// The number of quotas to return.
 	MaxResults types.Int64 `tfsdk:"-"`
 	// Opaque token for the next page of results.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListQuotasRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQuotasRequest) {
+}
+
+func (newState *ListQuotasRequest) SyncEffectiveFieldsDuringRead(existingState ListQuotasRequest) {
 }
 
 type ListQuotasResponse struct {
@@ -1508,10 +2282,22 @@ type ListQuotasResponse struct {
 	Quotas []QuotaInfo `tfsdk:"quotas" tf:"optional"`
 }
 
+func (newState *ListQuotasResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQuotasResponse) {
+}
+
+func (newState *ListQuotasResponse) SyncEffectiveFieldsDuringRead(existingState ListQuotasResponse) {
+}
+
 // List refreshes
 type ListRefreshesRequest struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
+}
+
+func (newState *ListRefreshesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRefreshesRequest) {
+}
+
+func (newState *ListRefreshesRequest) SyncEffectiveFieldsDuringRead(existingState ListRefreshesRequest) {
 }
 
 // List Registered Models
@@ -1547,12 +2333,24 @@ type ListRegisteredModelsRequest struct {
 	SchemaName types.String `tfsdk:"-"`
 }
 
+func (newState *ListRegisteredModelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRegisteredModelsRequest) {
+}
+
+func (newState *ListRegisteredModelsRequest) SyncEffectiveFieldsDuringRead(existingState ListRegisteredModelsRequest) {
+}
+
 type ListRegisteredModelsResponse struct {
 	// Opaque token for pagination. Omitted if there are no more results.
 	// page_token should be set to this value for fetching the next page.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
 	RegisteredModels []RegisteredModelInfo `tfsdk:"registered_models" tf:"optional"`
+}
+
+func (newState *ListRegisteredModelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRegisteredModelsResponse) {
+}
+
+func (newState *ListRegisteredModelsResponse) SyncEffectiveFieldsDuringRead(existingState ListRegisteredModelsResponse) {
 }
 
 // List schemas
@@ -1573,6 +2371,12 @@ type ListSchemasRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListSchemasRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchemasRequest) {
+}
+
+func (newState *ListSchemasRequest) SyncEffectiveFieldsDuringRead(existingState ListSchemasRequest) {
+}
+
 type ListSchemasResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -1580,6 +2384,12 @@ type ListSchemasResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of schema information objects.
 	Schemas []SchemaInfo `tfsdk:"schemas" tf:"optional"`
+}
+
+func (newState *ListSchemasResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchemasResponse) {
+}
+
+func (newState *ListSchemasResponse) SyncEffectiveFieldsDuringRead(existingState ListSchemasResponse) {
 }
 
 // List credentials
@@ -1595,6 +2405,12 @@ type ListStorageCredentialsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListStorageCredentialsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListStorageCredentialsRequest) {
+}
+
+func (newState *ListStorageCredentialsRequest) SyncEffectiveFieldsDuringRead(existingState ListStorageCredentialsRequest) {
+}
+
 type ListStorageCredentialsResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -1602,6 +2418,12 @@ type ListStorageCredentialsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
 	StorageCredentials []StorageCredentialInfo `tfsdk:"storage_credentials" tf:"optional"`
+}
+
+func (newState *ListStorageCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListStorageCredentialsResponse) {
+}
+
+func (newState *ListStorageCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState ListStorageCredentialsResponse) {
 }
 
 // List table summaries
@@ -1628,6 +2450,12 @@ type ListSummariesRequest struct {
 	TableNamePattern types.String `tfsdk:"-"`
 }
 
+func (newState *ListSummariesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSummariesRequest) {
+}
+
+func (newState *ListSummariesRequest) SyncEffectiveFieldsDuringRead(existingState ListSummariesRequest) {
+}
+
 // List system schemas
 type ListSystemSchemasRequest struct {
 	// Maximum number of schemas to return. - When set to 0, the page length is
@@ -1643,6 +2471,12 @@ type ListSystemSchemasRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListSystemSchemasRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSystemSchemasRequest) {
+}
+
+func (newState *ListSystemSchemasRequest) SyncEffectiveFieldsDuringRead(existingState ListSystemSchemasRequest) {
+}
+
 type ListSystemSchemasResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -1652,6 +2486,12 @@ type ListSystemSchemasResponse struct {
 	Schemas []SystemSchemaInfo `tfsdk:"schemas" tf:"optional"`
 }
 
+func (newState *ListSystemSchemasResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSystemSchemasResponse) {
+}
+
+func (newState *ListSystemSchemasResponse) SyncEffectiveFieldsDuringRead(existingState ListSystemSchemasResponse) {
+}
+
 type ListTableSummariesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -1659,6 +2499,12 @@ type ListTableSummariesResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// List of table summaries.
 	Tables []TableSummary `tfsdk:"tables" tf:"optional"`
+}
+
+func (newState *ListTableSummariesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTableSummariesResponse) {
+}
+
+func (newState *ListTableSummariesResponse) SyncEffectiveFieldsDuringRead(existingState ListTableSummariesResponse) {
 }
 
 // List tables
@@ -1689,6 +2535,12 @@ type ListTablesRequest struct {
 	SchemaName types.String `tfsdk:"-"`
 }
 
+func (newState *ListTablesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTablesRequest) {
+}
+
+func (newState *ListTablesRequest) SyncEffectiveFieldsDuringRead(existingState ListTablesRequest) {
+}
+
 type ListTablesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -1696,6 +2548,12 @@ type ListTablesResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of table information objects.
 	Tables []TableInfo `tfsdk:"tables" tf:"optional"`
+}
+
+func (newState *ListTablesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTablesResponse) {
+}
+
+func (newState *ListTablesResponse) SyncEffectiveFieldsDuringRead(existingState ListTablesResponse) {
 }
 
 // List Volumes
@@ -1725,6 +2583,12 @@ type ListVolumesRequest struct {
 	SchemaName types.String `tfsdk:"-"`
 }
 
+func (newState *ListVolumesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVolumesRequest) {
+}
+
+func (newState *ListVolumesRequest) SyncEffectiveFieldsDuringRead(existingState ListVolumesRequest) {
+}
+
 type ListVolumesResponseContent struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -1734,6 +2598,12 @@ type ListVolumesResponseContent struct {
 	Volumes []VolumeInfo `tfsdk:"volumes" tf:"optional"`
 }
 
+func (newState *ListVolumesResponseContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVolumesResponseContent) {
+}
+
+func (newState *ListVolumesResponseContent) SyncEffectiveFieldsDuringRead(existingState ListVolumesResponseContent) {
+}
+
 type MetastoreAssignment struct {
 	// The name of the default catalog in the metastore.
 	DefaultCatalogName types.String `tfsdk:"default_catalog_name" tf:"optional"`
@@ -1741,6 +2611,12 @@ type MetastoreAssignment struct {
 	MetastoreId types.String `tfsdk:"metastore_id" tf:""`
 	// The unique ID of the Databricks workspace.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:""`
+}
+
+func (newState *MetastoreAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan MetastoreAssignment) {
+}
+
+func (newState *MetastoreAssignment) SyncEffectiveFieldsDuringRead(existingState MetastoreAssignment) {
 }
 
 type MetastoreInfo struct {
@@ -1786,6 +2662,12 @@ type MetastoreInfo struct {
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 	// Username of user who last modified the metastore.
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+}
+
+func (newState *MetastoreInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan MetastoreInfo) {
+}
+
+func (newState *MetastoreInfo) SyncEffectiveFieldsDuringRead(existingState MetastoreInfo) {
 }
 
 type ModelVersionInfo struct {
@@ -1841,6 +2723,12 @@ type ModelVersionInfo struct {
 	Version types.Int64 `tfsdk:"version" tf:"optional"`
 }
 
+func (newState *ModelVersionInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelVersionInfo) {
+}
+
+func (newState *ModelVersionInfo) SyncEffectiveFieldsDuringRead(existingState ModelVersionInfo) {
+}
+
 type MonitorCronSchedule struct {
 	// Read only field that indicates whether a schedule is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
@@ -1853,15 +2741,33 @@ type MonitorCronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id" tf:""`
 }
 
+func (newState *MonitorCronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorCronSchedule) {
+}
+
+func (newState *MonitorCronSchedule) SyncEffectiveFieldsDuringRead(existingState MonitorCronSchedule) {
+}
+
 type MonitorDataClassificationConfig struct {
 	// Whether data classification is enabled.
 	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+}
+
+func (newState *MonitorDataClassificationConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorDataClassificationConfig) {
+}
+
+func (newState *MonitorDataClassificationConfig) SyncEffectiveFieldsDuringRead(existingState MonitorDataClassificationConfig) {
 }
 
 type MonitorDestination struct {
 	// The list of email addresses to send the notification to. A maximum of 5
 	// email addresses is supported.
 	EmailAddresses []types.String `tfsdk:"email_addresses" tf:"optional"`
+}
+
+func (newState *MonitorDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorDestination) {
+}
+
+func (newState *MonitorDestination) SyncEffectiveFieldsDuringRead(existingState MonitorDestination) {
 }
 
 type MonitorInferenceLog struct {
@@ -1893,6 +2799,12 @@ type MonitorInferenceLog struct {
 	//
 	// [function]: https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.to_timestamp.html
 	TimestampCol types.String `tfsdk:"timestamp_col" tf:""`
+}
+
+func (newState *MonitorInferenceLog) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorInferenceLog) {
+}
+
+func (newState *MonitorInferenceLog) SyncEffectiveFieldsDuringRead(existingState MonitorInferenceLog) {
 }
 
 type MonitorInfo struct {
@@ -1947,6 +2859,12 @@ type MonitorInfo struct {
 	TimeSeries []MonitorTimeSeries `tfsdk:"time_series" tf:"optional,object"`
 }
 
+func (newState *MonitorInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorInfo) {
+}
+
+func (newState *MonitorInfo) SyncEffectiveFieldsDuringRead(existingState MonitorInfo) {
+}
+
 type MonitorMetric struct {
 	// Jinja template for a SQL expression that specifies how to compute the
 	// metric. See [create metric definition].
@@ -1974,12 +2892,24 @@ type MonitorMetric struct {
 	Type types.String `tfsdk:"type" tf:""`
 }
 
+func (newState *MonitorMetric) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorMetric) {
+}
+
+func (newState *MonitorMetric) SyncEffectiveFieldsDuringRead(existingState MonitorMetric) {
+}
+
 type MonitorNotifications struct {
 	// Who to send notifications to on monitor failure.
 	OnFailure []MonitorDestination `tfsdk:"on_failure" tf:"optional,object"`
 	// Who to send notifications to when new data classification tags are
 	// detected.
 	OnNewClassificationTagDetected []MonitorDestination `tfsdk:"on_new_classification_tag_detected" tf:"optional,object"`
+}
+
+func (newState *MonitorNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorNotifications) {
+}
+
+func (newState *MonitorNotifications) SyncEffectiveFieldsDuringRead(existingState MonitorNotifications) {
 }
 
 type MonitorRefreshInfo struct {
@@ -2000,12 +2930,30 @@ type MonitorRefreshInfo struct {
 	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 }
 
+func (newState *MonitorRefreshInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorRefreshInfo) {
+}
+
+func (newState *MonitorRefreshInfo) SyncEffectiveFieldsDuringRead(existingState MonitorRefreshInfo) {
+}
+
 type MonitorRefreshListResponse struct {
 	// List of refreshes.
 	Refreshes []MonitorRefreshInfo `tfsdk:"refreshes" tf:"optional"`
 }
 
+func (newState *MonitorRefreshListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorRefreshListResponse) {
+}
+
+func (newState *MonitorRefreshListResponse) SyncEffectiveFieldsDuringRead(existingState MonitorRefreshListResponse) {
+}
+
 type MonitorSnapshot struct {
+}
+
+func (newState *MonitorSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorSnapshot) {
+}
+
+func (newState *MonitorSnapshot) SyncEffectiveFieldsDuringRead(existingState MonitorSnapshot) {
 }
 
 type MonitorTimeSeries struct {
@@ -2023,9 +2971,21 @@ type MonitorTimeSeries struct {
 	TimestampCol types.String `tfsdk:"timestamp_col" tf:""`
 }
 
+func (newState *MonitorTimeSeries) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorTimeSeries) {
+}
+
+func (newState *MonitorTimeSeries) SyncEffectiveFieldsDuringRead(existingState MonitorTimeSeries) {
+}
+
 type NamedTableConstraint struct {
 	// The name of the constraint.
 	Name types.String `tfsdk:"name" tf:""`
+}
+
+func (newState *NamedTableConstraint) SyncEffectiveFieldsDuringCreateOrUpdate(plan NamedTableConstraint) {
+}
+
+func (newState *NamedTableConstraint) SyncEffectiveFieldsDuringRead(existingState NamedTableConstraint) {
 }
 
 // Online Table information.
@@ -2034,10 +2994,27 @@ type OnlineTable struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Specification of the online table.
 	Spec []OnlineTableSpec `tfsdk:"spec" tf:"optional,object"`
-	// Online Table status
+	// Online Table data synchronization status
 	Status []OnlineTableStatus `tfsdk:"status" tf:"optional,object"`
 	// Data serving REST API URL for this table
-	TableServingUrl types.String `tfsdk:"table_serving_url" tf:"optional"`
+	TableServingUrl          types.String `tfsdk:"table_serving_url" tf:"optional"`
+	EffectiveTableServingUrl types.String `tfsdk:"effective_table_serving_url" tf:"computed,optional"`
+	// The provisioning state of the online table entity in Unity Catalog. This
+	// is distinct from the state of the data synchronization pipeline (i.e. the
+	// table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it
+	// runs asynchronously).
+	UnityCatalogProvisioningState types.String `tfsdk:"unity_catalog_provisioning_state" tf:"optional"`
+}
+
+func (newState *OnlineTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan OnlineTable) {
+	newState.EffectiveTableServingUrl = newState.TableServingUrl
+	newState.TableServingUrl = plan.TableServingUrl
+}
+
+func (newState *OnlineTable) SyncEffectiveFieldsDuringRead(existingState OnlineTable) {
+	if existingState.EffectiveTableServingUrl.ValueString() == newState.TableServingUrl.ValueString() {
+		newState.TableServingUrl = existingState.TableServingUrl
+	}
 }
 
 // Specification of an online table.
@@ -2052,7 +3029,8 @@ type OnlineTableSpec struct {
 	PerformFullCopy types.Bool `tfsdk:"perform_full_copy" tf:"optional"`
 	// ID of the associated pipeline. Generated by the server - cannot be set by
 	// the caller.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	PipelineId          types.String `tfsdk:"pipeline_id" tf:"optional"`
+	EffectivePipelineId types.String `tfsdk:"effective_pipeline_id" tf:"computed,optional"`
 	// Primary Key columns to be used for data insert/update in the destination.
 	PrimaryKeyColumns []types.String `tfsdk:"primary_key_columns" tf:"optional"`
 	// Pipeline runs continuously after generating the initial data.
@@ -2067,10 +3045,33 @@ type OnlineTableSpec struct {
 	TimeseriesKey types.String `tfsdk:"timeseries_key" tf:"optional"`
 }
 
+func (newState *OnlineTableSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan OnlineTableSpec) {
+	newState.EffectivePipelineId = newState.PipelineId
+	newState.PipelineId = plan.PipelineId
+}
+
+func (newState *OnlineTableSpec) SyncEffectiveFieldsDuringRead(existingState OnlineTableSpec) {
+	if existingState.EffectivePipelineId.ValueString() == newState.PipelineId.ValueString() {
+		newState.PipelineId = existingState.PipelineId
+	}
+}
+
 type OnlineTableSpecContinuousSchedulingPolicy struct {
 }
 
+func (newState *OnlineTableSpecContinuousSchedulingPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan OnlineTableSpecContinuousSchedulingPolicy) {
+}
+
+func (newState *OnlineTableSpecContinuousSchedulingPolicy) SyncEffectiveFieldsDuringRead(existingState OnlineTableSpecContinuousSchedulingPolicy) {
+}
+
 type OnlineTableSpecTriggeredSchedulingPolicy struct {
+}
+
+func (newState *OnlineTableSpecTriggeredSchedulingPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan OnlineTableSpecTriggeredSchedulingPolicy) {
+}
+
+func (newState *OnlineTableSpecTriggeredSchedulingPolicy) SyncEffectiveFieldsDuringRead(existingState OnlineTableSpecTriggeredSchedulingPolicy) {
 }
 
 // Status of an online table.
@@ -2094,6 +3095,12 @@ type OnlineTableStatus struct {
 	TriggeredUpdateStatus []TriggeredUpdateStatus `tfsdk:"triggered_update_status" tf:"optional,object"`
 }
 
+func (newState *OnlineTableStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan OnlineTableStatus) {
+}
+
+func (newState *OnlineTableStatus) SyncEffectiveFieldsDuringRead(existingState OnlineTableStatus) {
+}
+
 type PermissionsChange struct {
 	// The set of privileges to add.
 	Add []types.String `tfsdk:"add" tf:"optional"`
@@ -2103,9 +3110,21 @@ type PermissionsChange struct {
 	Remove []types.String `tfsdk:"remove" tf:"optional"`
 }
 
+func (newState *PermissionsChange) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionsChange) {
+}
+
+func (newState *PermissionsChange) SyncEffectiveFieldsDuringRead(existingState PermissionsChange) {
+}
+
 type PermissionsList struct {
 	// The privileges assigned to each principal
 	PrivilegeAssignments []PrivilegeAssignment `tfsdk:"privilege_assignments" tf:"optional"`
+}
+
+func (newState *PermissionsList) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionsList) {
+}
+
+func (newState *PermissionsList) SyncEffectiveFieldsDuringRead(existingState PermissionsList) {
 }
 
 // Progress information of the Online Table data synchronization pipeline.
@@ -2124,11 +3143,23 @@ type PipelineProgress struct {
 	TotalRowCount types.Int64 `tfsdk:"total_row_count" tf:"optional"`
 }
 
+func (newState *PipelineProgress) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineProgress) {
+}
+
+func (newState *PipelineProgress) SyncEffectiveFieldsDuringRead(existingState PipelineProgress) {
+}
+
 type PrimaryKeyConstraint struct {
 	// Column names for this constraint.
 	ChildColumns []types.String `tfsdk:"child_columns" tf:""`
 	// The name of the constraint.
 	Name types.String `tfsdk:"name" tf:""`
+}
+
+func (newState *PrimaryKeyConstraint) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrimaryKeyConstraint) {
+}
+
+func (newState *PrimaryKeyConstraint) SyncEffectiveFieldsDuringRead(existingState PrimaryKeyConstraint) {
 }
 
 type PrivilegeAssignment struct {
@@ -2138,9 +3169,21 @@ type PrivilegeAssignment struct {
 	Privileges []types.String `tfsdk:"privileges" tf:"optional"`
 }
 
+func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrivilegeAssignment) {
+}
+
+func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState PrivilegeAssignment) {
+}
+
 // Status of an asynchronously provisioned resource.
 type ProvisioningInfo struct {
 	State types.String `tfsdk:"state" tf:"optional"`
+}
+
+func (newState *ProvisioningInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProvisioningInfo) {
+}
+
+func (newState *ProvisioningInfo) SyncEffectiveFieldsDuringRead(existingState ProvisioningInfo) {
 }
 
 // Detailed status of an online table. Shown if the online table is in the
@@ -2149,6 +3192,12 @@ type ProvisioningStatus struct {
 	// Details about initial data synchronization. Only populated when in the
 	// PROVISIONING_INITIAL_SNAPSHOT state.
 	InitialPipelineSyncProgress []PipelineProgress `tfsdk:"initial_pipeline_sync_progress" tf:"optional,object"`
+}
+
+func (newState *ProvisioningStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProvisioningStatus) {
+}
+
+func (newState *ProvisioningStatus) SyncEffectiveFieldsDuringRead(existingState ProvisioningStatus) {
 }
 
 type QuotaInfo struct {
@@ -2167,6 +3216,12 @@ type QuotaInfo struct {
 	QuotaName types.String `tfsdk:"quota_name" tf:"optional"`
 }
 
+func (newState *QuotaInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuotaInfo) {
+}
+
+func (newState *QuotaInfo) SyncEffectiveFieldsDuringRead(existingState QuotaInfo) {
+}
+
 // R2 temporary credentials for API authentication. Read more at
 // https://developers.cloudflare.com/r2/api/s3/tokens/.
 type R2Credentials struct {
@@ -2178,6 +3233,12 @@ type R2Credentials struct {
 	SessionToken types.String `tfsdk:"session_token" tf:"optional"`
 }
 
+func (newState *R2Credentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan R2Credentials) {
+}
+
+func (newState *R2Credentials) SyncEffectiveFieldsDuringRead(existingState R2Credentials) {
+}
+
 // Get a Volume
 type ReadVolumeRequest struct {
 	// Whether to include volumes in the response for which the principal can
@@ -2185,6 +3246,12 @@ type ReadVolumeRequest struct {
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// The three-level (fully qualified) name of the volume
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *ReadVolumeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadVolumeRequest) {
+}
+
+func (newState *ReadVolumeRequest) SyncEffectiveFieldsDuringRead(existingState ReadVolumeRequest) {
 }
 
 type RegenerateDashboardRequest struct {
@@ -2195,11 +3262,23 @@ type RegenerateDashboardRequest struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *RegenerateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegenerateDashboardRequest) {
+}
+
+func (newState *RegenerateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState RegenerateDashboardRequest) {
+}
+
 type RegenerateDashboardResponse struct {
 	// Id of the regenerated monitoring dashboard.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
 	// The directory where the regenerated dashboard is stored.
 	ParentFolder types.String `tfsdk:"parent_folder" tf:"optional"`
+}
+
+func (newState *RegenerateDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegenerateDashboardResponse) {
+}
+
+func (newState *RegenerateDashboardResponse) SyncEffectiveFieldsDuringRead(existingState RegenerateDashboardResponse) {
 }
 
 // Registered model alias.
@@ -2208,6 +3287,12 @@ type RegisteredModelAlias struct {
 	AliasName types.String `tfsdk:"alias_name" tf:"optional"`
 	// Integer version number of the model version to which this alias points.
 	VersionNum types.Int64 `tfsdk:"version_num" tf:"optional"`
+}
+
+func (newState *RegisteredModelAlias) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelAlias) {
+}
+
+func (newState *RegisteredModelAlias) SyncEffectiveFieldsDuringRead(existingState RegisteredModelAlias) {
 }
 
 type RegisteredModelInfo struct {
@@ -2246,10 +3331,22 @@ type RegisteredModelInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *RegisteredModelInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelInfo) {
+}
+
+func (newState *RegisteredModelInfo) SyncEffectiveFieldsDuringRead(existingState RegisteredModelInfo) {
+}
+
 // Queue a metric refresh for a monitor
 type RunRefreshRequest struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
+}
+
+func (newState *RunRefreshRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunRefreshRequest) {
+}
+
+func (newState *RunRefreshRequest) SyncEffectiveFieldsDuringRead(existingState RunRefreshRequest) {
 }
 
 type SchemaInfo struct {
@@ -2294,11 +3391,23 @@ type SchemaInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *SchemaInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaInfo) {
+}
+
+func (newState *SchemaInfo) SyncEffectiveFieldsDuringRead(existingState SchemaInfo) {
+}
+
 type SetArtifactAllowlist struct {
 	// A list of allowed artifact match patterns.
 	ArtifactMatchers []ArtifactMatcher `tfsdk:"artifact_matchers" tf:""`
 	// The artifact type of the allowlist.
 	ArtifactType types.String `tfsdk:"-"`
+}
+
+func (newState *SetArtifactAllowlist) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetArtifactAllowlist) {
+}
+
+func (newState *SetArtifactAllowlist) SyncEffectiveFieldsDuringRead(existingState SetArtifactAllowlist) {
 }
 
 type SetRegisteredModelAliasRequest struct {
@@ -2310,6 +3419,12 @@ type SetRegisteredModelAliasRequest struct {
 	VersionNum types.Int64 `tfsdk:"version_num" tf:""`
 }
 
+func (newState *SetRegisteredModelAliasRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetRegisteredModelAliasRequest) {
+}
+
+func (newState *SetRegisteredModelAliasRequest) SyncEffectiveFieldsDuringRead(existingState SetRegisteredModelAliasRequest) {
+}
+
 // Server-Side Encryption properties for clients communicating with AWS s3.
 type SseEncryptionDetails struct {
 	// The type of key encryption to use (affects headers from s3 client).
@@ -2317,6 +3432,12 @@ type SseEncryptionDetails struct {
 	// When algorithm is **AWS_SSE_KMS** this field specifies the ARN of the SSE
 	// key to use.
 	AwsKmsKeyArn types.String `tfsdk:"aws_kms_key_arn" tf:"optional"`
+}
+
+func (newState *SseEncryptionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan SseEncryptionDetails) {
+}
+
+func (newState *SseEncryptionDetails) SyncEffectiveFieldsDuringRead(existingState SseEncryptionDetails) {
 }
 
 type StorageCredentialInfo struct {
@@ -2358,12 +3479,24 @@ type StorageCredentialInfo struct {
 	UsedForManagedStorage types.Bool `tfsdk:"used_for_managed_storage" tf:"optional"`
 }
 
+func (newState *StorageCredentialInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan StorageCredentialInfo) {
+}
+
+func (newState *StorageCredentialInfo) SyncEffectiveFieldsDuringRead(existingState StorageCredentialInfo) {
+}
+
 type SystemSchemaInfo struct {
 	// Name of the system schema.
 	Schema types.String `tfsdk:"schema" tf:"optional"`
 	// The current state of enablement for the system schema. An empty string
 	// means the system schema is available and ready for opt-in.
 	State types.String `tfsdk:"state" tf:"optional"`
+}
+
+func (newState *SystemSchemaInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan SystemSchemaInfo) {
+}
+
+func (newState *SystemSchemaInfo) SyncEffectiveFieldsDuringRead(existingState SystemSchemaInfo) {
 }
 
 // A table constraint, as defined by *one* of the following fields being set:
@@ -2377,6 +3510,12 @@ type TableConstraint struct {
 	PrimaryKeyConstraint []PrimaryKeyConstraint `tfsdk:"primary_key_constraint" tf:"optional,object"`
 }
 
+func (newState *TableConstraint) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableConstraint) {
+}
+
+func (newState *TableConstraint) SyncEffectiveFieldsDuringRead(existingState TableConstraint) {
+}
+
 // A table that is dependent on a SQL object.
 type TableDependency struct {
 	// Full name of the dependent table, in the form of
@@ -2384,9 +3523,21 @@ type TableDependency struct {
 	TableFullName types.String `tfsdk:"table_full_name" tf:""`
 }
 
+func (newState *TableDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableDependency) {
+}
+
+func (newState *TableDependency) SyncEffectiveFieldsDuringRead(existingState TableDependency) {
+}
+
 type TableExistsResponse struct {
 	// Whether the table exists or not.
 	TableExists types.Bool `tfsdk:"table_exists" tf:"optional"`
+}
+
+func (newState *TableExistsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableExistsResponse) {
+}
+
+func (newState *TableExistsResponse) SyncEffectiveFieldsDuringRead(existingState TableExistsResponse) {
 }
 
 type TableInfo struct {
@@ -2469,6 +3620,12 @@ type TableInfo struct {
 	ViewDependencies []DependencyList `tfsdk:"view_dependencies" tf:"optional,object"`
 }
 
+func (newState *TableInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableInfo) {
+}
+
+func (newState *TableInfo) SyncEffectiveFieldsDuringRead(existingState TableInfo) {
+}
+
 type TableRowFilter struct {
 	// The full name of the row filter SQL UDF.
 	FunctionName types.String `tfsdk:"function_name" tf:""`
@@ -2478,11 +3635,23 @@ type TableRowFilter struct {
 	InputColumnNames []types.String `tfsdk:"input_column_names" tf:""`
 }
 
+func (newState *TableRowFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableRowFilter) {
+}
+
+func (newState *TableRowFilter) SyncEffectiveFieldsDuringRead(existingState TableRowFilter) {
+}
+
 type TableSummary struct {
 	// The full name of the table.
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 
 	TableType types.String `tfsdk:"table_type" tf:"optional"`
+}
+
+func (newState *TableSummary) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSummary) {
+}
+
+func (newState *TableSummary) SyncEffectiveFieldsDuringRead(existingState TableSummary) {
 }
 
 // Detailed status of an online table. Shown if the online table is in the
@@ -2499,6 +3668,12 @@ type TriggeredUpdateStatus struct {
 	TriggeredUpdateProgress []PipelineProgress `tfsdk:"triggered_update_progress" tf:"optional,object"`
 }
 
+func (newState *TriggeredUpdateStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggeredUpdateStatus) {
+}
+
+func (newState *TriggeredUpdateStatus) SyncEffectiveFieldsDuringRead(existingState TriggeredUpdateStatus) {
+}
+
 // Delete an assignment
 type UnassignRequest struct {
 	// Query for the ID of the metastore to delete.
@@ -2507,10 +3682,28 @@ type UnassignRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *UnassignRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnassignRequest) {
+}
+
+func (newState *UnassignRequest) SyncEffectiveFieldsDuringRead(existingState UnassignRequest) {
+}
+
 type UnassignResponse struct {
 }
 
+func (newState *UnassignResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnassignResponse) {
+}
+
+func (newState *UnassignResponse) SyncEffectiveFieldsDuringRead(existingState UnassignResponse) {
+}
+
 type UpdateAssignmentResponse struct {
+}
+
+func (newState *UpdateAssignmentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAssignmentResponse) {
+}
+
+func (newState *UpdateAssignmentResponse) SyncEffectiveFieldsDuringRead(existingState UpdateAssignmentResponse) {
 }
 
 type UpdateCatalog struct {
@@ -2532,6 +3725,12 @@ type UpdateCatalog struct {
 	Properties map[string]types.String `tfsdk:"properties" tf:"optional"`
 }
 
+func (newState *UpdateCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCatalog) {
+}
+
+func (newState *UpdateCatalog) SyncEffectiveFieldsDuringRead(existingState UpdateCatalog) {
+}
+
 type UpdateConnection struct {
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
@@ -2541,6 +3740,12 @@ type UpdateConnection struct {
 	Options map[string]types.String `tfsdk:"options" tf:""`
 	// Username of current owner of the connection.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
+}
+
+func (newState *UpdateConnection) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateConnection) {
+}
+
+func (newState *UpdateConnection) SyncEffectiveFieldsDuringRead(existingState UpdateConnection) {
 }
 
 type UpdateExternalLocation struct {
@@ -2577,12 +3782,24 @@ type UpdateExternalLocation struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *UpdateExternalLocation) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExternalLocation) {
+}
+
+func (newState *UpdateExternalLocation) SyncEffectiveFieldsDuringRead(existingState UpdateExternalLocation) {
+}
+
 type UpdateFunction struct {
 	// The fully-qualified name of the function (of the form
 	// __catalog_name__.__schema_name__.__function__name__).
 	Name types.String `tfsdk:"-"`
 	// Username of current owner of function.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
+}
+
+func (newState *UpdateFunction) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateFunction) {
+}
+
+func (newState *UpdateFunction) SyncEffectiveFieldsDuringRead(existingState UpdateFunction) {
 }
 
 type UpdateMetastore struct {
@@ -2606,6 +3823,12 @@ type UpdateMetastore struct {
 	StorageRootCredentialId types.String `tfsdk:"storage_root_credential_id" tf:"optional"`
 }
 
+func (newState *UpdateMetastore) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateMetastore) {
+}
+
+func (newState *UpdateMetastore) SyncEffectiveFieldsDuringRead(existingState UpdateMetastore) {
+}
+
 type UpdateMetastoreAssignment struct {
 	// The name of the default catalog in the metastore. This field is
 	// depracted. Please use "Default Namespace API" to configure the default
@@ -2617,6 +3840,12 @@ type UpdateMetastoreAssignment struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *UpdateMetastoreAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateMetastoreAssignment) {
+}
+
+func (newState *UpdateMetastoreAssignment) SyncEffectiveFieldsDuringRead(existingState UpdateMetastoreAssignment) {
+}
+
 type UpdateModelVersionRequest struct {
 	// The comment attached to the model version
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -2624,6 +3853,12 @@ type UpdateModelVersionRequest struct {
 	FullName types.String `tfsdk:"-"`
 	// The integer version number of the model version
 	Version types.Int64 `tfsdk:"-"`
+}
+
+func (newState *UpdateModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelVersionRequest) {
+}
+
+func (newState *UpdateModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionRequest) {
 }
 
 type UpdateMonitor struct {
@@ -2662,6 +3897,12 @@ type UpdateMonitor struct {
 	TimeSeries []MonitorTimeSeries `tfsdk:"time_series" tf:"optional,object"`
 }
 
+func (newState *UpdateMonitor) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateMonitor) {
+}
+
+func (newState *UpdateMonitor) SyncEffectiveFieldsDuringRead(existingState UpdateMonitor) {
+}
+
 type UpdatePermissions struct {
 	// Array of permissions change objects.
 	Changes []PermissionsChange `tfsdk:"changes" tf:"optional"`
@@ -2669,6 +3910,12 @@ type UpdatePermissions struct {
 	FullName types.String `tfsdk:"-"`
 	// Type of securable.
 	SecurableType types.String `tfsdk:"-"`
+}
+
+func (newState *UpdatePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePermissions) {
+}
+
+func (newState *UpdatePermissions) SyncEffectiveFieldsDuringRead(existingState UpdatePermissions) {
 }
 
 type UpdateRegisteredModelRequest struct {
@@ -2682,7 +3929,19 @@ type UpdateRegisteredModelRequest struct {
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 }
 
+func (newState *UpdateRegisteredModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRegisteredModelRequest) {
+}
+
+func (newState *UpdateRegisteredModelRequest) SyncEffectiveFieldsDuringRead(existingState UpdateRegisteredModelRequest) {
+}
+
 type UpdateResponse struct {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
 type UpdateSchema struct {
@@ -2699,6 +3958,12 @@ type UpdateSchema struct {
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// A map of key-value properties attached to the securable.
 	Properties map[string]types.String `tfsdk:"properties" tf:"optional"`
+}
+
+func (newState *UpdateSchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSchema) {
+}
+
+func (newState *UpdateSchema) SyncEffectiveFieldsDuringRead(existingState UpdateSchema) {
 }
 
 type UpdateStorageCredential struct {
@@ -2733,12 +3998,24 @@ type UpdateStorageCredential struct {
 	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
 }
 
+func (newState *UpdateStorageCredential) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateStorageCredential) {
+}
+
+func (newState *UpdateStorageCredential) SyncEffectiveFieldsDuringRead(existingState UpdateStorageCredential) {
+}
+
 // Update a table owner.
 type UpdateTableRequest struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
 
 	Owner types.String `tfsdk:"owner" tf:"optional"`
+}
+
+func (newState *UpdateTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateTableRequest) {
+}
+
+func (newState *UpdateTableRequest) SyncEffectiveFieldsDuringRead(existingState UpdateTableRequest) {
 }
 
 type UpdateVolumeRequestContent struct {
@@ -2752,6 +4029,12 @@ type UpdateVolumeRequestContent struct {
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 }
 
+func (newState *UpdateVolumeRequestContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateVolumeRequestContent) {
+}
+
+func (newState *UpdateVolumeRequestContent) SyncEffectiveFieldsDuringRead(existingState UpdateVolumeRequestContent) {
+}
+
 type UpdateWorkspaceBindings struct {
 	// A list of workspace IDs.
 	AssignWorkspaces []types.Int64 `tfsdk:"assign_workspaces" tf:"optional"`
@@ -2759,6 +4042,12 @@ type UpdateWorkspaceBindings struct {
 	Name types.String `tfsdk:"-"`
 	// A list of workspace IDs.
 	UnassignWorkspaces []types.Int64 `tfsdk:"unassign_workspaces" tf:"optional"`
+}
+
+func (newState *UpdateWorkspaceBindings) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceBindings) {
+}
+
+func (newState *UpdateWorkspaceBindings) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceBindings) {
 }
 
 type UpdateWorkspaceBindingsParameters struct {
@@ -2770,6 +4059,12 @@ type UpdateWorkspaceBindingsParameters struct {
 	SecurableName types.String `tfsdk:"-"`
 	// The type of the securable to bind to a workspace.
 	SecurableType types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateWorkspaceBindingsParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceBindingsParameters) {
+}
+
+func (newState *UpdateWorkspaceBindingsParameters) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceBindingsParameters) {
 }
 
 type ValidateStorageCredential struct {
@@ -2793,11 +4088,23 @@ type ValidateStorageCredential struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *ValidateStorageCredential) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateStorageCredential) {
+}
+
+func (newState *ValidateStorageCredential) SyncEffectiveFieldsDuringRead(existingState ValidateStorageCredential) {
+}
+
 type ValidateStorageCredentialResponse struct {
 	// Whether the tested location is a directory in cloud storage.
 	IsDir types.Bool `tfsdk:"isDir" tf:"optional"`
 	// The results of the validation check.
 	Results []ValidationResult `tfsdk:"results" tf:"optional"`
+}
+
+func (newState *ValidateStorageCredentialResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateStorageCredentialResponse) {
+}
+
+func (newState *ValidateStorageCredentialResponse) SyncEffectiveFieldsDuringRead(existingState ValidateStorageCredentialResponse) {
 }
 
 type ValidationResult struct {
@@ -2807,6 +4114,12 @@ type ValidationResult struct {
 	Operation types.String `tfsdk:"operation" tf:"optional"`
 	// The results of the tested operation.
 	Result types.String `tfsdk:"result" tf:"optional"`
+}
+
+func (newState *ValidationResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidationResult) {
+}
+
+func (newState *ValidationResult) SyncEffectiveFieldsDuringRead(existingState ValidationResult) {
 }
 
 type VolumeInfo struct {
@@ -2848,10 +4161,22 @@ type VolumeInfo struct {
 	VolumeType types.String `tfsdk:"volume_type" tf:"optional"`
 }
 
+func (newState *VolumeInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan VolumeInfo) {
+}
+
+func (newState *VolumeInfo) SyncEffectiveFieldsDuringRead(existingState VolumeInfo) {
+}
+
 type WorkspaceBinding struct {
 	BindingType types.String `tfsdk:"binding_type" tf:"optional"`
 
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
+}
+
+func (newState *WorkspaceBinding) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceBinding) {
+}
+
+func (newState *WorkspaceBinding) SyncEffectiveFieldsDuringRead(existingState WorkspaceBinding) {
 }
 
 // Currently assigned workspace bindings
@@ -2862,4 +4187,10 @@ type WorkspaceBindingsResponse struct {
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *WorkspaceBindingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceBindingsResponse) {
+}
+
+func (newState *WorkspaceBindingsResponse) SyncEffectiveFieldsDuringRead(existingState WorkspaceBindingsResponse) {
 }

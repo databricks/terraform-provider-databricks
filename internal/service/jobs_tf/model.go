@@ -22,11 +22,30 @@ type BaseJob struct {
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	// The id of the budget policy used by this job for cost attribution
+	// purposes. This may be set through (in order of precedence): 1. Budget
+	// admins through the account or workspace console 2. Jobs UI in the job
+	// details page and Jobs API using `budget_policy_id` 3. Inferred default
+	// based on accessible budget policies of the run_as identity on job
+	// creation or modification.
+	EffectiveBudgetPolicyId          types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
+	EffectiveEffectiveBudgetPolicyId types.String `tfsdk:"effective_effective_budget_policy_id" tf:"computed,optional"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// Settings for this job and all of its runs. These settings can be updated
 	// using the `resetJob` method.
 	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
+}
+
+func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
+	newState.EffectiveEffectiveBudgetPolicyId = newState.EffectiveBudgetPolicyId
+	newState.EffectiveBudgetPolicyId = plan.EffectiveBudgetPolicyId
+}
+
+func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
+	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
+		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
+	}
 }
 
 type BaseRun struct {
@@ -159,6 +178,12 @@ type BaseRun struct {
 	TriggerInfo []TriggerInfo `tfsdk:"trigger_info" tf:"optional,object"`
 }
 
+func (newState *BaseRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseRun) {
+}
+
+func (newState *BaseRun) SyncEffectiveFieldsDuringRead(existingState BaseRun) {
+}
+
 type CancelAllRuns struct {
 	// Optional boolean parameter to cancel all queued runs. If no job_id is
 	// provided, all queued runs in the workspace are canceled.
@@ -167,7 +192,19 @@ type CancelAllRuns struct {
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 }
 
+func (newState *CancelAllRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelAllRuns) {
+}
+
+func (newState *CancelAllRuns) SyncEffectiveFieldsDuringRead(existingState CancelAllRuns) {
+}
+
 type CancelAllRunsResponse struct {
+}
+
+func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelAllRunsResponse) {
+}
+
+func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringRead(existingState CancelAllRunsResponse) {
 }
 
 type CancelRun struct {
@@ -175,7 +212,19 @@ type CancelRun struct {
 	RunId types.Int64 `tfsdk:"run_id" tf:""`
 }
 
+func (newState *CancelRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRun) {
+}
+
+func (newState *CancelRun) SyncEffectiveFieldsDuringRead(existingState CancelRun) {
+}
+
 type CancelRunResponse struct {
+}
+
+func (newState *CancelRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRunResponse) {
+}
+
+func (newState *CancelRunResponse) SyncEffectiveFieldsDuringRead(existingState CancelRunResponse) {
 }
 
 type ClusterInstance struct {
@@ -199,6 +248,12 @@ type ClusterInstance struct {
 	SparkContextId types.String `tfsdk:"spark_context_id" tf:"optional"`
 }
 
+func (newState *ClusterInstance) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterInstance) {
+}
+
+func (newState *ClusterInstance) SyncEffectiveFieldsDuringRead(existingState ClusterInstance) {
+}
+
 type ClusterSpec struct {
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
@@ -214,6 +269,12 @@ type ClusterSpec struct {
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
 	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+}
+
+func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
+}
+
+func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
 }
 
 type ConditionTask struct {
@@ -236,15 +297,32 @@ type ConditionTask struct {
 	Right types.String `tfsdk:"right" tf:""`
 }
 
+func (newState *ConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConditionTask) {
+}
+
+func (newState *ConditionTask) SyncEffectiveFieldsDuringRead(existingState ConditionTask) {
+}
+
 type Continuous struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 }
 
+func (newState *Continuous) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continuous) {
+}
+
+func (newState *Continuous) SyncEffectiveFieldsDuringRead(existingState Continuous) {
+}
+
 type CreateJob struct {
 	// List of permissions to set on the job.
 	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	// The id of the user specified budget policy to use for this job. If not
+	// specified, a default budget policy may be applied when creating or
+	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// used by this workload.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
@@ -343,10 +421,22 @@ type CreateJob struct {
 	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
+func (newState *CreateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateJob) {
+}
+
+func (newState *CreateJob) SyncEffectiveFieldsDuringRead(existingState CreateJob) {
+}
+
 // Job was created successfully
 type CreateResponse struct {
 	// The canonical identifier for the newly created job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
 type CronSchedule struct {
@@ -364,6 +454,12 @@ type CronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id" tf:""`
 }
 
+func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
+}
+
+func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
+}
+
 type DbtOutput struct {
 	// An optional map of headers to send when retrieving the artifact from the
 	// `artifacts_link`.
@@ -372,6 +468,12 @@ type DbtOutput struct {
 	// valid for a limited time (30 minutes). This information is only available
 	// after the run has finished.
 	ArtifactsLink types.String `tfsdk:"artifacts_link" tf:"optional"`
+}
+
+func (newState *DbtOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtOutput) {
+}
+
+func (newState *DbtOutput) SyncEffectiveFieldsDuringRead(existingState DbtOutput) {
 }
 
 type DbtTask struct {
@@ -411,12 +513,30 @@ type DbtTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *DbtTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtTask) {
+}
+
+func (newState *DbtTask) SyncEffectiveFieldsDuringRead(existingState DbtTask) {
+}
+
 type DeleteJob struct {
 	// The canonical identifier of the job to delete. This field is required.
 	JobId types.Int64 `tfsdk:"job_id" tf:""`
 }
 
+func (newState *DeleteJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteJob) {
+}
+
+func (newState *DeleteJob) SyncEffectiveFieldsDuringRead(existingState DeleteJob) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 type DeleteRun struct {
@@ -424,7 +544,19 @@ type DeleteRun struct {
 	RunId types.Int64 `tfsdk:"run_id" tf:""`
 }
 
+func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRun) {
+}
+
+func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
+}
+
 type DeleteRunResponse struct {
+}
+
+func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRunResponse) {
+}
+
+func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunResponse) {
 }
 
 // Represents a change to the job cluster's settings that would be required for
@@ -445,12 +577,24 @@ type EnforcePolicyComplianceForJobResponseJobClusterSettingsChange struct {
 	PreviousValue types.String `tfsdk:"previous_value" tf:"optional"`
 }
 
+func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+}
+
+func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+}
+
 type EnforcePolicyComplianceRequest struct {
 	// The ID of the job you want to enforce policy compliance on.
 	JobId types.Int64 `tfsdk:"job_id" tf:""`
 	// If set, previews changes made to the job to comply with its policy, but
 	// does not update the job.
 	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
+}
+
+func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceRequest) {
+}
+
+func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceRequest) {
 }
 
 type EnforcePolicyComplianceResponse struct {
@@ -470,6 +614,12 @@ type EnforcePolicyComplianceResponse struct {
 	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
 }
 
+func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceResponse) {
+}
+
+func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceResponse) {
+}
+
 // Run was exported successfully.
 type ExportRunOutput struct {
 	// The exported content in HTML format (one for every view item). To extract
@@ -480,12 +630,24 @@ type ExportRunOutput struct {
 	Views []ViewItem `tfsdk:"views" tf:"optional"`
 }
 
+func (newState *ExportRunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportRunOutput) {
+}
+
+func (newState *ExportRunOutput) SyncEffectiveFieldsDuringRead(existingState ExportRunOutput) {
+}
+
 // Export and retrieve a job run
 type ExportRunRequest struct {
 	// The canonical identifier for the run. This field is required.
 	RunId types.Int64 `tfsdk:"-"`
 	// Which views to export (CODE, DASHBOARDS, or ALL). Defaults to CODE.
 	ViewsToExport types.String `tfsdk:"-"`
+}
+
+func (newState *ExportRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportRunRequest) {
+}
+
+func (newState *ExportRunRequest) SyncEffectiveFieldsDuringRead(existingState ExportRunRequest) {
 }
 
 type FileArrivalTriggerConfiguration struct {
@@ -503,11 +665,23 @@ type FileArrivalTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds" tf:"optional"`
 }
 
+func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileArrivalTriggerConfiguration) {
+}
+
+func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState FileArrivalTriggerConfiguration) {
+}
+
 type ForEachStats struct {
 	// Sample of 3 most common error messages occurred during the iteration.
 	ErrorMessageStats []ForEachTaskErrorMessageStats `tfsdk:"error_message_stats" tf:"optional"`
 	// Describes stats of the iteration. Only latest retries are considered.
 	TaskRunStats []ForEachTaskTaskRunStats `tfsdk:"task_run_stats" tf:"optional,object"`
+}
+
+func (newState *ForEachStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachStats) {
+}
+
+func (newState *ForEachStats) SyncEffectiveFieldsDuringRead(existingState ForEachStats) {
 }
 
 type ForEachTask struct {
@@ -522,6 +696,12 @@ type ForEachTask struct {
 	Task []Task `tfsdk:"task" tf:"object"`
 }
 
+func (newState *ForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTask) {
+}
+
+func (newState *ForEachTask) SyncEffectiveFieldsDuringRead(existingState ForEachTask) {
+}
+
 type ForEachTaskErrorMessageStats struct {
 	// Describes the count of such error message encountered during the
 	// iterations.
@@ -530,6 +710,12 @@ type ForEachTaskErrorMessageStats struct {
 	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
 	// Describes the termination reason for the error message.
 	TerminationCategory types.String `tfsdk:"termination_category" tf:"optional"`
+}
+
+func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTaskErrorMessageStats) {
+}
+
+func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskErrorMessageStats) {
 }
 
 type ForEachTaskTaskRunStats struct {
@@ -548,10 +734,22 @@ type ForEachTaskTaskRunStats struct {
 	TotalIterations types.Int64 `tfsdk:"total_iterations" tf:"optional"`
 }
 
+func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTaskTaskRunStats) {
+}
+
+func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskTaskRunStats) {
+}
+
 // Get job permission levels
 type GetJobPermissionLevelsRequest struct {
 	// The job for which to get or manage permissions.
 	JobId types.String `tfsdk:"-"`
+}
+
+func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsRequest) {
+}
+
+func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsRequest) {
 }
 
 type GetJobPermissionLevelsResponse struct {
@@ -559,10 +757,22 @@ type GetJobPermissionLevelsResponse struct {
 	PermissionLevels []JobPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
 }
 
+func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsResponse) {
+}
+
+func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsResponse) {
+}
+
 // Get job permissions
 type GetJobPermissionsRequest struct {
 	// The job for which to get or manage permissions.
 	JobId types.String `tfsdk:"-"`
+}
+
+func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionsRequest) {
+}
+
+func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionsRequest) {
 }
 
 // Get a single job
@@ -572,10 +782,22 @@ type GetJobRequest struct {
 	JobId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetJobRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobRequest) {
+}
+
+func (newState *GetJobRequest) SyncEffectiveFieldsDuringRead(existingState GetJobRequest) {
+}
+
 // Get job policy compliance
 type GetPolicyComplianceRequest struct {
 	// The ID of the job whose compliance status you are requesting.
 	JobId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyComplianceRequest) {
+}
+
+func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceRequest) {
 }
 
 type GetPolicyComplianceResponse struct {
@@ -592,10 +814,22 @@ type GetPolicyComplianceResponse struct {
 	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
 }
 
+func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyComplianceResponse) {
+}
+
+func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceResponse) {
+}
+
 // Get the output for a single run
 type GetRunOutputRequest struct {
 	// The canonical identifier for the run.
 	RunId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunOutputRequest) {
+}
+
+func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringRead(existingState GetRunOutputRequest) {
 }
 
 // Get a single job run
@@ -613,6 +847,12 @@ type GetRunRequest struct {
 	RunId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunRequest) {
+}
+
+func (newState *GetRunRequest) SyncEffectiveFieldsDuringRead(existingState GetRunRequest) {
+}
+
 // Read-only state of the remote repository at the time the job was run. This
 // field is only included on job runs.
 type GitSnapshot struct {
@@ -620,6 +860,12 @@ type GitSnapshot struct {
 	// this points to the HEAD of the branch at the time of the run; if git_tag
 	// was specified, this points to the commit the tag points to.
 	UsedCommit types.String `tfsdk:"used_commit" tf:"optional"`
+}
+
+func (newState *GitSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSnapshot) {
+}
+
+func (newState *GitSnapshot) SyncEffectiveFieldsDuringRead(existingState GitSnapshot) {
 }
 
 // An optional specification for a remote Git repository containing the source
@@ -655,6 +901,12 @@ type GitSource struct {
 	JobSource []JobSource `tfsdk:"job_source" tf:"optional,object"`
 }
 
+func (newState *GitSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSource) {
+}
+
+func (newState *GitSource) SyncEffectiveFieldsDuringRead(existingState GitSource) {
+}
+
 // Job was retrieved successfully.
 type Job struct {
 	// The time at which this job was created in epoch milliseconds
@@ -663,6 +915,14 @@ type Job struct {
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	// The id of the budget policy used by this job for cost attribution
+	// purposes. This may be set through (in order of precedence): 1. Budget
+	// admins through the account or workspace console 2. Jobs UI in the job
+	// details page and Jobs API using `budget_policy_id` 3. Inferred default
+	// based on accessible budget policies of the run_as identity on job
+	// creation or modification.
+	EffectiveBudgetPolicyId          types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
+	EffectiveEffectiveBudgetPolicyId types.String `tfsdk:"effective_effective_budget_policy_id" tf:"computed,optional"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// The email of an active workspace user or the application ID of a service
@@ -678,6 +938,17 @@ type Job struct {
 	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
 }
 
+func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
+	newState.EffectiveEffectiveBudgetPolicyId = newState.EffectiveBudgetPolicyId
+	newState.EffectiveBudgetPolicyId = plan.EffectiveBudgetPolicyId
+}
+
+func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
+	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
+		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
+	}
+}
+
 type JobAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -687,6 +958,12 @@ type JobAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobAccessControlRequest) {
+}
+
+func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState JobAccessControlRequest) {
 }
 
 type JobAccessControlResponse struct {
@@ -702,6 +979,12 @@ type JobAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobAccessControlResponse) {
+}
+
+func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState JobAccessControlResponse) {
+}
+
 type JobCluster struct {
 	// A unique name for the job cluster. This field is required and must be
 	// unique within the job. `JobTaskSettings` may refer to this field to
@@ -709,6 +992,12 @@ type JobCluster struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:""`
 	// If new_cluster, a description of a cluster that is created for each task.
 	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"object"`
+}
+
+func (newState *JobCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCluster) {
+}
+
+func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobCluster) {
 }
 
 type JobCompliance struct {
@@ -724,6 +1013,12 @@ type JobCompliance struct {
 	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
 }
 
+func (newState *JobCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCompliance) {
+}
+
+func (newState *JobCompliance) SyncEffectiveFieldsDuringRead(existingState JobCompliance) {
+}
+
 type JobDeployment struct {
 	// The kind of deployment that manages the job.
 	//
@@ -731,6 +1026,12 @@ type JobDeployment struct {
 	Kind types.String `tfsdk:"kind" tf:""`
 	// Path of the file that contains deployment metadata.
 	MetadataFilePath types.String `tfsdk:"metadata_file_path" tf:"optional"`
+}
+
+func (newState *JobDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobDeployment) {
+}
+
+func (newState *JobDeployment) SyncEffectiveFieldsDuringRead(existingState JobDeployment) {
 }
 
 type JobEmailNotifications struct {
@@ -769,6 +1070,12 @@ type JobEmailNotifications struct {
 	OnSuccess []types.String `tfsdk:"on_success" tf:"optional"`
 }
 
+func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEmailNotifications) {
+}
+
+func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringRead(existingState JobEmailNotifications) {
+}
+
 type JobEnvironment struct {
 	// The key of an environment. It has to be unique within a job.
 	EnvironmentKey types.String `tfsdk:"environment_key" tf:""`
@@ -776,6 +1083,12 @@ type JobEnvironment struct {
 	// and jobs' environment for non-notebook task. In this minimal environment
 	// spec, only pip dependencies are supported.
 	Spec compute.Environment `tfsdk:"spec" tf:"optional,object"`
+}
+
+func (newState *JobEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEnvironment) {
+}
+
+func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobEnvironment) {
 }
 
 type JobNotificationSettings struct {
@@ -787,6 +1100,12 @@ type JobNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
 }
 
+func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobNotificationSettings) {
+}
+
+func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringRead(existingState JobNotificationSettings) {
+}
+
 type JobParameter struct {
 	// The optional default value of the parameter
 	Default types.String `tfsdk:"default" tf:"optional"`
@@ -794,6 +1113,12 @@ type JobParameter struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// The value used in the run
 	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *JobParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobParameter) {
+}
+
+func (newState *JobParameter) SyncEffectiveFieldsDuringRead(existingState JobParameter) {
 }
 
 type JobParameterDefinition struct {
@@ -804,12 +1129,24 @@ type JobParameterDefinition struct {
 	Name types.String `tfsdk:"name" tf:""`
 }
 
+func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobParameterDefinition) {
+}
+
+func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringRead(existingState JobParameterDefinition) {
+}
+
 type JobPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *JobPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermission) {
+}
+
+func (newState *JobPermission) SyncEffectiveFieldsDuringRead(existingState JobPermission) {
 }
 
 type JobPermissions struct {
@@ -820,16 +1157,34 @@ type JobPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *JobPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissions) {
+}
+
+func (newState *JobPermissions) SyncEffectiveFieldsDuringRead(existingState JobPermissions) {
+}
+
 type JobPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissionsDescription) {
+}
+
+func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState JobPermissionsDescription) {
+}
+
 type JobPermissionsRequest struct {
 	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The job for which to get or manage permissions.
 	JobId types.String `tfsdk:"-"`
+}
+
+func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissionsRequest) {
+}
+
+func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState JobPermissionsRequest) {
 }
 
 // Write-only setting. Specifies the user, service principal or group that the
@@ -847,7 +1202,18 @@ type JobRunAs struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *JobRunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobRunAs) {
+}
+
+func (newState *JobRunAs) SyncEffectiveFieldsDuringRead(existingState JobRunAs) {
+}
+
 type JobSettings struct {
+	// The id of the user specified budget policy to use for this job. If not
+	// specified, a default budget policy may be applied when creating or
+	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// used by this workload.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
@@ -946,6 +1312,12 @@ type JobSettings struct {
 	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
+func (newState *JobSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSettings) {
+}
+
+func (newState *JobSettings) SyncEffectiveFieldsDuringRead(existingState JobSettings) {
+}
+
 // The source of the job specification in the remote repository when the job is
 // source controlled.
 type JobSource struct {
@@ -963,6 +1335,12 @@ type JobSource struct {
 	ImportFromGitBranch types.String `tfsdk:"import_from_git_branch" tf:""`
 	// Path of the job YAML file that contains the job specification.
 	JobConfigPath types.String `tfsdk:"job_config_path" tf:""`
+}
+
+func (newState *JobSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSource) {
+}
+
+func (newState *JobSource) SyncEffectiveFieldsDuringRead(existingState JobSource) {
 }
 
 type JobsHealthRule struct {
@@ -987,9 +1365,21 @@ type JobsHealthRule struct {
 	Value types.Int64 `tfsdk:"value" tf:""`
 }
 
+func (newState *JobsHealthRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobsHealthRule) {
+}
+
+func (newState *JobsHealthRule) SyncEffectiveFieldsDuringRead(existingState JobsHealthRule) {
+}
+
 // An optional set of health rules that can be defined for this job.
 type JobsHealthRules struct {
 	Rules []JobsHealthRule `tfsdk:"rules" tf:"optional"`
+}
+
+func (newState *JobsHealthRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobsHealthRules) {
+}
+
+func (newState *JobsHealthRules) SyncEffectiveFieldsDuringRead(existingState JobsHealthRules) {
 }
 
 type ListJobComplianceForPolicyResponse struct {
@@ -1005,6 +1395,12 @@ type ListJobComplianceForPolicyResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
 }
 
+func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobComplianceForPolicyResponse) {
+}
+
+func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceForPolicyResponse) {
+}
+
 // List job policy compliance
 type ListJobComplianceRequest struct {
 	// Use this field to specify the maximum number of results to be returned by
@@ -1016,6 +1412,12 @@ type ListJobComplianceRequest struct {
 	PageToken types.String `tfsdk:"-"`
 	// Canonical unique identifier for the cluster policy.
 	PolicyId types.String `tfsdk:"-"`
+}
+
+func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobComplianceRequest) {
+}
+
+func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceRequest) {
 }
 
 // List jobs
@@ -1036,6 +1438,12 @@ type ListJobsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListJobsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobsRequest) {
+}
+
+func (newState *ListJobsRequest) SyncEffectiveFieldsDuringRead(existingState ListJobsRequest) {
+}
+
 // List of jobs was retrieved successfully.
 type ListJobsResponse struct {
 	// If true, additional jobs matching the provided filter are available for
@@ -1049,6 +1457,12 @@ type ListJobsResponse struct {
 	// A token that can be used to list the previous page of jobs (if
 	// applicable).
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+}
+
+func (newState *ListJobsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobsResponse) {
+}
+
+func (newState *ListJobsResponse) SyncEffectiveFieldsDuringRead(existingState ListJobsResponse) {
 }
 
 // List job runs
@@ -1091,6 +1505,12 @@ type ListRunsRequest struct {
 	StartTimeTo types.Int64 `tfsdk:"-"`
 }
 
+func (newState *ListRunsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRunsRequest) {
+}
+
+func (newState *ListRunsRequest) SyncEffectiveFieldsDuringRead(existingState ListRunsRequest) {
+}
+
 // List of runs was retrieved successfully.
 type ListRunsResponse struct {
 	// If true, additional runs matching the provided filter are available for
@@ -1106,6 +1526,12 @@ type ListRunsResponse struct {
 	Runs []BaseRun `tfsdk:"runs" tf:"optional"`
 }
 
+func (newState *ListRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRunsResponse) {
+}
+
+func (newState *ListRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListRunsResponse) {
+}
+
 type NotebookOutput struct {
 	// The value passed to
 	// [dbutils.notebook.exit()](/notebooks/notebook-workflows.html#notebook-workflows-exit).
@@ -1116,6 +1542,12 @@ type NotebookOutput struct {
 	Result types.String `tfsdk:"result" tf:"optional"`
 	// Whether or not the result was truncated.
 	Truncated types.Bool `tfsdk:"truncated" tf:"optional"`
+}
+
+func (newState *NotebookOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookOutput) {
+}
+
+func (newState *NotebookOutput) SyncEffectiveFieldsDuringRead(existingState NotebookOutput) {
 }
 
 type NotebookTask struct {
@@ -1159,6 +1591,12 @@ type NotebookTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *NotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookTask) {
+}
+
+func (newState *NotebookTask) SyncEffectiveFieldsDuringRead(existingState NotebookTask) {
+}
+
 type PeriodicTriggerConfiguration struct {
 	// The interval at which the trigger should run.
 	Interval types.Int64 `tfsdk:"interval" tf:""`
@@ -1166,9 +1604,21 @@ type PeriodicTriggerConfiguration struct {
 	Unit types.String `tfsdk:"unit" tf:""`
 }
 
+func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan PeriodicTriggerConfiguration) {
+}
+
+func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState PeriodicTriggerConfiguration) {
+}
+
 type PipelineParams struct {
 	// If true, triggers a full refresh on the delta live table.
 	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
+}
+
+func (newState *PipelineParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineParams) {
+}
+
+func (newState *PipelineParams) SyncEffectiveFieldsDuringRead(existingState PipelineParams) {
 }
 
 type PipelineTask struct {
@@ -1176,6 +1626,12 @@ type PipelineTask struct {
 	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
 	// The full name of the pipeline task to execute.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:""`
+}
+
+func (newState *PipelineTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTask) {
+}
+
+func (newState *PipelineTask) SyncEffectiveFieldsDuringRead(existingState PipelineTask) {
 }
 
 type PythonWheelTask struct {
@@ -1194,6 +1650,12 @@ type PythonWheelTask struct {
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
 }
 
+func (newState *PythonWheelTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PythonWheelTask) {
+}
+
+func (newState *PythonWheelTask) SyncEffectiveFieldsDuringRead(existingState PythonWheelTask) {
+}
+
 type QueueDetails struct {
 	// The reason for queuing the run. * `ACTIVE_RUNS_LIMIT_REACHED`: The run
 	// was queued due to reaching the workspace limit of active task runs. *
@@ -1207,9 +1669,21 @@ type QueueDetails struct {
 	Message types.String `tfsdk:"message" tf:"optional"`
 }
 
+func (newState *QueueDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueueDetails) {
+}
+
+func (newState *QueueDetails) SyncEffectiveFieldsDuringRead(existingState QueueDetails) {
+}
+
 type QueueSettings struct {
 	// If true, enable queueing for the job. This is a required field.
 	Enabled types.Bool `tfsdk:"enabled" tf:""`
+}
+
+func (newState *QueueSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueueSettings) {
+}
+
+func (newState *QueueSettings) SyncEffectiveFieldsDuringRead(existingState QueueSettings) {
 }
 
 type RepairHistoryItem struct {
@@ -1230,6 +1704,12 @@ type RepairHistoryItem struct {
 	// The repair history item type. Indicates whether a run is the original run
 	// or a repair run.
 	Type types.String `tfsdk:"type" tf:"optional"`
+}
+
+func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairHistoryItem) {
+}
+
+func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringRead(existingState RepairHistoryItem) {
 }
 
 type RepairRun struct {
@@ -1333,11 +1813,23 @@ type RepairRun struct {
 	SqlParams map[string]types.String `tfsdk:"sql_params" tf:"optional"`
 }
 
+func (newState *RepairRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRun) {
+}
+
+func (newState *RepairRun) SyncEffectiveFieldsDuringRead(existingState RepairRun) {
+}
+
 // Run repair was initiated.
 type RepairRunResponse struct {
 	// The ID of the repair. Must be provided in subsequent repairs using the
 	// `latest_repair_id` field to ensure sequential repairs.
 	RepairId types.Int64 `tfsdk:"repair_id" tf:"optional"`
+}
+
+func (newState *RepairRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRunResponse) {
+}
+
+func (newState *RepairRunResponse) SyncEffectiveFieldsDuringRead(existingState RepairRunResponse) {
 }
 
 type ResetJob struct {
@@ -1351,7 +1843,19 @@ type ResetJob struct {
 	NewSettings []JobSettings `tfsdk:"new_settings" tf:"object"`
 }
 
+func (newState *ResetJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetJob) {
+}
+
+func (newState *ResetJob) SyncEffectiveFieldsDuringRead(existingState ResetJob) {
+}
+
 type ResetResponse struct {
+}
+
+func (newState *ResetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetResponse) {
+}
+
+func (newState *ResetResponse) SyncEffectiveFieldsDuringRead(existingState ResetResponse) {
 }
 
 type ResolvedConditionTaskValues struct {
@@ -1360,16 +1864,40 @@ type ResolvedConditionTaskValues struct {
 	Right types.String `tfsdk:"right" tf:"optional"`
 }
 
+func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedConditionTaskValues) {
+}
+
+func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedConditionTaskValues) {
+}
+
 type ResolvedDbtTaskValues struct {
 	Commands []types.String `tfsdk:"commands" tf:"optional"`
+}
+
+func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedDbtTaskValues) {
+}
+
+func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedDbtTaskValues) {
 }
 
 type ResolvedNotebookTaskValues struct {
 	BaseParameters map[string]types.String `tfsdk:"base_parameters" tf:"optional"`
 }
 
+func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedNotebookTaskValues) {
+}
+
+func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedNotebookTaskValues) {
+}
+
 type ResolvedParamPairValues struct {
 	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
+}
+
+func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedParamPairValues) {
+}
+
+func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringRead(existingState ResolvedParamPairValues) {
 }
 
 type ResolvedPythonWheelTaskValues struct {
@@ -1378,14 +1906,32 @@ type ResolvedPythonWheelTaskValues struct {
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
 }
 
+func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedPythonWheelTaskValues) {
+}
+
+func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedPythonWheelTaskValues) {
+}
+
 type ResolvedRunJobTaskValues struct {
 	JobParameters map[string]types.String `tfsdk:"job_parameters" tf:"optional"`
 
 	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
 }
 
+func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedRunJobTaskValues) {
+}
+
+func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedRunJobTaskValues) {
+}
+
 type ResolvedStringParamsValues struct {
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
+}
+
+func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedStringParamsValues) {
+}
+
+func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringRead(existingState ResolvedStringParamsValues) {
 }
 
 type ResolvedValues struct {
@@ -1408,6 +1954,12 @@ type ResolvedValues struct {
 	SparkSubmitTask []ResolvedStringParamsValues `tfsdk:"spark_submit_task" tf:"optional,object"`
 
 	SqlTask []ResolvedParamPairValues `tfsdk:"sql_task" tf:"optional,object"`
+}
+
+func (newState *ResolvedValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedValues) {
+}
+
+func (newState *ResolvedValues) SyncEffectiveFieldsDuringRead(existingState ResolvedValues) {
 }
 
 // Run was retrieved successfully
@@ -1548,6 +2100,12 @@ type Run struct {
 	TriggerInfo []TriggerInfo `tfsdk:"trigger_info" tf:"optional,object"`
 }
 
+func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
+}
+
+func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
+}
+
 type RunConditionTask struct {
 	// The left operand of the condition task. Can be either a string value or a
 	// job state or parameter reference.
@@ -1571,6 +2129,12 @@ type RunConditionTask struct {
 	Right types.String `tfsdk:"right" tf:""`
 }
 
+func (newState *RunConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunConditionTask) {
+}
+
+func (newState *RunConditionTask) SyncEffectiveFieldsDuringRead(existingState RunConditionTask) {
+}
+
 type RunForEachTask struct {
 	// An optional maximum allowed number of concurrent runs of the task. Set
 	// this value if you want to be able to execute multiple runs of the task
@@ -1586,9 +2150,21 @@ type RunForEachTask struct {
 	Task []Task `tfsdk:"task" tf:"object"`
 }
 
+func (newState *RunForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunForEachTask) {
+}
+
+func (newState *RunForEachTask) SyncEffectiveFieldsDuringRead(existingState RunForEachTask) {
+}
+
 type RunJobOutput struct {
 	// The run id of the triggered job run
 	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+}
+
+func (newState *RunJobOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobOutput) {
+}
+
+func (newState *RunJobOutput) SyncEffectiveFieldsDuringRead(existingState RunJobOutput) {
 }
 
 type RunJobTask struct {
@@ -1676,6 +2252,12 @@ type RunJobTask struct {
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
 	SqlParams map[string]types.String `tfsdk:"sql_params" tf:"optional"`
+}
+
+func (newState *RunJobTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobTask) {
+}
+
+func (newState *RunJobTask) SyncEffectiveFieldsDuringRead(existingState RunJobTask) {
 }
 
 type RunNow struct {
@@ -1783,6 +2365,12 @@ type RunNow struct {
 	SqlParams map[string]types.String `tfsdk:"sql_params" tf:"optional"`
 }
 
+func (newState *RunNow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNow) {
+}
+
+func (newState *RunNow) SyncEffectiveFieldsDuringRead(existingState RunNow) {
+}
+
 // Run was started successfully.
 type RunNowResponse struct {
 	// A unique identifier for this job run. This is set to the same value as
@@ -1790,6 +2378,12 @@ type RunNowResponse struct {
 	NumberInJob types.Int64 `tfsdk:"number_in_job" tf:"optional"`
 	// The globally unique ID of the newly triggered run.
 	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+}
+
+func (newState *RunNowResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNowResponse) {
+}
+
+func (newState *RunNowResponse) SyncEffectiveFieldsDuringRead(existingState RunNowResponse) {
 }
 
 // Run output was retrieved successfully.
@@ -1830,6 +2424,12 @@ type RunOutput struct {
 	RunJobOutput []RunJobOutput `tfsdk:"run_job_output" tf:"optional,object"`
 	// The output of a SQL task, if available.
 	SqlOutput []SqlOutput `tfsdk:"sql_output" tf:"optional,object"`
+}
+
+func (newState *RunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunOutput) {
+}
+
+func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput) {
 }
 
 type RunParameters struct {
@@ -1915,6 +2515,12 @@ type RunParameters struct {
 	SqlParams map[string]types.String `tfsdk:"sql_params" tf:"optional"`
 }
 
+func (newState *RunParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunParameters) {
+}
+
+func (newState *RunParameters) SyncEffectiveFieldsDuringRead(existingState RunParameters) {
+}
+
 // The current state of the run.
 type RunState struct {
 	// A value indicating the run's current lifecycle state. This field is
@@ -1933,6 +2539,12 @@ type RunState struct {
 	UserCancelledOrTimedout types.Bool `tfsdk:"user_cancelled_or_timedout" tf:"optional"`
 }
 
+func (newState *RunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunState) {
+}
+
+func (newState *RunState) SyncEffectiveFieldsDuringRead(existingState RunState) {
+}
+
 // The current status of the run
 type RunStatus struct {
 	// If the run was queued, details about the reason for queuing the run.
@@ -1942,6 +2554,12 @@ type RunStatus struct {
 	// If the run is in a TERMINATING or TERMINATED state, details about the
 	// reason for terminating the run.
 	TerminationDetails []TerminationDetails `tfsdk:"termination_details" tf:"optional,object"`
+}
+
+func (newState *RunStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunStatus) {
+}
+
+func (newState *RunStatus) SyncEffectiveFieldsDuringRead(existingState RunStatus) {
 }
 
 // Used when outputting a child run, in GetRun or ListRuns.
@@ -2107,6 +2725,12 @@ type RunTask struct {
 	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
+func (newState *RunTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTask) {
+}
+
+func (newState *RunTask) SyncEffectiveFieldsDuringRead(existingState RunTask) {
+}
+
 type SparkJarTask struct {
 	// Deprecated since 04/2016. Provide a `jar` through the `libraries` field
 	// instead. For an example, see :method:jobs/create.
@@ -2124,6 +2748,12 @@ type SparkJarTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
+}
+
+func (newState *SparkJarTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkJarTask) {
+}
+
+func (newState *SparkJarTask) SyncEffectiveFieldsDuringRead(existingState SparkJarTask) {
 }
 
 type SparkPythonTask struct {
@@ -2152,6 +2782,12 @@ type SparkPythonTask struct {
 	Source types.String `tfsdk:"source" tf:"optional"`
 }
 
+func (newState *SparkPythonTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkPythonTask) {
+}
+
+func (newState *SparkPythonTask) SyncEffectiveFieldsDuringRead(existingState SparkPythonTask) {
+}
+
 type SparkSubmitTask struct {
 	// Command-line parameters passed to spark submit.
 	//
@@ -2160,6 +2796,12 @@ type SparkSubmitTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
+}
+
+func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkSubmitTask) {
+}
+
+func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringRead(existingState SparkSubmitTask) {
 }
 
 type SqlAlertOutput struct {
@@ -2180,11 +2822,23 @@ type SqlAlertOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlAlertOutput) {
+}
+
+func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringRead(existingState SqlAlertOutput) {
+}
+
 type SqlDashboardOutput struct {
 	// The canonical identifier of the SQL warehouse.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 	// Widgets executed in the run. Only SQL query based widgets are listed.
 	Widgets []SqlDashboardWidgetOutput `tfsdk:"widgets" tf:"optional"`
+}
+
+func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlDashboardOutput) {
+}
+
+func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardOutput) {
 }
 
 type SqlDashboardWidgetOutput struct {
@@ -2204,6 +2858,12 @@ type SqlDashboardWidgetOutput struct {
 	WidgetTitle types.String `tfsdk:"widget_title" tf:"optional"`
 }
 
+func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlDashboardWidgetOutput) {
+}
+
+func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardWidgetOutput) {
+}
+
 type SqlOutput struct {
 	// The output of a SQL alert task, if available.
 	AlertOutput []SqlAlertOutput `tfsdk:"alert_output" tf:"optional,object"`
@@ -2213,9 +2873,21 @@ type SqlOutput struct {
 	QueryOutput []SqlQueryOutput `tfsdk:"query_output" tf:"optional,object"`
 }
 
+func (newState *SqlOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutput) {
+}
+
+func (newState *SqlOutput) SyncEffectiveFieldsDuringRead(existingState SqlOutput) {
+}
+
 type SqlOutputError struct {
 	// The error message when execution fails.
 	Message types.String `tfsdk:"message" tf:"optional"`
+}
+
+func (newState *SqlOutputError) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutputError) {
+}
+
+func (newState *SqlOutputError) SyncEffectiveFieldsDuringRead(existingState SqlOutputError) {
 }
 
 type SqlQueryOutput struct {
@@ -2231,9 +2903,21 @@ type SqlQueryOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlQueryOutput) {
+}
+
+func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringRead(existingState SqlQueryOutput) {
+}
+
 type SqlStatementOutput struct {
 	// A key that can be used to look up query details.
 	LookupKey types.String `tfsdk:"lookup_key" tf:"optional"`
+}
+
+func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlStatementOutput) {
+}
+
+func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringRead(existingState SqlStatementOutput) {
 }
 
 type SqlTask struct {
@@ -2256,6 +2940,12 @@ type SqlTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:""`
 }
 
+func (newState *SqlTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTask) {
+}
+
+func (newState *SqlTask) SyncEffectiveFieldsDuringRead(existingState SqlTask) {
+}
+
 type SqlTaskAlert struct {
 	// The canonical identifier of the SQL alert.
 	AlertId types.String `tfsdk:"alert_id" tf:""`
@@ -2263,6 +2953,12 @@ type SqlTaskAlert struct {
 	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions" tf:"optional"`
 	// If specified, alert notifications are sent to subscribers.
 	Subscriptions []SqlTaskSubscription `tfsdk:"subscriptions" tf:"optional"`
+}
+
+func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskAlert) {
+}
+
+func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringRead(existingState SqlTaskAlert) {
 }
 
 type SqlTaskDashboard struct {
@@ -2275,6 +2971,12 @@ type SqlTaskDashboard struct {
 	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions" tf:"optional"`
 	// If specified, dashboard snapshots are sent to subscriptions.
 	Subscriptions []SqlTaskSubscription `tfsdk:"subscriptions" tf:"optional"`
+}
+
+func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskDashboard) {
+}
+
+func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringRead(existingState SqlTaskDashboard) {
 }
 
 type SqlTaskFile struct {
@@ -2292,9 +2994,21 @@ type SqlTaskFile struct {
 	Source types.String `tfsdk:"source" tf:"optional"`
 }
 
+func (newState *SqlTaskFile) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskFile) {
+}
+
+func (newState *SqlTaskFile) SyncEffectiveFieldsDuringRead(existingState SqlTaskFile) {
+}
+
 type SqlTaskQuery struct {
 	// The canonical identifier of the SQL query.
 	QueryId types.String `tfsdk:"query_id" tf:""`
+}
+
+func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskQuery) {
+}
+
+func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringRead(existingState SqlTaskQuery) {
 }
 
 type SqlTaskSubscription struct {
@@ -2309,9 +3023,18 @@ type SqlTaskSubscription struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskSubscription) {
+}
+
+func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringRead(existingState SqlTaskSubscription) {
+}
+
 type SubmitRun struct {
 	// List of permissions to set on the job.
 	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	// The user specified id of the budget policy to use for this one-time run.
+	// If not specified, the run will be not be attributed to any budget policy.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// An optional set of email addresses notified when the run begins or
 	// completes.
 	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
@@ -2368,10 +3091,22 @@ type SubmitRun struct {
 	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
+func (newState *SubmitRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRun) {
+}
+
+func (newState *SubmitRun) SyncEffectiveFieldsDuringRead(existingState SubmitRun) {
+}
+
 // Run was created and started successfully.
 type SubmitRunResponse struct {
 	// The canonical identifier for the newly submitted run.
 	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+}
+
+func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRunResponse) {
+}
+
+func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringRead(existingState SubmitRunResponse) {
 }
 
 type SubmitTask struct {
@@ -2469,6 +3204,12 @@ type SubmitTask struct {
 	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
+func (newState *SubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitTask) {
+}
+
+func (newState *SubmitTask) SyncEffectiveFieldsDuringRead(existingState SubmitTask) {
+}
+
 type TableUpdateTriggerConfiguration struct {
 	// The table(s) condition based on which to trigger a job run.
 	Condition types.String `tfsdk:"condition" tf:"optional"`
@@ -2484,6 +3225,12 @@ type TableUpdateTriggerConfiguration struct {
 	// table updates before triggering a run. The minimum allowed value is 60
 	// seconds.
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds" tf:"optional"`
+}
+
+func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableUpdateTriggerConfiguration) {
+}
+
+func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState TableUpdateTriggerConfiguration) {
 }
 
 type Task struct {
@@ -2604,12 +3351,24 @@ type Task struct {
 	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
 }
 
+func (newState *Task) SyncEffectiveFieldsDuringCreateOrUpdate(plan Task) {
+}
+
+func (newState *Task) SyncEffectiveFieldsDuringRead(existingState Task) {
+}
+
 type TaskDependency struct {
 	// Can only be specified on condition task dependencies. The outcome of the
 	// dependent task that must be met for this task to run.
 	Outcome types.String `tfsdk:"outcome" tf:"optional"`
 	// The name of the task this task depends on.
 	TaskKey types.String `tfsdk:"task_key" tf:""`
+}
+
+func (newState *TaskDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskDependency) {
+}
+
+func (newState *TaskDependency) SyncEffectiveFieldsDuringRead(existingState TaskDependency) {
 }
 
 type TaskEmailNotifications struct {
@@ -2648,6 +3407,12 @@ type TaskEmailNotifications struct {
 	OnSuccess []types.String `tfsdk:"on_success" tf:"optional"`
 }
 
+func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskEmailNotifications) {
+}
+
+func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringRead(existingState TaskEmailNotifications) {
+}
+
 type TaskNotificationSettings struct {
 	// If true, do not send notifications to recipients specified in `on_start`
 	// for the retried runs and do not send notifications to recipients
@@ -2659,6 +3424,12 @@ type TaskNotificationSettings struct {
 	// If true, do not send notifications to recipients specified in
 	// `on_failure` if the run is skipped.
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
+}
+
+func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskNotificationSettings) {
+}
+
+func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringRead(existingState TaskNotificationSettings) {
 }
 
 type TerminationDetails struct {
@@ -2722,10 +3493,22 @@ type TerminationDetails struct {
 	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
+func (newState *TerminationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationDetails) {
+}
+
+func (newState *TerminationDetails) SyncEffectiveFieldsDuringRead(existingState TerminationDetails) {
+}
+
 // Additional details about what triggered the run
 type TriggerInfo struct {
 	// The run id of the Run Job task run
 	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+}
+
+func (newState *TriggerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerInfo) {
+}
+
+func (newState *TriggerInfo) SyncEffectiveFieldsDuringRead(existingState TriggerInfo) {
 }
 
 type TriggerSettings struct {
@@ -2739,6 +3522,12 @@ type TriggerSettings struct {
 	Table []TableUpdateTriggerConfiguration `tfsdk:"table" tf:"optional,object"`
 
 	TableUpdate []TableUpdateTriggerConfiguration `tfsdk:"table_update" tf:"optional,object"`
+}
+
+func (newState *TriggerSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerSettings) {
+}
+
+func (newState *TriggerSettings) SyncEffectiveFieldsDuringRead(existingState TriggerSettings) {
 }
 
 type UpdateJob struct {
@@ -2762,7 +3551,19 @@ type UpdateJob struct {
 	NewSettings []JobSettings `tfsdk:"new_settings" tf:"optional,object"`
 }
 
+func (newState *UpdateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateJob) {
+}
+
+func (newState *UpdateJob) SyncEffectiveFieldsDuringRead(existingState UpdateJob) {
+}
+
 type UpdateResponse struct {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
 type ViewItem struct {
@@ -2776,8 +3577,20 @@ type ViewItem struct {
 	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
+func (newState *ViewItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan ViewItem) {
+}
+
+func (newState *ViewItem) SyncEffectiveFieldsDuringRead(existingState ViewItem) {
+}
+
 type Webhook struct {
 	Id types.String `tfsdk:"id" tf:""`
+}
+
+func (newState *Webhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan Webhook) {
+}
+
+func (newState *Webhook) SyncEffectiveFieldsDuringRead(existingState Webhook) {
 }
 
 type WebhookNotifications struct {
@@ -2805,4 +3618,10 @@ type WebhookNotifications struct {
 	// completes successfully. A maximum of 3 destinations can be specified for
 	// the `on_success` property.
 	OnSuccess []Webhook `tfsdk:"on_success" tf:"optional"`
+}
+
+func (newState *WebhookNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan WebhookNotifications) {
+}
+
+func (newState *WebhookNotifications) SyncEffectiveFieldsDuringRead(existingState WebhookNotifications) {
 }

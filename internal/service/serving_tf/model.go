@@ -30,6 +30,12 @@ type Ai21LabsConfig struct {
 	Ai21labsApiKeyPlaintext types.String `tfsdk:"ai21labs_api_key_plaintext" tf:"optional"`
 }
 
+func (newState *Ai21LabsConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ai21LabsConfig) {
+}
+
+func (newState *Ai21LabsConfig) SyncEffectiveFieldsDuringRead(existingState Ai21LabsConfig) {
+}
+
 type AiGatewayConfig struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
@@ -46,6 +52,12 @@ type AiGatewayConfig struct {
 	UsageTrackingConfig []AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional,object"`
 }
 
+func (newState *AiGatewayConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayConfig) {
+}
+
+func (newState *AiGatewayConfig) SyncEffectiveFieldsDuringRead(existingState AiGatewayConfig) {
+}
+
 type AiGatewayGuardrailParameters struct {
 	// List of invalid keywords. AI guardrail uses keyword or string matching to
 	// decide if the keyword exists in the request or response content.
@@ -59,6 +71,12 @@ type AiGatewayGuardrailParameters struct {
 	ValidTopics []types.String `tfsdk:"valid_topics" tf:"optional"`
 }
 
+func (newState *AiGatewayGuardrailParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailParameters) {
+}
+
+func (newState *AiGatewayGuardrailParameters) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailParameters) {
+}
+
 type AiGatewayGuardrailPiiBehavior struct {
 	// Behavior for PII filter. Currently only 'BLOCK' is supported. If 'BLOCK'
 	// is set for the input guardrail and the request contains PII, the request
@@ -69,11 +87,23 @@ type AiGatewayGuardrailPiiBehavior struct {
 	Behavior types.String `tfsdk:"behavior" tf:""`
 }
 
+func (newState *AiGatewayGuardrailPiiBehavior) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailPiiBehavior) {
+}
+
+func (newState *AiGatewayGuardrailPiiBehavior) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailPiiBehavior) {
+}
+
 type AiGatewayGuardrails struct {
 	// Configuration for input guardrail filters.
 	Input []AiGatewayGuardrailParameters `tfsdk:"input" tf:"optional,object"`
 	// Configuration for output guardrail filters.
 	Output []AiGatewayGuardrailParameters `tfsdk:"output" tf:"optional,object"`
+}
+
+func (newState *AiGatewayGuardrails) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrails) {
+}
+
+func (newState *AiGatewayGuardrails) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrails) {
 }
 
 type AiGatewayInferenceTableConfig struct {
@@ -92,6 +122,12 @@ type AiGatewayInferenceTableConfig struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
 }
 
+func (newState *AiGatewayInferenceTableConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayInferenceTableConfig) {
+}
+
+func (newState *AiGatewayInferenceTableConfig) SyncEffectiveFieldsDuringRead(existingState AiGatewayInferenceTableConfig) {
+}
+
 type AiGatewayRateLimit struct {
 	// Used to specify how many calls are allowed for a key within the
 	// renewal_period.
@@ -104,9 +140,21 @@ type AiGatewayRateLimit struct {
 	RenewalPeriod types.String `tfsdk:"renewal_period" tf:""`
 }
 
+func (newState *AiGatewayRateLimit) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayRateLimit) {
+}
+
+func (newState *AiGatewayRateLimit) SyncEffectiveFieldsDuringRead(existingState AiGatewayRateLimit) {
+}
+
 type AiGatewayUsageTrackingConfig struct {
 	// Whether to enable usage tracking.
 	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+}
+
+func (newState *AiGatewayUsageTrackingConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayUsageTrackingConfig) {
+}
+
+func (newState *AiGatewayUsageTrackingConfig) SyncEffectiveFieldsDuringRead(existingState AiGatewayUsageTrackingConfig) {
 }
 
 type AmazonBedrockConfig struct {
@@ -143,6 +191,12 @@ type AmazonBedrockConfig struct {
 	BedrockProvider types.String `tfsdk:"bedrock_provider" tf:""`
 }
 
+func (newState *AmazonBedrockConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan AmazonBedrockConfig) {
+}
+
+func (newState *AmazonBedrockConfig) SyncEffectiveFieldsDuringRead(existingState AmazonBedrockConfig) {
+}
+
 type AnthropicConfig struct {
 	// The Databricks secret key reference for an Anthropic API key. If you
 	// prefer to paste your API key directly, see `anthropic_api_key_plaintext`.
@@ -154,6 +208,12 @@ type AnthropicConfig struct {
 	// must provide an API key using one of the following fields:
 	// `anthropic_api_key` or `anthropic_api_key_plaintext`.
 	AnthropicApiKeyPlaintext types.String `tfsdk:"anthropic_api_key_plaintext" tf:"optional"`
+}
+
+func (newState *AnthropicConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan AnthropicConfig) {
+}
+
+func (newState *AnthropicConfig) SyncEffectiveFieldsDuringRead(existingState AnthropicConfig) {
 }
 
 type AutoCaptureConfigInput struct {
@@ -170,6 +230,12 @@ type AutoCaptureConfigInput struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
 }
 
+func (newState *AutoCaptureConfigInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureConfigInput) {
+}
+
+func (newState *AutoCaptureConfigInput) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigInput) {
+}
+
 type AutoCaptureConfigOutput struct {
 	// The name of the catalog in Unity Catalog.
 	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
@@ -183,8 +249,20 @@ type AutoCaptureConfigOutput struct {
 	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
 }
 
+func (newState *AutoCaptureConfigOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureConfigOutput) {
+}
+
+func (newState *AutoCaptureConfigOutput) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigOutput) {
+}
+
 type AutoCaptureState struct {
 	PayloadTable []PayloadTable `tfsdk:"payload_table" tf:"optional,object"`
+}
+
+func (newState *AutoCaptureState) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureState) {
+}
+
+func (newState *AutoCaptureState) SyncEffectiveFieldsDuringRead(existingState AutoCaptureState) {
 }
 
 // Get build logs for a served model
@@ -197,9 +275,21 @@ type BuildLogsRequest struct {
 	ServedModelName types.String `tfsdk:"-"`
 }
 
+func (newState *BuildLogsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan BuildLogsRequest) {
+}
+
+func (newState *BuildLogsRequest) SyncEffectiveFieldsDuringRead(existingState BuildLogsRequest) {
+}
+
 type BuildLogsResponse struct {
 	// The logs associated with building the served entity's environment.
 	Logs types.String `tfsdk:"logs" tf:""`
+}
+
+func (newState *BuildLogsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan BuildLogsResponse) {
+}
+
+func (newState *BuildLogsResponse) SyncEffectiveFieldsDuringRead(existingState BuildLogsResponse) {
 }
 
 type ChatMessage struct {
@@ -207,6 +297,12 @@ type ChatMessage struct {
 	Content types.String `tfsdk:"content" tf:"optional"`
 	// The role of the message. One of [system, user, assistant].
 	Role types.String `tfsdk:"role" tf:"optional"`
+}
+
+func (newState *ChatMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChatMessage) {
+}
+
+func (newState *ChatMessage) SyncEffectiveFieldsDuringRead(existingState ChatMessage) {
 }
 
 type CohereConfig struct {
@@ -223,6 +319,12 @@ type CohereConfig struct {
 	// must provide an API key using one of the following fields:
 	// `cohere_api_key` or `cohere_api_key_plaintext`.
 	CohereApiKeyPlaintext types.String `tfsdk:"cohere_api_key_plaintext" tf:"optional"`
+}
+
+func (newState *CohereConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan CohereConfig) {
+}
+
+func (newState *CohereConfig) SyncEffectiveFieldsDuringRead(existingState CohereConfig) {
 }
 
 type CreateServingEndpoint struct {
@@ -245,6 +347,12 @@ type CreateServingEndpoint struct {
 	Tags []EndpointTag `tfsdk:"tags" tf:"optional"`
 }
 
+func (newState *CreateServingEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServingEndpoint) {
+}
+
+func (newState *CreateServingEndpoint) SyncEffectiveFieldsDuringRead(existingState CreateServingEndpoint) {
+}
+
 type DatabricksModelServingConfig struct {
 	// The Databricks secret key reference for a Databricks API token that
 	// corresponds to a user or service principal with Can Query access to the
@@ -265,6 +373,12 @@ type DatabricksModelServingConfig struct {
 	DatabricksWorkspaceUrl types.String `tfsdk:"databricks_workspace_url" tf:""`
 }
 
+func (newState *DatabricksModelServingConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabricksModelServingConfig) {
+}
+
+func (newState *DatabricksModelServingConfig) SyncEffectiveFieldsDuringRead(existingState DatabricksModelServingConfig) {
+}
+
 type DataframeSplitInput struct {
 	Columns []any `tfsdk:"columns" tf:"optional"`
 
@@ -273,7 +387,19 @@ type DataframeSplitInput struct {
 	Index []types.Int64 `tfsdk:"index" tf:"optional"`
 }
 
+func (newState *DataframeSplitInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataframeSplitInput) {
+}
+
+func (newState *DataframeSplitInput) SyncEffectiveFieldsDuringRead(existingState DataframeSplitInput) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 // Delete a serving endpoint
@@ -282,12 +408,24 @@ type DeleteServingEndpointRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteServingEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteServingEndpointRequest) {
+}
+
+func (newState *DeleteServingEndpointRequest) SyncEffectiveFieldsDuringRead(existingState DeleteServingEndpointRequest) {
+}
+
 type EmbeddingsV1ResponseEmbeddingElement struct {
 	Embedding []types.Float64 `tfsdk:"embedding" tf:"optional"`
 	// The index of the embedding in the response.
 	Index types.Int64 `tfsdk:"index" tf:"optional"`
 	// This will always be 'embedding'.
 	Object types.String `tfsdk:"object" tf:"optional"`
+}
+
+func (newState *EmbeddingsV1ResponseEmbeddingElement) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingsV1ResponseEmbeddingElement) {
+}
+
+func (newState *EmbeddingsV1ResponseEmbeddingElement) SyncEffectiveFieldsDuringRead(existingState EmbeddingsV1ResponseEmbeddingElement) {
 }
 
 type EndpointCoreConfigInput struct {
@@ -307,6 +445,12 @@ type EndpointCoreConfigInput struct {
 	TrafficConfig []TrafficConfig `tfsdk:"traffic_config" tf:"optional,object"`
 }
 
+func (newState *EndpointCoreConfigInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigInput) {
+}
+
+func (newState *EndpointCoreConfigInput) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigInput) {
+}
+
 type EndpointCoreConfigOutput struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
@@ -322,12 +466,24 @@ type EndpointCoreConfigOutput struct {
 	TrafficConfig []TrafficConfig `tfsdk:"traffic_config" tf:"optional,object"`
 }
 
+func (newState *EndpointCoreConfigOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigOutput) {
+}
+
+func (newState *EndpointCoreConfigOutput) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigOutput) {
+}
+
 type EndpointCoreConfigSummary struct {
 	// The list of served entities under the serving endpoint config.
 	ServedEntities []ServedEntitySpec `tfsdk:"served_entities" tf:"optional"`
 	// (Deprecated, use served_entities instead) The list of served models under
 	// the serving endpoint config.
 	ServedModels []ServedModelSpec `tfsdk:"served_models" tf:"optional"`
+}
+
+func (newState *EndpointCoreConfigSummary) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigSummary) {
+}
+
+func (newState *EndpointCoreConfigSummary) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigSummary) {
 }
 
 type EndpointPendingConfig struct {
@@ -349,6 +505,12 @@ type EndpointPendingConfig struct {
 	TrafficConfig []TrafficConfig `tfsdk:"traffic_config" tf:"optional,object"`
 }
 
+func (newState *EndpointPendingConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointPendingConfig) {
+}
+
+func (newState *EndpointPendingConfig) SyncEffectiveFieldsDuringRead(existingState EndpointPendingConfig) {
+}
+
 type EndpointState struct {
 	// The state of an endpoint's config update. This informs the user if the
 	// pending_config is in progress, if the update failed, or if there is no
@@ -363,11 +525,23 @@ type EndpointState struct {
 	Ready types.String `tfsdk:"ready" tf:"optional"`
 }
 
+func (newState *EndpointState) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointState) {
+}
+
+func (newState *EndpointState) SyncEffectiveFieldsDuringRead(existingState EndpointState) {
+}
+
 type EndpointTag struct {
 	// Key field for a serving endpoint tag.
 	Key types.String `tfsdk:"key" tf:""`
 	// Optional value field for a serving endpoint tag.
 	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *EndpointTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTag) {
+}
+
+func (newState *EndpointTag) SyncEffectiveFieldsDuringRead(existingState EndpointTag) {
 }
 
 // Get metrics of a serving endpoint
@@ -377,8 +551,20 @@ type ExportMetricsRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *ExportMetricsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportMetricsRequest) {
+}
+
+func (newState *ExportMetricsRequest) SyncEffectiveFieldsDuringRead(existingState ExportMetricsRequest) {
+}
+
 type ExportMetricsResponse struct {
 	Contents io.ReadCloser `tfsdk:"-"`
+}
+
+func (newState *ExportMetricsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportMetricsResponse) {
+}
+
+func (newState *ExportMetricsResponse) SyncEffectiveFieldsDuringRead(existingState ExportMetricsResponse) {
 }
 
 type ExternalModel struct {
@@ -411,6 +597,12 @@ type ExternalModel struct {
 	Task types.String `tfsdk:"task" tf:""`
 }
 
+func (newState *ExternalModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalModel) {
+}
+
+func (newState *ExternalModel) SyncEffectiveFieldsDuringRead(existingState ExternalModel) {
+}
+
 type ExternalModelUsageElement struct {
 	// The number of tokens in the chat/completions response.
 	CompletionTokens types.Int64 `tfsdk:"completion_tokens" tf:"optional"`
@@ -418,6 +610,12 @@ type ExternalModelUsageElement struct {
 	PromptTokens types.Int64 `tfsdk:"prompt_tokens" tf:"optional"`
 	// The total number of tokens in the prompt and response.
 	TotalTokens types.Int64 `tfsdk:"total_tokens" tf:"optional"`
+}
+
+func (newState *ExternalModelUsageElement) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalModelUsageElement) {
+}
+
+func (newState *ExternalModelUsageElement) SyncEffectiveFieldsDuringRead(existingState ExternalModelUsageElement) {
 }
 
 type FoundationModel struct {
@@ -431,6 +629,12 @@ type FoundationModel struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
+func (newState *FoundationModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan FoundationModel) {
+}
+
+func (newState *FoundationModel) SyncEffectiveFieldsDuringRead(existingState FoundationModel) {
+}
+
 // Get the schema for a serving endpoint
 type GetOpenApiRequest struct {
 	// The name of the serving endpoint that the served model belongs to. This
@@ -438,9 +642,21 @@ type GetOpenApiRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *GetOpenApiRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetOpenApiRequest) {
+}
+
+func (newState *GetOpenApiRequest) SyncEffectiveFieldsDuringRead(existingState GetOpenApiRequest) {
+}
+
 // The response is an OpenAPI spec in JSON format that typically includes fields
 // like openapi, info, servers and paths, etc.
 type GetOpenApiResponse struct {
+}
+
+func (newState *GetOpenApiResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetOpenApiResponse) {
+}
+
+func (newState *GetOpenApiResponse) SyncEffectiveFieldsDuringRead(existingState GetOpenApiResponse) {
 }
 
 // Get serving endpoint permission levels
@@ -449,9 +665,21 @@ type GetServingEndpointPermissionLevelsRequest struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
+func (newState *GetServingEndpointPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionLevelsRequest) {
+}
+
+func (newState *GetServingEndpointPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsRequest) {
+}
+
 type GetServingEndpointPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []ServingEndpointPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetServingEndpointPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionLevelsResponse) {
+}
+
+func (newState *GetServingEndpointPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsResponse) {
 }
 
 // Get serving endpoint permissions
@@ -460,10 +688,22 @@ type GetServingEndpointPermissionsRequest struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
+func (newState *GetServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionsRequest) {
+}
+
+func (newState *GetServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionsRequest) {
+}
+
 // Get a single serving endpoint
 type GetServingEndpointRequest struct {
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *GetServingEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointRequest) {
+}
+
+func (newState *GetServingEndpointRequest) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointRequest) {
 }
 
 type GoogleCloudVertexAiConfig struct {
@@ -496,9 +736,21 @@ type GoogleCloudVertexAiConfig struct {
 	Region types.String `tfsdk:"region" tf:"optional"`
 }
 
+func (newState *GoogleCloudVertexAiConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GoogleCloudVertexAiConfig) {
+}
+
+func (newState *GoogleCloudVertexAiConfig) SyncEffectiveFieldsDuringRead(existingState GoogleCloudVertexAiConfig) {
+}
+
 type ListEndpointsResponse struct {
 	// The list of endpoints.
 	Endpoints []ServingEndpoint `tfsdk:"endpoints" tf:"optional"`
+}
+
+func (newState *ListEndpointsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointsResponse) {
+}
+
+func (newState *ListEndpointsResponse) SyncEffectiveFieldsDuringRead(existingState ListEndpointsResponse) {
 }
 
 // Get the latest logs for a served model
@@ -511,9 +763,21 @@ type LogsRequest struct {
 	ServedModelName types.String `tfsdk:"-"`
 }
 
+func (newState *LogsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogsRequest) {
+}
+
+func (newState *LogsRequest) SyncEffectiveFieldsDuringRead(existingState LogsRequest) {
+}
+
 type ModelDataPlaneInfo struct {
 	// Information required to query DataPlane API 'query' endpoint.
 	QueryInfo oauth2.DataPlaneInfo `tfsdk:"query_info" tf:"optional,object"`
+}
+
+func (newState *ModelDataPlaneInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelDataPlaneInfo) {
+}
+
+func (newState *ModelDataPlaneInfo) SyncEffectiveFieldsDuringRead(existingState ModelDataPlaneInfo) {
 }
 
 type OpenAiConfig struct {
@@ -570,6 +834,12 @@ type OpenAiConfig struct {
 	OpenaiOrganization types.String `tfsdk:"openai_organization" tf:"optional"`
 }
 
+func (newState *OpenAiConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan OpenAiConfig) {
+}
+
+func (newState *OpenAiConfig) SyncEffectiveFieldsDuringRead(existingState OpenAiConfig) {
+}
+
 type PaLmConfig struct {
 	// The Databricks secret key reference for a PaLM API key. If you prefer to
 	// paste your API key directly, see `palm_api_key_plaintext`. You must
@@ -583,6 +853,12 @@ type PaLmConfig struct {
 	PalmApiKeyPlaintext types.String `tfsdk:"palm_api_key_plaintext" tf:"optional"`
 }
 
+func (newState *PaLmConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan PaLmConfig) {
+}
+
+func (newState *PaLmConfig) SyncEffectiveFieldsDuringRead(existingState PaLmConfig) {
+}
+
 type PatchServingEndpointTags struct {
 	// List of endpoint tags to add
 	AddTags []EndpointTag `tfsdk:"add_tags" tf:"optional"`
@@ -593,6 +869,12 @@ type PatchServingEndpointTags struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *PatchServingEndpointTags) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchServingEndpointTags) {
+}
+
+func (newState *PatchServingEndpointTags) SyncEffectiveFieldsDuringRead(existingState PatchServingEndpointTags) {
+}
+
 type PayloadTable struct {
 	// The name of the payload table.
 	Name types.String `tfsdk:"name" tf:"optional"`
@@ -600,6 +882,12 @@ type PayloadTable struct {
 	Status types.String `tfsdk:"status" tf:"optional"`
 	// The status message of the payload table.
 	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+}
+
+func (newState *PayloadTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan PayloadTable) {
+}
+
+func (newState *PayloadTable) SyncEffectiveFieldsDuringRead(existingState PayloadTable) {
 }
 
 // Update AI Gateway of a serving endpoint
@@ -622,6 +910,12 @@ type PutAiGatewayRequest struct {
 	UsageTrackingConfig []AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional,object"`
 }
 
+func (newState *PutAiGatewayRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAiGatewayRequest) {
+}
+
+func (newState *PutAiGatewayRequest) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayRequest) {
+}
+
 type PutAiGatewayResponse struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
@@ -638,6 +932,12 @@ type PutAiGatewayResponse struct {
 	UsageTrackingConfig []AiGatewayUsageTrackingConfig `tfsdk:"usage_tracking_config" tf:"optional,object"`
 }
 
+func (newState *PutAiGatewayResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAiGatewayResponse) {
+}
+
+func (newState *PutAiGatewayResponse) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayResponse) {
+}
+
 // Update rate limits of a serving endpoint
 type PutRequest struct {
 	// The name of the serving endpoint whose rate limits are being updated.
@@ -647,9 +947,21 @@ type PutRequest struct {
 	RateLimits []RateLimit `tfsdk:"rate_limits" tf:"optional"`
 }
 
+func (newState *PutRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutRequest) {
+}
+
+func (newState *PutRequest) SyncEffectiveFieldsDuringRead(existingState PutRequest) {
+}
+
 type PutResponse struct {
 	// The list of endpoint rate limits.
 	RateLimits []RateLimit `tfsdk:"rate_limits" tf:"optional"`
+}
+
+func (newState *PutResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutResponse) {
+}
+
+func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResponse) {
 }
 
 type QueryEndpointInput struct {
@@ -704,6 +1016,12 @@ type QueryEndpointInput struct {
 	Temperature types.Float64 `tfsdk:"temperature" tf:"optional"`
 }
 
+func (newState *QueryEndpointInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEndpointInput) {
+}
+
+func (newState *QueryEndpointInput) SyncEffectiveFieldsDuringRead(existingState QueryEndpointInput) {
+}
+
 type QueryEndpointResponse struct {
 	// The list of choices returned by the __chat or completions
 	// external/foundation model__ serving endpoint.
@@ -735,6 +1053,12 @@ type QueryEndpointResponse struct {
 	Usage []ExternalModelUsageElement `tfsdk:"usage" tf:"optional,object"`
 }
 
+func (newState *QueryEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEndpointResponse) {
+}
+
+func (newState *QueryEndpointResponse) SyncEffectiveFieldsDuringRead(existingState QueryEndpointResponse) {
+}
+
 type RateLimit struct {
 	// Used to specify how many calls are allowed for a key within the
 	// renewal_period.
@@ -748,12 +1072,24 @@ type RateLimit struct {
 	RenewalPeriod types.String `tfsdk:"renewal_period" tf:""`
 }
 
+func (newState *RateLimit) SyncEffectiveFieldsDuringCreateOrUpdate(plan RateLimit) {
+}
+
+func (newState *RateLimit) SyncEffectiveFieldsDuringRead(existingState RateLimit) {
+}
+
 type Route struct {
 	// The name of the served model this route configures traffic for.
 	ServedModelName types.String `tfsdk:"served_model_name" tf:""`
 	// The percentage of endpoint traffic to send to this route. It must be an
 	// integer between 0 and 100 inclusive.
 	TrafficPercentage types.Int64 `tfsdk:"traffic_percentage" tf:""`
+}
+
+func (newState *Route) SyncEffectiveFieldsDuringCreateOrUpdate(plan Route) {
+}
+
+func (newState *Route) SyncEffectiveFieldsDuringRead(existingState Route) {
 }
 
 type ServedEntityInput struct {
@@ -815,6 +1151,12 @@ type ServedEntityInput struct {
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
 	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
+}
+
+func (newState *ServedEntityInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntityInput) {
+}
+
+func (newState *ServedEntityInput) SyncEffectiveFieldsDuringRead(existingState ServedEntityInput) {
 }
 
 type ServedEntityOutput struct {
@@ -880,6 +1222,12 @@ type ServedEntityOutput struct {
 	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
 }
 
+func (newState *ServedEntityOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntityOutput) {
+}
+
+func (newState *ServedEntityOutput) SyncEffectiveFieldsDuringRead(existingState ServedEntityOutput) {
+}
+
 type ServedEntitySpec struct {
 	// The name of the entity served. The entity may be a model in the
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
@@ -900,6 +1248,12 @@ type ServedEntitySpec struct {
 	FoundationModel []FoundationModel `tfsdk:"foundation_model" tf:"optional,object"`
 	// The name of the served entity.
 	Name types.String `tfsdk:"name" tf:"optional"`
+}
+
+func (newState *ServedEntitySpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntitySpec) {
+}
+
+func (newState *ServedEntitySpec) SyncEffectiveFieldsDuringRead(existingState ServedEntitySpec) {
 }
 
 type ServedModelInput struct {
@@ -950,6 +1304,12 @@ type ServedModelInput struct {
 	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
 }
 
+func (newState *ServedModelInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelInput) {
+}
+
+func (newState *ServedModelInput) SyncEffectiveFieldsDuringRead(existingState ServedModelInput) {
+}
+
 type ServedModelOutput struct {
 	// The creation timestamp of the served model in Unix time.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
@@ -996,6 +1356,12 @@ type ServedModelOutput struct {
 	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
 }
 
+func (newState *ServedModelOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelOutput) {
+}
+
+func (newState *ServedModelOutput) SyncEffectiveFieldsDuringRead(existingState ServedModelOutput) {
+}
+
 type ServedModelSpec struct {
 	// The name of the model in Databricks Model Registry or the full name of
 	// the model in Unity Catalog.
@@ -1005,6 +1371,12 @@ type ServedModelSpec struct {
 	ModelVersion types.String `tfsdk:"model_version" tf:"optional"`
 	// The name of the served model.
 	Name types.String `tfsdk:"name" tf:"optional"`
+}
+
+func (newState *ServedModelSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelSpec) {
+}
+
+func (newState *ServedModelSpec) SyncEffectiveFieldsDuringRead(existingState ServedModelSpec) {
 }
 
 type ServedModelState struct {
@@ -1025,10 +1397,22 @@ type ServedModelState struct {
 	DeploymentStateMessage types.String `tfsdk:"deployment_state_message" tf:"optional"`
 }
 
+func (newState *ServedModelState) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelState) {
+}
+
+func (newState *ServedModelState) SyncEffectiveFieldsDuringRead(existingState ServedModelState) {
+}
+
 type ServerLogsResponse struct {
 	// The most recent log lines of the model server processing invocation
 	// requests.
 	Logs types.String `tfsdk:"logs" tf:""`
+}
+
+func (newState *ServerLogsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServerLogsResponse) {
+}
+
+func (newState *ServerLogsResponse) SyncEffectiveFieldsDuringRead(existingState ServerLogsResponse) {
 }
 
 type ServingEndpoint struct {
@@ -1056,6 +1440,12 @@ type ServingEndpoint struct {
 	Task types.String `tfsdk:"task" tf:"optional"`
 }
 
+func (newState *ServingEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpoint) {
+}
+
+func (newState *ServingEndpoint) SyncEffectiveFieldsDuringRead(existingState ServingEndpoint) {
+}
+
 type ServingEndpointAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -1065,6 +1455,12 @@ type ServingEndpointAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *ServingEndpointAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlRequest) {
+}
+
+func (newState *ServingEndpointAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlRequest) {
 }
 
 type ServingEndpointAccessControlResponse struct {
@@ -1078,6 +1474,12 @@ type ServingEndpointAccessControlResponse struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *ServingEndpointAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlResponse) {
+}
+
+func (newState *ServingEndpointAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlResponse) {
 }
 
 type ServingEndpointDetailed struct {
@@ -1116,12 +1518,24 @@ type ServingEndpointDetailed struct {
 	Task types.String `tfsdk:"task" tf:"optional"`
 }
 
+func (newState *ServingEndpointDetailed) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointDetailed) {
+}
+
+func (newState *ServingEndpointDetailed) SyncEffectiveFieldsDuringRead(existingState ServingEndpointDetailed) {
+}
+
 type ServingEndpointPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *ServingEndpointPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermission) {
+}
+
+func (newState *ServingEndpointPermission) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermission) {
 }
 
 type ServingEndpointPermissions struct {
@@ -1132,10 +1546,22 @@ type ServingEndpointPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *ServingEndpointPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissions) {
+}
+
+func (newState *ServingEndpointPermissions) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissions) {
+}
+
 type ServingEndpointPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *ServingEndpointPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissionsDescription) {
+}
+
+func (newState *ServingEndpointPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsDescription) {
 }
 
 type ServingEndpointPermissionsRequest struct {
@@ -1144,9 +1570,21 @@ type ServingEndpointPermissionsRequest struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
+func (newState *ServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissionsRequest) {
+}
+
+func (newState *ServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsRequest) {
+}
+
 type TrafficConfig struct {
 	// The list of routes that define traffic to each served entity.
 	Routes []Route `tfsdk:"routes" tf:"optional"`
+}
+
+func (newState *TrafficConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrafficConfig) {
+}
+
+func (newState *TrafficConfig) SyncEffectiveFieldsDuringRead(existingState TrafficConfig) {
 }
 
 type V1ResponseChoiceElement struct {
@@ -1160,4 +1598,10 @@ type V1ResponseChoiceElement struct {
 	Message []ChatMessage `tfsdk:"message" tf:"optional,object"`
 	// The text response from the __completions__ endpoint.
 	Text types.String `tfsdk:"text" tf:"optional"`
+}
+
+func (newState *V1ResponseChoiceElement) SyncEffectiveFieldsDuringCreateOrUpdate(plan V1ResponseChoiceElement) {
+}
+
+func (newState *V1ResponseChoiceElement) SyncEffectiveFieldsDuringRead(existingState V1ResponseChoiceElement) {
 }

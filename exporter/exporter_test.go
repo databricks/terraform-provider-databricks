@@ -2180,7 +2180,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.enableListing("dlt")
-			ic.enableServices("dlt,access,notebooks,users,repos,secrets")
+			ic.enableServices("dlt,access,notebooks,users,repos,secrets,wsfiles")
 
 			err := ic.Run()
 			assert.NoError(t, err)

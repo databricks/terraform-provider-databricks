@@ -1576,7 +1576,6 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "notebooks",
 		Name:           workspaceObjectResouceName,
-		List:           listNotebooksAndWorkspaceFiles,
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -1623,10 +1622,8 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_workspace_file": {
 		WorkspaceLevel: true,
-		Service:        "notebooks",
+		Service:        "wsfiles",
 		Name:           workspaceObjectResouceName,
-		// We don't need list function for workspace files because it will be handled by the notebooks listing
-		// List: createListWorkspaceObjectsFunc(workspace.File, "databricks_workspace_file", "workspace_file"),
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
 			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -2174,28 +2171,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			return fmt.Errorf("can't find directory with object_id: %s", r.Value)
-		},
-		// TODO: think if we really need this, we need directories only for permissions,
-		// and only when they are different from parents & notebooks
-		List: func(ic *importContext) error {
-			if ic.incremental {
-				return nil
-			}
-			directoryList := ic.getAllDirectories()
-			for offset, directory := range directoryList {
-				if strings.HasPrefix(directory.Path, "/Repos") {
-					continue
-				}
-				if res := ignoreIdeFolderRegex.FindStringSubmatch(directory.Path); res != nil {
-					continue
-				}
-				ic.maybeEmitWorkspaceObject("databricks_directory", directory.Path, &directory)
-
-				if offset%50 == 0 {
-					log.Printf("[INFO] Scanned %d of %d directories", offset+1, len(directoryList))
-				}
-			}
-			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")

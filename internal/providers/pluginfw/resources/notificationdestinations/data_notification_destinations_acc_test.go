@@ -54,7 +54,9 @@ func TestAccNotificationsCreation(t *testing.T) {
 				}
 			}
 
-			data "databricks_notification_destinations" "this" {}
+			data "databricks_notification_destinations" "this" {
+				depends_on = [databricks_notification_destination.email_notification, databricks_notification_destination.notification]
+			}
 		`,
 		Check: CheckDataSourceNotificationsPopulated(t),
 	})

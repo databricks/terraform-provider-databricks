@@ -45,7 +45,7 @@ func TestAccNotificationsCreation(t *testing.T) {
 				}
 			}
 
-			resource "databricks_notification_destination" "notification" {
+			resource "databricks_notification_destination" "slack_notification" {
 				display_name = "slack notification destination"
 				config {
 					slack {
@@ -55,7 +55,7 @@ func TestAccNotificationsCreation(t *testing.T) {
 			}
 
 			data "databricks_notification_destinations" "this" {
-				depends_on = [databricks_notification_destination.email_notification, databricks_notification_destination.notification]
+				depends_on = [databricks_notification_destination.email_notification, databricks_notification_destination.slack_notification]
 			}
 		`,
 		Check: CheckDataSourceNotificationsPopulated(t),

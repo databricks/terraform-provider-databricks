@@ -53,6 +53,7 @@ Data source exposes the following attributes:
 The following resources are used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide
+* [databricks_groups](../data-sources/groups.md) to retrive [Groups](https://docs.databricks.com/en/admin/users-groups/groups.html) information.
 * [databricks_cluster](../resources/cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_directory](../resources/directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).
 * [databricks_group_member](../resources/group_member.md) to attach [users](../resources/user.md) and [groups](../resources/group.md) as group members.

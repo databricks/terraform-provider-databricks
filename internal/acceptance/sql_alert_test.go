@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestAccAlert(t *testing.T) {
+func TestAccSqlAlert(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_sql_query" "this" {

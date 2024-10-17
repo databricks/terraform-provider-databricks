@@ -587,6 +587,7 @@ func ResourceSqlQuery() common.Resource {
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewQueryAPI(ctx, c).Delete(data.Id())
 		},
-		Schema: s,
+		Schema:             s,
+		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_query` resource instead.",
 	}
 }

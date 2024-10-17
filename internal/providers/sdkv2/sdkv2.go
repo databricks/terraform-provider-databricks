@@ -128,6 +128,7 @@ func DatabricksProvider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order
 			"databricks_access_control_rule_set":         permissions.ResourceAccessControlRuleSet().ToResource(),
+			"databricks_alert":                           sql.ResourceAlert().ToResource(),
 			"databricks_artifact_allowlist":              catalog.ResourceArtifactAllowlist().ToResource(),
 			"databricks_aws_s3_mount":                    storage.ResourceAWSS3Mount().ToResource(),
 			"databricks_azure_adls_gen1_mount":           storage.ResourceAzureAdlsGen1Mount().ToResource(),
@@ -188,6 +189,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_pipeline":                        pipelines.ResourcePipeline().ToResource(),
 			"databricks_provider":                        sharing.ResourceProvider().ToResource(),
 			"databricks_quality_monitor":                 catalog.ResourceQualityMonitor().ToResource(),
+			"databricks_query":                           sql.ResourceQuery().ToResource(),
 			"databricks_recipient":                       sharing.ResourceRecipient().ToResource(),
 			"databricks_registered_model":                catalog.ResourceRegisteredModel().ToResource(),
 			"databricks_repo":                            repos.ResourceRepo().ToResource(),

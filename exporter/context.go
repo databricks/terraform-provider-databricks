@@ -374,14 +374,30 @@ func (ic *importContext) Run() error {
 	ic.startImportChannels()
 
 	// Start listing of objects
+	listWorkspaceObjectsAlreadyRunning := false
 	for rnLoop, irLoop := range ic.Importables {
 		resourceName := rnLoop
 		ir := irLoop
+		// TODO: extend this to other services?  Like, Git Folders
+		if !ic.accountLevel && (ir.Service == "notebooks" || ir.Service == "wsfiles" || (ir.Service == "directories" && !ic.incremental)) {
+			if _, exists := ic.listing[ir.Service]; exists && !listWorkspaceObjectsAlreadyRunning {
+				ic.waitGroup.Add(1)
+				log.Printf("[DEBUG] Starting listing of workspace objects")
+				go func() {
+					if err := listWorkspaceObjects(ic); err != nil {
+						log.Printf("[ERROR] listing of workspace objects failed %s", err)
+					}
+					log.Print("[DEBUG] Finished listing of workspace objects")
+					ic.waitGroup.Done()
+				}()
+				listWorkspaceObjectsAlreadyRunning = true
+			}
+			continue
+		}
 		if ir.List == nil {
 			continue
 		}
-		_, exists := ic.listing[ir.Service]
-		if !exists {
+		if _, exists := ic.listing[ir.Service]; !exists {
 			log.Printf("[DEBUG] %s (%s service) is not part of listing", resourceName, ir.Service)
 			continue
 		}

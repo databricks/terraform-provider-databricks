@@ -1084,7 +1084,8 @@ func TestNotebookGeneration(t *testing.T) {
 		},
 	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
-		err := resourcesMap["databricks_notebook"].List(ic)
+		ic.enableListing("notebooks")
+		err := listWorkspaceObjects(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
@@ -1127,7 +1128,8 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 		},
 	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "JUPYTER"
-		err := resourcesMap["databricks_notebook"].List(ic)
+		ic.enableListing("notebooks")
+		err := listWorkspaceObjects(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
@@ -1184,7 +1186,8 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 	}, "notebooks,directories", true, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
 		ic.enableServices("notebooks")
-		err := resourcesMap["databricks_notebook"].List(ic)
+		ic.enableListing("notebooks")
+		err := listWorkspaceObjects(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
@@ -1231,7 +1234,8 @@ func TestDirectoryGeneration(t *testing.T) {
 			},
 		},
 	}, "directories", false, func(ic *importContext) {
-		err := resourcesMap["databricks_directory"].List(ic)
+		ic.enableListing("directories")
+		err := listWorkspaceObjects(ic)
 		assert.NoError(t, err)
 
 		ic.waitGroup.Wait()
@@ -1517,7 +1521,7 @@ func TestEmitSqlParent(t *testing.T) {
 
 func TestEmitFilesFromSlice(t *testing.T) {
 	ic := importContextForTest()
-	ic.enableServices("storage,notebooks")
+	ic.enableServices("storage,notebooks,wsfiles")
 	ic.emitFilesFromSlice([]string{
 		"dbfs:/FileStore/test.txt",
 		"/Workspace/Shared/test.txt",
@@ -1530,7 +1534,7 @@ func TestEmitFilesFromSlice(t *testing.T) {
 
 func TestEmitFilesFromMap(t *testing.T) {
 	ic := importContextForTest()
-	ic.enableServices("storage,notebooks")
+	ic.enableServices("storage,notebooks,wsfiles")
 	ic.emitFilesFromMap(map[string]string{
 		"k1": "dbfs:/FileStore/test.txt",
 		"k2": "/Workspace/Shared/test.txt",

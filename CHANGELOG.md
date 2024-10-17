@@ -1,5 +1,41 @@
 # Version changelog
 
+## [Release] Release v1.54.0
+
+### New Features and Improvements
+
+ * Add `databricks_registered_model` data source ([#4033](https://github.com/databricks/terraform-provider-databricks/pull/4033)).
+ * Add data source `databricks_notification_destinations` ([#4087](https://github.com/databricks/terraform-provider-databricks/pull/4087)).
+
+
+### Bug Fixes
+
+ * Fix databricks_cluster_pluginframework data source ([#4097](https://github.com/databricks/terraform-provider-databricks/pull/4097)).
+ * Mark unity_catalog_provisioning_state as ReadOnly ([#4116](https://github.com/databricks/terraform-provider-databricks/pull/4116)).
+ * Tolerate invalid keys in `databricks_workspace_conf` ([#4102](https://github.com/databricks/terraform-provider-databricks/pull/4102)).
+ * force send `read_only` in `databricks_external_location` when it's changed ([#4067](https://github.com/databricks/terraform-provider-databricks/pull/4067)).
+ * force send `read_only` in `databricks_storage_credential` when it's changed ([#4083](https://github.com/databricks/terraform-provider-databricks/pull/4083)).
+
+
+### Documentation
+
+ * Document `budget_policy_id` in `databricks_pipeline` and `databricks_job` ([#4110](https://github.com/databricks/terraform-provider-databricks/pull/4110)).
+ * Reformat code examples in documentation ([#4081](https://github.com/databricks/terraform-provider-databricks/pull/4081)).
+ * Update documentation for `databricks_model_serving` ([#4115](https://github.com/databricks/terraform-provider-databricks/pull/4115)).
+ * Updates to resource examples ([#4093](https://github.com/databricks/terraform-provider-databricks/pull/4093)).
+
+
+### Internal Changes
+
+ * Add maxItem=1 validator for object types in plugin framework schema ([#4094](https://github.com/databricks/terraform-provider-databricks/pull/4094)).
+ * Fix acceptance test for `databricks_registered_model` data source ([#4105](https://github.com/databricks/terraform-provider-databricks/pull/4105)).
+ * Generate Effective Fields ([#4057](https://github.com/databricks/terraform-provider-databricks/pull/4057)).
+ * Generate Effective Fields ([#4112](https://github.com/databricks/terraform-provider-databricks/pull/4112)).
+ * Set SDK used in the useragent in context ([#4092](https://github.com/databricks/terraform-provider-databricks/pull/4092)).
+ * Support adding context in resources and data sources ([#4085](https://github.com/databricks/terraform-provider-databricks/pull/4085)).
+ * Update plugin framework schema to use ListNestedBlocks ([#4040](https://github.com/databricks/terraform-provider-databricks/pull/4040)).
+
+
 ## [Release] Release v1.53.0
 
 ### New Features and Improvements

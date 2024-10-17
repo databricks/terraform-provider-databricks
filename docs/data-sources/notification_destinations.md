@@ -27,13 +27,14 @@ resource "databricks_notification_destination" "slack" {
   }
 }
 
-data  "databricks_notification_destinations" "this" {} # Lists all notification desitnations
+# Lists all notification desitnations
+data "databricks_notification_destinations" "this" {}
 
+# List destinations of specific type and name
 data "databricks_notification_destinations" "filtered_notification" {
-    display_name_contains = "Destination"
-    type = "EMAIL"
+  display_name_contains = "Destination"
+  type                  = "EMAIL"
 }
-
 ```
 
 

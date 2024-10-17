@@ -98,7 +98,8 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 
 	var notificationsTfSdk []settings_tf.ListNotificationDestinationsResult
 	for _, notification := range notificationsGoSdk {
-		if (notification.DestinationType.String() != notificationType) || (notificationDisplayName != "" && !strings.Contains(strings.ToLower(notification.DisplayName), notificationDisplayName)) {
+		if (notificationType != "" && notification.DestinationType.String() != notificationType) ||
+			(notificationDisplayName != "" && !strings.Contains(strings.ToLower(notification.DisplayName), notificationDisplayName)) {
 			continue
 		}
 

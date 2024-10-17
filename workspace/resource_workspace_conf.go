@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -169,13 +170,9 @@ func SafeGetStatus(ctx context.Context, w *databricks.WorkspaceClient, keys []st
 	} else if invalidKeys != nil {
 		tflog.Warn(ctx, fmt.Sprintf("the following keys are not supported by the api: %s. Remove these keys from the configuration to avoid this warning.", strings.Join(invalidKeys, ", ")))
 		// Request again but remove invalid keys
-		invalidKeysMap := make(map[string]struct{}, len(invalidKeys))
-		for _, k := range invalidKeys {
-			invalidKeysMap[k] = struct{}{}
-		}
 		validKeys := make([]string, 0, len(keys))
 		for _, k := range keys {
-			if _, ok := invalidKeysMap[k]; !ok {
+			if !slices.Contains(invalidKeys, k) {
 				validKeys = append(validKeys, k)
 			}
 		}

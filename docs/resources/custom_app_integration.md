@@ -44,10 +44,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by Databricks account ID and integration ID.
+This resource can be imported by its integration ID.
 
 ```sh
-terraform import databricks_budget.this '<account_id>|<budget_configuration_id>'
+terraform import databricks_custom_app_integration.this '<integration_id>'
 ```
 
 ## Related Resources

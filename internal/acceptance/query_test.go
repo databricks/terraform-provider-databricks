@@ -12,14 +12,6 @@ func TestAccQuery(t *testing.T) {
 			display_name = "tf-{var.RANDOM}"
 			query_text = "SELECT 1 AS p1, 2 as p2"
 		}
-
-        resource "databricks_permissions" "query_usage" {
-			sql_query_id = databricks_query.this.id
-			access_control {
-              group_name       = "users"
-              permission_level = "CAN_RUN"
-			}
-		}
 `,
 	}, Step{
 		Template: `
@@ -34,14 +26,6 @@ func TestAccQuery(t *testing.T) {
     			}
     			title = "foo"
   			}
-		}
-
-        resource "databricks_permissions" "query_usage" {
-			sql_query_id = databricks_query.this.id
-			access_control {
-              group_name       = "users"
-              permission_level = "CAN_RUN"
-			}
 		}
 `,
 	})

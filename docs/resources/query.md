@@ -127,9 +127,42 @@ resource "databricks_query" "query" {
 }
 ```
 
+### For Terraform version >= 1.7.0
+
+Terraform 1.7 introduced the [removed](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) block in addition to the [import](https://developer.hashicorp.com/terraform/language/import) block introduced in Terraform 1.5.  Together they make import and removal of resources easier, avoiding manual execution of `terraform import` and `terraform state rm` commands.
+
+So with Terraform 1.7+, the migration looks as the following:
+
+* remove the old query definition and replace it with the new one.
+* Adjust references, like, `databricks_permissions`.
+* Add `import` and `removed` blocks like this:
+
+```hcl
+import {
+  to = databricks_query.query
+  id = "<query-id>"
+}
+
+removed {
+  from = databricks_sql_query.query
+
+  lifecycle {
+    destroy = false
+  }
+}
+```
+
+* Run the `terraform plan` command to check possible changes, such as value type change, etc.
+* Run the `terraform apply` command to apply changes.
+* Remove the `import` and `removed` blocks from the code.
+
+### For Terraform version < 1.7.0
+
+* Remove the old query definition and replace it with the new one.
 * Remove the old resource from the state with the `terraform state rm databricks_sql_query.query` command.
 * Import new resource with the `terraform import databricks_query.query <query-id>` command.
-* Run the `terraform plan` command to check possible changes, like, value type change, etc.
+* Adjust references, like, `databricks_permissions`.
+* Run the `terraform plan` command to check possible changes, such as value type change, etc.
 
 ## Access Control
 

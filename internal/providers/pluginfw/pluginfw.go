@@ -55,6 +55,7 @@ func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []f
 		cluster.DataSourceCluster,
 		volume.DataSourceVolumes,
 		registered_model.DataSourceRegisteredModel,
+		registered_model.DataSourceRegisteredModelVersions,
 		notificationdestinations.DataSourceNotificationDestinations,
 	}
 }

@@ -58,6 +58,18 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - unique ID of the SQL Alert.
 
+## Access Control
+
+[databricks_permissions](permissions.md#sql-alert-usage) can control which groups or individual users can *Manage*, *Edit*, *Run* or *View* individual alerts.
+
+## Import
+
+This resource can be imported using alert ID:
+
+```bash
+terraform import databricks_sql_alert.this <alert-id>
+```
+
 ## Related Resources
 
 The following resources are often used in the same context:

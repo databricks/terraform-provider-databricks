@@ -120,7 +120,7 @@ type GroupList struct {
 	StartIndex   int32   `json:"startIndex,omitempty"`
 	ItemsPerPage int32   `json:"itemsPerPage,omitempty"`
 	Schemas      []URN   `json:"schemas,omitempty"`
-	Resources    []Group `json:"resources,omitempty"`
+	Resources    []Group `json:"Resources,omitempty"`
 }
 
 type email struct {

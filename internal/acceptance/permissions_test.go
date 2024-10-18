@@ -841,20 +841,20 @@ func TestAccPermissions_ServingEndpoint(t *testing.T) {
 func TestAccPermissions_Alert(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	alertTemplate := `
-		resource "databricks_sql_query" "this" {
-			name = "{var.STICKY_RANDOM}-query"
-			query = "SELECT 1 AS p1, 2 as p2"
-			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
+		resource "databricks_query" "this" {
+			display_name = "{var.STICKY_RANDOM}-query"
+			query_text = "SELECT 1 AS p1, 2 as p2"
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 		}
 
 		resource "databricks_alert" "this" {
-  			query_id     = databricks_sql_query.this.id
+  			query_id     = databricks_query.this.id
   			display_name = "{var.STICKY_RANDOM}-alert"
 			condition {
     			op = "GREATER_THAN"
     			operand {
       				column {
-        				name = "value"
+        				name = "p1"
       				}
     			}
     			threshold {

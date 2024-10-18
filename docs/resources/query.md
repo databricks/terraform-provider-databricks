@@ -190,6 +190,6 @@ terraform import databricks_query.this <query-id>
 
 The following resources are often used in the same context:
 
-* [databricks_sql_query](sql_query.md) to manage Databricks SQL [Queries](https://docs.databricks.com/sql/user/queries/index.html).
-* [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
+* [databricks_alert](alert.md) to manage [Databricks SQL Alerts](https://docs.databricks.com/en/sql/user/alerts/index.html).
+* [databricks_sql_endpoint](sql_endpoint.md) to manage [Databricks SQL Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
 * [databricks_directory](directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).

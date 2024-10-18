@@ -77,7 +77,11 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Migrating from `databricks_sql_alert` resource
 
-Under the hood, the new resource uses the same data as the `databricks_sql_alert`, but is exposed via a different API. This means that we can migrate existing alerts without recreating them.  This operation is done in few steps:
+Under the hood, the new resource uses the same data as the `databricks_sql_alert`, but is exposed via a different API. This means that we can migrate existing alerts without recreating them.  
+
+-> It's also recommended to migrate to the `databricks_query` resource - see [databricks_query](query.md) for more details.
+
+This operation is done in few steps:
 
 * Record the ID of existing `databricks_sql_alert`, for example, by executing the `terraform state show databricks_sql_alert.alert` command.
 * Create the code for the new implementation by performing the following changes:
@@ -109,7 +113,7 @@ we'll have a new resource defined as:
 
 ```hcl
 resource "databricks_alert" "alert" {
-  query_id     = databricks_sql_query.this.id
+  query_id     = databricks_query.this.id
   display_name = "My Alert"
   parent_path  = databricks_directory.shared_dir.path
   condition {
@@ -205,6 +209,6 @@ terraform import databricks_alert.this <alert-id>
 
 The following resources are often used in the same context:
 
-* [databricks_sql_query](sql_query.md) to manage Databricks SQL [Queries](https://docs.databricks.com/sql/user/queries/index.html).
-* [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
+* [databricks_query](query.md) to manage [Databricks SQL Queries](https://docs.databricks.com/sql/user/queries/index.html).
+* [databricks_sql_endpoint](sql_endpoint.md) to manage [Databricks SQL Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
 * [databricks_directory](directory.md) to manage directories in [Databricks Workpace](https://docs.databricks.com/workspace/workspace-objects.html).

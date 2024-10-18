@@ -508,8 +508,8 @@ func TestAccPermissions_Repo_Id(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	template := `
 		resource "databricks_repo" "this" {
-			url = "https://github.com/databrickslabs/tempo.git"
-			path = "/Repos/terraform-tests/tempo-{var.STICKY_RANDOM}"
+			url = "https://github.com/databricks/databricks-sdk-go.git"
+			path = "/Repos/terraform-tests/databricks-sdk-go-{var.STICKY_RANDOM}"
 		}
 		`
 	WorkspaceLevel(t, Step{
@@ -542,8 +542,8 @@ func TestAccPermissions_Repo_Path(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	template := `
 		resource "databricks_repo" "this" {
-			url = "https://github.com/databrickslabs/tempo.git"
-			path = "/Repos/terraform-tests/tempo-{var.STICKY_RANDOM}"
+			url = "https://github.com/databricks/databricks-sdk-go.git"
+			path = "/Repos/terraform-tests/databricks-sdk-go-{var.STICKY_RANDOM}"
 		}
 		`
 	WorkspaceLevel(t, Step{

@@ -222,11 +222,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return raw.(string)
 		},
 		List: func(ic *importContext) error {
-			pools, err := ic.workspaceClient.InstancePools.ListAll(ic.Context)
-			if err != nil {
-				return err
-			}
-			for i, pool := range pools {
+			it := ic.workspaceClient.InstancePools.List(ic.Context)
+			i := 0
+			for it.HasNext(ic.Context) {
+				pool, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
+				i++
 				if !ic.MatchesName(pool.InstancePoolName) {
 					continue
 				}
@@ -234,7 +237,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_instance_pool",
 					ID:       pool.InstancePoolId,
 				})
-				log.Printf("[INFO] Imported %d of %d instance pools", i+1, len(pools))
+				log.Printf("[INFO] Imported %d instance pools", i)
 			}
 			return nil
 		},
@@ -756,14 +759,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			if err != nil {
 				return err
 			}
-			policiesList, err := w.ClusterPolicies.ListAll(ic.Context, compute.ListClusterPoliciesRequest{})
-			if err != nil {
-				return err
-			}
-
 			builtInClusterPolicies := ic.getBuiltinPolicyFamilies()
-			for offset, policy := range policiesList {
-				log.Printf("[TRACE] Scanning %d:  %v", offset+1, policy)
+			it := w.ClusterPolicies.List(ic.Context, compute.ListClusterPoliciesRequest{})
+			i := 0
+			for it.HasNext(ic.Context) {
+				policy, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
+				i++
+				log.Printf("[TRACE] Scanning %d:  %v", i, policy)
 				family, isBuiltin := builtInClusterPolicies[policy.PolicyFamilyId]
 				if policy.PolicyFamilyId != "" && isBuiltin && family.Name == policy.Name &&
 					policy.PolicyFamilyDefinitionOverrides == "" {
@@ -778,8 +783,8 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_cluster_policy",
 					ID:       policy.PolicyId,
 				})
-				if offset%10 == 0 {
-					log.Printf("[INFO] Scanned %d of %d cluster policies", offset+1, len(policiesList))
+				if i%10 == 0 {
+					log.Printf("[INFO] Scanned %d cluster policies", i)
 				}
 			}
 			return nil
@@ -1744,11 +1749,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		List: func(ic *importContext) error {
-			endpointsList, err := ic.workspaceClient.Warehouses.ListAll(ic.Context, sql.ListWarehousesRequest{})
-			if err != nil {
-				return err
-			}
-			for i, q := range endpointsList {
+			it := ic.workspaceClient.Warehouses.List(ic.Context, sql.ListWarehousesRequest{})
+			i := 0
+			for it.HasNext(ic.Context) {
+				q, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				if !ic.MatchesName(q.Name) {
 					continue
 				}
@@ -1756,7 +1763,8 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_sql_endpoint",
 					ID:       q.Id,
 				})
-				log.Printf("[INFO] Imported %d of %d SQL endpoints", i+1, len(endpointsList))
+				i++
+				log.Printf("[INFO] Imported %d SQL endpoints", i)
 			}
 			return nil
 		},
@@ -2227,11 +2235,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			return strings.ToLower(d.Id()) + "_" + nameMd5[:8]
 		},
 		List: func(ic *importContext) error {
-			endpointsList, err := ic.workspaceClient.ServingEndpoints.ListAll(ic.Context)
-			if err != nil {
-				return err
-			}
-			for offset, endpoint := range endpointsList {
+			it := ic.workspaceClient.ServingEndpoints.List(ic.Context)
+			i := 0
+			for it.HasNext(ic.Context) {
+				endpoint, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				if endpoint.Config != nil && endpoint.Config.ServedEntities != nil && len(endpoint.Config.ServedEntities) > 0 {
 					if endpoint.Config.ServedEntities[0].FoundationModel != nil {
 						log.Printf("[INFO] skipping endpoint %s that is foundation model", endpoint.Name)
@@ -2242,8 +2252,9 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_model_serving",
 					ID:       endpoint.Name,
 				}, endpoint.LastUpdatedTimestamp, fmt.Sprintf("serving endpoint '%s'", endpoint.Name))
-				if offset%50 == 0 {
-					log.Printf("[INFO] Scanned %d of %d Serving Endpoints", offset+1, len(endpointsList))
+				i++
+				if i%50 == 0 {
+					log.Printf("[INFO] Scanned %d Serving Endpoints", i)
 				}
 			}
 			return nil
@@ -2544,12 +2555,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.currentMetastore == nil {
 				return fmt.Errorf("there is no UC metastore information")
 			}
-
-			catalogs, err := ic.workspaceClient.Catalogs.ListAll(ic.Context, catalog.ListCatalogsRequest{})
-			if err != nil {
-				return err
-			}
-			for _, v := range catalogs {
+			it := ic.workspaceClient.Catalogs.List(ic.Context, catalog.ListCatalogsRequest{})
+			for it.HasNext(ic.Context) {
+				v, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				switch v.CatalogType {
 				case "MANAGED_CATALOG", "FOREIGN_CATALOG", "DELTASHARING_CATALOG":
 					{
@@ -2586,12 +2597,13 @@ var resourcesMap map[string]importable = map[string]importable{
 			} else if cat.ShareName == "" {
 				// TODO: We need to be careful here if we add more catalog types... Really we need to have CatalogType in resource
 				if ic.isServiceInListing("uc-schemas") {
-					schemas, err := ic.workspaceClient.Schemas.ListAll(ic.Context, catalog.ListSchemasRequest{CatalogName: r.ID})
-					if err != nil {
-						return err
-					}
 					ignoredSchemas := []string{"information_schema"}
-					for _, schema := range schemas {
+					it := ic.workspaceClient.Schemas.List(ic.Context, catalog.ListSchemasRequest{CatalogName: r.ID})
+					for it.HasNext(ic.Context) {
+						schema, err := it.Next(ic.Context)
+						if err != nil {
+							return err
+						}
 						if schema.CatalogType != "MANAGED_CATALOG" || slices.Contains(ignoredSchemas, schema.Name) {
 							continue
 						}
@@ -2644,15 +2656,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			// TODO: somehow add depends on catalog's grant...
 			// TODO: emit owner? See comment in catalog resource
 			if ic.isServiceInListing("uc-models") {
-				models, err := ic.workspaceClient.RegisteredModels.ListAll(ic.Context,
+				it := ic.workspaceClient.RegisteredModels.List(ic.Context,
 					catalog.ListRegisteredModelsRequest{
 						CatalogName: catalogName,
 						SchemaName:  schemaName,
 					})
-				if err != nil { // TODO: should we continue?
-					return err
-				}
-				for _, model := range models {
+				for it.HasNext(ic.Context) {
+					model, err := it.Next(ic.Context)
+					if err != nil {
+						return err // TODO: should we continue?
+					}
 					ic.EmitIfUpdatedAfterMillis(&resource{
 						Resource:  "databricks_registered_model",
 						ID:        model.FullName,
@@ -2662,15 +2675,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			if ic.isServiceInListing("uc-volumes") {
 				// list volumes
-				volumes, err := ic.workspaceClient.Volumes.ListAll(ic.Context,
+				it := ic.workspaceClient.Volumes.List(ic.Context,
 					catalog.ListVolumesRequest{
 						CatalogName: catalogName,
 						SchemaName:  schemaName,
 					})
-				if err != nil {
-					return err
-				}
-				for _, volume := range volumes {
+				for it.HasNext(ic.Context) {
+					volume, err := it.Next(ic.Context)
+					if err != nil {
+						return err // TODO: should we continue?
+					}
 					ic.EmitIfUpdatedAfterMillis(&resource{
 						Resource:  "databricks_volume",
 						ID:        volume.FullName,
@@ -2680,14 +2694,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			if ic.isServiceInListing("uc-tables") {
 				// list tables
-				tables, err := ic.workspaceClient.Tables.ListAll(ic.Context, catalog.ListTablesRequest{
+				it := ic.workspaceClient.Tables.List(ic.Context, catalog.ListTablesRequest{
 					CatalogName: catalogName,
 					SchemaName:  schemaName,
 				})
-				if err != nil {
-					return err
-				}
-				for _, table := range tables {
+				for it.HasNext(ic.Context) {
+					table, err := it.Next(ic.Context)
+					if err != nil {
+						return err // TODO: should we continue?
+					}
 					switch table.TableType {
 					case "MANAGED", "EXTERNAL", "VIEW":
 						ic.EmitIfUpdatedAfterMillis(&resource{
@@ -2870,11 +2885,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		List: func(ic *importContext) error {
-			objList, err := ic.workspaceClient.StorageCredentials.ListAll(ic.Context, catalog.ListStorageCredentialsRequest{})
-			if err != nil {
-				return err
-			}
-			for _, v := range objList {
+			it := ic.workspaceClient.StorageCredentials.List(ic.Context, catalog.ListStorageCredentialsRequest{})
+			for it.HasNext(ic.Context) {
+				v, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_storage_credential",
 					ID:       v.Name,
@@ -2912,11 +2928,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		List: func(ic *importContext) error {
-			objList, err := ic.workspaceClient.ExternalLocations.ListAll(ic.Context, catalog.ListExternalLocationsRequest{})
-			if err != nil {
-				return err
-			}
-			for _, v := range objList {
+			it := ic.workspaceClient.ExternalLocations.List(ic.Context, catalog.ListExternalLocationsRequest{})
+			for it.HasNext(ic.Context) {
+				v, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				if v.Name != "metastore_default_location" {
 					ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 						Resource: "databricks_external_location",
@@ -2952,11 +2969,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return connectionType + "_" + connectionName
 		},
 		List: func(ic *importContext) error {
-			connections, err := ic.workspaceClient.Connections.ListAll(ic.Context, catalog.ListConnectionsRequest{})
-			if err != nil {
-				return err
-			}
-			for _, conn := range connections {
+			it := ic.workspaceClient.Connections.List(ic.Context, catalog.ListConnectionsRequest{})
+			for it.HasNext(ic.Context) {
+				conn, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_connection",
 					ID:       conn.MetastoreId + "|" + conn.Name,
@@ -2977,11 +2995,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-shares",
 		List: func(ic *importContext) error {
-			shares, err := ic.workspaceClient.Shares.ListAll(ic.Context, sharing.ListSharesRequest{})
-			if err != nil {
-				return err
-			}
-			for _, share := range shares {
+			it := ic.workspaceClient.Shares.List(ic.Context, sharing.ListSharesRequest{})
+			for it.HasNext(ic.Context) {
+				share, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_share",
 					ID:       share.Name,
@@ -3033,11 +3052,12 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-shares",
 		List: func(ic *importContext) error {
-			recipients, err := ic.workspaceClient.Recipients.ListAll(ic.Context, sharing.ListRecipientsRequest{})
-			if err != nil {
-				return err
-			}
-			for _, rec := range recipients {
+			it := ic.workspaceClient.Recipients.List(ic.Context, sharing.ListRecipientsRequest{})
+			for it.HasNext(ic.Context) {
+				rec, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_recipient",
 					ID:       rec.Name,
@@ -3108,11 +3128,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name
 		},
 		List: func(ic *importContext) error {
-			metastores, err := ic.accountClient.Metastores.ListAll(ic.Context)
-			if err != nil {
-				return err
-			}
-			for _, mstore := range metastores {
+			it := ic.accountClient.Metastores.List(ic.Context)
+			for it.HasNext(ic.Context) {
+				mstore, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
 					Resource: "databricks_metastore",
 					ID:       mstore.MetastoreId,
@@ -3307,23 +3328,27 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "dashboards",
 		List: func(ic *importContext) error {
-			dashboards, err := ic.workspaceClient.Lakeview.ListAll(ic.Context, dashboards.ListDashboardsRequest{PageSize: 100})
-			if err != nil {
-				return err
-			}
-			for i, d := range dashboards {
+			it := ic.workspaceClient.Lakeview.List(ic.Context, dashboards.ListDashboardsRequest{PageSize: 100})
+			i := 0
+			for it.HasNext(ic.Context) {
+				d, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
+				i++
 				if !ic.MatchesName(d.DisplayName) {
 					continue
 				}
-				// TODO: add emit for incremental mode. Use already defined functions for emitting?
+				// TODO: add emit for incremental mode. But this information isn't included into the List response
 				ic.Emit(&resource{
 					Resource: "databricks_dashboard",
 					ID:       d.DashboardId,
 				})
 				if i%100 == 0 {
-					log.Printf("[INFO] Processed %d dashboard out of %d", i+1, len(dashboards))
+					log.Printf("[INFO] Processed %d dashboards", i)
 				}
 			}
+			log.Printf("[INFO] Listed %d dashboards", i)
 			return nil
 		},
 		Name: func(ic *importContext, d *schema.ResourceData) string {
@@ -3413,11 +3438,12 @@ var resourcesMap map[string]importable = map[string]importable{
 			if !ic.meAdmin {
 				return fmt.Errorf("notifications can be imported only by admin")
 			}
-			notifications, err := ic.workspaceClient.NotificationDestinations.ListAll(ic.Context, settings.ListNotificationDestinationsRequest{})
-			if err != nil {
-				return err
-			}
-			for _, n := range notifications {
+			it := ic.workspaceClient.NotificationDestinations.List(ic.Context, settings.ListNotificationDestinationsRequest{})
+			for it.HasNext(ic.Context) {
+				n, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				ic.Emit(&resource{
 					Resource: "databricks_notification_destination",
 					ID:       n.Id,

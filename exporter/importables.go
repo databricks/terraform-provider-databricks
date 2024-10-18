@@ -2476,6 +2476,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				return err
 			}
 			for _, v := range systemSchemas {
+				if v.Schema == "information_schema" || v.Schema == "__internal_logging" {
+					continue
+				}
 				if v.State == catalog.SystemSchemaInfoStateEnableCompleted || v.State == catalog.SystemSchemaInfoStateEnableInitialized {
 					id := fmt.Sprintf("%s|%s", currentMetastore, v.Schema)
 					data := ic.Resources["databricks_system_schema"].Data(

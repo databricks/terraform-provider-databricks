@@ -38,6 +38,7 @@ func ResourceAlert() common.Resource {
 				strings.TrimPrefix(f, "condition.0.threshold.0.value.0.")).SetExactlyOneOf(alof)
 		}
 		common.CustomizeSchemaPath(m, "owner_user_name").SetSuppressDiff()
+		common.CustomizeSchemaPath(m, "notify_on_ok").SetSuppressDiff()
 		common.CustomizeSchemaPath(m, "id").SetReadOnly()
 		common.CustomizeSchemaPath(m, "create_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "lifecycle_state").SetReadOnly()

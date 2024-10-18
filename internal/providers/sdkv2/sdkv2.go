@@ -23,6 +23,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/useragent"
 
 	"github.com/databricks/terraform-provider-databricks/access"
+	"github.com/databricks/terraform-provider-databricks/apps"
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -137,6 +138,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_budget":                          finops.ResourceBudget().ToResource(),
 			"databricks_catalog":                         catalog.ResourceCatalog().ToResource(),
 			"databricks_catalog_workspace_binding":       catalog.ResourceCatalogWorkspaceBinding().ToResource(),
+			"databricks_custom_app_integration":          apps.ResourceCustomAppIntegration().ToResource(),
 			"databricks_connection":                      catalog.ResourceConnection().ToResource(),
 			"databricks_cluster":                         clusters.ResourceCluster().ToResource(),
 			"databricks_cluster_policy":                  policies.ResourceClusterPolicy().ToResource(),

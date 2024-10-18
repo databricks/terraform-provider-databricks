@@ -9,7 +9,7 @@ var (
 	customAppIntegrationTemplate = `resource "databricks_custom_app_integration" "this" {
 			name = "custom_integration_name"
 			redirect_urls = ["https://example.com"]
-			scopes = ["all"]
+			scopes = ["all-apis"]
 			token_access_policy {
 				access_token_ttl_in_minutes = %s
 				refresh_token_ttl_in_minutes = 30

@@ -1424,6 +1424,10 @@ func TestListSystemSchemasSuccess(t *testing.T) {
 						State:  catalog.SystemSchemaInfoStateEnableCompleted,
 					},
 					{
+						Schema: "information_schema",
+						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+					},
+					{
 						Schema: "marketplace",
 						State:  catalog.SystemSchemaInfoStateAvailable,
 					},

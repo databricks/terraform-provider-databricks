@@ -6,6 +6,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/oauth2"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type CustomAppIntegration struct {
@@ -24,7 +25,8 @@ func ResourceCustomAppIntegration() common.Resource {
 			common.CustomizeSchemaPath(m, p).SetForceNew()
 		}
 		common.CustomizeSchemaPath(m, "client_secret").SetSensitive().SetComputed()
-
+		common.CustomizeSchemaPath(m, "token_access_policy", "access_token_ttl_in_minutes").SetValidateFunc(validation.IntBetween(5, 1440))
+		common.CustomizeSchemaPath(m, "token_access_policy", "refresh_token_ttl_in_minutes").SetValidateFunc(validation.IntBetween(5, 129600))
 		return m
 	})
 	return common.Resource{
@@ -58,6 +60,7 @@ func ResourceCustomAppIntegration() common.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update oauth2.UpdateCustomAppIntegration
+			update.IntegrationId = d.Id()
 			common.DataToStructPointer(d, s, &update)
 			acc, err := c.AccountClient()
 			if err != nil {

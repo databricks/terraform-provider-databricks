@@ -25,14 +25,15 @@ resource "databricks_custom_app_integration" "this" {
 
 The following arguments are available:
 
-* `name` - (Required) Name of the custom OAuth app. Change requires a new resource
-* `confidential` - Indicates whether an OAuth client secret is required to authenticate this client. Default to `false`
-* `redirect_urls` - List of OAuth redirect urls
+* `name` - (Required) Name of the custom OAuth app. Change requires a new resource.
+* `confidential` - Indicates whether an OAuth client secret is required to authenticate this client. Default to `false`. Change requires a new resource.
+* `redirect_urls` - List of OAuth redirect urls.
+* `scopes` - OAuth scopes granted to the application. Supported scopes: `all-apis`, `sql`, `offline_access`, `openid`, `profile`, `email`.
 
 ### token_access_policy Configuration Block (Optional)
 
-* `access_token_ttl_in_minutes` - access token time to live in minutes
-* `refresh_token_ttl_in_minutes` - refresh token time to live in minutes
+* `access_token_ttl_in_minutes` - access token time to live (TTL) in minutes.
+* `refresh_token_ttl_in_minutes` - refresh token TTL in minutes. The TTL of refresh token cannot be lower than TTL of access token.
 
 ## Attribute Reference
 

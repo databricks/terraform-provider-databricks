@@ -106,6 +106,7 @@ func TestResourceCustomAppIntegrationUpdate(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			api := a.GetMockCustomAppIntegrationAPI().EXPECT()
 			api.Update(mock.Anything, oauth2.UpdateCustomAppIntegration{
+				IntegrationId: "integration_id",
 				RedirectUrls: []string{
 					"https://example.com",
 				},

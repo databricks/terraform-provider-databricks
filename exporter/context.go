@@ -200,6 +200,7 @@ var goroutinesNumber = map[string]int{
 	"databricks_dbfs_file":         3,
 	"databricks_user":              1,
 	"databricks_service_principal": 1,
+	"databricks_dashboard":         4,
 	"databricks_sql_dashboard":     3,
 	"databricks_sql_widget":        4,
 	"databricks_sql_visualization": 4,

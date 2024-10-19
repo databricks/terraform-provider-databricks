@@ -29,6 +29,6 @@ func TestMwsAccCustomAppIntegrationUpdate(t *testing.T) {
 	AccountLevel(t, Step{
 		Template: fmt.Sprintf(customAppIntegrationTemplate, "30"),
 	}, Step{
-		Template: fmt.Sprintf(customAppIntegrationTemplate, "60"),
+		Template: fmt.Sprintf(customAppIntegrationTemplate, "15"),
 	})
 }

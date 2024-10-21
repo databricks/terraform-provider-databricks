@@ -19,7 +19,6 @@ func ResourceAlert() common.Resource {
 		// TODO: can we automatically generate it from SDK? Or should we avoid validation at all?
 		common.CustomizeSchemaPath(m, "condition", "op").SetRequired().SetValidateFunc(validation.StringInSlice([]string{
 			"GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "EQUAL", "NOT_EQUAL", "IS_NULL"}, true))
-		common.CustomizeSchemaPath(m, "condition", "op").SetRequired()
 		common.CustomizeSchemaPath(m, "parent_path").SetCustomSuppressDiff(common.WorkspaceOrEmptyPathPrefixDiffSuppress).SetForceNew()
 		common.CustomizeSchemaPath(m, "condition", "operand").SetRequired()
 		common.CustomizeSchemaPath(m, "condition", "operand", "column").SetRequired()
@@ -39,6 +38,7 @@ func ResourceAlert() common.Resource {
 				strings.TrimPrefix(f, "condition.0.threshold.0.value.0.")).SetExactlyOneOf(alof)
 		}
 		common.CustomizeSchemaPath(m, "owner_user_name").SetSuppressDiff()
+		common.CustomizeSchemaPath(m, "notify_on_ok").SetDefault(true)
 		common.CustomizeSchemaPath(m, "id").SetReadOnly()
 		common.CustomizeSchemaPath(m, "create_time").SetReadOnly()
 		common.CustomizeSchemaPath(m, "lifecycle_state").SetReadOnly()

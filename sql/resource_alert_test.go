@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -31,6 +32,7 @@ var (
 			},
 		},
 		ParentPath: "/Workspace/Shared/Alerts",
+		NotifyOnOk: true,
 	}
 	createHcl = `query_id = "123456"
   display_name = "TF new alert"
@@ -54,6 +56,7 @@ var (
 			QueryId:     "123456",
 			DisplayName: "TF new alert",
 			ParentPath:  "/Shared/Alerts",
+			NotifyOnOk:  true,
 			Condition: &sql.AlertCondition{
 				Op: "GREATER_THAN",
 				Operand: &sql.AlertConditionOperand{
@@ -194,6 +197,7 @@ func TestAlertUpdate(t *testing.T) {
 					QueryId:       "123456",
 					DisplayName:   "TF new alert",
 					OwnerUserName: "user@domain.com",
+					NotifyOnOk:    false,
 					Condition: &sql.AlertCondition{
 						Op: "GREATER_THAN",
 						Operand: &sql.AlertConditionOperand{
@@ -223,6 +227,7 @@ func TestAlertUpdate(t *testing.T) {
 		HCL: `query_id = "123456"
   display_name = "TF new alert"
   owner_user_name = "user@domain.com"
+  notify_on_ok = false
   condition {
     op = "GREATER_THAN"
     operand {

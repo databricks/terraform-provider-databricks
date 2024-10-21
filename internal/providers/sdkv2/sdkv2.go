@@ -149,6 +149,7 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_external_location":               catalog.ResourceExternalLocation().ToResource(),
 			"databricks_file":                            storage.ResourceFile().ToResource(),
 			"databricks_git_credential":                  repos.ResourceGitCredential().ToResource(),
+			"databricks_git_folder":                      repos.ResourceGitFolder().ToResource(),
 			"databricks_global_init_script":              workspace.ResourceGlobalInitScript().ToResource(),
 			"databricks_grant":                           catalog.ResourceGrant().ToResource(),
 			"databricks_grants":                          catalog.ResourceGrants().ToResource(),

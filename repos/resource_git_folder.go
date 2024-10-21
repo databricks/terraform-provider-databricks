@@ -6,32 +6,30 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
-type gitFolderStruct struct {
-	workspace.RepoInfo
-}
+type gitFolderStruct workspace.RepoInfo
 
-var gitFolderAliasMap = map[string]string{
+var aliasMap = map[string]string{
 	"provider": "git_provider",
 }
 
 func (gitFolderStruct) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"workspace.gitFolderStruct": gitFolderAliasMap,
+		"repos.gitFolderStruct": aliasMap,
 	}
 }
 
-type gitFolderCreateStruct struct {
-	workspace.CreateRepoRequest
-}
+type gitFolderCreateStruct workspace.CreateRepoRequest
 
 func (gitFolderCreateStruct) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"workspace.gitFolderCreateStruct": gitFolderAliasMap,
+		"repos.gitFolderCreateStruct": aliasMap,
 	}
 }
 
@@ -39,13 +37,11 @@ func (gitFolderCreateStruct) CustomizeSchema(s *common.CustomizableSchema) *comm
 	return s
 }
 
-type gitFolderUpdateStruct struct {
-	workspace.UpdateRepoRequest
-}
+type gitFolderUpdateStruct workspace.UpdateRepoRequest
 
 func (gitFolderUpdateStruct) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"workspace.gitFolderUpdateStruct": gitFolderAliasMap,
+		"repos.gitFolderUpdateStruct": aliasMap,
 	}
 }
 
@@ -65,18 +61,25 @@ var (
 
 func ResourceGitFolder() common.Resource {
 	s := common.StructToSchema(gitFolderStruct{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		common.CustomizeSchemaPath(m).RemoveField("id")
-		common.CustomizeSchemaPath(m).AddNewField("id", &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		})
-
 		for _, p := range []string{"git_provider", "path", "branch", "head_commit_id"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()
 		}
-		for _, p := range []string{"url", "git_provider", "sparse_checkout", "path"} {
+		for _, p := range []string{"git_provider", "url", "sparse_checkout", "path"} {
 			common.CustomizeSchemaPath(m, p).SetForceNew()
 		}
+
+		common.CustomizeSchemaPath(m, "url").SetValidateFunc(validation.IsURLWithScheme([]string{"https", "http"}))
+		common.CustomizeSchemaPath(m, "git_provider").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+		common.CustomizeSchemaPath(m, "branch").SetConflictsWith([]string{"tag"}).SetValidateFunc(validation.StringIsNotWhiteSpace)
+		common.CustomizeSchemaPath(m, "path").SetValidateFunc(validatePath)
+		common.CustomizeSchemaPath(m).AddNewField("tag", &schema.Schema{
+			Type:          schema.TypeString,
+			Optional:      true,
+			ConflictsWith: []string{"branch"},
+			ValidateFunc:  validation.StringIsNotWhiteSpace,
+		})
+
+		delete(m, "id")
 		return m
 	})
 	return common.Resource{
@@ -102,7 +105,7 @@ func ResourceGitFolder() common.Resource {
 			if err != nil {
 				return err
 			}
-			//d.Set("id", repo.Id)
+			d.Set("id", repo.Id)
 			common.StructToData(repo, s, d)
 			return nil
 		},
@@ -111,7 +114,11 @@ func ResourceGitFolder() common.Resource {
 			if err != nil {
 				return err
 			}
-			repo, err := ws.Repos.GetByRepoId(ctx, 0)
+			id, err := strconv.ParseInt(d.Id(), 10, 64)
+			if err != nil {
+				return err
+			}
+			repo, err := ws.Repos.GetByRepoId(ctx, id)
 			if err != nil {
 				return err
 			}
@@ -137,7 +144,11 @@ func ResourceGitFolder() common.Resource {
 			if err != nil {
 				return err
 			}
-			return ws.Repos.DeleteByRepoId(ctx, 0)
+			id, err := strconv.ParseInt(d.Id(), 10, 64)
+			if err != nil {
+				return err
+			}
+			return ws.Repos.DeleteByRepoId(ctx, id)
 		},
 		Schema: s,
 	}

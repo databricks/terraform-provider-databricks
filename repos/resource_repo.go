@@ -3,9 +3,7 @@ package repos
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"path"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -127,29 +125,6 @@ func (a ReposAPI) ListAll() ([]ReposInformation, error) {
 	return a.List("")
 }
 
-var (
-	gitProvidersMap = map[string]string{
-		"github.com":    "gitHub",
-		"dev.azure.com": "azureDevOpsServices",
-		"gitlab.com":    "gitLab",
-		"bitbucket.org": "bitbucketCloud",
-	}
-	awsCodeCommitRegex = regexp.MustCompile(`^git-codecommit\.[^.]+\.amazonaws\.com$`)
-)
-
-func GetGitProviderFromUrl(uri string) string {
-	provider := ""
-	u, err := url.Parse(uri)
-	if err == nil {
-		lhost := strings.ToLower(u.Host)
-		provider = gitProvidersMap[lhost]
-		if provider == "" && awsCodeCommitRegex.FindStringSubmatch(lhost) != nil {
-			provider = "awsCodeCommit"
-		}
-	}
-	return provider
-}
-
 func validatePath(i interface{}, k string) (_ []string, errors []error) {
 	v := i.(string)
 	if v == "" || !strings.HasPrefix(v, "/Repos/") {
@@ -163,6 +138,7 @@ func validatePath(i interface{}, k string) (_ []string, errors []error) {
 	return
 }
 
+// Deprecated: Use databricks_git_folder instead
 func ResourceRepo() common.Resource {
 	s := common.StructToSchema(ReposInformation{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		s["url"].ValidateFunc = validation.IsURLWithScheme([]string{"https", "http"})
@@ -255,5 +231,6 @@ func ResourceRepo() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewReposAPI(ctx, c).Delete(d.Id())
 		},
+		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_git_folder` resource instead.",
 	}
 }

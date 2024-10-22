@@ -228,12 +228,12 @@ func DatabricksProvider() *schema.Provider {
 	}
 
 	// Remove the resources and data sources that are being migrated to plugin framework
-	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove() {
-		delete(resourceMap, resourceToRemove)
+	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove() {
+		delete(dataSourceMap, dataSourceToRemove)
 	}
 
-	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove() {
-		delete(resourceMap, dataSourceToRemove)
+	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove() {
+		delete(resourceMap, resourceToRemove)
 	}
 
 	p := &schema.Provider{

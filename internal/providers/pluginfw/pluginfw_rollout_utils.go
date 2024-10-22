@@ -28,6 +28,7 @@ var migratedResources = []func() resource.Resource{
 
 // List of data sources that have been migrated from SDK V2 to plugin framework
 var migratedDataSources = []func() datasource.DataSource{
+	// TODO: Add DataSourceCluster back in after fixing unit tests.
 	// cluster.DataSourceCluster,
 	volume.DataSourceVolumes,
 }

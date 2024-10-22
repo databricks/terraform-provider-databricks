@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/library"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/notificationdestinations"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/registered_model"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
@@ -39,6 +40,7 @@ var onboardedResources = []func() resource.Resource{
 // List of data sources that have been onboarded to the plugin framework - not migrated from sdkv2.
 var onboardedDataSources = []func() datasource.DataSource{
 	registered_model.DataSourceRegisteredModel,
+	notificationdestinations.DataSourceNotificationDestinations,
 }
 
 // GetUseSdkV2DataSources is a helper function to get name of resources that should use SDK V2 instead of plugin framework

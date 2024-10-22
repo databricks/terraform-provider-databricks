@@ -16,15 +16,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
-<<<<<<< Updated upstream
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/cluster"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/library"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/notificationdestinations"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/registered_model"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
-=======
->>>>>>> Stashed changes
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -51,16 +42,7 @@ func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []fun
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-<<<<<<< Updated upstream
-	return []func() datasource.DataSource{
-		cluster.DataSourceCluster,
-		volume.DataSourceVolumes,
-		registered_model.DataSourceRegisteredModel,
-		notificationdestinations.DataSourceNotificationDestinations,
-	}
-=======
 	return getPluginFrameworkDataSourcesToRegister()
->>>>>>> Stashed changes
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {

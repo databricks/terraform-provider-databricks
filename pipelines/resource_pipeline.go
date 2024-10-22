@@ -246,6 +246,8 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("storage").SetConflictsWith([]string{"catalog"})
 	s.SchemaPath("catalog").SetConflictsWith([]string{"storage"})
 	s.SchemaPath("ingestion_definition", "connection_name").SetConflictsWith([]string{"ingestion_definition.0.ingestion_gateway_id"})
+	s.SchemaPath("target").SetConflictsWith([]string{"schema"})
+	s.SchemaPath("schema").SetConflictsWith([]string{"target"})
 
 	// MinItems fields
 	s.SchemaPath("library").SetMinItems(1)

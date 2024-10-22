@@ -372,7 +372,6 @@ This block describes the queue settings of the job:
 * `periodic` - (Optional) configuration block to define a trigger for Periodic Triggers consisting of the following attributes:
   * `interval` - (Required) Specifies the interval at which the job should run. This value is required.
   * `unit` - (Required) Options are {"DAYS", "HOURS", "WEEKS"}.
-
 * `file_arrival` - (Optional) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) URL to be monitored for file arrivals. The path must point to the root or a subpath of the external location. Please note that the URL must have a trailing slash character (`/`).
   * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.

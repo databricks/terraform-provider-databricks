@@ -16,12 +16,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/cluster"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/library"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/notificationdestinations"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/registered_model"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/cluster"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/qualitymonitor"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/registered_model"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/volume"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -45,17 +45,17 @@ var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		qualitymonitor.ResourceQualityMonitor,
 		library.ResourceLibrary,
+		qualitymonitor.ResourceQualityMonitor,
 	}
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		cluster.DataSourceCluster,
-		volume.DataSourceVolumes,
-		registered_model.DataSourceRegisteredModel,
 		notificationdestinations.DataSourceNotificationDestinations,
+		registered_model.DataSourceRegisteredModel,
+		volume.DataSourceVolumes,
 	}
 }
 

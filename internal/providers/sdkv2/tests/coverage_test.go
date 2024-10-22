@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -144,7 +145,7 @@ func TestCoverageReport(t *testing.T) {
 	files, err := recursiveChildren("..")
 	assert.NoError(t, err)
 
-	p := sdkv2.DatabricksProvider()
+	p := sdkv2.DatabricksProvider(context.Background())
 	var cr CoverageReport
 	var longestResourceName, longestFieldName int
 

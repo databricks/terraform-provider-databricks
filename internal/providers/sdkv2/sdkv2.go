@@ -72,7 +72,7 @@ func init() {
 }
 
 // DatabricksProvider returns the entire terraform provider object
-func DatabricksProvider() *schema.Provider {
+func DatabricksProvider(ctx context.Context) *schema.Provider {
 	dataSourceMap := map[string]*schema.Resource{ // must be in alphabetical order
 		"databricks_aws_crossaccount_policy":              aws.DataAwsCrossaccountPolicy().ToResource(),
 		"databricks_aws_assume_role_policy":               aws.DataAwsAssumeRolePolicy().ToResource(),
@@ -228,11 +228,11 @@ func DatabricksProvider() *schema.Provider {
 	}
 
 	// Remove the resources and data sources that are being migrated to plugin framework
-	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove() {
+	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove(ctx) {
 		delete(dataSourceMap, dataSourceToRemove)
 	}
 
-	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove() {
+	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove(ctx) {
 		delete(resourceMap, resourceToRemove)
 	}
 

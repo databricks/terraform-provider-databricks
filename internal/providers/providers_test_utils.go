@@ -141,7 +141,7 @@ func (pf providerFixture) configureProviderAndReturnClient_SDKv2(t *testing.T) (
 	for k, v := range pf.env {
 		t.Setenv(k, v)
 	}
-	p := sdkv2.DatabricksProvider()
+	p := sdkv2.DatabricksProvider(context.Background())
 	ctx := context.Background()
 	diags := p.Configure(ctx, terraform.NewResourceConfigRaw(pf.rawConfigSDKv2()))
 	if len(diags) > 0 {

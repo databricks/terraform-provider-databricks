@@ -45,26 +45,34 @@ var onboardedDataSources = []func() datasource.DataSource{
 }
 
 // GetUseSdkV2DataSources is a helper function to get name of resources that should use SDK V2 instead of plugin framework
-func getUseSdkV2Resources() []string {
+func getUseSdkV2Resources(ctx context.Context) []string {
 	useSdkV2 := os.Getenv("USE_SDK_V2_RESOURCES")
-	if useSdkV2 == "" {
-		return []string{}
+	useSdkV2Ctx := ctx.Value("USE_SDK_V2_RESOURCES")
+	combinedNames := ""
+	if useSdkV2 != "" && useSdkV2Ctx != "" {
+		combinedNames = useSdkV2 + "," + useSdkV2Ctx.(string)
+	} else {
+		combinedNames = useSdkV2 + useSdkV2Ctx.(string)
 	}
-	return strings.Split(useSdkV2, ",")
+	return strings.Split(combinedNames, ",")
 }
 
 // GetUseSdkV2DataSources is a helper function to get name of data sources that should use SDK V2 instead of plugin framework
-func getUseSdkV2DataSources() []string {
+func getUseSdkV2DataSources(ctx context.Context) []string {
 	useSdkV2 := os.Getenv("USE_SDK_V2_DATA_SOURCES")
-	if useSdkV2 == "" {
-		return []string{}
+	useSdkV2Ctx := ctx.Value("USE_SDK_V2_DATA_SOURCES")
+	combinedNames := ""
+	if useSdkV2 != "" && useSdkV2Ctx != "" {
+		combinedNames = useSdkV2 + "," + useSdkV2Ctx.(string)
+	} else {
+		combinedNames = useSdkV2 + useSdkV2Ctx.(string)
 	}
-	return strings.Split(useSdkV2, ",")
+	return strings.Split(combinedNames, ",")
 }
 
 // Helper function to check if a resource should use be in SDK V2 instead of plugin framework
-func shouldUseSdkV2Resource(resourceName string) bool {
-	useSdkV2Resources := getUseSdkV2Resources()
+func shouldUseSdkV2Resource(ctx context.Context, resourceName string) bool {
+	useSdkV2Resources := getUseSdkV2Resources(ctx)
 	for _, sdkV2Resource := range useSdkV2Resources {
 		if resourceName == sdkV2Resource {
 			return true
@@ -74,8 +82,8 @@ func shouldUseSdkV2Resource(resourceName string) bool {
 }
 
 // Helper function to check if a data source should use be in SDK V2 instead of plugin framework
-func shouldUseSdkV2DataSource(dataSourceName string) bool {
-	sdkV2DataSources := getUseSdkV2DataSources()
+func shouldUseSdkV2DataSource(ctx context.Context, dataSourceName string) bool {
+	sdkV2DataSources := getUseSdkV2DataSources(ctx)
 	for _, sdkV2DataSource := range sdkV2DataSources {
 		if dataSourceName == sdkV2DataSource {
 			return true
@@ -85,13 +93,13 @@ func shouldUseSdkV2DataSource(dataSourceName string) bool {
 }
 
 // getPluginFrameworkResourcesToRegister is a helper function to get the list of resources that are migrated away from sdkv2 to plugin framework
-func getPluginFrameworkResourcesToRegister() []func() resource.Resource {
+func getPluginFrameworkResourcesToRegister(ctx context.Context) []func() resource.Resource {
 	var resources []func() resource.Resource
 
 	// Loop through the map and add resources if they're not specifically marked to use the SDK V2
 	for _, resourceFunc := range migratedResources {
 		name := getResourceName(resourceFunc)
-		if !shouldUseSdkV2Resource(name) {
+		if !shouldUseSdkV2Resource(ctx, name) {
 			resources = append(resources, resourceFunc)
 		}
 	}
@@ -100,13 +108,13 @@ func getPluginFrameworkResourcesToRegister() []func() resource.Resource {
 }
 
 // getPluginFrameworkDataSourcesToRegister is a helper function to get the list of data sources that are migrated away from sdkv2 to plugin framework
-func getPluginFrameworkDataSourcesToRegister() []func() datasource.DataSource {
+func getPluginFrameworkDataSourcesToRegister(ctx context.Context) []func() datasource.DataSource {
 	var dataSources []func() datasource.DataSource
 
 	// Loop through the map and add data sources if they're not specifically marked to use the SDK V2
 	for _, dataSourceFunc := range migratedDataSources {
 		name := getDataSourceName(dataSourceFunc)
-		if !shouldUseSdkV2DataSource(name) {
+		if !shouldUseSdkV2DataSource(ctx, name) {
 			dataSources = append(dataSources, dataSourceFunc)
 		}
 	}
@@ -127,11 +135,11 @@ func getDataSourceName(dataSourceFunc func() datasource.DataSource) string {
 }
 
 // GetSdkV2ResourcesToRemove is a helper function to get the list of resources that are migrated away from sdkv2 to plugin framework
-func GetSdkV2ResourcesToRemove() []string {
+func GetSdkV2ResourcesToRemove(ctx context.Context) []string {
 	resourcesToRemove := []string{}
 	for _, resourceFunc := range migratedResources {
 		name := getResourceName(resourceFunc)
-		if !shouldUseSdkV2Resource(name) {
+		if !shouldUseSdkV2Resource(ctx, name) {
 			resourcesToRemove = append(resourcesToRemove, name)
 		}
 	}
@@ -139,11 +147,11 @@ func GetSdkV2ResourcesToRemove() []string {
 }
 
 // GetSdkV2DataSourcesToRemove is a helper function to get the list of data sources that are migrated away from sdkv2 to plugin framework
-func GetSdkV2DataSourcesToRemove() []string {
+func GetSdkV2DataSourcesToRemove(ctx context.Context) []string {
 	dataSourcesToRemove := []string{}
 	for _, dataSourceFunc := range migratedDataSources {
 		name := getDataSourceName(dataSourceFunc)
-		if !shouldUseSdkV2DataSource(name) {
+		if !shouldUseSdkV2DataSource(ctx, name) {
 			dataSourcesToRemove = append(dataSourcesToRemove, name)
 		}
 	}

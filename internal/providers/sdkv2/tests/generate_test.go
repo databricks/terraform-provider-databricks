@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -234,7 +235,7 @@ func TestGenerateTestCodeStubs(t *testing.T) {
 	t.Logf("Got %d unit tests in total. %v",
 		len(funcs), resourceTestStub{})
 	t.Skip()
-	p := sdkv2.DatabricksProvider()
+	p := sdkv2.DatabricksProvider(context.Background())
 	for name, resource := range p.ResourcesMap {
 		if name != "databricks_group_instance_profile" {
 			continue

@@ -38,11 +38,11 @@ type DatabricksProviderPluginFramework struct {
 var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return getPluginFrameworkResourcesToRegister()
+	return getPluginFrameworkResourcesToRegister(ctx)
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return getPluginFrameworkDataSourcesToRegister()
+	return getPluginFrameworkDataSourcesToRegister(ctx)
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {

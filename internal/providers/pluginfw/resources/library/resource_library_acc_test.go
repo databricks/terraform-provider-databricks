@@ -24,7 +24,7 @@ func TestAccLibraryCreationPluginFramework(t *testing.T) {
 				"ResourceClass" = "SingleNode"
 			}
 		}
-		resource "databricks_library_pluginframework" "new_library" {
+		resource "databricks_library" "new_library" {
 			cluster_id = databricks_cluster.this.id
 			pypi {
 				repo = "https://pypi.org/dummy"
@@ -54,7 +54,7 @@ func TestAccLibraryUpdatePluginFramework(t *testing.T) {
 						"ResourceClass" = "SingleNode"
 					}
 				}
-				resource "databricks_library_pluginframework" "new_library" {
+				resource "databricks_library" "new_library" {
 					cluster_id = databricks_cluster.this.id
 					pypi {
 						repo = "https://pypi.org/simple"
@@ -80,7 +80,7 @@ func TestAccLibraryUpdatePluginFramework(t *testing.T) {
 					"ResourceClass" = "SingleNode"
 				}
 			}
-			resource "databricks_library_pluginframework" "new_library" {
+			resource "databricks_library" "new_library" {
 				cluster_id = databricks_cluster.this.id
 				pypi {
 					package = "networkx"

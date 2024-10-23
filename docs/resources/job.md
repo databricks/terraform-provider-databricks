@@ -224,14 +224,14 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 
 * `warehouse_id` - (Required) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now.
 * `parameters` - (Optional) (Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters.
-* `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
+* `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks Query ([databricks_query](query.md)).
 * `dashboard` - (Optional) block consisting of following fields:
   * `dashboard_id` - (Required) (String) identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
   * `subscriptions` - (Optional) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `custom_subject` - (Optional) string specifying a custom subject of email sent.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `alert` - (Optional) block consisting of following fields:
-  * `alert_id` - (Required) (String) identifier of the Databricks SQL Alert.
+  * `alert_id` - (Required) (String) identifier of the Databricks Alert ([databricks_alert](alert.md)).
   * `subscriptions` - (Optional) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `file` - (Optional) block consisting of single string fields:

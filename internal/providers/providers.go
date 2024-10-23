@@ -60,7 +60,7 @@ func GetProviderServer(ctx context.Context, options ...ServerOption) (tfprotov6.
 	}
 	sdkPluginProvider := serverOptions.sdkV2Provider
 	if sdkPluginProvider == nil {
-		sdkPluginProvider = sdkv2.DatabricksProvider()
+		sdkPluginProvider = sdkv2.DatabricksProvider(ctx)
 	}
 	pluginFrameworkProvider := serverOptions.pluginFrameworkProvider
 	if pluginFrameworkProvider == nil {
@@ -68,7 +68,7 @@ func GetProviderServer(ctx context.Context, options ...ServerOption) (tfprotov6.
 	}
 
 	upgradedSdkPluginProvider, err := tf5to6server.UpgradeServer(
-		context.Background(),
+		ctx,
 		sdkPluginProvider.GRPCProvider,
 	)
 	if err != nil {

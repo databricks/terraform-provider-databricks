@@ -55,7 +55,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: commonPartQualityMonitoring + `
 
-			resource "databricks_quality_monitor_pluginframework" "testMonitorInference" {
+			resource "databricks_quality_monitor" "testMonitorInference" {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
@@ -81,7 +81,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				}
 			}
 
-			resource "databricks_quality_monitor_pluginframework" "testMonitorTimeseries" {
+			resource "databricks_quality_monitor" "testMonitorTimeseries" {
 				table_name = databricks_sql_table.myTimeseries.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTimeseries.name}"
 				output_schema_name = databricks_schema.things.id
@@ -104,7 +104,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				}
 			}
 
-			resource "databricks_quality_monitor_pluginframework" "testMonitorSnapshot" {
+			resource "databricks_quality_monitor" "testMonitorSnapshot" {
 				table_name = databricks_sql_table.mySnapshot.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTimeseries.name}"
 				output_schema_name = databricks_schema.things.id
@@ -121,7 +121,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 	}
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: commonPartQualityMonitoring + `
-			resource "databricks_quality_monitor_pluginframework" "testMonitorInference" {
+			resource "databricks_quality_monitor" "testMonitorInference" {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
@@ -136,7 +136,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 		`,
 	}, acceptance.Step{
 		Template: commonPartQualityMonitoring + `
-		resource "databricks_quality_monitor_pluginframework" "testMonitorInference" {
+		resource "databricks_quality_monitor" "testMonitorInference" {
 			table_name = databricks_sql_table.myInferenceTable.id
 			assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 			output_schema_name = databricks_schema.things.id
@@ -160,7 +160,7 @@ func TestUcAccQualityMonitorImportPluginFramework(t *testing.T) {
 		acceptance.Step{
 			Template: commonPartQualityMonitoring + `
 
-			resource "databricks_quality_monitor_pluginframework" "testMonitorInference" {
+			resource "databricks_quality_monitor" "testMonitorInference" {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
@@ -176,8 +176,8 @@ func TestUcAccQualityMonitorImportPluginFramework(t *testing.T) {
 		},
 		acceptance.Step{
 			ImportState:                          true,
-			ResourceName:                         "databricks_quality_monitor_pluginframework.testMonitorInference",
-			ImportStateIdFunc:                    acceptance.BuildImportStateIdFunc("databricks_quality_monitor_pluginframework.testMonitorInference", "table_name"),
+			ResourceName:                         "databricks_quality_monitor.testMonitorInference",
+			ImportStateIdFunc:                    acceptance.BuildImportStateIdFunc("databricks_quality_monitor.testMonitorInference", "table_name"),
 			ImportStateVerify:                    true,
 			ImportStateVerifyIdentifierAttribute: "table_name",
 		},

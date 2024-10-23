@@ -188,8 +188,8 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 		Response: compute.GetSparkVersionsResponse{
 			Versions: []compute.SparkVersion{
 				{
-					Key:  "7.1.x-cpu-ml-scala2.12",
-					Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					Key:  "15.4.x-scala2.12",
+					Name: "15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)",
 				},
 			},
 		},
@@ -222,15 +222,16 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 			AutoterminationMinutes: 10,
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
-			SparkVersion:           "11.3.x-scala2.12",
-			CustomTags: map[string]string{
-				"ResourceClass": "SingleNode",
-			},
-			SparkConf: map[string]string{
-				"spark.databricks.cluster.profile": "singleNode",
-				"spark.master":                     "local[*]",
-			},
-			DataSecurityMode: "LEGACY_TABLE_ACL",
+			SparkVersion:           "15.4.x-scala2.12",
+			DataSecurityMode:       "LEGACY_TABLE_ACL",
+			NumWorkers:             1,
+			// CustomTags: map[string]string{
+			// 	"ResourceClass": "SingleNode",
+			// },
+			// SparkConf: map[string]string{
+			// 	"spark.databricks.cluster.profile": "singleNode",
+			// 	"spark.master":                     "local[*]",
+			// },
 		},
 		Response: clusters.ClusterID{
 			ClusterID: "bcd",
@@ -244,9 +245,9 @@ var createHighConcurrencyCluster = []qa.HTTPFixture{
 			ClusterID:        "bcd",
 			State:            "RUNNING",
 			DataSecurityMode: "LEGACY_TABLE_ACL",
-			SparkConf: map[string]string{
-				"spark.databricks.cluster.profile": "singleNode",
-			},
+			// SparkConf: map[string]string{
+			// 	"spark.databricks.cluster.profile": "singleNode",
+			// },
 		},
 	},
 }
@@ -265,8 +266,8 @@ var createSharedCluster = []qa.HTTPFixture{
 		Response: compute.GetSparkVersionsResponse{
 			Versions: []compute.SparkVersion{
 				{
-					Key:  "7.1.x-cpu-ml-scala2.12",
-					Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+					Key:  "15.4.x-scala2.12",
+					Name: "15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)",
 				},
 			},
 		},
@@ -299,15 +300,16 @@ var createSharedCluster = []qa.HTTPFixture{
 			AutoterminationMinutes: 10,
 			ClusterName:            "terraform-table-acl",
 			NodeTypeID:             "Standard_F4s",
-			SparkVersion:           "11.3.x-scala2.12",
-			CustomTags: map[string]string{
-				"ResourceClass": "SingleNode",
-			},
-			DataSecurityMode: "LEGACY_TABLE_ACL",
-			SparkConf: map[string]string{
-				"spark.databricks.cluster.profile": "singleNode",
-				"spark.master":                     "local[*]",
-			},
+			SparkVersion:           "15.4.x-scala2.12",
+			DataSecurityMode:       "LEGACY_TABLE_ACL",
+			NumWorkers:             1,
+			// CustomTags: map[string]string{
+			// 	"ResourceClass": "SingleNode",
+			// },
+			// SparkConf: map[string]string{
+			// 	"spark.databricks.cluster.profile": "singleNode",
+			// 	"spark.master":                     "local[*]",
+			// },
 		},
 		Response: clusters.ClusterID{
 			ClusterID: "bcd",

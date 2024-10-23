@@ -2002,23 +2002,22 @@ var resourcesMap map[string]importable = map[string]importable{
 			return name + "_" + d.Id()
 		},
 		List: func(ic *importContext) error {
-			w, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			pipelinesList, err := w.Pipelines.ListPipelinesAll(ic.Context, pipelines.ListPipelinesRequest{
-				MaxResults: 50,
+			it := ic.workspaceClient.Pipelines.ListPipelines(ic.Context, pipelines.ListPipelinesRequest{
+				MaxResults: 100,
 			})
-			if err != nil {
-				return err
-			}
-			for i, q := range pipelinesList {
+			i := 0
+			for it.HasNext(ic.Context) {
+				q, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
+				i++
 				if !ic.MatchesName(q.Name) {
 					continue
 				}
 				var modifiedAt int64
 				if ic.incremental {
-					pipeline, err := w.Pipelines.Get(ic.Context, pipelines.GetPipelineRequest{
+					pipeline, err := ic.workspaceClient.Pipelines.Get(ic.Context, pipelines.GetPipelineRequest{
 						PipelineId: q.PipelineId,
 					})
 					if err != nil {
@@ -2030,21 +2029,37 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_pipeline",
 					ID:       q.PipelineId,
 				}, modifiedAt, fmt.Sprintf("DLT Pipeline '%s'", q.Name))
-				log.Printf("[INFO] Imported %d of %d DLT Pipelines", i+1, len(pipelinesList))
+				if i%100 == 0 {
+					log.Printf("[INFO] Imported %d DLT Pipelines", i)
+				}
 			}
+			log.Printf("[INFO] Listed %d DLT pipelines", i)
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
 			var pipeline tfpipelines.Pipeline
 			s := ic.Resources["databricks_pipeline"].Schema
 			common.DataToStructPointer(r.Data, s, &pipeline)
-			if pipeline.Catalog != "" && pipeline.Target != "" {
-				ic.Emit(&resource{
-					Resource: "databricks_schema",
-					ID:       pipeline.Catalog + "." + pipeline.Target,
-				})
+			if pipeline.Deployment != nil && pipeline.Deployment.Kind == "BUNDLE" {
+				log.Printf("[INFO] Skipping processing of DLT Pipeline with ID %s (%s) as deployed with DABs",
+					r.ID, pipeline.Name)
+				return nil
 			}
-			if pipeline.Deployment == nil || pipeline.Deployment.Kind == "BUNDLE" {
+			if pipeline.Catalog != "" {
+				var schemaName string
+				if pipeline.Target != "" {
+					schemaName = pipeline.Target
+				} else if pipeline.Schema != "" {
+					schemaName = pipeline.Schema
+				}
+				if schemaName != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_schema",
+						ID:       pipeline.Catalog + "." + pipeline.Target,
+					})
+				}
+			}
+			if pipeline.Deployment == nil || pipeline.Deployment.Kind != "BUNDLE" {
 				for _, lib := range pipeline.Libraries {
 					if lib.Notebook != nil {
 						ic.emitNotebookOrRepo(lib.Notebook.Path)

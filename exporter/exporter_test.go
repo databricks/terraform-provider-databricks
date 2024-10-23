@@ -252,7 +252,7 @@ var meAdminFixture = qa.HTTPFixture{
 var emptyPipelines = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.0/pipelines?max_results=50",
+	Resource:     "/api/2.0/pipelines?max_results=100",
 	Response:     pipelines.ListPipelinesResponse{},
 }
 
@@ -2021,7 +2021,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			emptyIpAccessLIst,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?max_results=50",
+				Resource: "/api/2.0/pipelines?max_results=100",
 				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
@@ -2236,7 +2236,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			userReadFixture,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?max_results=50",
+				Resource: "/api/2.0/pipelines?max_results=100",
 				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
@@ -2601,7 +2601,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?max_results=50",
+				Resource: "/api/2.0/pipelines?max_results=100",
 				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{

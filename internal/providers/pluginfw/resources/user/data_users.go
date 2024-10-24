@@ -2,14 +2,15 @@ package user
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func DataSourceUsers() datasource.DataSource {
@@ -22,16 +23,10 @@ type UsersDataSource struct {
 	Client *common.DatabricksClient
 }
 
-type UserData struct {
-	Id          types.String `tfsdk:"id,omitempty" tf:"computed"`
-	UserName    types.String `tfsdk:"user_name,omitempty" tf:"computed"`
-	DisplayName types.String `tfsdk:"display_name,omitempty" tf:"computed"`
-}
-
 type UsersInfo struct {
 	DisplayNameContains string     `json:"display_name_contains,omitempty" tf:"computed"`
 	UserNameContains    string     `json:"user_name_contains,omitempty" tf:"computed"`
-	Users               []UserData `json:"users,omitempty" tf:"computed"` // TODO: use  UserData[] or []iam_tf.ListAccountUserResponse / []iam_tf.ListUserResponse?
+	Users               []iam.User `json:"users,omitempty" tf:"computed"`
 }
 
 func (d *UsersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -59,6 +54,13 @@ func AppendDiagAndCheckErrors(resp *datasource.ReadResponse, diags diag.Diagnost
 	return resp.Diagnostics.HasError()
 }
 
+// DiagsFromError helps us create an error diagnostic from an error.
+func DiagsFromError(summary string, err error) diag.Diagnostics {
+	return diag.Diagnostics{
+		diag.NewErrorDiagnostic(summary, err.Error()),
+	}
+}
+
 func validateFilters(data *UsersInfo) diag.Diagnostics {
 	if data.DisplayNameContains != "" && data.UserNameContains != "" {
 		return diag.Diagnostics{diag.NewErrorDiagnostic("Invalid configuration", "Exactly one of display_name_contains or user_name_contains should be specified, not both.")}
@@ -71,23 +73,41 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	diags := req.Config.Get(ctx, &userInfo)
 	diags = append(diags, validateFilters(&userInfo)...)
-
 	if AppendDiagAndCheckErrors(resp, diags) {
 		return
 	}
+
+	var filter string
+
+	if userInfo.DisplayNameContains != "" {
+		filter = fmt.Sprintf("displayName co \"%s\"", userInfo.DisplayNameContains)
+	} else if userInfo.UserNameContains != "" {
+		filter = fmt.Sprintf("userName co \"%s\"", userInfo.UserNameContains)
+	}
+
+	var users []iam.User
+	var err error
 
 	if d.Client.Config.IsAccountClient() {
 		a, diags := d.Client.GetAccountClient()
 		if AppendDiagAndCheckErrors(resp, diags) {
 			return
 		}
-		// TODO: Add retrieval of iterator at the account level.
+		users, err = a.Users.ListAll(ctx, iam.ListAccountUsersRequest{Filter: filter})
+		if err != nil && AppendDiagAndCheckErrors(resp, DiagsFromError("Error listing account users", err)) {
+			return
+		}
 	} else {
 		w, diags := d.Client.GetWorkspaceClient()
 		if AppendDiagAndCheckErrors(resp, diags) {
 			return
 		}
-		// TODO: Add retreival of iterator at the workspace level.
+		users, err = w.Users.ListAll(ctx, iam.ListUsersRequest{Filter: filter})
+		if err != nil && AppendDiagAndCheckErrors(resp, DiagsFromError("Error listing workspace users", err)) {
+			return
+		}
 	}
-	// TODO: Continue setting the datasource.
+
+	userInfo.Users = users
+	resp.Diagnostics.Append(resp.State.Set(ctx, userInfo)...)
 }

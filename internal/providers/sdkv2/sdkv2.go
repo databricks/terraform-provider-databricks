@@ -125,7 +125,6 @@ func DatabricksProvider() *schema.Provider {
 			"databricks_volume":                               catalog.DataSourceVolume().ToResource(),
 			"databricks_volumes":                              catalog.DataSourceVolumes().ToResource(),
 			"databricks_user":                                 scim.DataSourceUser().ToResource(),
-			"databricks_users":                                scim.DataSourceUsers().ToResource(),
 			"databricks_zones":                                clusters.DataSourceClusterZones().ToResource(),
 		},
 		ResourcesMap: map[string]*schema.Resource{ // must be in alphabetical order

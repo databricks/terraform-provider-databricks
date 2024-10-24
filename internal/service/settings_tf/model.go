@@ -1543,24 +1543,31 @@ func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccAzurePrivateEndpointRule) {
+	newState.EffectiveConnectionState = existingState.EffectiveConnectionState
 	if existingState.EffectiveConnectionState.ValueString() == newState.ConnectionState.ValueString() {
 		newState.ConnectionState = existingState.ConnectionState
 	}
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
+	newState.EffectiveDeactivated = existingState.EffectiveDeactivated
 	if existingState.EffectiveDeactivated.ValueBool() == newState.Deactivated.ValueBool() {
 		newState.Deactivated = existingState.Deactivated
 	}
+	newState.EffectiveDeactivatedAt = existingState.EffectiveDeactivatedAt
 	if existingState.EffectiveDeactivatedAt.ValueInt64() == newState.DeactivatedAt.ValueInt64() {
 		newState.DeactivatedAt = existingState.DeactivatedAt
 	}
+	newState.EffectiveEndpointName = existingState.EffectiveEndpointName
 	if existingState.EffectiveEndpointName.ValueString() == newState.EndpointName.ValueString() {
 		newState.EndpointName = existingState.EndpointName
 	}
+	newState.EffectiveRuleId = existingState.EffectiveRuleId
 	if existingState.EffectiveRuleId.ValueString() == newState.RuleId.ValueString() {
 		newState.RuleId = existingState.RuleId
 	}
+	newState.EffectiveUpdatedTime = existingState.EffectiveUpdatedTime
 	if existingState.EffectiveUpdatedTime.ValueInt64() == newState.UpdatedTime.ValueInt64() {
 		newState.UpdatedTime = existingState.UpdatedTime
 	}
@@ -1672,12 +1679,15 @@ func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringCreat
 }
 
 func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringRead(existingState NetworkConnectivityConfiguration) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
+	newState.EffectiveNetworkConnectivityConfigId = existingState.EffectiveNetworkConnectivityConfigId
 	if existingState.EffectiveNetworkConnectivityConfigId.ValueString() == newState.NetworkConnectivityConfigId.ValueString() {
 		newState.NetworkConnectivityConfigId = existingState.NetworkConnectivityConfigId
 	}
+	newState.EffectiveUpdatedTime = existingState.EffectiveUpdatedTime
 	if existingState.EffectiveUpdatedTime.ValueInt64() == newState.UpdatedTime.ValueInt64() {
 		newState.UpdatedTime = existingState.UpdatedTime
 	}

@@ -43,6 +43,7 @@ func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
 }
 
 func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
+	newState.EffectiveEffectiveBudgetPolicyId = existingState.EffectiveEffectiveBudgetPolicyId
 	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
 		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
 	}
@@ -944,6 +945,7 @@ func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
 }
 
 func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
+	newState.EffectiveEffectiveBudgetPolicyId = existingState.EffectiveEffectiveBudgetPolicyId
 	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
 		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
 	}

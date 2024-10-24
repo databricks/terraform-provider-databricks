@@ -53,6 +53,7 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
   {{- if .Entity.IsFloat64}}{{$type = "Float64"}}{{end}}
   {{- if .Entity.IsInt}}{{$type = "Int64"}}{{end}}
   {{- if .Entity.Enum}}{{$type = "String"}}{{end}}
+	newState.Effective{{.PascalName}} = existingState.Effective{{.PascalName}}
   if existingState.Effective{{.PascalName}}.Value{{$type}}() == newState.{{.PascalName}}.Value{{$type}}() {
     newState.{{.PascalName}} = existingState.{{.PascalName}}
   }

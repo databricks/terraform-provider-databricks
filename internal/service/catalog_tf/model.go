@@ -3012,6 +3012,7 @@ func (newState *OnlineTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan Online
 }
 
 func (newState *OnlineTable) SyncEffectiveFieldsDuringRead(existingState OnlineTable) {
+	newState.EffectiveTableServingUrl = existingState.EffectiveTableServingUrl
 	if existingState.EffectiveTableServingUrl.ValueString() == newState.TableServingUrl.ValueString() {
 		newState.TableServingUrl = existingState.TableServingUrl
 	}
@@ -3051,6 +3052,7 @@ func (newState *OnlineTableSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan On
 }
 
 func (newState *OnlineTableSpec) SyncEffectiveFieldsDuringRead(existingState OnlineTableSpec) {
+	newState.EffectivePipelineId = existingState.EffectivePipelineId
 	if existingState.EffectivePipelineId.ValueString() == newState.PipelineId.ValueString() {
 		newState.PipelineId = existingState.PipelineId
 	}

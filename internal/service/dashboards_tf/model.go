@@ -41,6 +41,7 @@ func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateDashboardRequest) {
+	newState.EffectiveParentPath = existingState.EffectiveParentPath
 	if existingState.EffectiveParentPath.ValueString() == newState.ParentPath.ValueString() {
 		newState.ParentPath = existingState.ParentPath
 	}
@@ -65,6 +66,7 @@ func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState CreateScheduleRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
@@ -90,9 +92,11 @@ func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState CreateSubscriptionRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}
@@ -175,21 +179,27 @@ func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboar
 }
 
 func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
+	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
 	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
 		newState.CreateTime = existingState.CreateTime
 	}
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveEtag = existingState.EffectiveEtag
 	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
 		newState.Etag = existingState.Etag
 	}
+	newState.EffectiveParentPath = existingState.EffectiveParentPath
 	if existingState.EffectiveParentPath.ValueString() == newState.ParentPath.ValueString() {
 		newState.ParentPath = existingState.ParentPath
 	}
+	newState.EffectivePath = existingState.EffectivePath
 	if existingState.EffectivePath.ValueString() == newState.Path.ValueString() {
 		newState.Path = existingState.Path
 	}
+	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
 	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
 		newState.UpdateTime = existingState.UpdateTime
 	}
@@ -219,12 +229,15 @@ func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveEtag = existingState.EffectiveEtag
 	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
 		newState.Etag = existingState.Etag
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}
@@ -268,15 +281,19 @@ func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveEtag = existingState.EffectiveEtag
 	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
 		newState.Etag = existingState.Etag
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}
+	newState.EffectiveSubscriptionId = existingState.EffectiveSubscriptionId
 	if existingState.EffectiveSubscriptionId.ValueString() == newState.SubscriptionId.ValueString() {
 		newState.SubscriptionId = existingState.SubscriptionId
 	}
@@ -520,9 +537,11 @@ func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringRead(existingState GetScheduleRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}
@@ -551,12 +570,15 @@ func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState GetSubscriptionRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}
+	newState.EffectiveSubscriptionId = existingState.EffectiveSubscriptionId
 	if existingState.EffectiveSubscriptionId.ValueString() == newState.SubscriptionId.ValueString() {
 		newState.SubscriptionId = existingState.SubscriptionId
 	}
@@ -583,6 +605,7 @@ func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringRead(existingState ListDashboardsRequest) {
+	newState.EffectivePageToken = existingState.EffectivePageToken
 	if existingState.EffectivePageToken.ValueString() == newState.PageToken.ValueString() {
 		newState.PageToken = existingState.PageToken
 	}
@@ -602,6 +625,7 @@ func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse) {
+	newState.EffectiveNextPageToken = existingState.EffectiveNextPageToken
 	if existingState.EffectiveNextPageToken.ValueString() == newState.NextPageToken.ValueString() {
 		newState.NextPageToken = existingState.NextPageToken
 	}
@@ -628,9 +652,11 @@ func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringRead(existingState ListSchedulesRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectivePageToken = existingState.EffectivePageToken
 	if existingState.EffectivePageToken.ValueString() == newState.PageToken.ValueString() {
 		newState.PageToken = existingState.PageToken
 	}
@@ -652,6 +678,7 @@ func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse) {
+	newState.EffectiveNextPageToken = existingState.EffectiveNextPageToken
 	if existingState.EffectiveNextPageToken.ValueString() == newState.NextPageToken.ValueString() {
 		newState.NextPageToken = existingState.NextPageToken
 	}
@@ -683,12 +710,15 @@ func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectivePageToken = existingState.EffectivePageToken
 	if existingState.EffectivePageToken.ValueString() == newState.PageToken.ValueString() {
 		newState.PageToken = existingState.PageToken
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}
@@ -710,6 +740,7 @@ func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse) {
+	newState.EffectiveNextPageToken = existingState.EffectiveNextPageToken
 	if existingState.EffectiveNextPageToken.ValueString() == newState.NextPageToken.ValueString() {
 		newState.NextPageToken = existingState.NextPageToken
 	}
@@ -782,9 +813,11 @@ func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard) {
+	newState.EffectiveDisplayName = existingState.EffectiveDisplayName
 	if existingState.EffectiveDisplayName.ValueString() == newState.DisplayName.ValueString() {
 		newState.DisplayName = existingState.DisplayName
 	}
+	newState.EffectiveRevisionCreateTime = existingState.EffectiveRevisionCreateTime
 	if existingState.EffectiveRevisionCreateTime.ValueString() == newState.RevisionCreateTime.ValueString() {
 		newState.RevisionCreateTime = existingState.RevisionCreateTime
 	}
@@ -873,18 +906,23 @@ func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule)
 }
 
 func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) {
+	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
 	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
 		newState.CreateTime = existingState.CreateTime
 	}
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveEtag = existingState.EffectiveEtag
 	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
 		newState.Etag = existingState.Etag
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}
+	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
 	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
 		newState.UpdateTime = existingState.UpdateTime
 	}
@@ -953,24 +991,31 @@ func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subsc
 }
 
 func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
+	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
 	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
 		newState.CreateTime = existingState.CreateTime
 	}
+	newState.EffectiveCreatedByUserId = existingState.EffectiveCreatedByUserId
 	if existingState.EffectiveCreatedByUserId.ValueInt64() == newState.CreatedByUserId.ValueInt64() {
 		newState.CreatedByUserId = existingState.CreatedByUserId
 	}
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveEtag = existingState.EffectiveEtag
 	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
 		newState.Etag = existingState.Etag
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}
+	newState.EffectiveSubscriptionId = existingState.EffectiveSubscriptionId
 	if existingState.EffectiveSubscriptionId.ValueString() == newState.SubscriptionId.ValueString() {
 		newState.SubscriptionId = existingState.SubscriptionId
 	}
+	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
 	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
 		newState.UpdateTime = existingState.UpdateTime
 	}
@@ -989,6 +1034,7 @@ func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCrea
 }
 
 func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination) {
+	newState.EffectiveDestinationId = existingState.EffectiveDestinationId
 	if existingState.EffectiveDestinationId.ValueString() == newState.DestinationId.ValueString() {
 		newState.DestinationId = existingState.DestinationId
 	}
@@ -1006,6 +1052,7 @@ func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser) {
+	newState.EffectiveUserId = existingState.EffectiveUserId
 	if existingState.EffectiveUserId.ValueInt64() == newState.UserId.ValueInt64() {
 		newState.UserId = existingState.UserId
 	}
@@ -1094,6 +1141,7 @@ func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardRequest) {
+	newState.EffectiveEtag = existingState.EffectiveEtag
 	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
 		newState.Etag = existingState.Etag
 	}
@@ -1130,12 +1178,15 @@ func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState UpdateScheduleRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
 	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
 		newState.DashboardId = existingState.DashboardId
 	}
+	newState.EffectiveEtag = existingState.EffectiveEtag
 	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
 		newState.Etag = existingState.Etag
 	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
 	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
 		newState.ScheduleId = existingState.ScheduleId
 	}

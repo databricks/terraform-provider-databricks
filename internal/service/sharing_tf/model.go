@@ -892,6 +892,7 @@ func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInf
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
+	newState.EffectiveOwner = existingState.EffectiveOwner
 	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
 		newState.Owner = existingState.Owner
 	}
@@ -1000,15 +1001,19 @@ func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 }
 
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState SharedDataObject) {
+	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
 	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
 		newState.CdfEnabled = existingState.CdfEnabled
 	}
+	newState.EffectiveHistoryDataSharingStatus = existingState.EffectiveHistoryDataSharingStatus
 	if existingState.EffectiveHistoryDataSharingStatus.ValueString() == newState.HistoryDataSharingStatus.ValueString() {
 		newState.HistoryDataSharingStatus = existingState.HistoryDataSharingStatus
 	}
+	newState.EffectiveSharedAs = existingState.EffectiveSharedAs
 	if existingState.EffectiveSharedAs.ValueString() == newState.SharedAs.ValueString() {
 		newState.SharedAs = existingState.SharedAs
 	}
+	newState.EffectiveStartVersion = existingState.EffectiveStartVersion
 	if existingState.EffectiveStartVersion.ValueInt64() == newState.StartVersion.ValueInt64() {
 		newState.StartVersion = existingState.StartVersion
 	}
@@ -1130,6 +1135,7 @@ func (newState *UpdateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan Update
 }
 
 func (newState *UpdateShare) SyncEffectiveFieldsDuringRead(existingState UpdateShare) {
+	newState.EffectiveOwner = existingState.EffectiveOwner
 	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
 		newState.Owner = existingState.Owner
 	}

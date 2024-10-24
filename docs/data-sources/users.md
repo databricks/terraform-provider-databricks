@@ -48,8 +48,15 @@ This data source exposes the following attributes:
     - `name`
       - `givenName` - Given name of the Databricks user.
       - `familyName` - Family name of the Databricks user.
-    - `active` - Boolean that represents if this user is active. 
     - `displayName` - The display name of the user. 
+    - `roles` - Indicates if the user has the admin role.
+      - `$ref`
+      - `value`
+      - `display`
+      - `primary`
+      - `type`
+    - `externalId` - reserved for future use. 
+    - `active` - Boolean that represents if this user is active. 
 
 ## Related Resources
 

@@ -1,8 +1,9 @@
-package acceptance
+package user_test
 
 import (
 	"testing"
 
+	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,7 +48,14 @@ func checkUsersDataSourcePopulated(t *testing.T) func(s *terraform.State) error 
 }
 
 func TestAccDataSourceDataUsers(t *testing.T) {
-	AccountLevel(t, Step{
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: dataSourceTemplate,
+		Check:    checkUsersDataSourcePopulated(t),
+	})
+}
+
+func TestWorkspaceDataSourceDataUsers(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: dataSourceTemplate,
 		Check:    checkUsersDataSourcePopulated(t),
 	})

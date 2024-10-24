@@ -7,14 +7,14 @@ import (
 func TestAccAlert(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: `
-		resource "databricks_sql_query" "this" {
-			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
-			name = "tf-{var.RANDOM}"
-			query = "SELECT 1 AS p1, 2 as p2"
+		resource "databricks_query" "this" {
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+			display_name = "tf-{var.RANDOM}"
+			query_text   = "SELECT 1 AS p1, 2 as p2"
 		}
 
 		resource "databricks_alert" "alert" {
-			query_id = databricks_sql_query.this.id
+			query_id = databricks_query.this.id
 			display_name = "tf-alert-{var.RANDOM}"
 			condition {
 			    op = "EQUAL"
@@ -33,14 +33,14 @@ func TestAccAlert(t *testing.T) {
 `,
 	}, Step{
 		Template: `
-		resource "databricks_sql_query" "this" {
-			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
-			name = "tf-{var.RANDOM}"
-			query = "SELECT 1 AS p1, 2 as p2"
+		resource "databricks_query" "this" {
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+			display_name = "tf-{var.RANDOM}"
+			query_text   = "SELECT 1 AS p1, 2 as p2"
 		}
 
 		resource "databricks_alert" "alert" {
-			query_id = databricks_sql_query.this.id
+			query_id = databricks_query.this.id
 			display_name = "tf-alert-{var.RANDOM}"
 			condition {
 			    op = "GREATER_THAN"

@@ -56,6 +56,22 @@ const preTestTemplate = `
 			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
 		}
 	}
+
+	resource "databricks_table" "mytable_3" {
+		catalog_name = databricks_catalog.sandbox.id
+		schema_name = databricks_schema.things.name
+		name = "bar_3"
+		table_type = "MANAGED"
+		data_source_format = "DELTA"
+		
+		column {
+			name      = "id"
+			position  = 0
+			type_name = "INT"
+			type_text = "int"
+			type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+		}
+	}
 `
 
 const preTestTemplateUpdate = `
@@ -123,7 +139,8 @@ func shareTemplateWithOwner(comment string, owner string) string {
 				comment = "%s"
 				data_object_type = "TABLE"
 				history_data_sharing_status = "DISABLED"
-			}							
+			}
+
 		}`, owner, comment)
 }
 
@@ -136,5 +153,52 @@ func TestUcAccUpdateShare(t *testing.T) {
 		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("e", "{env.TEST_DATA_ENG_GROUP}"),
 	}, acceptance.Step{
 		Template: preTestTemplate + preTestTemplateUpdate + shareTemplateWithOwner("f", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
+	})
+}
+
+func TestUcAccUpdateShareAddObject(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				comment = "A"
+				data_object_type = "TABLE"
+				history_data_sharing_status = "DISABLED"
+			}
+			object {
+				name = databricks_table.mytable_3.id
+				comment = "C"
+				data_object_type = "TABLE"
+				history_data_sharing_status = "DISABLED"
+			}
+
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				comment = "AA"
+				data_object_type = "TABLE"
+				history_data_sharing_status = "DISABLED"
+			}
+			object {
+				name = databricks_table.mytable_2.id
+				comment = "BB"
+				data_object_type = "TABLE"
+				history_data_sharing_status = "DISABLED"
+			}
+			object {
+				name = databricks_table.mytable_3.id
+				comment = "CC"
+				data_object_type = "TABLE"
+				history_data_sharing_status = "DISABLED"
+			}
+		}`,
 	})
 }

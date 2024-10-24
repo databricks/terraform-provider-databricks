@@ -16,12 +16,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/cluster"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/library"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/notificationdestinations"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/registered_model"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -33,30 +27,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func GetDatabricksProviderPluginFramework() provider.Provider {
-	p := &DatabricksProviderPluginFramework{}
+func GetDatabricksProviderPluginFramework(sdkV2FallbackOptions ...SdkV2FallbackOption) provider.Provider {
+	p := &DatabricksProviderPluginFramework{sdkV2Fallbacks: sdkV2FallbackOptions}
 	return p
 }
 
 type DatabricksProviderPluginFramework struct {
+	sdkV2Fallbacks []SdkV2FallbackOption
 }
 
 var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-		qualitymonitor.ResourceQualityMonitor,
-		library.ResourceLibrary,
-	}
+	return getPluginFrameworkResourcesToRegister(p.sdkV2Fallbacks...)
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		cluster.DataSourceCluster,
-		volume.DataSourceVolumes,
-		registered_model.DataSourceRegisteredModel,
-		notificationdestinations.DataSourceNotificationDestinations,
-	}
+	return getPluginFrameworkDataSourcesToRegister(p.sdkV2Fallbacks...)
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {

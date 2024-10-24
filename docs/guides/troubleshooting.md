@@ -17,6 +17,18 @@ TF_LOG=DEBUG DATABRICKS_DEBUG_TRUNCATE_BYTES=250000 terraform apply -no-color 2>
 
 * Open a [new GitHub issue](https://github.com/databricks/terraform-provider-databricks/issues/new/choose) providing all information described in the issue template - debug logs, your Terraform code, Terraform & plugin versions, etc.
 
+## Plugin Framework Migration Problems
+The following resources and data sources have been migrated from sdkv2 to plugin framework。 If you encounter any problem with those, you can fallback to sdkv2 by setting the `USE_SDK_V2_RESOURCES` and `USE_SDK_V2_DATA_SOURCES` environment variables.
+
+Example: `export USE_SDK_V2_RESOURCES="databricks_library,databricks_quality_monitor"`
+
+### Resources migrated
+  - databricks_quality_monitor
+  - databricks_library
+### Data sources migrated
+  - databricks_volumes
+
+
 ## Typical problems
 
 ### Data resources and Authentication is not configured errors

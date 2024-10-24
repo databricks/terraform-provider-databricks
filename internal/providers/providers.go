@@ -20,6 +20,7 @@ import (
 type serverOptions struct {
 	sdkV2Provider           *schema.Provider
 	pluginFrameworkProvider provider.Provider
+	sdkV2fallbacks          []pluginfw.SdkV2FallbackOption
 }
 
 // ServerOption is a common interface for overriding providers in GetProviderServer functino call.
@@ -41,6 +42,20 @@ func WithSdkV2Provider(sdkV2Provider *schema.Provider) ServerOption {
 	return &sdkV2ProviderOption{sdkV2Provider: sdkV2Provider}
 }
 
+type sdkV2FallbackOption struct {
+	sdkV2fallbacks []pluginfw.SdkV2FallbackOption
+}
+
+func (o *sdkV2FallbackOption) Apply(options *serverOptions) {
+	options.sdkV2fallbacks = o.sdkV2fallbacks
+}
+
+// WithSdkV2FallbackOptions allows overriding the SDKv2 fallback options used when creating a Terraform provider with muxing.
+// This is typically used in acceptance test for testing the compatibility between sdkv2 and plugin framework.
+func WithSdkV2FallbackOptions(options []pluginfw.SdkV2FallbackOption) ServerOption {
+	return &sdkV2FallbackOption{sdkV2fallbacks: options}
+}
+
 // GetProviderServer initializes and returns a Terraform Protocol v6 ProviderServer.
 // The function begins by initializing the Databricks provider using the SDK plugin
 // and then upgrades this provider to be compatible with Terraform's Protocol v6 using
@@ -60,11 +75,11 @@ func GetProviderServer(ctx context.Context, options ...ServerOption) (tfprotov6.
 	}
 	sdkPluginProvider := serverOptions.sdkV2Provider
 	if sdkPluginProvider == nil {
-		sdkPluginProvider = sdkv2.DatabricksProvider()
+		sdkPluginProvider = sdkv2.DatabricksProvider(serverOptions.sdkV2fallbacks...)
 	}
 	pluginFrameworkProvider := serverOptions.pluginFrameworkProvider
 	if pluginFrameworkProvider == nil {
-		pluginFrameworkProvider = pluginfw.GetDatabricksProviderPluginFramework()
+		pluginFrameworkProvider = pluginfw.GetDatabricksProviderPluginFramework(serverOptions.sdkV2fallbacks...)
 	}
 
 	upgradedSdkPluginProvider, err := tf5to6server.UpgradeServer(

@@ -1,0 +1,25 @@
+{
+    "condition": {
+        "op":"GREATER_THAN",
+        "operand": {
+            "column": {
+                "name":"threshold"
+            }
+        },
+        "threshold": {
+            "value": {
+                "string_value":"50"
+            }
+        }
+    },
+    "create_time":"2023-04-10T08:14:47Z",
+    "display_name":"Test Alert",
+    "id":"3cf91a42-6217-4f3c-a6f0-345d489051b9",
+    "lifecycle_state":"ACTIVE",
+    "notify_on_ok":true,
+    "owner_user_name":"test@domain.com",
+    "query_id":"16c4f969-eea0-4aad-8f82-03d79b078dcc",
+    "state":"OK",
+    "trigger_time":"2023-04-10T08:15:56Z",
+    "update_time":"2023-04-10T08:14:47Z"
+}

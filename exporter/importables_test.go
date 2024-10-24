@@ -1343,6 +1343,7 @@ func TestDbfsFileGeneration(t *testing.T) {
 	})
 }
 
+// TODO: remove it completely after we remove support for legacy dashboards
 func TestSqlListObjects(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -1369,7 +1370,7 @@ func TestIncrementalListDLT(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines?max_results=50",
+			Resource: "/api/2.0/pipelines?max_results=100",
 			Response: pipelines.ListPipelinesResponse{
 				Statuses: []pipelines.PipelineStateInfo{
 					{

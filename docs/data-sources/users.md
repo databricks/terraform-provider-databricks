@@ -43,8 +43,13 @@ This data source exposes the following attributes:
 
 - `users` - A list of users matching the specified criteria. Each user has the following attributes:
     - `id` - The ID of the user.
-    - `user_name` - The username of the user.
-    - `display_name` - The display name of the user. 
+    - `userName` - The username of the user.
+    - `emails` - All the emails associated with the Databricks user.
+    - `name`
+      - `givenName` - Given name of the Databricks user.
+      - `familyName` - Family name of the Databricks user.
+    - `active` - Boolean that represents if this user is active. 
+    - `displayName` - The display name of the user. 
 
 ## Related Resources
 

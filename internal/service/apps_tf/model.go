@@ -77,24 +77,31 @@ func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
 }
 
 func (newState *App) SyncEffectiveFieldsDuringRead(existingState App) {
+	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
 	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
 		newState.CreateTime = existingState.CreateTime
 	}
+	newState.EffectiveCreator = existingState.EffectiveCreator
 	if existingState.EffectiveCreator.ValueString() == newState.Creator.ValueString() {
 		newState.Creator = existingState.Creator
 	}
+	newState.EffectiveServicePrincipalId = existingState.EffectiveServicePrincipalId
 	if existingState.EffectiveServicePrincipalId.ValueInt64() == newState.ServicePrincipalId.ValueInt64() {
 		newState.ServicePrincipalId = existingState.ServicePrincipalId
 	}
+	newState.EffectiveServicePrincipalName = existingState.EffectiveServicePrincipalName
 	if existingState.EffectiveServicePrincipalName.ValueString() == newState.ServicePrincipalName.ValueString() {
 		newState.ServicePrincipalName = existingState.ServicePrincipalName
 	}
+	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
 	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
 		newState.UpdateTime = existingState.UpdateTime
 	}
+	newState.EffectiveUpdater = existingState.EffectiveUpdater
 	if existingState.EffectiveUpdater.ValueString() == newState.Updater.ValueString() {
 		newState.Updater = existingState.Updater
 	}
+	newState.EffectiveUrl = existingState.EffectiveUrl
 	if existingState.EffectiveUrl.ValueString() == newState.Url.ValueString() {
 		newState.Url = existingState.Url
 	}
@@ -174,12 +181,15 @@ func (newState *AppDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppD
 }
 
 func (newState *AppDeployment) SyncEffectiveFieldsDuringRead(existingState AppDeployment) {
+	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
 	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
 		newState.CreateTime = existingState.CreateTime
 	}
+	newState.EffectiveCreator = existingState.EffectiveCreator
 	if existingState.EffectiveCreator.ValueString() == newState.Creator.ValueString() {
 		newState.Creator = existingState.Creator
 	}
+	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
 	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
 		newState.UpdateTime = existingState.UpdateTime
 	}
@@ -211,6 +221,7 @@ func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringRead(existingState AppDeploymentStatus) {
+	newState.EffectiveMessage = existingState.EffectiveMessage
 	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
 		newState.Message = existingState.Message
 	}
@@ -361,6 +372,7 @@ func (newState *ApplicationStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *ApplicationStatus) SyncEffectiveFieldsDuringRead(existingState ApplicationStatus) {
+	newState.EffectiveMessage = existingState.EffectiveMessage
 	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
 		newState.Message = existingState.Message
 	}
@@ -380,6 +392,7 @@ func (newState *ComputeStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan Comp
 }
 
 func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState ComputeStatus) {
+	newState.EffectiveMessage = existingState.EffectiveMessage
 	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
 		newState.Message = existingState.Message
 	}

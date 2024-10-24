@@ -204,8 +204,8 @@ var goroutinesNumber = map[string]int{
 	"databricks_sql_dashboard":     3,
 	"databricks_sql_widget":        4,
 	"databricks_sql_visualization": 4,
-	"databricks_sql_query":         5,
-	"databricks_sql_alert":         2,
+	"databricks_query":             4,
+	"databricks_alert":             2,
 	"databricks_permissions":       11,
 }
 

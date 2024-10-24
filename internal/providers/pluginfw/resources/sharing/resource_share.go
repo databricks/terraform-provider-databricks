@@ -143,8 +143,6 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
 		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "created_at")
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
-		c.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "object", "added_at")
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "object", "added_by")
 
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partitions", "values", "op")
@@ -361,6 +359,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			}
 		}
 
+		matchOrder(updatedShareInfo.Objects, planGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, updatedShareInfo, &state)...)
 		if resp.Diagnostics.HasError() {
 			return

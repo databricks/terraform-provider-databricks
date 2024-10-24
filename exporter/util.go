@@ -438,33 +438,27 @@ func appendEndingSlashToDirName(dir string) string {
 	return dir + "/"
 }
 
-func isMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	res_catalog_name := res.Data.Get("catalog_name").(string)
-	res_schema_name := res.Data.Get("schema_name").(string)
-	ra_catalog_name, cat_found := ra.Get("catalog_name")
-	ra_schema_name, schema_found := ra.Get("name")
-	if !cat_found || !schema_found {
-		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
-			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
-		return true
-	}
-	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
-	return result
-}
+func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		// catalog and schema names for the source resource
+		res_catalog_name := res.Data.Get(catalog_name_attr).(string)
+		res_schema_name := res.Data.Get(schema_name_attr).(string)
+		// In some cases catalog or schema name could be empty, like, in non-UC DLT pipelines, so we need to skip it
+		if res_catalog_name == "" || res_schema_name == "" {
+			return false
+		}
+		// catalog and schema names for target resource approximation
+		ra_catalog_name, cat_found := ra.Get("catalog_name")
+		ra_schema_name, schema_found := ra.Get("name")
+		if !cat_found || !schema_found {
+			log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
+				ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
+			return false
+		}
+		result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+		return result
 
-func isMatchingCatalogAndSchemaInModelServing(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	res_catalog_name := res.Data.Get("config.0.auto_capture_config.0.catalog_name").(string)
-	res_schema_name := res.Data.Get("config.0.auto_capture_config.0.schema_name").(string)
-	ra_catalog_name, cat_found := ra.Get("catalog_name")
-	ra_schema_name, schema_found := ra.Get("name")
-	if !cat_found || !schema_found {
-		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
-			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
-		return true
 	}
-
-	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
-	return result
 }
 
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
@@ -535,24 +529,6 @@ func (ic *importContext) emitPermissionsIfNotIgnored(r *resource, id, name strin
 			})
 		}
 	}
-}
-
-func dltIsMatchingCatalogAndSchema(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	res_catalog_name := res.Data.Get("catalog").(string)
-	if res_catalog_name == "" {
-		return false
-	}
-	res_schema_name := res.Data.Get("target").(string)
-	ra_catalog_name, cat_found := ra.Get("catalog_name")
-	ra_schema_name, schema_found := ra.Get("name")
-	if !cat_found || !schema_found {
-		log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
-			ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
-		return true
-	}
-
-	result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
-	return result
 }
 
 func (ic *importContext) emitWorkspaceBindings(securableType, securableName string) {

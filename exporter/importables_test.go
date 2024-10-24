@@ -1343,6 +1343,7 @@ func TestDbfsFileGeneration(t *testing.T) {
 	})
 }
 
+// TODO: remove it completely after we remove support for legacy dashboards
 func TestSqlListObjects(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

@@ -41,21 +41,69 @@ const IdentityColumnNone IdentityColumn = ""
 const IdentityColumnAlways IdentityColumn = "always"
 const IdentityColumnDefault IdentityColumn = "default"
 
+type SqlKeyConstraintInfo struct {
+	SqlKeyConstraint SqlKeyConstraint `json:"key_constraint" tf:"alias:key_constraint,computed"`
+	TypeJson         string           `json:"type_json,omitempty" tf:"computed"`
+}
+
+type SqlKeyConstraint interface {
+	getConstraint() string
+}
+
+type SqlPrimaryKeyConstraint struct {
+	PrimaryKey string `json:"primary_key" tf:"alias:key,computed"`
+}
+
+type SqlForeignKeyConstraint struct {
+	ReferencedKey        string `json:"referenced_key" tf:"alias:referenced_key,computed"`
+	ReferencedCatalog    string `json:"referenced_catalog" tf:"alias:referenced_catalog,computed"`
+	ReferencedSchema     string `json:"referenced_schema" tf:"alias:referenced_schema,computed"`
+	ReferencedTable      string `json:"referenced_table" tf:"alias:referenced_table,computed"`
+	ReferencedForeignKey string `json:"referenced_foreign_key" tf:"alias:referenced_foreign_key,computed"`
+}
+
+func (sqlKeyConstraint SqlPrimaryKeyConstraint) getConstraint() string {
+	return fmt.Sprintf("PRIMARY KEY (%s)", sqlKeyConstraint.PrimaryKey)
+}
+
+func (sqlKeyConstraint SqlForeignKeyConstraint) getConstraint() string {
+	return fmt.Sprintf(
+		"FOREIGN KEY (%s) REFERENCES %s.%s.%s(%s)",
+		sqlKeyConstraint.ReferencedKey,
+		sqlKeyConstraint.ReferencedCatalog,
+		sqlKeyConstraint.ReferencedSchema,
+		sqlKeyConstraint.ReferencedTable,
+		sqlKeyConstraint.ReferencedForeignKey)
+}
+
+func (ti *SqlTableInfo) serializeSqlKeyConstraintInfo(keyConstraint SqlKeyConstraintInfo) string {
+	return keyConstraint.SqlKeyConstraint.getConstraint()
+}
+
+func (ti *SqlTableInfo) serializeSqlKeyConstraintInfos() string {
+	keyConstraintFragments := make([]string, len(ti.KeyConstraintInfos))
+	for i, keyConstraint := range ti.KeyConstraintInfos {
+		keyConstraintFragments[i] = ti.serializeSqlKeyConstraintInfo(keyConstraint)
+	}
+	return strings.Join(keyConstraintFragments[:], ", ")
+}
+
 type SqlTableInfo struct {
-	Name                  string            `json:"name"`
-	CatalogName           string            `json:"catalog_name" tf:"force_new"`
-	SchemaName            string            `json:"schema_name" tf:"force_new"`
-	TableType             string            `json:"table_type" tf:"force_new"`
-	DataSourceFormat      string            `json:"data_source_format,omitempty" tf:"force_new"`
-	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
-	Partitions            []string          `json:"partitions,omitempty" tf:"force_new"`
-	ClusterKeys           []string          `json:"cluster_keys,omitempty"`
-	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
-	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
-	ViewDefinition        string            `json:"view_definition,omitempty"`
-	Comment               string            `json:"comment,omitempty"`
-	Properties            map[string]string `json:"properties,omitempty"`
-	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
+	Name                  string                 `json:"name"`
+	CatalogName           string                 `json:"catalog_name" tf:"force_new"`
+	SchemaName            string                 `json:"schema_name" tf:"force_new"`
+	TableType             string                 `json:"table_type" tf:"force_new"`
+	DataSourceFormat      string                 `json:"data_source_format,omitempty" tf:"force_new"`
+	ColumnInfos           []SqlColumnInfo        `json:"columns,omitempty" tf:"alias:column,computed"`
+	KeyConstraintInfos    []SqlKeyConstraintInfo `json:"key_constraints,omitempty" tf:"alias:key_constraints,computed"`
+	Partitions            []string               `json:"partitions,omitempty" tf:"force_new"`
+	ClusterKeys           []string               `json:"cluster_keys,omitempty"`
+	StorageLocation       string                 `json:"storage_location,omitempty" tf:"suppress_diff"`
+	StorageCredentialName string                 `json:"storage_credential_name,omitempty" tf:"force_new"`
+	ViewDefinition        string                 `json:"view_definition,omitempty"`
+	Comment               string                 `json:"comment,omitempty"`
+	Properties            map[string]string      `json:"properties,omitempty"`
+	Options               map[string]string      `json:"options,omitempty" tf:"force_new"`
 	// EffectiveProperties includes both properties and options. Options are prefixed with `option.`.
 	EffectiveProperties map[string]string `json:"effective_properties" tf:"computed"`
 	ClusterID           string            `json:"cluster_id,omitempty" tf:"computed"`
@@ -291,6 +339,10 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	if len(ti.ColumnInfos) > 0 {
 		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeColumnInfos()))
+	}
+
+	if len(ti.KeyConstraintInfos) > 0 {
+		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeSqlKeyConstraintInfos()))
 	}
 
 	if !isView {

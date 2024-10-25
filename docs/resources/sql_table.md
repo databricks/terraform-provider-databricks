@@ -149,6 +149,57 @@ resource "databricks_sql_table" "thing" {
 }
 ```
 
+## Use Primary and Foreign Keys
+
+```hcl
+resource "databricks_catalog" "sandbox" {
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
+  properties = {
+    purpose = "testing"
+  }
+}
+resource "databricks_schema" "things" {
+  catalog_name = databricks_catalog.sandbox.id
+  name         = "things"
+  comment      = "this database is managed by terraform"
+  properties = {
+    kind = "various"
+  }
+}
+resource "databricks_sql_table" "thing" {
+  provider           = databricks.workspace
+  name               = "quickstart_table"
+  catalog_name       = databricks_catalog.sandbox.name
+  schema_name        = databricks_schema.things.name
+  table_type         = "MANAGED"
+  data_source_format = "DELTA"
+  storage_location   = ""
+  column {
+    name     = "id"
+    type     = "bigint"
+  }
+  column {
+    name    = "name"
+    type    = "string"
+    comment = "name of thing"
+  }
+  key_constraint {
+    primary_key = "id"
+    rely = "true"
+  }
+  key_constraint {
+    referenced_key = "external_id"
+    referenced_catalog = "bronze"
+    referenced_schema = "biz"
+    referenced_table = "transactions"
+    referenced_foreign_key = "transactionId"
+  }
+  comment = "this table is managed by terraform"
+}
+```
+
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -163,6 +214,7 @@ The following arguments are supported:
 * `cluster_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a cluster_id is specified, it will be used to execute SQL commands to manage this table. If empty, a cluster will be created automatically with the name `terraform-sql-table`.
 * `warehouse_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a `warehouse_id` is specified, that SQL warehouse will be used to execute SQL commands to manage this table. Conflicts with `cluster_id`.
 * `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. Conflicts with `partitions`.
+* `key_constraint` - (Optional) Constraints for Primary and Foreign Keys.
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.
 * `owner` - (Optional) Username/groupname/sp application_id of the schema owner.
 * `comment` - (Optional) User-supplied free-form text. Changing comment is not currently supported on `VIEW` table_type.
@@ -180,6 +232,19 @@ Currently, changing the column definitions for a table will require dropping and
 * `identity` - (Optional) Whether field is an identity column. Can be `default`, `always` or unset. It is unset by default.
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
+
+### `key_constraint` configuration block
+
+For Primary Keys
+* `primary_key` - Column that will get the constraint.
+* `rely` - (Optional) Whether utilizing rely optimization. Can be `true` or `false`. Default to `false`.
+
+For Foreign Keys
+* `referenced_key` - Column that will get the constraint.
+* `referenced_catalog` - Catalog name of the remote table.
+* `referenced_schema` - Schema name of the remote table.
+* `referenced_table` - Remote table name.
+* `referenced_foreign_key` - Column name of the foreign key in the remote table that will get referenced by the Foreign Key.
 
 ## Attribute Reference
 

@@ -42,8 +42,7 @@ const IdentityColumnAlways IdentityColumn = "always"
 const IdentityColumnDefault IdentityColumn = "default"
 
 type SqlKeyConstraintInfo struct {
-	SqlKeyConstraint SqlKeyConstraint `json:"key_constraint" tf:"alias:key_constraint,computed"`
-	TypeJson         string           `json:"type_json,omitempty" tf:"computed"`
+	SqlKeyConstraint SqlKeyConstraint
 }
 
 type SqlKeyConstraint interface {
@@ -51,21 +50,21 @@ type SqlKeyConstraint interface {
 }
 
 type SqlPrimaryKeyConstraint struct {
-	PrimaryKey string `json:"primary_key" tf:"alias:key,computed"`
-	Rely       bool   `json:"rely,omitempty" tf:"default:false,alias:key,computed"`
+	PrimaryKey string `json:"primary_key"`
+	Rely       bool   `json:"rely,omitempty" tf:"default:false"`
 }
 
 type SqlForeignKeyConstraint struct {
-	ReferencedKey        string `json:"referenced_key" tf:"alias:referenced_key,computed"`
-	ReferencedCatalog    string `json:"referenced_catalog" tf:"alias:referenced_catalog,computed"`
-	ReferencedSchema     string `json:"referenced_schema" tf:"alias:referenced_schema,computed"`
-	ReferencedTable      string `json:"referenced_table" tf:"alias:referenced_table,computed"`
-	ReferencedForeignKey string `json:"referenced_foreign_key" tf:"alias:referenced_foreign_key,computed"`
+	ReferencedKey        string `json:"referenced_key"`
+	ReferencedCatalog    string `json:"referenced_catalog"`
+	ReferencedSchema     string `json:"referenced_schema"`
+	ReferencedTable      string `json:"referenced_table"`
+	ReferencedForeignKey string `json:"referenced_foreign_key"`
 }
 
 func (sqlKeyConstraint SqlPrimaryKeyConstraint) getConstraint() string {
 	var constraint = fmt.Sprintf("PRIMARY KEY (%s)", sqlKeyConstraint.PrimaryKey)
-	if sqlKeyConstraint.Rely == true {
+	if sqlKeyConstraint.Rely {
 		constraint += " RELY"
 	}
 	return constraint
@@ -100,7 +99,7 @@ type SqlTableInfo struct {
 	TableType             string                 `json:"table_type" tf:"force_new"`
 	DataSourceFormat      string                 `json:"data_source_format,omitempty" tf:"force_new"`
 	ColumnInfos           []SqlColumnInfo        `json:"columns,omitempty" tf:"alias:column,computed"`
-	KeyConstraintInfos    []SqlKeyConstraintInfo `json:"key_constraints,omitempty" tf:"alias:key_constraints,computed"`
+	KeyConstraintInfos    []SqlKeyConstraintInfo `json:"key_constraints,omitempty" tf:"alias:key_constraint"`
 	Partitions            []string               `json:"partitions,omitempty" tf:"force_new"`
 	ClusterKeys           []string               `json:"cluster_keys,omitempty"`
 	StorageLocation       string                 `json:"storage_location,omitempty" tf:"suppress_diff"`

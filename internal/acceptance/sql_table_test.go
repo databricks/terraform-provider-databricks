@@ -171,6 +171,7 @@ func TestUcAccResourceSqlTableWithPrimaryAndForeignKeyConstraints_Managed(t *tes
 			}
 			key_constraint {
 				primary_key = "id"
+				rely = "true"
 			}
 			key_constraint {
 				referenced_key = "external_id"
@@ -213,6 +214,7 @@ func TestUcAccResourceSqlTableWithPrimaryAndForeignKeyConstraints_Managed(t *tes
 			}
 			key_constraint {
 				primary_key = "id"
+				rely = "true"
 			}
 			key_constraint {
 				referenced_key = "external_id"

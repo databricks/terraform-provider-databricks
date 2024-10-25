@@ -52,6 +52,7 @@ type SqlKeyConstraint interface {
 
 type SqlPrimaryKeyConstraint struct {
 	PrimaryKey string `json:"primary_key" tf:"alias:key,computed"`
+	Rely       bool   `json:"rely,omitempty" tf:"default:false,alias:key,computed"`
 }
 
 type SqlForeignKeyConstraint struct {
@@ -63,7 +64,11 @@ type SqlForeignKeyConstraint struct {
 }
 
 func (sqlKeyConstraint SqlPrimaryKeyConstraint) getConstraint() string {
-	return fmt.Sprintf("PRIMARY KEY (%s)", sqlKeyConstraint.PrimaryKey)
+	var constraint = fmt.Sprintf("PRIMARY KEY (%s)", sqlKeyConstraint.PrimaryKey)
+	if sqlKeyConstraint.Rely == true {
+		constraint += " RELY"
+	}
+	return constraint
 }
 
 func (sqlKeyConstraint SqlForeignKeyConstraint) getConstraint() string {

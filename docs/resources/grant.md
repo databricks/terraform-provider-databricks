@@ -30,11 +30,15 @@ See [databricks_grants Metastore grants](grants.md#metastore-grants) for the lis
 
 ```hcl
 resource "databricks_grant" "sandbox_data_engineers" {
+  metastore = "metastore_id"
+
   principal  = "Data Engineers"
   privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
 }
 
 resource "databricks_grant" "sandbox_data_sharer" {
+  metastore = "metastore_id"
+
   principal  = "Data Sharer"
   privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
 }
@@ -46,7 +50,6 @@ See [databricks_grants Catalog grants](grants.md#catalog-grants) for the list of
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {

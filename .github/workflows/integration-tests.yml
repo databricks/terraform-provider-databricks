@@ -16,16 +16,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Check if all changes are in docs/ directory
-      id: check-integration-tests-required
-      run: |
-        changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-        if echo "$changed_files" | grep -qv '^docs/'; then
-          echo "integration_tests_required=true" >> $GITHUB_ENV
-        else
-          echo "integration_tests_required=false" >> $GITHUB_ENV
-        fi
+    - uses: dorny/paths-filter@v3
+      with:
+        # integration_tests_required should be true if integration tests should be run.
+        # - Any PRs that only modify documentation should not require integration tests to run.
+        filters: |
+          integration_tests_required:
+            - '!**/*.md'
 
   trigger-tests:
     needs: check-integration-test-changes
@@ -64,6 +61,7 @@ jobs:
   # * Avoid running integration tests twice, since it was already run at the tip of the branch before squashing.
   # Additionally, integration tests are not run on docs-only changes.
   auto-approve:
+    needs: check-integration-test-changes
     if: '{{ github.event_name == "merge_group" || env.integration_tests_required == "false" }}'
     runs-on: ubuntu-latest
     steps:

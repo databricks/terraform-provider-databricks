@@ -1,5 +1,30 @@
 # Version changelog
 
+## [Release] Release v1.55.1
+
+### Bug Fixes
+
+ * Recreate missing system schema  ([#4068](https://github.com/databricks/terraform-provider-databricks/pull/4068)).
+ * Tolerate `databricks_permissions` resources for SQL warehouses with `/warehouses/...` IDs ([#4158](https://github.com/databricks/terraform-provider-databricks/pull/4158)).
+
+
+### Documentation
+
+ * Fix `databricks_grant` regarding metastore_id description ([#4164](https://github.com/databricks/terraform-provider-databricks/pull/4164)).
+
+
+### Internal Changes
+
+ * Automatically trigger integration tests on PR ([#4149](https://github.com/databricks/terraform-provider-databricks/pull/4149)).
+
+
+### Exporter
+
+ * **Breaking change** Use new query and alert resources instead of legacy resources ([#4150](https://github.com/databricks/terraform-provider-databricks/pull/4150)).
+ * Improve exporting of `databricks_pipeline` resources ([#4142](https://github.com/databricks/terraform-provider-databricks/pull/4142)).
+ * Improving reliability of `Emit` function ([#4163](https://github.com/databricks/terraform-provider-databricks/pull/4163)).
+
+
 ## [Release] Release v1.55.0
 
 ### New Features and Improvements

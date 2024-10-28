@@ -9,8 +9,27 @@ on:
   
 
 jobs:
-  trigger-tests:
+  check-integration-test-changes:
     if: github.event_name == 'pull_request'
+    name: Check if changes require integration tests to be triggered
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Check if all changes are in docs/ directory
+      id: check-integration-tests-required
+      run: |
+        changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+        if echo "$changed_files" | grep -qv '^docs/'; then
+          echo "integration_tests_required=true" >> $GITHUB_ENV
+        else
+          echo "integration_tests_required=false" >> $GITHUB_ENV
+        fi
+
+  trigger-tests:
+    needs: check-integration-test-changes
+    if: '{{ env.integration_tests_required == "true" }}'
     name: Trigger Tests
     runs-on: ubuntu-latest
     environment: "test-trigger-is"
@@ -36,8 +55,6 @@ jobs:
         -f pull_request_number=${{ github.event.pull_request.number }} \
         -f commit_sha=${{ github.event.pull_request.head.sha }} 
 
-    
-
   # Statuses and checks apply to specific commits (by hash). 
   # Enforcement of required checks is done both at the PR level and the merge queue level.
   # In case of multiple commits in a single PR, the hash of the squashed commit 
@@ -45,8 +62,9 @@ jobs:
   # We auto approve the check for the merge queue for two reasons:
   # * Queue times out due to duration of tests.
   # * Avoid running integration tests twice, since it was already run at the tip of the branch before squashing.
+  # Additionally, integration tests are not run on docs-only changes.
   auto-approve:
-    if: github.event_name == 'merge_group'
+    if: '{{ github.event_name == "merge_group" || env.integration_tests_required == "false" }}'
     runs-on: ubuntu-latest
     steps:
       - name: Mark Check
@@ -54,6 +72,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+            if [ "${{ github.event_name }}" == "merge_group" ]; then
+              echo "Auto-approving check for merge queue"
+            else
+              echo "Auto-approving check for docs-only changes"
+            fi
             gh api -X POST -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               /repos/${{ github.repository }}/statuses/${{ github.sha }} \

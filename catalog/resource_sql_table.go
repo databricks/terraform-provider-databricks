@@ -21,7 +21,7 @@ import (
 )
 
 var MaxSqlExecWaitTimeout = 50
-var optionPrefix = "option."
+var optionPrefixes = []string{"option.", "spark.sql.dataSourceOptions."}
 
 type SqlColumnInfo struct {
 	Name     string         `json:"name"`
@@ -608,18 +608,17 @@ func ResourceSqlTable() common.Resource {
 				}
 			}
 			for userOptName, userSpecifiedValue := range userSpecifiedOptions {
-				effectOptName := optionPrefix + userOptName
 				var found bool
 				var effectiveValue any
+				var effectOptName string
 				// If the option is not found, check if the user specified the option without the prefix
 				// i.e. if user specified `multiLine` for JSON, then backend returns `spark.sql.dataSourceOptions.multiLine`
-				if effectiveValue, found = effectiveProperties[effectOptName]; !found && !strings.Contains(userOptName, ".") {
-					for k, v := range effectiveProperties {
-						if strings.HasSuffix(k, "."+userOptName) {
-							found = true
-							effectiveValue = v
-							break
-						}
+				for _, prefix := range optionPrefixes {
+					effectOptName = prefix + userOptName
+					if v, ok := effectiveProperties[effectOptName]; ok {
+						found = true
+						effectiveValue = v
+						break
 					}
 				}
 				if !found || effectiveValue != userSpecifiedValue {
@@ -669,10 +668,6 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			// opts := d.Get("options").(map[string]any)
-			// for k, v := range opts {
-			// 	ti.EffectiveProperties[optionPrefix+k] = v.(string)
-			// }
 			for i := range ti.ColumnInfos {
 				c := &ti.ColumnInfos[i]
 				c.Identity, err = reconstructIdentity(c)

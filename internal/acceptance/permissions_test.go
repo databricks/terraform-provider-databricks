@@ -617,7 +617,16 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 		resource "databricks_sql_endpoint" "this" {
 			name = "{var.STICKY_RANDOM}"
 			cluster_size = "2X-Small"
+			tags {
+				custom_tags {
+					key   = "Owner"
+					value = "eng-dev-ecosystem-team_at_databricks.com"
+				}
+			}
 		}`
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	var warehouseId string
 	WorkspaceLevel(t, Step{
 		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
 	}, Step{
@@ -638,15 +647,24 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 	}, Step{
 		Template: sqlWarehouseTemplate,
 		Check: func(s *terraform.State) error {
-			w := databricks.Must(databricks.NewWorkspaceClient())
-			id := s.RootModule().Resources["databricks_sql_endpoint.this"].Primary.ID
-			warehouse, err := w.Warehouses.GetById(context.Background(), id)
+			warehouseId = s.RootModule().Resources["databricks_sql_endpoint.this"].Primary.ID
+			warehouse, err := w.Warehouses.GetById(ctx, warehouseId)
 			assert.NoError(t, err)
-			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "warehouses", id)
+			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "warehouses", warehouseId)
 			assert.NoError(t, err)
 			assertContainsPermission(t, permissions, currentPrincipalType(t), warehouse.CreatorName, iam.PermissionLevelIsOwner)
 			return nil
 		},
+	}, Step{
+		// To test import, a new permission must be added to the warehouse, as it is not possible to import databricks_permissions
+		// for a warehouse that has the default permissions (i.e. current user has IS_OWNER and admins have CAN_MANAGE).
+		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
+	}, Step{
+		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
+		// Verify that we can use "/warehouses/<ID>" instead of "/sql/warehouses/<ID>"
+		ResourceName:      "databricks_permissions.this",
+		ImportState:       true,
+		ImportStateIdFunc: func(s *terraform.State) (string, error) { return "/warehouses/" + warehouseId, nil },
 	})
 }
 

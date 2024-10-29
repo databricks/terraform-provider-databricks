@@ -103,44 +103,6 @@ func TestResourceSqlTableCreateStatement_PrimaryKeyConstraint(t *testing.T) {
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
 }
 
-func TestResourceSqlTableAlterStatement_DropPrimaryKeyConstraint(t *testing.T) {
-	ti := &SqlTableInfo{
-		Name:                  "bar",
-		CatalogName:           "main",
-		SchemaName:            "foo",
-		TableType:             "EXTERNAL",
-		DataSourceFormat:      "DELTA",
-		StorageLocation:       "s3://ext-main/foo/bar1",
-		StorageCredentialName: "somecred",
-		Comment:               "terraform managed",
-		ColumnInfos: []SqlColumnInfo{
-			{
-				Name: "id",
-			},
-			{
-				Name:    "name",
-				Comment: "a comment",
-			},
-		},
-		KeyConstraintInfos: []SqlKeyConstraintInfo{
-			{
-				SqlKeyConstraint: SqlPrimaryKeyConstraint{
-					Name:       "id_pk",
-					PrimaryKey: "id",
-					Rely:       true,
-				},
-			},
-		},
-	}
-	stmt := ti.buildTableCreateStatement()
-	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
-	assert.Contains(t, stmt, "USING DELTA")
-	assert.Contains(t, stmt, "(`id`  NOT NULL, `name`  NOT NULL COMMENT 'a comment')")
-	assert.Contains(t, stmt, "(CONSTRAINT `id_pk` PRIMARY KEY (id) RELY)")
-	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
-	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
-}
-
 func TestResourceSqlTableCreateStatement_ForeignKeyConstraint(t *testing.T) {
 	ti := &SqlTableInfo{
 		Name:                  "bar",

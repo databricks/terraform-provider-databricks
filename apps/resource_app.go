@@ -72,9 +72,6 @@ func (appStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 	s.SchemaPath("name").SetRequired().SetForceNew().SetValidateFunc(validation.StringLenBetween(2, 30))
 	s.SchemaPath("mode").SetDefault("SNAPSHOT").SetValidateFunc(validation.StringInSlice([]string{"SNAPSHOT", "AUTO_SYNC"}, false))
 
-	// Slice set
-	s.SchemaPath("resource").SetSliceSet()
-
 	// Computed fields
 	for _, p := range []string{"active_deployment", "app_status", "compute_status", "create_time", "creator",
 		"default_source_code_path", "pending_deployment", "service_principal_id", "service_principal_name",

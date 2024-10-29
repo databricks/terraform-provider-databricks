@@ -11,10 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-const defaultEndpointProvisionTimeout = 75 * time.Minute
+const defaultAppProvisionTimeout = 10 * time.Minute
 const deleteCallTimeout = 10 * time.Second
 
-type App struct {
+var appAliasMap = map[string]string{
+	"resources": "resource",
+}
+
+type appStruct struct {
 	apps.App
 	// The mode of which the deployment will manage the source code.
 	Mode string `json:"mode,omitempty"`
@@ -28,11 +32,48 @@ type App struct {
 	SourceCodePath string `json:"source_code_path,omitempty"`
 }
 
-func (App) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+type appCreateStruct struct {
+	apps.CreateAppRequest
+}
+
+func (appCreateStruct) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"apps.appCreateStruct": appAliasMap,
+	}
+}
+
+func (appCreateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	return s
+}
+
+type appUpdateStruct struct {
+	apps.UpdateAppRequest
+}
+
+func (appUpdateStruct) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"apps.appUpdateStruct": appAliasMap,
+	}
+}
+
+func (appUpdateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	return s
+}
+
+func (appStruct) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"apps.appStruct": appAliasMap,
+	}
+}
+
+func (appStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 
 	// Required fields & validation
 	s.SchemaPath("name").SetRequired().SetForceNew().SetValidateFunc(validation.StringLenBetween(2, 30))
 	s.SchemaPath("mode").SetDefault("SNAPSHOT").SetValidateFunc(validation.StringInSlice([]string{"SNAPSHOT", "AUTO_SYNC"}, false))
+
+	// Slice set
+	s.SchemaPath("resource").SetSliceSet()
 
 	// Computed fields
 	for _, p := range []string{"active_deployment", "app_status", "compute_status", "create_time", "creator",
@@ -47,12 +88,12 @@ func (App) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSch
 	return s
 }
 
-var appSchema = common.StructToSchema(App{}, nil)
+var appSchema = common.StructToSchema(appStruct{}, nil)
 
 func ResourceApp() common.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var createApp apps.CreateAppRequest
+			var createApp appCreateStruct
 			var createAppDeployment apps.CreateAppDeploymentRequest
 			common.DataToStructPointer(d, appSchema, &createApp)
 			common.DataToStructPointer(d, appSchema, &createAppDeployment)
@@ -62,7 +103,7 @@ func ResourceApp() common.Resource {
 			}
 
 			// create the app, which does not require the source code path yet
-			wait, err := w.Apps.Create(ctx, createApp)
+			wait, err := w.Apps.Create(ctx, createApp.CreateAppRequest)
 			if err != nil {
 				return err
 			}
@@ -102,16 +143,16 @@ func ResourceApp() common.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(app, appSchema, d)
+			return common.StructToData(appStruct{App: *app}, appSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var update apps.UpdateAppRequest
+			var update appUpdateStruct
 			common.DataToStructPointer(d, appSchema, &update)
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			_, err = w.Apps.Update(ctx, update)
+			_, err = w.Apps.Update(ctx, update.UpdateAppRequest)
 			if err != nil {
 				return err
 			}
@@ -137,7 +178,7 @@ func ResourceApp() common.Resource {
 		},
 		Schema: appSchema,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(defaultEndpointProvisionTimeout),
+			Create: schema.DefaultTimeout(defaultAppProvisionTimeout),
 		},
 	}
 }

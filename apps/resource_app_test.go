@@ -94,7 +94,7 @@ func getTestAppData(warehouseName, endpointName string) map[string]interface{} {
 			"creator":              "user@test.com",
 			"update_time":          "2019-08-24T14:15:22Z",
 		}},
-		"resources": []any{map[string]any{
+		"resource": []any{map[string]any{
 			"name":        "api-key",
 			"description": "API key for external service.",
 			"secret": []any{map[string]any{
@@ -165,7 +165,7 @@ func TestResourceAppsCreate(t *testing.T) {
 		description = "My app description."
 		source_code_path = "/Workspace/user@test.com/my_custom_app"
 		mode = "SNAPSHOT"
-		resources {
+		resource {
 			name = "api-key"
 			description = "API key for external service."
 			secret {
@@ -257,7 +257,7 @@ func TestResourceAppsUpdate(t *testing.T) {
 			description = "My app description."
 			source_code_path = "/Workspace/user@test.com/my_new_custom_app"
 			mode = "SNAPSHOT"
-			resources {
+			resource {
 				name = "api-key"
 				description = "API key for external service."
 				secret {

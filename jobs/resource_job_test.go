@@ -2056,8 +2056,17 @@ func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
-	assert.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+	assert.ErrorContains(t, err, `NumWorkers could be 0 only for SingleNode clusters. To create a single node
+cluster please include the following configuration in your cluster configuration:
+
+  spark_conf = {
+    "spark.databricks.cluster.profile" : "singleNode"
+    "spark.master" : "local[*]"
+  }
+
+  custom_tags = {
+    "ResourceClass" = "SingleNode"
+  }`)
 }
 
 func TestResourceJobRead(t *testing.T) {
@@ -2946,8 +2955,17 @@ func TestResourceJobUpdate_FailNumWorkersZero(t *testing.T) {
 			parameters = ["--cleanup", "full"]
 		}`,
 	}.Apply(t)
-	assert.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+	assert.ErrorContains(t, err, `NumWorkers could be 0 only for SingleNode clusters. To create a single node
+cluster please include the following configuration in your cluster configuration:
+
+  spark_conf = {
+    "spark.databricks.cluster.profile" : "singleNode"
+    "spark.master" : "local[*]"
+  }
+
+  custom_tags = {
+    "ResourceClass" = "SingleNode"
+  }`)
 }
 
 func TestJobsAPIList(t *testing.T) {

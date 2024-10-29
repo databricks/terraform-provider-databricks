@@ -2056,7 +2056,7 @@ func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
 			jar = "dbfs://ff/gg/hh.jar"
 		}`,
 	}.Apply(t)
-	assert.ErrorContains(t, err, `NumWorkers could be 0 only for SingleNode clusters. To create a single node
+	assert.ErrorContains(t, err, `num_workers may be 0 only for single-node clusters. To create a single node
 cluster please include the following configuration in your cluster configuration:
 
   spark_conf = {
@@ -2959,7 +2959,7 @@ func TestResourceJobUpdate_FailNumWorkersZero(t *testing.T) {
 			parameters = ["--cleanup", "full"]
 		}`,
 	}.Apply(t)
-	assert.ErrorContains(t, err, `NumWorkers could be 0 only for SingleNode clusters. To create a single node
+	assert.ErrorContains(t, err, `num_workers may be 0 only for single-node clusters. To create a single node
 cluster please include the following configuration in your cluster configuration:
 
   spark_conf = {

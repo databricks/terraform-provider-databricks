@@ -26,7 +26,7 @@ var clusterSchema = resourceClusterSchema()
 var clusterSchemaVersion = 4
 
 const (
-	numWorkerErr = `NumWorkers could be 0 only for SingleNode clusters. To create a single node
+	numWorkerErr = `num_workers may be 0 only for single-node clusters. To create a single node
 cluster please include the following configuration in your cluster configuration:
 
   spark_conf = {

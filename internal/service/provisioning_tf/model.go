@@ -342,6 +342,7 @@ func (newState *Credential) SyncEffectiveFieldsDuringCreateOrUpdate(plan Credent
 }
 
 func (newState *Credential) SyncEffectiveFieldsDuringRead(existingState Credential) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
@@ -382,6 +383,7 @@ func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringRead(existingState CustomerManagedKey) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
@@ -739,9 +741,11 @@ func (newState *Network) SyncEffectiveFieldsDuringCreateOrUpdate(plan Network) {
 }
 
 func (newState *Network) SyncEffectiveFieldsDuringRead(existingState Network) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
+	newState.EffectiveVpcStatus = existingState.EffectiveVpcStatus
 	if existingState.EffectiveVpcStatus.ValueString() == newState.VpcStatus.ValueString() {
 		newState.VpcStatus = existingState.VpcStatus
 	}
@@ -871,9 +875,11 @@ func (newState *StorageConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *StorageConfiguration) SyncEffectiveFieldsDuringRead(existingState StorageConfiguration) {
+	newState.EffectiveAccountId = existingState.EffectiveAccountId
 	if existingState.EffectiveAccountId.ValueString() == newState.AccountId.ValueString() {
 		newState.AccountId = existingState.AccountId
 	}
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
@@ -1135,12 +1141,15 @@ func (newState *Workspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspac
 }
 
 func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
+	newState.EffectiveWorkspaceStatus = existingState.EffectiveWorkspaceStatus
 	if existingState.EffectiveWorkspaceStatus.ValueString() == newState.WorkspaceStatus.ValueString() {
 		newState.WorkspaceStatus = existingState.WorkspaceStatus
 	}
+	newState.EffectiveWorkspaceStatusMessage = existingState.EffectiveWorkspaceStatusMessage
 	if existingState.EffectiveWorkspaceStatusMessage.ValueString() == newState.WorkspaceStatusMessage.ValueString() {
 		newState.WorkspaceStatusMessage = existingState.WorkspaceStatusMessage
 	}

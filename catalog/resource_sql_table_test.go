@@ -1625,15 +1625,18 @@ func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {
 			}
 			options = {
 				"myopt" = "myval"
+				"multiLine" = "true"
 			}`,
 			map[string]string{
 				"properties.%":                      "1",
 				"properties.myprop":                 "myval",
-				"options.%":                         "1",
+				"options.%":                         "2",
 				"options.myopt":                     "myval",
-				"effective_properties.%":            "2",
+				"options.multiLine":                 "true",
+				"effective_properties.%":            "3",
 				"effective_properties.myprop":       "myval",
 				"effective_properties.option.myopt": "myval",
+				"effective_properties.spark.sql.dataSourceOptions.multiLine": "true",
 			},
 			nil,
 		},

@@ -46,15 +46,20 @@ type SqlKeyConstraintInfo struct {
 }
 
 type SqlKeyConstraint interface {
-	getConstraint() string
+	getConstraintCreateTableStatement() string
+	getConstraintAlterTableCreateStatement() string
+	getConstraintAlterTableDropStatement() string
+	getConstraintName() string
 }
 
 type SqlPrimaryKeyConstraint struct {
+	Name       string `json:"name"`
 	PrimaryKey string `json:"primary_key"`
 	Rely       bool   `json:"rely,omitempty" tf:"default:false"`
 }
 
 type SqlForeignKeyConstraint struct {
+	Name                 string `json:"name"`
 	ReferencedKey        string `json:"referenced_key"`
 	ReferencedCatalog    string `json:"referenced_catalog"`
 	ReferencedSchema     string `json:"referenced_schema"`
@@ -62,17 +67,29 @@ type SqlForeignKeyConstraint struct {
 	ReferencedForeignKey string `json:"referenced_foreign_key"`
 }
 
-func (sqlKeyConstraint SqlPrimaryKeyConstraint) getConstraint() string {
-	var constraint = fmt.Sprintf("PRIMARY KEY (%s)", sqlKeyConstraint.PrimaryKey)
+func (sqlKeyConstraint SqlPrimaryKeyConstraint) getConstraintName() string {
+	return fmt.Sprintf("`%s`", sqlKeyConstraint.Name)
+}
+
+func (sqlKeyConstraint SqlForeignKeyConstraint) getConstraintName() string {
+	return fmt.Sprintf("`%s`", sqlKeyConstraint.Name)
+}
+
+func (sqlKeyConstraint SqlPrimaryKeyConstraint) getConstraintCreateTableStatement() string {
+	var constraint = fmt.Sprintf(
+		"CONSTRAINT %s PRIMARY KEY (%s)",
+		sqlKeyConstraint.getConstraintName(),
+		sqlKeyConstraint.PrimaryKey)
 	if sqlKeyConstraint.Rely {
 		constraint += " RELY"
 	}
 	return constraint
 }
 
-func (sqlKeyConstraint SqlForeignKeyConstraint) getConstraint() string {
+func (sqlKeyConstraint SqlForeignKeyConstraint) getConstraintCreateTableStatement() string {
 	return fmt.Sprintf(
-		"FOREIGN KEY (%s) REFERENCES %s.%s.%s(%s)",
+		"CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s.%s.%s(%s)",
+		sqlKeyConstraint.getConstraintName(),
 		sqlKeyConstraint.ReferencedKey,
 		sqlKeyConstraint.ReferencedCatalog,
 		sqlKeyConstraint.ReferencedSchema,
@@ -80,8 +97,42 @@ func (sqlKeyConstraint SqlForeignKeyConstraint) getConstraint() string {
 		sqlKeyConstraint.ReferencedForeignKey)
 }
 
+func (sqlKeyConstraint SqlPrimaryKeyConstraint) getConstraintAlterTableCreateStatement() string {
+	var constraint = fmt.Sprintf(
+		"ADD CONSTRAINT %s PRIMARY KEY (%s)",
+		sqlKeyConstraint.getConstraintName(),
+		sqlKeyConstraint.PrimaryKey)
+	if sqlKeyConstraint.Rely {
+		constraint += " RELY"
+	}
+	return constraint
+}
+
+func (sqlKeyConstraint SqlForeignKeyConstraint) getConstraintAlterTableCreateStatement() string {
+	return fmt.Sprintf(
+		"ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s.%s.%s(%s)",
+		sqlKeyConstraint.getConstraintName(),
+		sqlKeyConstraint.ReferencedKey,
+		sqlKeyConstraint.ReferencedCatalog,
+		sqlKeyConstraint.ReferencedSchema,
+		sqlKeyConstraint.ReferencedTable,
+		sqlKeyConstraint.ReferencedForeignKey)
+}
+
+func (sqlKeyConstraint SqlPrimaryKeyConstraint) getConstraintAlterTableDropStatement() string {
+	return fmt.Sprintf(
+		"DROP CONSTRAINT %s",
+		sqlKeyConstraint.getConstraintName())
+}
+
+func (sqlKeyConstraint SqlForeignKeyConstraint) getConstraintAlterTableDropStatement() string {
+	return fmt.Sprintf(
+		"DROP CONSTRAINT %s",
+		sqlKeyConstraint.getConstraintName())
+}
+
 func (ti *SqlTableInfo) serializeSqlKeyConstraintInfo(keyConstraint SqlKeyConstraintInfo) string {
-	return keyConstraint.SqlKeyConstraint.getConstraint()
+	return keyConstraint.SqlKeyConstraint.getConstraintCreateTableStatement()
 }
 
 func (ti *SqlTableInfo) serializeSqlKeyConstraintInfos() string {
@@ -407,6 +458,43 @@ func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, stateme
 	return statements
 }
 
+func (ti *SqlTableInfo) addOrRemoveKeyConstraintStatements(
+	oldti *SqlTableInfo,
+	statements []string,
+	typestring string) []string {
+	nameToOldKeyConstraint := make(map[string]SqlKeyConstraintInfo)
+	nameToNewKeyConstraint := make(map[string]SqlKeyConstraintInfo)
+	for _, kci := range oldti.KeyConstraintInfos {
+		nameToOldKeyConstraint[kci.SqlKeyConstraint.getConstraintName()] = kci
+	}
+	for _, newKci := range ti.KeyConstraintInfos {
+		nameToNewKeyConstraint[newKci.SqlKeyConstraint.getConstraintName()] = newKci
+	}
+
+	removeKeyConstraintStatements := make([]string, 0)
+
+	for name, oldKci := range nameToOldKeyConstraint {
+		if _, exists := nameToNewKeyConstraint[name]; !exists {
+			// Remove old column if old column is no longer found in the config.
+			var oldKciDropStatement = oldKci.SqlKeyConstraint.getConstraintAlterTableDropStatement()
+			removeKeyConstraintStatements = append(statements, fmt.Sprintf("ALTER %s %s %s", typestring, ti.SQLFullName(), oldKciDropStatement))
+		}
+	}
+	if len(removeKeyConstraintStatements) > 0 {
+		removeKeyConstraintStatementsStr := strings.Join(removeKeyConstraintStatements, ", ")
+		statements = append(statements, removeKeyConstraintStatementsStr)
+	}
+
+	for _, newKci := range ti.KeyConstraintInfos {
+		if _, exists := nameToOldKeyConstraint[newKci.SqlKeyConstraint.getConstraintName()]; !exists {
+			// Add new column if new column is detected.
+			newKciStatement := newKci.SqlKeyConstraint.getConstraintAlterTableCreateStatement()
+			statements = append(statements, fmt.Sprintf("ALTER %s %s %s", typestring, ti.SQLFullName(), newKciStatement))
+		}
+	}
+	return statements
+}
+
 func (ti *SqlTableInfo) addOrRemoveColumnStatements(oldti *SqlTableInfo, statements []string, typestring string) []string {
 	nameToOldColumn := make(map[string]SqlColumnInfo)
 	nameToNewColumn := make(map[string]SqlColumnInfo)
@@ -510,6 +598,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 	}
 
 	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)
+	statements = ti.addOrRemoveKeyConstraintStatements(oldti, statements, typestring)
 
 	return statements, nil
 }

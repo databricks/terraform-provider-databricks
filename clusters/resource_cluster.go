@@ -26,7 +26,26 @@ var clusterSchema = resourceClusterSchema()
 var clusterSchemaVersion = 4
 
 const (
-	numWorkerErr                              = "NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details"
+	numWorkerErr = `num_workers may be 0 only for single-node clusters. To create a single node
+cluster please include the following configuration in your cluster configuration:
+
+  spark_conf = {
+    "spark.databricks.cluster.profile" : "singleNode"
+    "spark.master" : "local[*]"
+  }
+
+  custom_tags = {
+    "ResourceClass" = "SingleNode"
+  }
+
+Please note that the Databricks Terraform provider cannot detect if the above configuration
+is defined in a policy used by the cluster. Please define this in the cluster configuration
+itself to create a single node cluster.
+
+For more details please see:
+  1. https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster#fixed-size-or-autoscaling-cluster
+  2. https://docs.databricks.com/clusters/single-node.html`
+
 	unsupportedExceptCreateEditClusterSpecErr = "unsupported type %T, must be one of %scompute.CreateCluster, %scompute.ClusterSpec or %scompute.EditCluster. Please report this issue to the GitHub repo"
 )
 

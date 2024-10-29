@@ -25,6 +25,12 @@ type AccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *AccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessControlRequest) {
+}
+
+func (newState *AccessControlRequest) SyncEffectiveFieldsDuringRead(existingState AccessControlRequest) {
+}
+
 type AccessControlResponse struct {
 	// All permissions.
 	AllPermissions []Permission `tfsdk:"all_permissions" tf:"optional"`
@@ -36,6 +42,12 @@ type AccessControlResponse struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *AccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessControlResponse) {
+}
+
+func (newState *AccessControlResponse) SyncEffectiveFieldsDuringRead(existingState AccessControlResponse) {
 }
 
 type ComplexValue struct {
@@ -50,10 +62,22 @@ type ComplexValue struct {
 	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
+func (newState *ComplexValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplexValue) {
+}
+
+func (newState *ComplexValue) SyncEffectiveFieldsDuringRead(existingState ComplexValue) {
+}
+
 // Delete a group
 type DeleteAccountGroupRequest struct {
 	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteAccountGroupRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAccountGroupRequest) {
+}
+
+func (newState *DeleteAccountGroupRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountGroupRequest) {
 }
 
 // Delete a service principal
@@ -62,10 +86,22 @@ type DeleteAccountServicePrincipalRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteAccountServicePrincipalRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAccountServicePrincipalRequest) {
+}
+
+func (newState *DeleteAccountServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountServicePrincipalRequest) {
+}
+
 // Delete a user
 type DeleteAccountUserRequest struct {
 	// Unique ID for a user in the Databricks account.
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteAccountUserRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAccountUserRequest) {
+}
+
+func (newState *DeleteAccountUserRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountUserRequest) {
 }
 
 // Delete a group
@@ -74,7 +110,19 @@ type DeleteGroupRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteGroupRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteGroupRequest) {
+}
+
+func (newState *DeleteGroupRequest) SyncEffectiveFieldsDuringRead(existingState DeleteGroupRequest) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 // Delete a service principal
@@ -83,10 +131,22 @@ type DeleteServicePrincipalRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteServicePrincipalRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteServicePrincipalRequest) {
+}
+
+func (newState *DeleteServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existingState DeleteServicePrincipalRequest) {
+}
+
 // Delete a user
 type DeleteUserRequest struct {
 	// Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteUserRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteUserRequest) {
+}
+
+func (newState *DeleteUserRequest) SyncEffectiveFieldsDuringRead(existingState DeleteUserRequest) {
 }
 
 // Delete permissions assignment
@@ -97,7 +157,19 @@ type DeleteWorkspaceAssignmentRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *DeleteWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWorkspaceAssignmentRequest) {
+}
+
+func (newState *DeleteWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspaceAssignmentRequest) {
+}
+
 type DeleteWorkspacePermissionAssignmentResponse struct {
+}
+
+func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWorkspacePermissionAssignmentResponse) {
+}
+
+func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspacePermissionAssignmentResponse) {
 }
 
 // Get group details
@@ -106,10 +178,22 @@ type GetAccountGroupRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *GetAccountGroupRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAccountGroupRequest) {
+}
+
+func (newState *GetAccountGroupRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountGroupRequest) {
+}
+
 // Get service principal details
 type GetAccountServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *GetAccountServicePrincipalRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAccountServicePrincipalRequest) {
+}
+
+func (newState *GetAccountServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountServicePrincipalRequest) {
 }
 
 // Get user details
@@ -139,14 +223,32 @@ type GetAccountUserRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetAccountUserRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAccountUserRequest) {
+}
+
+func (newState *GetAccountUserRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountUserRequest) {
+}
+
 // Get assignable roles for a resource
 type GetAssignableRolesForResourceRequest struct {
 	// The resource name for which assignable roles will be listed.
 	Resource types.String `tfsdk:"-"`
 }
 
+func (newState *GetAssignableRolesForResourceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAssignableRolesForResourceRequest) {
+}
+
+func (newState *GetAssignableRolesForResourceRequest) SyncEffectiveFieldsDuringRead(existingState GetAssignableRolesForResourceRequest) {
+}
+
 type GetAssignableRolesForResourceResponse struct {
 	Roles []Role `tfsdk:"roles" tf:"optional"`
+}
+
+func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAssignableRolesForResourceResponse) {
+}
+
+func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuringRead(existingState GetAssignableRolesForResourceResponse) {
 }
 
 // Get group details
@@ -155,9 +257,21 @@ type GetGroupRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *GetGroupRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetGroupRequest) {
+}
+
+func (newState *GetGroupRequest) SyncEffectiveFieldsDuringRead(existingState GetGroupRequest) {
+}
+
 type GetPasswordPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []PasswordPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPasswordPermissionLevelsResponse) {
+}
+
+func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPasswordPermissionLevelsResponse) {
 }
 
 // Get object permission levels
@@ -168,9 +282,21 @@ type GetPermissionLevelsRequest struct {
 	RequestObjectType types.String `tfsdk:"-"`
 }
 
+func (newState *GetPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPermissionLevelsRequest) {
+}
+
+func (newState *GetPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetPermissionLevelsRequest) {
+}
+
 type GetPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []PermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPermissionLevelsResponse) {
+}
+
+func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPermissionLevelsResponse) {
 }
 
 // Get object permissions
@@ -183,6 +309,12 @@ type GetPermissionRequest struct {
 	// pipelines, queries, registered-models, repos, serving-endpoints, or
 	// warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *GetPermissionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPermissionRequest) {
+}
+
+func (newState *GetPermissionRequest) SyncEffectiveFieldsDuringRead(existingState GetPermissionRequest) {
 }
 
 // Get a rule set
@@ -200,10 +332,22 @@ type GetRuleSetRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *GetRuleSetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRuleSetRequest) {
+}
+
+func (newState *GetRuleSetRequest) SyncEffectiveFieldsDuringRead(existingState GetRuleSetRequest) {
+}
+
 // Get service principal details
 type GetServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *GetServicePrincipalRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServicePrincipalRequest) {
+}
+
+func (newState *GetServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existingState GetServicePrincipalRequest) {
 }
 
 // Get user details
@@ -233,10 +377,22 @@ type GetUserRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetUserRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUserRequest) {
+}
+
+func (newState *GetUserRequest) SyncEffectiveFieldsDuringRead(existingState GetUserRequest) {
+}
+
 // List workspace permissions
 type GetWorkspaceAssignmentRequest struct {
 	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceAssignmentRequest) {
+}
+
+func (newState *GetWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceAssignmentRequest) {
 }
 
 type GrantRule struct {
@@ -244,6 +400,12 @@ type GrantRule struct {
 	Principals []types.String `tfsdk:"principals" tf:"optional"`
 	// Role that is assigned to the list of principals.
 	Role types.String `tfsdk:"role" tf:""`
+}
+
+func (newState *GrantRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan GrantRule) {
+}
+
+func (newState *GrantRule) SyncEffectiveFieldsDuringRead(existingState GrantRule) {
 }
 
 type Group struct {
@@ -270,6 +432,12 @@ type Group struct {
 	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 }
 
+func (newState *Group) SyncEffectiveFieldsDuringCreateOrUpdate(plan Group) {
+}
+
+func (newState *Group) SyncEffectiveFieldsDuringRead(existingState Group) {
+}
+
 // List group details
 type ListAccountGroupsRequest struct {
 	// Comma-separated list of attributes to return in response.
@@ -294,6 +462,12 @@ type ListAccountGroupsRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (newState *ListAccountGroupsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAccountGroupsRequest) {
+}
+
+func (newState *ListAccountGroupsRequest) SyncEffectiveFieldsDuringRead(existingState ListAccountGroupsRequest) {
+}
+
 // List service principals
 type ListAccountServicePrincipalsRequest struct {
 	// Comma-separated list of attributes to return in response.
@@ -316,6 +490,12 @@ type ListAccountServicePrincipalsRequest struct {
 	SortOrder types.String `tfsdk:"-"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
+}
+
+func (newState *ListAccountServicePrincipalsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAccountServicePrincipalsRequest) {
+}
+
+func (newState *ListAccountServicePrincipalsRequest) SyncEffectiveFieldsDuringRead(existingState ListAccountServicePrincipalsRequest) {
 }
 
 // List users
@@ -343,6 +523,12 @@ type ListAccountUsersRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (newState *ListAccountUsersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAccountUsersRequest) {
+}
+
+func (newState *ListAccountUsersRequest) SyncEffectiveFieldsDuringRead(existingState ListAccountUsersRequest) {
+}
+
 // List group details
 type ListGroupsRequest struct {
 	// Comma-separated list of attributes to return in response.
@@ -367,6 +553,12 @@ type ListGroupsRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (newState *ListGroupsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListGroupsRequest) {
+}
+
+func (newState *ListGroupsRequest) SyncEffectiveFieldsDuringRead(existingState ListGroupsRequest) {
+}
+
 type ListGroupsResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
@@ -381,6 +573,12 @@ type ListGroupsResponse struct {
 	TotalResults types.Int64 `tfsdk:"totalResults" tf:"optional"`
 }
 
+func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListGroupsResponse) {
+}
+
+func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringRead(existingState ListGroupsResponse) {
+}
+
 type ListServicePrincipalResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
@@ -393,6 +591,12 @@ type ListServicePrincipalResponse struct {
 	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
 	// Total results that match the request filters.
 	TotalResults types.Int64 `tfsdk:"totalResults" tf:"optional"`
+}
+
+func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalResponse) {
+}
+
+func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalResponse) {
 }
 
 // List service principals
@@ -417,6 +621,12 @@ type ListServicePrincipalsRequest struct {
 	SortOrder types.String `tfsdk:"-"`
 	// Specifies the index of the first result. First item is number 1.
 	StartIndex types.Int64 `tfsdk:"-"`
+}
+
+func (newState *ListServicePrincipalsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalsRequest) {
+}
+
+func (newState *ListServicePrincipalsRequest) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalsRequest) {
 }
 
 // List users
@@ -444,6 +654,12 @@ type ListUsersRequest struct {
 	StartIndex types.Int64 `tfsdk:"-"`
 }
 
+func (newState *ListUsersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUsersRequest) {
+}
+
+func (newState *ListUsersRequest) SyncEffectiveFieldsDuringRead(existingState ListUsersRequest) {
+}
+
 type ListUsersResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
@@ -458,10 +674,22 @@ type ListUsersResponse struct {
 	TotalResults types.Int64 `tfsdk:"totalResults" tf:"optional"`
 }
 
+func (newState *ListUsersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUsersResponse) {
+}
+
+func (newState *ListUsersResponse) SyncEffectiveFieldsDuringRead(existingState ListUsersResponse) {
+}
+
 // Get permission assignments
 type ListWorkspaceAssignmentRequest struct {
 	// The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *ListWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListWorkspaceAssignmentRequest) {
+}
+
+func (newState *ListWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringRead(existingState ListWorkspaceAssignmentRequest) {
 }
 
 type MigratePermissionsRequest struct {
@@ -476,9 +704,21 @@ type MigratePermissionsRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:""`
 }
 
+func (newState *MigratePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigratePermissionsRequest) {
+}
+
+func (newState *MigratePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsRequest) {
+}
+
 type MigratePermissionsResponse struct {
 	// Number of permissions migrated.
 	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated" tf:"optional"`
+}
+
+func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigratePermissionsResponse) {
+}
+
+func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsResponse) {
 }
 
 type Name struct {
@@ -488,12 +728,24 @@ type Name struct {
 	GivenName types.String `tfsdk:"givenName" tf:"optional"`
 }
 
+func (newState *Name) SyncEffectiveFieldsDuringCreateOrUpdate(plan Name) {
+}
+
+func (newState *Name) SyncEffectiveFieldsDuringRead(existingState Name) {
+}
+
 type ObjectPermissions struct {
 	AccessControlList []AccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+}
+
+func (newState *ObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ObjectPermissions) {
+}
+
+func (newState *ObjectPermissions) SyncEffectiveFieldsDuringRead(existingState ObjectPermissions) {
 }
 
 type PartialUpdate struct {
@@ -506,6 +758,12 @@ type PartialUpdate struct {
 	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 }
 
+func (newState *PartialUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartialUpdate) {
+}
+
+func (newState *PartialUpdate) SyncEffectiveFieldsDuringRead(existingState PartialUpdate) {
+}
+
 type PasswordAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -515,6 +773,12 @@ type PasswordAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordAccessControlRequest) {
+}
+
+func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PasswordAccessControlRequest) {
 }
 
 type PasswordAccessControlResponse struct {
@@ -530,12 +794,24 @@ type PasswordAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *PasswordAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordAccessControlResponse) {
+}
+
+func (newState *PasswordAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PasswordAccessControlResponse) {
+}
+
 type PasswordPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *PasswordPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermission) {
+}
+
+func (newState *PasswordPermission) SyncEffectiveFieldsDuringRead(existingState PasswordPermission) {
 }
 
 type PasswordPermissions struct {
@@ -546,14 +822,32 @@ type PasswordPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *PasswordPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissions) {
+}
+
+func (newState *PasswordPermissions) SyncEffectiveFieldsDuringRead(existingState PasswordPermissions) {
+}
+
 type PasswordPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *PasswordPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissionsDescription) {
+}
+
+func (newState *PasswordPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsDescription) {
+}
+
 type PasswordPermissionsRequest struct {
 	AccessControlList []PasswordAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+}
+
+func (newState *PasswordPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissionsRequest) {
+}
+
+func (newState *PasswordPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsRequest) {
 }
 
 type Patch struct {
@@ -565,7 +859,19 @@ type Patch struct {
 	Value any `tfsdk:"value" tf:"optional"`
 }
 
+func (newState *Patch) SyncEffectiveFieldsDuringCreateOrUpdate(plan Patch) {
+}
+
+func (newState *Patch) SyncEffectiveFieldsDuringRead(existingState Patch) {
+}
+
 type PatchResponse struct {
+}
+
+func (newState *PatchResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchResponse) {
+}
+
+func (newState *PatchResponse) SyncEffectiveFieldsDuringRead(existingState PatchResponse) {
 }
 
 type Permission struct {
@@ -574,6 +880,12 @@ type Permission struct {
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *Permission) SyncEffectiveFieldsDuringCreateOrUpdate(plan Permission) {
+}
+
+func (newState *Permission) SyncEffectiveFieldsDuringRead(existingState Permission) {
 }
 
 // The output format for existing workspace PermissionAssignment records, which
@@ -587,9 +899,21 @@ type PermissionAssignment struct {
 	Principal []PrincipalOutput `tfsdk:"principal" tf:"optional,object"`
 }
 
+func (newState *PermissionAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignment) {
+}
+
+func (newState *PermissionAssignment) SyncEffectiveFieldsDuringRead(existingState PermissionAssignment) {
+}
+
 type PermissionAssignments struct {
 	// Array of permissions assignments defined for a workspace.
 	PermissionAssignments []PermissionAssignment `tfsdk:"permission_assignments" tf:"optional"`
+}
+
+func (newState *PermissionAssignments) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignments) {
+}
+
+func (newState *PermissionAssignments) SyncEffectiveFieldsDuringRead(existingState PermissionAssignments) {
 }
 
 type PermissionOutput struct {
@@ -599,10 +923,22 @@ type PermissionOutput struct {
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *PermissionOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionOutput) {
+}
+
+func (newState *PermissionOutput) SyncEffectiveFieldsDuringRead(existingState PermissionOutput) {
+}
+
 type PermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *PermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionsDescription) {
+}
+
+func (newState *PermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PermissionsDescription) {
 }
 
 type PermissionsRequest struct {
@@ -615,6 +951,12 @@ type PermissionsRequest struct {
 	// pipelines, queries, registered-models, repos, serving-endpoints, or
 	// warehouses.
 	RequestObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *PermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionsRequest) {
+}
+
+func (newState *PermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PermissionsRequest) {
 }
 
 // Information about the principal assigned to the workspace.
@@ -632,15 +974,33 @@ type PrincipalOutput struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *PrincipalOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrincipalOutput) {
+}
+
+func (newState *PrincipalOutput) SyncEffectiveFieldsDuringRead(existingState PrincipalOutput) {
+}
+
 type ResourceMeta struct {
 	// Identifier for group type. Can be local workspace group
 	// (`WorkspaceGroup`) or account group (`Group`).
 	ResourceType types.String `tfsdk:"resourceType" tf:"optional"`
 }
 
+func (newState *ResourceMeta) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResourceMeta) {
+}
+
+func (newState *ResourceMeta) SyncEffectiveFieldsDuringRead(existingState ResourceMeta) {
+}
+
 type Role struct {
 	// Role to assign to a principal or a list of principals on a resource.
 	Name types.String `tfsdk:"name" tf:""`
+}
+
+func (newState *Role) SyncEffectiveFieldsDuringCreateOrUpdate(plan Role) {
+}
+
+func (newState *Role) SyncEffectiveFieldsDuringRead(existingState Role) {
 }
 
 type RuleSetResponse struct {
@@ -652,6 +1012,12 @@ type RuleSetResponse struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
+func (newState *RuleSetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RuleSetResponse) {
+}
+
+func (newState *RuleSetResponse) SyncEffectiveFieldsDuringRead(existingState RuleSetResponse) {
+}
+
 type RuleSetUpdateRequest struct {
 	// The expected etag of the rule set to update. The update will fail if the
 	// value does not match the value that is stored in account access control
@@ -661,6 +1027,12 @@ type RuleSetUpdateRequest struct {
 	GrantRules []GrantRule `tfsdk:"grant_rules" tf:"optional"`
 	// Name of the rule set.
 	Name types.String `tfsdk:"name" tf:""`
+}
+
+func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RuleSetUpdateRequest) {
+}
+
+func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringRead(existingState RuleSetUpdateRequest) {
 }
 
 type ServicePrincipal struct {
@@ -687,7 +1059,19 @@ type ServicePrincipal struct {
 	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
 }
 
+func (newState *ServicePrincipal) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServicePrincipal) {
+}
+
+func (newState *ServicePrincipal) SyncEffectiveFieldsDuringRead(existingState ServicePrincipal) {
+}
+
 type UpdateResponse struct {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
 type UpdateRuleSetRequest struct {
@@ -695,6 +1079,12 @@ type UpdateRuleSetRequest struct {
 	Name types.String `tfsdk:"name" tf:""`
 
 	RuleSet []RuleSetUpdateRequest `tfsdk:"rule_set" tf:"object"`
+}
+
+func (newState *UpdateRuleSetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRuleSetRequest) {
+}
+
+func (newState *UpdateRuleSetRequest) SyncEffectiveFieldsDuringRead(existingState UpdateRuleSetRequest) {
 }
 
 type UpdateWorkspaceAssignments struct {
@@ -709,6 +1099,12 @@ type UpdateWorkspaceAssignments struct {
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// The workspace ID for the account.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *UpdateWorkspaceAssignments) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceAssignments) {
+}
+
+func (newState *UpdateWorkspaceAssignments) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceAssignments) {
 }
 
 type User struct {
@@ -745,7 +1141,19 @@ type User struct {
 	UserName types.String `tfsdk:"userName" tf:"optional"`
 }
 
+func (newState *User) SyncEffectiveFieldsDuringCreateOrUpdate(plan User) {
+}
+
+func (newState *User) SyncEffectiveFieldsDuringRead(existingState User) {
+}
+
 type WorkspacePermissions struct {
 	// Array of permissions defined for a workspace.
 	Permissions []PermissionOutput `tfsdk:"permissions" tf:"optional"`
+}
+
+func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspacePermissions) {
+}
+
+func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringRead(existingState WorkspacePermissions) {
 }

@@ -49,6 +49,7 @@ In addition to all arguments above, the following attributes are exported:
   * `detailed_state` - The state of the online table.
   * `message` - A text description of the current state of the online table.
 * `table_serving_url` - Data serving REST API URL for this table.
+* `unity_catalog_provisioning_state` - The provisioning state of the online table entity in Unity Catalog. This is distinct from the state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline may be in "PROVISIONING" as it runs asynchronously).
 
 ## Import
 

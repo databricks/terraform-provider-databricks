@@ -21,12 +21,24 @@ type AclItem struct {
 	Principal types.String `tfsdk:"principal" tf:""`
 }
 
+func (newState *AclItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan AclItem) {
+}
+
+func (newState *AclItem) SyncEffectiveFieldsDuringRead(existingState AclItem) {
+}
+
 type AzureKeyVaultSecretScopeMetadata struct {
 	// The DNS of the KeyVault
 	DnsName types.String `tfsdk:"dns_name" tf:""`
 	// The resource id of the azure KeyVault that user wants to associate the
 	// scope with.
 	ResourceId types.String `tfsdk:"resource_id" tf:""`
+}
+
+func (newState *AzureKeyVaultSecretScopeMetadata) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureKeyVaultSecretScopeMetadata) {
+}
+
+func (newState *AzureKeyVaultSecretScopeMetadata) SyncEffectiveFieldsDuringRead(existingState AzureKeyVaultSecretScopeMetadata) {
 }
 
 type CreateCredentialsRequest struct {
@@ -51,6 +63,12 @@ type CreateCredentialsRequest struct {
 	PersonalAccessToken types.String `tfsdk:"personal_access_token" tf:"optional"`
 }
 
+func (newState *CreateCredentialsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialsRequest) {
+}
+
+func (newState *CreateCredentialsRequest) SyncEffectiveFieldsDuringRead(existingState CreateCredentialsRequest) {
+}
+
 type CreateCredentialsResponse struct {
 	// ID of the credential object in the workspace.
 	CredentialId types.Int64 `tfsdk:"credential_id" tf:""`
@@ -59,6 +77,12 @@ type CreateCredentialsResponse struct {
 	// The username or email provided with your Git provider account and
 	// associated with the credential.
 	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
+}
+
+func (newState *CreateCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialsResponse) {
+}
+
+func (newState *CreateCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState CreateCredentialsResponse) {
 }
 
 type CreateRepoRequest struct {
@@ -76,6 +100,12 @@ type CreateRepoRequest struct {
 	SparseCheckout []SparseCheckout `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the Git repository to be linked.
 	Url types.String `tfsdk:"url" tf:""`
+}
+
+func (newState *CreateRepoRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRepoRequest) {
+}
+
+func (newState *CreateRepoRequest) SyncEffectiveFieldsDuringRead(existingState CreateRepoRequest) {
 }
 
 type CreateRepoResponse struct {
@@ -96,6 +126,12 @@ type CreateRepoResponse struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *CreateRepoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRepoResponse) {
+}
+
+func (newState *CreateRepoResponse) SyncEffectiveFieldsDuringRead(existingState CreateRepoResponse) {
+}
+
 type CreateScope struct {
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
 	BackendAzureKeyvault []AzureKeyVaultSecretScopeMetadata `tfsdk:"backend_azure_keyvault" tf:"optional,object"`
@@ -109,7 +145,19 @@ type CreateScope struct {
 	ScopeBackendType types.String `tfsdk:"scope_backend_type" tf:"optional"`
 }
 
+func (newState *CreateScope) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateScope) {
+}
+
+func (newState *CreateScope) SyncEffectiveFieldsDuringRead(existingState CreateScope) {
+}
+
 type CreateScopeResponse struct {
+}
+
+func (newState *CreateScopeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateScopeResponse) {
+}
+
+func (newState *CreateScopeResponse) SyncEffectiveFieldsDuringRead(existingState CreateScopeResponse) {
 }
 
 type CredentialInfo struct {
@@ -122,6 +170,12 @@ type CredentialInfo struct {
 	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
 }
 
+func (newState *CredentialInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CredentialInfo) {
+}
+
+func (newState *CredentialInfo) SyncEffectiveFieldsDuringRead(existingState CredentialInfo) {
+}
+
 type Delete struct {
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"path" tf:""`
@@ -132,6 +186,12 @@ type Delete struct {
 	Recursive types.Bool `tfsdk:"recursive" tf:"optional"`
 }
 
+func (newState *Delete) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete) {
+}
+
+func (newState *Delete) SyncEffectiveFieldsDuringRead(existingState Delete) {
+}
+
 type DeleteAcl struct {
 	// The principal to remove an existing ACL from.
 	Principal types.String `tfsdk:"principal" tf:""`
@@ -139,7 +199,19 @@ type DeleteAcl struct {
 	Scope types.String `tfsdk:"scope" tf:""`
 }
 
+func (newState *DeleteAcl) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAcl) {
+}
+
+func (newState *DeleteAcl) SyncEffectiveFieldsDuringRead(existingState DeleteAcl) {
+}
+
 type DeleteAclResponse struct {
+}
+
+func (newState *DeleteAclResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAclResponse) {
+}
+
+func (newState *DeleteAclResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAclResponse) {
 }
 
 // Delete a credential
@@ -148,7 +220,19 @@ type DeleteCredentialsRequest struct {
 	CredentialId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *DeleteCredentialsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCredentialsRequest) {
+}
+
+func (newState *DeleteCredentialsRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialsRequest) {
+}
+
 type DeleteCredentialsResponse struct {
+}
+
+func (newState *DeleteCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCredentialsResponse) {
+}
+
+func (newState *DeleteCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialsResponse) {
 }
 
 // Delete a repo
@@ -157,10 +241,28 @@ type DeleteRepoRequest struct {
 	RepoId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *DeleteRepoRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRepoRequest) {
+}
+
+func (newState *DeleteRepoRequest) SyncEffectiveFieldsDuringRead(existingState DeleteRepoRequest) {
+}
+
 type DeleteRepoResponse struct {
 }
 
+func (newState *DeleteRepoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRepoResponse) {
+}
+
+func (newState *DeleteRepoResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRepoResponse) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 type DeleteScope struct {
@@ -168,7 +270,19 @@ type DeleteScope struct {
 	Scope types.String `tfsdk:"scope" tf:""`
 }
 
+func (newState *DeleteScope) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteScope) {
+}
+
+func (newState *DeleteScope) SyncEffectiveFieldsDuringRead(existingState DeleteScope) {
+}
+
 type DeleteScopeResponse struct {
+}
+
+func (newState *DeleteScopeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteScopeResponse) {
+}
+
+func (newState *DeleteScopeResponse) SyncEffectiveFieldsDuringRead(existingState DeleteScopeResponse) {
 }
 
 type DeleteSecret struct {
@@ -178,7 +292,19 @@ type DeleteSecret struct {
 	Scope types.String `tfsdk:"scope" tf:""`
 }
 
+func (newState *DeleteSecret) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSecret) {
+}
+
+func (newState *DeleteSecret) SyncEffectiveFieldsDuringRead(existingState DeleteSecret) {
+}
+
 type DeleteSecretResponse struct {
+}
+
+func (newState *DeleteSecretResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSecretResponse) {
+}
+
+func (newState *DeleteSecretResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSecretResponse) {
 }
 
 // Export a workspace object
@@ -203,12 +329,24 @@ type ExportRequest struct {
 	Path types.String `tfsdk:"-"`
 }
 
+func (newState *ExportRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportRequest) {
+}
+
+func (newState *ExportRequest) SyncEffectiveFieldsDuringRead(existingState ExportRequest) {
+}
+
 type ExportResponse struct {
 	// The base64-encoded content. If the limit (10MB) is exceeded, exception
 	// with error code **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown.
 	Content types.String `tfsdk:"content" tf:"optional"`
 	// The file type of the exported file.
 	FileType types.String `tfsdk:"file_type" tf:"optional"`
+}
+
+func (newState *ExportResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportResponse) {
+}
+
+func (newState *ExportResponse) SyncEffectiveFieldsDuringRead(existingState ExportResponse) {
 }
 
 // Get secret ACL details
@@ -219,10 +357,22 @@ type GetAclRequest struct {
 	Scope types.String `tfsdk:"-"`
 }
 
+func (newState *GetAclRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAclRequest) {
+}
+
+func (newState *GetAclRequest) SyncEffectiveFieldsDuringRead(existingState GetAclRequest) {
+}
+
 // Get a credential entry
 type GetCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetCredentialsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialsRequest) {
+}
+
+func (newState *GetCredentialsRequest) SyncEffectiveFieldsDuringRead(existingState GetCredentialsRequest) {
 }
 
 type GetCredentialsResponse struct {
@@ -235,15 +385,33 @@ type GetCredentialsResponse struct {
 	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
 }
 
+func (newState *GetCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialsResponse) {
+}
+
+func (newState *GetCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState GetCredentialsResponse) {
+}
+
 // Get repo permission levels
 type GetRepoPermissionLevelsRequest struct {
 	// The repo for which to get or manage permissions.
 	RepoId types.String `tfsdk:"-"`
 }
 
+func (newState *GetRepoPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoPermissionLevelsRequest) {
+}
+
+func (newState *GetRepoPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetRepoPermissionLevelsRequest) {
+}
+
 type GetRepoPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []RepoPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetRepoPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoPermissionLevelsResponse) {
+}
+
+func (newState *GetRepoPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetRepoPermissionLevelsResponse) {
 }
 
 // Get repo permissions
@@ -252,10 +420,22 @@ type GetRepoPermissionsRequest struct {
 	RepoId types.String `tfsdk:"-"`
 }
 
+func (newState *GetRepoPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoPermissionsRequest) {
+}
+
+func (newState *GetRepoPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetRepoPermissionsRequest) {
+}
+
 // Get a repo
 type GetRepoRequest struct {
 	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetRepoRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoRequest) {
+}
+
+func (newState *GetRepoRequest) SyncEffectiveFieldsDuringRead(existingState GetRepoRequest) {
 }
 
 type GetRepoResponse struct {
@@ -275,12 +455,24 @@ type GetRepoResponse struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *GetRepoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoResponse) {
+}
+
+func (newState *GetRepoResponse) SyncEffectiveFieldsDuringRead(existingState GetRepoResponse) {
+}
+
 // Get a secret
 type GetSecretRequest struct {
 	// The key to fetch secret for.
 	Key types.String `tfsdk:"-"`
 	// The name of the scope to fetch secret information from.
 	Scope types.String `tfsdk:"-"`
+}
+
+func (newState *GetSecretRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSecretRequest) {
+}
+
+func (newState *GetSecretRequest) SyncEffectiveFieldsDuringRead(existingState GetSecretRequest) {
 }
 
 type GetSecretResponse struct {
@@ -290,10 +482,22 @@ type GetSecretResponse struct {
 	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
+func (newState *GetSecretResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSecretResponse) {
+}
+
+func (newState *GetSecretResponse) SyncEffectiveFieldsDuringRead(existingState GetSecretResponse) {
+}
+
 // Get status
 type GetStatusRequest struct {
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"-"`
+}
+
+func (newState *GetStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetStatusRequest) {
+}
+
+func (newState *GetStatusRequest) SyncEffectiveFieldsDuringRead(existingState GetStatusRequest) {
 }
 
 // Get workspace object permission levels
@@ -304,9 +508,21 @@ type GetWorkspaceObjectPermissionLevelsRequest struct {
 	WorkspaceObjectType types.String `tfsdk:"-"`
 }
 
+func (newState *GetWorkspaceObjectPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceObjectPermissionLevelsRequest) {
+}
+
+func (newState *GetWorkspaceObjectPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceObjectPermissionLevelsRequest) {
+}
+
 type GetWorkspaceObjectPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []WorkspaceObjectPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetWorkspaceObjectPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceObjectPermissionLevelsResponse) {
+}
+
+func (newState *GetWorkspaceObjectPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceObjectPermissionLevelsResponse) {
 }
 
 // Get workspace object permissions
@@ -315,6 +531,12 @@ type GetWorkspaceObjectPermissionsRequest struct {
 	WorkspaceObjectId types.String `tfsdk:"-"`
 	// The workspace object type for which to get or manage permissions.
 	WorkspaceObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *GetWorkspaceObjectPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceObjectPermissionsRequest) {
+}
+
+func (newState *GetWorkspaceObjectPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceObjectPermissionsRequest) {
 }
 
 type Import struct {
@@ -350,7 +572,19 @@ type Import struct {
 	Path types.String `tfsdk:"path" tf:""`
 }
 
+func (newState *Import) SyncEffectiveFieldsDuringCreateOrUpdate(plan Import) {
+}
+
+func (newState *Import) SyncEffectiveFieldsDuringRead(existingState Import) {
+}
+
 type ImportResponse struct {
+}
+
+func (newState *ImportResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ImportResponse) {
+}
+
+func (newState *ImportResponse) SyncEffectiveFieldsDuringRead(existingState ImportResponse) {
 }
 
 // Lists ACLs
@@ -359,14 +593,32 @@ type ListAclsRequest struct {
 	Scope types.String `tfsdk:"-"`
 }
 
+func (newState *ListAclsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAclsRequest) {
+}
+
+func (newState *ListAclsRequest) SyncEffectiveFieldsDuringRead(existingState ListAclsRequest) {
+}
+
 type ListAclsResponse struct {
 	// The associated ACLs rule applied to principals in the given scope.
 	Items []AclItem `tfsdk:"items" tf:"optional"`
 }
 
+func (newState *ListAclsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAclsResponse) {
+}
+
+func (newState *ListAclsResponse) SyncEffectiveFieldsDuringRead(existingState ListAclsResponse) {
+}
+
 type ListCredentialsResponse struct {
 	// List of credentials.
 	Credentials []CredentialInfo `tfsdk:"credentials" tf:"optional"`
+}
+
+func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCredentialsResponse) {
+}
+
+func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState ListCredentialsResponse) {
 }
 
 // Get repos
@@ -381,6 +633,12 @@ type ListReposRequest struct {
 	PathPrefix types.String `tfsdk:"-"`
 }
 
+func (newState *ListReposRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListReposRequest) {
+}
+
+func (newState *ListReposRequest) SyncEffectiveFieldsDuringRead(existingState ListReposRequest) {
+}
+
 type ListReposResponse struct {
 	// Token that can be specified as a query parameter to the `GET /repos`
 	// endpoint to retrieve the next page of results.
@@ -389,14 +647,32 @@ type ListReposResponse struct {
 	Repos []RepoInfo `tfsdk:"repos" tf:"optional"`
 }
 
+func (newState *ListReposResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListReposResponse) {
+}
+
+func (newState *ListReposResponse) SyncEffectiveFieldsDuringRead(existingState ListReposResponse) {
+}
+
 type ListResponse struct {
 	// List of objects.
 	Objects []ObjectInfo `tfsdk:"objects" tf:"optional"`
 }
 
+func (newState *ListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListResponse) {
+}
+
+func (newState *ListResponse) SyncEffectiveFieldsDuringRead(existingState ListResponse) {
+}
+
 type ListScopesResponse struct {
 	// The available secret scopes.
 	Scopes []SecretScope `tfsdk:"scopes" tf:"optional"`
+}
+
+func (newState *ListScopesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListScopesResponse) {
+}
+
+func (newState *ListScopesResponse) SyncEffectiveFieldsDuringRead(existingState ListScopesResponse) {
 }
 
 // List secret keys
@@ -405,9 +681,21 @@ type ListSecretsRequest struct {
 	Scope types.String `tfsdk:"-"`
 }
 
+func (newState *ListSecretsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSecretsRequest) {
+}
+
+func (newState *ListSecretsRequest) SyncEffectiveFieldsDuringRead(existingState ListSecretsRequest) {
+}
+
 type ListSecretsResponse struct {
 	// Metadata information of all secrets contained within the given scope.
 	Secrets []SecretMetadata `tfsdk:"secrets" tf:"optional"`
+}
+
+func (newState *ListSecretsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSecretsResponse) {
+}
+
+func (newState *ListSecretsResponse) SyncEffectiveFieldsDuringRead(existingState ListSecretsResponse) {
 }
 
 // List contents
@@ -418,6 +706,12 @@ type ListWorkspaceRequest struct {
 	Path types.String `tfsdk:"-"`
 }
 
+func (newState *ListWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListWorkspaceRequest) {
+}
+
+func (newState *ListWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState ListWorkspaceRequest) {
+}
+
 type Mkdirs struct {
 	// The absolute path of the directory. If the parent directories do not
 	// exist, it will also create them. If the directory already exists, this
@@ -425,7 +719,19 @@ type Mkdirs struct {
 	Path types.String `tfsdk:"path" tf:""`
 }
 
+func (newState *Mkdirs) SyncEffectiveFieldsDuringCreateOrUpdate(plan Mkdirs) {
+}
+
+func (newState *Mkdirs) SyncEffectiveFieldsDuringRead(existingState Mkdirs) {
+}
+
 type MkdirsResponse struct {
+}
+
+func (newState *MkdirsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkdirsResponse) {
+}
+
+func (newState *MkdirsResponse) SyncEffectiveFieldsDuringRead(existingState MkdirsResponse) {
 }
 
 type ObjectInfo struct {
@@ -453,6 +759,12 @@ type ObjectInfo struct {
 	Size types.Int64 `tfsdk:"size" tf:"optional"`
 }
 
+func (newState *ObjectInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ObjectInfo) {
+}
+
+func (newState *ObjectInfo) SyncEffectiveFieldsDuringRead(existingState ObjectInfo) {
+}
+
 type PutAcl struct {
 	// The permission level applied to the principal.
 	Permission types.String `tfsdk:"permission" tf:""`
@@ -462,7 +774,19 @@ type PutAcl struct {
 	Scope types.String `tfsdk:"scope" tf:""`
 }
 
+func (newState *PutAcl) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAcl) {
+}
+
+func (newState *PutAcl) SyncEffectiveFieldsDuringRead(existingState PutAcl) {
+}
+
 type PutAclResponse struct {
+}
+
+func (newState *PutAclResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAclResponse) {
+}
+
+func (newState *PutAclResponse) SyncEffectiveFieldsDuringRead(existingState PutAclResponse) {
 }
 
 type PutSecret struct {
@@ -476,7 +800,19 @@ type PutSecret struct {
 	StringValue types.String `tfsdk:"string_value" tf:"optional"`
 }
 
+func (newState *PutSecret) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutSecret) {
+}
+
+func (newState *PutSecret) SyncEffectiveFieldsDuringRead(existingState PutSecret) {
+}
+
 type PutSecretResponse struct {
+}
+
+func (newState *PutSecretResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutSecretResponse) {
+}
+
+func (newState *PutSecretResponse) SyncEffectiveFieldsDuringRead(existingState PutSecretResponse) {
 }
 
 type RepoAccessControlRequest struct {
@@ -490,6 +826,12 @@ type RepoAccessControlRequest struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *RepoAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoAccessControlRequest) {
+}
+
+func (newState *RepoAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState RepoAccessControlRequest) {
+}
+
 type RepoAccessControlResponse struct {
 	// All permissions.
 	AllPermissions []RepoPermission `tfsdk:"all_permissions" tf:"optional"`
@@ -501,6 +843,12 @@ type RepoAccessControlResponse struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *RepoAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoAccessControlResponse) {
+}
+
+func (newState *RepoAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState RepoAccessControlResponse) {
 }
 
 // Git folder (repo) information.
@@ -521,12 +869,24 @@ type RepoInfo struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *RepoInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInfo) {
+}
+
+func (newState *RepoInfo) SyncEffectiveFieldsDuringRead(existingState RepoInfo) {
+}
+
 type RepoPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *RepoPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermission) {
+}
+
+func (newState *RepoPermission) SyncEffectiveFieldsDuringRead(existingState RepoPermission) {
 }
 
 type RepoPermissions struct {
@@ -537,10 +897,22 @@ type RepoPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *RepoPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermissions) {
+}
+
+func (newState *RepoPermissions) SyncEffectiveFieldsDuringRead(existingState RepoPermissions) {
+}
+
 type RepoPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *RepoPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermissionsDescription) {
+}
+
+func (newState *RepoPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState RepoPermissionsDescription) {
 }
 
 type RepoPermissionsRequest struct {
@@ -549,11 +921,23 @@ type RepoPermissionsRequest struct {
 	RepoId types.String `tfsdk:"-"`
 }
 
+func (newState *RepoPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermissionsRequest) {
+}
+
+func (newState *RepoPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState RepoPermissionsRequest) {
+}
+
 type SecretMetadata struct {
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// The last updated timestamp (in milliseconds) for the secret.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+}
+
+func (newState *SecretMetadata) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretMetadata) {
+}
+
+func (newState *SecretMetadata) SyncEffectiveFieldsDuringRead(existingState SecretMetadata) {
 }
 
 type SecretScope struct {
@@ -565,6 +949,12 @@ type SecretScope struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
+func (newState *SecretScope) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretScope) {
+}
+
+func (newState *SecretScope) SyncEffectiveFieldsDuringRead(existingState SecretScope) {
+}
+
 // Sparse checkout configuration, it contains options like cone patterns.
 type SparseCheckout struct {
 	// List of sparse checkout cone patterns, see [cone mode handling] for
@@ -574,6 +964,12 @@ type SparseCheckout struct {
 	Patterns []types.String `tfsdk:"patterns" tf:"optional"`
 }
 
+func (newState *SparseCheckout) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparseCheckout) {
+}
+
+func (newState *SparseCheckout) SyncEffectiveFieldsDuringRead(existingState SparseCheckout) {
+}
+
 // Sparse checkout configuration, it contains options like cone patterns.
 type SparseCheckoutUpdate struct {
 	// List of sparse checkout cone patterns, see [cone mode handling] for
@@ -581,6 +977,12 @@ type SparseCheckoutUpdate struct {
 	//
 	// [cone mode handling]: https://git-scm.com/docs/git-sparse-checkout#_internalscone_mode_handling
 	Patterns []types.String `tfsdk:"patterns" tf:"optional"`
+}
+
+func (newState *SparseCheckoutUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparseCheckoutUpdate) {
+}
+
+func (newState *SparseCheckoutUpdate) SyncEffectiveFieldsDuringRead(existingState SparseCheckoutUpdate) {
 }
 
 type UpdateCredentialsRequest struct {
@@ -607,7 +1009,19 @@ type UpdateCredentialsRequest struct {
 	PersonalAccessToken types.String `tfsdk:"personal_access_token" tf:"optional"`
 }
 
+func (newState *UpdateCredentialsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCredentialsRequest) {
+}
+
+func (newState *UpdateCredentialsRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCredentialsRequest) {
+}
+
 type UpdateCredentialsResponse struct {
+}
+
+func (newState *UpdateCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCredentialsResponse) {
+}
+
+func (newState *UpdateCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState UpdateCredentialsResponse) {
 }
 
 type UpdateRepoRequest struct {
@@ -625,7 +1039,19 @@ type UpdateRepoRequest struct {
 	Tag types.String `tfsdk:"tag" tf:"optional"`
 }
 
+func (newState *UpdateRepoRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRepoRequest) {
+}
+
+func (newState *UpdateRepoRequest) SyncEffectiveFieldsDuringRead(existingState UpdateRepoRequest) {
+}
+
 type UpdateRepoResponse struct {
+}
+
+func (newState *UpdateRepoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRepoResponse) {
+}
+
+func (newState *UpdateRepoResponse) SyncEffectiveFieldsDuringRead(existingState UpdateRepoResponse) {
 }
 
 type WorkspaceObjectAccessControlRequest struct {
@@ -637,6 +1063,12 @@ type WorkspaceObjectAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *WorkspaceObjectAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectAccessControlRequest) {
+}
+
+func (newState *WorkspaceObjectAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectAccessControlRequest) {
 }
 
 type WorkspaceObjectAccessControlResponse struct {
@@ -652,12 +1084,24 @@ type WorkspaceObjectAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *WorkspaceObjectAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectAccessControlResponse) {
+}
+
+func (newState *WorkspaceObjectAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectAccessControlResponse) {
+}
+
 type WorkspaceObjectPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *WorkspaceObjectPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermission) {
+}
+
+func (newState *WorkspaceObjectPermission) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermission) {
 }
 
 type WorkspaceObjectPermissions struct {
@@ -668,10 +1112,22 @@ type WorkspaceObjectPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *WorkspaceObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissions) {
+}
+
+func (newState *WorkspaceObjectPermissions) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermissions) {
+}
+
 type WorkspaceObjectPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *WorkspaceObjectPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissionsDescription) {
+}
+
+func (newState *WorkspaceObjectPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermissionsDescription) {
 }
 
 type WorkspaceObjectPermissionsRequest struct {
@@ -680,4 +1136,10 @@ type WorkspaceObjectPermissionsRequest struct {
 	WorkspaceObjectId types.String `tfsdk:"-"`
 	// The workspace object type for which to get or manage permissions.
 	WorkspaceObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *WorkspaceObjectPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissionsRequest) {
+}
+
+func (newState *WorkspaceObjectPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermissionsRequest) {
 }

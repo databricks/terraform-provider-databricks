@@ -76,6 +76,12 @@ type CreatePipeline struct {
 	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional,object"`
 }
 
+func (newState *CreatePipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipeline) {
+}
+
+func (newState *CreatePipeline) SyncEffectiveFieldsDuringRead(existingState CreatePipeline) {
+}
+
 type CreatePipelineResponse struct {
 	// Only returned when dry_run is true.
 	EffectiveSettings []PipelineSpec `tfsdk:"effective_settings" tf:"optional,object"`
@@ -84,10 +90,22 @@ type CreatePipelineResponse struct {
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
 }
 
+func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipelineResponse) {
+}
+
+func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringRead(existingState CreatePipelineResponse) {
+}
+
 type CronTrigger struct {
 	QuartzCronSchedule types.String `tfsdk:"quartz_cron_schedule" tf:"optional"`
 
 	TimezoneId types.String `tfsdk:"timezone_id" tf:"optional"`
+}
+
+func (newState *CronTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronTrigger) {
+}
+
+func (newState *CronTrigger) SyncEffectiveFieldsDuringRead(existingState CronTrigger) {
 }
 
 type DataPlaneId struct {
@@ -97,12 +115,30 @@ type DataPlaneId struct {
 	SeqNo types.Int64 `tfsdk:"seq_no" tf:"optional"`
 }
 
+func (newState *DataPlaneId) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneId) {
+}
+
+func (newState *DataPlaneId) SyncEffectiveFieldsDuringRead(existingState DataPlaneId) {
+}
+
 // Delete a pipeline
 type DeletePipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *DeletePipelineRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineRequest) {
+}
+
+func (newState *DeletePipelineRequest) SyncEffectiveFieldsDuringRead(existingState DeletePipelineRequest) {
+}
+
 type DeletePipelineResponse struct {
+}
+
+func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineResponse) {
+}
+
+func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringRead(existingState DeletePipelineResponse) {
 }
 
 type EditPipeline struct {
@@ -170,7 +206,19 @@ type EditPipeline struct {
 	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional,object"`
 }
 
+func (newState *EditPipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipeline) {
+}
+
+func (newState *EditPipeline) SyncEffectiveFieldsDuringRead(existingState EditPipeline) {
+}
+
 type EditPipelineResponse struct {
+}
+
+func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipelineResponse) {
+}
+
+func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringRead(existingState EditPipelineResponse) {
 }
 
 type ErrorDetail struct {
@@ -180,9 +228,21 @@ type ErrorDetail struct {
 	Fatal types.Bool `tfsdk:"fatal" tf:"optional"`
 }
 
+func (newState *ErrorDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan ErrorDetail) {
+}
+
+func (newState *ErrorDetail) SyncEffectiveFieldsDuringRead(existingState ErrorDetail) {
+}
+
 type FileLibrary struct {
 	// The absolute path of the file.
 	Path types.String `tfsdk:"path" tf:"optional"`
+}
+
+func (newState *FileLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileLibrary) {
+}
+
+func (newState *FileLibrary) SyncEffectiveFieldsDuringRead(existingState FileLibrary) {
 }
 
 type Filters struct {
@@ -192,15 +252,33 @@ type Filters struct {
 	Include []types.String `tfsdk:"include" tf:"optional"`
 }
 
+func (newState *Filters) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filters) {
+}
+
+func (newState *Filters) SyncEffectiveFieldsDuringRead(existingState Filters) {
+}
+
 // Get pipeline permission levels
 type GetPipelinePermissionLevelsRequest struct {
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPipelinePermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsRequest) {
+}
+
+func (newState *GetPipelinePermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsRequest) {
+}
+
 type GetPipelinePermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []PipelinePermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsResponse) {
+}
+
+func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsResponse) {
 }
 
 // Get pipeline permissions
@@ -209,9 +287,21 @@ type GetPipelinePermissionsRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionsRequest) {
+}
+
+func (newState *GetPipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionsRequest) {
+}
+
 // Get a pipeline
 type GetPipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineRequest) {
+}
+
+func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelineRequest) {
 }
 
 type GetPipelineResponse struct {
@@ -243,6 +333,12 @@ type GetPipelineResponse struct {
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
+func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineResponse) {
+}
+
+func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelineResponse) {
+}
+
 // Get a pipeline update
 type GetUpdateRequest struct {
 	// The ID of the pipeline.
@@ -251,16 +347,36 @@ type GetUpdateRequest struct {
 	UpdateId types.String `tfsdk:"-"`
 }
 
+func (newState *GetUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateRequest) {
+}
+
+func (newState *GetUpdateRequest) SyncEffectiveFieldsDuringRead(existingState GetUpdateRequest) {
+}
+
 type GetUpdateResponse struct {
 	// The current update info.
 	Update []UpdateInfo `tfsdk:"update" tf:"optional,object"`
 }
 
+func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateResponse) {
+}
+
+func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringRead(existingState GetUpdateResponse) {
+}
+
 type IngestionConfig struct {
+	// Select tables from a specific source report.
+	Report []ReportSpec `tfsdk:"report" tf:"optional,object"`
 	// Select tables from a specific source schema.
 	Schema []SchemaSpec `tfsdk:"schema" tf:"optional,object"`
 	// Select tables from a specific source table.
 	Table []TableSpec `tfsdk:"table" tf:"optional,object"`
+}
+
+func (newState *IngestionConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionConfig) {
+}
+
+func (newState *IngestionConfig) SyncEffectiveFieldsDuringRead(existingState IngestionConfig) {
 }
 
 type IngestionGatewayPipelineDefinition struct {
@@ -280,6 +396,12 @@ type IngestionGatewayPipelineDefinition struct {
 	GatewayStorageSchema types.String `tfsdk:"gateway_storage_schema" tf:"optional"`
 }
 
+func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionGatewayPipelineDefinition) {
+}
+
+func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionGatewayPipelineDefinition) {
+}
+
 type IngestionPipelineDefinition struct {
 	// Immutable. The Unity Catalog connection this ingestion pipeline uses to
 	// communicate with the source. Specify either ingestion_gateway_id or
@@ -295,6 +417,12 @@ type IngestionPipelineDefinition struct {
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
 	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional,object"`
+}
+
+func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinition) {
+}
+
+func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionPipelineDefinition) {
 }
 
 // List pipeline events
@@ -324,6 +452,12 @@ type ListPipelineEventsRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsRequest) {
+}
+
+func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsRequest) {
+}
+
 type ListPipelineEventsResponse struct {
 	// The list of events matching the request criteria.
 	Events []PipelineEvent `tfsdk:"events" tf:"optional"`
@@ -331,6 +465,12 @@ type ListPipelineEventsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// If present, a token to fetch the previous page of events.
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+}
+
+func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsResponse) {
+}
+
+func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsResponse) {
 }
 
 // List pipelines
@@ -358,11 +498,23 @@ type ListPipelinesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesRequest) {
+}
+
+func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringRead(existingState ListPipelinesRequest) {
+}
+
 type ListPipelinesResponse struct {
 	// If present, a token to fetch the next page of events.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// The list of events matching the request criteria.
 	Statuses []PipelineStateInfo `tfsdk:"statuses" tf:"optional"`
+}
+
+func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesResponse) {
+}
+
+func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelinesResponse) {
 }
 
 // List pipeline updates
@@ -377,6 +529,12 @@ type ListUpdatesRequest struct {
 	UntilUpdateId types.String `tfsdk:"-"`
 }
 
+func (newState *ListUpdatesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesRequest) {
+}
+
+func (newState *ListUpdatesRequest) SyncEffectiveFieldsDuringRead(existingState ListUpdatesRequest) {
+}
+
 type ListUpdatesResponse struct {
 	// If present, then there are more results, and this a token to be used in a
 	// subsequent request to fetch the next page.
@@ -388,12 +546,30 @@ type ListUpdatesResponse struct {
 	Updates []UpdateInfo `tfsdk:"updates" tf:"optional"`
 }
 
+func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesResponse) {
+}
+
+func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringRead(existingState ListUpdatesResponse) {
+}
+
 type ManualTrigger struct {
+}
+
+func (newState *ManualTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan ManualTrigger) {
+}
+
+func (newState *ManualTrigger) SyncEffectiveFieldsDuringRead(existingState ManualTrigger) {
 }
 
 type NotebookLibrary struct {
 	// The absolute path of the notebook.
 	Path types.String `tfsdk:"path" tf:"optional"`
+}
+
+func (newState *NotebookLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookLibrary) {
+}
+
+func (newState *NotebookLibrary) SyncEffectiveFieldsDuringRead(existingState NotebookLibrary) {
 }
 
 type Notifications struct {
@@ -407,6 +583,12 @@ type Notifications struct {
 	Alerts []types.String `tfsdk:"alerts" tf:"optional"`
 	// A list of email addresses notified when a configured alert is triggered.
 	EmailRecipients []types.String `tfsdk:"email_recipients" tf:"optional"`
+}
+
+func (newState *Notifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan Notifications) {
+}
+
+func (newState *Notifications) SyncEffectiveFieldsDuringRead(existingState Notifications) {
 }
 
 type Origin struct {
@@ -447,6 +629,12 @@ type Origin struct {
 	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
 }
 
+func (newState *Origin) SyncEffectiveFieldsDuringCreateOrUpdate(plan Origin) {
+}
+
+func (newState *Origin) SyncEffectiveFieldsDuringRead(existingState Origin) {
+}
+
 type PipelineAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -456,6 +644,12 @@ type PipelineAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlRequest) {
+}
+
+func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlRequest) {
 }
 
 type PipelineAccessControlResponse struct {
@@ -469,6 +663,12 @@ type PipelineAccessControlResponse struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlResponse) {
+}
+
+func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlResponse) {
 }
 
 type PipelineCluster struct {
@@ -568,6 +768,12 @@ type PipelineCluster struct {
 	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
 }
 
+func (newState *PipelineCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineCluster) {
+}
+
+func (newState *PipelineCluster) SyncEffectiveFieldsDuringRead(existingState PipelineCluster) {
+}
+
 type PipelineClusterAutoscale struct {
 	// The maximum number of workers to which the cluster can scale up when
 	// overloaded. `max_workers` must be strictly greater than `min_workers`.
@@ -584,11 +790,23 @@ type PipelineClusterAutoscale struct {
 	Mode types.String `tfsdk:"mode" tf:"optional"`
 }
 
+func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineClusterAutoscale) {
+}
+
+func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringRead(existingState PipelineClusterAutoscale) {
+}
+
 type PipelineDeployment struct {
 	// The deployment method that manages the pipeline.
 	Kind types.String `tfsdk:"kind" tf:"optional"`
 	// The path to the file containing metadata about the deployment.
 	MetadataFilePath types.String `tfsdk:"metadata_file_path" tf:"optional"`
+}
+
+func (newState *PipelineDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineDeployment) {
+}
+
+func (newState *PipelineDeployment) SyncEffectiveFieldsDuringRead(existingState PipelineDeployment) {
 }
 
 type PipelineEvent struct {
@@ -612,6 +830,12 @@ type PipelineEvent struct {
 	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
 }
 
+func (newState *PipelineEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineEvent) {
+}
+
+func (newState *PipelineEvent) SyncEffectiveFieldsDuringRead(existingState PipelineEvent) {
+}
+
 type PipelineLibrary struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
@@ -627,12 +851,24 @@ type PipelineLibrary struct {
 	Whl types.String `tfsdk:"whl" tf:"optional"`
 }
 
+func (newState *PipelineLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineLibrary) {
+}
+
+func (newState *PipelineLibrary) SyncEffectiveFieldsDuringRead(existingState PipelineLibrary) {
+}
+
 type PipelinePermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *PipelinePermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermission) {
+}
+
+func (newState *PipelinePermission) SyncEffectiveFieldsDuringRead(existingState PipelinePermission) {
 }
 
 type PipelinePermissions struct {
@@ -643,16 +879,34 @@ type PipelinePermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *PipelinePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissions) {
+}
+
+func (newState *PipelinePermissions) SyncEffectiveFieldsDuringRead(existingState PipelinePermissions) {
+}
+
 type PipelinePermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsDescription) {
+}
+
+func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsDescription) {
+}
+
 type PipelinePermissionsRequest struct {
 	AccessControlList []PipelineAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsRequest) {
+}
+
+func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsRequest) {
 }
 
 type PipelineSpec struct {
@@ -711,6 +965,12 @@ type PipelineSpec struct {
 	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional,object"`
 }
 
+func (newState *PipelineSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineSpec) {
+}
+
+func (newState *PipelineSpec) SyncEffectiveFieldsDuringRead(existingState PipelineSpec) {
+}
+
 type PipelineStateInfo struct {
 	// The unique identifier of the cluster running the pipeline.
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
@@ -732,10 +992,44 @@ type PipelineStateInfo struct {
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
+func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineStateInfo) {
+}
+
+func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringRead(existingState PipelineStateInfo) {
+}
+
 type PipelineTrigger struct {
 	Cron []CronTrigger `tfsdk:"cron" tf:"optional,object"`
 
 	Manual []ManualTrigger `tfsdk:"manual" tf:"optional,object"`
+}
+
+func (newState *PipelineTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTrigger) {
+}
+
+func (newState *PipelineTrigger) SyncEffectiveFieldsDuringRead(existingState PipelineTrigger) {
+}
+
+type ReportSpec struct {
+	// Required. Destination catalog to store table.
+	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
+	// Required. Destination schema to store table.
+	DestinationSchema types.String `tfsdk:"destination_schema" tf:"optional"`
+	// Required. Destination table name. The pipeline fails if a table with that
+	// name already exists.
+	DestinationTable types.String `tfsdk:"destination_table" tf:"optional"`
+	// Required. Report URL in the source system.
+	SourceUrl types.String `tfsdk:"source_url" tf:"optional"`
+	// Configuration settings to control the ingestion of tables. These settings
+	// override the table_configuration defined in the
+	// IngestionPipelineDefinition object.
+	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional,object"`
+}
+
+func (newState *ReportSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportSpec) {
+}
+
+func (newState *ReportSpec) SyncEffectiveFieldsDuringRead(existingState ReportSpec) {
 }
 
 type SchemaSpec struct {
@@ -756,11 +1050,23 @@ type SchemaSpec struct {
 	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional,object"`
 }
 
+func (newState *SchemaSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaSpec) {
+}
+
+func (newState *SchemaSpec) SyncEffectiveFieldsDuringRead(existingState SchemaSpec) {
+}
+
 type Sequencing struct {
 	// A sequence number, unique and increasing within the control plane.
 	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no" tf:"optional"`
 	// the ID assigned by the data plane.
 	DataPlaneId []DataPlaneId `tfsdk:"data_plane_id" tf:"optional,object"`
+}
+
+func (newState *Sequencing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sequencing) {
+}
+
+func (newState *Sequencing) SyncEffectiveFieldsDuringRead(existingState Sequencing) {
 }
 
 type SerializedException struct {
@@ -772,6 +1078,12 @@ type SerializedException struct {
 	Stack []StackFrame `tfsdk:"stack" tf:"optional"`
 }
 
+func (newState *SerializedException) SyncEffectiveFieldsDuringCreateOrUpdate(plan SerializedException) {
+}
+
+func (newState *SerializedException) SyncEffectiveFieldsDuringRead(existingState SerializedException) {
+}
+
 type StackFrame struct {
 	// Class from which the method call originated
 	DeclaringClass types.String `tfsdk:"declaring_class" tf:"optional"`
@@ -781,6 +1093,12 @@ type StackFrame struct {
 	LineNumber types.Int64 `tfsdk:"line_number" tf:"optional"`
 	// Name of the method which was called
 	MethodName types.String `tfsdk:"method_name" tf:"optional"`
+}
+
+func (newState *StackFrame) SyncEffectiveFieldsDuringCreateOrUpdate(plan StackFrame) {
+}
+
+func (newState *StackFrame) SyncEffectiveFieldsDuringRead(existingState StackFrame) {
 }
 
 type StartUpdate struct {
@@ -804,11 +1122,29 @@ type StartUpdate struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
 }
 
+func (newState *StartUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdate) {
+}
+
+func (newState *StartUpdate) SyncEffectiveFieldsDuringRead(existingState StartUpdate) {
+}
+
 type StartUpdateResponse struct {
 	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
 }
 
+func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdateResponse) {
+}
+
+func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringRead(existingState StartUpdateResponse) {
+}
+
 type StopPipelineResponse struct {
+}
+
+func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopPipelineResponse) {
+}
+
+func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringRead(existingState StopPipelineResponse) {
 }
 
 // Stop a pipeline
@@ -816,12 +1152,18 @@ type StopRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *StopRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopRequest) {
+}
+
+func (newState *StopRequest) SyncEffectiveFieldsDuringRead(existingState StopRequest) {
+}
+
 type TableSpec struct {
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
 	// Required. Destination schema to store table.
 	DestinationSchema types.String `tfsdk:"destination_schema" tf:"optional"`
-	// Optional. Destination table name. The pipeline fails If a table with that
+	// Optional. Destination table name. The pipeline fails if a table with that
 	// name already exists. If not set, the source table name is used.
 	DestinationTable types.String `tfsdk:"destination_table" tf:"optional"`
 	// Source catalog name. Might be optional depending on the type of source.
@@ -837,6 +1179,12 @@ type TableSpec struct {
 	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional,object"`
 }
 
+func (newState *TableSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpec) {
+}
+
+func (newState *TableSpec) SyncEffectiveFieldsDuringRead(existingState TableSpec) {
+}
+
 type TableSpecificConfig struct {
 	// The primary key of the table used to apply changes.
 	PrimaryKeys []types.String `tfsdk:"primary_keys" tf:"optional"`
@@ -845,6 +1193,16 @@ type TableSpecificConfig struct {
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields" tf:"optional"`
 	// The SCD type to use to ingest the table.
 	ScdType types.String `tfsdk:"scd_type" tf:"optional"`
+	// The column names specifying the logical order of events in the source
+	// data. Delta Live Tables uses this sequencing to handle change events that
+	// arrive out of order.
+	SequenceBy []types.String `tfsdk:"sequence_by" tf:"optional"`
+}
+
+func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpecificConfig) {
+}
+
+func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringRead(existingState TableSpecificConfig) {
 }
 
 type UpdateInfo struct {
@@ -880,10 +1238,22 @@ type UpdateInfo struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
 }
 
+func (newState *UpdateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInfo) {
+}
+
+func (newState *UpdateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateInfo) {
+}
+
 type UpdateStateInfo struct {
 	CreationTime types.String `tfsdk:"creation_time" tf:"optional"`
 
 	State types.String `tfsdk:"state" tf:"optional"`
 
 	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
+}
+
+func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateStateInfo) {
+}
+
+func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateStateInfo) {
 }

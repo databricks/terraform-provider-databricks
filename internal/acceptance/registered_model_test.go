@@ -45,7 +45,6 @@ func TestUcAccRegisteredModel(t *testing.T) {
 			}
 			data "databricks_registered_model" "model" {
 				full_name = databricks_registered_model.model.id
-				include_model_versions = true
 			}
 			output "model" {
 				value = data.databricks_registered_model.model

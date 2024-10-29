@@ -52,25 +52,25 @@ func maybeStringWorkspacePrefix(path string) string {
 	return path
 }
 
-func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
+func (ic *importContext) emitWorkspaceObject(objType, path string) {
+	path = maybeStringWorkspacePrefix(path)
 	if isRepoPath(path) {
-		ic.emitRepoByPath(maybeStringWorkspacePrefix(path))
+		ic.emitRepoByPath(path)
 	} else {
-		// TODO: wrap this into ic.shouldEmit...
-		// TODO: strip /Workspace prefix if it's provided
-		ic.Emit(&resource{
-			Resource: "databricks_workspace_file",
-			ID:       maybeStringWorkspacePrefix(path),
-		})
+		ic.maybeEmitWorkspaceObject(objType, path, nil)
 	}
 }
 
+func (ic *importContext) emitDirectoryOrRepo(path string) {
+	ic.emitWorkspaceObject("databricks_directory", path)
+}
+
+func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
+	ic.emitWorkspaceObject("databricks_workspace_file", path)
+}
+
 func (ic *importContext) emitNotebookOrRepo(path string) {
-	if isRepoPath(path) {
-		ic.emitRepoByPath(maybeStringWorkspacePrefix(path))
-	} else {
-		ic.maybeEmitWorkspaceObject("databricks_notebook", maybeStringWorkspacePrefix(path), nil)
-	}
+	ic.emitWorkspaceObject("databricks_notebook", path)
 }
 
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
@@ -193,7 +193,7 @@ func (ic *importContext) shouldSkipWorkspaceObject(object workspace.ObjectStatus
 	}
 	if !(object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) ||
 		strings.HasPrefix(object.Path, "/Repos") {
-		// log.Printf("[DEBUG] Skipping unsupported entry %v", object)
+		log.Printf("[DEBUG] Skipping unsupported entry %v", object)
 		return true
 	}
 	if res := ignoreIdeFolderRegex.FindStringSubmatch(object.Path); res != nil {
@@ -236,7 +236,7 @@ func emitWorkpaceObject(ic *importContext, object workspace.ObjectStatus) {
 	}
 }
 
-func listNotebooksAndWorkspaceFiles(ic *importContext) error {
+func listWorkspaceObjects(ic *importContext) error {
 	objectsChannel := make(chan workspace.ObjectStatus, defaultChannelSize)
 	numRoutines := 2 // TODO: make configurable? together with the channel size?
 	var processedObjects atomic.Uint64
@@ -257,10 +257,13 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 	}
 	// There are two use cases - this function will handle listing, or it will receive listing
 	updatedSinceMs := ic.getUpdatedSinceMs()
+	isNotebooksListingEnabled := ic.isServiceInListing("notebooks")
+	isDirectoryListingEnabled := ic.isServiceInListing("directories")
+	isWsFilesListingEnabled := ic.isServiceInListing("wsfiles")
 	allObjects := ic.getAllWorkspaceObjects(func(objects []workspace.ObjectStatus) {
 		for _, object := range objects {
 			if object.ObjectType == workspace.Directory {
-				if !ic.incremental && object.Path != "/" && ic.isServiceInListing("directories") {
+				if !ic.incremental && object.Path != "/" && isDirectoryListingEnabled {
 					objectsChannel <- object
 				}
 			} else {
@@ -269,8 +272,14 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 				}
 				object := object
 				switch object.ObjectType {
-				case workspace.Notebook, workspace.File:
-					objectsChannel <- object
+				case workspace.Notebook:
+					if isNotebooksListingEnabled {
+						objectsChannel <- object
+					}
+				case workspace.File:
+					if isWsFilesListingEnabled {
+						objectsChannel <- object
+					}
 				default:
 					log.Printf("[WARN] unknown type %s for path %s", object.ObjectType, object.Path)
 				}
@@ -285,9 +294,11 @@ func listNotebooksAndWorkspaceFiles(ic *importContext) error {
 			if ic.shouldSkipWorkspaceObject(object, updatedSinceMs) {
 				continue
 			}
-			if object.ObjectType == workspace.Directory && !ic.incremental && ic.isServiceInListing("directories") && object.Path != "/" {
+			if !ic.incremental && isDirectoryListingEnabled && object.ObjectType == workspace.Directory && object.Path != "/" {
 				emitWorkpaceObject(ic, object)
-			} else if (object.ObjectType == workspace.Notebook || object.ObjectType == workspace.File) && ic.isServiceInListing("notebooks") {
+			} else if isNotebooksListingEnabled && object.ObjectType == workspace.Notebook {
+				emitWorkpaceObject(ic, object)
+			} else if isWsFilesListingEnabled && object.ObjectType == workspace.File {
 				emitWorkpaceObject(ic, object)
 			}
 		}

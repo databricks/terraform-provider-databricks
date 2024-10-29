@@ -29,6 +29,12 @@ type CentralCleanRoomInfo struct {
 	StationRegion types.String `tfsdk:"station_region" tf:"optional"`
 }
 
+func (newState *CentralCleanRoomInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CentralCleanRoomInfo) {
+}
+
+func (newState *CentralCleanRoomInfo) SyncEffectiveFieldsDuringRead(existingState CentralCleanRoomInfo) {
+}
+
 type CleanRoomAssetInfo struct {
 	// Time at which this asset was added, in epoch milliseconds.
 	AddedAt types.Int64 `tfsdk:"added_at" tf:"optional"`
@@ -42,6 +48,12 @@ type CleanRoomAssetInfo struct {
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 }
 
+func (newState *CleanRoomAssetInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetInfo) {
+}
+
+func (newState *CleanRoomAssetInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetInfo) {
+}
+
 type CleanRoomCatalog struct {
 	// Name of the catalog in the clean room station. Empty for notebooks.
 	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
@@ -51,11 +63,23 @@ type CleanRoomCatalog struct {
 	Tables []SharedDataObject `tfsdk:"tables" tf:"optional"`
 }
 
+func (newState *CleanRoomCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCatalog) {
+}
+
+func (newState *CleanRoomCatalog) SyncEffectiveFieldsDuringRead(existingState CleanRoomCatalog) {
+}
+
 type CleanRoomCatalogUpdate struct {
 	// The name of the catalog to update assets.
 	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
 	// The updates to the assets in the catalog.
 	Updates []SharedDataObjectUpdate `tfsdk:"updates" tf:"optional,object"`
+}
+
+func (newState *CleanRoomCatalogUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCatalogUpdate) {
+}
+
+func (newState *CleanRoomCatalogUpdate) SyncEffectiveFieldsDuringRead(existingState CleanRoomCatalogUpdate) {
 }
 
 type CleanRoomCollaboratorInfo struct {
@@ -67,6 +91,12 @@ type CleanRoomCollaboratorInfo struct {
 	// metastore for Delta Sharing and is used to identify the organization to
 	// other collaborators.
 	OrganizationName types.String `tfsdk:"organization_name" tf:"optional"`
+}
+
+func (newState *CleanRoomCollaboratorInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCollaboratorInfo) {
+}
+
+func (newState *CleanRoomCollaboratorInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomCollaboratorInfo) {
 }
 
 type CleanRoomInfo struct {
@@ -90,11 +120,23 @@ type CleanRoomInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *CleanRoomInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomInfo) {
+}
+
+func (newState *CleanRoomInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomInfo) {
+}
+
 type CleanRoomNotebookInfo struct {
 	// The base64 representation of the notebook content in HTML.
 	NotebookContent types.String `tfsdk:"notebook_content" tf:"optional"`
 	// The name of the notebook.
 	NotebookName types.String `tfsdk:"notebook_name" tf:"optional"`
+}
+
+func (newState *CleanRoomNotebookInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookInfo) {
+}
+
+func (newState *CleanRoomNotebookInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookInfo) {
 }
 
 type CleanRoomTableInfo struct {
@@ -109,6 +151,12 @@ type CleanRoomTableInfo struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
+}
+
+func (newState *CleanRoomTableInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomTableInfo) {
+}
+
+func (newState *CleanRoomTableInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomTableInfo) {
 }
 
 type ColumnInfo struct {
@@ -138,6 +186,12 @@ type ColumnInfo struct {
 	TypeText types.String `tfsdk:"type_text" tf:"optional"`
 }
 
+func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo) {
+}
+
+func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
+}
+
 type ColumnMask struct {
 	// The full name of the column mask SQL UDF.
 	FunctionName types.String `tfsdk:"function_name" tf:"optional"`
@@ -148,6 +202,12 @@ type ColumnMask struct {
 	UsingColumnNames []types.String `tfsdk:"using_column_names" tf:"optional"`
 }
 
+func (newState *ColumnMask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnMask) {
+}
+
+func (newState *ColumnMask) SyncEffectiveFieldsDuringRead(existingState ColumnMask) {
+}
+
 type CreateCleanRoom struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -155,6 +215,12 @@ type CreateCleanRoom struct {
 	Name types.String `tfsdk:"name" tf:""`
 	// Central clean room details.
 	RemoteDetailedInfo []CentralCleanRoomInfo `tfsdk:"remote_detailed_info" tf:"object"`
+}
+
+func (newState *CreateCleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoom) {
+}
+
+func (newState *CreateCleanRoom) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoom) {
 }
 
 type CreateProvider struct {
@@ -167,6 +233,12 @@ type CreateProvider struct {
 	// This field is required when the __authentication_type__ is **TOKEN** or
 	// not provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str" tf:"optional"`
+}
+
+func (newState *CreateProvider) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProvider) {
+}
+
+func (newState *CreateProvider) SyncEffectiveFieldsDuringRead(existingState CreateProvider) {
 }
 
 type CreateRecipient struct {
@@ -194,6 +266,12 @@ type CreateRecipient struct {
 	SharingCode types.String `tfsdk:"sharing_code" tf:"optional"`
 }
 
+func (newState *CreateRecipient) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRecipient) {
+}
+
+func (newState *CreateRecipient) SyncEffectiveFieldsDuringRead(existingState CreateRecipient) {
+}
+
 type CreateShare struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -203,10 +281,22 @@ type CreateShare struct {
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 }
 
+func (newState *CreateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateShare) {
+}
+
+func (newState *CreateShare) SyncEffectiveFieldsDuringRead(existingState CreateShare) {
+}
+
 // Delete a clean room
 type DeleteCleanRoomRequest struct {
 	// The name of the clean room.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomRequest) {
+}
+
+func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomRequest) {
 }
 
 // Delete a provider
@@ -215,13 +305,31 @@ type DeleteProviderRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderRequest) {
+}
+
+func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest) {
+}
+
 // Delete a share recipient
 type DeleteRecipientRequest struct {
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteRecipientRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRecipientRequest) {
+}
+
+func (newState *DeleteRecipientRequest) SyncEffectiveFieldsDuringRead(existingState DeleteRecipientRequest) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 // Delete a share
@@ -230,13 +338,31 @@ type DeleteShareRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteShareRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteShareRequest) {
+}
+
+func (newState *DeleteShareRequest) SyncEffectiveFieldsDuringRead(existingState DeleteShareRequest) {
+}
+
 // Get a share activation URL
 type GetActivationUrlInfoRequest struct {
 	// The one time activation url. It also accepts activation token.
 	ActivationUrl types.String `tfsdk:"-"`
 }
 
+func (newState *GetActivationUrlInfoRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoRequest) {
+}
+
+func (newState *GetActivationUrlInfoRequest) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoRequest) {
+}
+
 type GetActivationUrlInfoResponse struct {
+}
+
+func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoResponse) {
+}
+
+func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoResponse) {
 }
 
 // Get a clean room
@@ -247,16 +373,34 @@ type GetCleanRoomRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomRequest) {
+}
+
+func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomRequest) {
+}
+
 // Get a provider
 type GetProviderRequest struct {
 	// Name of the provider.
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *GetProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderRequest) {
+}
+
+func (newState *GetProviderRequest) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest) {
+}
+
 // Get a share recipient
 type GetRecipientRequest struct {
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *GetRecipientRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientRequest) {
+}
+
+func (newState *GetRecipientRequest) SyncEffectiveFieldsDuringRead(existingState GetRecipientRequest) {
 }
 
 type GetRecipientSharePermissionsResponse struct {
@@ -268,6 +412,12 @@ type GetRecipientSharePermissionsResponse struct {
 	PermissionsOut []ShareToPrivilegeAssignment `tfsdk:"permissions_out" tf:"optional"`
 }
 
+func (newState *GetRecipientSharePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientSharePermissionsResponse) {
+}
+
+func (newState *GetRecipientSharePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState GetRecipientSharePermissionsResponse) {
+}
+
 // Get a share
 type GetShareRequest struct {
 	// Query for data to include in the share.
@@ -276,9 +426,21 @@ type GetShareRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *GetShareRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetShareRequest) {
+}
+
+func (newState *GetShareRequest) SyncEffectiveFieldsDuringRead(existingState GetShareRequest) {
+}
+
 type IpAccessList struct {
 	// Allowed IP Addresses in CIDR notation. Limit of 100.
 	AllowedIpAddresses []types.String `tfsdk:"allowed_ip_addresses" tf:"optional"`
+}
+
+func (newState *IpAccessList) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAccessList) {
+}
+
+func (newState *IpAccessList) SyncEffectiveFieldsDuringRead(existingState IpAccessList) {
 }
 
 // List clean rooms
@@ -294,6 +456,12 @@ type ListCleanRoomsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsRequest) {
+}
+
+func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsRequest) {
+}
+
 type ListCleanRoomsResponse struct {
 	// An array of clean rooms. Remote details (central) are not included.
 	CleanRooms []CleanRoomInfo `tfsdk:"clean_rooms" tf:"optional"`
@@ -303,6 +471,12 @@ type ListCleanRoomsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsResponse) {
+}
+
+func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsResponse) {
+}
+
 type ListProviderSharesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -310,6 +484,12 @@ type ListProviderSharesResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of provider shares.
 	Shares []ProviderShare `tfsdk:"shares" tf:"optional"`
+}
+
+func (newState *ListProviderSharesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderSharesResponse) {
+}
+
+func (newState *ListProviderSharesResponse) SyncEffectiveFieldsDuringRead(existingState ListProviderSharesResponse) {
 }
 
 // List providers
@@ -331,6 +511,12 @@ type ListProvidersRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersRequest) {
+}
+
+func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest) {
+}
+
 type ListProvidersResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -338,6 +524,12 @@ type ListProvidersResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of provider information objects.
 	Providers []ProviderInfo `tfsdk:"providers" tf:"optional"`
+}
+
+func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersResponse) {
+}
+
+func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringRead(existingState ListProvidersResponse) {
 }
 
 // List share recipients
@@ -359,6 +551,12 @@ type ListRecipientsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListRecipientsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsRequest) {
+}
+
+func (newState *ListRecipientsRequest) SyncEffectiveFieldsDuringRead(existingState ListRecipientsRequest) {
+}
+
 type ListRecipientsResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -366,6 +564,12 @@ type ListRecipientsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of recipient information objects.
 	Recipients []RecipientInfo `tfsdk:"recipients" tf:"optional"`
+}
+
+func (newState *ListRecipientsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsResponse) {
+}
+
+func (newState *ListRecipientsResponse) SyncEffectiveFieldsDuringRead(existingState ListRecipientsResponse) {
 }
 
 // List shares by Provider
@@ -386,6 +590,12 @@ type ListSharesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListSharesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesRequest) {
+}
+
+func (newState *ListSharesRequest) SyncEffectiveFieldsDuringRead(existingState ListSharesRequest) {
+}
+
 type ListSharesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -395,9 +605,21 @@ type ListSharesResponse struct {
 	Shares []ShareInfo `tfsdk:"shares" tf:"optional"`
 }
 
+func (newState *ListSharesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesResponse) {
+}
+
+func (newState *ListSharesResponse) SyncEffectiveFieldsDuringRead(existingState ListSharesResponse) {
+}
+
 type Partition struct {
 	// An array of partition values.
-	Values []PartitionValue `tfsdk:"values" tf:"optional"`
+	Values []PartitionValue `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *Partition) SyncEffectiveFieldsDuringCreateOrUpdate(plan Partition) {
+}
+
+func (newState *Partition) SyncEffectiveFieldsDuringRead(existingState Partition) {
 }
 
 type PartitionValue struct {
@@ -415,11 +637,23 @@ type PartitionValue struct {
 	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
+func (newState *PartitionValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionValue) {
+}
+
+func (newState *PartitionValue) SyncEffectiveFieldsDuringRead(existingState PartitionValue) {
+}
+
 type PrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal" tf:"optional"`
 	// The privileges assigned to the principal.
 	Privileges []types.String `tfsdk:"privileges" tf:"optional"`
+}
+
+func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrivilegeAssignment) {
+}
+
+func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState PrivilegeAssignment) {
 }
 
 type ProviderInfo struct {
@@ -460,9 +694,21 @@ type ProviderInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *ProviderInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderInfo) {
+}
+
+func (newState *ProviderInfo) SyncEffectiveFieldsDuringRead(existingState ProviderInfo) {
+}
+
 type ProviderShare struct {
 	// The name of the Provider Share.
 	Name types.String `tfsdk:"name" tf:"optional"`
+}
+
+func (newState *ProviderShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderShare) {
+}
+
+func (newState *ProviderShare) SyncEffectiveFieldsDuringRead(existingState ProviderShare) {
 }
 
 type RecipientInfo struct {
@@ -513,6 +759,12 @@ type RecipientInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *RecipientInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientInfo) {
+}
+
+func (newState *RecipientInfo) SyncEffectiveFieldsDuringRead(existingState RecipientInfo) {
+}
+
 type RecipientProfile struct {
 	// The token used to authorize the recipient.
 	BearerToken types.String `tfsdk:"bearer_token" tf:"optional"`
@@ -520,6 +772,12 @@ type RecipientProfile struct {
 	Endpoint types.String `tfsdk:"endpoint" tf:"optional"`
 	// The version number of the recipient's credentials on a share.
 	ShareCredentialsVersion types.Int64 `tfsdk:"share_credentials_version" tf:"optional"`
+}
+
+func (newState *RecipientProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientProfile) {
+}
+
+func (newState *RecipientProfile) SyncEffectiveFieldsDuringRead(existingState RecipientProfile) {
 }
 
 type RecipientTokenInfo struct {
@@ -540,10 +798,22 @@ type RecipientTokenInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *RecipientTokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientTokenInfo) {
+}
+
+func (newState *RecipientTokenInfo) SyncEffectiveFieldsDuringRead(existingState RecipientTokenInfo) {
+}
+
 // Get an access token
 type RetrieveTokenRequest struct {
 	// The one time activation url. It also accepts activation token.
 	ActivationUrl types.String `tfsdk:"-"`
+}
+
+func (newState *RetrieveTokenRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RetrieveTokenRequest) {
+}
+
+func (newState *RetrieveTokenRequest) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenRequest) {
 }
 
 type RetrieveTokenResponse struct {
@@ -557,6 +827,12 @@ type RetrieveTokenResponse struct {
 	ShareCredentialsVersion types.Int64 `tfsdk:"shareCredentialsVersion" tf:"optional"`
 }
 
+func (newState *RetrieveTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RetrieveTokenResponse) {
+}
+
+func (newState *RetrieveTokenResponse) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenResponse) {
+}
+
 type RotateRecipientToken struct {
 	// The expiration time of the bearer token in ISO 8601 format. This will set
 	// the expiration_time of existing token only to a smaller timestamp, it
@@ -567,6 +843,12 @@ type RotateRecipientToken struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan RotateRecipientToken) {
+}
+
+func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringRead(existingState RotateRecipientToken) {
+}
+
 // An object with __properties__ containing map of key-value properties attached
 // to the securable.
 type SecurablePropertiesKvPairs struct {
@@ -574,27 +856,46 @@ type SecurablePropertiesKvPairs struct {
 	Properties map[string]types.String `tfsdk:"properties" tf:""`
 }
 
+func (newState *SecurablePropertiesKvPairs) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecurablePropertiesKvPairs) {
+}
+
+func (newState *SecurablePropertiesKvPairs) SyncEffectiveFieldsDuringRead(existingState SecurablePropertiesKvPairs) {
+}
+
 type ShareInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Time at which this share was created, in epoch milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at" tf:"computed,optional"`
 	// Username of share creator.
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by" tf:"computed,optional"`
 	// Name of the share.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// A list of shared data objects within the share.
-	Objects []SharedDataObject `tfsdk:"objects" tf:"optional"`
+	Objects []SharedDataObject `tfsdk:"object" tf:"optional"`
 	// Username of current owner of share.
-	Owner types.String `tfsdk:"owner" tf:"optional"`
+	Owner          types.String `tfsdk:"owner" tf:"optional"`
+	EffectiveOwner types.String `tfsdk:"effective_owner" tf:"computed,optional"`
 	// Storage Location URL (full path) for the share.
 	StorageLocation types.String `tfsdk:"storage_location" tf:"optional"`
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 	// Time at which this share was updated, in epoch milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"computed,optional"`
 	// Username of share updater.
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by" tf:"computed,optional"`
+}
+
+func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo) {
+	newState.EffectiveOwner = newState.Owner
+	newState.Owner = plan.Owner
+}
+
+func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
+	newState.EffectiveOwner = existingState.EffectiveOwner
+	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
+		newState.Owner = existingState.Owner
+	}
 }
 
 // Get recipient share permissions
@@ -615,6 +916,12 @@ type SharePermissionsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *SharePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharePermissionsRequest) {
+}
+
+func (newState *SharePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState SharePermissionsRequest) {
+}
+
 type ShareToPrivilegeAssignment struct {
 	// The privileges assigned to the principal.
 	PrivilegeAssignments []PrivilegeAssignment `tfsdk:"privilege_assignments" tf:"optional"`
@@ -622,14 +929,21 @@ type ShareToPrivilegeAssignment struct {
 	ShareName types.String `tfsdk:"share_name" tf:"optional"`
 }
 
+func (newState *ShareToPrivilegeAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareToPrivilegeAssignment) {
+}
+
+func (newState *ShareToPrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState ShareToPrivilegeAssignment) {
+}
+
 type SharedDataObject struct {
 	// The time when this data object is added to the share, in epoch
 	// milliseconds.
-	AddedAt types.Int64 `tfsdk:"added_at" tf:"optional"`
+	AddedAt types.Int64 `tfsdk:"added_at" tf:"computed,optional"`
 	// Username of the sharer.
-	AddedBy types.String `tfsdk:"added_by" tf:"optional"`
+	AddedBy types.String `tfsdk:"added_by" tf:"computed,optional"`
 	// Whether to enable cdf or indicate if cdf is enabled on the shared object.
-	CdfEnabled types.Bool `tfsdk:"cdf_enabled" tf:"optional"`
+	CdfEnabled          types.Bool `tfsdk:"cdf_enabled" tf:"optional"`
+	EffectiveCdfEnabled types.Bool `tfsdk:"effective_cdf_enabled" tf:"computed,optional"`
 	// A user-provided comment when adding the data object to the share.
 	// [Update:OPT]
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -641,19 +955,21 @@ type SharedDataObject struct {
 	DataObjectType types.String `tfsdk:"data_object_type" tf:"optional"`
 	// Whether to enable or disable sharing of data history. If not specified,
 	// the default is **DISABLED**.
-	HistoryDataSharingStatus types.String `tfsdk:"history_data_sharing_status" tf:"optional"`
+	HistoryDataSharingStatus          types.String `tfsdk:"history_data_sharing_status" tf:"optional"`
+	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status" tf:"computed,optional"`
 	// A fully qualified name that uniquely identifies a data object.
 	//
 	// For example, a table's fully qualified name is in the format of
 	// `<catalog>.<schema>.<table>`.
 	Name types.String `tfsdk:"name" tf:""`
 	// Array of partitions for the shared data.
-	Partitions []Partition `tfsdk:"partitions" tf:"optional"`
+	Partitions []Partition `tfsdk:"partition" tf:"optional"`
 	// A user-provided new name for the data object within the share. If this
 	// new name is not provided, the object's original name will be used as the
 	// `shared_as` name. The `shared_as` name must be unique within a share. For
 	// tables, the new name must follow the format of `<schema>.<table>`.
-	SharedAs types.String `tfsdk:"shared_as" tf:"optional"`
+	SharedAs          types.String `tfsdk:"shared_as" tf:"optional"`
+	EffectiveSharedAs types.String `tfsdk:"effective_shared_as" tf:"computed,optional"`
 	// The start version associated with the object. This allows data providers
 	// to control the lowest object version that is accessible by clients. If
 	// specified, clients can query snapshots or changes for versions >=
@@ -661,9 +977,10 @@ type SharedDataObject struct {
 	// version of the object at the time it was added to the share.
 	//
 	// NOTE: The start_version should be <= the `current` version of the object.
-	StartVersion types.Int64 `tfsdk:"start_version" tf:"optional"`
+	StartVersion          types.Int64 `tfsdk:"start_version" tf:"optional"`
+	EffectiveStartVersion types.Int64 `tfsdk:"effective_start_version" tf:"computed,optional"`
 	// One of: **ACTIVE**, **PERMISSION_DENIED**.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"computed,optional"`
 	// A user-provided new name for the data object within the share. If this
 	// new name is not provided, the object's original name will be used as the
 	// `string_shared_as` name. The `string_shared_as` name must be unique
@@ -672,11 +989,47 @@ type SharedDataObject struct {
 	StringSharedAs types.String `tfsdk:"string_shared_as" tf:"optional"`
 }
 
+func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject) {
+	newState.EffectiveCdfEnabled = newState.CdfEnabled
+	newState.CdfEnabled = plan.CdfEnabled
+	newState.EffectiveHistoryDataSharingStatus = newState.HistoryDataSharingStatus
+	newState.HistoryDataSharingStatus = plan.HistoryDataSharingStatus
+	newState.EffectiveSharedAs = newState.SharedAs
+	newState.SharedAs = plan.SharedAs
+	newState.EffectiveStartVersion = newState.StartVersion
+	newState.StartVersion = plan.StartVersion
+}
+
+func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState SharedDataObject) {
+	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
+	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
+		newState.CdfEnabled = existingState.CdfEnabled
+	}
+	newState.EffectiveHistoryDataSharingStatus = existingState.EffectiveHistoryDataSharingStatus
+	if existingState.EffectiveHistoryDataSharingStatus.ValueString() == newState.HistoryDataSharingStatus.ValueString() {
+		newState.HistoryDataSharingStatus = existingState.HistoryDataSharingStatus
+	}
+	newState.EffectiveSharedAs = existingState.EffectiveSharedAs
+	if existingState.EffectiveSharedAs.ValueString() == newState.SharedAs.ValueString() {
+		newState.SharedAs = existingState.SharedAs
+	}
+	newState.EffectiveStartVersion = existingState.EffectiveStartVersion
+	if existingState.EffectiveStartVersion.ValueInt64() == newState.StartVersion.ValueInt64() {
+		newState.StartVersion = existingState.StartVersion
+	}
+}
+
 type SharedDataObjectUpdate struct {
 	// One of: **ADD**, **REMOVE**, **UPDATE**.
 	Action types.String `tfsdk:"action" tf:"optional"`
 	// The data object that is being added, removed, or updated.
 	DataObject []SharedDataObject `tfsdk:"data_object" tf:"optional,object"`
+}
+
+func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObjectUpdate) {
+}
+
+func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringRead(existingState SharedDataObjectUpdate) {
 }
 
 type UpdateCleanRoom struct {
@@ -690,7 +1043,19 @@ type UpdateCleanRoom struct {
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 }
 
+func (newState *UpdateCleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoom) {
+}
+
+func (newState *UpdateCleanRoom) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoom) {
+}
+
 type UpdatePermissionsResponse struct {
+}
+
+func (newState *UpdatePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePermissionsResponse) {
+}
+
+func (newState *UpdatePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState UpdatePermissionsResponse) {
 }
 
 type UpdateProvider struct {
@@ -705,6 +1070,12 @@ type UpdateProvider struct {
 	// This field is required when the __authentication_type__ is **TOKEN** or
 	// not provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str" tf:"optional"`
+}
+
+func (newState *UpdateProvider) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProvider) {
+}
+
+func (newState *UpdateProvider) SyncEffectiveFieldsDuringRead(existingState UpdateProvider) {
 }
 
 type UpdateRecipient struct {
@@ -727,7 +1098,19 @@ type UpdateRecipient struct {
 	PropertiesKvpairs []SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional,object"`
 }
 
+func (newState *UpdateRecipient) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRecipient) {
+}
+
+func (newState *UpdateRecipient) SyncEffectiveFieldsDuringRead(existingState UpdateRecipient) {
+}
+
 type UpdateResponse struct {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
 type UpdateShare struct {
@@ -738,11 +1121,24 @@ type UpdateShare struct {
 	// New name for the share.
 	NewName types.String `tfsdk:"new_name" tf:"optional"`
 	// Username of current owner of share.
-	Owner types.String `tfsdk:"owner" tf:"optional"`
+	Owner          types.String `tfsdk:"owner" tf:"optional"`
+	EffectiveOwner types.String `tfsdk:"effective_owner" tf:"computed,optional"`
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 	// Array of shared data object updates.
 	Updates []SharedDataObjectUpdate `tfsdk:"updates" tf:"optional"`
+}
+
+func (newState *UpdateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateShare) {
+	newState.EffectiveOwner = newState.Owner
+	newState.Owner = plan.Owner
+}
+
+func (newState *UpdateShare) SyncEffectiveFieldsDuringRead(existingState UpdateShare) {
+	newState.EffectiveOwner = existingState.EffectiveOwner
+	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
+		newState.Owner = existingState.Owner
+	}
 }
 
 type UpdateSharePermissions struct {
@@ -762,4 +1158,10 @@ type UpdateSharePermissions struct {
 	Name types.String `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSharePermissions) {
+}
+
+func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringRead(existingState UpdateSharePermissions) {
 }

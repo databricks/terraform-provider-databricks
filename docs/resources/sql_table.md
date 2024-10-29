@@ -136,8 +136,8 @@ resource "databricks_sql_table" "thing" {
   data_source_format = "DELTA"
   storage_location   = ""
   column {
-    name = "id"
-    type = "bigint"
+    name     = "id"
+    type     = "bigint"
     identity = "default"
   }
   column {

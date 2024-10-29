@@ -1860,7 +1860,6 @@ func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
 			"is_pinned":               false,
 		},
 	}.Apply(t)
-	assert.Error(t, err)
 	assert.EqualError(t, err, numWorkerErr)
 }
 

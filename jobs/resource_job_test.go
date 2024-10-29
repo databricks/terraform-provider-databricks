@@ -2066,7 +2066,11 @@ cluster please include the following configuration in your cluster configuration
 
   custom_tags = {
     "ResourceClass" = "SingleNode"
-  }`)
+  }
+
+Please note that the Databricks terraform provider cannot detect if the above configuration
+is defined in a policy used by the cluster. Please define this in the cluster configuration
+itself to create a single node cluster.`)
 }
 
 func TestResourceJobRead(t *testing.T) {
@@ -2965,7 +2969,11 @@ cluster please include the following configuration in your cluster configuration
 
   custom_tags = {
     "ResourceClass" = "SingleNode"
-  }`)
+  }
+
+Please note that the Databricks terraform provider cannot detect if the above configuration
+is defined in a policy used by the cluster. Please define this in the cluster configuration
+itself to create a single node cluster.`)
 }
 
 func TestJobsAPIList(t *testing.T) {

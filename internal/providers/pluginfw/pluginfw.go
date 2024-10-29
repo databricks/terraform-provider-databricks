@@ -21,6 +21,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/registered_model"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/volume"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -47,6 +48,7 @@ func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []fun
 	return []func() resource.Resource{
 		library.ResourceLibrary,
 		qualitymonitor.ResourceQualityMonitor,
+		sharing.ResourceShare,
 	}
 }
 

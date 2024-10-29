@@ -1,5 +1,59 @@
 # Version changelog
 
+## [Release] Release v1.56.0
+
+### Bug Fixes
+
+ * Recreate missing system schema  ([#4068](https://github.com/databricks/terraform-provider-databricks/pull/4068)).
+ * Tolerate `databricks_permissions` resources for SQL warehouses with `/warehouses/...` IDs ([#4158](https://github.com/databricks/terraform-provider-databricks/pull/4158)).
+
+
+### Documentation
+
+ * Fix `databricks_grant` regarding metastore_id description ([#4164](https://github.com/databricks/terraform-provider-databricks/pull/4164)).
+
+
+### Internal Changes
+
+ * Automatically trigger integration tests on PR ([#4149](https://github.com/databricks/terraform-provider-databricks/pull/4149)).
+
+
+### Exporter
+
+ * **Breaking change** Use new query and alert resources instead of legacy resources ([#4150](https://github.com/databricks/terraform-provider-databricks/pull/4150)).
+ * Improve exporting of `databricks_pipeline` resources ([#4142](https://github.com/databricks/terraform-provider-databricks/pull/4142)).
+ * Improving reliability of `Emit` function ([#4163](https://github.com/databricks/terraform-provider-databricks/pull/4163)).
+
+
+## [Release] Release v1.55.0
+
+### New Features and Improvements
+
+ * Add `databricks_alert` resource to replace `databricks_sql_alert` ([#4051](https://github.com/databricks/terraform-provider-databricks/pull/4051)).
+ * Add `databricks_query` resource instead of `databricks_sql_query` ([#4103](https://github.com/databricks/terraform-provider-databricks/pull/4103)).
+ * Added resource `databricks_custom_app_integration` ([#4124](https://github.com/databricks/terraform-provider-databricks/pull/4124)).
+ * Handle `schema` attribute in `databricks_pipeline` ([#4137](https://github.com/databricks/terraform-provider-databricks/pull/4137)).
+
+
+### Bug Fixes
+
+ * Change repo used in test ([#4122](https://github.com/databricks/terraform-provider-databricks/pull/4122)).
+
+
+### Documentation
+
+ * Clarify that `graviton` option of `databricks_node_type` could be used on Azure ([#4125](https://github.com/databricks/terraform-provider-databricks/pull/4125)).
+ * Fix argument in example for `databricks_custom_app_integration` ([#4132](https://github.com/databricks/terraform-provider-databricks/pull/4132)).
+ * Fix for UC on AWS guide - use `databricks_aws_unity_catalog_assume_role_policy` where necessary ([#4109](https://github.com/databricks/terraform-provider-databricks/pull/4109)).
+
+
+### Exporter
+
+ * **Breaking change**: Move `databricks_workspace_file` to a separate service ([#4118](https://github.com/databricks/terraform-provider-databricks/pull/4118)).
+ * Exclude some system schemas from export ([#4121](https://github.com/databricks/terraform-provider-databricks/pull/4121)).
+ * Use `List` + iteration instead of call to `ListAll` ([#4123](https://github.com/databricks/terraform-provider-databricks/pull/4123)).
+
+
 ## [Release] Release v1.54.0
 
 ### New Features and Improvements

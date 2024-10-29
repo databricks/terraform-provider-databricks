@@ -52,25 +52,25 @@ func maybeStringWorkspacePrefix(path string) string {
 	return path
 }
 
-func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
+func (ic *importContext) emitWorkspaceObject(objType, path string) {
+	path = maybeStringWorkspacePrefix(path)
 	if isRepoPath(path) {
-		ic.emitRepoByPath(maybeStringWorkspacePrefix(path))
+		ic.emitRepoByPath(path)
 	} else {
-		// TODO: wrap this into ic.shouldEmit...
-		// TODO: strip /Workspace prefix if it's provided
-		ic.Emit(&resource{
-			Resource: "databricks_workspace_file",
-			ID:       maybeStringWorkspacePrefix(path),
-		})
+		ic.maybeEmitWorkspaceObject(objType, path, nil)
 	}
 }
 
+func (ic *importContext) emitDirectoryOrRepo(path string) {
+	ic.emitWorkspaceObject("databricks_directory", path)
+}
+
+func (ic *importContext) emitWorkspaceFileOrRepo(path string) {
+	ic.emitWorkspaceObject("databricks_workspace_file", path)
+}
+
 func (ic *importContext) emitNotebookOrRepo(path string) {
-	if isRepoPath(path) {
-		ic.emitRepoByPath(maybeStringWorkspacePrefix(path))
-	} else {
-		ic.maybeEmitWorkspaceObject("databricks_notebook", maybeStringWorkspacePrefix(path), nil)
-	}
+	ic.emitWorkspaceObject("databricks_notebook", path)
 }
 
 func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {

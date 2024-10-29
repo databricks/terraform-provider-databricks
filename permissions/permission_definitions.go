@@ -558,6 +558,11 @@ func allResourcePermissions() []resourcePermissions {
 			field:             "sql_endpoint_id",
 			objectType:        "warehouses",
 			requestObjectType: "sql/warehouses",
+			// ISSUE-4143: some older warehouse permissions have an ID that starts with "/warehouses" instead of "/sql/warehouses"
+			// Because no idRetriever is defined, any warehouse permissions resources will be created with the "/sql/warehouses" prefix.
+			idMatcher: func(id string) bool {
+				return strings.HasPrefix(id, "/sql/warehouses/") || strings.HasPrefix(id, "/warehouses/")
+			},
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE":     {isManagementPermission: false},
 				"CAN_MANAGE":  {isManagementPermission: true},

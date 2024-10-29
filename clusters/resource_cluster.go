@@ -44,8 +44,8 @@ itself to create a single node cluster.
 
 For more details please see:
   1. https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster#fixed-size-or-autoscaling-cluster
-  2. https://docs.databricks.com/clusters/single-node.html 
-`
+  2. https://docs.databricks.com/clusters/single-node.html`
+
 	unsupportedExceptCreateEditClusterSpecErr = "unsupported type %T, must be one of %scompute.CreateCluster, %scompute.ClusterSpec or %scompute.EditCluster. Please report this issue to the GitHub repo"
 )
 

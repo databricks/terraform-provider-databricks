@@ -185,10 +185,12 @@ resource "databricks_sql_table" "thing" {
     comment = "name of thing"
   }
   key_constraint {
+    name = "id_pk"
     primary_key = "id"
     rely = "true"
   }
   key_constraint {
+    name = "external_id_fk"
     referenced_key = "external_id"
     referenced_catalog = "bronze"
     referenced_schema = "biz"
@@ -236,10 +238,12 @@ Currently, changing the column definitions for a table will require dropping and
 ### `key_constraint` configuration block
 
 For Primary Keys
+* `name` - Constraint name.
 * `primary_key` - Column that will get the constraint.
 * `rely` - (Optional) Whether utilizing rely optimization. Can be `true` or `false`. Default to `false`.
 
 For Foreign Keys
+* `name` - Constraint name.
 * `referenced_key` - Column that will get the constraint.
 * `referenced_catalog` - Catalog name of the remote table.
 * `referenced_schema` - Schema name of the remote table.

@@ -58,6 +58,8 @@ func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []f
 		volume.DataSourceVolumes,
 		registered_model.DataSourceRegisteredModel,
 		notificationdestinations.DataSourceNotificationDestinations,
+		sharing.DataSourceShare,
+		sharing.DataSourceShares,
 	}
 }
 

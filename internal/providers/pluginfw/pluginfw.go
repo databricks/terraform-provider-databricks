@@ -16,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/framework"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -35,10 +36,20 @@ type DatabricksProviderPluginFramework struct {
 	sdkV2Fallbacks []SdkV2FallbackOption
 }
 
+func preprocessResources(resources []func() resource.Resource) []func() resource.Resource {
+	var res []func() resource.Resource
+	for _, r := range resources {
+		res = append(res, func() resource.Resource {
+			return framework.WrapResource(r())
+		})
+	}
+	return res
+}
+
 var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return getPluginFrameworkResourcesToRegister(p.sdkV2Fallbacks...)
+	return preprocessResources(getPluginFrameworkResourcesToRegister(p.sdkV2Fallbacks...))
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {

@@ -48,6 +48,48 @@ func GetSqlColumnInfoHCL(columnInfos []SqlColumnInfo) string {
 	return columnsTemplate
 }
 
+// Given a slice of SqlKeyConstraintInfo, construct the corresponding HCL string.
+func GetSqlKeyConstraintInfoHCL(keyConstraintInfos []SqlKeyConstraintInfo) string {
+	keyConstraintsTemplate := ""
+
+	for _, kci := range keyConstraintInfos {
+		switch kci.SqlKeyConstraint.(type) {
+		case SqlPrimaryKeyConstraint:
+			pkci := kci.SqlKeyConstraint.(SqlPrimaryKeyConstraint)
+			pkciTemplate := fmt.Sprintf(
+				`
+			{
+				key_constraint {
+					name      = "%s"
+					primary_key      = "%s"
+					rely  = %t
+				}
+			}
+			`, pkci.Name, pkci.PrimaryKey, pkci.Rely,
+			)
+			keyConstraintsTemplate += pkciTemplate
+		case SqlForeignKeyConstraint:
+			fkci := kci.SqlKeyConstraint.(SqlForeignKeyConstraint)
+			fkciTemplate := fmt.Sprintf(
+				`
+			{
+				key_constraint {
+					name      = "%s"
+					referenced_key      = "%s"
+					referenced_catalog  = "%s"
+					referenced_schema  = "%s"
+					referenced_table  = "%s"
+					referenced_foreign_key  = "%s"
+				}
+			}
+			`, fkci.Name, fkci.ReferencedKey, fkci.ReferencedCatalog, fkci.ReferencedSchema, fkci.ReferencedTable, fkci.ReferencedForeignKey,
+			)
+			keyConstraintsTemplate += fkciTemplate
+		}
+	}
+	return keyConstraintsTemplate
+}
+
 // check if a UC resource needs the additional update call during create operation
 func updateRequired(d *schema.ResourceData, updateOnly []string) bool {
 	for _, key := range updateOnly {

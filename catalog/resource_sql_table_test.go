@@ -996,6 +996,13 @@ type resourceSqlTableUpdateColumnTestMetaData struct {
 	expectedErrorMsg string
 }
 
+type resourceSqlTableUpdateKeyConstraintTestMetaData struct {
+	oldKeyConstraints []SqlKeyConstraintInfo
+	newKeyConstraints []SqlKeyConstraintInfo
+	allowedCommands   []string
+	expectedErrorMsg  string
+}
+
 func resourceSqlTableUpdateColumnHelper(t *testing.T, testMetaData resourceSqlTableUpdateColumnTestMetaData) {
 	newColumnsTemplate := GetSqlColumnInfoHCL(testMetaData.newColumns)
 	instanceStateMap := map[string]string{
@@ -1070,6 +1077,111 @@ func resourceSqlTableUpdateColumnHelper(t *testing.T, testMetaData resourceSqlTa
 	}
 }
 
+func resourceSqlTableUpdateKeyConstraintHelper(t *testing.T, testMetaData resourceSqlTableUpdateKeyConstraintTestMetaData) {
+	newKeyConstraintsTemplate := GetSqlKeyConstraintInfoHCL(testMetaData.newKeyConstraints)
+	instanceStateMap := map[string]string{
+		"name":               "bar",
+		"catalog_name":       "main",
+		"schema_name":        "foo",
+		"table_type":         "EXTERNAL",
+		"data_source_format": "DELTA",
+		"storage_location":   "s3://ext-main/foo/bar1",
+		"comment":            "terraform managed",
+		"key_constraint.#":   strconv.Itoa(len(testMetaData.oldKeyConstraints)),
+	}
+	for k, v := range getKeyConstraintsInstanceState(testMetaData.oldKeyConstraints) {
+		instanceStateMap[k] = v
+	}
+	d, err := qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			assert.True(t, slices.Contains(testMetaData.allowedCommands, commandStr))
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: fmt.Sprintf(`
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "EXTERNAL"
+		data_source_format = "DELTA"
+		storage_location   = "s3://ext-main/foo/bar1"
+		comment 		   = "terraform managed"
+		cluster_id         = "gone"
+		%s
+		`, newKeyConstraintsTemplate),
+		InstanceState: instanceStateMap,
+		Fixtures: append([]qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/unity-catalog/tables/main.foo.bar",
+				ReuseRequest: true,
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					KeyConstraintInfos:    testMetaData.oldKeyConstraints,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/start",
+				ExpectedRequest: clusters.ClusterID{
+					ClusterID: "gone",
+				},
+				Status: 404,
+			},
+		}, createClusterForSql...),
+		Resource: ResourceSqlTable(),
+		ID:       "main.foo.bar",
+		Update:   true,
+	}.Apply(t)
+
+	if testMetaData.expectedErrorMsg != "" {
+		assert.EqualError(t, err, testMetaData.expectedErrorMsg)
+	} else {
+		assert.NoError(t, err)
+		assert.Equal(t, "bar", d.Get("name"))
+	}
+}
+
+func getKeyConstraintsInstanceState(keyConstraints []SqlKeyConstraintInfo) map[string]string {
+	res := make(map[string]string)
+	for i, kci := range keyConstraints {
+		switch kci.SqlKeyConstraint.(type) {
+		case SqlPrimaryKeyConstraint:
+			var pkci = kci.SqlKeyConstraint.(SqlPrimaryKeyConstraint)
+			name := fmt.Sprintf("key_constraint.%d.name", i)
+			primaryKey := fmt.Sprintf("key_constraint.%d.primary_key", i)
+			rely := fmt.Sprintf("key_constraint.%d.rely", i)
+			res[name] = pkci.Name
+			res[primaryKey] = pkci.PrimaryKey
+			res[rely] = strconv.FormatBool(pkci.Rely)
+		case SqlForeignKeyConstraint:
+			var fkci = kci.SqlKeyConstraint.(SqlForeignKeyConstraint)
+			name := fmt.Sprintf("key_constraint.%d.name", i)
+			referencedKey := fmt.Sprintf("key_constraint.%d.referenced_key", i)
+			referencedCatalog := fmt.Sprintf("key_constraint.%d.referenced_catalog", i)
+			referencedSchema := fmt.Sprintf("key_constraint.%d.referenced_schema", i)
+			referencedTable := fmt.Sprintf("key_constraint.%d.referenced_table", i)
+			referencedForeignKey := fmt.Sprintf("key_constraint.%d.referenced_foreign_key", i)
+			res[name] = fkci.Name
+			res[referencedKey] = fkci.ReferencedKey
+			res[referencedCatalog] = fkci.ReferencedCatalog
+			res[referencedSchema] = fkci.ReferencedSchema
+			res[referencedTable] = fkci.ReferencedTable
+			res[referencedForeignKey] = fkci.ReferencedForeignKey
+		}
+	}
+	return res
+}
+
 func TestResourceSqlTableUpdateTable_Columns(t *testing.T) {
 	resourceSqlTableUpdateColumnHelper(t,
 		resourceSqlTableUpdateColumnTestMetaData{
@@ -1103,6 +1215,45 @@ func TestResourceSqlTableUpdateTable_Columns(t *testing.T) {
 				"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` COMMENT 'new comment'",
 				"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` DROP NOT NULL",
 				"ALTER TABLE `main`.`foo`.`bar` RENAME COLUMN `two` to `three`",
+			},
+			expectedErrorMsg: "",
+		},
+	)
+}
+
+func TestResourceSqlTableUpdateTable_KeyConstraints(t *testing.T) {
+	resourceSqlTableUpdateKeyConstraintHelper(t,
+		resourceSqlTableUpdateKeyConstraintTestMetaData{
+			oldKeyConstraints: []SqlKeyConstraintInfo{
+				{
+					SqlPrimaryKeyConstraint{
+						Name:       "pk",
+						PrimaryKey: "id",
+						Rely:       true,
+					},
+				},
+				{
+					SqlForeignKeyConstraint{
+						Name:                 "external_id_fk",
+						ReferencedKey:        "external_id",
+						ReferencedCatalog:    "somecatalog",
+						ReferencedSchema:     "someschema",
+						ReferencedTable:      "someothertable",
+						ReferencedForeignKey: "id",
+					},
+				},
+			},
+			newKeyConstraints: []SqlKeyConstraintInfo{
+				{
+					SqlPrimaryKeyConstraint{
+						Name:       "pk",
+						PrimaryKey: "id",
+						Rely:       true,
+					},
+				},
+			},
+			allowedCommands: []string{
+				"ALTER TABLE bar DROP CONSTRAINT `external_id_fk`",
 			},
 			expectedErrorMsg: "",
 		},

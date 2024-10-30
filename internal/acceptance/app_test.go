@@ -25,7 +25,7 @@ var (
 		path = "/Shared/%s/xx_{var.RANDOM}"
 	}
 	resource "databricks_app" "this" {
-		name = "my-custom-app"
+		name = "{var.RANDOM}"
 		description = "%s"
 		source_code_path = databricks_workspace_file.this.workspace_path
 		mode = "SNAPSHOT"
@@ -56,8 +56,8 @@ func TestAccAppUpdate(t *testing.T) {
 		skipf(t)("not available on GCP")
 	}
 	WorkspaceLevel(t, Step{
-		Template: fmt.Sprintf(budgetTemplate, "app", "My app"),
+		Template: fmt.Sprintf(appTemplate, "app", "My app"),
 	}, Step{
-		Template: fmt.Sprintf(budgetTemplate, "app", "My new app"),
+		Template: fmt.Sprintf(appTemplate, "app", "My new app"),
 	})
 }

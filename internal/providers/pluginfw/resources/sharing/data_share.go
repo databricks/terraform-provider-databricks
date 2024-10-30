@@ -3,6 +3,7 @@ package sharing
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -60,6 +61,10 @@ func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		IncludeSharedData: true,
 	})
 	if err != nil {
+		if apierr.IsMissing(err) {
+			resp.State.RemoveResource(ctx)
+		}
+
 		resp.Diagnostics.AddError("Failed to fetch share", err.Error())
 		return
 	}

@@ -20,14 +20,18 @@ var (
 		}
 	}
 
+	resource "databricks_directory" "my_custom_directory" {
+ 		path = "/Shared/provider-test/xx_{var.RANDOM}"
+	}
+	
 	resource "databricks_workspace_file" "this" {
 		source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
-		path = "/Shared/%s/xx_{var.RANDOM}"
+		path = databricks_directory.my_custom_directory.path + "/tf-test-python.py"
 	}
 	resource "databricks_app" "this" {
 		name = "{var.RANDOM}"
 		description = "%s"
-		source_code_path = databricks_workspace_file.this.workspace_path
+		source_code_path = databricks_directory.my_custom_directory.path
 		mode = "SNAPSHOT"
 		resource {
 			name = "warehouse"
@@ -46,7 +50,7 @@ func TestAccAppCreate(t *testing.T) {
 		skipf(t)("not available on GCP")
 	}
 	WorkspaceLevel(t, Step{
-		Template: fmt.Sprintf(appTemplate, "app", "My app"),
+		Template: fmt.Sprintf(appTemplate, "My app"),
 	})
 }
 
@@ -56,8 +60,8 @@ func TestAccAppUpdate(t *testing.T) {
 		skipf(t)("not available on GCP")
 	}
 	WorkspaceLevel(t, Step{
-		Template: fmt.Sprintf(appTemplate, "app", "My app"),
+		Template: fmt.Sprintf(appTemplate, "My app"),
 	}, Step{
-		Template: fmt.Sprintf(appTemplate, "app", "My new app"),
+		Template: fmt.Sprintf(appTemplate, "My new app"),
 	})
 }

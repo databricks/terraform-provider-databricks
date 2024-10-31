@@ -206,7 +206,7 @@ func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
 			"path": "/Repos/Production/test/abc/",
 		},
 		Create: true,
-	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 4")
+	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 4. Deprecated Resource")
 }
 
 func TestResourceRepoCreateCustomDirectoryWrongPath(t *testing.T) {
@@ -217,7 +217,7 @@ func TestResourceRepoCreateCustomDirectoryWrongPath(t *testing.T) {
 			"path": "/Repos/test/",
 		},
 		Create: true,
-	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 2")
+	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 2. Deprecated Resource")
 }
 
 func TestResourceRepoCreateWithBranch(t *testing.T) {

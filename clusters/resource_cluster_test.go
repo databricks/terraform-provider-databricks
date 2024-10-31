@@ -1860,8 +1860,7 @@ func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
 			"is_pinned":               false,
 		},
 	}.Apply(t)
-	assert.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+	assert.EqualError(t, err, numWorkerErr)
 }
 
 func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
@@ -1900,8 +1899,7 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 			"num_workers":             0,
 		},
 	}.Apply(t)
-	assert.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+	assert.EqualError(t, err, numWorkerErr)
 }
 
 func TestModifyClusterRequestAws(t *testing.T) {

@@ -1,0 +1,114 @@
+name: PR Comment
+
+# WARNING:
+# THIS WORKFLOW ALWAYS RUNS FOR EXTERNAL CONTRIBUTORS WITHOUT ANY APPROVAL.
+# THIS WORKFLOW RUNS FROM MAIN BRANCH, NOT FROM THE PR BRANCH.
+# DO NOT PULL THE PR OR EXECUTE ANY CODE FROM THE PR.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+
+jobs:
+  comment-on-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      # NOTE: The following checks may not be accurate depending on Org or Repo settings. 
+      - name: Check user and potential secret access
+        id: check-secrets-access
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          USER_LOGIN="${{ github.event.pull_request.user.login }}"
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          
+          echo "Pull request opened by: $USER_LOGIN"
+          
+          # Check if PR is from a fork
+          IS_FORK=$([[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]] && echo "true" || echo "false")
+          
+          HAS_ACCESS="false"
+          
+          # Check user's permission level on the repository
+          USER_PERMISSION=$(gh api repos/$REPO_OWNER/$REPO_NAME/collaborators/$USER_LOGIN/permission --jq '.permission')
+          
+          if [[ "$USER_PERMISSION" == "admin" || "$USER_PERMISSION" == "write" ]]; then
+            HAS_ACCESS="true"
+          elif [[ "$USER_PERMISSION" == "read" ]]; then
+            # For read access, we need to check if the user has been explicitly granted secret access
+            # This information is not directly available via API, so we'll make an assumption
+            # that read access does not imply secret access
+            HAS_ACCESS="false"
+          fi
+          
+          # Check if repo owner is an organization
+          IS_ORG=$(gh api users/$REPO_OWNER --jq '.type == "Organization"')
+          
+          if [[ "$IS_ORG" == "true" && "$HAS_ACCESS" == "false" ]]; then
+            # Check if user is a member of any team with write or admin access to the repo
+            TEAMS_WITH_ACCESS=$(gh api repos/$REPO_OWNER/$REPO_NAME/teams --jq '.[] | select(.permission == "push" or .permission == "admin") | .slug')
+            for team in $TEAMS_WITH_ACCESS; do
+              IS_TEAM_MEMBER=$(gh api orgs/$REPO_OWNER/teams/$team/memberships/$USER_LOGIN --silent && echo "true" || echo "false")
+              if [[ "$IS_TEAM_MEMBER" == "true" ]]; then
+                HAS_ACCESS="true"
+                break
+              fi
+            done
+          fi
+          
+          # If it's a fork, set HAS_ACCESS to false regardless of other checks
+          if [[ "$IS_FORK" == "true" ]]; then
+            HAS_ACCESS="false"
+          fi
+          
+          echo "has_secrets_access=$HAS_ACCESS" >> $GITHUB_OUTPUT
+          if [[ "$HAS_ACCESS" == "true" ]]; then
+            echo "User $USER_LOGIN likely has access to secrets"
+          else
+            echo "User $USER_LOGIN likely does not have access to secrets"
+          fi
+
+
+      - uses: actions/checkout@v4
+
+      - name: Delete old comments
+        if: steps.check-secrets-access.outputs.has_secrets_access != 'true'
+        env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            # Delete previous comment if it exists
+            previous_comment_ids=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+              --jq '.[] | select(.body | startswith("<!-- INTEGRATION_TESTS -->")) | .id')
+            echo "Previous comment IDs: $previous_comment_ids"
+            # Iterate over each comment ID and delete the comment
+            if [ ! -z "$previous_comment_ids" ]; then
+              echo "$previous_comment_ids" | while read -r comment_id; do
+                echo "Deleting comment with ID: $comment_id"
+                gh api "repos/${{ github.repository }}/issues/comments/$comment_id" -X DELETE
+              done
+            fi
+
+      - name: Comment on PR
+        if: steps.check-secrets-access.outputs.has_secrets_access != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body \
+          "<!-- INTEGRATION_TESTS -->
+          Run integration tests manually:
+          [go/deco-tests-run/terraform](https://go/deco-tests-run/terraform)
+
+          Inputs:
+          * PR number: ${{github.event.pull_request.number}}
+          * Commit SHA: \`${{ env.COMMIT_SHA }}\`
+          
+          Checks will be approved automatically on success.
+          "

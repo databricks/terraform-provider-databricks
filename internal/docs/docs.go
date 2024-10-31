@@ -10,6 +10,9 @@ func ProviderDocumentationRootUrl() string {
 	return ProviderRegistryUrl() + "docs/"
 }
 
+func ProviderDocumentationUrl() string {
+	return ProviderDocumentationRootUrl() + "index.html"
+}
 func ResourceDocumentationUrl(resource string) string {
 	return ProviderDocumentationRootUrl() + "resources/" + resource
 }

@@ -78,32 +78,33 @@ type importContext struct {
 	Scope importedResources
 
 	// command-line resources (immutable, or set by the single thread)
-	includeUserDomains       bool
-	importAllUsers           bool
-	exportDeletedUsersAssets bool
-	incremental              bool
-	mounts                   bool
-	noFormat                 bool
-	nativeImportSupported    bool
-	services                 map[string]struct{}
-	listing                  map[string]struct{}
-	match                    string
-	matchRegexStr            string
-	matchRegex               *regexp.Regexp
-	excludeRegexStr          string
-	excludeRegex             *regexp.Regexp
-	lastActiveDays           int64
-	lastActiveMs             int64
-	generateDeclaration      bool
-	exportSecrets            bool
-	meAdmin                  bool
-	meUserName               string
-	prefix                   string
-	accountLevel             bool
-	shImports                map[string]bool
-	notebooksFormat          string
-	updatedSinceStr          string
-	updatedSinceMs           int64
+	includeUserDomains                      bool
+	importAllUsers                          bool
+	exportDeletedUsersAssets                bool
+	incremental                             bool
+	mounts                                  bool
+	noFormat                                bool
+	nativeImportSupported                   bool
+	services                                map[string]struct{}
+	listing                                 map[string]struct{}
+	match                                   string
+	matchRegexStr                           string
+	matchRegex                              *regexp.Regexp
+	excludeRegexStr                         string
+	excludeRegex                            *regexp.Regexp
+	filterDirectoriesDuringWorkspaceWalking bool
+	lastActiveDays                          int64
+	lastActiveMs                            int64
+	generateDeclaration                     bool
+	exportSecrets                           bool
+	meAdmin                                 bool
+	meUserName                              string
+	prefix                                  string
+	accountLevel                            bool
+	shImports                               map[string]bool
+	notebooksFormat                         string
+	updatedSinceStr                         string
+	updatedSinceMs                          int64
 
 	waitGroup *sync.WaitGroup
 

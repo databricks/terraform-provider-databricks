@@ -93,17 +93,18 @@ func (ic *importContext) getAllDirectories() []workspace.ObjectStatus {
 var directoriesToIgnore = []string{".ide", ".bundle", "__pycache__"}
 
 // TODO: add ignoring directories of deleted users?  This could potentially decrease the number of processed objects...
-func excludeAuxiliaryDirectories(v workspace.ObjectStatus) bool {
+func isAuxiliaryDirectory(v workspace.ObjectStatus) bool {
 	if v.ObjectType != workspace.Directory {
-		return true
+		return false
 	}
 	// TODO: rewrite to use suffix check, etc., instead of split and slice contains?
 	parts := strings.Split(v.Path, "/")
 	result := len(parts) > 1 && slices.Contains[[]string, string](directoriesToIgnore, parts[len(parts)-1])
+	log.Printf("[DEBUG] directory %s: %v", v.Path, result)
 	if result {
 		log.Printf("[DEBUG] Ignoring directory %s", v.Path)
 	}
-	return !result
+	return result
 }
 
 func (ic *importContext) getAllWorkspaceObjects(visitor func([]workspace.ObjectStatus)) []workspace.ObjectStatus {
@@ -113,7 +114,15 @@ func (ic *importContext) getAllWorkspaceObjects(visitor func([]workspace.ObjectS
 		t1 := time.Now()
 		log.Print("[INFO] Starting to list all workspace objects")
 		notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-		ic.allWorkspaceObjects, _ = ListParallel(notebooksAPI, "/", excludeAuxiliaryDirectories, visitor)
+		shouldIncludeDirectory := func(v workspace.ObjectStatus) bool {
+			decision := !isAuxiliaryDirectory(v)
+			if decision && ic.filterDirectoriesDuringWorkspaceWalking {
+				decision = ic.MatchesName(v.Path)
+			}
+			// log.Printf("[DEBUG] decision of shouldIncludeDirectory for %s: %v", v.Path, decision)
+			return decision
+		}
+		ic.allWorkspaceObjects, _ = ListParallel(notebooksAPI, "/", shouldIncludeDirectory, visitor)
 		log.Printf("[INFO] Finished listing of all workspace objects. %d objects in total. %v seconds",
 			len(ic.allWorkspaceObjects), time.Since(t1).Seconds())
 	}

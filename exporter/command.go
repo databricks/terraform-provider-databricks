@@ -131,6 +131,8 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
 		"Generate Databricks provider declaration.")
+	flags.BoolVar(&ic.filterDirectoriesDuringWorkspaceWalking, "filterDirectoriesDuringWorkspaceWalking", false,
+		"Apply filtering to directory names during workspace walking")
 	flags.StringVar(&ic.notebooksFormat, "notebooksFormat", "SOURCE",
 		"Format to export notebooks: SOURCE, DBC, JUPYTER. Default: SOURCE")
 	services, listing := ic.allServicesAndListing()

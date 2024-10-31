@@ -13,7 +13,7 @@ import (
 
 // DataSourceGroup returns information about group specified by display name
 func DataSourceGroup() common.Resource {
-	type entity struct {
+	type groupData struct {
 		DisplayName       string   `json:"display_name"`
 		Recursive         bool     `json:"recursive,omitempty"`
 		Members           []string `json:"members,omitempty" tf:"slice_set,computed"`
@@ -26,7 +26,7 @@ func DataSourceGroup() common.Resource {
 		AclPrincipalID    string   `json:"acl_principal_id,omitempty" tf:"computed"`
 	}
 
-	s := common.StructToSchema(entity{}, func(
+	s := common.StructToSchema(groupData{}, func(
 		s map[string]*schema.Schema) map[string]*schema.Schema {
 		// nolint once SDKv2 has Diagnostics-returning validators, change
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
@@ -39,7 +39,7 @@ func DataSourceGroup() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			var this entity
+			var this groupData
 			common.DataToStructPointer(d, s, &this)
 			groupsAPI := NewGroupsAPI(ctx, m)
 			groupAttributes := "members,roles,entitlements,externalId"

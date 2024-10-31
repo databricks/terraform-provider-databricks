@@ -14,6 +14,74 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+type AibiDashboardEmbeddingAccessPolicy struct {
+	AccessPolicyType types.String `tfsdk:"access_policy_type" tf:""`
+}
+
+func (newState *AibiDashboardEmbeddingAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicy) {
+}
+
+func (newState *AibiDashboardEmbeddingAccessPolicy) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicy) {
+}
+
+type AibiDashboardEmbeddingAccessPolicySetting struct {
+	AibiDashboardEmbeddingAccessPolicy []AibiDashboardEmbeddingAccessPolicy `tfsdk:"aibi_dashboard_embedding_access_policy" tf:"object"`
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// update pattern to perform setting updates in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// PATCH request to identify the setting version you are updating.
+	Etag types.String `tfsdk:"etag" tf:"optional"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+}
+
+func (newState *AibiDashboardEmbeddingAccessPolicySetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicySetting) {
+}
+
+func (newState *AibiDashboardEmbeddingAccessPolicySetting) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicySetting) {
+}
+
+type AibiDashboardEmbeddingApprovedDomains struct {
+	ApprovedDomains []types.String `tfsdk:"approved_domains" tf:"optional"`
+}
+
+func (newState *AibiDashboardEmbeddingApprovedDomains) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomains) {
+}
+
+func (newState *AibiDashboardEmbeddingApprovedDomains) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomains) {
+}
+
+type AibiDashboardEmbeddingApprovedDomainsSetting struct {
+	AibiDashboardEmbeddingApprovedDomains []AibiDashboardEmbeddingApprovedDomains `tfsdk:"aibi_dashboard_embedding_approved_domains" tf:"object"`
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// update pattern to perform setting updates in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// PATCH request to identify the setting version you are updating.
+	Etag types.String `tfsdk:"etag" tf:"optional"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+}
+
+func (newState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomainsSetting) {
+}
+
+func (newState *AibiDashboardEmbeddingApprovedDomainsSetting) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomainsSetting) {
+}
+
 type AutomaticClusterUpdateSetting struct {
 	AutomaticClusterUpdateWorkspace []ClusterAutoRestartMessage `tfsdk:"automatic_cluster_update_workspace" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -962,6 +1030,42 @@ func (newState *GetAccountIpAccessListRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetAccountIpAccessListRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountIpAccessListRequest) {
 }
 
+// Retrieve the AI/BI dashboard embedding access policy
+type GetAibiDashboardEmbeddingAccessPolicySettingRequest struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+func (newState *GetAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAibiDashboardEmbeddingAccessPolicySettingRequest) {
+}
+
+func (newState *GetAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringRead(existingState GetAibiDashboardEmbeddingAccessPolicySettingRequest) {
+}
+
+// Retrieve the list of domains approved to host embedded AI/BI dashboards
+type GetAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+func (newState *GetAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
+}
+
+func (newState *GetAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringRead(existingState GetAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
+}
+
 // Get the automatic cluster update setting
 type GetAutomaticClusterUpdateSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -1494,8 +1598,7 @@ type NccAzurePrivateEndpointRule struct {
 	// DISCONNECTED: Connection was removed by the private link resource owner,
 	// the private endpoint becomes informative and should be deleted for
 	// clean-up.
-	ConnectionState          types.String `tfsdk:"connection_state" tf:"optional"`
-	EffectiveConnectionState types.String `tfsdk:"effective_connection_state" tf:"computed,optional"`
+	ConnectionState types.String `tfsdk:"connection_state" tf:"optional"`
 	// Time in epoch milliseconds when this object was created.
 	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	EffectiveCreationTime types.Int64 `tfsdk:"effective_creation_time" tf:"computed,optional"`
@@ -1526,8 +1629,6 @@ type NccAzurePrivateEndpointRule struct {
 }
 
 func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAzurePrivateEndpointRule) {
-	newState.EffectiveConnectionState = newState.ConnectionState
-	newState.ConnectionState = plan.ConnectionState
 	newState.EffectiveCreationTime = newState.CreationTime
 	newState.CreationTime = plan.CreationTime
 	newState.EffectiveDeactivated = newState.Deactivated
@@ -1543,24 +1644,27 @@ func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccAzurePrivateEndpointRule) {
-	if existingState.EffectiveConnectionState.ValueString() == newState.ConnectionState.ValueString() {
-		newState.ConnectionState = existingState.ConnectionState
-	}
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
+	newState.EffectiveDeactivated = existingState.EffectiveDeactivated
 	if existingState.EffectiveDeactivated.ValueBool() == newState.Deactivated.ValueBool() {
 		newState.Deactivated = existingState.Deactivated
 	}
+	newState.EffectiveDeactivatedAt = existingState.EffectiveDeactivatedAt
 	if existingState.EffectiveDeactivatedAt.ValueInt64() == newState.DeactivatedAt.ValueInt64() {
 		newState.DeactivatedAt = existingState.DeactivatedAt
 	}
+	newState.EffectiveEndpointName = existingState.EffectiveEndpointName
 	if existingState.EffectiveEndpointName.ValueString() == newState.EndpointName.ValueString() {
 		newState.EndpointName = existingState.EndpointName
 	}
+	newState.EffectiveRuleId = existingState.EffectiveRuleId
 	if existingState.EffectiveRuleId.ValueString() == newState.RuleId.ValueString() {
 		newState.RuleId = existingState.RuleId
 	}
+	newState.EffectiveUpdatedTime = existingState.EffectiveUpdatedTime
 	if existingState.EffectiveUpdatedTime.ValueInt64() == newState.UpdatedTime.ValueInt64() {
 		newState.UpdatedTime = existingState.UpdatedTime
 	}
@@ -1672,12 +1776,15 @@ func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringCreat
 }
 
 func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringRead(existingState NetworkConnectivityConfiguration) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
+	newState.EffectiveNetworkConnectivityConfigId = existingState.EffectiveNetworkConnectivityConfigId
 	if existingState.EffectiveNetworkConnectivityConfigId.ValueString() == newState.NetworkConnectivityConfigId.ValueString() {
 		newState.NetworkConnectivityConfigId = existingState.NetworkConnectivityConfigId
 	}
+	newState.EffectiveUpdatedTime = existingState.EffectiveUpdatedTime
 	if existingState.EffectiveUpdatedTime.ValueInt64() == newState.UpdatedTime.ValueInt64() {
 		newState.UpdatedTime = existingState.UpdatedTime
 	}
@@ -1958,6 +2065,9 @@ type TokenInfo struct {
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// Timestamp when the token expires.
 	ExpiryTime types.Int64 `tfsdk:"expiry_time" tf:"optional"`
+	// Approximate timestamp for the day the token was last used. Accurate up to
+	// 1 day.
+	LastUsedDay types.Int64 `tfsdk:"last_used_day" tf:"optional"`
 	// User ID of the user that owns the token.
 	OwnerId types.Int64 `tfsdk:"owner_id" tf:"optional"`
 	// ID of the token.
@@ -2020,6 +2130,46 @@ func (newState *TokenPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *TokenPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState TokenPermissionsRequest) {
+}
+
+// Details required to update a setting.
+type UpdateAibiDashboardEmbeddingAccessPolicySettingRequest struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	// Field mask is required to be passed into the PATCH request. Field mask
+	// specifies which fields of the setting payload will be updated. The field
+	// mask needs to be supplied as single string. To specify multiple fields in
+	// the field mask, use comma as the separator (no space).
+	FieldMask types.String `tfsdk:"field_mask" tf:""`
+
+	Setting []AibiDashboardEmbeddingAccessPolicySetting `tfsdk:"setting" tf:"object"`
+}
+
+func (newState *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) {
+}
+
+func (newState *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) {
+}
+
+// Details required to update a setting.
+type UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	// Field mask is required to be passed into the PATCH request. Field mask
+	// specifies which fields of the setting payload will be updated. The field
+	// mask needs to be supplied as single string. To specify multiple fields in
+	// the field mask, use comma as the separator (no space).
+	FieldMask types.String `tfsdk:"field_mask" tf:""`
+
+	Setting []AibiDashboardEmbeddingApprovedDomainsSetting `tfsdk:"setting" tf:"object"`
+}
+
+func (newState *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
+}
+
+func (newState *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
 }
 
 // Details required to update a setting.

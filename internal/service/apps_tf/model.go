@@ -77,24 +77,31 @@ func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
 }
 
 func (newState *App) SyncEffectiveFieldsDuringRead(existingState App) {
+	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
 	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
 		newState.CreateTime = existingState.CreateTime
 	}
+	newState.EffectiveCreator = existingState.EffectiveCreator
 	if existingState.EffectiveCreator.ValueString() == newState.Creator.ValueString() {
 		newState.Creator = existingState.Creator
 	}
+	newState.EffectiveServicePrincipalId = existingState.EffectiveServicePrincipalId
 	if existingState.EffectiveServicePrincipalId.ValueInt64() == newState.ServicePrincipalId.ValueInt64() {
 		newState.ServicePrincipalId = existingState.ServicePrincipalId
 	}
+	newState.EffectiveServicePrincipalName = existingState.EffectiveServicePrincipalName
 	if existingState.EffectiveServicePrincipalName.ValueString() == newState.ServicePrincipalName.ValueString() {
 		newState.ServicePrincipalName = existingState.ServicePrincipalName
 	}
+	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
 	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
 		newState.UpdateTime = existingState.UpdateTime
 	}
+	newState.EffectiveUpdater = existingState.EffectiveUpdater
 	if existingState.EffectiveUpdater.ValueString() == newState.Updater.ValueString() {
 		newState.Updater = existingState.Updater
 	}
+	newState.EffectiveUrl = existingState.EffectiveUrl
 	if existingState.EffectiveUrl.ValueString() == newState.Url.ValueString() {
 		newState.Url = existingState.Url
 	}
@@ -137,6 +144,8 @@ func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringRead(existing
 }
 
 type AppDeployment struct {
+	// The name of the app.
+	AppName types.String `tfsdk:"-"`
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
 	CreateTime          types.String `tfsdk:"create_time" tf:"optional"`
 	EffectiveCreateTime types.String `tfsdk:"effective_create_time" tf:"computed,optional"`
@@ -174,12 +183,15 @@ func (newState *AppDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppD
 }
 
 func (newState *AppDeployment) SyncEffectiveFieldsDuringRead(existingState AppDeployment) {
+	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
 	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
 		newState.CreateTime = existingState.CreateTime
 	}
+	newState.EffectiveCreator = existingState.EffectiveCreator
 	if existingState.EffectiveCreator.ValueString() == newState.Creator.ValueString() {
 		newState.Creator = existingState.Creator
 	}
+	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
 	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
 		newState.UpdateTime = existingState.UpdateTime
 	}
@@ -211,6 +223,7 @@ func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringRead(existingState AppDeploymentStatus) {
+	newState.EffectiveMessage = existingState.EffectiveMessage
 	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
 		newState.Message = existingState.Message
 	}
@@ -361,6 +374,7 @@ func (newState *ApplicationStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *ApplicationStatus) SyncEffectiveFieldsDuringRead(existingState ApplicationStatus) {
+	newState.EffectiveMessage = existingState.EffectiveMessage
 	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
 		newState.Message = existingState.Message
 	}
@@ -380,48 +394,10 @@ func (newState *ComputeStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan Comp
 }
 
 func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState ComputeStatus) {
+	newState.EffectiveMessage = existingState.EffectiveMessage
 	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
 		newState.Message = existingState.Message
 	}
-}
-
-type CreateAppDeploymentRequest struct {
-	// The name of the app.
-	AppName types.String `tfsdk:"-"`
-	// The unique id of the deployment.
-	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
-	// The mode of which the deployment will manage the source code.
-	Mode types.String `tfsdk:"mode" tf:"optional"`
-	// The workspace file system path of the source code used to create the app
-	// deployment. This is different from
-	// `deployment_artifacts.source_code_path`, which is the path used by the
-	// deployed app. The former refers to the original source code location of
-	// the app in the workspace during deployment creation, whereas the latter
-	// provides a system generated stable snapshotted source code path used by
-	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
-}
-
-func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppDeploymentRequest) {
-}
-
-func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringRead(existingState CreateAppDeploymentRequest) {
-}
-
-type CreateAppRequest struct {
-	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
-	// The name of the app. The name must contain only lowercase alphanumeric
-	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" tf:""`
-	// Resources for the app.
-	Resources []AppResource `tfsdk:"resources" tf:"optional"`
-}
-
-func (newState *CreateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppRequest) {
-}
-
-func (newState *CreateAppRequest) SyncEffectiveFieldsDuringRead(existingState CreateAppRequest) {
 }
 
 // Delete an app
@@ -574,20 +550,4 @@ func (newState *StopAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sto
 }
 
 func (newState *StopAppRequest) SyncEffectiveFieldsDuringRead(existingState StopAppRequest) {
-}
-
-type UpdateAppRequest struct {
-	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
-	// The name of the app. The name must contain only lowercase alphanumeric
-	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" tf:""`
-	// Resources for the app.
-	Resources []AppResource `tfsdk:"resources" tf:"optional"`
-}
-
-func (newState *UpdateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAppRequest) {
-}
-
-func (newState *UpdateAppRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAppRequest) {
 }

@@ -447,7 +447,7 @@ func (cluster Cluster) Validate() error {
 	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
 	}
-	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
+	return errors.New(numWorkerErr)
 }
 
 // TODO: Remove this once all the resources using clusters are migrated to Go SDK.

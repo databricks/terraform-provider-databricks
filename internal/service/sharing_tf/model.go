@@ -955,8 +955,7 @@ type SharedDataObject struct {
 	DataObjectType types.String `tfsdk:"data_object_type" tf:"optional"`
 	// Whether to enable or disable sharing of data history. If not specified,
 	// the default is **DISABLED**.
-	HistoryDataSharingStatus          types.String `tfsdk:"history_data_sharing_status" tf:"optional"`
-	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status" tf:"computed,optional"`
+	HistoryDataSharingStatus types.String `tfsdk:"history_data_sharing_status" tf:"optional"`
 	// A fully qualified name that uniquely identifies a data object.
 	//
 	// For example, a table's fully qualified name is in the format of
@@ -992,8 +991,6 @@ type SharedDataObject struct {
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject) {
 	newState.EffectiveCdfEnabled = newState.CdfEnabled
 	newState.CdfEnabled = plan.CdfEnabled
-	newState.EffectiveHistoryDataSharingStatus = newState.HistoryDataSharingStatus
-	newState.HistoryDataSharingStatus = plan.HistoryDataSharingStatus
 	newState.EffectiveSharedAs = newState.SharedAs
 	newState.SharedAs = plan.SharedAs
 	newState.EffectiveStartVersion = newState.StartVersion
@@ -1004,10 +1001,6 @@ func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState Sh
 	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
 	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
 		newState.CdfEnabled = existingState.CdfEnabled
-	}
-	newState.EffectiveHistoryDataSharingStatus = existingState.EffectiveHistoryDataSharingStatus
-	if existingState.EffectiveHistoryDataSharingStatus.ValueString() == newState.HistoryDataSharingStatus.ValueString() {
-		newState.HistoryDataSharingStatus = existingState.HistoryDataSharingStatus
 	}
 	newState.EffectiveSharedAs = existingState.EffectiveSharedAs
 	if existingState.EffectiveSharedAs.ValueString() == newState.SharedAs.ValueString() {

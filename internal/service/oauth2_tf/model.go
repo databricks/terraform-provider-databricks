@@ -342,6 +342,16 @@ func (newState *ListPublishedAppIntegrationsRequest) SyncEffectiveFieldsDuringRe
 
 // List service principal secrets
 type ListServicePrincipalSecretsRequest struct {
+	// An opaque page token which was the `next_page_token` in the response of
+	// the previous request to list the secrets for this service principal.
+	// Provide this token to retrieve the next page of secret entries. When
+	// providing a `page_token`, all other parameters provided to the request
+	// must match the previous request. To list all of the secrets for a service
+	// principal, it is necessary to continue requesting pages of entries until
+	// the response contains no `next_page_token`. Note that the number of
+	// entries returned must not be used to determine when the listing is
+	// complete.
+	PageToken types.String `tfsdk:"-"`
 	// The service principal ID.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
 }
@@ -353,6 +363,8 @@ func (newState *ListServicePrincipalSecretsRequest) SyncEffectiveFieldsDuringRea
 }
 
 type ListServicePrincipalSecretsResponse struct {
+	// A token, which can be sent as `page_token` to retrieve the next page.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// List of the secrets
 	Secrets []SecretInfo `tfsdk:"secrets" tf:"optional"`
 }

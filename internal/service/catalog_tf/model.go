@@ -728,20 +728,6 @@ func (newState *CreateMonitor) SyncEffectiveFieldsDuringCreateOrUpdate(plan Crea
 func (newState *CreateMonitor) SyncEffectiveFieldsDuringRead(existingState CreateMonitor) {
 }
 
-// Online Table information.
-type CreateOnlineTableRequest struct {
-	// Full three-part (catalog, schema, table) name of the table.
-	Name types.String `tfsdk:"name" tf:"optional"`
-	// Specification of the online table.
-	Spec []OnlineTableSpec `tfsdk:"spec" tf:"optional,object"`
-}
-
-func (newState *CreateOnlineTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOnlineTableRequest) {
-}
-
-func (newState *CreateOnlineTableRequest) SyncEffectiveFieldsDuringRead(existingState CreateOnlineTableRequest) {
-}
-
 type CreateRegisteredModelRequest struct {
 	// The name of the catalog where the schema and the registered model reside
 	CatalogName types.String `tfsdk:"catalog_name" tf:""`

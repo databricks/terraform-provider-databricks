@@ -15,93 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type CreateDashboardRequest struct {
-	// The display name of the dashboard.
-	DisplayName types.String `tfsdk:"display_name" tf:""`
-	// The workspace path of the folder containing the dashboard. Includes
-	// leading slash and no trailing slash. This field is excluded in List
-	// Dashboards responses.
-	ParentPath          types.String `tfsdk:"parent_path" tf:"optional"`
-	EffectiveParentPath types.String `tfsdk:"effective_parent_path" tf:"computed,optional"`
-	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses. Use the [get dashboard API] to
-	// retrieve an example response, which includes the `serialized_dashboard`
-	// field. This field provides the structure of the JSON string that
-	// represents the dashboard's layout and components.
-	//
-	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
-	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
-	// The warehouse ID used to run the dashboard.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
-}
-
-func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDashboardRequest) {
-	newState.EffectiveParentPath = newState.ParentPath
-	newState.ParentPath = plan.ParentPath
-}
-
-func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateDashboardRequest) {
-	newState.EffectiveParentPath = existingState.EffectiveParentPath
-	if existingState.EffectiveParentPath.ValueString() == newState.ParentPath.ValueString() {
-		newState.ParentPath = existingState.ParentPath
-	}
-}
-
-type CreateScheduleRequest struct {
-	// The cron expression describing the frequency of the periodic refresh for
-	// this schedule.
-	CronSchedule []CronSchedule `tfsdk:"cron_schedule" tf:"object"`
-	// UUID identifying the dashboard to which the schedule belongs.
-	DashboardId          types.String `tfsdk:"-"`
-	EffectiveDashboardId types.String `tfsdk:"-"`
-	// The display name for schedule.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
-	// The status indicates whether this schedule is paused or not.
-	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
-}
-
-func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateScheduleRequest) {
-	newState.EffectiveDashboardId = newState.DashboardId
-	newState.DashboardId = plan.DashboardId
-}
-
-func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState CreateScheduleRequest) {
-	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
-	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
-		newState.DashboardId = existingState.DashboardId
-	}
-}
-
-type CreateSubscriptionRequest struct {
-	// UUID identifying the dashboard to which the subscription belongs.
-	DashboardId          types.String `tfsdk:"-"`
-	EffectiveDashboardId types.String `tfsdk:"-"`
-	// UUID identifying the schedule to which the subscription belongs.
-	ScheduleId          types.String `tfsdk:"-"`
-	EffectiveScheduleId types.String `tfsdk:"-"`
-	// Subscriber details for users and destinations to be added as subscribers
-	// to the schedule.
-	Subscriber []Subscriber `tfsdk:"subscriber" tf:"object"`
-}
-
-func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateSubscriptionRequest) {
-	newState.EffectiveDashboardId = newState.DashboardId
-	newState.DashboardId = plan.DashboardId
-	newState.EffectiveScheduleId = newState.ScheduleId
-	newState.ScheduleId = plan.ScheduleId
-}
-
-func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState CreateSubscriptionRequest) {
-	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
-	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
-		newState.DashboardId = existingState.DashboardId
-	}
-	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
-	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
-		newState.ScheduleId = existingState.ScheduleId
-	}
-}
-
 type CronSchedule struct {
 	// A cron expression using quartz syntax. EX: `0 0 8 * * ?` represents
 	// everyday at 8am. See [Cron Trigger] for details.
@@ -308,22 +221,6 @@ func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionResponse) {
 }
 
-// Execute SQL query in a conversation message
-type ExecuteMessageQueryRequest struct {
-	// Conversation ID
-	ConversationId types.String `tfsdk:"-"`
-	// Message ID
-	MessageId types.String `tfsdk:"-"`
-	// Genie space ID
-	SpaceId types.String `tfsdk:"-"`
-}
-
-func (newState *ExecuteMessageQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExecuteMessageQueryRequest) {
-}
-
-func (newState *ExecuteMessageQueryRequest) SyncEffectiveFieldsDuringRead(existingState ExecuteMessageQueryRequest) {
-}
-
 // Genie AI Response
 type GenieAttachment struct {
 	Query []QueryAttachment `tfsdk:"query" tf:"optional,object"`
@@ -371,6 +268,22 @@ func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuring
 }
 
 func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest) {
+}
+
+// Execute SQL query in a conversation message
+type GenieExecuteMessageQueryRequest struct {
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieExecuteMessageQueryRequest) {
+}
+
+func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringRead(existingState GenieExecuteMessageQueryRequest) {
 }
 
 // Get conversation message
@@ -1111,83 +1024,4 @@ func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
-}
-
-type UpdateDashboardRequest struct {
-	// UUID identifying the dashboard.
-	DashboardId types.String `tfsdk:"-"`
-	// The display name of the dashboard.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
-	// The etag for the dashboard. Can be optionally provided on updates to
-	// ensure that the dashboard has not been modified since the last read. This
-	// field is excluded in List Dashboards responses.
-	Etag          types.String `tfsdk:"etag" tf:"optional"`
-	EffectiveEtag types.String `tfsdk:"effective_etag" tf:"computed,optional"`
-	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses. Use the [get dashboard API] to
-	// retrieve an example response, which includes the `serialized_dashboard`
-	// field. This field provides the structure of the JSON string that
-	// represents the dashboard's layout and components.
-	//
-	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
-	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
-	// The warehouse ID used to run the dashboard.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
-}
-
-func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDashboardRequest) {
-	newState.EffectiveEtag = newState.Etag
-	newState.Etag = plan.Etag
-}
-
-func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardRequest) {
-	newState.EffectiveEtag = existingState.EffectiveEtag
-	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
-		newState.Etag = existingState.Etag
-	}
-}
-
-type UpdateScheduleRequest struct {
-	// The cron expression describing the frequency of the periodic refresh for
-	// this schedule.
-	CronSchedule []CronSchedule `tfsdk:"cron_schedule" tf:"object"`
-	// UUID identifying the dashboard to which the schedule belongs.
-	DashboardId          types.String `tfsdk:"-"`
-	EffectiveDashboardId types.String `tfsdk:"-"`
-	// The display name for schedule.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
-	// The etag for the schedule. Must be left empty on create, must be provided
-	// on updates to ensure that the schedule has not been modified since the
-	// last read, and can be optionally provided on delete.
-	Etag          types.String `tfsdk:"etag" tf:"optional"`
-	EffectiveEtag types.String `tfsdk:"effective_etag" tf:"computed,optional"`
-	// The status indicates whether this schedule is paused or not.
-	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
-	// UUID identifying the schedule.
-	ScheduleId          types.String `tfsdk:"-"`
-	EffectiveScheduleId types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateScheduleRequest) {
-	newState.EffectiveDashboardId = newState.DashboardId
-	newState.DashboardId = plan.DashboardId
-	newState.EffectiveEtag = newState.Etag
-	newState.Etag = plan.Etag
-	newState.EffectiveScheduleId = newState.ScheduleId
-	newState.ScheduleId = plan.ScheduleId
-}
-
-func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState UpdateScheduleRequest) {
-	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
-	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
-		newState.DashboardId = existingState.DashboardId
-	}
-	newState.EffectiveEtag = existingState.EffectiveEtag
-	if existingState.EffectiveEtag.ValueString() == newState.Etag.ValueString() {
-		newState.Etag = existingState.Etag
-	}
-	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
-	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
-		newState.ScheduleId = existingState.ScheduleId
-	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
-var commonClusterConfig = `resource "data "databricks_spark_version" "latest" {
+var commonClusterConfig = `data "databricks_spark_version" "latest" {
 }
 resource "databricks_cluster" "this" {
 	cluster_name = "test-library-{var.RANDOM}"

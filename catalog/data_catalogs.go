@@ -20,6 +20,5 @@ func DataSourceCatalogs() common.Resource {
 			data.Ids = append(data.Ids, v.Name)
 		}
 		return nil
-
 	})
 }

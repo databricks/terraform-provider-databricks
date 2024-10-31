@@ -88,8 +88,6 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 				}
 			}
 
-			schema = null
-
 			continuous = false
 		}
 		` + dltNotebookResource,

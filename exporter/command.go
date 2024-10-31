@@ -145,6 +145,12 @@ func Run(args ...string) error {
 	flags.StringVar(&ic.match, "match", "", "Match resource names during listing operation. "+
 		"This filter applies to all resources that are getting listed, so if you want to import "+
 		"all dependencies of just one cluster, specify -listing=compute")
+	flags.StringVar(&ic.matchRegexStr, "matchRegex", "", "Match resource names during listing operation against a regex. "+
+		"This filter applies to all resources that are getting listed, so if you want to import "+
+		"all dependencies of just one cluster, specify -listing=compute")
+	flags.StringVar(&ic.excludeRegexStr, "excludeRegex", "", "Exclude resource names matching regex during listing operation. "+
+		"This filter applies to all resources that are getting listed, so if you want to import "+
+		"all dependencies of just one cluster, specify -listing=compute")
 	prefix := ""
 	flags.StringVar(&prefix, "prefix", "", "Prefix that will be added to the name of all exported resources")
 	newArgs := args

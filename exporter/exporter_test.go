@@ -2371,9 +2371,31 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2F",
 				Response: workspace.ObjectList{
-					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus},
+					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+						workspace.ObjectStatus{
+							ObjectID:   4567,
+							ObjectType: workspace.Notebook,
+							Path:       "/UnmatchedNotebook",
+							Language:   "PYTHON",
+						},
+						workspace.ObjectStatus{
+							ObjectID:   1234,
+							ObjectType: workspace.File,
+							Path:       "/UnmatchedFile",
+						},
+						workspace.ObjectStatus{
+							ObjectID:   456,
+							ObjectType: workspace.Directory,
+							Path:       "/databricks_automl",
+						},
+					},
 				},
 				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2Fdatabricks_automl",
+				Response: workspace.ObjectList{},
 			},
 			{
 				Method:       "GET",
@@ -2410,10 +2432,26 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.enableListing("notebooks")
+			ic.enableListing("notebooks,wsfiles")
+			ic.excludeRegexStr = "databricks_automl"
+			ic.matchRegexStr = "^/[FN].*$"
 
 			err := ic.Run()
 			assert.NoError(t, err)
+			// check generated code for notebooks
+			content, err := os.ReadFile(tmpDir + "/notebooks.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_notebook" "notebook_456"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/Notebook"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedNotebook`))
+			// check generated code for workspace files
+			content, err = os.ReadFile(tmpDir + "/wsfiles.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_workspace_file" "file_123"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/File"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedFile`))
 		})
 }
 

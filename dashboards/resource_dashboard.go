@@ -143,7 +143,7 @@ func ResourceDashboard() common.Resource {
 			dashboard.SerializedDashboard = content
 			updatedDashboard, err := w.Lakeview.Update(ctx, dashboards.UpdateDashboardRequest{
 				DashboardId: dashboard.DashboardId,
-				Dashboard: &dashboard,
+				Dashboard:   &dashboard,
 			})
 			if err != nil {
 				return err

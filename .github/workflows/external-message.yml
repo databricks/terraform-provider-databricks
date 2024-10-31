@@ -37,7 +37,7 @@ jobs:
           HAS_ACCESS="false"
           
           # Check user's permission level on the repository
-          USER_PERMISSION=$(gh api repos/$REPO_OWNER/$REPO_NAME/collaborators/$USER_LOGIN/permission --jq '.permission')
+          USER_PERMISSION=$(gh api repos/$REPO_OWNER/$REPO_NAME/collaborators/$USER_LOGIN/permission --jq '.permission' || echo "none")
           
           if [[ "$USER_PERMISSION" == "admin" || "$USER_PERMISSION" == "write" ]]; then
             HAS_ACCESS="true"

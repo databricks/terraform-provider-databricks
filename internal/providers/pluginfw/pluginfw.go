@@ -23,7 +23,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/registered_model"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/sharing"
-        "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/user"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/user"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -63,7 +63,7 @@ func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []f
 		sharing.DataSourceShare,
 		sharing.DataSourceShares,
 		catalog.DataSourceFunctions,
-                user.DataSourceUsers,
+		user.DataSourceUsers,
 	}
 }
 

@@ -11,11 +11,11 @@ import (
 
 const dataSourceTemplate = `
 	resource "databricks_user" "user1" {
-		user_name = "user-datasource-{var.STICKY_RANDOM}-1@databricks.com"
+		user_name = "tf-{var.STICKY_RANDOM}-1@databricks.com"
 	}
 
 	resource "databricks_user" "user2" {
-		user_name = "user-datasource-{var.STICKY_RANDOM}-2@databricks.com"
+		user_name = "tf-{var.STICKY_RANDOM}-2@databricks.com"
 	}
 
 	data "databricks_users" "this" {

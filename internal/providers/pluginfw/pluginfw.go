@@ -16,14 +16,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/catalog"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/cluster"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/notificationdestinations"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/registered_model"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/sharing"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/user"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -50,16 +42,7 @@ func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []fun
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		cluster.DataSourceCluster,
-		volume.DataSourceVolumes,
-		registered_model.DataSourceRegisteredModel,
-		notificationdestinations.DataSourceNotificationDestinations,
-		sharing.DataSourceShare,
-		sharing.DataSourceShares,
-		catalog.DataSourceFunctions,
-		user.DataSourceUsers,
-	}
+	return getPluginFrameworkDataSourcesToRegister(p.sdkV2Fallbacks...)
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {

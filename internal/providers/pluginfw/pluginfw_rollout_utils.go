@@ -19,6 +19,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/registered_model"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/sharing"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/user"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -45,6 +46,7 @@ var pluginFwOnlyResources = []func() resource.Resource{
 var pluginFwOnlyDataSources = []func() datasource.DataSource{
 	registered_model.DataSourceRegisteredModel,
 	notificationdestinations.DataSourceNotificationDestinations,
+	user.DataSourceUsers,
 	catalog.DataSourceFunctions,
 	// TODO: Add DataSourceCluster into migratedDataSources after fixing unit tests.
 	cluster.DataSourceCluster, // Using the staging name (with pluginframework suffix)

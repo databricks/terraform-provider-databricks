@@ -166,6 +166,8 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
 }
 

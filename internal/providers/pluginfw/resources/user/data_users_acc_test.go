@@ -19,7 +19,7 @@ const dataSourceTemplate = `
 	}
 
 	data "databricks_users" "this" {
-		user_name_contains = "testuser"
+		filter = "userName co \"testuser\""
 		depends_on = [databricks_user.user1, databricks_user.user2]
 	}
 `

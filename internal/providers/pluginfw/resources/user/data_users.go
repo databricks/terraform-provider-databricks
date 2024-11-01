@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"go/types"
 
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -12,6 +11,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/iam_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func DataSourceUsers() datasource.DataSource {
@@ -55,6 +55,9 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
+	var users []iam.User
+	var err error
+
 	if d.Client.Config.IsAccountClient() {
 		a, diags := d.Client.GetAccountClient()
 		resp.Diagnostics.Append(diags...)
@@ -62,7 +65,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			return
 		}
 
-		users, err := a.Users.ListAll(ctx, iam.ListAccountUsersRequest{Filter: usersInfo.Filter})
+		users, err = a.Users.ListAll(ctx, iam.ListAccountUsersRequest{Filter: usersInfo.Filter.ValueString()})
 		if err != nil {
 			resp.Diagnostics.AddError("Error listing account users", err.Error())
 		}
@@ -73,7 +76,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			return
 		}
 
-		users, err := w.Users.ListAll(ctx, iam.ListUsersRequest{Filter: filter})
+		users, err = w.Users.ListAll(ctx, iam.ListUsersRequest{Filter: usersInfo.Filter.ValueString()})
 		if err != nil {
 			resp.Diagnostics.AddError("Error listing workspace users", err.Error())
 		}
@@ -85,7 +88,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		usersInfo.Users = append(usersInfo.Users, user)
+		usersInfo.Users = append(usersInfo.Users, tfUser)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, usersInfo)...)

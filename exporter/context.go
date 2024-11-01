@@ -78,28 +78,33 @@ type importContext struct {
 	Scope importedResources
 
 	// command-line resources (immutable, or set by the single thread)
-	includeUserDomains       bool
-	importAllUsers           bool
-	exportDeletedUsersAssets bool
-	incremental              bool
-	mounts                   bool
-	noFormat                 bool
-	nativeImportSupported    bool
-	services                 map[string]struct{}
-	listing                  map[string]struct{}
-	match                    string
-	lastActiveDays           int64
-	lastActiveMs             int64
-	generateDeclaration      bool
-	exportSecrets            bool
-	meAdmin                  bool
-	meUserName               string
-	prefix                   string
-	accountLevel             bool
-	shImports                map[string]bool
-	notebooksFormat          string
-	updatedSinceStr          string
-	updatedSinceMs           int64
+	includeUserDomains                      bool
+	importAllUsers                          bool
+	exportDeletedUsersAssets                bool
+	incremental                             bool
+	mounts                                  bool
+	noFormat                                bool
+	nativeImportSupported                   bool
+	services                                map[string]struct{}
+	listing                                 map[string]struct{}
+	match                                   string
+	matchRegexStr                           string
+	matchRegex                              *regexp.Regexp
+	excludeRegexStr                         string
+	excludeRegex                            *regexp.Regexp
+	filterDirectoriesDuringWorkspaceWalking bool
+	lastActiveDays                          int64
+	lastActiveMs                            int64
+	generateDeclaration                     bool
+	exportSecrets                           bool
+	meAdmin                                 bool
+	meUserName                              string
+	prefix                                  string
+	accountLevel                            bool
+	shImports                               map[string]bool
+	notebooksFormat                         string
+	updatedSinceStr                         string
+	updatedSinceMs                          int64
 
 	waitGroup *sync.WaitGroup
 
@@ -297,6 +302,24 @@ func (ic *importContext) Run() error {
 		return fmt.Errorf("no services to import")
 	}
 
+	if ic.matchRegexStr != "" {
+		log.Printf("[DEBUG] Using regex '%s' to filter resources", ic.matchRegexStr)
+		re, err := regexp.Compile(ic.matchRegexStr)
+		if err != nil {
+			log.Printf("[ERROR] can't compile regex '%s': %v", ic.matchRegexStr, err)
+			return err
+		}
+		ic.matchRegex = re
+	}
+	if ic.excludeRegexStr != "" {
+		log.Printf("[DEBUG] Using regex '%s' to filter resources", ic.excludeRegexStr)
+		re, err := regexp.Compile(ic.excludeRegexStr)
+		if err != nil {
+			log.Printf("[ERROR] can't compile regex '%s': %v", ic.excludeRegexStr, err)
+			return err
+		}
+		ic.excludeRegex = re
+	}
 	if ic.incremental {
 		if ic.updatedSinceStr == "" {
 			ic.updatedSinceStr = getLastRunString(statsFileName)

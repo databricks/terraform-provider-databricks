@@ -12,8 +12,8 @@ import (
 
 func checkDataSourceVolumesPopulated(t *testing.T) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		_, ok := s.Modules[0].Resources["data.databricks_volumes_pluginframework.this"]
-		require.True(t, ok, "data.databricks_volumes_pluginframework.this has to be there")
+		_, ok := s.Modules[0].Resources["data.databricks_volumes.this"]
+		require.True(t, ok, "data.databricks_volumes.this has to be there")
 		num_volumes, _ := strconv.Atoi(s.Modules[0].Outputs["volumes"].Value.(string))
 		assert.GreaterOrEqual(t, num_volumes, 1)
 		return nil
@@ -45,13 +45,13 @@ func TestUcAccDataSourceVolumes(t *testing.T) {
 			schema_name  = databricks_schema.things.name
 			volume_type  = "MANAGED"      
 		}
-		data "databricks_volumes_pluginframework" "this" {
+		data "databricks_volumes" "this" {
 			catalog_name = databricks_catalog.sandbox.name
 			schema_name = databricks_schema.things.name
 			depends_on = [ databricks_volume.this ] 
 		}
 		output "volumes" {
-			value = length(data.databricks_volumes_pluginframework.this.ids)
+			value = length(data.databricks_volumes.this.ids)
 		}
 		`,
 		Check: checkDataSourceVolumesPopulated(t),

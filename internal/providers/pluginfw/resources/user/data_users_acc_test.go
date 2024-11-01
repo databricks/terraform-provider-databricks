@@ -11,15 +11,16 @@ import (
 
 const dataSourceTemplate = `
 	resource "databricks_user" "user1" {
-		user_name = "testuser1@databricks.com"
+		user_name = "user-datasource-{var.STICKY_RANDOM}-1@databricks.com"
 	}
 
 	resource "databricks_user" "user2" {
-		user_name = "testuser2@databricks.com"
+		user_name = "user-datasource-{var.STICKY_RANDOM}-2@databricks.com"
 	}
 
 	data "databricks_users" "this" {
 		user_name_contains = "testuser"
+		depends_on = [databricks_user.user1, databricks_user.user2]
 	}
 `
 

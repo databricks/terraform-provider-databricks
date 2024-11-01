@@ -4,7 +4,7 @@ subcategory: "Security"
 
 # databricks_users Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
+-> If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
 
 Retrieves information about multiple [databricks_user](../resources/user.md) resources.
 
@@ -14,7 +14,7 @@ Adding a subset of users to a group
 
 ```hcl
 data "databricks_users" "company_users" {
-  user_name_contains = "@domain.org"
+  filter = "userName co \"@domain.org\""
 }
 
 resource "databricks_group" "data_users_group" {
@@ -32,10 +32,17 @@ resource "databricks_group_member" "add_users_to_group" {
 
 This data source allows you to filter the list of users using the following optional arguments: 
 
-- `display_name_contains` - (Optional) A substring to filter users by their display name. Only users whose display names contain this substring will be included in the results.
-- `user_name_contains` - (Optional) A substring to filter users by their username. Only users whose usernames contain this substring will be included in the results.
+- `filter` - (Optional) Query by which the results have to be filtered. If not specified, all users will be returned. Supported operators are equals (`eq`), contains (`co`), starts with (`sw`), and not equals (`ne`). Additionally, simple expressions can be formed using logical operators `and` and `or`.
 
-->**Note** You can specify **exactly one** of `display_name_contains` or `user_name_contains`. If neither is specified, all users will be returned.
+  **Examples:**
+    - User whose `displayName` equals "john": 
+    ```hcl
+      filter = "displayName eq \"john\""
+    ```
+    - User whose `displayName` contains "john" or `userName` contains "@domain.org": 
+    ```hcl
+      filter = "displayName co \"john\" or userName co \"@domain.org\""
+    ```
 
 ## Attribute Reference
 

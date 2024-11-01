@@ -3,9 +3,12 @@ package catalog
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -46,28 +49,81 @@ func (r *FunctionResource) Configure(ctx context.Context, req resource.Configure
 	}
 }
 
-/* Is there a way I can make this general, accept any type of Response? There seems to be no base class that relates them... */
-func AppendDiagAndCheckErrors(resp *resource.CreateResponse, diags diag.Diagnostics) bool {
-	resp.Diagnostics.Append(diags...)
-	return resp.Diagnostics.HasError()
+func AppendDiagAndCheckErrors(resp *diag.Diagnostics, diags diag.Diagnostics) bool {
+	resp.Append(diags...)
+	return resp.HasError()
 }
 
 func (r *FunctionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+
+}
+
+func (r *FunctionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
-	if AppendDiagAndCheckErrors(resp, diags) {
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, diags) {
+		return
+	}
+
+	var planFunc catalog_tf.FunctionInfo
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, req.Plan.Get(ctx, &planFunc)) {
+		return
+	}
+
+	var updateReq catalog.UpdateFunction
+
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, converters.TfSdkToGoSdkStruct(ctx, planFunc, &updateReq)) {
+		return
+	}
+
+	funcInfo, err := w.Functions.Update(ctx, updateReq)
+	if err != nil {
+		resp.Diagnostics.AddError("failed to update function", err.Error())
+	}
+
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, converters.GoSdkToTfSdkStruct(ctx, funcInfo, &planFunc)) {
+		return
+	}
+
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, resp.State.Set(ctx, funcInfo)) {
 		return
 	}
 }
 
-func (r *FunctionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	/* TODO */
-}
-
 func (r *FunctionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	/* TODO */
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
+
+	w, diags := r.Client.GetWorkspaceClient()
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, diags) {
+		return
+	}
+
+	var stateFunc catalog_tf.FunctionInfo
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, req.State.Get(ctx, &stateFunc)) {
+		return
+	}
+
+	funcName := stateFunc.Name.ValueString()
+
+	funcInfo, err := w.Functions.GetByName(ctx, funcName)
+	if err != nil {
+		if apierr.IsMissing(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("failed to get function", err.Error())
+		return
+	}
+
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, converters.GoSdkToTfSdkStruct(ctx, funcInfo, &stateFunc)) {
+		return
+	}
+
+	if AppendDiagAndCheckErrors(&resp.Diagnostics, resp.State.Set(ctx, stateFunc)) {
+		return
+	}
 }
 
 func (r *FunctionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	/* TODO */
+
 }

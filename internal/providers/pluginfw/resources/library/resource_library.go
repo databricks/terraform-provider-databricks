@@ -62,6 +62,7 @@ func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams 
 type LibraryExtended struct {
 	compute_tf.Library
 	ClusterId types.String `tfsdk:"cluster_id"`
+	ID        types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
 }
 
 type LibraryResource struct {
@@ -69,7 +70,7 @@ type LibraryResource struct {
 }
 
 func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
 }
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -138,6 +139,8 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 	installedLib := LibraryExtended{}
 
 	resp.Diagnostics.Append(readLibrary(ctx, w, waitParams, libraryRep, &installedLib)...)
+
+	installedLib.ID = types.StringValue(libGoSDK.String())
 
 	if resp.Diagnostics.HasError() {
 		return

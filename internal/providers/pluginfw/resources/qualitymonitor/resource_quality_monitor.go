@@ -58,6 +58,7 @@ type MonitorInfoExtended struct {
 	catalog_tf.MonitorInfo
 	WarehouseId          types.String `tfsdk:"warehouse_id" tf:"optional"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard" tf:"optional"`
+	ID                   types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
 }
 
 type QualityMonitorResource struct {
@@ -65,7 +66,7 @@ type QualityMonitorResource struct {
 }
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(resourceName)
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -131,6 +132,9 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	// Set the ID to the table name
+	newMonitorInfoTfSDK.ID = newMonitorInfoTfSDK.TableName
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
 
@@ -161,6 +165,8 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
 }

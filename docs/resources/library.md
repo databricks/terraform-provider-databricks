@@ -7,6 +7,9 @@ Installs a [library](https://docs.databricks.com/libraries/index.html) on [datab
 
 -> `databricks_library` resource would always start the associated cluster if it's not running, so make sure to have auto-termination configured. It's not possible to atomically change the version of the same library without cluster restart. Libraries are fully removed from the cluster only after restart.
 
+## Plugin Framework Migration
+The library resource has been migrated from sdkv2 to plugin framework。 If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_library"`.
+
 ## Installing library on all clusters
 
 You can install libraries on all clusters with the help of [databricks_clusters](../data-sources/clusters.md) data resource:

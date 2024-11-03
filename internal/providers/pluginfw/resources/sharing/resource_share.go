@@ -9,7 +9,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
@@ -163,8 +162,6 @@ func (d *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 }
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -226,8 +223,6 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-
 	var existingState ShareInfoExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
@@ -281,8 +276,6 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-
 	var state ShareInfoExtended
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -380,8 +373,6 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 }
 
 func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
-
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

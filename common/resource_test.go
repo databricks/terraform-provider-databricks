@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -36,6 +37,100 @@ func TestImportingCallsRead(t *testing.T) {
 	assert.True(t, r.Schema["foo"].ForceNew)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, 1, d.Get("foo"))
+}
+
+func TestCreateSkipRead(t *testing.T) {
+	res := Resource{
+		Create: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			log.Println("[DEBUG] Create called")
+			return d.Set("foo", 1)
+		},
+		Read: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			log.Println("[DEBUG] Read called")
+			d.Set("foo", 2)
+			return nil
+		},
+		Schema: map[string]*schema.Schema{
+			"foo": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
+			return true
+		},
+	}
+
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	// Test with skipping read
+	r := res.ToResource()
+	d := r.TestResourceData()
+	diags := r.CreateContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, 1, d.Get("foo"))
+	// Test without skipping read
+	res.CanSkipReadAfterCreateAndUpdate = nil
+	r = res.ToResource()
+	d = r.TestResourceData()
+	diags = r.CreateContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, 2, d.Get("foo"))
+}
+
+func TestUpdateSkipRead(t *testing.T) {
+	res := Resource{
+		Update: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			log.Println("[DEBUG] Update called")
+			return d.Set("foo", 1)
+		},
+		Read: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			log.Println("[DEBUG] Read called")
+			d.Set("foo", 2)
+			return nil
+		},
+		Schema: map[string]*schema.Schema{
+			"foo": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
+			return true
+		},
+	}
+
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	// Test with skipping read
+	r := res.ToResource()
+	d := r.TestResourceData()
+	datas, err := r.Importer.StateContext(ctx, d, client)
+	require.NoError(t, err)
+	assert.Len(t, datas, 1)
+	assert.False(t, r.Schema["foo"].ForceNew)
+	assert.Equal(t, "", d.Id())
+
+	diags := r.UpdateContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, 1, d.Get("foo"))
+	// Test without skipping read
+	res.CanSkipReadAfterCreateAndUpdate = nil
+	r = res.ToResource()
+	d = r.TestResourceData()
+	_, err = r.Importer.StateContext(ctx, d, client)
+	require.NoError(t, err)
+	diags = r.UpdateContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, 2, d.Get("foo"))
 }
 
 func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {

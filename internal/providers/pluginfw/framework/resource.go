@@ -8,8 +8,7 @@ import (
 )
 
 func WrapResource(r resource.Resource) resource.Resource {
-	var wrapped resource.Resource
-	wrapped = Resource{Resource: r}
+	var wrapped resource.Resource = r
 	if c, ok := wrapped.(resource.ResourceWithConfigure); ok {
 		wrapped = Configurer{c}
 	}

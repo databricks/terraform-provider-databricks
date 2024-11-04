@@ -2349,7 +2349,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 		})
 }
 
-func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
+func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 	fileStatus := workspace.ObjectStatus{
 		ObjectID:   123,
 		ObjectType: workspace.File,
@@ -2371,7 +2371,135 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2F",
 				Response: workspace.ObjectList{
-					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus},
+					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+						{
+							ObjectID:   4567,
+							ObjectType: workspace.Notebook,
+							Path:       "/UnmatchedNotebook",
+							Language:   "PYTHON",
+						},
+						{
+							ObjectID:   1234,
+							ObjectType: workspace.File,
+							Path:       "/UnmatchedFile",
+						},
+						{
+							ObjectID:   456,
+							ObjectType: workspace.Directory,
+							Path:       "/databricks_automl",
+						},
+						{
+							ObjectID:   456,
+							ObjectType: workspace.Directory,
+							Path:       "/.bundle",
+						},
+					},
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2Fdatabricks_automl",
+				Response: workspace.ObjectList{},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/workspace/get-status?path=%2FNotebook",
+				Response:     notebookStatus,
+				ReuseRequest: true,
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/workspace/get-status?path=%2FFile",
+				Response:     fileStatus,
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2FFile",
+				Response: workspace.ExportPath{
+					Content: "dGVzdA==",
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FNotebook",
+				Response: workspace.ExportPath{
+					Content: "dGVzdA==",
+				},
+				ReuseRequest: true,
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.enableListing("notebooks,wsfiles")
+			ic.excludeRegexStr = "databricks_automl"
+			ic.matchRegexStr = "^/[FN].*$"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+			// check generated code for notebooks
+			content, err := os.ReadFile(tmpDir + "/notebooks.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_notebook" "notebook_456"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/Notebook"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedNotebook`))
+			// check generated code for workspace files
+			content, err = os.ReadFile(tmpDir + "/wsfiles.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_workspace_file" "file_123"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/File"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedFile`))
+		})
+}
+
+func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
+	fileStatus := workspace.ObjectStatus{
+		ObjectID:   123,
+		ObjectType: workspace.File,
+		Path:       "/File",
+	}
+	notebookStatus := workspace.ObjectStatus{
+		ObjectID:   456,
+		ObjectType: workspace.Notebook,
+		Path:       "/Notebook",
+		Language:   "PYTHON",
+	}
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			noCurrentMetastoreAttached,
+			emptyRepos,
+			emptyIpAccessLIst,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2F",
+				Response: workspace.ObjectList{
+					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+						{
+							ObjectID:   4567,
+							ObjectType: workspace.Notebook,
+							Path:       "/UnmatchedNotebook",
+							Language:   "PYTHON",
+						},
+						{
+							ObjectID:   1234,
+							ObjectType: workspace.File,
+							Path:       "/UnmatchedFile",
+						},
+						{
+							ObjectID:   456,
+							ObjectType: workspace.Directory,
+							Path:       "/databricks_automl",
+						},
+					},
 				},
 				ReuseRequest: true,
 			},
@@ -2410,10 +2538,27 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.enableListing("notebooks")
+			ic.enableListing("notebooks,wsfiles")
+			ic.excludeRegexStr = "databricks_automl"
+			ic.matchRegexStr = "^/[FN].*$"
+			ic.filterDirectoriesDuringWorkspaceWalking = true
 
 			err := ic.Run()
 			assert.NoError(t, err)
+			// check generated code for notebooks
+			content, err := os.ReadFile(tmpDir + "/notebooks.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_notebook" "notebook_456"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/Notebook"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedNotebook`))
+			// check generated code for workspace files
+			content, err = os.ReadFile(tmpDir + "/wsfiles.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_workspace_file" "file_123"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/File"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedFile`))
 		})
 }
 

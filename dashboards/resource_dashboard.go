@@ -68,22 +68,22 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			var newDashboardRequest dashboards.CreateDashboardRequest
-			common.DataToStructPointer(d, dashboardSchema, &newDashboardRequest)
+			var dashboard dashboards.Dashboard
+			common.DataToStructPointer(d, dashboardSchema, &dashboard)
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
 			}
 			d.Set("md5", md5Hash)
-			newDashboardRequest.SerializedDashboard = content
-			createdDashboard, err := w.Lakeview.Create(ctx, newDashboardRequest)
+			dashboard.SerializedDashboard = content
+			createdDashboard, err := w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: &dashboard})
 			if err != nil && isParentDoesntExistError(err) {
-				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", newDashboardRequest.ParentPath)
-				err = w.Workspace.MkdirsByPath(ctx, newDashboardRequest.ParentPath)
+				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
+				err = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath)
 				if err != nil {
 					return err
 				}
-				createdDashboard, err = w.Lakeview.Create(ctx, newDashboardRequest)
+				createdDashboard, err = w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: &dashboard})
 			}
 			if err != nil {
 				return err
@@ -132,16 +132,19 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			var updateDashboardRequest dashboards.UpdateDashboardRequest
-			common.DataToStructPointer(d, dashboardSchema, &updateDashboardRequest)
-			updateDashboardRequest.DashboardId = d.Id()
+			var dashboard dashboards.Dashboard
+			common.DataToStructPointer(d, dashboardSchema, &dashboard)
+			dashboard.DashboardId = d.Id()
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
 			}
 			d.Set("md5", md5Hash)
-			updateDashboardRequest.SerializedDashboard = content
-			updatedDashboard, err := w.Lakeview.Update(ctx, updateDashboardRequest)
+			dashboard.SerializedDashboard = content
+			updatedDashboard, err := w.Lakeview.Update(ctx, dashboards.UpdateDashboardRequest{
+				DashboardId: dashboard.DashboardId,
+				Dashboard:   &dashboard,
+			})
 			if err != nil {
 				return err
 			}

@@ -277,6 +277,8 @@ type CreateWorkspaceRequest struct {
 	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
 	// The configurations for the GKE cluster of a Databricks workspace.
 	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional,object"`
+	// Whether no public IP is enabled for the workspace.
+	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
 	// account. For example, `us-east4`.
 	Location types.String `tfsdk:"location" tf:"optional"`
@@ -342,6 +344,7 @@ func (newState *Credential) SyncEffectiveFieldsDuringCreateOrUpdate(plan Credent
 }
 
 func (newState *Credential) SyncEffectiveFieldsDuringRead(existingState Credential) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
@@ -382,6 +385,7 @@ func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringRead(existingState CustomerManagedKey) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
@@ -478,6 +482,21 @@ func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspaceRequest) {
+}
+
+type ExternalCustomerInfo struct {
+	// Email of the authoritative user.
+	AuthoritativeUserEmail types.String `tfsdk:"authoritative_user_email" tf:"optional"`
+	// The authoritative user full name.
+	AuthoritativeUserFullName types.String `tfsdk:"authoritative_user_full_name" tf:"optional"`
+	// The legal entity name for the external workspace
+	CustomerName types.String `tfsdk:"customer_name" tf:"optional"`
+}
+
+func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalCustomerInfo) {
+}
+
+func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringRead(existingState ExternalCustomerInfo) {
 }
 
 type GcpKeyInfo struct {
@@ -739,9 +758,11 @@ func (newState *Network) SyncEffectiveFieldsDuringCreateOrUpdate(plan Network) {
 }
 
 func (newState *Network) SyncEffectiveFieldsDuringRead(existingState Network) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
+	newState.EffectiveVpcStatus = existingState.EffectiveVpcStatus
 	if existingState.EffectiveVpcStatus.ValueString() == newState.VpcStatus.ValueString() {
 		newState.VpcStatus = existingState.VpcStatus
 	}
@@ -871,9 +892,11 @@ func (newState *StorageConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *StorageConfiguration) SyncEffectiveFieldsDuringRead(existingState StorageConfiguration) {
+	newState.EffectiveAccountId = existingState.EffectiveAccountId
 	if existingState.EffectiveAccountId.ValueString() == newState.AccountId.ValueString() {
 		newState.AccountId = existingState.AccountId
 	}
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
@@ -1057,6 +1080,10 @@ type Workspace struct {
 	// This value must be unique across all non-deleted deployments across all
 	// AWS regions.
 	DeploymentName types.String `tfsdk:"deployment_name" tf:"optional"`
+	// If this workspace is for a external customer, then external_customer_info
+	// is populated. If this workspace is not for a external customer, then
+	// external_customer_info is empty.
+	ExternalCustomerInfo []ExternalCustomerInfo `tfsdk:"external_customer_info" tf:"optional,object"`
 	// The network settings for the workspace. The configurations are only for
 	// Databricks-managed VPCs. It is ignored if you specify a customer-managed
 	// VPC in the `network_id` field.", All the IP range configurations must be
@@ -1083,6 +1110,8 @@ type Workspace struct {
 	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
 	// The configurations for the GKE cluster of a Databricks workspace.
 	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional,object"`
+	// Whether no public IP is enabled for the workspace.
+	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
 	// account (for example, `us-east4`).
 	Location types.String `tfsdk:"location" tf:"optional"`
@@ -1135,12 +1164,15 @@ func (newState *Workspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspac
 }
 
 func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace) {
+	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
 	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
 		newState.CreationTime = existingState.CreationTime
 	}
+	newState.EffectiveWorkspaceStatus = existingState.EffectiveWorkspaceStatus
 	if existingState.EffectiveWorkspaceStatus.ValueString() == newState.WorkspaceStatus.ValueString() {
 		newState.WorkspaceStatus = existingState.WorkspaceStatus
 	}
+	newState.EffectiveWorkspaceStatusMessage = existingState.EffectiveWorkspaceStatusMessage
 	if existingState.EffectiveWorkspaceStatusMessage.ValueString() == newState.WorkspaceStatusMessage.ValueString() {
 		newState.WorkspaceStatusMessage = existingState.WorkspaceStatusMessage
 	}

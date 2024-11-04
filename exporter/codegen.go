@@ -904,22 +904,27 @@ func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteC
 		return
 	}
 
-	//
 	newResources := make(map[string]struct{}, 100)
 	log.Printf("[DEBUG] started processing new writes for %s", generatedFile)
 	for f := range ch {
 		if f != nil {
-			log.Printf("[DEBUG] started writing resource body for %s", f.BlockName)
-			_, err = tf.WriteString(f.ResourceBody)
-			if err == nil {
-				newResources[f.BlockName] = struct{}{}
-				if f.ImportCommand != "" {
-					ic.waitGroup.Add(1)
-					importChan <- f.ImportCommand
+			// check if we have the same blockname already written. To avoid duplicates
+			_, exists := newResources[f.BlockName]
+			if !exists {
+				log.Printf("[DEBUG] started writing resource body for %s", f.BlockName)
+				_, err = tf.WriteString(f.ResourceBody)
+				if err == nil {
+					newResources[f.BlockName] = struct{}{}
+					if f.ImportCommand != "" {
+						ic.waitGroup.Add(1)
+						importChan <- f.ImportCommand
+					}
+					log.Printf("[DEBUG] finished writing resource body for %s", f.BlockName)
+				} else {
+					log.Printf("[ERROR] Error when writing to %s: %v", generatedFile, err)
 				}
-				log.Printf("[DEBUG] finished writing resource body for %s", f.BlockName)
 			} else {
-				log.Printf("[ERROR] Error when writing to %s: %v", generatedFile, err)
+				log.Printf("[WARN] Found duplicate resource: '%s'", f.BlockName)
 			}
 		} else {
 			log.Print("[WARN] got nil as resourceWriteData!")

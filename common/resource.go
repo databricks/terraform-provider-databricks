@@ -16,17 +16,18 @@ import (
 
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
-	Create             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Read               func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Update             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Delete             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	CustomizeDiff      func(ctx context.Context, d *schema.ResourceDiff) error
-	StateUpgraders     []schema.StateUpgrader
-	Schema             map[string]*schema.Schema
-	SchemaVersion      int
-	Timeouts           *schema.ResourceTimeout
-	DeprecationMessage string
-	Importer           *schema.ResourceImporter
+	Create                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Read                            func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Update                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Delete                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	CustomizeDiff                   func(ctx context.Context, d *schema.ResourceDiff) error
+	StateUpgraders                  []schema.StateUpgrader
+	Schema                          map[string]*schema.Schema
+	SchemaVersion                   int
+	Timeouts                        *schema.ResourceTimeout
+	DeprecationMessage              string
+	Importer                        *schema.ResourceImporter
+	CanSkipReadAfterCreateAndUpdate func(d *schema.ResourceData) bool
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -93,6 +94,9 @@ func (r Resource) ToResource() *schema.Resource {
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
+			}
+			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
+				return nil
 			}
 			if err := recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
@@ -161,6 +165,9 @@ func (r Resource) ToResource() *schema.Resource {
 			if err != nil {
 				err = nicerError(ctx, err, "create")
 				return diag.FromErr(err)
+			}
+			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
+				return nil
 			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")

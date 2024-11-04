@@ -39,7 +39,7 @@ func TestImportingCallsRead(t *testing.T) {
 	assert.Equal(t, 1, d.Get("foo"))
 }
 
-func TestCreateSkipRead(t *testing.T) {
+func createTestResourceForSkipRead(skipRead bool) Resource {
 	res := Resource{
 		Create: func(ctx context.Context,
 			d *schema.ResourceData,
@@ -54,64 +54,51 @@ func TestCreateSkipRead(t *testing.T) {
 			d.Set("foo", 2)
 			return nil
 		},
+		Update: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			log.Println("[DEBUG] Update called")
+			return d.Set("foo", 3)
+		},
 		Schema: map[string]*schema.Schema{
 			"foo": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
 		},
-		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
-			return true
-		},
 	}
+	if skipRead {
+		res.CanSkipReadAfterCreateAndUpdate = func(d *schema.ResourceData) bool {
+			return true
+		}
+	}
+	return res
+}
 
+func TestCreateSkipRead(t *testing.T) {
 	client := &DatabricksClient{}
 	ctx := context.Background()
-	// Test with skipping read
-	r := res.ToResource()
+	r := createTestResourceForSkipRead(true).ToResource()
 	d := r.TestResourceData()
 	diags := r.CreateContext(ctx, d, client)
 	assert.False(t, diags.HasError())
 	assert.Equal(t, 1, d.Get("foo"))
-	// Test without skipping read
-	res.CanSkipReadAfterCreateAndUpdate = nil
-	r = res.ToResource()
-	d = r.TestResourceData()
-	diags = r.CreateContext(ctx, d, client)
+}
+
+func TestCreateDontSkipRead(t *testing.T) {
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	r := createTestResourceForSkipRead(false).ToResource()
+	d := r.TestResourceData()
+	diags := r.CreateContext(ctx, d, client)
 	assert.False(t, diags.HasError())
 	assert.Equal(t, 2, d.Get("foo"))
 }
 
 func TestUpdateSkipRead(t *testing.T) {
-	res := Resource{
-		Update: func(ctx context.Context,
-			d *schema.ResourceData,
-			c *DatabricksClient) error {
-			log.Println("[DEBUG] Update called")
-			return d.Set("foo", 1)
-		},
-		Read: func(ctx context.Context,
-			d *schema.ResourceData,
-			c *DatabricksClient) error {
-			log.Println("[DEBUG] Read called")
-			d.Set("foo", 2)
-			return nil
-		},
-		Schema: map[string]*schema.Schema{
-			"foo": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-		},
-		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
-			return true
-		},
-	}
-
 	client := &DatabricksClient{}
 	ctx := context.Background()
-	// Test with skipping read
-	r := res.ToResource()
+	r := createTestResourceForSkipRead(true).ToResource()
 	d := r.TestResourceData()
 	datas, err := r.Importer.StateContext(ctx, d, client)
 	require.NoError(t, err)
@@ -121,14 +108,21 @@ func TestUpdateSkipRead(t *testing.T) {
 
 	diags := r.UpdateContext(ctx, d, client)
 	assert.False(t, diags.HasError())
-	assert.Equal(t, 1, d.Get("foo"))
-	// Test without skipping read
-	res.CanSkipReadAfterCreateAndUpdate = nil
-	r = res.ToResource()
-	d = r.TestResourceData()
-	_, err = r.Importer.StateContext(ctx, d, client)
+	assert.Equal(t, 3, d.Get("foo"))
+}
+
+func TestUpdateDontSkipRead(t *testing.T) {
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	r := createTestResourceForSkipRead(false).ToResource()
+	d := r.TestResourceData()
+	datas, err := r.Importer.StateContext(ctx, d, client)
 	require.NoError(t, err)
-	diags = r.UpdateContext(ctx, d, client)
+	assert.Len(t, datas, 1)
+	assert.False(t, r.Schema["foo"].ForceNew)
+	assert.Equal(t, "", d.Id())
+
+	diags := r.UpdateContext(ctx, d, client)
 	assert.False(t, diags.HasError())
 	assert.Equal(t, 2, d.Get("foo"))
 }

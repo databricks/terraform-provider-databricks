@@ -1493,7 +1493,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.emitWorkspaceObjectParentDirectory(r)
 			return r.Data.Set("source", fileName)
 		},
-		ShouldOmitField: shouldOmitMd5Field,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "language":
+				return d.Get("language") == ""
+			case "format":
+				return d.Get("format") == "SOURCE"
+			}
+			return shouldOmitMd5Field(ic, pathString, as, d)
+		},
 		Depends: []reference{
 			{Path: "source", File: true},
 			{Path: "path", Resource: "databricks_directory", MatchType: MatchLongestPrefix,

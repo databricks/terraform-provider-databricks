@@ -63,6 +63,10 @@ type ObjectStatus struct {
 	ResourceId            string                 `json:"resource_id,omitempty"`
 }
 
+type ImportResponse struct {
+	ObjectID int64 `json:"object_id,omitempty"`
+}
+
 // ExportPath contains the base64 content of the notebook
 type ExportPath struct {
 	Content string `json:"content,omitempty"`
@@ -101,12 +105,14 @@ type NotebooksAPI struct {
 var mtx = &sync.Mutex{}
 
 // Create creates a notebook given the content and path
-func (a NotebooksAPI) Create(r ImportPath) error {
+func (a NotebooksAPI) Create(r ImportPath) (ImportResponse, error) {
 	if r.Format == "DBC" {
 		mtx.Lock()
 		defer mtx.Unlock()
 	}
-	return a.client.Post(a.context, "/workspace/import", r, nil)
+	var responce ImportResponse
+	err := a.client.Post(a.context, "/workspace/import", r, &responce)
+	return responce, err
 }
 
 // Read returns the notebook metadata and not the contents
@@ -215,31 +221,29 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 	}, nil)
 }
 
+func setComputedProperties(d *schema.ResourceData, c *common.DatabricksClient) {
+	d.Set("url", c.FormatURL("#workspace", d.Id()))
+	d.Set("workspace_path", "/Workspace"+d.Id())
+}
+
 // ResourceNotebook manages notebooks
 func ResourceNotebook() common.Resource {
 	s := FileContentSchema(map[string]*schema.Schema{
 		"language": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true, // we need it because it will be filled by the provider or backend
 			ValidateFunc: validation.StringInSlice([]string{
 				Scala,
 				Python,
 				R,
 				SQL,
 			}, false),
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				source := d.Get("source").(string)
-				if source == "" {
-					return false
-				}
-				ext := strings.ToLower(filepath.Ext(source))
-				return old == extMap[ext].Language
-			},
 		},
 		"format": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Default:  "SOURCE",
+			Computed: true,
 			ValidateFunc: validation.StringInSlice([]string{
 				"SOURCE",
 				"DBC",
@@ -270,6 +274,9 @@ func ResourceNotebook() common.Resource {
 	return common.Resource{
 		Schema:        s,
 		SchemaVersion: 1,
+		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
+			return d.Get("format").(string) == "SOURCE"
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			content, err := ReadContent(d)
 			if err != nil {
@@ -284,6 +291,10 @@ func ResourceNotebook() common.Resource {
 				Path:      path,
 				Overwrite: true,
 			}
+			if createNotebook.Format == "" && createNotebook.Language != "" {
+				createNotebook.Format = "SOURCE"
+				d.Set("format", createNotebook.Format)
+			}
 			if createNotebook.Language == "" {
 				// TODO: check what happens with empty source
 				ext := strings.ToLower(filepath.Ext(d.Get("source").(string)))
@@ -293,8 +304,9 @@ func ResourceNotebook() common.Resource {
 				createNotebook.Overwrite = extMap[ext].Overwrite
 				// by default it's SOURCE, but for DBC we have to change it
 				d.Set("format", createNotebook.Format)
+				d.Set("language", createNotebook.Language)
 			}
-			err = notebooksAPI.Create(createNotebook)
+			resp, err := notebooksAPI.Create(createNotebook)
 			if err != nil {
 				if isParentDoesntExistError(err) {
 					parent := filepath.ToSlash(filepath.Dir(path))
@@ -303,16 +315,25 @@ func ResourceNotebook() common.Resource {
 					if err != nil {
 						return err
 					}
-					err = notebooksAPI.Create(createNotebook)
+					resp, err = notebooksAPI.Create(createNotebook)
 				}
 				if err != nil {
 					return err
 				}
 			}
+			if d.Get("object_type").(string) == "" {
+				d.Set("object_type", Notebook)
+			}
+			d.Set("object_id", resp.ObjectID)
 			d.SetId(path)
+			setComputedProperties(d, c)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			oldFormat := d.Get("format").(string)
+			if oldFormat == "" {
+				oldFormat = "SOURCE"
+			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -323,9 +344,12 @@ func ResourceNotebook() common.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("url", c.FormatURL("#workspace", d.Id()))
-			d.Set("workspace_path", "/Workspace"+objectStatus.Path)
-			return common.StructToData(objectStatus, s, d)
+			setComputedProperties(d, c)
+			err = common.StructToData(objectStatus, s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set("format", oldFormat)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			notebooksAPI := NewNotebooksAPI(ctx, c)
@@ -334,25 +358,33 @@ func ResourceNotebook() common.Resource {
 				return err
 			}
 			format := d.Get("format").(string)
+			var resp ImportResponse
 			if format == "DBC" {
 				// Overwrite cannot be used for source format when importing a folder
 				err = notebooksAPI.Delete(d.Id(), true)
 				if err != nil {
 					return err
 				}
-				return notebooksAPI.Create(ImportPath{
+				resp, err = notebooksAPI.Create(ImportPath{
 					Content: base64.StdEncoding.EncodeToString(content),
 					Format:  format,
 					Path:    d.Id(),
 				})
+			} else {
+				resp, err = notebooksAPI.Create(ImportPath{
+					Content:   base64.StdEncoding.EncodeToString(content),
+					Language:  d.Get("language").(string),
+					Format:    format,
+					Overwrite: true,
+					Path:      d.Id(),
+				})
 			}
-			return notebooksAPI.Create(ImportPath{
-				Content:   base64.StdEncoding.EncodeToString(content),
-				Language:  d.Get("language").(string),
-				Format:    format,
-				Overwrite: true,
-				Path:      d.Id(),
-			})
+			if err != nil {
+				return err
+			}
+			d.Set("object_id", resp.ObjectID)
+			setComputedProperties(d, c)
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			objType := d.Get("object_type")

@@ -332,7 +332,14 @@ func ResourceNotebook() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			oldFormat := d.Get("format").(string)
 			if oldFormat == "" {
-				oldFormat = "SOURCE"
+				source := d.Get("source").(string)
+				// check if `source` is set, and if it is, use file exension to determine format
+				if source != "" {
+					ext := strings.ToLower(filepath.Ext(source))
+					oldFormat = extMap[ext].Format
+				} else {
+					oldFormat = "SOURCE"
+				}
 			}
 			w, err := c.WorkspaceClient()
 			if err != nil {

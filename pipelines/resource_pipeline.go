@@ -232,7 +232,7 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 
 	// As of 6th Nov 2024, the DLT API only normalizes the catalog name when creating
 	// a pipeline. So we only ignore the equal fold diff for the catalog name and not other
-	// UC resources like target or ingestion_definition.connection_name.
+	// UC resources like target, schema or ingestion_definition.connection_name.
 	s.SchemaPath("catalog").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 
 	// Deprecated fields

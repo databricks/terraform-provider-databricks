@@ -45,17 +45,10 @@ func TestResourceClusterCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -79,6 +72,7 @@ func TestResourceClusterCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, false, d.Get("is_pinned"))
 }
 
 func TestResourceClusterCreatePinned(t *testing.T) {
@@ -128,24 +122,18 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events: []compute.ClusterEvent{
-						{
-							ClusterId: "abc",
-							Timestamp: int64(123),
-							Type:      compute.EventTypePinned,
-							Details:   &compute.EventDetails{},
-						},
-					},
-					TotalCount: 1,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{{
+						ClusterId:              "abc",
+						NumWorkers:             100,
+						ClusterName:            "Shared Autoscaling",
+						SparkVersion:           "7.1-scala12",
+						NodeTypeId:             "i3.xlarge",
+						AutoterminationMinutes: 15,
+						State:                  compute.StateRunning,
+					}},
 				},
 			},
 		},
@@ -162,6 +150,7 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, true, d.Get("is_pinned"))
 }
 
 func TestResourceClusterCreateErrorFollowedByDeletion(t *testing.T) {
@@ -307,17 +296,10 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -506,17 +488,10 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -574,17 +549,10 @@ func TestResourceClusterCreateNoWait_WithLibraries(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -668,17 +636,10 @@ func TestResourceClusterCreateNoWait(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 		},
@@ -745,17 +706,10 @@ func TestResourceClusterRead(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 		},
@@ -843,17 +797,10 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -907,17 +854,10 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -974,17 +914,10 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1050,17 +983,10 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 		},
@@ -1109,17 +1035,10 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1169,17 +1088,10 @@ func TestResourceClusterUpdate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1249,17 +1161,10 @@ func TestResourceClusterUpdate_WhileScaling(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1345,17 +1250,10 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1493,17 +1391,10 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{ // start cluster before libs install
@@ -1633,17 +1524,10 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1786,17 +1670,10 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1970,8 +1847,11 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
+				},
 			},
 			{
 				Method:       "GET",
@@ -2008,8 +1888,11 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
+				},
 			},
 			{
 				Method:   "GET",
@@ -2072,17 +1955,10 @@ func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{

@@ -35,8 +35,14 @@ func (ic *importContext) isServiceInListing(service string) bool {
 }
 
 func (ic *importContext) MatchesName(n string) bool {
-	if ic.match == "" {
+	if ic.match == "" && ic.matchRegex == nil && ic.excludeRegex == nil {
 		return true
+	}
+	if ic.excludeRegex != nil && ic.excludeRegex.MatchString(n) {
+		return false
+	}
+	if ic.matchRegex != nil {
+		return ic.matchRegex.MatchString(n)
 	}
 	return strings.Contains(strings.ToLower(n), strings.ToLower(ic.match))
 }

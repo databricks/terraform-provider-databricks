@@ -466,17 +466,22 @@ func TestAccPermissions_WorkspaceFile_Path(t *testing.T) {
 		}
 		resource "databricks_workspace_file" "this" {
 			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
-			path = "${databricks_directory.this.path}/test_notebook"
+			path = "${databricks_directory.this.path}/test_ws_file"
 		}`
 	WorkspaceLevel(t, Step{
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id", groupPermissions("CAN_RUN")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id",
+			groupPermissions("CAN_RUN")),
 	}, Step{
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id",
+			currentPrincipalPermission(t, "CAN_MANAGE"),
+			allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
 	}, Step{
 		// The current user can be removed from permissions since they inherit permissions from the directory they created.
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id", allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id",
+			allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
 	}, Step{
-		Template:    workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id", currentPrincipalPermission(t, "CAN_READ")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id",
+			currentPrincipalPermission(t, "CAN_READ")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for file, allowed levels: CAN_MANAGE"),
 	})
 }
@@ -489,17 +494,22 @@ func TestAccPermissions_WorkspaceFile_Id(t *testing.T) {
 		}
 		resource "databricks_workspace_file" "this" {
 			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
-			path = "${databricks_directory.this.path}/test_notebook"
+			path = "${databricks_directory.this.path}/test_ws_file"
 		}`
 	WorkspaceLevel(t, Step{
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id", groupPermissions("CAN_RUN")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id",
+			groupPermissions("CAN_RUN")),
 	}, Step{
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id",
+			currentPrincipalPermission(t, "CAN_MANAGE"),
+			allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
 	}, Step{
 		// The current user can be removed from permissions since they inherit permissions from the directory they created.
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id", allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id",
+			allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
 	}, Step{
-		Template:    workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id", currentPrincipalPermission(t, "CAN_READ")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id",
+			currentPrincipalPermission(t, "CAN_READ")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for file, allowed levels: CAN_MANAGE"),
 	})
 }

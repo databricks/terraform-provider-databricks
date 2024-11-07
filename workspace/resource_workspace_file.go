@@ -44,7 +44,7 @@ func ResourceWorkspaceFile() common.Resource {
 			path := d.Get("path").(string)
 			importReq := workspace.Import{
 				Content:         base64.StdEncoding.EncodeToString(content),
-				Format:          workspace.ImportFormatAuto,
+				Format:          workspace.ImportFormatRaw,
 				Path:            path,
 				Overwrite:       true,
 				ForceSendFields: []string{"Content"},
@@ -93,7 +93,7 @@ func ResourceWorkspaceFile() common.Resource {
 			}
 			return client.Workspace.Import(ctx, workspace.Import{
 				Content:         base64.StdEncoding.EncodeToString(content),
-				Format:          workspace.ImportFormatAuto,
+				Format:          workspace.ImportFormatRaw,
 				Overwrite:       true,
 				Path:            d.Id(),
 				ForceSendFields: []string{"Content"},

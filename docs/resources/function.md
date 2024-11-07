@@ -1,7 +1,7 @@
 ---
 subcategory: "Unity Catalog"
 ---
-# databricks_functionss Resource
+# databricks_function Resource
 
 -> This resource source can only be used with a workspace-level provider.
 

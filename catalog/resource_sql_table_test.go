@@ -141,6 +141,86 @@ func TestResourceSqlTableCreateStatement_Partition(t *testing.T) {
 	assert.Contains(t, stmt, "PARTITIONED BY (baz, bazz)")
 }
 
+func TestResourceSqlTableCreateStatement_Constraints(t *testing.T) {
+	ti := &SqlTableInfo{
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "EXTERNAL",
+		DataSourceFormat:      "DELTA",
+		StorageLocation:       "s3://ext-main/foo/bar1",
+		StorageCredentialName: "somecred",
+		Comment:               "terraform managed",
+		ColumnInfos: []SqlColumnInfo{
+			{
+				Name: "id",
+				Type: "int",
+			},
+			{
+				Name: "external_id",
+				Type: "int",
+			},
+			{
+				Name: "external_name",
+				Type: "string",
+			},
+		},
+		Constraints: []ConstraintInfo{
+			{
+				Name:       "pk",
+				Type:       "PRIMARY KEY",
+				KeyColumns: []string{"id"},
+			},
+			{
+				Name:        "fk",
+				Type:        "FOREIGN KEY",
+				KeyColumns:  []string{"external_id", "external_name"},
+				ParentTable: "some_table",
+			},
+		},
+	}
+	stmt := ti.buildTableCreateStatement()
+	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
+	assert.Contains(t, stmt, "USING DELTA")
+	assert.Contains(t, stmt, "(`id` int NOT NULL, `external_id` int NOT NULL, `external_name` string NOT NULL")
+	assert.Contains(t, stmt, "CONSTRAINT `pk` PRIMARY KEY(`id`)")
+	assert.Contains(t, stmt, "CONSTRAINT `fk` FOREIGN KEY(`external_id`,`external_name`) REFERENCES some_table)")
+	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
+	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
+}
+
+func TestResourceSqlTableCreateStatement_ConstraintsWithoutColumns(t *testing.T) {
+	ti := &SqlTableInfo{
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "EXTERNAL",
+		DataSourceFormat:      "DELTA",
+		StorageLocation:       "s3://ext-main/foo/bar1",
+		StorageCredentialName: "somecred",
+		Comment:               "terraform managed",
+		Constraints: []ConstraintInfo{
+			{
+				Name:       "pk",
+				Type:       "PRIMARY KEY",
+				KeyColumns: []string{"id"},
+			},
+			{
+				Name:        "fk",
+				Type:        "FOREIGN KEY",
+				KeyColumns:  []string{"external_id", "external_name"},
+				ParentTable: "some_table",
+			},
+		},
+	}
+	stmt := ti.buildTableCreateStatement()
+	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
+	assert.Contains(t, stmt, "USING DELTA")
+	assert.NotContains(t, stmt, "CONSTRAINT")
+	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
+	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
+}
+
 func TestResourceSqlTableCreateStatement_Liquid(t *testing.T) {
 	ti := &SqlTableInfo{
 		Name:                  "bar",
@@ -198,7 +278,7 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 		table_type         = "MANAGED"
 		data_source_format = "DELTA"
 		storage_location   = "abfss:container@account/somepath"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"
@@ -251,7 +331,7 @@ func TestResourceSqlTableCreateTableWithOwner(t *testing.T) {
 		table_type         = "MANAGED"
 		data_source_format = "DELTA"
 		storage_location   = "abfss:container@account/somepath"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"
@@ -326,7 +406,7 @@ func TestResourceSqlTableCreateTable_Error(t *testing.T) {
 		table_type         = "MANAGED"
 		data_source_format = "DELTA"
 		storage_location   = "abfss:container@account/somepath"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"
@@ -1310,7 +1390,7 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 		data_source_format = "DELTA"
 		storage_location   = "abfss://container@account/somepath"
 		warehouse_id       = "existingwarehouse"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"
@@ -1380,7 +1460,7 @@ func TestResourceSqlTableCreateTableWithIdentityColumn_ExistingSQLWarehouse(t *t
 		data_source_format = "DELTA"
 		storage_location   = "abfss://container@account/somepath"
 		warehouse_id       = "existingwarehouse"
-	  
+
 		column {
 		  name      	= "id"
 		  type 			= "bigint"
@@ -1476,8 +1556,8 @@ func TestResourceSqlTableReadTableWithIdentityColumn_ExistingSQLWarehouse(t *tes
 		data_source_format = "DELTA"
 		storage_location   = "abfss://container@account/somepath"
 		warehouse_id       = "existingwarehouse"
-	  
-	
+
+
 		comment = "this table is managed by terraform"
 		`,
 		Fixtures: []qa.HTTPFixture{
@@ -1542,7 +1622,7 @@ func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
 		table_type         = "MANAGED"
 		data_source_format = "DELTA"
 		warehouse_id       = "existingwarehouse"
-	  
+
 		column {
 		  name      = "id"
 		  type      = "int"

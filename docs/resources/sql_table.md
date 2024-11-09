@@ -149,6 +149,35 @@ resource "databricks_sql_table" "thing" {
 }
 ```
 
+## Use Constraints
+
+```hcl
+resource "databricks_sql_table" "table_with_constraints" {
+  provider           = databricks.workspace
+  name               = "constraints_table"
+  catalog_name       = databricks_catalog.sandbox.name
+  schema_name        = databricks_schema.things.name
+  table_type         = "MANAGED"
+  data_source_format = "DELTA"
+  storage_location   = ""
+  column {
+    name     = "id"
+    type     = "int"
+  }
+  column {
+    name    = "name"
+    type    = "string"
+    comment = "name of thing"
+  }
+  constraint {
+    name        = "pk"
+    type        = "PRIMARY KEY"
+    key_columns = ["id"]
+  }
+  comment = "this table contains PRIMARY KEY constraint on `id` column"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -173,13 +202,23 @@ The following arguments are supported:
 ### `column` configuration block
 
 For table columns
-Currently, changing the column definitions for a table will require dropping and re-creating the table
 
 * `name` - User-visible name of column
 * `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
 * `identity` - (Optional) Whether field is an identity column. Can be `default`, `always` or unset. It is unset by default.
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
+
+### `constraint` configuration block
+
+For table constraints
+Only `PRIMARY KEY` and `FOREIGN KEY` constraints are supported right now.
+
+* `name` - User-visible name of the constraint
+* `type` - Type of the constraint. Supported values: `PRIMARY KEY`, `FOREIGN KEY`
+* `key_columns` - List of the columns in the defined table that should be used for the constraint.
+* `parent_table` - (Optional) Required for `FOREIGN KEY` constraint. Full name of the parent table.
+* `parent_columns` - (Optional) Optional for `FOREIGN KEY` constraint. Should be used if column names in the parent table differ.
 
 ## Attribute Reference
 

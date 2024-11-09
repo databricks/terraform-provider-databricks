@@ -32,6 +32,14 @@ type SqlColumnInfo struct {
 	TypeJson string         `json:"type_json,omitempty" tf:"computed"`
 }
 
+type ConstraintInfo struct {
+	Name          string   `json:"name"`
+	Type          string   `json:"type"`
+	KeyColumns    []string `json:"key_columns"`
+	ParentTable   string   `json:"parent_table,omitempty"`
+	ParentColumns []string `json:"parent_columns,omitempty"`
+}
+
 type TypeJson struct {
 	Metadata map[string]any `json:"metadata,omitempty"`
 }
@@ -51,6 +59,7 @@ type SqlTableInfo struct {
 	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
 	Partitions            []string          `json:"partitions,omitempty" tf:"force_new"`
 	ClusterKeys           []string          `json:"cluster_keys,omitempty"`
+	Constraints           []ConstraintInfo  `json:"constraints,omitempty"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`
@@ -87,6 +96,9 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 	s.SchemaPath("partitions").SetConflictsWith([]string{"cluster_keys"})
 	s.SchemaPath("cluster_keys").SetConflictsWith([]string{"partitions"})
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
+		return getColumnType(old) == getColumnType(new)
+	})
+	s.SchemaPath("constraint", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 		return getColumnType(old) == getColumnType(new)
 	})
 	return s
@@ -242,6 +254,32 @@ func (ti *SqlTableInfo) serializeColumnInfos() string {
 	return strings.Join(columnFragments[:], ", ") // id INT NOT NULL, name STRING, age INT
 }
 
+func serializePrimaryKeyConstraint(constraint ConstraintInfo) string {
+	return fmt.Sprintf("CONSTRAINT %s PRIMARY KEY(%s)", constraint.getWrappedConstraintName(), constraint.getWrappedKeyColumnNames())
+}
+
+func serializeForeignKeyConstraint(constraint ConstraintInfo) string {
+	constraint_clause := fmt.Sprintf("CONSTRAINT %s FOREIGN KEY(%s) REFERENCES %s", constraint.getWrappedConstraintName(), constraint.getWrappedKeyColumnNames(), constraint.ParentTable)
+	if len(constraint.ParentColumns) > 0 {
+		constraint_clause += fmt.Sprintf("(%s)", constraint.getWrappedParentColumnNames())
+	}
+	return constraint_clause
+}
+
+func (ti *SqlTableInfo) serializeConstraints() string {
+	constraintFragments := make([]string, len(ti.Constraints))
+
+	for i, constraint := range ti.Constraints {
+		if constraint.Type == "PRIMARY KEY" {
+			constraintFragments[i] = serializePrimaryKeyConstraint(constraint)
+		} else if constraint.Type == "FOREIGN KEY" {
+			constraintFragments[i] = serializeForeignKeyConstraint(constraint)
+		}
+	}
+
+	return strings.Join(constraintFragments[:], ", ") // CONSTRAINT `pk`` PRIMARY KEY (`id`, `nickname`), CONSTRAINT `fk` FOREIGN KEY (`player_id`) REFERENCES players
+}
+
 func (ti *SqlTableInfo) serializeProperties() string {
 	propsMap := make([]string, 0, len(ti.Properties))
 	for key, value := range ti.Properties {
@@ -290,7 +328,11 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.SQLFullName()))
 
 	if len(ti.ColumnInfos) > 0 {
-		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeColumnInfos()))
+		columnInfosClause := ti.serializeColumnInfos()
+		if len(ti.Constraints) > 0 {
+			columnInfosClause += fmt.Sprintf(", %s", ti.serializeConstraints())
+		}
+		statements = append(statements, fmt.Sprintf(" (%s)", columnInfosClause))
 	}
 
 	if !isView {
@@ -340,6 +382,21 @@ func (ci SqlColumnInfo) getWrappedColumnName() string {
 // Wrapping column name with backticks to avoid special character messing things up.
 func (ti *SqlTableInfo) getWrappedClusterKeys() string {
 	return "`" + strings.Join(ti.ClusterKeys, "`,`") + "`"
+}
+
+// Wrapping the constraint name with backticks to avoid special character messing things up.
+func (ci ConstraintInfo) getWrappedConstraintName() string {
+	return fmt.Sprintf("`%s`", ci.Name)
+}
+
+// Wrapping constraint column names with backticks to avoid special character messing things up.
+func (ci ConstraintInfo) getWrappedKeyColumnNames() string {
+	return "`" + strings.Join(ci.KeyColumns, "`,`") + "`"
+}
+
+// Wrapping parent column name with backticks to avoid special character messing things up.
+func (ci ConstraintInfo) getWrappedParentColumnNames() string {
+	return "`" + strings.Join(ci.ParentColumns, "`,`") + "`"
 }
 
 func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
@@ -413,6 +470,43 @@ func (ti *SqlTableInfo) alterExistingColumnStatements(oldti *SqlTableInfo, state
 	return statements
 }
 
+func (ti *SqlTableInfo) addOrRemoveConstraintStatements(oldti *SqlTableInfo, statements []string, typestring string) []string {
+	nameToOldConstraint := make(map[string]ConstraintInfo)
+	nameToNewConstraint := make(map[string]ConstraintInfo)
+	for _, ci := range oldti.Constraints {
+		nameToOldConstraint[ci.Name] = ci
+	}
+	for _, newCi := range ti.Constraints {
+		nameToNewConstraint[newCi.Name] = newCi
+	}
+
+	removeConstraintStatements := make([]string, 0)
+
+	for name, oldCi := range nameToOldConstraint {
+		if _, exists := nameToNewConstraint[name]; !exists {
+			// Remove old constraint if old constraint is no longer found in the config.
+			removeConstraintStatements = append(removeConstraintStatements, oldCi.getWrappedConstraintName())
+		}
+	}
+	for _, removeStatement := range removeConstraintStatements {
+		statements = append(statements, fmt.Sprintf("ALTER %s %s DROP CONSTRAINT IF EXISTS %s", typestring, ti.SQLFullName(), removeStatement))
+	}
+
+	for _, newCi := range ti.Constraints {
+		if _, exists := nameToOldConstraint[newCi.Name]; !exists {
+			var newConstraintStatement string
+			if newCi.Type == "PRIMARY KEY" {
+				newConstraintStatement = serializePrimaryKeyConstraint(newCi)
+			} else if newCi.Type == "FOREIGN KEY" {
+				newConstraintStatement = serializeForeignKeyConstraint(newCi)
+			}
+			statements = append(statements, fmt.Sprintf("ALTER %s %s ADD %s", typestring, ti.SQLFullName(), newConstraintStatement))
+		}
+	}
+
+	return statements
+}
+
 func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 	statements := make([]string, 0)
 	typestring := ti.getTableTypeString()
@@ -454,6 +548,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 	}
 
 	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)
+	statements = ti.addOrRemoveConstraintStatements(oldti, statements, typestring)
 
 	return statements, nil
 }

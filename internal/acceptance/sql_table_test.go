@@ -58,7 +58,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 				that      = "this"
 				something = "else2"
 			}
-			
+
 			column {
 				name      = "id"
 				type      = "int"
@@ -66,6 +66,78 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 			column {
 				name      = "name"
 				type      = "string"
+			}
+			comment = "this table is managed by terraform..."
+		}`,
+	})
+}
+
+func TestUcAccResourceSqlTable_Constraints(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	UnityWorkspaceLevel(t, Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				this      = "that"
+				something = "else"
+			}
+
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			constraint {
+				name        = "pk"
+				type        = "PRIMARY KEY"
+				key_columns = ["id", "name"]
+			}
+			comment = "this table is managed by terraform"
+			owner = "account users"
+		}`,
+	}, Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			properties         = {
+				that      = "this"
+				something = "else2"
+			}
+
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "string"
+			}
+			constraint {
+				name        = "pk"
+				type        = "PRIMARY KEY"
+				key_columns = ["id", "name"]
 			}
 			comment = "this table is managed by terraform..."
 		}`,
@@ -121,7 +193,7 @@ func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
 				that      = "this"
 				something = "else2"
 			}
-			
+
 			column {
 				name      = "id"
 				type      = "bigint"
@@ -146,7 +218,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			}
 			comment = "Managed by TF"
 		}
-		
+
 		resource "databricks_external_location" "some" {
 			name            = "external-{var.RANDOM}"
 			url             = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
@@ -154,7 +226,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			comment         = "Managed by TF"
 			force_destroy   = true
 		}
-				
+
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
 			catalog_name = "main"
@@ -203,7 +275,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 				type      = "string"
 			}
 		}
-		
+
 		resource "databricks_sql_table" "view" {
 			name               = "bar_view"
 			catalog_name       = "main"
@@ -219,7 +291,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 			column {
 				name      = "name"
 				comment   = "view column comment"
-			}			
+			}
 		}`,
 	})
 }
@@ -261,7 +333,7 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 			options         = {
 				this      = "blue"
 				that      = "green"
-			}			
+			}
 			column {
 				name      = "id"
 				type      = "int"
@@ -298,7 +370,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 			options         = {
 				this      = "blue"
 				that      = "green"
-			}			
+			}
 			column {
 				name      = "id"
 				type      = "int"
@@ -338,7 +410,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 				name      = "name"
 				type      = "varchar(64)"
 			}
-			cluster_keys = ["id", "name"]			
+			cluster_keys = ["id", "name"]
 			comment = "this table is managed by terraform..."
 		}`,
 	})

@@ -59,7 +59,7 @@ type SqlTableInfo struct {
 	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
 	Partitions            []string          `json:"partitions,omitempty" tf:"force_new"`
 	ClusterKeys           []string          `json:"cluster_keys,omitempty"`
-	Constraints           []ConstraintInfo  `json:"constraints,omitempty"`
+	Constraints           []ConstraintInfo  `json:"constraints,omitempty" tf:"alias:constraint"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
 	ViewDefinition        string            `json:"view_definition,omitempty"`

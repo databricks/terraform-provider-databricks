@@ -130,9 +130,19 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-// This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
-// Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func Validate(cluster any) error {
+// The clusters API does not provide a great way to create a single node cluster.
+// This function validates that a user has their cluster configured correctly IF
+// they were trying to create a single node cluster. It does this by:
+//
+//  1. Asserting the correct cluster tags and spark conf are set when num_workers is 0
+//     and autoscaling is not enabled.
+//  2. Skip the validation if a policy is configured on the cluster. This is done to allow
+//     users to configure spark_conf, custom_tags, num_workers, etc. in the policy itself.
+//
+// TODO: Once the clusters resource is migrated to the TF plugin framework, we should
+// make this a warning instead of an error.
+func ValidateIfSingleNode(cluster any) error {
+	var hasPolicyConfigured bool
 	var profile, master, resourceClass string
 	switch c := cluster.(type) {
 	case compute.CreateCluster:
@@ -142,6 +152,7 @@ func Validate(cluster any) error {
 		profile = c.SparkConf["spark.databricks.cluster.profile"]
 		master = c.SparkConf["spark.master"]
 		resourceClass = c.CustomTags["ResourceClass"]
+		hasPolicyConfigured = c.PolicyId != ""
 	case compute.EditCluster:
 		if c.NumWorkers > 0 || c.Autoscale != nil {
 			return nil
@@ -149,6 +160,7 @@ func Validate(cluster any) error {
 		profile = c.SparkConf["spark.databricks.cluster.profile"]
 		master = c.SparkConf["spark.master"]
 		resourceClass = c.CustomTags["ResourceClass"]
+		hasPolicyConfigured = c.PolicyId != ""
 	case compute.ClusterSpec:
 		if c.NumWorkers > 0 || c.Autoscale != nil {
 			return nil
@@ -156,8 +168,15 @@ func Validate(cluster any) error {
 		profile = c.SparkConf["spark.databricks.cluster.profile"]
 		master = c.SparkConf["spark.master"]
 		resourceClass = c.CustomTags["ResourceClass"]
+		hasPolicyConfigured = c.PolicyId != ""
 	default:
 		return fmt.Errorf(unsupportedExceptCreateEditClusterSpecErr, cluster, "", "", "")
+	}
+	// If a cluster has a policy configured then we skip validation regarding whether
+	// the single node cluster configuration is valid or not. This is done to allow
+	// users to configure spark_conf, custom_tags, num_workers, etc. in the policy itself.
+	if hasPolicyConfigured {
+		return nil
 	}
 	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
 		return nil
@@ -445,7 +464,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	clusters := w.Clusters
 	var createClusterRequest compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &createClusterRequest)
-	if err := Validate(createClusterRequest); err != nil {
+	if err := ValidateIfSingleNode(createClusterRequest); err != nil {
 		return err
 	}
 	if err = ModifyRequestOnInstancePool(&createClusterRequest); err != nil {
@@ -595,7 +614,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
-		if err := Validate(cluster); err != nil {
+		if err := ValidateIfSingleNode(cluster); err != nil {
 			return err
 		}
 		if err = ModifyRequestOnInstancePool(&cluster); err != nil {

@@ -1072,12 +1072,12 @@ func ResourceJob() common.Resource {
 				if task.NewCluster == nil {
 					continue
 				}
-				if err := clusters.Validate(*task.NewCluster); err != nil {
+				if err := clusters.ValidateIfSingleNode(*task.NewCluster); err != nil {
 					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
 				}
 			}
 			if js.NewCluster != nil {
-				if err := clusters.Validate(*js.NewCluster); err != nil {
+				if err := clusters.ValidateIfSingleNode(*js.NewCluster); err != nil {
 					return fmt.Errorf("invalid job cluster: %w", err)
 				}
 			}

@@ -157,7 +157,7 @@ func (c controlRunStateLifecycleManagerGoSdk) OnUpdate(ctx context.Context) erro
 }
 
 func updateAndValidateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceData) error {
-	err := clusters.Validate(*clusterSpec)
+	err := clusters.ValidateIfSingleNode(*clusterSpec)
 	if err != nil {
 		return err
 	}

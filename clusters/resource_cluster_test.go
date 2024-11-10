@@ -1863,6 +1863,77 @@ func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
 	assert.EqualError(t, err, numWorkerErr)
 }
 
+func TestResourceClusterCreate_SingleNodeWithPolicy(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					NumWorkers:             0,
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.3.x-scala12",
+					NodeTypeId:             "Standard_F4s",
+					AutoterminationMinutes: 120,
+					ForceSendFields:        []string{"NumWorkers"},
+					PolicyId:               "policy-123",
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/events",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
+					Limit:      1,
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
+				},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.3.x-scala12",
+					NodeTypeId:             "Standard_F4s",
+					AutoterminationMinutes: 120,
+					State:                  compute.StateRunning,
+					PolicyId:               "policy-123",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 120,
+			"cluster_name":            "Single Node Cluster",
+			"spark_version":           "7.3.x-scala12",
+			"node_type_id":            "Standard_F4s",
+			"is_pinned":               false,
+			"policy_id":               "policy-123",
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, d.Get("num_workers"))
+}
+
 func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Create:   true,
@@ -1900,6 +1971,76 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 		},
 	}.Apply(t)
 	assert.EqualError(t, err, numWorkerErr)
+}
+
+func TestResourceClusterUpdate_NumWorkersZeroWithPolicy(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				ReuseRequest: true,
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             0,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+					PolicyId:               "policy-123",
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/events",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
+					Limit:      1,
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
+				},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/edit",
+				ExpectedRequest: compute.ClusterDetails{
+					AutoterminationMinutes: 15,
+					ClusterId:              "abc",
+					NumWorkers:             0,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					PolicyId:               "policy-123",
+					ForceSendFields:        []string{"NumWorkers"},
+				},
+			},
+		},
+		ID:       "abc",
+		Update:   true,
+		Resource: ResourceCluster(),
+		InstanceState: map[string]string{
+			"autotermination_minutes": "15",
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             "100",
+			"policy_id":               "policy-123",
+		},
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             0,
+			"policy_id":               "policy-123",
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
 }
 
 func TestModifyClusterRequestAws(t *testing.T) {

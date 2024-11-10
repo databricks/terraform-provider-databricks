@@ -2073,6 +2073,55 @@ is defined in a policy used by the cluster. Please define this in the cluster co
 itself to create a single node cluster.`)
 }
 
+func TestResourceJobCreate_SingleNodeJobClustersWithPolicy(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/create",
+				ExpectedRequest: JobSettings{
+					Name:              "single node cluster",
+					MaxConcurrentRuns: 1,
+					Libraries: []compute.Library{
+						{
+							Jar: "dbfs://ff/gg/hh.jar",
+						},
+					},
+					NewCluster: &clusters.Cluster{
+						NumWorkers:   0,
+						PolicyID:     "policy-123",
+						SparkVersion: "7.3.x-scala2.12",
+					},
+				},
+				Response: Job{
+					JobID: 17,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=17",
+				Response: Job{
+					Settings: &JobSettings{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "single node cluster"
+		new_cluster  {
+			spark_version = "7.3.x-scala2.12"
+			policy_id     = "policy-123"
+		  }	
+		max_concurrent_runs = 1
+		library {
+			jar = "dbfs://ff/gg/hh.jar"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "17", d.Id())
+}
+
 func TestResourceJobRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -2974,6 +3023,59 @@ cluster please include the following configuration in your cluster configuration
 Please note that the Databricks Terraform provider cannot detect if the above configuration
 is defined in a policy used by the cluster. Please define this in the cluster configuration
 itself to create a single node cluster.`)
+}
+
+func TestResourceJobUpdate_SingleNodeJobClustersWithPolicy(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		ID: "17",
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/jobs/reset",
+				ExpectedRequest: UpdateJobRequest{
+					JobID: 17,
+					NewSettings: &JobSettings{
+						Name:              "single node cluster",
+						MaxConcurrentRuns: 1,
+						Libraries: []compute.Library{
+							{
+								Jar: "dbfs://ff/gg/hh.jar",
+							},
+						},
+						NewCluster: &clusters.Cluster{
+							NumWorkers:   0,
+							PolicyID:     "policy-123",
+							SparkVersion: "7.3.x-scala2.12",
+						},
+					},
+				},
+				Response: Job{
+					JobID: 17,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/jobs/get?job_id=17",
+				Response: Job{
+					Settings: &JobSettings{},
+				},
+			},
+		},
+		Update:   true,
+		Resource: ResourceJob(),
+		HCL: `
+		name = "single node cluster"
+		new_cluster  {
+			spark_version = "7.3.x-scala2.12"
+			policy_id     = "policy-123"
+		  }	
+		max_concurrent_runs = 1
+		library {
+			jar = "dbfs://ff/gg/hh.jar"
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "17", d.Id())
 }
 
 func TestJobsAPIList(t *testing.T) {

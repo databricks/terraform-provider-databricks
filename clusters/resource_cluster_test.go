@@ -12,9 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var nothingPinned = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+	Response: compute.ListClustersResponse{
+		Clusters: []compute.ClusterDetails{},
+	},
+}
+
 func TestResourceClusterCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -42,13 +51,6 @@ func TestResourceClusterCreate(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -267,6 +269,7 @@ func TestResourceClusterCreateErrorFollowedByDeletionError(t *testing.T) {
 func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -293,13 +296,6 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -456,6 +452,7 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 func TestResourceClusterCreatePhoton(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -489,13 +486,6 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
-				},
-			},
-			{
-				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
 				Response: compute.ClusterLibraryStatuses{
 					LibraryStatuses: []compute.LibraryFullStatus{},
@@ -521,6 +511,7 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 func TestResourceClusterCreateNoWait_WithLibraries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -546,13 +537,6 @@ func TestResourceClusterCreateNoWait_WithLibraries(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateUnknown,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -606,6 +590,7 @@ func TestResourceClusterCreateNoWait_WithLibraries(t *testing.T) {
 func TestResourceClusterCreateNoWait(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -633,13 +618,6 @@ func TestResourceClusterCreateNoWait(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateUnknown,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 		},
@@ -689,6 +667,7 @@ func TestResourceClusterCreate_Error(t *testing.T) {
 func TestResourceClusterRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/clusters/get?cluster_id=abc",
@@ -703,13 +682,6 @@ func TestResourceClusterRead(t *testing.T) {
 					Autoscale: &compute.AutoScale{
 						MaxWorkers: 4,
 					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 		},
@@ -779,6 +751,7 @@ func TestResourceClusterRead_Error(t *testing.T) {
 func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -794,13 +767,6 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -839,6 +805,7 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -851,13 +818,6 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -899,6 +859,7 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -911,13 +872,6 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateTerminated,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -956,6 +910,7 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -980,13 +935,6 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 						MinWorkers: 4,
 						MaxWorkers: 10,
 					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 		},
@@ -1020,6 +968,7 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1032,13 +981,6 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1073,6 +1015,7 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 func TestResourceClusterUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1085,13 +1028,6 @@ func TestResourceClusterUpdate(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1146,6 +1082,7 @@ func TestResourceClusterUpdate(t *testing.T) {
 func TestResourceClusterUpdate_WhileScaling(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1158,13 +1095,6 @@ func TestResourceClusterUpdate_WhileScaling(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1235,6 +1165,7 @@ func TestResourceClusterUpdate_WhileScaling(t *testing.T) {
 func TestResourceClusterUpdateWithPinned(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1247,13 +1178,6 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1344,6 +1268,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			terminated, // 1 of ...
 			{
 				Method:   "POST",
@@ -1388,13 +1313,6 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 					SparkVersion: "7.1-scala12",
 					NodeTypeId:   "i3.xlarge",
 					State:        compute.StateTerminated,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{ // start cluster before libs install
@@ -1504,6 +1422,7 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1521,13 +1440,6 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 						FirstOnDemand: 1,
 						ZoneId:        "us-west-2a",
 					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1646,6 +1558,7 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 func TestResourceClusterCreate_SingleNode(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -1667,13 +1580,6 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 				Response: compute.ClusterDetails{
 					ClusterId: "abc",
 					State:     compute.StateRunning,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1839,18 +1745,12 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceCluster(),
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/clusters/get?cluster_id=foo",
 				Response: compute.ClusterDetails{
 					State: compute.StateTerminated,
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{
@@ -1889,13 +1789,6 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
-				},
-			},
-			{
-				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=foo",
 				Response: compute.ClusterLibraryStatuses{
 					ClusterId: "foo",
@@ -1928,6 +1821,7 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 					},
 				},
 			},
+			nothingPinned,
 		},
 		Read: true,
 		ID:   "foo",
@@ -1937,6 +1831,7 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1952,13 +1847,6 @@ func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 					GcpAttributes: &compute.GcpAttributes{
 						LocalSsdCount: 2,
 					},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
 				},
 			},
 			{

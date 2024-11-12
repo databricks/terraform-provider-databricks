@@ -734,7 +734,7 @@ func allResourcePermissions() []resourcePermissions {
 		},
 		{
 			field:             "vector_search_endpoint_id",
-			objectType:        "vector-search-endpoint",
+			objectType:        "vector-search-endpoints",
 			requestObjectType: "vector-search-endpoints",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
 				"CAN_USE":    {isManagementPermission: false},

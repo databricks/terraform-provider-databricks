@@ -1,6 +1,8 @@
 module github.com/databricks/terraform-provider-databricks
 
-go 1.22
+go 1.22.0
+
+toolchain go1.22.5
 
 require (
 	github.com/databricks/databricks-sdk-go v0.51.0

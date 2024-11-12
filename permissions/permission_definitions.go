@@ -737,7 +737,7 @@ func allResourcePermissions() []resourcePermissions {
 			objectType:        "vector-search-endpoint",
 			requestObjectType: "vector-search-endpoints",
 			allowedPermissionLevels: map[string]permissionLevelOptions{
-				"CAN_USE":   {isManagementPermission: false},
+				"CAN_USE":    {isManagementPermission: false},
 				"CAN_MANAGE": {isManagementPermission: true},
 			},
 			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},

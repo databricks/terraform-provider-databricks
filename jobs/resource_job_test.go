@@ -823,6 +823,14 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 								NotebookPath: "/Stuff",
 							},
 						},
+						{
+							TaskKey: "c",
+							NewCluster: &clusters.Cluster{
+								SparkVersion: "d",
+								NodeTypeID:   "e",
+								NumWorkers:   0,
+							},
+						},
 					},
 					MaxConcurrentRuns: 1,
 					JobClusters: []JobCluster{
@@ -839,7 +847,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 							NewCluster: &clusters.Cluster{
 								SparkVersion: "x",
 								NodeTypeID:   "y",
-								NumWorkers:   9,
+								NumWorkers:   0,
 							},
 						},
 					},
@@ -883,7 +891,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 		job_cluster {
 			job_cluster_key = "k"
 			new_cluster {
-			  num_workers   = 9
+			  num_workers   = 0
 			  spark_version = "x"
 			  node_type_id  = "y"
 			}
@@ -910,7 +918,17 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 			notebook_task {
 				notebook_path = "/Stuff"
 			}
-		}`,
+		}
+		
+		task {
+			task_key = "c"
+			new_cluster {
+				spark_version = "d"
+				node_type_id = "e"
+				num_workers = 0
+			}
+		}
+		`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "17", d.Id())

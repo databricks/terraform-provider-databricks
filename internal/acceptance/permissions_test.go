@@ -866,6 +866,8 @@ func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	})
 }
 
+// AlexOtt: Temporary disable as it takes too long to create a new vector search endpoint
+// Testing is done in the `vector_search_test.go`
 func TestAccPermissions_VectorSearchEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	if isGcp(t) {

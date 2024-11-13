@@ -868,26 +868,26 @@ func TestAccPermissions_ServingEndpoint(t *testing.T) {
 
 // AlexOtt: Temporary disable as it takes too long to create a new vector search endpoint
 // Testing is done in the `vector_search_test.go`
-func TestAccPermissions_VectorSearchEndpoint(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if isGcp(t) {
-		skipf(t)("Vector Search endpoints are not supported on GCP")
-	}
-	endpointTemplate := `
-	resource "databricks_vector_search_endpoint" "endpoint" {
-		name = "{var.STICKY_RANDOM}"
-		endpoint_type = "STANDARD"
-	}
-`
-	WorkspaceLevel(t, Step{
-		Template: endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", groupPermissions("CAN_USE")),
-	}, Step{
-		Template: endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE")),
-	}, Step{
-		Template:    endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE")),
-		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for mlflowExperiment, allowed levels: CAN_MANAGE"),
-	})
-}
+// func TestAccPermissions_VectorSearchEndpoint(t *testing.T) {
+// 	loadDebugEnvIfRunsFromIDE(t, "workspace")
+// 	if isGcp(t) {
+// 		skipf(t)("Vector Search endpoints are not supported on GCP")
+// 	}
+// 	endpointTemplate := `
+// 	resource "databricks_vector_search_endpoint" "endpoint" {
+// 		name = "{var.STICKY_RANDOM}"
+// 		endpoint_type = "STANDARD"
+// 	}
+// `
+// 	WorkspaceLevel(t, Step{
+// 		Template: endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", groupPermissions("CAN_USE")),
+// 	}, Step{
+// 		Template: endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE")),
+// 	}, Step{
+// 		Template:    endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE")),
+// 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for mlflowExperiment, allowed levels: CAN_MANAGE"),
+// 	})
+// }
 
 func TestAccPermissions_Alert(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")

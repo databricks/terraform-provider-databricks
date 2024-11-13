@@ -53,6 +53,7 @@ func ResourceQualityMonitor() common.Resource {
 			common.CustomizeSchemaPath(m, "profile_metrics_table_name").SetReadOnly()
 			common.CustomizeSchemaPath(m, "status").SetReadOnly()
 			common.CustomizeSchemaPath(m, "dashboard_id").SetReadOnly()
+			
 			return m
 		},
 	)

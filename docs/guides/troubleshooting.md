@@ -17,6 +17,18 @@ TF_LOG=DEBUG DATABRICKS_DEBUG_TRUNCATE_BYTES=250000 terraform apply -no-color 2>
 
 * Open a [new GitHub issue](https://github.com/databricks/terraform-provider-databricks/issues/new/choose) providing all information described in the issue template - debug logs, your Terraform code, Terraform & plugin versions, etc.
 
+## Plugin Framework Migration Problems
+The following resources and data sources have been migrated from sdkv2 to plugin framework。 If you encounter any problem with those, you can fallback to sdkv2 by setting the `USE_SDK_V2_RESOURCES` and `USE_SDK_V2_DATA_SOURCES` environment variables.
+
+Example: `export USE_SDK_V2_RESOURCES="databricks_library,databricks_quality_monitor"`
+
+### Resources migrated
+  - databricks_quality_monitor
+  - databricks_library
+### Data sources migrated
+  - databricks_volumes
+
+
 ## Typical problems
 
 ### Data resources and Authentication is not configured errors
@@ -58,16 +70,16 @@ terraform {
 │   │   ├── main.tf
 │   │   └── versions.tf
 │   └── production
-│	   ├── README.md
-│	   ├── main.tf
-│   	└── versions.tf
+│    ├── README.md
+│    ├── main.tf
+│    └── versions.tf
 └── modules
-	├── first-module
-	│   ├── ...
-	│   └── versions.tf
-	└── second-module
- 	   ├── ...
- 	   └── versions.tf
+ ├── first-module
+ │   ├── ...
+ │   └── versions.tf
+ └── second-module
+     ├── ...
+     └── versions.tf
 ```
 
 ### Error: Failed to install provider
@@ -131,14 +143,13 @@ If you see the following HTTP request when running Terraform in the debug mode:
 GET /login.html?error=private-link-validation-error:NNNNNNNNNN
 ```
 
-then it means that you're trying to access a workspace that uses private link with private access set to disabled, but you're trying to reach it via public endpoint.  Make sure that domain names resolution is configured correctly to resolve workspace URL to a private endpoint.
+then it means that you're trying to access a workspace that uses private link with private access set to disabled, but you're trying to reach it via public endpoint.  Make sure that domain names resolution is configured correctly to resolve workspace URL to a private endpoint.  Also, this may happen when you’re accessing the internet via an HTTP proxy, so all traffic from Terraform is forwarded to the HTTP proxy, and routed via the public internet.
 
 ### Error: ....: Unauthorized access to Org: NNNNNNNNNN
 
-
 There are a few possible reasons for this error:
 
-* You’re trying to access a Databricks workspace with a private link enabled and public network access set to disabled.  Typically this happens when a computer from which you’re running terraform apply or terraform plan doesn’t have domain name resolution configured correctly, and Terraform is reaching the workspace via a public IP address. Also, this may happen when you’re accessing the internet via a proxy, so all traffic from Terraform is forwarded to the proxy, and routed via the public internet.
+* You’re trying to access a Databricks workspace with a private link enabled and public network access set to disabled.  Typically this happens when a computer from which you’re running terraform apply or terraform plan doesn’t have domain name resolution configured correctly, and Terraform is reaching the workspace via a public IP address. Also, this may happen when you’re accessing the internet via an HTTP proxy, so all traffic from Terraform is forwarded to the proxy, and routed via the public internet.
 * You have a Databricks workspace with IP Access Lists enabled and you’re trying to access from a computer that isn’t in the list of approved IP addresses.
 
 ### Error: Provider registry.terraform.io/databricks/databricks v... does not have a package available for your current platform, windows_386
@@ -183,3 +194,54 @@ If the metastore assigned to the workspace has changed, the new metastore id mus
 ```
 
 To solve this error, the new Metastore ID must be set in the field `metastore_id` of the failing resources.
+
+### More than one authorization method configured error
+
+If you notice the below error:
+
+```sh
+Error: validate: more than one authorization method configured
+```
+
+Ensure that you only have one authorization method set. All available authorization methods are documented [here](https://registry.terraform.io/providers/databricks/databricks/latest/docs#auth_type).
+
+If you want to enforce a specific authorization method, you can set the `auth_type` attribute in the provider block:
+
+```hcl
+provider "databricks" {
+  # other configurations
+  auth_type = "pat"
+}
+```
+
+The above would enforce the use of PAT authorization.
+
+
+### oauth-m2m: oidc: databricks OAuth is not supported for this host.
+
+There could be different reasons for this error:
+
+- Old version of Terraform provider is used - there were [problems reported](https://github.com/databricks/terraform-provider-databricks/issues/3023) with versions lower than 1.35.0, so try to upgrade your provider.
+- You use multiple provider instances in your code and don't specify that specific instance in your resource or data source - in this case, Terraform will try to use "default instance" that could be initialized from the `DEFAULT` profile in your `~/.databrickscfg` file if you have it.  Check that correct provider instance is used everywhere.
+- If you're using authentication data from `~/.databrickscfg` file, check that profile you're using has correct data - URL, client ID and secret.
+
+### Provider "registry.terraform.io/databricks/databricks" planned an invalid value for ...: planned value ... for a non-computed attribute.
+
+Starting with version v1.51.0, the Terraform provider for Databricks supports `terraform` versions 1.1.5 and later. Older versions of `terraform`, such as v0.15.5, are known to erroneously generate this error. Check the version of `terraform` that you're using by running `terraform version` and upgrade it if necessary.
+
+### Error: cannot create ....: invalid Databricks Account configuration
+
+`....` is the descriptive name of a resource such as `access control rule set`. The error occurs when creating a workspace resource with a provider containing the `account_id` argument e.g.:
+
+```hcl
+provider "databricks" {
+  host          = "https://<workspace-hostname>.cloud.databricks.com"
+  client_id     = "..."
+  client_secret = "..."
+
+  # This line is the problem
+  account_id = "..."
+}
+```
+
+Remove the `account_id` argument from the workspace provider to resolve the error.

@@ -67,6 +67,10 @@ func DataSourceUser() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"active": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 			usersAPI := NewUsersAPI(ctx, m)
@@ -81,6 +85,7 @@ func DataSourceUser() common.Resource {
 			d.Set("acl_principal_id", fmt.Sprintf("users/%s", user.UserName))
 			d.Set("external_id", user.ExternalID)
 			d.Set("application_id", user.ApplicationID)
+			d.Set("active", user.Active)
 			splits := strings.Split(user.UserName, "@")
 			norm := nonAlphanumeric.ReplaceAllLiteralString(splits[0], "_")
 			norm = strings.ToLower(norm)

@@ -30,10 +30,19 @@ type instanceApproximation struct {
 type resourceApproximation struct {
 	Type      string                  `json:"type"`
 	Name      string                  `json:"name"`
-	Provider  string                  `json:"provider"`
 	Mode      string                  `json:"mode"`
-	Module    string                  `json:"module,omitempty"`
 	Instances []instanceApproximation `json:"instances"`
+	Resource  *resource
+}
+
+func (ra *resourceApproximation) Get(attr string) (any, bool) {
+	for _, i := range ra.Instances {
+		v, found := i.Attributes[attr]
+		if found {
+			return v, found
+		}
+	}
+	return nil, false
 }
 
 // TODO: think if something like trie may help here...
@@ -144,6 +153,8 @@ type importable struct {
 	Ignore func(ic *importContext, r *resource) bool
 	// Function to check if the field in the given resource should be omitted or not
 	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
+	// Function to check if the field in the given resource should be generated or not independently of the value
+	ShouldGenerateField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
 	// Defines if specific service is account level resource
@@ -163,9 +174,14 @@ const (
 	MatchCaseInsensitive = "caseinsensitive"
 	// MatchPrefix is to specify that prefix of value should match
 	MatchPrefix = "prefix"
+	// MatchLongestPrefix is to specify that prefix of value should match, and select the longest value from list of candidates
+	MatchLongestPrefix = "longestprefix"
 	// MatchRegexp is to specify that the group extracted from value should match
 	MatchRegexp = "regexp"
 )
+
+type valueTransformFunc func(string) string
+type isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
 
 type reference struct {
 	// path to a given field, like, `cluster_id`, `access_control.user_name``, ... For references blocks/arrays, the `.N` component isn't required
@@ -182,6 +198,15 @@ type reference struct {
 	File bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match
 	Regexp *regexp.Regexp
+	// functions to transform match and current search value
+	MatchValueTransformFunc  valueTransformFunc
+	SearchValueTransformFunc valueTransformFunc
+	// function to evaluate fit of the resource approximation found to the resource...
+	IsValidApproximation isValidAproximationFunc
+	// if we should skip direct lookups (for example, we need it for UC schemas matching)
+	SkipDirectLookup bool
+	// Extra Lookup key - if we need to search for the resource in a different way
+	ExtraLookupKey string
 }
 
 func (r reference) MatchAttribute() string {
@@ -214,6 +239,29 @@ type resource struct {
 	Incremental bool
 	// Actual Terraform data
 	Data *schema.ResourceData
+	// Arbitrary data to be used by importable
+	ExtraData map[string]any
+	// References to dependencies - it could be fully resolved resource, with Data, etc., or it could be just resource type + ID
+	DependsOn []*resource
+}
+
+func (r *resource) AddExtraData(key string, value any) {
+	if r.ExtraData == nil {
+		r.ExtraData = map[string]any{}
+	}
+	r.ExtraData[key] = value
+}
+
+func (r *resource) AddDependsOn(dep *resource) {
+	r.DependsOn = append(r.DependsOn, dep)
+}
+
+func (r *resource) GetExtraData(key string) (any, bool) {
+	if r.ExtraData == nil {
+		return nil, false
+	}
+	v, ok := r.ExtraData[key]
+	return v, ok
 }
 
 func (r *resource) MatchPair() (string, string) {
@@ -297,12 +345,16 @@ func (r *resource) ImportResource(ic *importContext) {
 			return pr.ReadContext(ctx, r.Data, ic.Client)
 		},
 			fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
-		if dia != nil {
+		if dia.HasError() {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
 		if r.Data.Id() == "" {
-			r.Data.SetId(r.ID)
+			if r.Resource != "databricks_permissions" && r.Resource != "databricks_grants" {
+				log.Printf("[WARN] %s %s has empty ID because it's deleted or empty", r.Resource, r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+			}
+			return
 		}
 	}
 	r.Name = ic.ResourceName(r)
@@ -357,4 +409,16 @@ func (a *importedResources) Sorted() []*resource {
 	copy(c, a.resources)
 	sort.Sort(c)
 	return c
+}
+
+func (a *importedResources) FindById(resourceType, id string) *resource {
+	defer a.mutex.RLocker().Unlock()
+	a.mutex.RLocker().Lock()
+	for _, r := range a.resources {
+		if r.Resource == resourceType && r.ID == id {
+			return r
+		}
+	}
+
+	return nil
 }

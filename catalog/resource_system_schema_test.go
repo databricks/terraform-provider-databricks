@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSystemSchemaCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
@@ -52,9 +52,11 @@ func TestSystemSchemaCreate(t *testing.T) {
 		Resource: ResourceSystemSchema(),
 		HCL:      `schema = "access"`,
 		Create:   true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc|access", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"schema":    "access",
+		"id":        "abc|access",
+		"full_name": "system.access",
+	})
 }
 
 func TestSystemSchemaCreate_Error(t *testing.T) {
@@ -70,7 +72,7 @@ func TestSystemSchemaCreate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -155,7 +157,7 @@ func TestSystemSchemaUpdate_Error(t *testing.T) {
 			{
 				Method:   http.MethodPut,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -222,7 +224,7 @@ func TestSystemSchemaRead_Error(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -235,6 +237,74 @@ func TestSystemSchemaRead_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc|access", d.Id(), "Id should not be empty for error reads")
+}
+
+func TestSystemSchemaRead_NotEnabled(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
+				Response: catalog.GetMetastoreSummaryResponse{
+					MetastoreId: "abc",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas?",
+				Response: catalog.ListSystemSchemasResponse{
+					Schemas: []catalog.SystemSchemaInfo{
+						{
+							Schema: "access",
+							State:  catalog.SystemSchemaInfoStateAvailable,
+						},
+						{
+							Schema: "billing",
+							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceSystemSchema(),
+		Read:     true,
+		Removed:  true,
+		ID:       "abc|access",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty if a schema is not enabled")
+}
+
+func TestSystemSchemaRead_NotExists(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/metastore_summary",
+				Response: catalog.GetMetastoreSummaryResponse{
+					MetastoreId: "abc",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas?",
+				Response: catalog.ListSystemSchemasResponse{
+					Schemas: []catalog.SystemSchemaInfo{
+						{
+							Schema: "billing",
+							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceSystemSchema(),
+		Read:     true,
+		Removed:  true,
+		ID:       "abc|access",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "", d.Id(), "Id should be empty if a schema does not exist")
 }
 
 func TestSystemSchemaDelete(t *testing.T) {
@@ -280,7 +350,7 @@ func TestSystemSchemaDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.1/unity-catalog/metastores/abc/systemschemas/access?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

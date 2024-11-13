@@ -11,7 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // Given a compute.Wait struct, returns library statuses based on the input parameter.
@@ -67,7 +67,7 @@ func WaitForLibrariesInstalledSdk(ctx context.Context, w *databricks.WorkspaceCl
 		// and result contains only the libraries that were successfully installed
 		result.LibraryStatuses = installed
 		if len(cleanup.Libraries) > 0 {
-			w.Libraries.Uninstall(ctx, cleanup)
+			err = w.Libraries.Uninstall(ctx, cleanup)
 			if err != nil {
 				err = fmt.Errorf("cannot cleanup libraries: %w", err)
 			}

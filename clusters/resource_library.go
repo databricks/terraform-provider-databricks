@@ -3,6 +3,7 @@ package clusters
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -12,14 +13,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ResourceLibrary() common.Resource {
-	libraySdkSchema := common.StructToSchema(compute.Library{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		m["cluster_id"] = &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		}
-		return m
+type LibraryResource struct {
+	compute.Library
+}
+
+func (LibraryResource) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema) *common.CustomizableSchema {
+	s.AddNewField("cluster_id", &schema.Schema{
+		Type:     schema.TypeString,
+		Required: true,
 	})
+	return s
+}
+
+func (LibraryResource) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	return s
+}
+
+func ResourceLibrary() common.Resource {
+	libraySdkSchema := common.StructToSchema(LibraryResource{}, nil)
 	parseId := func(id string) (string, string) {
 		split := strings.SplitN(id, "/", 2)
 		if len(split) != 2 {
@@ -69,6 +80,11 @@ func ResourceLibrary() common.Resource {
 				IsRefresh: true,
 			}, d.Timeout(schema.TimeoutRead))
 			if err != nil {
+				err = common.IgnoreNotFoundError(err)
+				if err == nil {
+					log.Printf("[WARN] %s is not found, ignoring it", clusterID)
+					d.SetId("")
+				}
 				return err
 			}
 			for _, v := range cll.LibraryStatuses {

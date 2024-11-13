@@ -28,10 +28,10 @@ resource "databricks_global_init_script" "init2" {
   name = "hello script"
 }
 ```
-    
+
 ## Argument Reference
 
--> **Note** Global init script in the Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed global init script won't be overwritten by Terraform, if there's no local change to source.
+-> Global init script in the Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed global init script won't be overwritten by Terraform, if there's no local change to source.
 
 The size of a global init script source code must not exceed 64Kb. The following arguments are supported:
 
@@ -56,7 +56,7 @@ Global init scripts are available only for administrators, so you can't change p
 The resource global init script can be imported using script ID:
 
 ```bash
-$ terraform import databricks_global_init_script.this script_id
+terraform import databricks_global_init_script.this script_id
 ```
 
 ## Related Resources

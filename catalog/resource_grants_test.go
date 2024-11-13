@@ -358,31 +358,6 @@ func TestGrantReadMalformedId(t *testing.T) {
 	}.ExpectError(t, "ID must be two elements split by `/`: foo.bar")
 }
 
-type data map[string]string
-
-func (a data) Get(k string) any {
-	return a[k]
-}
-
-func TestMappingUnsupported(t *testing.T) {
-	d := data{"nothing": "here"}
-	err := mapping.validate(d, PermissionsList{})
-	assert.EqualError(t, err, "unknown is not fully supported yet")
-}
-
-func TestInvalidPrivilege(t *testing.T) {
-	d := data{"table": "me"}
-	err := mapping.validate(d, PermissionsList{
-		Assignments: []PrivilegeAssignment{
-			{
-				Principal:  "me",
-				Privileges: []string{"EVERYTHING"},
-			},
-		},
-	})
-	assert.EqualError(t, err, "EVERYTHING is not allowed on table")
-}
-
 func TestPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
 	diff := diffPermissions(
 		catalog.PermissionsList{ // config
@@ -414,7 +389,7 @@ func TestPermissionsList_Diff_ExternallyAddedPrincipal(t *testing.T) {
 	assert.Len(t, diff[0].Add, 0)
 	assert.Len(t, diff[0].Remove, 1)
 	assert.Equal(t, "b", diff[0].Principal)
-	assert.Equal(t, catalog.Privilege("a"), diff[0].Remove[0])
+	assert.Equal(t, catalog.Privilege("A"), diff[0].Remove[0])
 	assert.Equal(t, "c", diff[1].Principal)
 }
 
@@ -440,7 +415,29 @@ func TestPermissionsList_Diff_ExternallyAddedPriv(t *testing.T) {
 	assert.Len(t, diff, 1)
 	assert.Len(t, diff[0].Add, 0)
 	assert.Len(t, diff[0].Remove, 1)
-	assert.Equal(t, catalog.Privilege("b"), diff[0].Remove[0])
+	assert.Equal(t, catalog.Privilege("B"), diff[0].Remove[0])
+}
+
+func TestPermissionsList_Diff_CaseSensitivePrincipal(t *testing.T) {
+	diff := diffPermissions(
+		catalog.PermissionsList{ // config
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{
+				{
+					Principal:  "A",
+					Privileges: []catalog.Privilege{"a"},
+				},
+			},
+		},
+		catalog.PermissionsList{
+			PrivilegeAssignments: []catalog.PrivilegeAssignment{ // platform
+				{
+					Principal:  "a",
+					Privileges: []catalog.Privilege{"a"},
+				},
+			},
+		},
+	)
+	assert.Len(t, diff, 2)
 }
 
 func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
@@ -465,8 +462,8 @@ func TestPermissionsList_Diff_LocalRemoteDiff(t *testing.T) {
 	assert.Len(t, diff, 1)
 	assert.Len(t, diff[0].Add, 1)
 	assert.Len(t, diff[0].Remove, 1)
-	assert.Equal(t, catalog.Privilege("a"), diff[0].Add[0])
-	assert.Equal(t, catalog.Privilege("c"), diff[0].Remove[0])
+	assert.Equal(t, catalog.Privilege("A"), diff[0].Add[0])
+	assert.Equal(t, catalog.Privilege("C"), diff[0].Remove[0])
 }
 
 func TestShareGrantCreate(t *testing.T) {
@@ -598,30 +595,6 @@ func TestShareGrantUpdate(t *testing.T) {
 			privileges = ["SELECT"]
 		}`,
 	}.ApplyNoError(t)
-}
-
-func TestPrivilegeWithSpace(t *testing.T) {
-	d := data{"table": "me"}
-	err := mapping.validate(d, PermissionsList{
-		Assignments: []PrivilegeAssignment{
-			{
-				Principal:  "me",
-				Privileges: []string{"ALL PRIVILEGES"},
-			},
-		},
-	})
-	assert.EqualError(t, err, "ALL PRIVILEGES is not allowed on table. Did you mean ALL_PRIVILEGES?")
-
-	d = data{"external_location": "me"}
-	err = mapping.validate(d, PermissionsList{
-		Assignments: []PrivilegeAssignment{
-			{
-				Principal:  "me",
-				Privileges: []string{"CREATE TABLE"},
-			},
-		},
-	})
-	assert.EqualError(t, err, "CREATE TABLE is not allowed on external_location. Did you mean CREATE_TABLE?")
 }
 
 func TestConnectionGrantCreate(t *testing.T) {

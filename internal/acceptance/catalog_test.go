@@ -1,24 +1,27 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestUcAccCatalog(t *testing.T) {
-	unityWorkspaceLevel(t, step{
-		Template: `
+	loadUcwsEnv(t)
+	UnityWorkspaceLevel(t, Step{
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name         = "sandbox{var.RANDOM}"
 			comment      = "this catalog is managed by terraform"
 			properties = {
 				purpose = "testing"
 			}
-		}`,
+			%s
+		}`, getPredictiveOptimizationSetting(t, true)),
 	})
 }
 
 func TestUcAccCatalogIsolated(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -27,7 +30,7 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 				purpose = "testing"
 			}
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -37,7 +40,7 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 				purpose = "testing"
 			}
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
@@ -51,44 +54,49 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 }
 
 func TestUcAccCatalogUpdate(t *testing.T) {
-	unityWorkspaceLevel(t, step{
-		Template: `
+	loadUcwsEnv(t)
+	UnityWorkspaceLevel(t, Step{
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
 			comment        = "this catalog is managed by terraform"
 			properties     = {
 				purpose = "testing"
 			}
-		}`,
-	}, step{
-		Template: `
+			%s
+		}`, getPredictiveOptimizationSetting(t, true)),
+	}, Step{
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
 			comment        = "this catalog is managed by terraform"
 			properties     = {
 				purpose = "testing"
 			}
+			%s
 			owner = "account users"
-		}`,
-	}, step{
-		Template: `
+		}`, getPredictiveOptimizationSetting(t, true)),
+	}, Step{
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
 			comment        = "this catalog is managed by terraform"
 			properties     = {
 				purpose = "testing"
 			}
+			%s
 			owner = "{env.TEST_DATA_ENG_GROUP}"
-		}`,
-	}, step{
-		Template: `
+		}`, getPredictiveOptimizationSetting(t, true)),
+	}, Step{
+		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
 			name           = "sandbox{var.STICKY_RANDOM}"
 			comment        = "this catalog is managed by terraform - updated comment"
 			properties     = {
 				purpose = "testing"
 			}
+			%s
 			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
-		}`,
+		}`, getPredictiveOptimizationSetting(t, false)),
 	})
 }

@@ -137,11 +137,10 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 	return clusters.Cluster{
 		NumWorkers:  0,
 		ClusterName: clusterName,
-		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
-			clusters.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
-			}),
+		SparkVersion: clusters.LatestSparkVersionOrDefault(clustersAPI.Context(), clustersAPI.WorkspaceClient(), compute.SparkVersionRequest{
+			Latest:          true,
+			LongTermSupport: true,
+		}),
 		NodeTypeID: clustersAPI.GetSmallestNodeType(
 			compute.NodeTypeRequest{
 				LocalDisk: true,
@@ -165,7 +164,7 @@ func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error
 		if apierr.IsMissing(err) {
 			err = errors.New(err.Error())
 		}
-		return "", fmt.Errorf("failed to get mouting cluster: %w", err)
+		return "", fmt.Errorf("failed to get mounting cluster: %w", err)
 	}
 	return cluster.ClusterID, nil
 }

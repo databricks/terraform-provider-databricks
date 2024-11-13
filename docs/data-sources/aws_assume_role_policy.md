@@ -49,6 +49,7 @@ resource "databricks_mws_credentials" "this" {
 ## Argument Reference
 
 * `external_id` (Required) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
+* `aws_partition` - (Optional) AWS partition. The options are `aws` or `aws-us-gov`. Defaults to `aws`
 * `for_log_delivery` (Optional) Either or not this assume role policy should be created for usage log delivery. Defaults to false.
 
 ## Attribute Reference
@@ -61,6 +62,6 @@ In addition to all arguments above, the following attributes are exported:
 
 The following resources are used in the same context:
 
-* [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide
+* [Provisioning AWS Databricks workspaces with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide
 * [databricks_aws_bucket_policy](aws_bucket_policy.md) data to configure a simple access policy for AWS S3 buckets, so that Databricks can access data in it.
 * [databricks_aws_crossaccount_policy](aws_crossaccount_policy.md) data to construct the necessary AWS cross-account policy for you, which is based on [official documentation](https://docs.databricks.com/administration-guide/account-api/iam-role.html#language-Your%C2%A0VPC,%C2%A0default).

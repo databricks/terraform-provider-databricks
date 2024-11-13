@@ -4,6 +4,8 @@ page_title: "Provisioning Databricks workspaces on GCP."
 
 # Provisioning Databricks workspaces on GCP
 
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+
 You can provision multiple Databricks workspaces with Terraform.
 
 ## Creating a GCP service account for Databricks Provisioning
@@ -55,6 +57,8 @@ resource "google_project_iam_custom_role" "workspace_creator" {
   permissions = [
     "iam.serviceAccounts.getIamPolicy",
     "iam.serviceAccounts.setIamPolicy",
+    "iam.serviceAccounts.create",
+    "iam.serviceAccounts.get",
     "iam.roles.create",
     "iam.roles.delete",
     "iam.roles.get",
@@ -66,8 +70,13 @@ resource "google_project_iam_custom_role" "workspace_creator" {
     "serviceusage.services.list",
     "serviceusage.services.enable",
     "compute.networks.get",
+    "compute.networks.updatePolicy",
     "compute.projects.get",
     "compute.subnetworks.get",
+    "compute.subnetworks.getIamPolicy",
+    "compute.subnetworks.setIamPolicy",
+    "compute.firewalls.get",
+    "compute.firewalls.create",
   ]
 }
 
@@ -268,3 +277,7 @@ provider "databricks" {
 ```
 
 We assume that you have a terraform module in your project that creates a workspace (using [Databricks Workspace](#creating-a-databricks-workspace) section), and you named it as `dbx_gcp` while calling it in the **main.tf** file of your terraform project. And `workspace_url` and `token_value` are the output attributes of that module. This provider configuration will allow you to use the generated token to authenticate to the created workspace during workspace creation.
+
+### More than one authorization method configured error
+
+See the [troubleshooting guide](https://registry.terraform.io/providers/databricks/databricks/latest/docs/guides/troubleshooting#more-than-one-authorization-method-configured)

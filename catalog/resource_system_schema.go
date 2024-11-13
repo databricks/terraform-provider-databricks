@@ -17,6 +17,10 @@ func ResourceSystemSchema() common.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		}
+		m["full_name"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		m["state"].Computed = true
 		return m
 	})
@@ -43,7 +47,7 @@ func ResourceSystemSchema() common.Resource {
 		//enable new schema
 		err = w.SystemSchemas.Enable(ctx, catalog.EnableRequest{
 			MetastoreId: metastoreSummary.MetastoreId,
-			SchemaName:  catalog.EnableSchemaName(new),
+			SchemaName:  new,
 		})
 		//ignore "schema <schema-name> already exists" error
 		if err != nil && !strings.Contains(err.Error(), "already exists") {
@@ -53,7 +57,7 @@ func ResourceSystemSchema() common.Resource {
 		if old != "" {
 			err = w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
 				MetastoreId: metastoreSummary.MetastoreId,
-				SchemaName:  catalog.DisableSchemaName(old),
+				SchemaName:  old,
 			})
 			if err != nil {
 				return err
@@ -85,9 +89,25 @@ func ResourceSystemSchema() common.Resource {
 			}
 			for _, schema := range systemSchemaInfo.Schemas {
 				if schema.Schema == schemaName {
-					return common.StructToData(schema, systemSchema, d)
+					err = common.StructToData(schema, systemSchema, d)
+					if err != nil {
+						return err
+					}
+					// only track enabled/legacy schemas
+					if schema.State != catalog.SystemSchemaInfoStateEnableCompleted &&
+						schema.State != catalog.SystemSchemaInfoStateEnableInitialized &&
+						schema.State != catalog.SystemSchemaInfoStateUnavailable {
+						log.Printf("[WARN] %s is not enabled, ignoring it", schemaName)
+						d.SetId("")
+						return nil
+					}
+
+					d.Set("full_name", fmt.Sprintf("system.%s", schemaName))
+					return nil
 				}
 			}
+			log.Printf("[WARN] %s does not exist, ignoring it", schemaName)
+			d.SetId("")
 			return nil
 		},
 		Update: createOrUpdate,
@@ -106,7 +126,7 @@ func ResourceSystemSchema() common.Resource {
 			}
 			return w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
 				MetastoreId: metastoreSummary.MetastoreId,
-				SchemaName:  catalog.DisableSchemaName(schemaName),
+				SchemaName:  schemaName,
 			})
 		},
 	}

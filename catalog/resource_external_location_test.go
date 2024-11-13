@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestExternalLocationCornerCases(t *testing.T) {
@@ -48,6 +50,81 @@ func TestCreateExternalLocation(t *testing.T) {
 		url = "s3://foo/bar"
 		credential_name = "bcd"
 		comment = "def"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateIsolatedExternalLocation(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockExternalLocationsAPI().EXPECT()
+			e.Create(mock.Anything, catalog.CreateExternalLocation{
+				Name:           "abc",
+				Url:            "s3://foo/bar",
+				CredentialName: "bcd",
+				Comment:        "def",
+			}).Return(&catalog.ExternalLocationInfo{
+				Name:           "abc",
+				Url:            "s3://foo/bar",
+				CredentialName: "bcd",
+				Comment:        "def",
+				MetastoreId:    "e",
+				Owner:          "f",
+			}, nil)
+			e.Update(mock.Anything, catalog.UpdateExternalLocation{
+				Name:           "abc",
+				Url:            "s3://foo/bar",
+				CredentialName: "bcd",
+				Comment:        "def",
+				IsolationMode:  "ISOLATION_MODE_ISOLATED",
+			}).Return(&catalog.ExternalLocationInfo{
+				Name:           "abc",
+				Url:            "s3://foo/bar",
+				CredentialName: "bcd",
+				Comment:        "def",
+				IsolationMode:  "ISOLATION_MODE_ISOLATED",
+				MetastoreId:    "e",
+				Owner:          "f",
+			}, nil)
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "e",
+				WorkspaceId: 123456789101112,
+			}, nil)
+			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
+				SecurableName: "abc",
+				SecurableType: "external_location",
+				Add: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}).Return(&catalog.WorkspaceBindingsResponse{
+				Bindings: []catalog.WorkspaceBinding{
+					{
+						WorkspaceId: int64(123456789101112),
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+					},
+				},
+			}, nil)
+			e.GetByName(mock.Anything, "abc").Return(&catalog.ExternalLocationInfo{
+				Name:           "abc",
+				Url:            "s3://foo/bar",
+				CredentialName: "bcd",
+				Comment:        "def",
+				IsolationMode:  "ISOLATION_MODE_ISOLATED",
+				MetastoreId:    "e",
+				Owner:          "f",
+			}, nil)
+		},
+		Resource: ResourceExternalLocation(),
+		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		isolation_mode = "ISOLATION_MODE_ISOLATED"
 		`,
 	}.ApplyNoError(t)
 }
@@ -216,6 +293,7 @@ func TestUpdateExternalLocation(t *testing.T) {
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
 					Comment:        "def",
+					ReadOnly:       false,
 				},
 			},
 			{
@@ -243,6 +321,52 @@ func TestUpdateExternalLocation(t *testing.T) {
 		url = "s3://foo/bar"
 		credential_name = "bcd"
 		comment = "def"
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				ExpectedRequest: catalog.UpdateExternalLocation{
+					Url:             "s3://foo/bar",
+					CredentialName:  "bcd",
+					Comment:         "def",
+					ReadOnly:        false,
+					ForceSendFields: []string{"ReadOnly"},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+					ReadOnly:       false,
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":            "abc",
+			"url":             "s3://foo/bar",
+			"credential_name": "abc",
+			"comment":         "def",
+			"read_only":       "true",
+		},
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		read_only = false
 		`,
 	}.ApplyNoError(t)
 }
@@ -373,7 +497,7 @@ func TestUpdateExternalLocationRollback(t *testing.T) {
 					Url:            "s3://foo/bar",
 					CredentialName: "xyz",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -437,7 +561,7 @@ func TestUpdateExternalLocationRollbackError(t *testing.T) {
 					Url:            "s3://foo/bar",
 					CredentialName: "xyz",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -449,7 +573,7 @@ func TestUpdateExternalLocationRollbackError(t *testing.T) {
 				ExpectedRequest: catalog.UpdateExternalLocation{
 					Owner: "administrators",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

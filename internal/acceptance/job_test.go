@@ -12,10 +12,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccJobTasks(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		data "databricks_current_user" "me" {}
 		data "databricks_spark_version" "latest" {}
@@ -39,9 +40,16 @@ func TestAccJobTasks(t *testing.T) {
 			job_cluster {
 				job_cluster_key = "j"
 				new_cluster {
-					num_workers   = 20
+					num_workers   = 0  // Setting it to zero intentionally to cover edge case.
 					spark_version = data.databricks_spark_version.latest.id
 					node_type_id  = data.databricks_node_type.smallest.id
+					custom_tags = {
+						"ResourceClass" = "SingleNode"
+					}
+					spark_conf = {
+						"spark.databricks.cluster.profile" : "singleNode"
+						"spark.master" : "local[*,4]"
+					}
 				}
 			}
 
@@ -97,6 +105,67 @@ func TestAccJobTasks(t *testing.T) {
 				}
 			}
 
+			parameter {
+				name = "empty_default"
+				default = ""
+			}
+
+			parameter {
+				name = "non_empty_default"
+				default = "non_empty"
+			}
+		}`,
+	})
+}
+
+func TestAccForEachTask(t *testing.T) {
+	t.Skip("Skipping this test because feature not enabled in Prod")
+	WorkspaceLevel(t, Step{
+		Template: `
+		data "databricks_current_user" "me" {}
+		data "databricks_spark_version" "latest" {}
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+
+		resource "databricks_notebook" "this" {
+			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+			language = "PYTHON"
+			content_base64 = base64encode(<<-EOT
+				# created from ${abspath(path.module)}
+				display(spark.range(10))
+				EOT
+			)
+		}
+
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+
+			job_cluster {
+				job_cluster_key = "j"
+				new_cluster {
+					num_workers   = 20
+					spark_version = data.databricks_spark_version.latest.id
+					node_type_id  = data.databricks_node_type.smallest.id
+				}
+			}
+
+			task {
+				task_key = "for_each_task_key"
+				for_each_task {
+					concurrency = 1
+					inputs = "[1, 2, 3, 4, 5, 6]"
+					task {
+						task_key        = "nested_task_key"
+						job_cluster_key = "j"
+
+						notebook_task {
+							notebook_path = databricks_notebook.this.path
+						}
+					}
+				}
+			}
+			
 			parameter {
 				name = "empty_default"
 				default = ""
@@ -213,19 +282,19 @@ func TestAccJobControlRunState(t *testing.T) {
 	}
 	randomName1 := RandomName("notebook-")
 	randomName2 := RandomName("updated-notebook-")
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		// A new continuous job with empty block should be started automatically
 		Template: getJobTemplate(randomName1, ``),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
-	}, step{
+	}, Step{
 		// Updating the notebook should cancel the existing run
 		Template: getJobTemplate(randomName2, ``),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
-	}, step{
+	}, Step{
 		// Marking the job as paused should cancel existing run and not start a new one
 		Template: getJobTemplate(randomName2, `pause_status = "PAUSED"`),
 		Check:    resourceCheck("databricks_job.this", waitForAllRunsToEnd),
-	}, step{
+	}, Step{
 		// No pause status should be the equivalent of unpaused
 		Template: getJobTemplate(randomName2, `pause_status = "UNPAUSED"`),
 		Check:    resourceCheck("databricks_job.this", waitForRunToStart),
@@ -277,7 +346,7 @@ func runAsTemplate(runAs string) string {
 }
 
 func TestAccJobRunAsUser(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_user" "this" {
 			user_name = "` + qa.RandomEmail() + `"
@@ -286,30 +355,94 @@ func TestAccJobRunAsUser(t *testing.T) {
 	})
 }
 
-func TestAccJobRunAsServicePrincipal(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+func TestUcAccJobRunAsServicePrincipal(t *testing.T) {
+	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 	})
 }
 
-func TestAccJobRunAsMutations(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "ucws")
+func getRunAsAttribute(t *testing.T, ctx context.Context) string {
+	isSp, err := isAuthedAsWorkspaceServicePrincipal(ctx)
+	require.NoError(t, err)
+	if isSp {
+		return "service_principal_name"
+	}
+	return "user_name"
+}
+
+func TestUcAccJobRunAsMutations(t *testing.T) {
+	loadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
-	unityWorkspaceLevel(
+	// Note: the attribute must match the type of principal that the test is run as.
+	ctx := context.Background()
+	attribute := getRunAsAttribute(t, ctx)
+	UnityWorkspaceLevel(
 		t,
 		// Provision job with service principal `run_as`
-		step{
+		Step{
 			Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 		},
 		// Update job to a user `run_as`
-		step{
-			Template: runAsTemplate(`user_name = data.databricks_current_user.me.user_name`),
+		Step{
+			Template: runAsTemplate(attribute + ` = data.databricks_current_user.me.user_name`),
 		},
 		// Update job back to a service principal `run_as`
-		step{
+		Step{
 			Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
 		},
 	)
+}
+
+func TestAccRemoveWebhooks(t *testing.T) {
+	skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
+	WorkspaceLevel(t, Step{
+		Template: `
+		resource databricks_job test {
+			webhook_notifications {
+				on_success {
+					id = "a90cc1be-a29e-4eb7-a7e9-e4b0d4a7e7ae"
+				}
+			}
+		}
+		`,
+	}, Step{
+		Template: `
+		resource databricks_job test {}
+		`,
+	})
+}
+
+func TestAccPeriodicTrigger(t *testing.T) {
+	WorkspaceLevel(t, Step{
+		Template: `
+		resource "databricks_job" "this" {
+			name = "{var.RANDOM}"
+
+			trigger {
+				pause_status = "UNPAUSED"
+				periodic {
+					interval = 17
+					unit = "HOURS"
+				}
+			}
+		}`,
+		Check: resourceCheck("databricks_job.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
+			w, err := client.WorkspaceClient()
+			assert.NoError(t, err)
+
+			jobID, err := strconv.ParseInt(id, 10, 64)
+			assert.NoError(t, err)
+
+			res, err := w.Jobs.GetByJobId(ctx, jobID)
+			assert.NoError(t, err)
+
+			assert.Equal(t, jobs.PauseStatus("UNPAUSED"), res.Settings.Trigger.PauseStatus)
+			assert.Equal(t, 17, res.Settings.Trigger.Periodic.Interval)
+			assert.Equal(t, jobs.PeriodicTriggerConfigurationTimeUnit("HOURS"), res.Settings.Trigger.Periodic.Unit)
+
+			return nil
+		}),
+	})
 }

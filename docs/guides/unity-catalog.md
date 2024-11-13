@@ -5,7 +5,7 @@ page_title: "Unity Catalog set up on AWS"
 # Deploying pre-requisite resources and enabling Unity Catalog
 
 **Note**
-If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you.
+If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you. See [this guide](unity-catalog-default.md) instead.
 
 **Note**
 Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
@@ -30,7 +30,7 @@ To get started with Unity Catalog, this guide takes you through the following hi
   - [Create users and groups](#create-users-and-groups)
   - [Create a Unity Catalog metastore and link it to workspaces](#create-a-unity-catalog-metastore-and-link-it-to-workspaces)
   - [Configure external locations and credentials](#configure-external-locations-and-credentials)
-  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)  
+  - [Create Unity Catalog objects in the metastore](#create-unity-catalog-objects-in-the-metastore)
   - [Configure Unity Catalog clusters](#configure-unity-catalog-clusters)
 
 ## Provider initialization
@@ -199,12 +199,15 @@ First, we need to create the storage credential in Databricks before creating th
 
 ```hcl
 data "aws_caller_identity" "current" {}
+locals {
+  uc_iam_role = "${local.prefix}-uc-access"
+}
 
 resource "databricks_storage_credential" "external" {
-  provider = databricks.workspace
-  name     = "${local.prefix}-external-access"
+  name = "${local.prefix}-external-access"
+  //cannot reference aws_iam_role directly, as it will create circular dependency
   aws_iam_role {
-    role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access" //cannot reference aws_iam_role directly, as it will create circular dependency
+    role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.uc_iam_role}"
   }
   comment = "Managed by TF"
 }
@@ -224,10 +227,9 @@ Then we can create the required objects in AWS
 ```hcl
 resource "aws_s3_bucket" "external" {
   bucket = "${local.prefix}-external"
-  acl    = "private"
   // destroy all objects with bucket destroy
   force_destroy = true
-  tags = merge(local.tags, {
+  tags = merge(var.tags, {
     Name = "${local.prefix}-external"
   })
 }
@@ -239,86 +241,30 @@ resource "aws_s3_bucket_versioning" "external_versioning" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "external" {
-  bucket             = aws_s3_bucket.external.id
-  ignore_public_acls = true
-  depends_on         = [aws_s3_bucket.external]
+data "databricks_aws_unity_catalog_assume_role_policy" "this" {
+  aws_account_id = data.aws_caller_identity.current.account_id
+  role_name      = local.uc_iam_role
+  external_id    = databricks_storage_credential.external.aws_iam_role[0].external_id
 }
 
-data "aws_iam_policy_document" "passrole_for_uc" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      identifiers = [databricks_storage_credential.external.aws_iam_role.unity_catalog_iam_arn]
-      type        = "AWS"
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "sts:ExternalId"
-      values   = [databricks_storage_credential.external.aws_iam_role.external_id]
-    }
-  }
-  statement {
-    sid     = "ExplicitSelfRoleAssumption"
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-    condition {
-      test     = "ArnLike"
-      variable = "aws:PrincipalArn"
-      values   = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access"]
-    }
-  }
+data "databricks_aws_unity_catalog_policy" "this" {
+  aws_account_id = data.aws_caller_identity.current.account_id
+  bucket_name    = aws_s3_bucket.external.id
+  role_name      = local.uc_iam_role
 }
 
 resource "aws_iam_policy" "external_data_access" {
-  // Terraform's "jsonencode" function converts a
-  // Terraform expression's result to valid JSON syntax.
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = "${aws_s3_bucket.external.id}-access"
-    Statement = [
-      {
-        "Action" : [
-          "s3:GetObject",
-          "s3:GetObjectVersion",
-          "s3:PutObject",
-          "s3:PutObjectAcl",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:GetBucketLocation"
-        ],
-        "Resource" : [
-          aws_s3_bucket.external.arn,
-          "${aws_s3_bucket.external.arn}/*"
-        ],
-        "Effect" : "Allow"
-      }, 
-      {
-        "Action" : [
-          "sts:AssumeRole"
-        ],
-        "Resource" : [
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.prefix}-uc-access"
-        ],
-        "Effect" : "Allow"
-      },
-    ]
-  })
-  tags = merge(local.tags, {
+  policy = data.databricks_aws_unity_catalog_policy.this.json
+  tags = merge(var.tags, {
     Name = "${local.prefix}-unity-catalog external access IAM policy"
   })
 }
 
 resource "aws_iam_role" "external_data_access" {
-  name                = "${local.prefix}-external-access"
-  assume_role_policy  = data.aws_iam_policy_document.passrole_for_uc.json
+  name                = local.uc_iam_role
+  assume_role_policy  = data.databricks_aws_unity_catalog_assume_role_policy.this.json
   managed_policy_arns = [aws_iam_policy.external_data_access.arn]
-  tags = merge(local.tags, {
+  tags = merge(var.tags, {
     Name = "${local.prefix}-unity-catalog external access IAM role"
   })
 }

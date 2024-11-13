@@ -9,7 +9,7 @@ import (
 
 func TestCatalogWorkspaceBindingsCornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceCatalogWorkspaceBinding(),
-		qa.CornerCaseID("my_catalog|1234567890101112"),
+		qa.CornerCaseID("1234567890101112|catalog|my_catalog"),
 		qa.CornerCaseSkipCRUD("create"))
 }
 
@@ -106,31 +106,10 @@ func TestCatalogWorkspaceBindingsReadOnly_Create(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestSecurableWorkspaceBindings_Create(t *testing.T) {
+func TestCatalogWorkspaceBindingsReadImport(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog",
-				ExpectedRequest: catalog.UpdateWorkspaceBindingsParameters{
-					Add: []catalog.WorkspaceBinding{
-						{
-							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
-							WorkspaceId: int64(1234567890101112),
-						},
-					},
-					SecurableName: "my_catalog",
-					SecurableType: "catalog",
-				},
-				Response: catalog.WorkspaceBindingsResponse{
-					Bindings: []catalog.WorkspaceBinding{
-						{
-							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
-							WorkspaceId: int64(1234567890101112),
-						},
-					},
-				},
-			}, {
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog?",
 				Response: catalog.WorkspaceBindingsResponse{
@@ -144,61 +123,28 @@ func TestSecurableWorkspaceBindings_Create(t *testing.T) {
 			},
 		},
 		Resource: ResourceCatalogWorkspaceBinding(),
-		Create:   true,
-		HCL: `
-		securable_name = "my_catalog"
-		securable_type = "catalog"
-		workspace_id   = "1234567890101112"
-		binding_type   = "BINDING_TYPE_READ_ONLY"
-		`,
-	}.ApplyNoError(t)
+		ID:       "1234567890101112|catalog|my_catalog",
+		New:      true,
+		Read:     true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"workspace_id":   1234567890101112,
+		"securable_type": "catalog",
+		"securable_name": "my_catalog",
+	})
 }
 
-func TestSecurableWorkspaceBindings_Delete(t *testing.T) {
+func TestCatalogWorkspaceBindingsReadErrors(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog",
-				ExpectedRequest: catalog.UpdateWorkspaceBindingsParameters{
-					Remove: []catalog.WorkspaceBinding{
-						{
-							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
-							WorkspaceId: int64(1234567890101112),
-						},
-					},
-					SecurableName: "my_catalog",
-					SecurableType: "catalog",
-				},
-				Response: catalog.WorkspaceBindingsResponse{
-					Bindings: []catalog.WorkspaceBinding{
-						{
-							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
-							WorkspaceId: int64(1234567890101112),
-						},
-					},
-				},
-			}, {
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/bindings/catalog/my_catalog?",
-				Response: catalog.WorkspaceBindingsResponse{
-					Bindings: []catalog.WorkspaceBinding{
-						{
-							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
-							WorkspaceId: int64(1234567890101112),
-						},
-					},
-				},
-			},
-		},
 		Resource: ResourceCatalogWorkspaceBinding(),
-		Delete:   true,
-		ID:       "1234567890101112|catalog|my_catalog",
-		HCL: `
-		securable_name = "my_catalog"
-		securable_type = "catalog"
-		workspace_id   = "1234567890101112"
-		binding_type   = "BINDING_TYPE_READ_ONLY"
-		`,
-	}.ApplyNoError(t)
+		ID:       "1234567890101112|catalog",
+		New:      true,
+		Read:     true,
+	}.ExpectError(t, "incorrect binding id: 1234567890101112|catalog. Correct format: <workspace_id>|<securable_type>|<securable_name>")
+
+	qa.ResourceFixture{
+		Resource: ResourceCatalogWorkspaceBinding(),
+		ID:       "A234567890101112|catalog|my_catalog",
+		New:      true,
+		Read:     true,
+	}.ExpectError(t, "can't parse workspace_id: strconv.ParseInt: parsing \"A234567890101112\": invalid syntax")
 }

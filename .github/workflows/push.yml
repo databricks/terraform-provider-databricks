@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21.x
+          go-version: 1.22.x
 
       - name: Pull external libraries
         run: make vendor
@@ -25,7 +25,9 @@ jobs:
         run: make test
 
       - name: Publish test coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   fmt:
     runs-on: ubuntu-latest
@@ -37,7 +39,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21.x
+          go-version: 1.22.x
 
           # No need to download cached dependencies when running gofmt.
           cache: false

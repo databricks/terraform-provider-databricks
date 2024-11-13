@@ -1,16 +1,14 @@
 package catalog
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestVolumesCornerCases(t *testing.T) {
@@ -154,7 +152,7 @@ func TestVolumesCreateWithoutInitialOwner_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.1/unity-catalog/volumes",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -216,7 +214,7 @@ func TestVolumesCreateWithInitialOwner_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -270,6 +268,7 @@ func TestVolumesRead(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
+	assert.Equal(t, "/Volumes/testCatalogName/testSchemaName/testName", d.Get("volume_path"))
 }
 
 func TestResourceVolumeRead_Error(t *testing.T) {
@@ -278,7 +277,7 @@ func TestResourceVolumeRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -307,7 +306,7 @@ func TestVolumesUpdate(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testNameNew",
+					NewName: "testNameNew",
 					Comment: "This is a new test comment.",
 				},
 				Response: catalog.VolumeInfo{
@@ -357,6 +356,7 @@ func TestVolumesUpdate(t *testing.T) {
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+	assert.Equal(t, "/Volumes/testCatalogName/testSchemaName/testNameNew", d.Get("volume_path"))
 }
 
 func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
@@ -386,7 +386,7 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
-					Name:    "testNameNew",
+					NewName: "testNameNew",
 					Comment: "This is a new test comment.",
 				},
 				Response: catalog.VolumeInfo{
@@ -572,7 +572,7 @@ func TestVolumesUpdateRollback(t *testing.T) {
 					Name:    "testName",
 					Comment: "This is a new test comment.",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -626,7 +626,7 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 					Name:    "testName",
 					Comment: "This is a new test comment.",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   serverErrMessage,
 				},
@@ -638,7 +638,7 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
 					Owner: "testOwnerOld",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   rollbackErrMessage,
 				},
@@ -676,7 +676,7 @@ func TestVolumeUpdate_Error(t *testing.T) {
 				ExpectedRequest: catalog.UpdateVolumeRequestContent{
 					Owner: "testOwnerNew",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -725,7 +725,7 @@ func TestVolumeDelete_Error(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",
 				},
@@ -737,27 +737,4 @@ func TestVolumeDelete_Error(t *testing.T) {
 		Removed:  true,
 		ID:       "testCatalogName.testSchemaName.testName",
 	}.ExpectError(t, "Something went wrong")
-}
-
-func TestVolumesList(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   http.MethodGet,
-			Resource: "/api/2.1/unity-catalog/volumes?catalog_name=&schema_name=",
-			Response: map[string]any{},
-		},
-	})
-	require.NoError(t, err)
-
-	w, err := client.WorkspaceClient()
-	require.NoError(t, err)
-
-	defer server.Close()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	vLists, err := w.Volumes.Impl().List(ctx, catalog.ListVolumesRequest{})
-
-	require.NoError(t, err)
-	assert.Equal(t, 0, len(vLists.Volumes))
 }

@@ -4,13 +4,13 @@ subcategory: "Security"
 
 # databricks_access_control_rule_set Resource
 
--> **Note** This resource could be used with account or workspace-level provider.
+-> This resource can be used with an account or workspace-level provider.
 
 This resource allows you to manage access rules on Databricks account level resources. For convenience we allow accessing this resource through the Databricks account and workspace.
 
--> **Note** Currently, we only support managing access rules on service principal, group and account resources through `databricks_access_control_rule_set`.
+-> Currently, we only support managing access rules on service principal, group and account resources through `databricks_access_control_rule_set`.
 
--> **Warning** `databricks_access_control_rule_set` cannot be used to manage access rules for resources supported by [databricks_permissions](permissions.md). Refer to its documentation for more information.
+!> `databricks_access_control_rule_set` cannot be used to manage access rules for resources supported by [databricks_permissions](permissions.md). Refer to its documentation for more information.
 
 ## Service principal rule set usage
 
@@ -238,15 +238,21 @@ grant_rules {
 
 Arguments of the `grant_rules` block are:
 
-- `role` - (Required) Role to be granted. The supported roles are listed below. For more information about these roles, refer to [service principal roles](https://docs.databricks.com/security/auth-authz/access-control/service-principal-acl.html#service-principal-roles), [group roles](https://docs.databricks.com/en/administration-guide/users-groups/groups.html#manage-roles-on-an-account-group-using-the-workspace-admin-settings-page) or [marketplace roles](https://docs.databricks.com/en/marketplace/get-started-provider.html#assign-the-marketplace-admin-role).
+* `role` - (Required) Role to be granted. The supported roles are listed below. For more information about these roles, refer to [service principal roles](https://docs.databricks.com/security/auth-authz/access-control/service-principal-acl.html#service-principal-roles), [group roles](https://docs.databricks.com/en/administration-guide/users-groups/groups.html#manage-roles-on-an-account-group-using-the-workspace-admin-settings-page) or [marketplace roles](https://docs.databricks.com/en/marketplace/get-started-provider.html#assign-the-marketplace-admin-role).
   * `roles/servicePrincipal.manager` - Manager of a service principal.
   * `roles/servicePrincipal.user` - User of a service principal.
   * `roles/group.manager` - Manager of a group.
   * `roles/marketplace.admin` - Admin of marketplace.
-- `principals` - (Required) a list of principals who are granted a role. The following format is supported:
+* `principals` - (Required) a list of principals who are granted a role. The following format is supported:
   * `users/{username}` (also exposed as `acl_principal_id` attribute of `databricks_user` resource).
   * `groups/{groupname}` (also exposed as `acl_principal_id` attribute of `databricks_group` resource).
   * `servicePrincipals/{applicationId}` (also exposed as `acl_principal_id` attribute of `databricks_service_principal` resource).
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - ID of the access control rule set - the same as `name`.
 
 ## Related Resources
 

@@ -5,7 +5,7 @@ page_title: "Unity Catalog set up on Google Cloud"
 # Deploying pre-requisite resources and enabling Unity Catalog
 
 **Note**
-If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you.
+If your workspace was enabled for Unity Catalog automatically, this guide does not apply to you. See [this guide](unity-catalog-default.md) instead.
 
 **Note**
 Except for metastore, metastore assignment and storage credential objects, Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future.
@@ -31,7 +31,7 @@ To get started with Unity Catalog, this guide takes you through the following hi
 
 ## Provider initialization
 
-Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authenticating-with-hostname,-username,-and-password), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
+Initialize the 3 providers to set up the required resources. See [Databricks provider authentication](../index.md#authentication), [Azure AD provider authentication](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs#authenticating-to-azure-active-directory) and [Azure provider authentication](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure) for more details.
 
 Define the required variables, and calculate the local values
 

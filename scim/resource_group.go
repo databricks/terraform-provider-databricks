@@ -13,13 +13,13 @@ import (
 // ResourceGroup manages user groups
 func ResourceGroup() common.Resource {
 	type entity struct {
-		DisplayName string `json:"display_name" tf:"force_new"`
+		DisplayName string `json:"display_name"`
 		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
 		URL         string `json:"url,omitempty" tf:"computed"`
 	}
 	groupSchema := common.StructToSchema(entity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(&m)
+			addEntitlementsToSchema(m)
 			// https://github.com/databricks/terraform-provider-databricks/issues/1089
 			m["display_name"].ValidateDiagFunc = validation.ToDiagFunc(
 				validation.StringNotInSlice([]string{"users", "admins"}, false))
@@ -34,7 +34,7 @@ func ResourceGroup() common.Resource {
 			}
 			return m
 		})
-	addEntitlementsToSchema(&groupSchema)
+	addEntitlementsToSchema(groupSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			g := Group{

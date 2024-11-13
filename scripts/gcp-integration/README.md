@@ -1,4 +1,5 @@
-make test-gcp
+# make test-gcp
+
 ---
 
 Used for running integration tests on GCP.

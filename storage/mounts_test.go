@@ -173,12 +173,12 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/spark-versions",
-			Response: clusters.SparkVersionsList{
-				SparkVersions: []clusters.SparkVersion{
+			Resource:     "/api/2.1/clusters/spark-versions",
+			Response: compute.GetSparkVersionsResponse{
+				Versions: []compute.SparkVersion{
 					{
-						Version:     "7.1.x-cpu-ml-scala2.12",
-						Description: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
+						Key:  "7.1.x-cpu-ml-scala2.12",
+						Name: "7.1 ML (includes Apache Spark 3.0.0, Scala 2.12)",
 					},
 				},
 			},
@@ -186,7 +186,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 		{
 			Method:       "GET",
 			ReuseRequest: true,
-			Resource:     "/api/2.0/clusters/list-node-types",
+			Resource:     "/api/2.1/clusters/list-node-types",
 			Response: compute.ListNodeTypesResponse{
 				NodeTypes: []compute.NodeType{
 					{
@@ -212,7 +212,7 @@ func TestDeletedMountClusterRecreates(t *testing.T) {
 				AutoterminationMinutes: 10,
 				ClusterName:            "terraform-mount",
 				NodeTypeID:             "Standard_F4s",
-				SparkVersion:           "7.3.x-scala2.12",
+				SparkVersion:           "11.3.x-scala2.12",
 				CustomTags: map[string]string{
 					"ResourceClass": "SingleNode",
 				},
@@ -309,11 +309,11 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		// no mounting cluster given, try creating it
 		_, err := getMountingClusterID(ctx, client, "")
-		assert.EqualError(t, err, "failed to get mouting cluster: nope")
+		assert.EqualError(t, err, "failed to get mounting cluster: nope")
 
 		// mounting cluster given, but it's removed already
 		_, err = getMountingClusterID(ctx, client, "bcd")
-		assert.EqualError(t, err, "failed to get mouting cluster: nope")
+		assert.EqualError(t, err, "failed to get mounting cluster: nope")
 
 		// some other error happens
 		_, err = getMountingClusterID(ctx, client, "def")
@@ -342,14 +342,14 @@ func TestMountCRD(t *testing.T) {
 		})
 		diags := r.CreateContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+		assert.Equal(t, "failed to get mounting cluster: nope", diags[0].Summary)
 
 		diags = r.ReadContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+		assert.Equal(t, "failed to get mounting cluster: nope", diags[0].Summary)
 
 		diags = r.DeleteContext(ctx, d, client)
 		assert.True(t, diags.HasError())
-		assert.Equal(t, "failed to get mouting cluster: nope", diags[0].Summary)
+		assert.Equal(t, "failed to get mounting cluster: nope", diags[0].Summary)
 	})
 }

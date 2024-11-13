@@ -2,32 +2,32 @@
 page_title: "Provisioning Azure Databricks with Private Link - Standard deployment."
 ---
 
-# Deploying pre-requisite resources and enabling Private Link connections - Standard deployment.
+# Deploying pre-requisite resources and enabling Private Link connections - Standard deployment
 
--> **Note**
-  - Refer to [adb-with-private-link-standard](https://github.com/databricks/terraform-databricks-examples/tree/main/modules/adb-with-private-link-standard), a Terraform module that contains code used to deploy an Azure Databricks workspace with Azure Private Link using the Standard deployment approach.
-  - Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for more Terraform modules and examples to deploy Azure Databricks resources.
-  - This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
+-> **Note** Refer to [adb-with-private-link-standard](https://github.com/databricks/terraform-databricks-examples/tree/main/modules/adb-with-private-link-standard), a Terraform module that contains code used to deploy an Azure Databricks workspace with Azure Private Link using the Standard deployment approach.
+
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for more Terraform modules and examples to deploy Azure Databricks resources.
+
+-> **Note** This guide assumes that connectivity from the on-premises user environment is already configured using ExpressRoute or a VPN gateway connection.
 
 [Azure Private Link](https://learn.microsoft.com/en-us/azure/private-link/private-link-overview) support enables private connectivity between users and their Databricks workspaces and between clusters on the data plane and core services on the control plane within the Databricks workspace infrastructure.
 
 You can use Terraform to deploy the underlying cloud resources and the private access settings resources automatically using a programmatic approach.
 
-
 This guide covers a [standard deployment](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/private-link-standard) to configure Azure Databricks with Private Link:
-* Two separate VNets are used:
-  * A transit VNet
-  * A customer Data Plane VNet
-* A private endpoint is used for back-end connectivity and deployed in the customer Data Plane VNet.
-* A private endpoint is used for front-end connectivity and deployed in the transit VNet.
-* A private endpoint is used for web authentication and deployed in the transit VNet.
-* A dedicated Databricks workspace, called Web Auth workspace, is used for web authentication traffic. This workspace is configured with the sub-resource **browser_authentication** and deployed using subnets in the transit VNet.
+- Two separate VNets are used:
+  - A transit VNet
+  - A customer Data Plane VNet
+- A private endpoint is used for back-end connectivity and deployed in the customer Data Plane VNet.
+- A private endpoint is used for front-end connectivity and deployed in the transit VNet.
+- A private endpoint is used for web authentication and deployed in the transit VNet.
+- A dedicated Databricks workspace, called Web Auth workspace, is used for web authentication traffic. This workspace is configured with the sub-resource **browser_authentication** and deployed using subnets in the transit VNet.
 
 -> **Note**  
-* A separate Web Auth workspace is not mandatory but recommended.
-* DNS mapping for SSO login callbacks to the Azure Databricks web application can be managed by the Web Auth workspace or another workspace associated with the **browser_authentication** private endpoint.
+- A separate Web Auth workspace is not mandatory but recommended.
+- DNS mapping for SSO login callbacks to the Azure Databricks web application can be managed by the Web Auth workspace or another workspace associated with the **browser_authentication** private endpoint.
 
-![Azure Databricks with Private Link - Standard deployment](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/images/azure-private-link-standard.png)
+![Azure Databricks with Private Link - Standard deployment](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/images/azure-private-link-standard.png)
 
 This guide uses the following variables:
 
@@ -44,14 +44,14 @@ This guide takes you through the following high-level steps to set up a workspac
 - Initialize the required providers
 - Configure Azure objects:
   - Deploy two Azure VNets with the following subnets:
-	- Public and private subnets for each Azure Databricks workspace in the Data Plane VNet
-	- Private Link subnet in the Data Plane VNet that will contain the Backend private endpoint
+   	- Public and private subnets for each Azure Databricks workspace in the Data Plane VNet
+   	- Private Link subnet in the Data Plane VNet that will contain the Backend private endpoint
   - Private Link subnet in the Transit VNet that will contain the following private endpoints:
-  	- Frontend private endpoint
-  	- Web auth private endpoint
+    - Frontend private endpoint
+    - Web auth private endpoint
   - Configure the private DNS zone to add:
-	- DNS A record to map connection for workspace access
-	- DNS A record(s) for web_auth
+   	- DNS A record to map connection for workspace access
+   	- DNS A record(s) for web_auth
 - Workspace Creation
 
 ## Provider initialization
@@ -124,12 +124,12 @@ locals {
 
 ## Summary
 
-* In the Transit resource group:
+- In the Transit resource group:
   1. Create a Transit VNet
   2. Create a private DNS zone
   3. Create Web Auth Databricks workspace with the sub-resource **browser_authentication**
   4. Create a Frontend private endpoint with the sub-resource **databricks_ui_api**
-* In the Data Plane resource group:
+- In the Data Plane resource group:
   1. Create a Data Plane VNet
   2. Create a private DNS zone
   3. Create a new Azure Databricks workspace
@@ -236,8 +236,7 @@ resource "azurerm_subnet" "transit_private" {
   virtual_network_name = azurerm_virtual_network.transit_vnet.name
   address_prefixes     = [cidrsubnet(local.cidr_transit, 6, 1)]
 
-  enforce_private_link_endpoint_network_policies = true
-  enforce_private_link_service_network_policies  = true
+  private_endpoint_network_policies_enabled = true
 
   delegation {
     name = "databricks"
@@ -260,11 +259,11 @@ resource "azurerm_subnet_network_security_group_association" "transit_private" {
 
 
 resource "azurerm_subnet" "transit_plsubnet" {
-  name                                           = "${local.prefix}-transit-privatelink"
-  resource_group_name                            = var.rg_transit
-  virtual_network_name                           = azurerm_virtual_network.transit_vnet.name
-  address_prefixes                               = [cidrsubnet(local.cidr_transit, 6, 2)]
-  enforce_private_link_endpoint_network_policies = true
+  name                                      = "${local.prefix}-transit-privatelink"
+  resource_group_name                       = var.rg_transit
+  virtual_network_name                      = azurerm_virtual_network.transit_vnet.name
+  address_prefixes                          = [cidrsubnet(local.cidr_transit, 6, 2)]
+  private_endpoint_network_policies_enabled = true
 }
 
 resource "azurerm_private_endpoint" "transit_auth" {
@@ -435,8 +434,8 @@ resource "azurerm_subnet" "app_private" {
   virtual_network_name = azurerm_virtual_network.app_vnet.name
   address_prefixes     = [cidrsubnet(local.cidr_dp, 6, 1)]
 
-  enforce_private_link_endpoint_network_policies = true
-  enforce_private_link_service_network_policies  = true
+  private_endpoint_network_policies_enabled     = true
+  private_link_service_network_policies_enabled = true
 
   delegation {
     name = "databricks"
@@ -460,12 +459,12 @@ resource "azurerm_subnet_network_security_group_association" "app_private" {
 
 
 resource "azurerm_subnet" "app_plsubnet" {
-  provider                                       = azurerm.app
-  name                                           = "${local.prefix}-app-privatelink"
-  resource_group_name                            = var.rg_dp
-  virtual_network_name                           = azurerm_virtual_network.app_vnet.name
-  address_prefixes                               = [cidrsubnet(local.cidr_dp, 6, 2)]
-  enforce_private_link_endpoint_network_policies = true
+  provider                                  = azurerm.app
+  name                                      = "${local.prefix}-app-privatelink"
+  resource_group_name                       = var.rg_dp
+  virtual_network_name                      = azurerm_virtual_network.app_vnet.name
+  address_prefixes                          = [cidrsubnet(local.cidr_dp, 6, 2)]
+  private_endpoint_network_policies_enabled = true
 }
 
 resource "azurerm_databricks_workspace" "app_workspace" {
@@ -518,5 +517,6 @@ resource "azurerm_private_endpoint" "app_dpcp" {
 ```
 
 -> **Note**
+
 - The public network access to the workspace is disabled. You can access the workspace only through private connectivity to the on-premises user environment. For testing purposes, you can deploy an Azure VM in the Transit VNet to test the frontend connectivity.
 - If you wish to deploy a test VM in the Data Plane VNet, you should configure a peering connection between the two VNets

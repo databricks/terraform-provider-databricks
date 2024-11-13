@@ -1,15 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/exporter"
-	"github.com/databricks/terraform-provider-databricks/provider"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 )
+
+const startMessageFormat = `Databricks Terraform Provider
+	
+Version %s
+	
+https://registry.terraform.io/providers/databricks/databricks/latest/docs
+	
+`
 
 func main() {
 	log.SetFlags(0)
@@ -24,20 +34,26 @@ func main() {
 		}
 		return
 	}
-	var debug bool
-	if len(os.Args) > 1 && os.Args[1] == "debug" {
-		debug = true
+
+	log.Printf(startMessageFormat, common.Version())
+
+	ctx := context.Background()
+	providerServer, err := providers.GetProviderServer(ctx)
+	if err != nil {
+		log.Fatal(err)
 	}
-	log.Printf(`Databricks Terraform Provider
 
-Version %s
+	var serveOpts []tf6server.ServeOpt
+	if len(os.Args) > 1 && os.Args[1] == "debug" { // debug mode
+		serveOpts = append(serveOpts, tf6server.WithManagedDebug())
+	}
 
-https://registry.terraform.io/providers/databricks/databricks/latest/docs
-
-`, common.Version())
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: provider.DatabricksProvider,
-		ProviderAddr: "registry.terraform.io/databricks/databricks",
-		Debug:        debug,
-	})
+	err = tf6server.Serve(
+		"registry.terraform.io/databricks/databricks",
+		func() tfprotov6.ProviderServer { return providerServer },
+		serveOpts...,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

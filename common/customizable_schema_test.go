@@ -43,8 +43,101 @@ func TestCustomizableSchemaSetSuppressDiff(t *testing.T) {
 	assert.Truef(t, testCustomizableSchemaScm["non_optional"].DiffSuppressFunc != nil, "DiffSuppressfunc should be set in field: non_optional")
 }
 
+func TestCustomizableSchemaSetCustomSuppressDiffWithDefault(t *testing.T) {
+	tc := []struct {
+		name      string
+		fieldName string
+		dv        any
+		old       string
+		new       string
+		result    bool
+	}{
+		{
+			name:      "default string",
+			fieldName: "string",
+			dv:        "foobar",
+			old:       "foobar",
+			new:       "",
+			result:    true,
+		},
+		{
+			name:      "default int",
+			fieldName: "integer",
+			dv:        123,
+			old:       "123",
+			new:       "0",
+			result:    true,
+		},
+		{
+			name:      "default bool",
+			fieldName: "bool",
+			dv:        true,
+			old:       "true",
+			new:       "false",
+			result:    true,
+		},
+		{
+			name:      "default float",
+			fieldName: "float",
+			dv:        123.456,
+			old:       "123.456",
+			new:       "0",
+			result:    true,
+		},
+		{
+			name:      "non default string",
+			fieldName: "string",
+			dv:        "foobar",
+			old:       "non-default-val",
+			new:       "",
+			result:    false,
+		},
+		{
+			name:      "non default int",
+			fieldName: "integer",
+			dv:        123,
+			old:       "non-default-val",
+			new:       "0",
+			result:    false,
+		},
+		{
+			name:      "non default bool",
+			fieldName: "bool",
+			dv:        true,
+			old:       "non-default-val",
+			new:       "false",
+			result:    false,
+		},
+		{
+			name:      "non default float",
+			fieldName: "float",
+			dv:        123.456,
+			old:       "non-default-val",
+			new:       "0",
+			result:    false,
+		},
+		{
+			name:      "override in config",
+			fieldName: "string",
+			dv:        "foobar",
+			old:       "foobar",
+			new:       "new-val-in-config",
+			result:    false,
+		},
+	}
+
+	for _, tt := range tc {
+		t.Run(tt.name, func(t *testing.T) {
+			CustomizeSchemaPath(testCustomizableSchemaScm, tt.fieldName).SetSuppressDiffWithDefault(tt.dv)
+			assert.Truef(t, testCustomizableSchemaScm[tt.fieldName].DiffSuppressFunc != nil, "DiffSuppressFunc should be set in field: %s", tt.fieldName)
+
+			assert.Equal(t, tt.result, testCustomizableSchemaScm[tt.fieldName].DiffSuppressFunc("", tt.old, tt.new, nil))
+		})
+	}
+}
+
 func TestCustomizableSchemaSetCustomSuppressDiff(t *testing.T) {
-	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetCustomSuppressDiff(diffSuppressor(CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").Schema))
+	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetCustomSuppressDiff(diffSuppressor("test", CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").Schema))
 	assert.Truef(t, testCustomizableSchemaScm["non_optional"].DiffSuppressFunc != nil, "DiffSuppressfunc should be set in field: non_optional")
 }
 
@@ -71,6 +164,34 @@ func TestCustomizableSchemaSetMinItems(t *testing.T) {
 func TestCustomizableSchemaSetConflictsWith(t *testing.T) {
 	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetConflictsWith([]string{"abc"})
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].ConflictsWith) == 1, "conflictsWith should be set in field: non_optional")
+}
+
+func TestCustomizableSchemaSetConflictsWith_PathInContext(t *testing.T) {
+	fakeContextWithPath := schemaPathContext{
+		path:       []string{"a", "0", "b"},
+		schemaPath: []*schema.Schema{},
+	}
+	cs := CustomizeSchemaPath(testCustomizableSchemaScm, "float")
+	cs.context = fakeContextWithPath
+	cs.SetConflictsWith([]string{"abc"})
+	assert.Truef(t, len(testCustomizableSchemaScm["float"].ConflictsWith) == 1, "conflictsWith should be set in field: float")
+	assert.Truef(t, cs.Schema.ConflictsWith[0] == "a.0.b.abc", "conflictsWith should be set with the correct prefix")
+}
+
+func TestCustomizableSchemaSetConflictsWith_MultiItemList(t *testing.T) {
+	fakeContextWithPath := schemaPathContext{
+		path: []string{"a", "0", "b"},
+		schemaPath: []*schema.Schema{
+			{
+				Type:     schema.TypeList,
+				MaxItems: 10,
+			},
+		},
+	}
+	cs := CustomizeSchemaPath(testCustomizableSchemaScm, "bool")
+	cs.context = fakeContextWithPath
+	cs.SetConflictsWith([]string{"abc"})
+	assert.Truef(t, len(testCustomizableSchemaScm["bool"].ConflictsWith) == 0, "conflictsWith should not be set when there's multi item list in the path")
 }
 
 func TestCustomizableSchemaSetExactlyOneOf(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccGitCredentials(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `resource "databricks_git_credential" "this" {
 			git_username = "test"
 			git_provider = "gitHub"

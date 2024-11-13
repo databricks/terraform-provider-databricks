@@ -122,8 +122,13 @@ func parseSecurableId(d *schema.ResourceData) (string, string, string, error) {
 func ResourceGrant() common.Resource {
 	s := common.StructToSchema(permissions.UnityCatalogPrivilegeAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			common.CustomizeSchemaPath(m, "principal").SetForceNew()
 
-			m["principal"].ForceNew = true
+			// set custom hash function for privileges
+			common.MustSchemaPath(m, "privileges").Set = func(i any) int {
+				privilege := i.(string)
+				return schema.HashString(permissions.NormalizePrivilege(privilege))
+			}
 
 			allFields := []string{}
 			for field := range permissions.Mappings {
@@ -184,7 +189,11 @@ func ResourceGrant() common.Resource {
 			if err != nil {
 				return err
 			}
-			return common.StructToData(*grantsForPrincipal, s, d)
+			err = common.StructToData(*grantsForPrincipal, s, d)
+			if err != nil {
+				return err
+			}
+			return d.Set(securable, name)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

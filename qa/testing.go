@@ -18,6 +18,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/common/environment"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -25,9 +26,9 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -104,11 +105,13 @@ type ResourceFixture struct {
 	CommandMock common.CommandMock
 
 	// Set one of them to true to test the corresponding CRUD function for the
-	// terraform resource.
-	Create bool
-	Read   bool
-	Update bool
-	Delete bool
+	// terraform resource. Or set ExpectedDiff to skip execution and only test
+	// that the diff is expected.
+	Create       bool
+	Read         bool
+	Update       bool
+	Delete       bool
+	ExpectedDiff map[string]*terraform.ResourceAttrDiff
 
 	Removed     bool
 	ID          string
@@ -171,26 +174,28 @@ func (f ResourceFixture) prepareExecution(r *schema.Resource) (resourceCRUD, err
 			return nil, fmt.Errorf("ID must be set for Delete")
 		}
 		return resourceCRUD(r.DeleteContext).withId(f.ID), nil
+	case f.ExpectedDiff != nil:
+		return nil, nil
 	}
-	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` specificed")
+	return nil, fmt.Errorf("no `Create|Read|Update|Delete: true` or `ExpectedDiff` specified")
 }
 
 func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.DatabricksClient, host string) {
 	if f.Azure || f.AzureSPN {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
-			Cloud:              config.CloudAzure,
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:              environment.CloudAzure,
 			DnsZone:            host,
 			AzureApplicationID: "azure-login-application-id",
-			AzureEnvironment:   &config.AzurePublicCloud,
+			AzureEnvironment:   &environment.AzurePublicCloud,
 		}
 	} else if f.Gcp {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
-			Cloud:   config.CloudGCP,
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:   environment.CloudGCP,
 			DnsZone: host,
 		}
 	} else {
-		client.Config.DatabricksEnvironment = &config.DatabricksEnvironment{
-			Cloud:   config.CloudAWS,
+		client.Config.DatabricksEnvironment = &environment.DatabricksEnvironment{
+			Cloud:   environment.CloudAWS,
 			DnsZone: host,
 		}
 	}
@@ -304,6 +309,16 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	}
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
+	if f.ExpectedDiff != nil {
+		// Users can specify that there is no diff by setting an empty but initialized map.
+		// resource.Diff returns nil if there is no diff.
+		if len(f.ExpectedDiff) == 0 {
+			assert.Nil(t, diff)
+			return nil, err
+		}
+		assert.Equal(t, f.ExpectedDiff, diff.Attributes)
+		return nil, err
+	}
 	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err
@@ -326,7 +341,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		// this is a bit strange, but we'll fix it later
 		diags := execute(ctx, resourceData, client)
 		if diags != nil {
-			return resourceData, fmt.Errorf(diagsToString(diags))
+			return resourceData, errors.New(diagsToString(diags))
 		}
 	}
 	if resourceData.Id() == "" && !f.Removed {
@@ -449,7 +464,7 @@ func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCas
 	}
 	HTTPFixturesApply(t, HTTPFailures, func(ctx context.Context, client *common.DatabricksClient) {
 		validData := r.TestResourceData()
-		client.Config.AccountID = config["account_id"]
+		client.Config.WithTesting().AccountID = config["account_id"]
 		for n, v := range m {
 			if v == nil {
 				continue

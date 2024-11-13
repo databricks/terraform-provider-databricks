@@ -2,17 +2,21 @@ package permissions
 
 import (
 	"context"
-	"net/http"
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/scim"
-
+	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,70 +26,39 @@ var (
 	TestingUser      = "ben"
 	TestingAdminUser = "admin"
 	TestingOwner     = "testOwner"
-	me               = qa.HTTPFixture{
-		ReuseRequest: true,
-		Method:       "GET",
-		Resource:     "/api/2.0/preview/scim/v2/Me",
-		Response: scim.User{
-			UserName: TestingAdminUser,
-		},
-	}
 )
-
-func TestEntityAccessControlChangeString(t *testing.T) {
-	assert.Equal(t, "me CAN_READ", AccessControlChange{
-		UserName:        "me",
-		PermissionLevel: "CAN_READ",
-	}.String())
-}
-
-func TestEntityAccessControlString(t *testing.T) {
-	assert.Equal(t, "me[CAN_READ (from [parent]) CAN_MANAGE]", AccessControl{
-		UserName: "me",
-		AllPermissions: []Permission{
-			{
-				InheritedFromObject: []string{"parent"},
-				PermissionLevel:     "CAN_READ",
-			},
-			{
-				PermissionLevel: "CAN_MANAGE",
-			},
-		},
-	}.String())
-}
 
 func TestResourcePermissionsRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectID:   "/clusters/abc",
-					ObjectType: "cluster",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -104,17 +77,16 @@ func TestResourcePermissionsRead(t *testing.T) {
 // https://github.com/databricks/terraform-provider-databricks/issues/1227
 func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Status:   400,
-				Response: apierr.APIError{
-					ErrorCode: "INVALID_STATE",
-					Message:   "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
-				},
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(nil, &apierr.APIError{
+				StatusCode: 400,
+				ErrorCode:  "INVALID_STATE",
+				Message:    "Cannot access cluster X that was terminated or unpinned more than Y days ago.",
+			})
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -126,27 +98,25 @@ func TestResourcePermissionsRead_RemovedCluster(t *testing.T) {
 
 func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		// Pass list of API request mocks
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				Response: ObjectACL{
-					ObjectID:   "/registered-models/fakeuuid123",
-					ObjectType: "registered-model",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "fakeuuid123",
+				RequestObjectType: "registered-models",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/registered-models/fakeuuid123",
+				ObjectType: "registered-model",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -164,42 +134,40 @@ func TestResourcePermissionsRead_Mlflow_Model(t *testing.T) {
 
 func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "fakeuuid123",
+				RequestObjectType: "registered-models",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_READ",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				Response: ObjectACL{
-					ObjectID:   "/registered-models/fakeuuid123",
-					ObjectType: "registered-model",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "fakeuuid123",
+				RequestObjectType: "registered-models",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/registered-models/fakeuuid123",
+				ObjectType: "registered-model",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -223,42 +191,40 @@ func TestResourcePermissionsCreate_Mlflow_Model(t *testing.T) {
 
 func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "fakeuuid123",
+				RequestObjectType: "registered-models",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_READ",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				Response: ObjectACL{
-					ObjectID:   "/registered-models/fakeuuid123",
-					ObjectType: "registered-model",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "fakeuuid123",
+				RequestObjectType: "registered-models",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/registered-models/fakeuuid123",
+				ObjectType: "registered-model",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 				},
-			},
+			}, nil)
 		},
 		InstanceState: map[string]string{
 			"registered_model_id": "fakeuuid123",
@@ -287,38 +253,36 @@ func TestResourcePermissionsUpdate_Mlflow_Model(t *testing.T) {
 
 func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				Response: ObjectACL{
-					ObjectID:   "/registered-models/fakeuuid123",
-					ObjectType: "registered-model",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "fakeuuid123",
+				RequestObjectType: "registered-models",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/registered-models/fakeuuid123",
+				ObjectType: "registered-model",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 				},
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/registered-models/fakeuuid123",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "fakeuuid123",
+				RequestObjectType: "registered-models",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
+			}).Return(nil, nil)
 		},
 		Resource: ResourcePermissions(),
 		Delete:   true,
@@ -330,35 +294,80 @@ func TestResourcePermissionsDelete_Mlflow_Model(t *testing.T) {
 
 func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
-				Response: ObjectACL{
-					ObjectID:   "/sql/dashboards/abc",
-					ObjectType: "dashboard",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "dbsql-dashboards",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "dashboards/abc",
+				ObjectType: "dashboard",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
 		New:      true,
 		ID:       "/sql/dashboards/abc",
+		HCL: `
+		sql_dashboard_id = "abc"
+		access_control {
+			user_name = "ben"
+			permission_level = "CAN_VIEW"
+		}
+		`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "/sql/dashboards/abc", d.Id())
 	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_VIEW", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsRead_Dashboard(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "dashboards",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "dashboards/abc",
+				ObjectType: "dashboard",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
+					},
+				},
+			}, nil)
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		New:      true,
+		ID:       "/dashboards/abc",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "/dashboards/abc", d.Id())
+	ac := d.Get("access_control").(*schema.Set)
+	assert.Equal(t, "abc", d.Get("dashboard_id").(string))
 	require.Equal(t, 1, len(ac.List()))
 	firstElem := ac.List()[0].(map[string]any)
 	assert.Equal(t, TestingUser, firstElem["user_name"])
@@ -367,17 +376,16 @@ func TestResourcePermissionsRead_SQLA_Asset(t *testing.T) {
 
 func TestResourcePermissionsRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "NOT_FOUND",
-					Message:   "Cluster does not exist",
-				},
-				Status: 404,
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(nil, &apierr.APIError{
+				StatusCode: 404,
+				ErrorCode:  "NOT_FOUND",
+				Message:    "Cluster does not exist",
+			})
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -389,17 +397,16 @@ func TestResourcePermissionsRead_NotFound(t *testing.T) {
 
 func TestResourcePermissionsRead_some_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(nil, &apierr.APIError{
+				StatusCode: 400,
+				ErrorCode:  "INVALID_REQUEST",
+				Message:    "Internal error happened",
+			})
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -417,56 +424,17 @@ func TestResourcePermissionsCustomizeDiff_ErrorOnCreate(t *testing.T) {
 		access_control {
 			permission_level = "WHATEVER"
 		}`,
-	}.ExpectError(t, "permission_level WHATEVER is not supported with cluster_id objects")
-}
-
-func TestResourcePermissionsCustomizeDiff_ErrorOnPermissionsDecreate(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-		},
-		Resource: ResourcePermissions(),
-		Create:   true,
-		HCL: `
-		cluster_id = "abc"
-		access_control {
-			permission_level = "CAN_ATTACH_TO"
-			user_name = "admin"
-		}`,
-	}.ExpectError(t, "it is not possible to decrease administrative permissions for the current user: admin")
+	}.ExpectError(t, "permission_level WHATEVER is not supported with cluster_id objects; allowed levels: CAN_ATTACH_TO, CAN_MANAGE, CAN_RESTART")
 }
 
 func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   http.MethodGet,
-			Resource: "/api/2.0/permissions/clusters/abc",
-			Response: ObjectACL{
-				ObjectID:   "/clusters/abc",
-				ObjectType: "clusters",
-				AccessControlList: []AccessControl{
-					{
-						UserName: TestingUser,
-						AllPermissions: []Permission{
-							{
-								PermissionLevel: "CAN_READ",
-								Inherited:       false,
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			Method:   http.MethodGet,
-			Resource: "/api/2.0/preview/scim/v2/Me",
-			Response: apierr.APIErrorBody{
-				ErrorCode: "INVALID_REQUEST",
-				Message:   "Internal error happened",
-			},
-			Status: 400,
-		},
-	}, func(ctx context.Context, client *common.DatabricksClient) {
+	mock := func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(nil, &apierr.APIError{
+			ErrorCode: "INVALID_REQUEST",
+			Message:   "Internal error happened",
+		})
+	}
+	qa.MockWorkspaceApply(t, mock, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourcePermissions().ToResource()
 		d := r.TestResourceData()
 		d.SetId("/clusters/abc")
@@ -478,35 +446,33 @@ func TestResourcePermissionsRead_ErrorOnScimMe(t *testing.T) {
 
 func TestResourcePermissionsRead_ToPermissionsEntity_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectType: "teapot",
-				},
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(&iam.ObjectPermissions{
+				ObjectType: "teapot",
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
 		New:      true,
 		ID:       "/clusters/abc",
-	}.ExpectError(t, "unknown object type teapot")
+	}.ExpectError(t, "expected object type cluster, got teapot")
 }
 
 func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectID:   "/clusters/abc",
-					ObjectType: "cluster",
-				},
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		Read:     true,
@@ -520,48 +486,46 @@ func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
 
 func TestResourcePermissionsDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectID:   "/clusters/abc",
-					ObjectType: "clusters",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
+			}).Return(nil, nil)
 		},
 		Resource: ResourcePermissions(),
 		Delete:   true,
@@ -573,53 +537,50 @@ func TestResourcePermissionsDelete(t *testing.T) {
 
 func TestResourcePermissionsDelete_error(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectID:   "/clusters/abc",
-					ObjectType: "clusters",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+			}).Return(nil, &apierr.APIError{
+				ErrorCode:  "INVALID_REQUEST",
+				Message:    "Internal error happened",
+				StatusCode: 400,
+			})
 		},
 		Resource: ResourcePermissions(),
 		Delete:   true,
@@ -630,15 +591,13 @@ func TestResourcePermissionsDelete_error(t *testing.T) {
 
 func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{me},
 		Resource: ResourcePermissions(),
 		Create:   true,
-	}.ExpectError(t, "at least one type of resource identifiers must be set")
+	}.ExpectError(t, "at least one type of resource identifier must be set; allowed fields: authorization, cluster_id, cluster_policy_id, dashboard_id, directory_id, directory_path, experiment_id, instance_pool_id, job_id, notebook_id, notebook_path, pipeline_id, registered_model_id, repo_id, repo_path, serving_endpoint_id, sql_alert_id, sql_dashboard_id, sql_endpoint_id, sql_query_id, vector_search_endpoint_id, workspace_file_id, workspace_file_path")
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourcePermissions(),
 		Create:   true,
 		State: map[string]any{
@@ -649,7 +608,6 @@ func TestResourcePermissionsCreate_no_access_control(t *testing.T) {
 
 func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{},
 		Resource: ResourcePermissions(),
 		Create:   true,
 		State: map[string]any{
@@ -667,7 +625,9 @@ func TestResourcePermissionsCreate_conflicting_fields(t *testing.T) {
 
 func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{me},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+		},
 		Resource: ResourcePermissions(),
 		Create:   true,
 		HCL: `
@@ -678,57 +638,55 @@ func TestResourcePermissionsCreate_AdminsThrowError(t *testing.T) {
 		}
 		`,
 	}.Apply(t)
-	assert.EqualError(t, err, "it is not possible to restrict any permissions from `admins`")
+	assert.EqualError(t, err, "it is not possible to modify admin permissions for cluster resources")
 }
 
 func TestResourcePermissionsCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_ATTACH_TO",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
-					},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: ObjectACL{
-					ObjectID:   "/clusters/abc",
-					ObjectType: "cluster",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_ATTACH_TO",
-									Inherited:       false,
-								},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_ATTACH_TO",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_ATTACH_TO",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
+					},
+				},
+			}).Return(nil, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -752,42 +710,50 @@ func TestResourcePermissionsCreate(t *testing.T) {
 
 func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "dbsql-dashboards",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/dashboards/abc",
+				ObjectType: "dashboard",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_RUN",
+								Inherited:       false,
+							},
 						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
+							},
 						},
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/sql/permissions/dashboards/abc",
-				Response: ObjectACL{
-					ObjectID:   "/sql/dashboards/abc",
-					ObjectType: "dashboard",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "dbsql-dashboards",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_RUN",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
+			}).Return(nil, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -811,42 +777,131 @@ func TestResourcePermissionsCreate_SQLA_Asset(t *testing.T) {
 
 func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   "PUT",
-				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_USE",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "IS_OWNER",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				Response: ObjectACL{
-					ObjectID:   "/sql/dashboards/abc",
-					ObjectType: "dashboard",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "warehouses/abc",
+				ObjectType: "warehouses",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 					},
 				},
+			}, nil)
+		},
+		Resource: ResourcePermissions(),
+		State: map[string]any{
+			"sql_endpoint_id": "abc",
+			"access_control": []any{
+				map[string]any{
+					"user_name":        TestingUser,
+					"permission_level": "CAN_USE",
+				},
 			},
+		},
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	ac := d.Get("access_control").(*schema.Set)
+	require.Equal(t, 1, len(ac.List()))
+	firstElem := ac.List()[0].(map[string]any)
+	assert.Equal(t, TestingUser, firstElem["user_name"])
+	assert.Equal(t, "CAN_USE", firstElem["permission_level"])
+}
+
+func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwnerError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_USE",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "IS_OWNER",
+					},
+				},
+			}).Return(nil, &apierr.APIError{
+				ErrorCode:  "INVALID_PARAMETER_VALUE",
+				Message:    "PUT requests for warehouse *** with no existing owner must provide a new owner.",
+				StatusCode: 400,
+			})
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_USE",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
+					},
+				},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "warehouses/abc",
+				ObjectType: "warehouses",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
+					},
+				},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -870,50 +925,48 @@ func TestResourcePermissionsCreate_SQLA_Endpoint(t *testing.T) {
 
 func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   "PUT",
-				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingOwner,
-							PermissionLevel: "IS_OWNER",
-						},
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingOwner,
+						PermissionLevel: "IS_OWNER",
+					},
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_USE",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/sql/warehouses/abc",
-				Response: ObjectACL{
-					ObjectID:   "/sql/dashboards/abc",
-					ObjectType: "dashboard",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_USE",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
-						{
-							UserName:        TestingOwner,
-							PermissionLevel: "IS_OWNER",
-						},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "sql/warehouses",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "warehouses/abc",
+				ObjectType: "warehouses",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
+					},
+					{
+						UserName:       TestingOwner,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelIsOwner}},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -960,17 +1013,12 @@ func TestResourcePermissionsCreate_SQLA_Endpoint_WithOwner(t *testing.T) {
 
 func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 	_, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/Development/Init").Return(nil, &apierr.APIError{
+				ErrorCode:  "INVALID_REQUEST",
+				Message:    "Internal error happened",
+				StatusCode: 400,
+			})
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -978,7 +1026,7 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 			"access_control": []any{
 				map[string]any{
 					"user_name":        TestingUser,
-					"permission_level": "CAN_USE",
+					"permission_level": "CAN_READ",
 				},
 			},
 		},
@@ -990,56 +1038,50 @@ func TestResourcePermissionsCreate_NotebookPath_NotExists(t *testing.T) {
 
 func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: workspace.ObjectStatus{
-					ObjectID:   988765,
-					ObjectType: "NOTEBOOK",
-				},
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/notebooks/988765",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/Development/Init").Return(&workspace.ObjectInfo{
+				ObjectId:   988765,
+				ObjectType: workspace.ObjectTypeNotebook,
+			}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "988765",
+				RequestObjectType: "notebooks",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_READ",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/notebooks/988765",
-				Response: ObjectACL{
-					ObjectID:   "/notebooks/988765",
-					ObjectType: "notebook",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "988765",
+				RequestObjectType: "notebooks",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/notebooks/988765",
+				ObjectType: "notebook",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -1064,56 +1106,50 @@ func TestResourcePermissionsCreate_NotebookPath(t *testing.T) {
 
 func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2FDevelopment%2FInit",
-				Response: workspace.ObjectStatus{
-					ObjectID:   988765,
-					ObjectType: workspace.File,
-				},
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/files/988765",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/Development/Init").Return(&workspace.ObjectInfo{
+				ObjectId:   988765,
+				ObjectType: workspace.ObjectTypeFile,
+			}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "988765",
+				RequestObjectType: "files",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_READ",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/files/988765",
-				Response: ObjectACL{
-					ObjectID:   "/files/988765",
-					ObjectType: "file",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "988765",
+				RequestObjectType: "files",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/files/988765",
+				ObjectType: "file",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -1138,18 +1174,6 @@ func TestResourcePermissionsCreate_WorkspaceFilePath(t *testing.T) {
 
 func TestResourcePermissionsCreate_error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/clusters/abc",
-				Response: apierr.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
-			},
-		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
 			"cluster_id": "abc",
@@ -1161,14 +1185,17 @@ func TestResourcePermissionsCreate_error(t *testing.T) {
 			},
 		},
 		Create: true,
-	}.ExpectError(t, "permission_level CAN_USE is not supported with cluster_id objects")
+	}.ExpectError(t, "permission_level CAN_USE is not supported with cluster_id objects; allowed levels: CAN_ATTACH_TO, CAN_MANAGE, CAN_RESTART")
 }
 
 func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			qa.HTTPFailures[0],
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/foo/bar").Return(nil, &apierr.APIError{
+				ErrorCode:  "INVALID_REQUEST",
+				Message:    "i'm a teapot",
+				StatusCode: 418,
+			})
 		},
 		Resource: ResourcePermissions(),
 		Create:   true,
@@ -1183,9 +1210,13 @@ func TestResourcePermissionsCreate_PathIdRetriever_Error(t *testing.T) {
 
 func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			qa.HTTPFailures[0],
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			mwc.GetMockPermissionsAPI().EXPECT().Set(mock.Anything, mock.Anything).Return(nil, &apierr.APIError{
+				ErrorCode:  "INVALID_REQUEST",
+				Message:    "i'm a teapot",
+				StatusCode: 418,
+			})
 		},
 		Resource: ResourcePermissions(),
 		Create:   true,
@@ -1200,52 +1231,50 @@ func TestResourcePermissionsCreate_ActualUpdate_Error(t *testing.T) {
 
 func TestResourcePermissionsUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/jobs/9",
-				Response: ObjectACL{
-					ObjectID:   "/jobs/9",
-					ObjectType: "job",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_VIEW",
-									Inherited:       false,
-								},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "9",
+				RequestObjectType: "jobs",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/jobs/9",
+				ObjectType: "job",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_VIEW",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/jobs/9",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_VIEW",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "IS_OWNER",
-						},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "9",
+				RequestObjectType: "jobs",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_VIEW",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "IS_OWNER",
 					},
 				},
-			},
+			}).Return(nil, nil)
 		},
 		InstanceState: map[string]string{
 			"job_id": "9",
@@ -1271,235 +1300,202 @@ func TestResourcePermissionsUpdate(t *testing.T) {
 	assert.Equal(t, "CAN_VIEW", firstElem["permission_level"])
 }
 
+func getResourcePermissions(field, objectType string) resourcePermissions {
+	for _, mapping := range allResourcePermissions() {
+		if mapping.field == field && mapping.objectType == objectType {
+			return mapping
+		}
+	}
+	panic(fmt.Sprintf("could not find resource permissions for field %s and object type %s", field, objectType))
+}
+
 func TestResourcePermissionsUpdateTokensAlwaysThereForAdmins(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "PUT",
-			Resource: "/api/2.0/permissions/authorization/tokens",
-			ExpectedRequest: AccessControlChangeList{
-				AccessControlList: []AccessControlChange{
-					{
-						UserName:        "me",
-						PermissionLevel: "CAN_MANAGE",
-					},
-					{
-						GroupName:       "admins",
-						PermissionLevel: "CAN_MANAGE",
-					},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "me"}, nil)
+		mwc.GetMockPermissionsAPI().EXPECT().Set(mock.Anything, iam.PermissionsRequest{
+			RequestObjectId:   "tokens",
+			RequestObjectType: "authorization",
+			AccessControlList: []iam.AccessControlRequest{
+				{
+					UserName:        "me",
+					PermissionLevel: "CAN_MANAGE",
+				},
+				{
+					GroupName:       "admins",
+					PermissionLevel: "CAN_MANAGE",
 				},
 			},
-		},
+		}).Return(nil, nil)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Update("/authorization/tokens", AccessControlChangeList{
-			AccessControlList: []AccessControlChange{
+		mapping := getResourcePermissions("authorization", "tokens")
+		err := p.Update("/authorization/tokens", entity.PermissionsEntity{
+			AccessControlList: []iam.AccessControlRequest{
 				{
 					UserName:        "me",
 					PermissionLevel: "CAN_MANAGE",
 				},
 			},
-		})
+		}, mapping)
 		assert.NoError(t, err)
 	})
 }
 
 func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForJob(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/permissions/jobs/123",
-			Response: ObjectACL{
-				ObjectID:   "/jobs/123",
-				ObjectType: "job",
-				AccessControlList: []AccessControl{
-					{
-						GroupName: "admins",
-						AllPermissions: []Permission{
-							{
-								PermissionLevel: "CAN_DO_EVERYTHING",
-								Inherited:       true,
-							},
-							{
-								PermissionLevel: "CAN_MANAGE",
-								Inherited:       false,
-							},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockJobsAPI().EXPECT().GetByJobId(mock.Anything, int64(123)).Return(&jobs.Job{
+			CreatorUserName: "creator@example.com",
+		}, nil)
+		e := mwc.GetMockPermissionsAPI().EXPECT()
+		e.Get(mock.Anything, iam.GetPermissionRequest{
+			RequestObjectId:   "123",
+			RequestObjectType: "jobs",
+		}).Return(&iam.ObjectPermissions{
+			ObjectId:   "/jobs/123",
+			ObjectType: "job",
+			AccessControlList: []iam.AccessControlResponse{
+				{
+					GroupName: "admins",
+					AllPermissions: []iam.Permission{
+						{
+							PermissionLevel: "CAN_DO_EVERYTHING",
+							Inherited:       true,
+						},
+						{
+							PermissionLevel: "CAN_MANAGE",
+							Inherited:       false,
 						},
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.1/jobs/get?job_id=123",
-			Response: jobs.Job{
-				CreatorUserName: "creator@example.com",
-			},
-		},
-		{
-			Method:   "PUT",
-			Resource: "/api/2.0/permissions/jobs/123",
-			ExpectedRequest: ObjectACL{
-				AccessControlList: []AccessControl{
-					{
-						GroupName:       "admins",
-						PermissionLevel: "CAN_MANAGE",
-					},
-					{
-						UserName:        "creator@example.com",
-						PermissionLevel: "IS_OWNER",
-					},
+		}, nil)
+		e.Set(mock.Anything, iam.PermissionsRequest{
+			RequestObjectId:   "123",
+			RequestObjectType: "jobs",
+			AccessControlList: []iam.AccessControlRequest{
+				{
+					GroupName:       "admins",
+					PermissionLevel: "CAN_MANAGE",
+				},
+				{
+					UserName:        "creator@example.com",
+					PermissionLevel: "IS_OWNER",
 				},
 			},
-		},
+		}).Return(nil, nil)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/jobs/123")
+		mapping := getResourcePermissions("job_id", "job")
+		err := p.Delete("/jobs/123", mapping)
 		assert.NoError(t, err)
 	})
 }
 
 func TestShouldDeleteNonExistentJob(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/permissions/jobs/123",
-			Response: ObjectACL{
-				ObjectID:   "/jobs/123",
-				ObjectType: "job",
-				AccessControlList: []AccessControl{
-					{
-						GroupName: "admins",
-						AllPermissions: []Permission{
-							{
-								PermissionLevel: "CAN_DO_EVERYTHING",
-								Inherited:       true,
-							},
-							{
-								PermissionLevel: "CAN_MANAGE",
-								Inherited:       false,
-							},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+			RequestObjectId:   "123",
+			RequestObjectType: "jobs",
+		}).Return(&iam.ObjectPermissions{
+			ObjectId:   "/jobs/123",
+			ObjectType: "job",
+			AccessControlList: []iam.AccessControlResponse{
+				{
+					GroupName: "admins",
+					AllPermissions: []iam.Permission{
+						{
+							PermissionLevel: "CAN_DO_EVERYTHING",
+							Inherited:       true,
+						},
+						{
+							PermissionLevel: "CAN_MANAGE",
+							Inherited:       false,
 						},
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.1/jobs/get?job_id=123",
-			Status:   400,
-			Response: apierr.APIError{
-				StatusCode: 400,
-				Message:    "Job 123 does not exist.",
-				ErrorCode:  "INVALID_PARAMETER_VALUE",
-			},
-		},
+		}, nil)
+		mwc.GetMockJobsAPI().EXPECT().GetByJobId(mock.Anything, int64(123)).Return(nil, &apierr.APIError{
+			StatusCode: 400,
+			Message:    "Job 123 does not exist.",
+			ErrorCode:  "INVALID_PARAMETER_VALUE",
+		})
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/jobs/123")
+		mapping := getResourcePermissions("job_id", "job")
+		err := p.Delete("/jobs/123", mapping)
 		assert.NoError(t, err)
 	})
 }
 
 func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/permissions/pipelines/123",
-			Response: ObjectACL{
-				ObjectID:   "/pipelines/123",
-				ObjectType: "pipeline",
-				AccessControlList: []AccessControl{
-					{
-						GroupName: "admins",
-						AllPermissions: []Permission{
-							{
-								PermissionLevel: "CAN_DO_EVERYTHING",
-								Inherited:       true,
-							},
-							{
-								PermissionLevel: "CAN_MANAGE",
-								Inherited:       false,
-							},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockPipelinesAPI().EXPECT().GetByPipelineId(mock.Anything, "123").Return(&pipelines.GetPipelineResponse{
+			CreatorUserName: "creator@example.com",
+		}, nil)
+		e := mwc.GetMockPermissionsAPI().EXPECT()
+		e.Get(mock.Anything, iam.GetPermissionRequest{
+			RequestObjectId:   "123",
+			RequestObjectType: "pipelines",
+		}).Return(&iam.ObjectPermissions{
+			ObjectId:   "/pipelines/123",
+			ObjectType: "pipeline",
+			AccessControlList: []iam.AccessControlResponse{
+				{
+					GroupName: "admins",
+					AllPermissions: []iam.Permission{
+						{
+							PermissionLevel: "CAN_DO_EVERYTHING",
+							Inherited:       true,
+						},
+						{
+							PermissionLevel: "CAN_MANAGE",
+							Inherited:       false,
 						},
 					},
 				},
 			},
-		},
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/pipelines/123?",
-			Response: jobs.Job{
-				CreatorUserName: "creator@example.com",
-			},
-		},
-		{
-			Method:   "PUT",
-			Resource: "/api/2.0/permissions/pipelines/123",
-			ExpectedRequest: ObjectACL{
-				AccessControlList: []AccessControl{
-					{
-						GroupName:       "admins",
-						PermissionLevel: "CAN_MANAGE",
-					},
-					{
-						UserName:        "creator@example.com",
-						PermissionLevel: "IS_OWNER",
-					},
+		}, nil)
+		e.Set(mock.Anything, iam.PermissionsRequest{
+			RequestObjectId:   "123",
+			RequestObjectType: "pipelines",
+			AccessControlList: []iam.AccessControlRequest{
+				{
+					GroupName:       "admins",
+					PermissionLevel: "CAN_MANAGE",
+				},
+				{
+					UserName:        "creator@example.com",
+					PermissionLevel: "IS_OWNER",
 				},
 			},
-		},
+		}).Return(nil, nil)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := NewPermissionsAPI(ctx, client)
-		err := p.Delete("/pipelines/123")
+		mapping := getResourcePermissions("pipeline_id", "pipelines")
+		err := p.Delete("/pipelines/123", mapping)
 		assert.NoError(t, err)
 	})
 }
 
 func TestPathPermissionsResourceIDFields(t *testing.T) {
-	var m permissionsIDFieldMapping
-	for _, x := range permissionsResourceIDFields() {
-		if x.field == "notebook_path" {
-			m = x
-		}
-	}
+	m := getResourcePermissions("notebook_path", "notebook")
 	w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 	require.NoError(t, err)
 	_, err = m.idRetriever(context.Background(), w, "x")
 	assert.ErrorContains(t, err, "cannot load path x")
 }
 
-func TestObjectACLToPermissionsEntityCornerCases(t *testing.T) {
-	_, err := (&ObjectACL{
-		ObjectType: "bananas",
-		AccessControlList: []AccessControl{
-			{
-				GroupName: "admins",
-			},
-		},
-	}).ToPermissionsEntity(ResourcePermissions().ToResource().TestResourceData(), "me")
-	assert.EqualError(t, err, "unknown object type bananas")
-}
-
-func TestEntityAccessControlToAccessControlChange(t *testing.T) {
-	_, res := AccessControl{}.toAccessControlChange()
-	assert.False(t, res)
-}
-
-func TestCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourcePermissions(), qa.CornerCaseSkipCRUD("create"))
-}
-
 func TestDeleteMissing(t *testing.T) {
-	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
-		{
-			MatchAny: true,
-			Status:   404,
-			Response: apierr.NotFound("missing"),
-		},
+	qa.MockWorkspaceApply(t, func(mwc *mocks.MockWorkspaceClient) {
+		mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, iam.GetPermissionRequest{
+			RequestObjectId:   "x",
+			RequestObjectType: "clusters",
+		}).Return(nil, apierr.ErrNotFound)
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		p := ResourcePermissions().ToResource()
 		d := p.TestResourceData()
-		d.SetId("x")
+		d.SetId("/clusters/x")
 		diags := p.DeleteContext(ctx, d, client)
 		assert.Nil(t, diags)
 	})
@@ -1507,65 +1503,59 @@ func TestDeleteMissing(t *testing.T) {
 
 func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2FRepos%2FDevelopment%2FInit",
-				Response: workspace.ObjectStatus{
-					ObjectID:   988765,
-					ObjectType: "repo",
-				},
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/repos/988765",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/Repos/Development/Init").Return(&workspace.ObjectInfo{
+				ObjectId:   988765,
+				ObjectType: workspace.ObjectTypeRepo,
+			}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "988765",
+				RequestObjectType: "repos",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/repos/988765",
+				ObjectType: "repo",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
+							},
 						},
 					},
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/repos/988765",
-				Response: ObjectACL{
-					ObjectID:   "/repos/988765",
-					ObjectType: "repo",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_RUN",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_RUN",
-									Inherited:       false,
-								},
-							},
-						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "988765",
+				RequestObjectType: "repos",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_READ",
+					},
+				},
+			}).Return(nil, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -1591,42 +1581,40 @@ func TestResourcePermissionsCreate_RepoPath(t *testing.T) {
 // when caller does not specify CAN_MANAGE permission during create, it should be explictly added
 func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "id111",
+				RequestObjectType: "sql/queries",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_RUN",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
-				Response: ObjectACL{
-					ObjectID:   "/sql/queries/id111",
-					ObjectType: "query",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "id111",
+				RequestObjectType: "sql/queries",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "queries/id111",
+				ObjectType: "query",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRun}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -1651,42 +1639,40 @@ func TestResourcePermissionsCreate_Sql_Queries(t *testing.T) {
 // when caller does not specify CAN_MANAGE permission during update, it should be explictly added
 func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPost,
-				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "id111",
+				RequestObjectType: "sql/queries",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_RUN",
+					},
+					{
+						UserName:        TestingAdminUser,
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/preview/sql/permissions/queries/id111",
-				Response: ObjectACL{
-					ObjectID:   "/sql/queries/id111",
-					ObjectType: "query",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_RUN",
-						},
-						{
-							UserName:        TestingAdminUser,
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "id111",
+				RequestObjectType: "sql/queries",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "queries/id111",
+				ObjectType: "query",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRun}},
+					},
+					{
+						UserName:       TestingAdminUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 				},
-			},
+			}, nil)
 		},
 		InstanceState: map[string]string{
 			"sql_query_id": "id111",
@@ -1713,65 +1699,59 @@ func TestResourcePermissionsUpdate_Sql_Queries(t *testing.T) {
 
 func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2FFirst",
-				Response: workspace.ObjectStatus{
-					ObjectID:   123456,
-					ObjectType: "directory",
-				},
-			},
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/directories/123456",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			mwc.GetMockWorkspaceAPI().EXPECT().GetStatusByPath(mock.Anything, "/First").Return(&workspace.ObjectInfo{
+				ObjectId:   123456,
+				ObjectType: workspace.ObjectTypeDirectory,
+			}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "123456",
+				RequestObjectType: "directories",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_READ",
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/directories/123456",
-				Response: ObjectACL{
-					ObjectID:   "/directories/123456",
-					ObjectType: "directory",
-					AccessControlList: []AccessControl{
-						{
-							UserName: TestingUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_READ",
-									Inherited:       false,
-								},
+			}).Return(nil, nil)
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "123456",
+				RequestObjectType: "directories",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/directories/123456",
+				ObjectType: "directory",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName: TestingUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_READ",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_RUN",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_RUN",
+								Inherited:       false,
 							},
 						},
-						{
-							UserName: TestingAdminUser,
-							AllPermissions: []Permission{
-								{
-									PermissionLevel: "CAN_MANAGE",
-									Inherited:       false,
-								},
+					},
+					{
+						UserName: TestingAdminUser,
+						AllPermissions: []iam.Permission{
+							{
+								PermissionLevel: "CAN_MANAGE",
+								Inherited:       false,
 							},
 						},
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource: ResourcePermissions(),
 		State: map[string]any{
@@ -1796,34 +1776,32 @@ func TestResourcePermissionsCreate_DirectoryPath(t *testing.T) {
 
 func TestResourcePermissionsPasswordUsage(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/authorization/passwords",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							GroupName:       "admins",
-							PermissionLevel: "CAN_USE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "passwords",
+				RequestObjectType: "authorization",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/authorization/passwords",
+				ObjectType: "passwords",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						GroupName:      "admins",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanUse}},
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/authorization/passwords",
-				Response: ObjectACL{
-					ObjectID:   "/authorization/passwords",
-					ObjectType: "passwords",
-					AccessControlList: []AccessControl{
-						{
-							GroupName:       "admins",
-							PermissionLevel: "CAN_USE",
-						},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "passwords",
+				RequestObjectType: "authorization",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						GroupName:       "admins",
+						PermissionLevel: "CAN_USE",
 					},
 				},
-			},
+			}).Return(nil, nil)
 		},
 		Resource: ResourcePermissions(),
 		HCL: `
@@ -1845,42 +1823,40 @@ func TestResourcePermissionsPasswordUsage(t *testing.T) {
 
 func TestResourcePermissionsRootDirectory(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			me,
-			{
-				Method:   http.MethodPut,
-				Resource: "/api/2.0/permissions/directories/0",
-				ExpectedRequest: AccessControlChangeList{
-					AccessControlList: []AccessControlChange{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							GroupName:       "admins",
-							PermissionLevel: "CAN_MANAGE",
-						},
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: TestingAdminUser}, nil)
+			e := mwc.GetMockPermissionsAPI().EXPECT()
+			e.Get(mock.Anything, iam.GetPermissionRequest{
+				RequestObjectId:   "0",
+				RequestObjectType: "directories",
+			}).Return(&iam.ObjectPermissions{
+				ObjectId:   "/directories/0",
+				ObjectType: "directory",
+				AccessControlList: []iam.AccessControlResponse{
+					{
+						UserName:       TestingUser,
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanRead}},
+					},
+					{
+						GroupName:      "admins",
+						AllPermissions: []iam.Permission{{PermissionLevel: iam.PermissionLevelCanManage}},
 					},
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/permissions/directories/0",
-				Response: ObjectACL{
-					ObjectID:   "/directories/0",
-					ObjectType: "directory",
-					AccessControlList: []AccessControl{
-						{
-							UserName:        TestingUser,
-							PermissionLevel: "CAN_READ",
-						},
-						{
-							GroupName:       "admins",
-							PermissionLevel: "CAN_MANAGE",
-						},
+			}, nil)
+			e.Set(mock.Anything, iam.PermissionsRequest{
+				RequestObjectId:   "0",
+				RequestObjectType: "directories",
+				AccessControlList: []iam.AccessControlRequest{
+					{
+						UserName:        TestingUser,
+						PermissionLevel: "CAN_READ",
+					},
+					{
+						GroupName:       "admins",
+						PermissionLevel: "CAN_MANAGE",
 					},
 				},
-			},
+			}).Return(nil, nil)
 		},
 		Resource: ResourcePermissions(),
 		HCL: `

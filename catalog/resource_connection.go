@@ -38,7 +38,10 @@ var sensitiveOptions = []string{"user", "password", "personalAccessToken", "acce
 
 func ResourceConnection() common.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
-		common.NoCustomize)
+		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			return m
+		})
 	pi := common.NewPairID("metastore_id", "name").Schema(
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			return s
@@ -64,7 +67,7 @@ func ResourceConnection() common.Resource {
 			if d.Get("owner") != "" {
 				var updateConnectionRequest catalog.UpdateConnection
 				common.DataToStructPointer(d, s, &updateConnectionRequest)
-				updateConnectionRequest.NameArg = updateConnectionRequest.Name
+				updateConnectionRequest.Name = createConnectionRequest.Name
 				conn, err = w.Connections.Update(ctx, updateConnectionRequest)
 				if err != nil {
 					return err
@@ -83,7 +86,7 @@ func ResourceConnection() common.Resource {
 			if err != nil {
 				return err
 			}
-			conn, err := w.Connections.GetByNameArg(ctx, connName)
+			conn, err := w.Connections.GetByName(ctx, connName)
 			if err != nil {
 				return err
 			}
@@ -116,13 +119,12 @@ func ResourceConnection() common.Resource {
 			if err != nil {
 				return err
 			}
-			updateConnectionRequest.NameArg = connName
+			updateConnectionRequest.Name = connName
 
 			if d.HasChange("owner") {
 				_, err = w.Connections.Update(ctx, catalog.UpdateConnection{
-					Name:    updateConnectionRequest.Name,
-					NameArg: updateConnectionRequest.Name,
-					Owner:   updateConnectionRequest.Owner,
+					Name:  updateConnectionRequest.Name,
+					Owner: updateConnectionRequest.Owner,
 				})
 				if err != nil {
 					return err
@@ -136,9 +138,8 @@ func ResourceConnection() common.Resource {
 					// Rollback
 					old, new := d.GetChange("owner")
 					_, rollbackErr := w.Connections.Update(ctx, catalog.UpdateConnection{
-						Name:    updateConnectionRequest.Name,
-						NameArg: updateConnectionRequest.Name,
-						Owner:   old.(string),
+						Name:  updateConnectionRequest.Name,
+						Owner: old.(string),
 					})
 					if rollbackErr != nil {
 						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
@@ -157,7 +158,7 @@ func ResourceConnection() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Connections.DeleteByNameArg(ctx, connName)
+			return w.Connections.DeleteByName(ctx, connName)
 		},
 	}
 }

@@ -6,19 +6,19 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/databricks/terraform-provider-databricks/secrets"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAccSecretScopeResource(t *testing.T) {
 	scope := qa.RandomName("tf-")
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_secret_scope" "my_scope" {
 			name = "%s"
@@ -29,25 +29,23 @@ func TestAccSecretScopeResource(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_secret_scope.my_scope", "backend_type", "DATABRICKS"),
 			resourceCheck("databricks_secret_scope.my_scope",
 				func(ctx context.Context, client *common.DatabricksClient, id string) error {
-					secretACLAPI := secrets.NewSecretAclsAPI(ctx, client)
-					acls, err := secretACLAPI.List(id)
-					require.NoError(t, err)
-
 					w, err := client.WorkspaceClient()
 					require.NoError(t, err)
-
+					acls_resp, err := w.Secrets.ListAclsByScope(ctx, id)
+					require.NoError(t, err)
+					acls := acls_resp.Items
 					me, err := w.CurrentUser.Me(ctx)
 					require.NoError(t, err)
 					assert.Equal(t, 1, len(acls))
 					assert.Equal(t, me.UserName, acls[0].Principal)
 
-					err = secrets.NewSecretScopesAPI(context.Background(), client).Delete(scope)
+					err = w.Secrets.DeleteScope(ctx, workspace.DeleteScope{Scope: scope})
 					assert.NoError(t, err)
 					return nil
 				}),
 		),
 		ExpectNonEmptyPlan: true,
-	}, step{
+	}, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_secret_scope" "my_scope" {
 			name = "%s"
@@ -65,7 +63,7 @@ func TestAccSecretScopeResourceAkvWithSp(t *testing.T) {
 		t.Skipf("service principal isn't defined")
 	}
 
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_secret_scope" "my_scope" {
 			name = "tf-{var.RANDOM}"

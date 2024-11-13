@@ -6,7 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -19,17 +20,17 @@ func TestResourceGlobalInitScriptRead(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/global-init-scripts/1234",
-				Response: GlobalInitScriptInfo{
-					ScriptID:      "1234",
-					Name:          "Test",
-					Position:      0,
-					Enabled:       true,
-					CreatedBy:     "someuser@domain.com",
-					CreatedAt:     1612520583493,
-					UpdatedBy:     "someuser@domain.com",
-					UpdatedAt:     1612520583493,
-					ContentBase64: "ZWNobyBoZWxsbw==",
+				Resource: "/api/2.0/global-init-scripts/1234?",
+				Response: compute.GlobalInitScriptDetailsWithContent{
+					ScriptId:  "1234",
+					Name:      "Test",
+					Position:  0,
+					Enabled:   true,
+					CreatedBy: "someuser@domain.com",
+					CreatedAt: 1612520583493,
+					UpdatedBy: "someuser@domain.com",
+					UpdatedAt: 1612520583493,
+					Script:    "ZWNobyBoZWxsbw==",
 				},
 			},
 		},
@@ -51,7 +52,7 @@ func TestResourceGlobalInitScriptDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   http.MethodDelete,
-				Resource: "/api/2.0/global-init-scripts/" + scriptID + "?script_id=" + scriptID,
+				Resource: "/api/2.0/global-init-scripts/1234?",
 				Status:   http.StatusOK,
 			},
 		},
@@ -68,8 +69,8 @@ func TestResourceGlobalInitScriptRead_NotFound(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{ // read log output for correct url...
 				Method:   "GET",
-				Resource: "/api/2.0/global-init-scripts/1234",
-				Response: apierr.APIErrorBody{
+				Resource: "/api/2.0/global-init-scripts/1234?",
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "The global unit script with ID 1234 does not exist.",
 				},
@@ -89,23 +90,22 @@ func TestResourceGlobalInitScriptCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/global-init-scripts",
-				ExpectedRequest: GlobalInitScriptPayload{
-					Name:          "test",
-					ContentBase64: "ZWNobyBoZWxsbw==",
+				ExpectedRequest: compute.GlobalInitScriptCreateRequest{
+					Name:   "test",
+					Script: "ZWNobyBoZWxsbw==",
 				},
-				Response: globalInitScriptCreateResponse{
-					ScriptID: "1234",
+				Response: compute.CreateResponse{
+					ScriptId: "1234",
 				},
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts/1234",
+				Resource:     "/api/2.0/global-init-scripts/1234?",
 				ReuseRequest: true,
-				Response: GlobalInitScriptInfo{
-					ScriptID:      "1234",
-					ContentBase64: "ZWNobyBoZWxsbw==",
-					Position:      0,
-					Name:          "test",
+				Response: compute.GlobalInitScriptDetailsWithContent{
+					ScriptId: "1234",
+					Script:   "ZWNobyBoZWxsbw==",
+					Name:     "test",
 				},
 			},
 		},
@@ -156,24 +156,24 @@ func TestResourceGlobalInitScriptUpdate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/global-init-scripts/1234",
-				ExpectedRequest: GlobalInitScriptPayload{
-					Name:          "test",
-					Position:      0,
-					ContentBase64: "ZWNobyBoZWxsbw==",
+				ExpectedRequest: compute.GlobalInitScriptUpdateRequest{
+					Name:     "test",
+					Position: 0,
+					Script:   "ZWNobyBoZWxsbw==",
 				},
-				Response: globalInitScriptCreateResponse{
-					ScriptID: "1234",
+				Response: compute.CreateResponse{
+					ScriptId: "1234",
 				},
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts/1234",
+				Resource:     "/api/2.0/global-init-scripts/1234?",
 				ReuseRequest: true,
-				Response: GlobalInitScriptInfo{
-					ScriptID:      "1234",
-					ContentBase64: "ZWNobyBoZWxsbw==",
-					Position:      0,
-					Name:          "test",
+				Response: compute.GlobalInitScriptDetailsWithContent{
+					ScriptId: "1234",
+					Script:   "ZWNobyBoZWxsbw==",
+					Position: 0,
+					Name:     "test",
 				},
 			},
 		},

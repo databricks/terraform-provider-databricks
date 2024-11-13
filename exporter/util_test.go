@@ -5,8 +5,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	"github.com/databricks/terraform-provider-databricks/clusters"
+	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/scim"
@@ -18,10 +19,10 @@ import (
 func TestImportClusterEmitsInitScripts(t *testing.T) {
 	ic := importContextForTest()
 	ic.enableServices("storage")
-	ic.importCluster(&clusters.Cluster{
-		InitScripts: []clusters.InitScriptStorageInfo{
+	ic.importCluster(&compute.ClusterSpec{
+		InitScripts: []compute.InitScriptInfo{
 			{
-				Dbfs: &clusters.DbfsStorageInfo{
+				Dbfs: &compute.DbfsStorageInfo{
 					Destination: "/mnt/abc/test.sh",
 				},
 			},
@@ -315,16 +316,16 @@ func TestGetEnvAsInt(t *testing.T) {
 }
 
 func TestExcludeAuxiliaryDirectories(t *testing.T) {
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "", ObjectType: workspace.Directory}))
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{ObjectType: workspace.File}))
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc",
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "", ObjectType: workspace.Directory}))
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{ObjectType: workspace.File}))
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc",
 		ObjectType: workspace.Directory}))
 	// should be ignored
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/.ide",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/.ide",
 		ObjectType: workspace.Directory}))
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Shared/.bundle",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Shared/.bundle",
 		ObjectType: workspace.Directory}))
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
 		ObjectType: workspace.Directory}))
 }
 
@@ -389,4 +390,50 @@ func TestParallelListing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 4, len(objects))
 
+}
+
+func TestIgnoreObjectWithEmptyName(t *testing.T) {
+	ic := importContextForTest()
+	// Test importing
+	d := tfcatalog.ResourceVolume().ToResource().TestResourceData()
+	d.SetId("vtest")
+	r := &resource{
+		ID:   "vtest",
+		Data: d,
+	}
+	//
+	ignoreFunc := resourcesMap["databricks_volume"].Ignore
+	require.NotNil(t, ignoreFunc)
+	assert.True(t, ignoreFunc(ic, r))
+	require.Equal(t, 1, len(ic.ignoredResources))
+	assert.Contains(t, ic.ignoredResources, "databricks_volume. id=vtest")
+
+	d.Set("name", "test")
+	assert.False(t, ignoreFunc(ic, r))
+	assert.Equal(t, 1, len(ic.ignoredResources))
+}
+
+func TestEmitWorkspaceObjectParentDirectory(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,directories")
+	dirPath := "/Shared"
+	r := &resource{
+		ID:       "/Shared/abc",
+		Resource: "databricks_notebook",
+	}
+	ic.emitWorkspaceObjectParentDirectory(r)
+	assert.Equal(t, 1, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_directory[<unknown>] (id: /Shared)"])
+
+	dir, exists := r.GetExtraData(ParentDirectoryExtraKey)
+	assert.True(t, exists)
+	assert.Equal(t, dirPath, dir)
+}
+
+func TestDirectoryIncrementalMode(t *testing.T) {
+	ic := importContextForTest()
+	ic.incremental = true
+
+	// test emit during workspace listing
+	assert.True(t, ic.shouldSkipWorkspaceObject(workspace.ObjectStatus{ObjectType: workspace.Directory}, 111111))
 }

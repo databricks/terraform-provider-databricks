@@ -5,7 +5,7 @@ subcategory: "Databricks SQL"
 
 This resource allows you to manage [Databricks SQL Alerts](https://docs.databricks.com/sql/user/queries/index.html).
 
-**Note:** To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
+-> To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
 ## Example Usage
 
@@ -50,7 +50,25 @@ The following arguments are available:
   * `custom_body` - (Optional, String) Custom body of alert notification, if it exists. See [Alerts API reference](https://docs.databricks.com/sql/user/alerts/index.html) for custom templating instructions.
   * `empty_result_state` - (Optional, String) State that alert evaluates to when query result is empty.  Currently supported values are `unknown`, `triggered`, `ok` - check [API documentation](https://docs.databricks.com/api/workspace/alerts/create) for full list of supported values.
 * `parent` - (Optional, String) The identifier of the workspace folder containing the alert. The default is ther user's home folder. The folder identifier is formatted as `folder/<folder_id>`.
-* `rearm` - (Optional, Integer) Number of seconds after being triggered before the alert rearms itself and can be triggered again. If not defined, alert will never be triggered again. 
+* `rearm` - (Optional, Integer) Number of seconds after being triggered before the alert rearms itself and can be triggered again. If not defined, alert will never be triggered again.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - unique ID of the SQL Alert.
+
+## Access Control
+
+[databricks_permissions](permissions.md#sql-alert-usage) can control which groups or individual users can *Manage*, *Edit*, *Run* or *View* individual alerts.
+
+## Import
+
+This resource can be imported using alert ID:
+
+```bash
+terraform import databricks_sql_alert.this <alert-id>
+```
 
 ## Related Resources
 

@@ -10,12 +10,11 @@ This datasource configures a simple access policy for AWS S3 buckets, so that Da
 ```hcl
 resource "aws_s3_bucket" "this" {
   bucket        = "<unique_bucket_name>"
-  acl           = "private"
   force_destroy = true
 }
 
-data "databricks_aws_bucket_policy" "stuff" {
-  bucket_name = aws_s3_bucket.this.bucket
+data "databricks_aws_bucket_policy" "this" {
+  bucket = aws_s3_bucket.this.bucket
 }
 
 resource "aws_s3_bucket_policy" "this" {
@@ -29,7 +28,6 @@ Bucket policy with full access:
 ```hcl
 resource "aws_s3_bucket" "ds" {
   bucket        = "${var.prefix}-ds"
-  acl           = "private"
   force_destroy = true
   tags = merge(var.tags, {
     Name = "${var.prefix}-ds"
@@ -77,8 +75,9 @@ resource "aws_s3_bucket_policy" "ds" {
 ## Argument Reference
 
 * `bucket` - (Required) AWS S3 Bucket name for which to generate the policy document.
+* `aws_partition` - (Optional) AWS partition. The options are `aws` or `aws-us-gov`. Defaults to `aws`
 * `full_access_role` - (Optional) Data access role that can have full access for this bucket
-* `databricks_e2_account_id` - (Optional) Your Databricks E2 account ID. Used to generate  restrictive IAM policies that will increase the security of your root bucket
+* `databricks_e2_account_id` - (Optional) Your Databricks account ID. Used to generate  restrictive IAM policies that will increase the security of your root bucket
 
 ## Attribute Reference
 
@@ -90,7 +89,7 @@ In addition to all arguments above, the following attributes are exported:
 
 The following resources are used in the same context:
 
-* [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
-* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide
+* [Provisioning AWS Databricks workspaces with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
+* [End to end workspace management](../guides/workspace-management.md) guide
 * [databricks_instance_profile](../resources/instance_profile.md) to manage AWS EC2 instance profiles that users can launch [databricks_cluster](../resources/cluster.md) and access data, like [databricks_mount](../resources/mount.md).
 * [databricks_mount](../resources/mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.

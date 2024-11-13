@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -15,7 +15,7 @@ func TestResourceServicePrincipalRoleCreate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				ExpectedRequest: scim.PatchRequest(
+				ExpectedRequest: scim.PatchRequestWithValue(
 					"add",
 					"roles",
 					"arn:aws:iam::999999999999:instance-profile/my-fake-instance-profile"),
@@ -53,7 +53,7 @@ func TestResourceServicePrincipalRoleCreate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -119,7 +119,7 @@ func TestResourceServicePrincipalRoleRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/abc?attributes=roles",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},

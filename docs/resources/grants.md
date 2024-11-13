@@ -3,11 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_grants Resource
 
--> **Note**
-  This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
+-> This article refers to the privileges and inheritance model in Privilege Model version 1.0. If you created your metastore during the public preview (before August 25, 2022), you can upgrade to Privilege Model version 1.0 following [Upgrade to privilege inheritance](https://docs.databricks.com/data-governance/unity-catalog/hive-metastore.html)
 
--> **Note**
-  Unity Catalog APIs are accessible via **workspace-level APIs**. This design may change in the future. Account-level principal grants can be assigned with any valid workspace as the Unity Catalog is decoupled from specific workspaces. More information in [the official documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html).
+-> Most of Unity Catalog APIs are only accessible via **workspace-level APIs**. This design may change in the future. Account-level principal grants can be assigned with any valid workspace as the Unity Catalog is decoupled from specific workspaces. More information in [the official documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html).
 
 Two different resources help you manage your Unity Catalog grants for a securable. Each of these resources serves a different use case:
 
@@ -35,6 +33,7 @@ You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`,
 
 ```hcl
 resource "databricks_grants" "sandbox" {
+  metastore = "metastore_id"
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
@@ -273,15 +272,15 @@ resource "databricks_grants" "some" {
   }
   grant {
     principal  = databricks_service_principal.my_sp.application_id
-    privileges = ["USE_SCHEMA", "MODIFY"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
   grant {
     principal  = databricks_group.my_group.display_name
-    privileges = ["USE_SCHEMA", "MODIFY"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
   grant {
     principal  = databricks_group.my_user.user_name
-    privileges = ["USE_SCHEMA", "MODIFY"]
+    privileges = ["CREATE_EXTERNAL_TABLE", "READ_FILES"]
   }
 }
 ```
@@ -340,3 +339,11 @@ resource "databricks_grants" "some" {
 ## Other access control
 
 You can control Databricks General Permissions through [databricks_permissions](permissions.md) resource.
+
+## Import
+
+The resource can be imported using combination of securable type (`table`, `catalog`, `foreign_connection`, ...) and it's name:
+
+```bash
+terraform import databricks_grants.this catalog/abc
+```

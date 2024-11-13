@@ -61,6 +61,11 @@ resource "databricks_cluster_policy" "fair_use" {
       // repo can also be specified here
     }
   }
+  libraries {
+    maven {
+      coordinates = "com.oracle.database.jdbc:ojdbc8:XXXX"
+    }
+  }
 }
 
 resource "databricks_permissions" "can_use_cluster_policyinstance_profile" {
@@ -127,7 +132,7 @@ locals {
 
 resource "databricks_cluster_policy" "personal_vm" {
   policy_family_id                   = "personal-vm"
-  policy_family_definition_overrides = jsonencode(personal_vm_override)
+  policy_family_definition_overrides = jsonencode(local.personal_vm_override)
   name                               = "Personal Compute"
 }
 ```
@@ -142,13 +147,16 @@ The following arguments are supported:
 * `max_clusters_per_user` - (Optional, integer) Maximum number of clusters allowed per user. When omitted, there is no limit. If specified, value must be greater than zero.
 * `policy_family_definition_overrides`(Optional) Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition inherited from the policy family. Policy rules specified here are merged into the inherited policy definition.
 * `policy_family_id` (Optional) ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition. Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy definition.
-* `libraries` (Optional) blocks defining individual libraries that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
+
+### libraries Configuration Block (Optional)
+
+One must specify each library in a separate configuration block, that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Canonical unique identifier for the cluster policy. This is equal to policy_id.
+* `id` - Canonical unique identifier for the cluster policy. This is equal to `policy_id`.
 * `policy_id` - Canonical unique identifier for the cluster policy.
 
 ## Import
@@ -163,7 +171,7 @@ terraform import databricks_cluster_policy.this <cluster-policy-id>
 
 The following resources are often used in the same context:
 
-* [Dynamic Passthrough Clusters for a Group](../guides/passthrough-cluster-per-user.md) guide.
+* [Dynamic Passthrough Clusters for a Group](../guides/workspace-management.md) guide.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_clusters](../data-sources/clusters.md) data to retrieve a list of [databricks_cluster](cluster.md) ids.
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).

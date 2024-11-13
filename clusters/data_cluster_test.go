@@ -1,104 +1,83 @@
 package clusters
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestClusterDataByID(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/get?cluster_id=abc",
-				Response: ClusterInfo{
-					ClusterID:              "abc",
-					NumWorkers:             100,
-					ClusterName:            "Shared Autoscaling",
-					SparkVersion:           "7.1-scala12",
-					NodeTypeID:             "i3.xlarge",
-					AutoterminationMinutes: 15,
-					State:                  ClusterStateRunning,
-					AutoScale: &AutoScale{
-						MaxWorkers: 4,
-					},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.GetByClusterId(mock.Anything, "abc").Return(&compute.ClusterDetails{
+				ClusterId:              "abc",
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeId:             "i3.xlarge",
+				AutoterminationMinutes: 15,
+				State:                  ClusterStateRunning,
+				Autoscale: &compute.AutoScale{
+					MaxWorkers: 4,
 				},
-			},
+			}, nil)
 		},
 		Resource:    DataSourceCluster(),
 		HCL:         `cluster_id = "abc"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "abc",
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, 15, d.Get("cluster_info.0.autotermination_minutes"))
-	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_info.0.cluster_name"))
-	assert.Equal(t, "i3.xlarge", d.Get("cluster_info.0.node_type_id"))
-	assert.Equal(t, 4, d.Get("cluster_info.0.autoscale.0.max_workers"))
-	assert.Equal(t, "RUNNING", d.Get("cluster_info.0.state"))
-
-	for k, v := range d.State().Attributes {
-		fmt.Printf("assert.Equal(t, %#v, d.Get(%#v))\n", v, k)
-	}
+	}.ApplyAndExpectData(t, map[string]any{
+		"cluster_info.0.autotermination_minutes": 15,
+		"cluster_info.0.cluster_name":            "Shared Autoscaling",
+		"cluster_info.0.node_type_id":            "i3.xlarge",
+		"cluster_info.0.autoscale.0.max_workers": 4,
+		"cluster_info.0.state":                   "RUNNING",
+		"cluster_name":                           "Shared Autoscaling",
+	})
 }
 
 func TestClusterDataByName(t *testing.T) {
-	d, err := qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
-
-				Response: ClusterList{
-					Clusters: []ClusterInfo{{
-						ClusterID:              "abc",
-						NumWorkers:             100,
-						ClusterName:            "Shared Autoscaling",
-						SparkVersion:           "7.1-scala12",
-						NodeTypeID:             "i3.xlarge",
-						AutoterminationMinutes: 15,
-						State:                  ClusterStateRunning,
-						AutoScale: &AutoScale{
-							MaxWorkers: 4,
-						},
-					}},
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.ListAll(mock.Anything, compute.ListClustersRequest{}).Return([]compute.ClusterDetails{{
+				ClusterId:              "abc",
+				NumWorkers:             100,
+				ClusterName:            "Shared Autoscaling",
+				SparkVersion:           "7.1-scala12",
+				NodeTypeId:             "i3.xlarge",
+				AutoterminationMinutes: 15,
+				State:                  ClusterStateRunning,
+				Autoscale: &compute.AutoScale{
+					MaxWorkers: 4,
 				},
-			},
+			}}, nil)
 		},
 		Resource:    DataSourceCluster(),
 		HCL:         `cluster_name = "Shared Autoscaling"`,
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, 15, d.Get("cluster_info.0.autotermination_minutes"))
-	assert.Equal(t, "Shared Autoscaling", d.Get("cluster_info.0.cluster_name"))
-	assert.Equal(t, "i3.xlarge", d.Get("cluster_info.0.node_type_id"))
-	assert.Equal(t, 4, d.Get("cluster_info.0.autoscale.0.max_workers"))
-	assert.Equal(t, "RUNNING", d.Get("cluster_info.0.state"))
-
-	for k, v := range d.State().Attributes {
-		fmt.Printf("assert.Equal(t, %#v, d.Get(%#v))\n", v, k)
-	}
+	}.ApplyAndExpectData(t, map[string]any{
+		"cluster_info.0.autotermination_minutes": 15,
+		"cluster_info.0.cluster_name":            "Shared Autoscaling",
+		"cluster_info.0.node_type_id":            "i3.xlarge",
+		"cluster_info.0.autoscale.0.max_workers": 4,
+		"cluster_info.0.state":                   "RUNNING",
+		"cluster_id":                             "abc",
+	})
 }
 
 func TestClusterDataByName_NotFound(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
-
-				Response: ClusterList{
-					Clusters: []ClusterInfo{},
-				},
-			},
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.ListAll(mock.Anything, compute.ListClustersRequest{}).Return([]compute.ClusterDetails{}, nil)
 		},
 		Resource:    DataSourceCluster(),
 		HCL:         `cluster_name = "Unknown"`,
@@ -110,34 +89,34 @@ func TestClusterDataByName_NotFound(t *testing.T) {
 
 func TestClusterDataByName_DuplicateNames(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
-
-				Response: ClusterList{
-					Clusters: []ClusterInfo{
-						{
-							ClusterID:              "abc",
-							NumWorkers:             100,
-							ClusterName:            "Shared Autoscaling",
-							SparkVersion:           "7.1-scala12",
-							NodeTypeID:             "i3.xlarge",
-							AutoterminationMinutes: 15,
-							State:                  ClusterStateRunning,
-						},
-						{
-							ClusterID:              "def",
-							NumWorkers:             100,
-							ClusterName:            "Shared Autoscaling",
-							SparkVersion:           "7.1-scala12",
-							NodeTypeID:             "i3.xlarge",
-							AutoterminationMinutes: 15,
-							State:                  ClusterStateRunning,
-						},
+		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
+			e := m.GetMockClustersAPI().EXPECT()
+			e.ListAll(mock.Anything, compute.ListClustersRequest{}).Return([]compute.ClusterDetails{
+				{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateRunning,
+					Autoscale: &compute.AutoScale{
+						MaxWorkers: 4,
 					},
 				},
-			},
+				{
+					ClusterId:              "def",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  ClusterStateRunning,
+					Autoscale: &compute.AutoScale{
+						MaxWorkers: 4,
+					},
+				},
+			}, nil)
 		},
 		Resource:    DataSourceCluster(),
 		HCL:         `cluster_name = "Shared Autoscaling"`,

@@ -49,7 +49,7 @@ Data source allows you to pick groups by the following attributes:
 * `scala` - (string, optional) if we should limit the search only to runtimes that are based on specific Scala version. Default to `2.12`.
 * `spark_version` - (string, optional) if we should limit the search only to runtimes that are based on specific Spark version. Default to empty string.  It could be specified as `3`, or `3.0`, or full version, like, `3.0.1`.
 * `photon` - (boolean, optional)  if we should limit the search only to Photon runtimes. Default to `false`. *Deprecated with DBR 14.0 release. Specify `runtime_engine=\"PHOTON\"` in the cluster configuration instead!*
-* `graviton` - (boolean, optional)  if we should limit the search only to runtimes supporting AWS Graviton CPUs. Default to `false`. *Deprecated with DBR 14.0 release. DBR version compiled for Graviton will be automatically installed when nodes with Graviton CPUs are specified in the cluster configuration.* 
+* `graviton` - (boolean, optional)  if we should limit the search only to runtimes supporting AWS Graviton CPUs. Default to `false`. _Deprecated with DBR 14.0 release. DBR version compiled for Graviton will be automatically installed when nodes with Graviton CPUs are specified in the cluster configuration._
 
 ## Attribute Reference
 
@@ -61,7 +61,7 @@ Data source exposes the following attributes:
 
 The following resources are used in the same context:
 
-* [End to end workspace management](../guides/passthrough-cluster-per-user.md) guide.
+* [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_cluster](../resources/cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_cluster_policy](../resources/cluster_policy.md) to create a [databricks_cluster](../resources/cluster.md) policy, which limits the ability to create clusters based on a set of rules.
 * [databricks_instance_pool](../resources/instance_pool.md) to manage [instance pools](https://docs.databricks.com/clusters/instance-pools/index.html) to reduce [cluster](../resources/cluster.md) start and auto-scaling times by maintaining a set of idle, ready-to-use instances.

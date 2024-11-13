@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,7 +30,7 @@ func TestCreateRecipient(t *testing.T) {
 						AllowedIpAddresses: []string{"0.0.0.0/0"},
 					},
 				},
-				Response: RecipientInfo{
+				Response: sharing.RecipientInfo{
 					Name: "a",
 				},
 			},
@@ -329,7 +329,7 @@ func TestUpdateRecipientRollback(t *testing.T) {
 				ExpectedRequest: sharing.UpdateRecipient{
 					Comment: "e",
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",
 				},
@@ -402,7 +402,7 @@ func TestDeleteRecipientError(t *testing.T) {
 			{
 				Method:   http.MethodDelete,
 				Resource: "/api/2.1/unity-catalog/recipients/testRecipient?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_STATE",
 					Message:   "Something went wrong",
 				},
@@ -413,4 +413,9 @@ func TestDeleteRecipientError(t *testing.T) {
 		Delete:   true,
 		ID:       "testRecipient",
 	}.ExpectError(t, "Something went wrong")
+}
+
+func TestRecipientPropsSuppressDiff(t *testing.T) {
+	assert.True(t, recepientPropertiesSuppressDiff("properties_kvpairs.0.properties.databricks.name", "test", "", nil))
+	assert.False(t, recepientPropertiesSuppressDiff("test", "test", "", nil))
 }

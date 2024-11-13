@@ -13,7 +13,7 @@ Retrieves information about [databricks_instance_pool](../resources/instance_poo
 Referring to an instance pool by name:
 
 ```hcl
-data "databricks_instance_pool" "Pool" {
+data "databricks_instance_pool" "pool" {
   name = "All spot"
 }
 
@@ -35,4 +35,3 @@ Data source exposes the following attributes:
 
 - `id` - The id of the instance pool.
 - `pool_info` - block describing instance pool and its state. Check documentation for [databricks_instance_pool](../resources/instance_pool.md) for a list of exposed attributes.
-

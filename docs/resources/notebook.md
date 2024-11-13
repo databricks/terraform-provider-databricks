@@ -44,7 +44,7 @@ resource "databricks_notebook" "lesson" {
 
 ## Argument Reference
 
--> **Note** Notebook on Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed notebook won't be overwritten by Terraform, if there's no local change to notebook sources. Notebooks are identified by their path, so changing notebook's name manually on the workspace and then applying Terraform state would result in creation of notebook from Terraform state.
+-> Notebook on Databricks workspace would only be changed, if Terraform stage did change. This means that any manual changes to managed notebook won't be overwritten by Terraform, if there's no local change to notebook sources. Notebooks are identified by their path, so changing notebook's name manually on the workspace and then applying Terraform state would result in creation of notebook from Terraform state.
 
 The size of a notebook source code must not exceed a few megabytes. The following arguments are supported:
 
@@ -60,6 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` -  Path of notebook on workspace
 * `url` - Routable URL of the notebook
 * `object_id` -  Unique identifier for a NOTEBOOK
+* `workspace_path` - path on Workspace File System (WSFS) in form of `/Workspace` + `path`
 
 ## Access Control
 
@@ -70,7 +71,7 @@ In addition to all arguments above, the following attributes are exported:
 The resource notebook can be imported using notebook path
 
 ```bash
-$ terraform import databricks_notebook.this /path/to/notebook
+terraform import databricks_notebook.this /path/to/notebook
 ```
 
 ## Related Resources

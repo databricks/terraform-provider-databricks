@@ -5,15 +5,18 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/useragent"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+const sdkName = "sdkv2"
 
 // AddContextToAllResources ...
 func AddContextToAllResources(p *schema.Provider, prefix string) {
 	for k, r := range p.DataSourcesMap {
 		name := strings.ReplaceAll(k, prefix+"_", "")
-		wrap := op(r.ReadContext).addContext(ResourceName, name).addContext(IsData, "yes")
+		wrap := op(r.ReadContext).addContext(ResourceName, name).addContext(IsData, "yes").addContext(Sdk, sdkName)
 		r.ReadContext = schema.ReadContextFunc(wrap)
 	}
 	for k, r := range p.ResourcesMap {
@@ -33,6 +36,8 @@ func (f op) addContext(k contextKey, v string) op {
 			ctx = useragent.InContext(ctx, "resource", v)
 		case IsData:
 			ctx = useragent.InContext(ctx, "data", v)
+		case Sdk:
+			ctx = common.SetSDKInContext(ctx, v)
 		}
 		ctx = context.WithValue(ctx, k, v)
 		return f(ctx, d, m)
@@ -41,7 +46,7 @@ func (f op) addContext(k contextKey, v string) op {
 
 func addContextToResource(name string, r *schema.Resource) {
 	addName := func(a op) func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
-		return a.addContext(ResourceName, name)
+		return a.addContext(ResourceName, name).addContext(Sdk, sdkName)
 	}
 	if r.CreateContext != nil {
 		r.CreateContext = addName(op(r.CreateContext))

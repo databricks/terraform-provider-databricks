@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -13,14 +14,16 @@ type StorageCredentialInfo struct {
 	Name                        string                                       `json:"name" tf:"force_new"`
 	Owner                       string                                       `json:"owner,omitempty" tf:"computed"`
 	Comment                     string                                       `json:"comment,omitempty"`
-	Aws                         *catalog.AwsIamRole                          `json:"aws_iam_role,omitempty" tf:"group:access"`
+	Aws                         *catalog.AwsIamRoleResponse                  `json:"aws_iam_role,omitempty" tf:"group:access"`
 	Azure                       *catalog.AzureServicePrincipal               `json:"azure_service_principal,omitempty" tf:"group:access"`
-	AzMI                        *catalog.AzureManagedIdentity                `json:"azure_managed_identity,omitempty" tf:"group:access"`
+	AzMI                        *catalog.AzureManagedIdentityResponse        `json:"azure_managed_identity,omitempty" tf:"group:access"`
 	GcpSAKey                    *GcpServiceAccountKey                        `json:"gcp_service_account_key,omitempty" tf:"group:access"`
 	DatabricksGcpServiceAccount *catalog.DatabricksGcpServiceAccountResponse `json:"databricks_gcp_service_account,omitempty" tf:"computed"`
+	CloudflareApiToken          *catalog.CloudflareApiToken                  `json:"cloudflare_api_token,omitempty" tf:"group:access"`
 	MetastoreID                 string                                       `json:"metastore_id,omitempty" tf:"computed"`
 	ReadOnly                    bool                                         `json:"read_only,omitempty"`
 	SkipValidation              bool                                         `json:"skip_validation,omitempty"`
+	IsolationMode               string                                       `json:"isolation_mode,omitempty" tf:"computed"`
 }
 
 func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {
@@ -35,6 +38,10 @@ func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*sche
 
 var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
+		m["storage_credential_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		return adjustDataAccessSchema(m)
 	})
 
@@ -53,7 +60,7 @@ func ResourceStorageCredential() common.Resource {
 
 			//manually add empty struct back for databricks_gcp_service_account
 			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
-				create.DatabricksGcpServiceAccount = struct{}{}
+				create.DatabricksGcpServiceAccount = &catalog.DatabricksGcpServiceAccountRequest{}
 			}
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
@@ -67,15 +74,16 @@ func ResourceStorageCredential() common.Resource {
 				}
 				d.SetId(storageCredential.CredentialInfo.Name)
 
-				// Don't update owner if it is not provided
-				if d.Get("owner") == "" {
+				// Update owner or isolation mode if it is provided
+				if !updateRequired(d, []string{"owner", "isolation_mode"}) {
 					return nil
 				}
+
 				update.Name = d.Id()
 				_, err = acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
 					MetastoreId:           metastoreId,
-					StorageCredentialName: storageCredential.CredentialInfo.Id,
+					StorageCredentialName: storageCredential.CredentialInfo.Name,
 				})
 				if err != nil {
 					return err
@@ -92,8 +100,8 @@ func ResourceStorageCredential() common.Resource {
 				}
 				d.SetId(storageCredential.Name)
 
-				// Don't update owner if it is not provided
-				if d.Get("owner") == "" {
+				// Update owner or isolation mode if it is provided
+				if !updateRequired(d, []string{"owner", "isolation_mode"}) {
 					return nil
 				}
 
@@ -102,11 +110,11 @@ func ResourceStorageCredential() common.Resource {
 				if err != nil {
 					return err
 				}
-				return nil
+				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, storageCredential.Name, catalog.UpdateBindingsSecurableTypeStorageCredential)
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Get(ctx, catalog.GetAccountStorageCredentialRequest{
 					MetastoreId:           d.Get("metastore_id").(string),
@@ -115,13 +123,49 @@ func ResourceStorageCredential() common.Resource {
 				if err != nil {
 					return err
 				}
-				return common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
+				// azure client secret, & r2 secret access key are sensitive, so we need to preserve them
+				var scOrig catalog.CreateStorageCredential
+				common.DataToStructPointer(d, storageCredentialSchema, &scOrig)
+				if scOrig.AzureServicePrincipal != nil {
+					if scOrig.AzureServicePrincipal.ClientSecret != "" {
+						storageCredential.CredentialInfo.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
+					}
+				}
+				if scOrig.CloudflareApiToken != nil {
+					if scOrig.CloudflareApiToken.SecretAccessKey != "" {
+						storageCredential.CredentialInfo.CloudflareApiToken.SecretAccessKey = scOrig.CloudflareApiToken.SecretAccessKey
+					}
+				}
+				err = common.StructToData(storageCredential.CredentialInfo, storageCredentialSchema, d)
+				if err != nil {
+					return err
+				}
+				d.Set("storage_credential_id", storageCredential.CredentialInfo.Id)
+				return nil
 			}, func(w *databricks.WorkspaceClient) error {
 				storageCredential, err := w.StorageCredentials.GetByName(ctx, d.Id())
 				if err != nil {
 					return err
 				}
-				return common.StructToData(storageCredential, storageCredentialSchema, d)
+				// azure client secret, & r2 secret access key are sensitive, so we need to preserve them
+				var scOrig catalog.CreateStorageCredential
+				common.DataToStructPointer(d, storageCredentialSchema, &scOrig)
+				if scOrig.AzureServicePrincipal != nil {
+					if scOrig.AzureServicePrincipal.ClientSecret != "" {
+						storageCredential.AzureServicePrincipal.ClientSecret = scOrig.AzureServicePrincipal.ClientSecret
+					}
+				}
+				if scOrig.CloudflareApiToken != nil {
+					if scOrig.CloudflareApiToken.SecretAccessKey != "" {
+						storageCredential.CloudflareApiToken.SecretAccessKey = scOrig.CloudflareApiToken.SecretAccessKey
+					}
+				}
+				err = common.StructToData(storageCredential, storageCredentialSchema, d)
+				if err != nil {
+					return err
+				}
+				d.Set("storage_credential_id", storageCredential.Id)
+				return nil
 			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -130,11 +174,6 @@ func ResourceStorageCredential() common.Resource {
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Id()
 			update.Force = force
-			// We need to set them to empty since these fields are computed
-			if _, ok := d.GetOk("aws_iam_role"); ok {
-				update.AwsIamRole.UnityCatalogIamArn = ""
-				update.AwsIamRole.ExternalId = ""
-			}
 			if _, ok := d.GetOk("azure_managed_identity"); ok {
 				update.AzureManagedIdentity.CredentialId = ""
 			}
@@ -157,6 +196,9 @@ func ResourceStorageCredential() common.Resource {
 					return nil
 				}
 
+				if d.HasChange("read_only") {
+					update.ForceSendFields = append(update.ForceSendFields, "ReadOnly")
+				}
 				update.Owner = ""
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
@@ -201,6 +243,9 @@ func ResourceStorageCredential() common.Resource {
 					return nil
 				}
 
+				if d.HasChange("read_only") {
+					update.ForceSendFields = append(update.ForceSendFields, "ReadOnly")
+				}
 				update.Owner = ""
 				_, err = w.StorageCredentials.Update(ctx, update)
 				if err != nil {
@@ -217,7 +262,8 @@ func ResourceStorageCredential() common.Resource {
 					}
 					return err
 				}
-				return nil
+				// Bind the current workspace if the storage credential is isolated, otherwise the read will fail
+				return bindings.AddCurrentWorkspaceBindings(ctx, d, w, update.Name, catalog.UpdateBindingsSecurableTypeStorageCredential)
 			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

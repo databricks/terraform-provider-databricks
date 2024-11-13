@@ -3,7 +3,7 @@ package acceptance
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"testing"
 )
@@ -48,7 +48,7 @@ var (
 )
 
 func TestAccDataSourcePipelines(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		locals {
 			name = "pipeline-ds-acceptance-{var.RANDOM}"

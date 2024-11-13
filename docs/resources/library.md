@@ -3,9 +3,12 @@ subcategory: "Compute"
 ---
 # databricks_library resource
 
-Installs a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md). Each different type of library has a slightly different syntax. It's possible to set only one type of library within one resource. Otherwise, the plan will fail with an error. 
+Installs a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md). Each different type of library has a slightly different syntax. It's possible to set only one type of library within one resource. Otherwise, the plan will fail with an error.
 
--> **Note** `databricks_library` resource would always start the associated cluster if it's not running, so make sure to have auto-termination configured. It's not possible to atomically change the version of the same library without cluster restart. Libraries are fully removed from the cluster only after restart.
+-> `databricks_library` resource would always start the associated cluster if it's not running, so make sure to have auto-termination configured. It's not possible to atomically change the version of the same library without cluster restart. Libraries are fully removed from the cluster only after restart.
+
+## Plugin Framework Migration
+The library resource has been migrated from sdkv2 to plugin framework。 If you encounter any problem with this resource and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_RESOURCES="databricks_library"`.
 
 ## Installing library on all clusters
 
@@ -71,7 +74,7 @@ resource "databricks_library" "app" {
 
 Installing Python PyPI artifacts. You can optionally also specify the `repo` parameter for a custom PyPI mirror, which should be accessible without any authentication for the network that cluster runs in.
 
--> **Note** `repo` host should be accessible from the Internet by Databricks control plane. If connectivity to custom PyPI repositories is required, please modify cluster-node `/etc/pip.conf` through [databricks_global_init_script](global_init_script.md).
+-> `repo` host should be accessible from the Internet by Databricks control plane. If connectivity to custom PyPI repositories is required, please modify cluster-node `/etc/pip.conf` through [databricks_global_init_script](global_init_script.md).
 
 ```hcl
 resource "databricks_library" "fbprophet" {
@@ -82,6 +85,19 @@ resource "databricks_library" "fbprophet" {
   }
 }
 ```
+
+## Python requirements files
+
+Installing Python libraries listed in the `requirements.txt` file.  Only Workspace paths and Unity Catalog Volumes paths are supported.  Requires a cluster with DBR 15.0+.
+
+
+```hcl
+resource "databricks_library" "libraries" {
+  cluster_id   = databricks_cluster.this.id
+  requirements = "/Workspace/path/to/requirements.txt"
+}
+```
+
 
 ## Python EGG
 
@@ -110,9 +126,10 @@ resource "databricks_library" "rkeops" {
 }
 ```
 
+
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 
@@ -128,5 +145,5 @@ The following resources are often used in the same context:
 * [databricks_global_init_script](global_init_script.md) to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_mount](mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.
-* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html). 
+* [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

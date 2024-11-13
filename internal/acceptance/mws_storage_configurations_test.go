@@ -6,7 +6,7 @@ import (
 
 func TestMwsAccStorageConfigurations(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET") // marker for AWS test env
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_storage_configurations" "this" {
 			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"

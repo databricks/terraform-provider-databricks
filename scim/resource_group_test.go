@@ -82,7 +82,7 @@ func TestResourceGroupCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/preview/scim/v2/Groups",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -164,7 +164,7 @@ func TestResourceGroupRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -184,7 +184,7 @@ func TestResourceGroupRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -282,7 +282,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 		allow_cluster_create = true
 		databricks_sql_access = true
 		`,
-		RequiresNew: true,
+		RequiresNew: false,
 		Update:      true,
 		ID:          "abc",
 	}.Apply(t)
@@ -300,7 +300,7 @@ func TestResourceGroupUpdate_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,entitlements,groups,members,externalId",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -338,7 +338,7 @@ func TestResourceGroupDelete_Error(t *testing.T) {
 			{
 				Method:   "DELETE",
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

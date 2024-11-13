@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -264,7 +265,7 @@ func TestIPACLRead_NotFound(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/ip-access-lists/" + TestingId + "?",
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
 					Message:   "Can't find an IP access list with id: " + TestingId + ".",
 				},
@@ -356,27 +357,4 @@ func TestIPACLDelete_Error(t *testing.T) {
 		AccountID: "100",
 		ID:        TestingId,
 	}.ExpectError(t, "Something went wrong")
-}
-
-func TestListIpAccessLists(t *testing.T) {
-	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
-		{
-			Method:   "GET",
-			Resource: "/api/2.0/ip-access-lists",
-			Response: map[string]any{},
-		},
-	})
-	require.NoError(t, err)
-
-	w, err := client.WorkspaceClient()
-	require.NoError(t, err)
-
-	defer server.Close()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	ipLists, err := w.IpAccessLists.Impl().List(ctx)
-
-	require.NoError(t, err)
-	assert.Equal(t, 0, len(ipLists.IpAccessLists))
 }

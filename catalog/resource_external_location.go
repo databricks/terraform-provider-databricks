@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -20,6 +21,7 @@ type ExternalLocationInfo struct {
 	ReadOnly       bool                       `json:"read_only,omitempty"`
 	AccessPoint    string                     `json:"access_point,omitempty"`
 	EncDetails     *catalog.EncryptionDetails `json:"encryption_details,omitempty"`
+	IsolationMode  string                     `json:"isolation_mode,omitempty" tf:"computed"`
 }
 
 func ResourceExternalLocation() common.Resource {
@@ -37,6 +39,7 @@ func ResourceExternalLocation() common.Resource {
 				return old == "false" && new == "true"
 			}
 			m["url"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
+			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			return m
 		})
 	return common.Resource{
@@ -58,8 +61,8 @@ func ResourceExternalLocation() common.Resource {
 			}
 			d.SetId(el.Name)
 
-			// Don't update owner if it is not provided
-			if d.Get("owner") == "" {
+			// Update owner or isolation mode if it is provided
+			if !updateRequired(d, []string{"owner", "isolation_mode"}) {
 				return nil
 			}
 
@@ -70,7 +73,9 @@ func ResourceExternalLocation() common.Resource {
 			if err != nil {
 				return err
 			}
-			return nil
+
+			// Bind the current workspace if the external location is isolated, otherwise the read will fail
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, el.Name, catalog.UpdateBindingsSecurableTypeExternalLocation)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -111,6 +116,9 @@ func ResourceExternalLocation() common.Resource {
 			if !d.HasChangeExcept("owner") {
 				return nil
 			}
+			if d.HasChange("read_only") {
+				updateExternalLocationRequest.ForceSendFields = append(updateExternalLocationRequest.ForceSendFields, "ReadOnly")
+			}
 
 			updateExternalLocationRequest.Owner = ""
 			_, err = w.ExternalLocations.Update(ctx, updateExternalLocationRequest)
@@ -128,7 +136,8 @@ func ResourceExternalLocation() common.Resource {
 				}
 				return err
 			}
-			return nil
+			// Bind the current workspace if the external location is isolated, otherwise the read will fail
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateExternalLocationRequest.Name, catalog.UpdateBindingsSecurableTypeExternalLocation)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)

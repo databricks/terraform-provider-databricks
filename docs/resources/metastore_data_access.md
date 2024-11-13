@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore_data_access (Resource)
 
--> **Note** This resource could be used with account or workspace-level provider.
+-> This resource can be used with an account or workspace-level provider.
 
-Optionally, each [databricks_metastore](docs/resources/metastore.md) can have a default [databricks_storage_credential](storage_credential.md) defined as `databricks_metastore_data_access`. This will be used by Unity Catalog to access data in the root storage location if defined.
+Optionally, each [databricks_metastore](metastore.md) can have a default [databricks_storage_credential](storage_credential.md) defined as `databricks_metastore_data_access`. This will be used by Unity Catalog to access data in the root storage location if defined.
 
 ## Example Usage
 

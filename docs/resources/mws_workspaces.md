@@ -3,7 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_workspaces resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
+-> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
 
 ```hcl
 provider "databricks" {
@@ -12,15 +12,15 @@ provider "databricks" {
 }
 ```
 
-This resource allows you to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1) or [workspaces on GCP](https://docs.gcp.databricks.com/administration-guide/account-settings-gcp/workspaces.html). Please follow this complete runnable example on [AWS](../guides/aws-workspace.md) or [GCP](../guides/gcp-workspace.md) with new VPC and new workspace setup.
+This resource allows you to set up [workspaces on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1) or [workspaces on GCP](https://docs.gcp.databricks.com/administration-guide/account-settings-gcp/workspaces.html). Please follow this complete runnable example on [AWS](../guides/aws-workspace.md) or [GCP](../guides/gcp-workspace.md) with new VPC and new workspace setup.
 
--> **Note** On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
+-> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
 
 ## Example Usage
 
 ### Creating a Databricks on AWS workspace
 
-![Simplest multiworkspace](https://github.com/databricks/terraform-provider-databricks/raw/master/docs/simplest-multiworkspace.png)
+![Simplest multiworkspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/simplest-multiworkspace.png)
 
 To get workspace running, you have to configure a couple of things:
 
@@ -315,7 +315,7 @@ output "databricks_token" {
 
 ## Argument Reference
 
--> **Note** All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id`, `private_access_settings_id` on a running workspace.
+-> All workspaces would be verified to get into runnable state or deleted upon failure. You can only update `credentials_id`, `network_id`, and `storage_customer_managed_key_id`, `private_access_settings_id` on a running workspace.
 
 The following arguments are available:
 
@@ -336,12 +336,13 @@ The following arguments are available:
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
 * `custom_tags` - (Optional / AWS only) - The custom tags key-value pairing that is attached to this workspace. These tags will be applied to clusters automatically in addition to any `default_tags` or `custom_tags` on a cluster level. Please note it can take up to an hour for custom_tags to be set due to scheduling on Control Plane. After custom tags are applied, they can be modified however they can never be completely removed.
+* `pricing_tier` - (Optional) - The pricing tier of the workspace.
 
 ### token block
 
 You can specify a `token` block in the body of the workspace resource, so that Terraform manages the refresh of the PAT token for the deployment user. The other option is to create [databricks_obo_token](obo_token.md), though it requires Premium or Enterprise plan enabled as well as more complex setup. Token block exposes `token_value`, that holds sensitive PAT token and optionally it can accept two arguments:
 
--> **Note** Tokens managed by `token {}` block are recreated when expired.
+-> Tokens managed by `token {}` block are recreated when expired.
 
 * `comment` - (Optional) Comment, that will appear in "User Settings / Access Tokens" page on Workspace UI. By default it's "Terraform PAT".
 * `lifetime_seconds` - (Optional) Token expiry lifetime. By default its 2592000 (30 days).
@@ -350,7 +351,7 @@ You can specify a `token` block in the body of the workspace resource, so that T
 
 On AWS, the following arguments could be modified after the workspace is running:
 
-* `network_id` - Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces) would require three separate `terraform apply` steps.
+* `network_id` - Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces-aws-only) would require three separate `terraform apply` steps.
 * `credentials_id`
 * `storage_customer_managed_key_id`
 * `private_access_settings_id`
@@ -367,10 +368,11 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
 * `custom_tags` - (Map) Custom Tags (if present) added to workspace
+* `gcp_workspace_sa` - (String, GCP only) identifier of a service account created for the workspace in form of `db-<workspace-id>@prod-gcp-<region>.iam.gserviceaccount.com`
 
 ## Timeouts
 
-The `timeouts` block allows you to specify `create`, `read` and `update` timeouts. It usually takes 5-7 minutes to provision Databricks E2 Workspace and another couple of minutes for your local DNS caches to resolve. Please launch `TF_LOG=DEBUG terraform apply` whenever you observe timeout issues.
+The `timeouts` block allows you to specify `create`, `read` and `update` timeouts. It usually takes 5-7 minutes to provision Databricks workspace and another couple of minutes for your local DNS caches to resolve. Please launch `TF_LOG=DEBUG terraform apply` whenever you observe timeout issues.
 
 ```hcl
 timeouts {
@@ -390,15 +392,15 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 
 The following resources are used in the same context:
 
 * [Provisioning Databricks on AWS](../guides/aws-workspace.md) guide.
-* [Provisioning Databricks on AWS with PrivateLink](../guides/aws-private-link-workspace.md) guide.
-* [Provisioning AWS Databricks E2 with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
+* [Provisioning Databricks on AWS with Private Link](../guides/aws-private-link-workspace.md) guide.
+* [Provisioning AWS Databricks workspaces with a Hub & Spoke firewall for data exfiltration protection](../guides/aws-e2-firewall-hub-and-spoke.md) guide.
 * [Provisioning Databricks on GCP](../guides/gcp-workspace.md) guide.
 * [Provisioning Databricks workspaces on GCP with Private Service Connect](../guides/gcp-private-service-connect-workspace.md) guide.
 * [databricks_mws_credentials](mws_credentials.md) to configure the cross-account role for creation of new workspaces within AWS.

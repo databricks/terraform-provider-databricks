@@ -9,12 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // AutoScale is a struct the describes auto scaling for clusters
@@ -194,22 +195,22 @@ type S3StorageInfo struct {
 
 // GcsStorageInfo contains the struct for when storing files in GCS
 type GcsStorageInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // AbfssStorageInfo contains the struct for when storing files in ADLS
 type AbfssStorageInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // LocalFileInfo represents a local file on disk, e.g. in a customer's container.
 type LocalFileInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // WorkspaceFileInfo represents a file in the Databricks workspace.
 type WorkspaceFileInfo struct {
-	Destination string `json:"destination,omitempty"`
+	Destination string `json:"destination"`
 }
 
 // StorageInfo contains the struct for either DBFS or S3 storage depending on which one is relevant.
@@ -433,20 +434,8 @@ type Cluster struct {
 	ClusterMounts    []MountInfo   `json:"cluster_mount_infos,omitempty" tf:"alias:cluster_mount_info"`
 }
 
-func (cluster Cluster) Validate() error {
-	// TODO: rewrite with CustomizeDiff
-	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
-		return nil
-	}
-	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
-	master := cluster.SparkConf["spark.master"]
-	resourceClass := cluster.CustomTags["ResourceClass"]
-	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
-		return nil
-	}
-	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
-}
-
+// TODO: Remove this once all the resources using clusters are migrated to Go SDK.
+// They would then be using ModifyRequestOnInstancePool(cluster *compute.CreateCluster) defined in resource_cluster.go that is a duplicate of this method but uses Go SDK.
 // ModifyRequestOnInstancePool helps remove all request fields that should not be submitted when instance pool is selected.
 func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	// Instance profile id does not exist or not set
@@ -477,6 +466,8 @@ func (cluster *Cluster) ModifyRequestOnInstancePool() {
 	cluster.DriverNodeTypeID = ""
 }
 
+// TODO: Remove this once all the resources using clusters are migrated to Go SDK.
+// They would then be using FixInstancePoolChangeIfAny(d *schema.ResourceData, cluster compute.CreateCluster) defined in resource_cluster.go that is a duplicate of this method but uses Go SDK.
 // https://github.com/databricks/terraform-provider-databricks/issues/824
 func (cluster *Cluster) FixInstancePoolChangeIfAny(d *schema.ResourceData) {
 	oldInstancePool, newInstancePool := d.GetChange("instance_pool_id")
@@ -566,6 +557,19 @@ func NewClustersAPI(ctx context.Context, m any) ClustersAPI {
 type ClustersAPI struct {
 	client  *common.DatabricksClient
 	context context.Context
+}
+
+// Temporary function to be used until all resources are migrated to Go SDK
+// Create a workspace client
+func (a ClustersAPI) WorkspaceClient() *databricks.WorkspaceClient {
+	client, _ := a.client.WorkspaceClient()
+	return client
+}
+
+// Temporary function to be used until all resources are migrated to Go SDK
+// Return a context
+func (a ClustersAPI) Context() context.Context {
+	return a.context
 }
 
 // Create creates a new Spark cluster and waits till it's running
@@ -710,14 +714,12 @@ func wrapMissingClusterError(err error, id string) error {
 	// as is in the longer term, so that this keeps working.
 	if apiErr.ErrorCode == "INVALID_STATE" {
 		log.Printf("[WARN] assuming that cluster is removed on backend: %s", apiErr)
-		apiErr.StatusCode = 404
-		return apiErr
+		return databricks.ErrResourceDoesNotExist
 	}
 	// fix non-compliant error code
 	if strings.Contains(apiErr.Message,
 		fmt.Sprintf("Cluster %s does not exist", id)) {
-		apiErr.StatusCode = 404
-		return apiErr
+		return databricks.ErrResourceDoesNotExist
 	}
 	return err
 }
@@ -897,7 +899,7 @@ func (a ClustersAPI) GetOrCreateRunningCluster(name string, custom ...Cluster) (
 	r := Cluster{
 		NumWorkers:  1,
 		ClusterName: name,
-		SparkVersion: a.LatestSparkVersionOrDefault(SparkVersionRequest{
+		SparkVersion: LatestSparkVersionOrDefault(a.Context(), a.WorkspaceClient(), compute.SparkVersionRequest{
 			Latest:          true,
 			LongTermSupport: true,
 		}),

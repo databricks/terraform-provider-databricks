@@ -1,5 +1,24 @@
 # Version changelog
 
+## [Release] Release v1.58.0
+
+### Bug Fixes
+
+ * Always fill `cluster_name` in `databricks_cluster` data source ([#4197](https://github.com/databricks/terraform-provider-databricks/pull/4197)).
+ * Suppress equal fold diff for DLT pipeline resource ([#4196](https://github.com/databricks/terraform-provider-databricks/pull/4196)).
+ * Upload content `databricks_workspace_file` using raw format ([#4200](https://github.com/databricks/terraform-provider-databricks/pull/4200)).
+
+
+### Internal Changes
+
+ * Update to latest OpenAPI spec and bump Go SDK ([#4199](https://github.com/databricks/terraform-provider-databricks/pull/4199)).
+
+
+### Dependency Updates
+
+ * Bump github.com/golang-jwt/jwt/v4 from 4.5.0 to 4.5.1 ([#4191](https://github.com/databricks/terraform-provider-databricks/pull/4191)).
+
+
 ## [Release] Release v1.57.0
 
 ### New Features and Improvements

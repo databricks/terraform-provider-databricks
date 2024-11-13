@@ -46,6 +46,7 @@ func DataSourceCluster() common.Resource {
 		}
 		data.Id = data.ClusterInfo.ClusterId
 		data.ClusterId = data.ClusterInfo.ClusterId
+		data.Name = data.ClusterInfo.ClusterName
 
 		return nil
 	})

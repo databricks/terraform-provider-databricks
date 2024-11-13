@@ -108,6 +108,7 @@ func (sm SecurableMapping) Id(d *schema.ResourceData) string {
 // Omitting provider as a reserved keyword
 var Mappings = SecurableMapping{
 	"catalog":            catalog.SecurableType("catalog"),
+	"credential":         catalog.SecurableType("credential"),
 	"foreign_connection": catalog.SecurableType("connection"),
 	"external_location":  catalog.SecurableType("external_location"),
 	"function":           catalog.SecurableType("function"),

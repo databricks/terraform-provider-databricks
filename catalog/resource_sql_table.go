@@ -38,6 +38,7 @@ type ConstraintInfo struct {
 	KeyColumns    []string `json:"key_columns"`
 	ParentTable   string   `json:"parent_table,omitempty"`
 	ParentColumns []string `json:"parent_columns,omitempty"`
+	Rely          bool     `json:"rely,omitempty" tf:"default:false"`
 }
 
 type TypeJson struct {
@@ -255,13 +256,20 @@ func (ti *SqlTableInfo) serializeColumnInfos() string {
 }
 
 func serializePrimaryKeyConstraint(constraint ConstraintInfo) string {
-	return fmt.Sprintf("CONSTRAINT %s PRIMARY KEY(%s)", constraint.getWrappedConstraintName(), constraint.getWrappedKeyColumnNames())
+	constraint_clause := fmt.Sprintf("CONSTRAINT %s PRIMARY KEY(%s)", constraint.getWrappedConstraintName(), constraint.getWrappedKeyColumnNames())
+	if constraint.Rely {
+		constraint_clause += " RELY"
+	}
+	return constraint_clause
 }
 
 func serializeForeignKeyConstraint(constraint ConstraintInfo) string {
 	constraint_clause := fmt.Sprintf("CONSTRAINT %s FOREIGN KEY(%s) REFERENCES %s", constraint.getWrappedConstraintName(), constraint.getWrappedKeyColumnNames(), constraint.ParentTable)
 	if len(constraint.ParentColumns) > 0 {
 		constraint_clause += fmt.Sprintf("(%s)", constraint.getWrappedParentColumnNames())
+	}
+	if constraint.Rely {
+		constraint_clause += " RELY"
 	}
 	return constraint_clause
 }

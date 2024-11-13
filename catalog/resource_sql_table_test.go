@@ -170,6 +170,7 @@ func TestResourceSqlTableCreateStatement_Constraints(t *testing.T) {
 				Name:       "pk",
 				Type:       "PRIMARY KEY",
 				KeyColumns: []string{"id"},
+				Rely:       true,
 			},
 			{
 				Name:        "fk",
@@ -183,7 +184,7 @@ func TestResourceSqlTableCreateStatement_Constraints(t *testing.T) {
 	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
 	assert.Contains(t, stmt, "USING DELTA")
 	assert.Contains(t, stmt, "(`id` int NOT NULL, `external_id` int NOT NULL, `external_name` string NOT NULL")
-	assert.Contains(t, stmt, "CONSTRAINT `pk` PRIMARY KEY(`id`)")
+	assert.Contains(t, stmt, "CONSTRAINT `pk` PRIMARY KEY(`id`) RELY")
 	assert.Contains(t, stmt, "CONSTRAINT `fk` FOREIGN KEY(`external_id`,`external_name`) REFERENCES some_table)")
 	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")

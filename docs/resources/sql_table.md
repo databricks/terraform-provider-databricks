@@ -219,6 +219,7 @@ Only `PRIMARY KEY` and `FOREIGN KEY` constraints are supported right now.
 * `key_columns` - List of the columns in the defined table that should be used for the constraint.
 * `parent_table` - (Optional) Required for `FOREIGN KEY` constraint. Full name of the parent table.
 * `parent_columns` - (Optional) Optional for `FOREIGN KEY` constraint. Should be used if column names in the parent table differ.
+* `rely` - (Optional) Set to `true` if `RELY` option should be used for the constraint
 
 ## Attribute Reference
 

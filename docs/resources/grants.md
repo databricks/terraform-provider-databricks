@@ -29,7 +29,7 @@ Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/s
 
 ## Metastore grants
 
-You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `CREATE_STORAGE_CREDENTIAL`, `MANAGE_ALLOWLIST`, `SET_SHARE_PERMISSION`, `USE_MARKETPLACE_ASSETS`, `USE_CONNECTION`, `USE_PROVIDER`, `USE_RECIPIENT` and `USE_SHARE` privileges to [databricks_metastore](metastore.md) assigned to the workspace.
+You can grant `CREATE_CATALOG`, `CREATE_CLEAN_ROOM`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `CREATE_SERVICE_CREDENTIAL`, `CREATE_STORAGE_CREDENTIAL`, `SET_SHARE_PERMISSION`, `USE_MARKETPLACE_ASSETS`, `USE_PROVIDER`, `USE_RECIPIENT`, and `USE_SHARE` privileges to [databricks_metastore](metastore.md) assigned to the workspace.
 
 ```hcl
 resource "databricks_grants" "sandbox" {
@@ -226,6 +226,28 @@ resource "databricks_grants" "udf" {
   grant {
     principal  = "Data Analysts"
     privileges = ["EXECUTE"]
+  }
+}
+```
+
+## Service credential grants
+
+You can grant `ALL_PRIVILEGES`, `ACCESS` and `CREATE_CONNECTION` privileges to [databricks_credential](credential.md) id specified in `credential` attribute:
+
+```hcl
+resource "databricks_credential" "external" {
+  name = aws_iam_role.external_data_access.name
+  aws_iam_role {
+    role_arn = aws_iam_role.external_data_access.arn
+  }
+  comment = "Managed by TF"
+}
+
+resource "databricks_grants" "external_creds" {
+  credential = databricks_credential.external.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_CONNECTION"]
   }
 }
 ```

@@ -29,7 +29,7 @@ func TestAccIPACLListsResourceFullLifecycle(t *testing.T) {
 }
 
 func TestMwsAccIPACLListsResourceFullLifecycle(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_ip_access_list" "this" {
 			label = "tf-{var.RANDOM}"
@@ -39,7 +39,7 @@ func TestMwsAccIPACLListsResourceFullLifecycle(t *testing.T) {
 				"10.0.10.0/24"
 			]
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 				resource "databricks_ip_access_list" "this" {
 					label = "tf-{var.RANDOM}"

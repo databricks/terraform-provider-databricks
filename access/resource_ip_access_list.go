@@ -33,6 +33,9 @@ func ResourceIPAccessList() common.Resource {
 	})
 	return common.Resource{
 		Schema: s,
+		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
+			return true
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl settings.CreateIpAccessList
 			var updateIacl settings.UpdateIpAccessList
@@ -65,17 +68,6 @@ func ResourceIPAccessList() common.Resource {
 						return err
 					}
 				}
-				// need to wait until the ip access list is enabled
-				retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-					status, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
-					if err != nil {
-						return retry.NonRetryableError(err)
-					}
-					if !status.IpAccessList.Enabled {
-						return retry.RetryableError(errors.New("access list not enabled yet"))
-					}
-					return nil
-				})
 				d.SetId(ipAclId)
 				return nil
 			}, func(w *databricks.WorkspaceClient) error {

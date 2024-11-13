@@ -14,6 +14,7 @@ func TestUcAccCredential(t *testing.T) {
 					aws_iam_role {
 						role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 					}
+					purpose = "SERVICE"
 					skip_validation = true
 					comment = "Managed by TF"
 				}`,
@@ -31,7 +32,7 @@ func TestAccCredentialOwner(t *testing.T) {
 			resource "databricks_credential" "test_acc_storage_credential_owner" {
 				name = "test_acc_storage_credential_owner-{var.RANDOM}"
 				owner = databricks_service_principal.test_acc_storage_credential_owner.application_id
-				metastore_id = "{env.TEST_METASTORE_ID}"
+				purpose = "SERVICE"
 				aws_iam_role {
 					role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 				}

@@ -15,8 +15,11 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 		for _, cred := range alofServiceCreds {
 			common.CustomizeSchemaPath(m, cred).SetAtLeastOneOf(alofServiceCreds)
 		}
+
+		common.MustSchemaPath(m, "name").Required = true
+		common.MustSchemaPath(m, "purpose").Required = true
+
 		common.MustSchemaPath(m, "id").Computed = true
-		common.MustSchemaPath(m, "purpose").Computed = true
 		common.MustSchemaPath(m, "aws_iam_role", "external_id").Computed = true
 		common.MustSchemaPath(m, "aws_iam_role", "unity_catalog_iam_arn").Computed = true
 		common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true

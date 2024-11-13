@@ -11,6 +11,8 @@ A credential represents an authentication and authorization mechanism for access
 
 To create credentials, you must be a Databricks account admin or have the `CREATE SERVICE CREDENTIAL` privilege. The user who creates the credential can delegate ownership to another user or group to manage permissions on it
 
+On AWS, the IAM role for a credential requires a trust policy. See [documentation](https://docs.databricks.com/en/connect/unity-catalog/cloud-services/service-credentials.html#step-1-create-an-iam-role) for more details. The data source [databricks_aws_unity_catalog_assume_role_policy](../data-sources/aws_unity_catalog_assume_role_policy.md) can be used to create the necessary AWS Unity Catalog assume role policy.
+
 ## Example Usage
 
 For AWS

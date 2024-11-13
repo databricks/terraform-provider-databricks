@@ -35,7 +35,7 @@ type VolumesList struct {
 }
 
 func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceName)
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceName)
 }
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

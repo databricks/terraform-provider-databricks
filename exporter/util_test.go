@@ -316,16 +316,16 @@ func TestGetEnvAsInt(t *testing.T) {
 }
 
 func TestExcludeAuxiliaryDirectories(t *testing.T) {
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "", ObjectType: workspace.Directory}))
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{ObjectType: workspace.File}))
-	assert.True(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc",
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "", ObjectType: workspace.Directory}))
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{ObjectType: workspace.File}))
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc",
 		ObjectType: workspace.Directory}))
 	// should be ignored
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/.ide",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/.ide",
 		ObjectType: workspace.Directory}))
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Shared/.bundle",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Shared/.bundle",
 		ObjectType: workspace.Directory}))
-	assert.False(t, excludeAuxiliaryDirectories(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
 		ObjectType: workspace.Directory}))
 }
 

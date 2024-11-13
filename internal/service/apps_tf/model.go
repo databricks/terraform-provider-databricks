@@ -144,8 +144,6 @@ func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringRead(existing
 }
 
 type AppDeployment struct {
-	// The name of the app.
-	AppName types.String `tfsdk:"-"`
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
 	CreateTime          types.String `tfsdk:"create_time" tf:"optional"`
 	EffectiveCreateTime types.String `tfsdk:"effective_create_time" tf:"computed,optional"`
@@ -400,6 +398,30 @@ func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState Compu
 	}
 }
 
+// Create an app deployment
+type CreateAppDeploymentRequest struct {
+	AppDeployment []AppDeployment `tfsdk:"app_deployment" tf:"optional,object"`
+	// The name of the app.
+	AppName types.String `tfsdk:"-"`
+}
+
+func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppDeploymentRequest) {
+}
+
+func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringRead(existingState CreateAppDeploymentRequest) {
+}
+
+// Create an app
+type CreateAppRequest struct {
+	App []App `tfsdk:"app" tf:"optional,object"`
+}
+
+func (newState *CreateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppRequest) {
+}
+
+func (newState *CreateAppRequest) SyncEffectiveFieldsDuringRead(existingState CreateAppRequest) {
+}
+
 // Delete an app
 type DeleteAppRequest struct {
 	// The name of the app.
@@ -550,4 +572,17 @@ func (newState *StopAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sto
 }
 
 func (newState *StopAppRequest) SyncEffectiveFieldsDuringRead(existingState StopAppRequest) {
+}
+
+// Update an app
+type UpdateAppRequest struct {
+	App []App `tfsdk:"app" tf:"optional,object"`
+	// The name of the app.
+	Name types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAppRequest) {
+}
+
+func (newState *UpdateAppRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAppRequest) {
 }

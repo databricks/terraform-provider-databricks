@@ -130,8 +130,6 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-// This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
-// Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func Validate(cluster any) error {
 	var profile, master, resourceClass string
 	switch c := cluster.(type) {
@@ -513,20 +511,23 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 }
 
 func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI compute.ClustersInterface) error {
-	events, err := clusterAPI.EventsAll(ctx, compute.GetEvents{
-		ClusterId:  d.Id(),
-		Limit:      1,
-		Order:      compute.GetEventsOrderDesc,
-		EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
+	clusterDetails := clusterAPI.List(ctx, compute.ListClustersRequest{
+		FilterBy: &compute.ListClustersFilterBy{
+			IsPinned: true,
+		},
+		PageSize: 100, // pinned cluster limit - just get all of them
 	})
-	if err != nil {
-		return err
+
+	for clusterDetails.HasNext(ctx) {
+		detail, err := clusterDetails.Next(ctx)
+		if err != nil {
+			return err
+		}
+		if detail.ClusterId == d.Id() {
+			return d.Set("is_pinned", true)
+		}
 	}
-	pinnedEvent := compute.EventTypeUnpinned
-	if len(events) > 0 {
-		pinnedEvent = events[0].Type
-	}
-	return d.Set("is_pinned", pinnedEvent == compute.EventTypePinned)
+	return d.Set("is_pinned", false)
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

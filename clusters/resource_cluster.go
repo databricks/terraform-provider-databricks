@@ -130,8 +130,6 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-// This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
-// Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func Validate(cluster any) error {
 	var profile, master, resourceClass string
 	switch c := cluster.(type) {

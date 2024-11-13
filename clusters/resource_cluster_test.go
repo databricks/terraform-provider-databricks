@@ -1630,22 +1630,6 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0, d.Get("num_workers"))
 }
-
-func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Create:   true,
-		Resource: ResourceCluster(),
-		State: map[string]any{
-			"autotermination_minutes": 120,
-			"cluster_name":            "Single Node Cluster",
-			"spark_version":           "7.3.x-scala12",
-			"node_type_id":            "Standard_F4s",
-			"is_pinned":               false,
-		},
-	}.Apply(t)
-	assert.EqualError(t, err, numWorkerErr)
-}
-
 func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Create:   true,
@@ -1662,27 +1646,59 @@ func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
 	require.Equal(t, true, strings.Contains(err.Error(), "expected num_workers to be at least (0)"))
 }
 
-func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		ID:       "abc",
-		Update:   true,
-		Resource: ResourceCluster(),
-		InstanceState: map[string]string{
-			"autotermination_minutes": "15",
-			"cluster_name":            "Shared Autoscaling",
-			"spark_version":           "7.1-scala12",
-			"node_type_id":            "i3.xlarge",
-			"num_workers":             "100",
+func TestResourceClusterCreate_NumWorkersIsZero(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					NumWorkers:             0,
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.3.x-scala12",
+					NodeTypeId:             "Standard_F4s",
+					AutoterminationMinutes: 120,
+					ForceSendFields:        []string{"NumWorkers"},
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateRunning,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					ClusterName:            "Single Node Cluster",
+					SparkVersion:           "7.3.x-scala12",
+					NodeTypeId:             "Standard_F4s",
+					AutoterminationMinutes: 120,
+					State:                  compute.StateRunning,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
+				},
+			},
 		},
+		Create:   true,
+		Resource: ResourceCluster(),
 		State: map[string]any{
-			"autotermination_minutes": 15,
-			"cluster_name":            "Shared Autoscaling",
-			"spark_version":           "7.1-scala12",
-			"node_type_id":            "i3.xlarge",
-			"num_workers":             0,
+			"autotermination_minutes": 120,
+			"cluster_name":            "Single Node Cluster",
+			"spark_version":           "7.3.x-scala12",
+			"node_type_id":            "Standard_F4s",
+			"is_pinned":               false,
 		},
 	}.Apply(t)
-	assert.EqualError(t, err, numWorkerErr)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, d.Get("num_workers"))
 }
 
 func TestModifyClusterRequestAws(t *testing.T) {

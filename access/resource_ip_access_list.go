@@ -34,7 +34,8 @@ func ResourceIPAccessList() common.Resource {
 	return common.Resource{
 		Schema: s,
 		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
-			return true
+			//only skip read after create
+			return d.IsNewResource()
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl settings.CreateIpAccessList
@@ -48,7 +49,7 @@ func ResourceIPAccessList() common.Resource {
 				}
 				ipAclId := status.IpAccessList.ListId
 				// need to wait until the ip access list is available from get
-				retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+				retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 					_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
 					var apiErr *apierr.APIError
 					if !errors.As(err, &apiErr) {

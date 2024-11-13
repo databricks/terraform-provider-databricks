@@ -305,11 +305,11 @@ func setPinnedStatus(ctx context.Context, clusterId string, clusterAPI compute.C
 	if len(events) > 0 {
 		pinnedEvent = events[0].Type
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, path.Root("is_pinned"), pinnedEvent == compute.EventTypePinned))
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("is_pinned"), pinnedEvent == compute.EventTypePinned)...)
 }
 
-func hasClusterConfigChanged(d *schema.ResourceData) bool {
-	for k := range clusterSchema {
+func hasClusterConfigChanged(req resource.UpdateRequest, resp *resource.UpdateResponse) bool {
+	for k := range req.Config {
 		// TODO: create a map if we'll add more non-cluster config parameters in the future
 		if k == "library" || k == "is_pinned" || k == "no_wait" {
 			continue
@@ -511,7 +511,7 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	cluster.ClusterId = clusterId
 	var clusterInfo *compute.ClusterDetails
 
-	if hasClusterConfigChanged(d) {
+	if hasClusterConfigChanged(req, resp) {
 		log.Printf("[DEBUG] Cluster state has changed!")
 		if err := Validate(cluster); err != nil {
 			return err

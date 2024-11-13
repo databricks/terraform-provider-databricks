@@ -11,9 +11,9 @@ import (
 
 var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		alofCred = []string{"aws_iam_role", "azure_managed_identity"}
-		for _, cred := range alofCred {
-			common.CustomizeSchemaPath(m, cred).SetAtLeastOneOf(alofCred)
+		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity"}
+		for _, cred := range alofServiceCreds {
+			common.CustomizeSchemaPath(m, cred).SetAtLeastOneOf(alofServiceCreds)
 		}
 		common.MustSchemaPath(m, "id").Computed = true
 		common.MustSchemaPath(m, "purpose").Computed = true

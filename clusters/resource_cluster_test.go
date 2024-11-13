@@ -1655,7 +1655,7 @@ func TestResourceClusterCreate_NumWorkersIsZero(t *testing.T) {
 				Resource: "/api/2.1/clusters/create",
 				ExpectedRequest: compute.CreateCluster{
 					NumWorkers:             0,
-					ClusterName:            "Single Node Cluster",
+					ClusterName:            "Zero workers cluster",
 					SparkVersion:           "7.3.x-scala12",
 					NodeTypeId:             "Standard_F4s",
 					AutoterminationMinutes: 120,
@@ -1672,7 +1672,7 @@ func TestResourceClusterCreate_NumWorkersIsZero(t *testing.T) {
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
 				Response: compute.ClusterDetails{
 					ClusterId:              "abc",
-					ClusterName:            "Single Node Cluster",
+					ClusterName:            "Zero workers cluster",
 					SparkVersion:           "7.3.x-scala12",
 					NodeTypeId:             "Standard_F4s",
 					AutoterminationMinutes: 120,
@@ -1691,7 +1691,7 @@ func TestResourceClusterCreate_NumWorkersIsZero(t *testing.T) {
 		Resource: ResourceCluster(),
 		State: map[string]any{
 			"autotermination_minutes": 120,
-			"cluster_name":            "Single Node Cluster",
+			"cluster_name":            "Zero workers cluster",
 			"spark_version":           "7.3.x-scala12",
 			"node_type_id":            "Standard_F4s",
 			"is_pinned":               false,

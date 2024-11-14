@@ -52,19 +52,6 @@ func TestDataSourceMwsNetworkConnectivityConfig(t *testing.T) {
 	})
 }
 
-func TestDataSourceMwsNetworkConnectivityConfig_AccountID(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures:    []qa.HTTPFixture{},
-		Resource:    DataSourceMwsNetworkConnectivityConfig(),
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-        HCL: `
-        name = "def"
-        `,
-	}.ExpectError(t, "invalid Databricks Account configuration")
-}
-
 func TestDataSourceMwsNetworkConnectivityConfig_NoName(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,

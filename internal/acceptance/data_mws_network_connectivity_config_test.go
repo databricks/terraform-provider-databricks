@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccDataSourceMwsNetworkConnectivityConfigTest(t *testing.T) {
-	accountLevel(t,
-		step{
+	AccountLevel(t,
+		Step{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
 				name = "tf-{var.RANDOM}"
 				region = "eastus2"
 			}`},
-		step{
+		Step{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
 				name = "tf-{var.RANDOM}"

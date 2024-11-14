@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
 func TestDataSourceMwsNetworkConnectivityConfig(t *testing.T) {
-	id := "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-
 	var ncc = settings.NetworkConnectivityConfiguration{
 		AccountId:    "abc",
 		CreationTime: 0,
@@ -20,34 +20,33 @@ func TestDataSourceMwsNetworkConnectivityConfig(t *testing.T) {
 			TargetRules:  nil,
 		},
 		Name:                        "def",
-		NetworkConnectivityConfigId: "",
+		NetworkConnectivityConfigId: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 		Region:                      "us-east-1",
 		UpdatedTime:                 0,
 	}
 
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/accounts/%s/network-connectivity-configs/%s?", ncc.AccountId, id),
-				Response: ncc,
-			},
-		},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+            api := a.GetMockNetworkConnectivityAPI().EXPECT()
+			api.ListNetworkConnectivityConfigurationsAll(mock.Anything, settings.ListNetworkConnectivityConfigurationsRequest{}).Return(
+                []settings.NetworkConnectivityConfiguration{ncc}, nil,
+            )
+        },
 		AccountID:   "abc",
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceMwsNetworkConnectivityConfig(),
-		ID:          id,
+		ID:          "_",
 		HCL: fmt.Sprintf(`
-		network_connectivity_config_id = "%s"
-		`, id),
+		    name = "%s"
+		`, ncc.Name),
 	}.ApplyAndExpectData(t, map[string]interface{}{
 		"account_id":                     "abc",
 		"creation_time":                  0,
 		"egress_config":                  []interface{}{map[string]interface{}{"default_rules": []interface{}{}, "target_rules": []interface{}{}}},
-		"id":                             id,
+		"id":                             "_",
 		"name":                           "def",
-		"network_connectivity_config_id": id,
+		"network_connectivity_config_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 		"region":                         "us-east-1",
 		"updated_time":                   0,
 	})
@@ -60,7 +59,21 @@ func TestDataSourceMwsNetworkConnectivityConfig_AccountID(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
+        HCL: `
+        name = "def"
+        `,
 	}.ExpectError(t, "invalid Databricks Account configuration")
+}
+
+func TestDataSourceMwsNetworkConnectivityConfig_NoName(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures:    qa.HTTPFailures,
+		AccountID:   "abc",
+		Resource:    DataSourceMwsNetworkConnectivityConfig(),
+		Read:        true,
+		NonWritable: true,
+		ID:          "_",
+	}.ExpectError(t, "`name` should be provided")
 }
 
 func TestDataSourceMwsNetworkConnectivityConfig_Error(t *testing.T) {
@@ -71,5 +84,8 @@ func TestDataSourceMwsNetworkConnectivityConfig_Error(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
+        HCL: `
+        name = "def"
+        `,
 	}.ExpectError(t, "i'm a teapot")
 }

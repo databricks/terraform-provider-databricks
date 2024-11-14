@@ -13,8 +13,6 @@ Apps run directly on a customer’s Databricks instance, integrate with their da
 resource "databricks_app" "this" {
   name             = "my-custom-app"
   description      = "My app"
-  source_code_path = "/Workspace/user@test.com/my_custom_app"
-  mode             = "SNAPSHOT"
 }
 ```
 
@@ -27,23 +25,19 @@ The following arguments are required:
 
 One or more `resource` block with the following arguments:
 
-* `name` - Name of the App Resource.
-* `description` - Description of the App Resource.
-
-* One or more of the following resource blocks
-  * `secret` block
-      * `scope` - Scope of the secret to grant permission on.
-      * `key` - Key of the secret to grant permission on.
-      * `permission` - Permission to grant on the secret scope. For secrets, only one permission is allowed. Permission must be one of: `READ`, `WRITE`, `MANAGE`.
-  * `sql_warehouse` block
-      * `id` - Id of the SQL warehouse to grant permission on.
-      * `permission` - Permission to grant on the SQL warehouse. Supported permissions are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`.
-  * `serving_endpoint` block
-      * `name` - Name of the serving endpoint to grant permission on.
-      * `permission` - Permission to grant on the serving endpoint. Supported permissions are: `CAN_MANAGE`, `CAN_QUERY`, `CAN_VIEW`.
-  * `job` block
-      * `id` - Id of the job to grant permission on.
-      * `permission` - Permissions to grant on the Job. Supported permissions are: `CAN_MANAGE`, `IS_OWNER`, `CAN_MANAGE_RUN`, `CAN_VIEW`.
+* `secret` block
+  * `scope` - Scope of the secret to grant permission on.
+  * `key` - Key of the secret to grant permission on.
+  * `permission` - Permission to grant on the secret scope. For secrets, only one permission is allowed. Permission must be one of: `READ`, `WRITE`, `MANAGE`.
+* `sql_warehouse` block
+  * `id` - Id of the SQL warehouse to grant permission on.
+  * `permission` - Permission to grant on the SQL warehouse. Supported permissions are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`.
+* `serving_endpoint` block
+  * `name` - Name of the serving endpoint to grant permission on.
+  * `permission` - Permission to grant on the serving endpoint. Supported permissions are: `CAN_MANAGE`, `CAN_QUERY`, `CAN_VIEW`.
+* `job` block
+  * `id` - Id of the job to grant permission on.
+  * `permission` - Permissions to grant on the Job. Supported permissions are: `CAN_MANAGE`, `IS_OWNER`, `CAN_MANAGE_RUN`, `CAN_VIEW`.
 
 ## Attribute Reference
 

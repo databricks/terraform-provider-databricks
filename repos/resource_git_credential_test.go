@@ -85,7 +85,7 @@ func TestResourceGitCredentialUpdate(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", credID),
-				ExpectedRequest: workspace.UpdateCredentials{
+				ExpectedRequest: workspace.UpdateCredentialsRequest{
 					CredentialId:        int64(credID),
 					GitProvider:         provider,
 					GitUsername:         user,
@@ -125,7 +125,7 @@ func TestResourceGitCredentialUpdate_Error(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", credID),
-				ExpectedRequest: workspace.UpdateCredentials{
+				ExpectedRequest: workspace.UpdateCredentialsRequest{
 					CredentialId:        int64(credID),
 					GitProvider:         provider,
 					GitUsername:         user,
@@ -168,7 +168,7 @@ func TestResourceGitCredentialCreate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: workspace.CreateCredentials{
+				ExpectedRequest: workspace.CreateCredentialsRequest{
 					GitProvider:         provider,
 					GitUsername:         user,
 					PersonalAccessToken: token,
@@ -200,7 +200,7 @@ func TestResourceGitCredentialCreate_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: workspace.CreateCredentials{
+				ExpectedRequest: workspace.CreateCredentialsRequest{
 					GitProvider:         provider,
 					GitUsername:         user,
 					PersonalAccessToken: token,
@@ -236,7 +236,7 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: workspace.CreateCredentials{
+				ExpectedRequest: workspace.CreateCredentialsRequest{
 					GitProvider:         provider,
 					GitUsername:         user,
 					PersonalAccessToken: token,
@@ -250,14 +250,14 @@ func TestResourceGitCredentialCreateWithForce(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
-				Response: workspace.GetCredentialsResponse{
+				Response: workspace.ListCredentialsResponse{
 					Credentials: []workspace.CredentialInfo{resp},
 				},
 			},
 			{
 				Method:   http.MethodPatch,
 				Resource: fmt.Sprintf("/api/2.0/git-credentials/%d", resp.CredentialId),
-				ExpectedRequest: workspace.UpdateCredentials{
+				ExpectedRequest: workspace.UpdateCredentialsRequest{
 					CredentialId:        resp.CredentialId,
 					GitProvider:         provider,
 					GitUsername:         user,
@@ -291,7 +291,7 @@ func TestResourceGitCredentialCreateWithForce_Error_List(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: workspace.CreateCredentials{
+				ExpectedRequest: workspace.CreateCredentialsRequest{
 					GitProvider:         provider,
 					GitUsername:         user,
 					PersonalAccessToken: token,
@@ -332,7 +332,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorEmptyList(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: workspace.CreateCredentials{
+				ExpectedRequest: workspace.CreateCredentialsRequest{
 					GitProvider:         provider,
 					GitUsername:         user,
 					PersonalAccessToken: token,
@@ -374,7 +374,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/git-credentials",
-				ExpectedRequest: workspace.CreateCredentials{
+				ExpectedRequest: workspace.CreateCredentialsRequest{
 					GitProvider:         provider,
 					GitUsername:         user,
 					PersonalAccessToken: token,
@@ -388,7 +388,7 @@ func TestResourceGitCredentialCreateWithForce_ErrorUpdate(t *testing.T) {
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/git-credentials",
-				Response: workspace.GetCredentialsResponse{
+				Response: workspace.ListCredentialsResponse{
 					Credentials: []workspace.CredentialInfo{resp},
 				},
 			},

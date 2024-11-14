@@ -4,15 +4,15 @@ subcategory: "Security"
 
 # databricks_permissions Resource
 
-This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspace. It would guarantee that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
+This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspaces. It ensures that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
--> **Note** Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset unless the changes are also reflected in the configuration.
+~> This resource is _authoritative_ for permissions on objects. Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset.
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/main/permissions/resource_permissions.go#L324-L332) those `access_control` blocks automatically.
+-> It is not possible to lower permissions for `admins`, so Databricks Terraform Provider removes those `access_control` blocks automatically.
 
--> **Note** If multiple permission levels are specified for an identity (e.g. `CAN_RESTART` and `CAN_MANAGE` for a cluster), only the highest level permission is returned and will cause permanent drift.
+-> If multiple permission levels are specified for an identity (e.g. `CAN_RESTART` and `CAN_MANAGE` for a cluster), only the highest level permission is returned and will cause permanent drift.
 
--> **Warning** To manage access control on service principals, use [databricks_access_control_rule_set](access_control_rule_set.md).
+~> To manage access control on service principals, use [databricks_access_control_rule_set](access_control_rule_set.md).
 
 ## Cluster usage
 
@@ -232,6 +232,8 @@ There are four assignable [permission levels](https://docs.databricks.com/securi
 - Read [main documentation](https://docs.databricks.com/security/access-control/dlt-acl.html) for additional detail.
 
 ```hcl
+data "databricks_current_user" "me" {}
+
 resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
@@ -347,7 +349,7 @@ resource "databricks_permissions" "notebook_usage_by_id" {
 }
 ```
 
--> **Note**: when importing a permissions resource, only the `notebook_id` is filled!
+-> when importing a permissions resource, only the `notebook_id` is filled!
 
 ## Workspace file usage
 
@@ -408,7 +410,7 @@ resource "databricks_permissions" "workspace_file_usage_by_id" {
 }
 ```
 
--> **Note**: when importing a permissions resource, only the `workspace_file_id` is filled!
+-> when importing a permissions resource, only the `workspace_file_id` is filled!
 
 ## Folder usage
 
@@ -474,7 +476,7 @@ resource "databricks_permissions" "folder_usage_by_id" {
 }
 ```
 
--> **Note**: when importing a permissions resource, only the `directory_id` is filled!
+-> when importing a permissions resource, only the `directory_id` is filled!
 
 ## Repos usage
 
@@ -633,6 +635,35 @@ resource "databricks_permissions" "ml_serving_usage" {
   access_control {
     group_name       = databricks_group.eng.display_name
     permission_level = "CAN_QUERY"
+  }
+}
+```
+
+## Mosaic AI Vector Search usage
+
+Valid permission levels for [databricks_vector_search_endpoint](vector_search_endpoint.md) are: `CAN_USE` and `CAN_MANAGE`.
+
+```hcl
+resource "databricks_vector_search_endpoint" "this" {
+  name          = "vector-search-test"
+  endpoint_type = "STANDARD"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "vector_search_endpoint_usage" {
+  vector_search_endpoint_id = databricks_vector_search_endpoint.this.endpoint_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
   }
 }
 ```
@@ -801,7 +832,7 @@ resource "databricks_permissions" "sql_dashboard_usage" {
 
 [SQL queries](https://docs.databricks.com/sql/user/security/access-control/query-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
 
--> **Note** If you do not define an `access_control` block granting `CAN_MANAGE` explictly for the user calling this provider, Databricks Terraform Provider will add `CAN_MANAGE` permission for the caller. This is a failsafe to prevent situations where the caller is locked out from making changes to the targeted `databricks_sql_query` resource when backend API do not apply permission inheritance correctly.
+-> If you do not define an `access_control` block granting `CAN_MANAGE` explictly for the user calling this provider, Databricks Terraform Provider will add `CAN_MANAGE` permission for the caller. This is a failsafe to prevent situations where the caller is locked out from making changes to the targeted `databricks_sql_query` resource when backend API do not apply permission inheritance correctly.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -893,6 +924,7 @@ Exactly one of the following arguments is required:
 - `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
 - `registered_model_id` - [MLflow registered model](mlflow_model.md) id
 - `serving_endpoint_id` - [Model Serving](model_serving.md) endpoint id.
+- `vector_search_endpoint_id` - [Vector Search](vector_search_endpoint.md) endpoint id.
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id
@@ -912,7 +944,7 @@ access_control {
 
 Arguments for the `access_control` block are:
 
--> **Note** It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/main/permissions/resource_permissions.go#L324-L332) those `access_control` blocks automatically.
+-> It is not possible to lower permissions for `admins` or your own user anywhere from `CAN_MANAGE` level, so Databricks Terraform Provider [removes](https://github.com/databricks/terraform-provider-databricks/blob/main/permissions/resource_permissions.go#L324-L332) those `access_control` blocks automatically.
 
 - `permission_level` - (Required) permission level according to specific resource. See examples above for the reference.
 

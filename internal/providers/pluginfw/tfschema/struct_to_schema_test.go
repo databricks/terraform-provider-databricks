@@ -24,6 +24,12 @@ type TestIntTfSdk struct {
 	Workers types.Int64 `tfsdk:"workers" tf:"optional"`
 }
 
+type TestComputedTfSdk struct {
+	ComputedTag  types.String `tfsdk:"computedtag" tf:"computed"`
+	MultipleTags types.String `tfsdk:"multipletags" tf:"computed,optional"`
+	NonComputed  types.String `tfsdk:"noncomputed" tf:"optional"`
+}
+
 type TestFloatTfSdk struct {
 	Float types.Float64 `tfsdk:"float" tf:"optional"`
 }
@@ -46,7 +52,7 @@ type DummyNested struct {
 }
 
 type DummyDoubleNested struct {
-	Nested *DummyNested `tfsdk:"nested" tf:"optional"`
+	Nested []*DummyNested `tfsdk:"nested" tf:"optional"`
 }
 
 type TestNestedMapTfSdk struct {
@@ -54,11 +60,11 @@ type TestNestedMapTfSdk struct {
 }
 
 type TestPointerTfSdk struct {
-	Nested *DummyNested `tfsdk:"nested" tf:"optional"`
+	Nested *[]DummyNested `tfsdk:"nested" tf:"optional"`
 }
 
 type TestNestedPointerTfSdk struct {
-	Nested DummyDoubleNested `tfsdk:"nested" tf:"optional"`
+	Nested []DummyDoubleNested `tfsdk:"nested" tf:"optional"`
 }
 
 var tests = []struct {
@@ -118,19 +124,25 @@ var tests = []struct {
 	{
 		"pointer to a struct conversion",
 		TestPointerTfSdk{
-			&DummyNested{
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(true),
+			&[]DummyNested{
+				{
+					Name:    types.StringValue("def"),
+					Enabled: types.BoolValue(true),
+				},
 			},
 		},
 	},
 	{
 		"nested pointer to a struct conversion",
 		TestNestedPointerTfSdk{
-			DummyDoubleNested{
-				Nested: &DummyNested{
-					Name:    types.StringValue("def"),
-					Enabled: types.BoolValue(true),
+			[]DummyDoubleNested{
+				{
+					Nested: []*DummyNested{
+						{
+							Name:    types.StringValue("def"),
+							Enabled: types.BoolValue(true),
+						},
+					},
 				},
 			},
 		},
@@ -247,4 +259,18 @@ func TestStructToSchemaExpectedError(t *testing.T) {
 	for _, test := range error_tests {
 		t.Run(test.name, func(t *testing.T) { testStructToSchemaPanics(t, test.testStruct, test.expectedError) })
 	}
+}
+
+func TestComputedField(t *testing.T) {
+	// Test that ComputedTag field is computed and required
+	scm := ResourceStructToSchema(TestComputedTfSdk{}, nil)
+	assert.True(t, scm.Attributes["computedtag"].IsComputed())
+	assert.True(t, scm.Attributes["computedtag"].IsRequired())
+
+	// Test that MultipleTags field is computed and optional
+	assert.True(t, scm.Attributes["multipletags"].IsComputed())
+	assert.True(t, scm.Attributes["multipletags"].IsOptional())
+
+	// Test that NonComputed field is not computed
+	assert.True(t, !scm.Attributes["noncomputed"].IsComputed())
 }

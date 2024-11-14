@@ -26,7 +26,13 @@ type CreateCustomAppIntegration struct {
 	// offline_access, openid, profile, email.
 	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+}
+
+func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegration) {
+}
+
+func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegration) {
 }
 
 type CreateCustomAppIntegrationOutput struct {
@@ -39,12 +45,24 @@ type CreateCustomAppIntegrationOutput struct {
 	IntegrationId types.String `tfsdk:"integration_id" tf:"optional"`
 }
 
+func (newState *CreateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegrationOutput) {
+}
+
+func (newState *CreateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegrationOutput) {
+}
+
 type CreatePublishedAppIntegration struct {
 	// App id of the OAuth published app integration. For example power-bi,
 	// tableau-deskop
 	AppId types.String `tfsdk:"app_id" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+}
+
+func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegration) {
+}
+
+func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegration) {
 }
 
 type CreatePublishedAppIntegrationOutput struct {
@@ -52,10 +70,22 @@ type CreatePublishedAppIntegrationOutput struct {
 	IntegrationId types.String `tfsdk:"integration_id" tf:"optional"`
 }
 
+func (newState *CreatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegrationOutput) {
+}
+
+func (newState *CreatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegrationOutput) {
+}
+
 // Create service principal secret
 type CreateServicePrincipalSecretRequest struct {
 	// The service principal ID.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretRequest) {
+}
+
+func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretRequest) {
 }
 
 type CreateServicePrincipalSecretResponse struct {
@@ -73,6 +103,12 @@ type CreateServicePrincipalSecretResponse struct {
 	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 }
 
+func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretResponse) {
+}
+
+func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretResponse) {
+}
+
 type DataPlaneInfo struct {
 	// Authorization details as a string.
 	AuthorizationDetails types.String `tfsdk:"authorization_details" tf:"optional"`
@@ -80,7 +116,19 @@ type DataPlaneInfo struct {
 	EndpointUrl types.String `tfsdk:"endpoint_url" tf:"optional"`
 }
 
+func (newState *DataPlaneInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneInfo) {
+}
+
+func (newState *DataPlaneInfo) SyncEffectiveFieldsDuringRead(existingState DataPlaneInfo) {
+}
+
 type DeleteCustomAppIntegrationOutput struct {
+}
+
+func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCustomAppIntegrationOutput) {
+}
+
+func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationOutput) {
 }
 
 // Delete Custom OAuth App Integration
@@ -88,7 +136,19 @@ type DeleteCustomAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteCustomAppIntegrationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCustomAppIntegrationRequest) {
+}
+
+func (newState *DeleteCustomAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationRequest) {
+}
+
 type DeletePublishedAppIntegrationOutput struct {
+}
+
+func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePublishedAppIntegrationOutput) {
+}
+
+func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationOutput) {
 }
 
 // Delete Published OAuth App Integration
@@ -96,7 +156,19 @@ type DeletePublishedAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
 
+func (newState *DeletePublishedAppIntegrationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePublishedAppIntegrationRequest) {
+}
+
+func (newState *DeletePublishedAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationRequest) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 // Delete service principal secret
@@ -105,6 +177,12 @@ type DeleteServicePrincipalSecretRequest struct {
 	SecretId types.String `tfsdk:"-"`
 	// The service principal ID.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *DeleteServicePrincipalSecretRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteServicePrincipalSecretRequest) {
+}
+
+func (newState *DeleteServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRead(existingState DeleteServicePrincipalSecretRequest) {
 }
 
 type GetCustomAppIntegrationOutput struct {
@@ -128,7 +206,13 @@ type GetCustomAppIntegrationOutput struct {
 
 	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+}
+
+func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput) {
+}
+
+func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationOutput) {
 }
 
 // Get OAuth Custom App Integration
@@ -136,11 +220,23 @@ type GetCustomAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
 }
 
+func (newState *GetCustomAppIntegrationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationRequest) {
+}
+
+func (newState *GetCustomAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationRequest) {
+}
+
 type GetCustomAppIntegrationsOutput struct {
 	// List of Custom OAuth App Integrations defined for the account.
 	Apps []GetCustomAppIntegrationOutput `tfsdk:"apps" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationsOutput) {
+}
+
+func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationsOutput) {
 }
 
 type GetPublishedAppIntegrationOutput struct {
@@ -155,12 +251,24 @@ type GetPublishedAppIntegrationOutput struct {
 	// Display name of the published OAuth app
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+}
+
+func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationOutput) {
+}
+
+func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationOutput) {
 }
 
 // Get OAuth Published App Integration
 type GetPublishedAppIntegrationRequest struct {
 	IntegrationId types.String `tfsdk:"-"`
+}
+
+func (newState *GetPublishedAppIntegrationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationRequest) {
+}
+
+func (newState *GetPublishedAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationRequest) {
 }
 
 type GetPublishedAppIntegrationsOutput struct {
@@ -170,12 +278,24 @@ type GetPublishedAppIntegrationsOutput struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationsOutput) {
+}
+
+func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationsOutput) {
+}
+
 type GetPublishedAppsOutput struct {
 	// List of Published OAuth Apps.
 	Apps []PublishedAppOutput `tfsdk:"apps" tf:"optional"`
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppsOutput) {
+}
+
+func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppsOutput) {
 }
 
 // Get custom oauth app integrations
@@ -187,12 +307,24 @@ type ListCustomAppIntegrationsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListCustomAppIntegrationsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCustomAppIntegrationsRequest) {
+}
+
+func (newState *ListCustomAppIntegrationsRequest) SyncEffectiveFieldsDuringRead(existingState ListCustomAppIntegrationsRequest) {
+}
+
 // Get all the published OAuth apps
 type ListOAuthPublishedAppsRequest struct {
 	// The max number of OAuth published apps to return in one page.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A token that can be used to get the next page of results.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListOAuthPublishedAppsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListOAuthPublishedAppsRequest) {
+}
+
+func (newState *ListOAuthPublishedAppsRequest) SyncEffectiveFieldsDuringRead(existingState ListOAuthPublishedAppsRequest) {
 }
 
 // Get published oauth app integrations
@@ -202,15 +334,45 @@ type ListPublishedAppIntegrationsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListPublishedAppIntegrationsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPublishedAppIntegrationsRequest) {
+}
+
+func (newState *ListPublishedAppIntegrationsRequest) SyncEffectiveFieldsDuringRead(existingState ListPublishedAppIntegrationsRequest) {
+}
+
 // List service principal secrets
 type ListServicePrincipalSecretsRequest struct {
+	// An opaque page token which was the `next_page_token` in the response of
+	// the previous request to list the secrets for this service principal.
+	// Provide this token to retrieve the next page of secret entries. When
+	// providing a `page_token`, all other parameters provided to the request
+	// must match the previous request. To list all of the secrets for a service
+	// principal, it is necessary to continue requesting pages of entries until
+	// the response contains no `next_page_token`. Note that the number of
+	// entries returned must not be used to determine when the listing is
+	// complete.
+	PageToken types.String `tfsdk:"-"`
 	// The service principal ID.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *ListServicePrincipalSecretsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalSecretsRequest) {
+}
+
+func (newState *ListServicePrincipalSecretsRequest) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsRequest) {
+}
+
 type ListServicePrincipalSecretsResponse struct {
+	// A token, which can be sent as `page_token` to retrieve the next page.
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// List of the secrets
 	Secrets []SecretInfo `tfsdk:"secrets" tf:"optional"`
+}
+
+func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalSecretsResponse) {
+}
+
+func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsResponse) {
 }
 
 type PublishedAppOutput struct {
@@ -232,6 +394,12 @@ type PublishedAppOutput struct {
 	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
 }
 
+func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedAppOutput) {
+}
+
+func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringRead(existingState PublishedAppOutput) {
+}
+
 type SecretInfo struct {
 	// UTC time when the secret was created
 	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
@@ -245,11 +413,23 @@ type SecretInfo struct {
 	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 }
 
+func (newState *SecretInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretInfo) {
+}
+
+func (newState *SecretInfo) SyncEffectiveFieldsDuringRead(existingState SecretInfo) {
+}
+
 type TokenAccessPolicy struct {
 	// access token time to live in minutes
 	AccessTokenTtlInMinutes types.Int64 `tfsdk:"access_token_ttl_in_minutes" tf:"optional"`
 	// refresh token time to live in minutes
 	RefreshTokenTtlInMinutes types.Int64 `tfsdk:"refresh_token_ttl_in_minutes" tf:"optional"`
+}
+
+func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessPolicy) {
+}
+
+func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringRead(existingState TokenAccessPolicy) {
 }
 
 type UpdateCustomAppIntegration struct {
@@ -258,17 +438,41 @@ type UpdateCustomAppIntegration struct {
 	// integration
 	RedirectUrls []types.String `tfsdk:"redirect_urls" tf:"optional"`
 	// Token access policy to be updated in the custom OAuth app integration
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+}
+
+func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegration) {
+}
+
+func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegration) {
 }
 
 type UpdateCustomAppIntegrationOutput struct {
 }
 
+func (newState *UpdateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegrationOutput) {
+}
+
+func (newState *UpdateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegrationOutput) {
+}
+
 type UpdatePublishedAppIntegration struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// Token access policy to be updated in the published OAuth app integration
-	TokenAccessPolicy *TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional"`
+	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+}
+
+func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegration) {
+}
+
+func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegration) {
 }
 
 type UpdatePublishedAppIntegrationOutput struct {
+}
+
+func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegrationOutput) {
+}
+
+func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegrationOutput) {
 }

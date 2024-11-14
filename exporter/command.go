@@ -41,8 +41,9 @@ func (ic *importContext) allServicesAndListing() (string, string) {
 			listing[ir.Service] = struct{}{}
 		}
 	}
-	// We need this to specify default listings of UC objects...
-	for _, ir := range []string{"uc-schemas", "uc-models", "uc-tables", "uc-volumes"} {
+	// We need this to specify default listings of UC & Workspace objects...
+	for _, ir := range []string{"uc-schemas", "uc-models", "uc-tables", "uc-volumes",
+		"notebooks", "directories", "wsfiles"} {
 		listing[ir] = struct{}{}
 	}
 	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")
@@ -130,6 +131,8 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
 		"Generate Databricks provider declaration.")
+	flags.BoolVar(&ic.filterDirectoriesDuringWorkspaceWalking, "filterDirectoriesDuringWorkspaceWalking", false,
+		"Apply filtering to directory names during workspace walking")
 	flags.StringVar(&ic.notebooksFormat, "notebooksFormat", "SOURCE",
 		"Format to export notebooks: SOURCE, DBC, JUPYTER. Default: SOURCE")
 	services, listing := ic.allServicesAndListing()
@@ -142,6 +145,12 @@ func Run(args ...string) error {
 			"`-services` parameter controls which transitive dependencies will be processed. "+
 			"We recommend limiting services with `-listing` more often, than `-services`.")
 	flags.StringVar(&ic.match, "match", "", "Match resource names during listing operation. "+
+		"This filter applies to all resources that are getting listed, so if you want to import "+
+		"all dependencies of just one cluster, specify -listing=compute")
+	flags.StringVar(&ic.matchRegexStr, "matchRegex", "", "Match resource names during listing operation against a regex. "+
+		"This filter applies to all resources that are getting listed, so if you want to import "+
+		"all dependencies of just one cluster, specify -listing=compute")
+	flags.StringVar(&ic.excludeRegexStr, "excludeRegex", "", "Exclude resource names matching regex during listing operation. "+
 		"This filter applies to all resources that are getting listed, so if you want to import "+
 		"all dependencies of just one cluster, specify -listing=compute")
 	prefix := ""

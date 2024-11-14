@@ -58,7 +58,7 @@ resource "databricks_permissions" "dashboard_usage" {
 	return templateString
 }
 
-// Altough EmbedCredentials is an optional field, please specify its value if you want to modify it.
+// Although EmbedCredentials is an optional field, please specify its value if you want to modify it.
 func (t *templateStruct) SetAttributes(mapper map[string]string) templateStruct {
 	// Switch case for each attribute. If it is set in the mapper, set it in the struct
 	if val, ok := mapper["display_name"]; ok {
@@ -89,7 +89,7 @@ func (t *templateStruct) SetAttributes(mapper map[string]string) templateStruct 
 func TestAccBasicDashboard(t *testing.T) {
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
@@ -119,7 +119,7 @@ func TestAccBasicDashboard(t *testing.T) {
 func TestAccDashboardWithSerializedJSON(t *testing.T) {
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
@@ -142,7 +142,7 @@ func TestAccDashboardWithSerializedJSON(t *testing.T) {
 			require.NoError(t, err)
 			return nil
 		}),
-	}, step{
+	}, Step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}`,
 			"embed_credentials":    "true",
@@ -174,7 +174,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 	fileName := tmpDir + "/Dashboard.json"
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		PreConfig: func() {
 			os.Mkdir(tmpDir, 0755)
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"), 0644)
@@ -200,7 +200,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 			require.NoError(t, err)
 			return nil
 		}),
-	}, step{
+	}, Step{
 		PreConfig: func() {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
 		},
@@ -231,7 +231,7 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 	initial_update_time := ""
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
@@ -254,7 +254,7 @@ func TestAccDashboardWithNoChange(t *testing.T) {
 			initial_update_time = dashboard.UpdateTime
 			return nil
 		}),
-	}, step{
+	}, Step{
 		Template: makeTemplate(template),
 		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
@@ -284,7 +284,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 	etag := ""
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":         displayName,
 			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
@@ -310,16 +310,19 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			etag = dashboard.Etag
 			return nil
 		}),
-	}, step{
+	}, Step{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
 			_, err = w.Lakeview.Update(context.Background(), dashboards.UpdateDashboardRequest{
-				DashboardId:         dashboard_id,
-				DisplayName:         display_name,
-				Etag:                etag,
-				WarehouseId:         warehouse_id,
-				SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
+				DashboardId: dashboard_id,
+				Dashboard: &dashboards.Dashboard{
+					DashboardId:         dashboard_id,
+					DisplayName:         display_name,
+					Etag:                etag,
+					WarehouseId:         warehouse_id,
+					SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
+				},
 			})
 			require.NoError(t, err)
 		},
@@ -355,7 +358,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 	fileName := tmpDir + "/Dashboard.json"
 	var template templateStruct
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		PreConfig: func() {
 			os.Mkdir(tmpDir, 0755)
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page in file\"}]}"), 0644)
@@ -388,7 +391,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			require.Equal(t, publish_dash.EmbedCredentials, false)
 			return nil
 		}),
-	}, step{
+	}, Step{
 		PreConfig: func() {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
 		},
@@ -414,16 +417,19 @@ func TestAccDashboardTestAll(t *testing.T) {
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			return nil
 		}),
-	}, step{
+	}, Step{
 		PreConfig: func() {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
 			_, err = w.Lakeview.Update(context.Background(), dashboards.UpdateDashboardRequest{
-				DashboardId:         dashboard_id,
-				DisplayName:         display_name,
-				Etag:                etag,
-				WarehouseId:         warehouse_id,
-				SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
+				DashboardId: dashboard_id,
+				Dashboard: &dashboards.Dashboard{
+					DashboardId:         dashboard_id,
+					DisplayName:         display_name,
+					Etag:                etag,
+					WarehouseId:         warehouse_id,
+					SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
+				},
 			})
 			require.NoError(t, err)
 		},
@@ -444,7 +450,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			require.NoError(t, err)
 			return nil
 		}),
-	}, step{
+	}, Step{
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"embed_credentials": "true",
 			"parent_path":       "/Shared/Teams",
@@ -466,7 +472,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			return nil
 		}),
-	}, step{
+	}, Step{
 		PreConfig: func() {
 			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified again\"}]}"), 0644)
 		},
@@ -489,5 +495,21 @@ func TestAccDashboardTestAll(t *testing.T) {
 			assert.NotEqual(t, "", dashboard.SerializedDashboard)
 			return nil
 		}),
+	})
+}
+
+func TestAccDashboardWithWorkspacePrefix(t *testing.T) {
+	var template templateStruct
+
+	// Test that the dashboard can use a /Workspace prefix on the parent path and not trigger recreation.
+	// If this does NOT work, the test fails with an error that the non-refresh plan is non-empty.
+
+	WorkspaceLevel(t, Step{
+		Template: makeTemplate(template.SetAttributes(map[string]string{
+			"display_name":         fmt.Sprintf("Test Dashboard - %s", qa.RandomName()),
+			"warehouse_id":         "{env.TEST_DEFAULT_WAREHOUSE_ID}",
+			"parent_path":          "/Workspace/Shared/provider-test",
+			"serialized_dashboard": `{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}`,
+		})),
 	})
 }

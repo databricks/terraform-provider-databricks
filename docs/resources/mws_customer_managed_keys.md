@@ -3,7 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_customer_managed_keys Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
+-> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 This resource to configure KMS keys for new workspaces within AWS or GCP. This is to support the following features:
 
@@ -14,7 +14,7 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 ## Example Usage
 
--> **Note** If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the previous behaviour.
+-> If you've used the resource before, please add `use_cases = ["MANAGED_SERVICES"]` to keep the previous behaviour.
 
 ### Customer-managed key for managed services
 
@@ -109,6 +109,8 @@ variable "databricks_account_id" {
 variable "databricks_cross_account_role" {
   description = "AWS ARN for the Databricks cross account role"
 }
+
+data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "databricks_storage_cmk" {
   version = "2012-10-17"
@@ -251,7 +253,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+!> Importing this resource is not currently supported.
 
 ## Related Resources
 

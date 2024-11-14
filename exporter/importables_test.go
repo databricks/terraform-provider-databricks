@@ -25,6 +25,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/permissions"
+	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	dlt_pipelines "github.com/databricks/terraform-provider-databricks/pipelines"
@@ -220,8 +221,8 @@ func TestPermissions(t *testing.T) {
 	assert.Equal(t, "abc", name)
 
 	d.MarkNewResource()
-	err := common.StructToData(permissions.PermissionsEntity{
-		AccessControlList: []permissions.AccessControlChange{
+	err := common.StructToData(entity.PermissionsEntity{
+		AccessControlList: []iam.AccessControlRequest{
 			{
 				UserName: "a",
 			},
@@ -1083,7 +1084,8 @@ func TestNotebookGeneration(t *testing.T) {
 		},
 	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
-		err := resourcesMap["databricks_notebook"].List(ic)
+		ic.enableListing("notebooks")
+		err := listWorkspaceObjects(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
@@ -1126,7 +1128,8 @@ func TestNotebookGenerationJupyter(t *testing.T) {
 		},
 	}, "notebooks", false, func(ic *importContext) {
 		ic.notebooksFormat = "JUPYTER"
-		err := resourcesMap["databricks_notebook"].List(ic)
+		ic.enableListing("notebooks")
+		err := listWorkspaceObjects(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
@@ -1183,7 +1186,8 @@ func TestNotebookGenerationBadCharacters(t *testing.T) {
 	}, "notebooks,directories", true, func(ic *importContext) {
 		ic.notebooksFormat = "SOURCE"
 		ic.enableServices("notebooks")
-		err := resourcesMap["databricks_notebook"].List(ic)
+		ic.enableListing("notebooks")
+		err := listWorkspaceObjects(ic)
 		assert.NoError(t, err)
 		ic.waitGroup.Wait()
 		ic.closeImportChannels()
@@ -1230,7 +1234,8 @@ func TestDirectoryGeneration(t *testing.T) {
 			},
 		},
 	}, "directories", false, func(ic *importContext) {
-		err := resourcesMap["databricks_directory"].List(ic)
+		ic.enableListing("directories")
+		err := listWorkspaceObjects(ic)
 		assert.NoError(t, err)
 
 		ic.waitGroup.Wait()
@@ -1338,6 +1343,7 @@ func TestDbfsFileGeneration(t *testing.T) {
 	})
 }
 
+// TODO: remove it completely after we remove support for legacy dashboards
 func TestSqlListObjects(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -1364,7 +1370,7 @@ func TestIncrementalListDLT(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/pipelines?max_results=50",
+			Resource: "/api/2.0/pipelines?max_results=100",
 			Response: pipelines.ListPipelinesResponse{
 				Statuses: []pipelines.PipelineStateInfo{
 					{
@@ -1423,6 +1429,10 @@ func TestListSystemSchemasSuccess(t *testing.T) {
 						State:  catalog.SystemSchemaInfoStateEnableCompleted,
 					},
 					{
+						Schema: "information_schema",
+						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+					},
+					{
 						Schema: "marketplace",
 						State:  catalog.SystemSchemaInfoStateAvailable,
 					},
@@ -1474,6 +1484,34 @@ func TestListUcAllowListSuccess(t *testing.T) {
 	err := resourcesMap["databricks_artifact_allowlist"].List(ic)
 	assert.NoError(t, err)
 	assert.Equal(t, len(ic.testEmits), 3)
+	// Test ignore function
+	d := tfcatalog.ResourceArtifactAllowlist().ToResource().TestResourceData()
+	d.MarkNewResource()
+	d.Set("id", "abc")
+	res := ic.Importables["databricks_artifact_allowlist"].Ignore(ic, &resource{
+		ID:   "abc",
+		Data: d,
+	})
+	assert.True(t, res)
+	assert.Contains(t, ic.ignoredResources, "databricks_artifact_allowlist. id=abc")
+	// Test ignore function, with blocks
+	err = common.StructToData(
+		tfcatalog.ArtifactAllowlistInfo{
+			ArtifactType: "INIT_SCRIPT",
+			ArtifactMatchers: []catalog.ArtifactMatcher{
+				{
+					Artifact:  "/Volumes/inits",
+					MatchType: "PREFIX_MATCH",
+				},
+			},
+		},
+		tfcatalog.ResourceArtifactAllowlist().Schema, d)
+	assert.NoError(t, err)
+	res = ic.Importables["databricks_artifact_allowlist"].Ignore(ic, &resource{
+		ID:   "abc",
+		Data: d,
+	})
+	assert.False(t, res)
 }
 
 func TestEmitSqlParent(t *testing.T) {
@@ -1488,7 +1526,7 @@ func TestEmitSqlParent(t *testing.T) {
 
 func TestEmitFilesFromSlice(t *testing.T) {
 	ic := importContextForTest()
-	ic.enableServices("storage,notebooks")
+	ic.enableServices("storage,notebooks,wsfiles")
 	ic.emitFilesFromSlice([]string{
 		"dbfs:/FileStore/test.txt",
 		"/Workspace/Shared/test.txt",
@@ -1501,7 +1539,7 @@ func TestEmitFilesFromSlice(t *testing.T) {
 
 func TestEmitFilesFromMap(t *testing.T) {
 	ic := importContextForTest()
-	ic.enableServices("storage,notebooks")
+	ic.enableServices("storage,notebooks,wsfiles")
 	ic.emitFilesFromMap(map[string]string{
 		"k1": "dbfs:/FileStore/test.txt",
 		"k2": "/Workspace/Shared/test.txt",

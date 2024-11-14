@@ -3,6 +3,7 @@ package tfschema
 import (
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -13,6 +14,7 @@ type BoolAttributeBuilder struct {
 	Computed           bool
 	DeprecationMessage string
 	Validators         []validator.Bool
+	PlanModifiers      []planmodifier.Bool
 }
 
 func (a BoolAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
@@ -34,10 +36,11 @@ func (a BoolAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 		DeprecationMessage: a.DeprecationMessage,
 		Computed:           a.Computed,
 		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
 	}
 }
 
-func (a BoolAttributeBuilder) SetOptional() AttributeBuilder {
+func (a BoolAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -46,7 +49,7 @@ func (a BoolAttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a BoolAttributeBuilder) SetRequired() AttributeBuilder {
+func (a BoolAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -55,7 +58,7 @@ func (a BoolAttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a BoolAttributeBuilder) SetSensitive() AttributeBuilder {
+func (a BoolAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -63,7 +66,7 @@ func (a BoolAttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a BoolAttributeBuilder) SetComputed() AttributeBuilder {
+func (a BoolAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -71,7 +74,7 @@ func (a BoolAttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a BoolAttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a BoolAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -81,12 +84,17 @@ func (a BoolAttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a BoolAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a BoolAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a BoolAttributeBuilder) AddValidator(v validator.Bool) AttributeBuilder {
+func (a BoolAttributeBuilder) AddValidator(v validator.Bool) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
+	return a
+}
+
+func (a BoolAttributeBuilder) AddPlanModifier(v planmodifier.Bool) BaseSchemaBuilder {
+	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

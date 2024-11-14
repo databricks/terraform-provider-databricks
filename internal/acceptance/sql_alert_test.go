@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestAccAlert(t *testing.T) {
-	workspaceLevel(t, step{
+func TestAccSqlAlert(t *testing.T) {
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_sql_query" "this" {
 			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"
@@ -31,7 +31,7 @@ func TestAccAlert(t *testing.T) {
 				muted = false
 			}
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_sql_query" "this" {
 			data_source_id = "{env.TEST_DEFAULT_WAREHOUSE_DATASOURCE_ID}"

@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -16,6 +17,7 @@ type MapAttributeBuilder struct {
 	Computed           bool
 	DeprecationMessage string
 	Validators         []validator.Map
+	PlanModifiers      []planmodifier.Map
 }
 
 func (a MapAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
@@ -39,10 +41,11 @@ func (a MapAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 		DeprecationMessage: a.DeprecationMessage,
 		Computed:           a.Computed,
 		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
 	}
 }
 
-func (a MapAttributeBuilder) SetOptional() AttributeBuilder {
+func (a MapAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -51,7 +54,7 @@ func (a MapAttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetRequired() AttributeBuilder {
+func (a MapAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -60,7 +63,7 @@ func (a MapAttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetSensitive() AttributeBuilder {
+func (a MapAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -68,7 +71,7 @@ func (a MapAttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetComputed() AttributeBuilder {
+func (a MapAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -76,7 +79,7 @@ func (a MapAttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a MapAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -86,12 +89,17 @@ func (a MapAttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a MapAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a MapAttributeBuilder) AddValidator(v validator.Map) AttributeBuilder {
+func (a MapAttributeBuilder) AddValidator(v validator.Map) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
+	return a
+}
+
+func (a MapAttributeBuilder) AddPlanModifier(v planmodifier.Map) BaseSchemaBuilder {
+	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

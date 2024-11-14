@@ -12,9 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var nothingPinned = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+	Response: compute.ListClustersResponse{
+		Clusters: []compute.ClusterDetails{},
+	},
+}
+
 func TestResourceClusterCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -45,20 +54,6 @@ func TestResourceClusterCreate(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
-				},
-			},
-			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
 				Response: compute.ClusterLibraryStatuses{
@@ -79,6 +74,7 @@ func TestResourceClusterCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, false, d.Get("is_pinned"))
 }
 
 func TestResourceClusterCreatePinned(t *testing.T) {
@@ -128,24 +124,18 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events: []compute.ClusterEvent{
-						{
-							ClusterId: "abc",
-							Timestamp: int64(123),
-							Type:      compute.EventTypePinned,
-							Details:   &compute.EventDetails{},
-						},
-					},
-					TotalCount: 1,
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{{
+						ClusterId:              "abc",
+						NumWorkers:             100,
+						ClusterName:            "Shared Autoscaling",
+						SparkVersion:           "7.1-scala12",
+						NodeTypeId:             "i3.xlarge",
+						AutoterminationMinutes: 15,
+						State:                  compute.StateRunning,
+					}},
 				},
 			},
 		},
@@ -162,11 +152,124 @@ func TestResourceClusterCreatePinned(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id())
+	assert.Equal(t, true, d.Get("is_pinned"))
+}
+
+func TestResourceClusterCreateErrorFollowedByDeletion(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/permanent-delete",
+				ExpectedRequest: compute.PermanentDeleteCluster{
+					ClusterId: "abc",
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "failed to reach RUNNING, got TERMINATED")
+	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceClusterCreateErrorFollowedByDeletionError(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/create",
+				ExpectedRequest: compute.CreateCluster{
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:              "abc",
+					NumWorkers:             100,
+					ClusterName:            "Shared Autoscaling",
+					SparkVersion:           "7.1-scala12",
+					NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateTerminated,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/clusters/permanent-delete",
+				ExpectedRequest: compute.PermanentDeleteCluster{
+					ClusterId: "abc",
+				},
+				Status: 500,
+				Response: common.APIErrorBody{
+					ErrorCode: "INTERNAL_ERROR",
+					Message:   "Internal error happened",
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			"node_type_id":            "i3.xlarge",
+			"num_workers":             100,
+		},
+	}.Apply(t)
+	assert.ErrorContains(t, err, "failed to create cluster: failed to reach RUNNING, got TERMINATED:  and failed to delete it during cleanup: Internal error happened")
+	assert.Equal(t, "abc", d.Id())
 }
 
 func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -193,20 +296,6 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -363,6 +452,7 @@ func TestResourceClusterCreate_WithLibraries(t *testing.T) {
 func TestResourceClusterCreatePhoton(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -395,20 +485,6 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
-				},
-			},
-			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
 				Response: compute.ClusterLibraryStatuses{
@@ -435,6 +511,7 @@ func TestResourceClusterCreatePhoton(t *testing.T) {
 func TestResourceClusterCreateNoWait_WithLibraries(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -460,20 +537,6 @@ func TestResourceClusterCreateNoWait_WithLibraries(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateUnknown,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -527,6 +590,7 @@ func TestResourceClusterCreateNoWait_WithLibraries(t *testing.T) {
 func TestResourceClusterCreateNoWait(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -554,20 +618,6 @@ func TestResourceClusterCreateNoWait(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateUnknown,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 		},
@@ -617,6 +667,7 @@ func TestResourceClusterCreate_Error(t *testing.T) {
 func TestResourceClusterRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/clusters/get?cluster_id=abc",
@@ -631,20 +682,6 @@ func TestResourceClusterRead(t *testing.T) {
 					Autoscale: &compute.AutoScale{
 						MaxWorkers: 4,
 					},
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 		},
@@ -714,6 +751,7 @@ func TestResourceClusterRead_Error(t *testing.T) {
 func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -729,20 +767,6 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -781,6 +805,7 @@ func TestResourceClusterUpdate_ResizeForAutoscalingToNumWorkersCluster(t *testin
 func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -793,20 +818,6 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -848,6 +859,7 @@ func TestResourceClusterUpdate_ResizeForNumWorkersToAutoscalingCluster(t *testin
 func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -860,20 +872,6 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateTerminated,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -912,6 +910,7 @@ func TestResourceClusterUpdate_EditNumWorkersWhenClusterTerminated(t *testing.T)
 func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -936,20 +935,6 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 						MinWorkers: 4,
 						MaxWorkers: 10,
 					},
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 		},
@@ -983,6 +968,7 @@ func TestResourceClusterUpdate_ResizeAutoscale(t *testing.T) {
 func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -995,20 +981,6 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -1043,6 +1015,7 @@ func TestResourceClusterUpdate_ResizeNumWorkers(t *testing.T) {
 func TestResourceClusterUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1055,20 +1028,6 @@ func TestResourceClusterUpdate(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -1123,6 +1082,7 @@ func TestResourceClusterUpdate(t *testing.T) {
 func TestResourceClusterUpdate_WhileScaling(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1135,20 +1095,6 @@ func TestResourceClusterUpdate_WhileScaling(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -1219,6 +1165,7 @@ func TestResourceClusterUpdate_WhileScaling(t *testing.T) {
 func TestResourceClusterUpdateWithPinned(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1231,20 +1178,6 @@ func TestResourceClusterUpdateWithPinned(t *testing.T) {
 					NodeTypeId:             "i3.xlarge",
 					AutoterminationMinutes: 15,
 					State:                  compute.StateRunning,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -1335,6 +1268,7 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 	}
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			terminated, // 1 of ...
 			{
 				Method:   "POST",
@@ -1379,20 +1313,6 @@ func TestResourceClusterUpdate_LibrariesChangeOnTerminatedCluster(t *testing.T) 
 					SparkVersion: "7.1-scala12",
 					NodeTypeId:   "i3.xlarge",
 					State:        compute.StateTerminated,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{ // start cluster before libs install
@@ -1502,6 +1422,7 @@ func TestResourceClusterUpdate_Error(t *testing.T) {
 func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1519,20 +1440,6 @@ func TestResourceClusterUpdate_AutoAz(t *testing.T) {
 						FirstOnDemand: 1,
 						ZoneId:        "us-west-2a",
 					},
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -1651,6 +1558,7 @@ func TestResourceClusterDelete_Error(t *testing.T) {
 func TestResourceClusterCreate_SingleNode(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "POST",
 				Resource: "/api/2.1/clusters/create",
@@ -1672,20 +1580,6 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 				Response: compute.ClusterDetails{
 					ClusterId: "abc",
 					State:     compute.StateRunning,
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{
@@ -1749,8 +1643,7 @@ func TestResourceClusterCreate_SingleNodeFail(t *testing.T) {
 			"is_pinned":               false,
 		},
 	}.Apply(t)
-	assert.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+	assert.EqualError(t, err, numWorkerErr)
 }
 
 func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
@@ -1789,8 +1682,7 @@ func TestResourceClusterUpdate_FailNumWorkersZero(t *testing.T) {
 			"num_workers":             0,
 		},
 	}.Apply(t)
-	assert.Error(t, err)
-	require.Equal(t, true, strings.Contains(err.Error(), "NumWorkers could be 0 only for SingleNode clusters"))
+	assert.EqualError(t, err, numWorkerErr)
 }
 
 func TestModifyClusterRequestAws(t *testing.T) {
@@ -1853,16 +1745,13 @@ func TestReadOnStoppedClusterWithLibrariesDoesNotFail(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceCluster(),
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/clusters/get?cluster_id=foo",
 				Response: compute.ClusterDetails{
 					State: compute.StateTerminated,
 				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
 			},
 			{
 				Method:       "GET",
@@ -1899,10 +1788,6 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 				},
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-			},
-			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=foo",
 				Response: compute.ClusterLibraryStatuses{
@@ -1936,6 +1821,7 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 					},
 				},
 			},
+			nothingPinned,
 		},
 		Read: true,
 		ID:   "foo",
@@ -1945,6 +1831,7 @@ func TestRefreshOnRunningClusterWithFailedLibraryUninstallsIt(t *testing.T) {
 func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			nothingPinned,
 			{
 				Method:       "GET",
 				Resource:     "/api/2.1/clusters/get?cluster_id=abc",
@@ -1960,20 +1847,6 @@ func TestResourceClusterUpdate_LocalSsdCount(t *testing.T) {
 					GcpAttributes: &compute.GcpAttributes{
 						LocalSsdCount: 2,
 					},
-				},
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "abc",
-					Limit:      1,
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-				},
-				Response: compute.GetEventsResponse{
-					Events:     []compute.ClusterEvent{},
-					TotalCount: 0,
 				},
 			},
 			{

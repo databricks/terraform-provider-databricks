@@ -32,7 +32,7 @@ func getServicePrincipalResource(t *testing.T) string {
 func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
 	loadAccountEnv(t)
 	spResource := getServicePrincipalResource(t)
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: spResource + `
 		resource "databricks_group" "this" {
 			display_name = "Group {var.RANDOM}"
@@ -69,7 +69,7 @@ func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
 
 func TestMwsAccAccountGroupRuleSetsFullLifeCycle(t *testing.T) {
 	username := qa.RandomEmail()
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_user" "this" {
 			user_name = "` + username + `"

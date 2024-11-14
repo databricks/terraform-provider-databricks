@@ -3,6 +3,7 @@ package tfschema
 import (
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -13,6 +14,7 @@ type Float64AttributeBuilder struct {
 	Computed           bool
 	DeprecationMessage string
 	Validators         []validator.Float64
+	PlanModifiers      []planmodifier.Float64
 }
 
 func (a Float64AttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
@@ -34,10 +36,11 @@ func (a Float64AttributeBuilder) BuildResourceAttribute() schema.Attribute {
 		DeprecationMessage: a.DeprecationMessage,
 		Computed:           a.Computed,
 		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
 	}
 }
 
-func (a Float64AttributeBuilder) SetOptional() AttributeBuilder {
+func (a Float64AttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -46,7 +49,7 @@ func (a Float64AttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetRequired() AttributeBuilder {
+func (a Float64AttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -55,7 +58,7 @@ func (a Float64AttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetSensitive() AttributeBuilder {
+func (a Float64AttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -63,7 +66,7 @@ func (a Float64AttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetComputed() AttributeBuilder {
+func (a Float64AttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -71,7 +74,7 @@ func (a Float64AttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a Float64AttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -81,12 +84,17 @@ func (a Float64AttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a Float64AttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a Float64AttributeBuilder) AddValidator(v validator.Float64) AttributeBuilder {
+func (a Float64AttributeBuilder) AddValidator(v validator.Float64) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
+	return a
+}
+
+func (a Float64AttributeBuilder) AddPlanModifier(v planmodifier.Float64) BaseSchemaBuilder {
+	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

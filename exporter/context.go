@@ -78,28 +78,33 @@ type importContext struct {
 	Scope importedResources
 
 	// command-line resources (immutable, or set by the single thread)
-	includeUserDomains       bool
-	importAllUsers           bool
-	exportDeletedUsersAssets bool
-	incremental              bool
-	mounts                   bool
-	noFormat                 bool
-	nativeImportSupported    bool
-	services                 map[string]struct{}
-	listing                  map[string]struct{}
-	match                    string
-	lastActiveDays           int64
-	lastActiveMs             int64
-	generateDeclaration      bool
-	exportSecrets            bool
-	meAdmin                  bool
-	meUserName               string
-	prefix                   string
-	accountLevel             bool
-	shImports                map[string]bool
-	notebooksFormat          string
-	updatedSinceStr          string
-	updatedSinceMs           int64
+	includeUserDomains                      bool
+	importAllUsers                          bool
+	exportDeletedUsersAssets                bool
+	incremental                             bool
+	mounts                                  bool
+	noFormat                                bool
+	nativeImportSupported                   bool
+	services                                map[string]struct{}
+	listing                                 map[string]struct{}
+	match                                   string
+	matchRegexStr                           string
+	matchRegex                              *regexp.Regexp
+	excludeRegexStr                         string
+	excludeRegex                            *regexp.Regexp
+	filterDirectoriesDuringWorkspaceWalking bool
+	lastActiveDays                          int64
+	lastActiveMs                            int64
+	generateDeclaration                     bool
+	exportSecrets                           bool
+	meAdmin                                 bool
+	meUserName                              string
+	prefix                                  string
+	accountLevel                            bool
+	shImports                               map[string]bool
+	notebooksFormat                         string
+	updatedSinceStr                         string
+	updatedSinceMs                          int64
 
 	waitGroup *sync.WaitGroup
 
@@ -200,11 +205,12 @@ var goroutinesNumber = map[string]int{
 	"databricks_dbfs_file":         3,
 	"databricks_user":              1,
 	"databricks_service_principal": 1,
+	"databricks_dashboard":         4,
 	"databricks_sql_dashboard":     3,
 	"databricks_sql_widget":        4,
 	"databricks_sql_visualization": 4,
-	"databricks_sql_query":         5,
-	"databricks_sql_alert":         2,
+	"databricks_query":             6,
+	"databricks_alert":             2,
 	"databricks_permissions":       11,
 }
 
@@ -296,6 +302,24 @@ func (ic *importContext) Run() error {
 		return fmt.Errorf("no services to import")
 	}
 
+	if ic.matchRegexStr != "" {
+		log.Printf("[DEBUG] Using regex '%s' to filter resources", ic.matchRegexStr)
+		re, err := regexp.Compile(ic.matchRegexStr)
+		if err != nil {
+			log.Printf("[ERROR] can't compile regex '%s': %v", ic.matchRegexStr, err)
+			return err
+		}
+		ic.matchRegex = re
+	}
+	if ic.excludeRegexStr != "" {
+		log.Printf("[DEBUG] Using regex '%s' to filter resources", ic.excludeRegexStr)
+		re, err := regexp.Compile(ic.excludeRegexStr)
+		if err != nil {
+			log.Printf("[ERROR] can't compile regex '%s': %v", ic.excludeRegexStr, err)
+			return err
+		}
+		ic.excludeRegex = re
+	}
 	if ic.incremental {
 		if ic.updatedSinceStr == "" {
 			ic.updatedSinceStr = getLastRunString(statsFileName)
@@ -374,14 +398,30 @@ func (ic *importContext) Run() error {
 	ic.startImportChannels()
 
 	// Start listing of objects
+	listWorkspaceObjectsAlreadyRunning := false
 	for rnLoop, irLoop := range ic.Importables {
 		resourceName := rnLoop
 		ir := irLoop
+		// TODO: extend this to other services?  Like, Git Folders
+		if !ic.accountLevel && (ir.Service == "notebooks" || ir.Service == "wsfiles" || (ir.Service == "directories" && !ic.incremental)) {
+			if _, exists := ic.listing[ir.Service]; exists && !listWorkspaceObjectsAlreadyRunning {
+				ic.waitGroup.Add(1)
+				log.Printf("[DEBUG] Starting listing of workspace objects")
+				go func() {
+					if err := listWorkspaceObjects(ic); err != nil {
+						log.Printf("[ERROR] listing of workspace objects failed %s", err)
+					}
+					log.Print("[DEBUG] Finished listing of workspace objects")
+					ic.waitGroup.Done()
+				}()
+				listWorkspaceObjectsAlreadyRunning = true
+			}
+			continue
+		}
 		if ir.List == nil {
 			continue
 		}
-		_, exists := ic.listing[ir.Service]
-		if !exists {
+		if _, exists := ic.listing[ir.Service]; !exists {
 			log.Printf("[DEBUG] %s (%s service) is not part of listing", resourceName, ir.Service)
 			continue
 		}
@@ -598,17 +638,20 @@ func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
 	return ic.State.Has(r)
 }
 
-func (ic *importContext) setImportingState(s string, state bool) {
-	ic.importingMutex.Lock()
-	defer ic.importingMutex.Unlock()
-	ic.importing[s] = state
-}
-
 func (ic *importContext) Add(r *resource) {
 	if ic.HasInState(r, true) { // resource must exist and already marked as added
 		return
 	}
-	ic.setImportingState(r.String(), true) // mark resource as added
+	rString := r.String()
+	ic.importingMutex.Lock()
+	_, ok := ic.importing[rString]
+	if ok {
+		ic.importingMutex.Unlock()
+		log.Printf("[DEBUG] %s already being added", rString)
+		return
+	}
+	ic.importing[rString] = true // mark resource as added
+	ic.importingMutex.Unlock()
 	state := r.Data.State()
 	if state == nil {
 		log.Printf("[ERROR] state is nil for %s", r)
@@ -631,7 +674,6 @@ func (ic *importContext) Add(r *resource) {
 		Instances: []instanceApproximation{inst},
 		Resource:  r,
 	})
-	// in single-threaded scenario scope is toposorted
 	ic.Scope.Append(r)
 }
 
@@ -710,14 +752,25 @@ func (ic *importContext) Emit(r *resource) {
 		log.Printf("[DEBUG] %s already imported", r)
 		return
 	}
+	rString := r.String()
 	if ic.testEmits != nil {
 		log.Printf("[INFO] %s is emitted in test mode", r)
 		ic.testEmitsMutex.Lock()
-		ic.testEmits[r.String()] = true
+		ic.testEmits[rString] = true
 		ic.testEmitsMutex.Unlock()
 		return
 	}
-	ic.setImportingState(r.String(), false) // we're starting to add a new resource
+	// we need to check that we're not importing the same resource twice - this may happen under high concurrency
+	// for specific resources, for example, directories when they aren't part of the listing
+	ic.importingMutex.Lock()
+	res, ok := ic.importing[rString]
+	if ok {
+		ic.importingMutex.Unlock()
+		log.Printf("[DEBUG] %s already being imported: %v", rString, res)
+		return
+	}
+	ic.importing[rString] = false // // we're starting to add a new resource
+	ic.importingMutex.Unlock()
 	_, ok = ic.Resources[r.Resource]
 	if !ok {
 		log.Printf("[ERROR] %s is not available in provider", r)
@@ -728,8 +781,10 @@ func (ic *importContext) Emit(r *resource) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the account level export", r.Resource, ir.Service)
 		return
 	}
-	// TODO: add similar condition for checking workspace-level objects only. After new ACLs import is merged
-
+	if !ic.accountLevel && !ir.WorkspaceLevel {
+		log.Printf("[DEBUG] %s (%s service) is not part of the workspace level export", r.Resource, ir.Service)
+		return
+	}
 	// from here, it should be done by the goroutine...  send resource into the channel
 	ch, exists := ic.channels[r.Resource]
 	if exists {

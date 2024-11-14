@@ -16,10 +16,12 @@ func TestDashboardCreate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakeviewAPI().EXPECT()
 			e.Create(mock.Anything, dashboards.CreateDashboardRequest{
-				DisplayName:         "Dashboard name",
-				WarehouseId:         "abc",
-				ParentPath:          "/path",
-				SerializedDashboard: "serialized_json",
+				Dashboard: &dashboards.Dashboard{
+					DisplayName:         "Dashboard name",
+					WarehouseId:         "abc",
+					ParentPath:          "/path",
+					SerializedDashboard: "serialized_json",
+				},
 			}).Return(&dashboards.Dashboard{
 				DashboardId:         "xyz",
 				DisplayName:         "Dashboard name",
@@ -67,17 +69,21 @@ func TestDashboardCreate_NoParent(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			lv := w.GetMockLakeviewAPI().EXPECT()
 			lv.Create(mock.Anything, dashboards.CreateDashboardRequest{
-				DisplayName:         "Dashboard name",
-				WarehouseId:         "abc",
-				ParentPath:          "/path",
-				SerializedDashboard: "serialized_json",
+				Dashboard: &dashboards.Dashboard{
+					DisplayName:         "Dashboard name",
+					WarehouseId:         "abc",
+					ParentPath:          "/path",
+					SerializedDashboard: "serialized_json",
+				},
 			}).Return(nil, fmt.Errorf("Path (/path) doesn't exist.")).Once()
 			w.GetMockWorkspaceAPI().EXPECT().MkdirsByPath(mock.Anything, "/path").Return(nil)
 			lv.Create(mock.Anything, dashboards.CreateDashboardRequest{
-				DisplayName:         "Dashboard name",
-				WarehouseId:         "abc",
-				ParentPath:          "/path",
-				SerializedDashboard: "serialized_json",
+				Dashboard: &dashboards.Dashboard{
+					DisplayName:         "Dashboard name",
+					WarehouseId:         "abc",
+					ParentPath:          "/path",
+					SerializedDashboard: "serialized_json",
+				},
 			}).Return(&dashboards.Dashboard{
 				DashboardId:         "xyz",
 				DisplayName:         "Dashboard name",
@@ -154,10 +160,14 @@ func TestDashboardUpdate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockLakeviewAPI().EXPECT()
 			e.Update(mock.Anything, dashboards.UpdateDashboardRequest{
-				DashboardId:         "xyz",
-				DisplayName:         "Dashboard name",
-				WarehouseId:         "abc",
-				SerializedDashboard: "serialized_dashboard_updated",
+				DashboardId: "xyz",
+				Dashboard: &dashboards.Dashboard{
+					DashboardId:         "xyz",
+					DisplayName:         "Dashboard name",
+					WarehouseId:         "abc",
+					SerializedDashboard: "serialized_dashboard_updated",
+					ParentPath:          "/path",
+				},
 			}).Return(&dashboards.Dashboard{
 				DashboardId:         "xyz",
 				DisplayName:         "Dashboard name",

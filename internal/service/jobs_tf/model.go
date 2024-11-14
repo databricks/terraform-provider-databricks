@@ -22,11 +22,31 @@ type BaseJob struct {
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	// The id of the budget policy used by this job for cost attribution
+	// purposes. This may be set through (in order of precedence): 1. Budget
+	// admins through the account or workspace console 2. Jobs UI in the job
+	// details page and Jobs API using `budget_policy_id` 3. Inferred default
+	// based on accessible budget policies of the run_as identity on job
+	// creation or modification.
+	EffectiveBudgetPolicyId          types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
+	EffectiveEffectiveBudgetPolicyId types.String `tfsdk:"effective_effective_budget_policy_id" tf:"computed,optional"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// Settings for this job and all of its runs. These settings can be updated
 	// using the `resetJob` method.
-	Settings *JobSettings `tfsdk:"settings" tf:"optional"`
+	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
+}
+
+func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
+	newState.EffectiveEffectiveBudgetPolicyId = newState.EffectiveBudgetPolicyId
+	newState.EffectiveBudgetPolicyId = plan.EffectiveBudgetPolicyId
+}
+
+func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
+	newState.EffectiveEffectiveBudgetPolicyId = existingState.EffectiveEffectiveBudgetPolicyId
+	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
+		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
+	}
 }
 
 type BaseRun struct {
@@ -47,10 +67,10 @@ type BaseRun struct {
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance *ClusterInstance `tfsdk:"cluster_instance" tf:"optional"`
+	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional,object"`
 	// A snapshot of the job’s cluster specification when this run was
 	// created.
-	ClusterSpec *ClusterSpec `tfsdk:"cluster_spec" tf:"optional"`
+	ClusterSpec []ClusterSpec `tfsdk:"cluster_spec" tf:"optional,object"`
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
@@ -77,7 +97,7 @@ type BaseRun struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource *GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
@@ -98,7 +118,7 @@ type BaseRun struct {
 	// run_id of the original attempt; otherwise, it is the same as the run_id.
 	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id" tf:"optional"`
 	// The parameters used for this run.
-	OverridingParameters *RunParameters `tfsdk:"overriding_parameters" tf:"optional"`
+	OverridingParameters []RunParameters `tfsdk:"overriding_parameters" tf:"optional,object"`
 	// The time in milliseconds that the run has spent in the queue.
 	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
 	// The repair history of the run.
@@ -123,7 +143,7 @@ type BaseRun struct {
 	RunType types.String `tfsdk:"run_type" tf:"optional"`
 	// The cron schedule that triggered this run if it was triggered by the
 	// periodic scheduler.
-	Schedule *CronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional,object"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
 	// on new clusters this is the cluster creation time, for runs that run on
 	// existing clusters this time should be very short. The duration of a task
@@ -137,8 +157,10 @@ type BaseRun struct {
 	// task starts executing, for example, if the job is scheduled to run on a
 	// new cluster, this is the time the cluster creation call is issued.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
-	// The current state of the run.
-	State *RunState `tfsdk:"state" tf:"optional"`
+	// Deprecated. Please use the `status` field instead.
+	State []RunState `tfsdk:"state" tf:"optional,object"`
+	// The current status of the run
+	Status []RunStatus `tfsdk:"status" tf:"optional,object"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
 	Tasks []RunTask `tfsdk:"tasks" tf:"optional"`
@@ -154,7 +176,13 @@ type BaseRun struct {
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
 	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 	// Additional details about what triggered the run
-	TriggerInfo *TriggerInfo `tfsdk:"trigger_info" tf:"optional"`
+	TriggerInfo []TriggerInfo `tfsdk:"trigger_info" tf:"optional,object"`
+}
+
+func (newState *BaseRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseRun) {
+}
+
+func (newState *BaseRun) SyncEffectiveFieldsDuringRead(existingState BaseRun) {
 }
 
 type CancelAllRuns struct {
@@ -165,7 +193,19 @@ type CancelAllRuns struct {
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 }
 
+func (newState *CancelAllRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelAllRuns) {
+}
+
+func (newState *CancelAllRuns) SyncEffectiveFieldsDuringRead(existingState CancelAllRuns) {
+}
+
 type CancelAllRunsResponse struct {
+}
+
+func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelAllRunsResponse) {
+}
+
+func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringRead(existingState CancelAllRunsResponse) {
 }
 
 type CancelRun struct {
@@ -173,7 +213,19 @@ type CancelRun struct {
 	RunId types.Int64 `tfsdk:"run_id" tf:""`
 }
 
+func (newState *CancelRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRun) {
+}
+
+func (newState *CancelRun) SyncEffectiveFieldsDuringRead(existingState CancelRun) {
+}
+
 type CancelRunResponse struct {
+}
+
+func (newState *CancelRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRunResponse) {
+}
+
+func (newState *CancelRunResponse) SyncEffectiveFieldsDuringRead(existingState CancelRunResponse) {
 }
 
 type ClusterInstance struct {
@@ -197,6 +249,12 @@ type ClusterInstance struct {
 	SparkContextId types.String `tfsdk:"spark_context_id" tf:"optional"`
 }
 
+func (newState *ClusterInstance) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterInstance) {
+}
+
+func (newState *ClusterInstance) SyncEffectiveFieldsDuringRead(existingState ClusterInstance) {
+}
+
 type ClusterSpec struct {
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
@@ -208,10 +266,16 @@ type ClusterSpec struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries []compute.Library `tfsdk:"library" tf:"optional"`
+	Libraries compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+}
+
+func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
+}
+
+func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
 }
 
 type ConditionTask struct {
@@ -234,21 +298,38 @@ type ConditionTask struct {
 	Right types.String `tfsdk:"right" tf:""`
 }
 
+func (newState *ConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConditionTask) {
+}
+
+func (newState *ConditionTask) SyncEffectiveFieldsDuringRead(existingState ConditionTask) {
+}
+
 type Continuous struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 }
 
+func (newState *Continuous) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continuous) {
+}
+
+func (newState *Continuous) SyncEffectiveFieldsDuringRead(existingState Continuous) {
+}
+
 type CreateJob struct {
 	// List of permissions to set on the job.
 	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	// The id of the user specified budget policy to use for this job. If not
+	// specified, a default budget policy may be applied when creating or
+	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// used by this workload.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
-	Continuous *Continuous `tfsdk:"continuous" tf:"optional"`
+	Continuous []Continuous `tfsdk:"continuous" tf:"optional,object"`
 	// Deployment information for jobs managed by external sources.
-	Deployment *JobDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []JobDeployment `tfsdk:"deployment" tf:"optional,object"`
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description" tf:"optional"`
@@ -259,9 +340,13 @@ type CreateJob struct {
 	EditMode types.String `tfsdk:"edit_mode" tf:"optional"`
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
-	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// A list of task execution environment specifications that can be
-	// referenced by tasks of this job.
+	// referenced by serverless tasks of this job. An environment is required to
+	// be present for serverless tasks. For serverless notebook tasks, the
+	// environment is accessible in the notebook environment panel. For other
+	// serverless tasks, the task environment is required to be specified using
+	// environment_key in the task settings.
 	Environments []JobEnvironment `tfsdk:"environment" tf:"optional"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -277,9 +362,9 @@ type CreateJob struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource *GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health *JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
@@ -302,22 +387,22 @@ type CreateJob struct {
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// job.
-	NotificationSettings *JobNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// Job-level parameter definitions
 	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
-	Queue *QueueSettings `tfsdk:"queue" tf:"optional"`
-	// Write-only setting, available only in Create/Update/Reset and Submit
-	// calls. Specifies the user or service principal that the job runs as. If
-	// not specified, the job runs as the user who created the job.
+	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
+	// Write-only setting. Specifies the user, service principal or group that
+	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
+	// user who created the job/pipeline.
 	//
-	// Only `user_name` or `service_principal_name` can be specified. If both
-	// are specified, an error is thrown.
-	RunAs *JobRunAs `tfsdk:"run_as" tf:"optional"`
+	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
+	// be specified. If not, an error is thrown.
+	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
 	// or sending an API request to `runNow`.
-	Schedule *CronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional,object"`
 	// A map of tags associated with the job. These are forwarded to the cluster
 	// as cluster tags for jobs clusters, and are subject to the same
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
@@ -331,16 +416,28 @@ type CreateJob struct {
 	// A configuration to trigger a run when certain conditions are met. The
 	// default behavior is that the job runs only when triggered by clicking
 	// “Run Now” in the Jobs UI or sending an API request to `runNow`.
-	Trigger *TriggerSettings `tfsdk:"trigger" tf:"optional"`
+	Trigger []TriggerSettings `tfsdk:"trigger" tf:"optional,object"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
-	WebhookNotifications *WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
+}
+
+func (newState *CreateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateJob) {
+}
+
+func (newState *CreateJob) SyncEffectiveFieldsDuringRead(existingState CreateJob) {
 }
 
 // Job was created successfully
 type CreateResponse struct {
 	// The canonical identifier for the newly created job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
 type CronSchedule struct {
@@ -358,6 +455,12 @@ type CronSchedule struct {
 	TimezoneId types.String `tfsdk:"timezone_id" tf:""`
 }
 
+func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
+}
+
+func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
+}
+
 type DbtOutput struct {
 	// An optional map of headers to send when retrieving the artifact from the
 	// `artifacts_link`.
@@ -366,6 +469,12 @@ type DbtOutput struct {
 	// valid for a limited time (30 minutes). This information is only available
 	// after the run has finished.
 	ArtifactsLink types.String `tfsdk:"artifacts_link" tf:"optional"`
+}
+
+func (newState *DbtOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtOutput) {
+}
+
+func (newState *DbtOutput) SyncEffectiveFieldsDuringRead(existingState DbtOutput) {
 }
 
 type DbtTask struct {
@@ -405,12 +514,30 @@ type DbtTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *DbtTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtTask) {
+}
+
+func (newState *DbtTask) SyncEffectiveFieldsDuringRead(existingState DbtTask) {
+}
+
 type DeleteJob struct {
 	// The canonical identifier of the job to delete. This field is required.
 	JobId types.Int64 `tfsdk:"job_id" tf:""`
 }
 
+func (newState *DeleteJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteJob) {
+}
+
+func (newState *DeleteJob) SyncEffectiveFieldsDuringRead(existingState DeleteJob) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 type DeleteRun struct {
@@ -418,7 +545,19 @@ type DeleteRun struct {
 	RunId types.Int64 `tfsdk:"run_id" tf:""`
 }
 
+func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRun) {
+}
+
+func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
+}
+
 type DeleteRunResponse struct {
+}
+
+func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRunResponse) {
+}
+
+func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunResponse) {
 }
 
 // Represents a change to the job cluster's settings that would be required for
@@ -439,12 +578,24 @@ type EnforcePolicyComplianceForJobResponseJobClusterSettingsChange struct {
 	PreviousValue types.String `tfsdk:"previous_value" tf:"optional"`
 }
 
+func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+}
+
+func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+}
+
 type EnforcePolicyComplianceRequest struct {
 	// The ID of the job you want to enforce policy compliance on.
 	JobId types.Int64 `tfsdk:"job_id" tf:""`
 	// If set, previews changes made to the job to comply with its policy, but
 	// does not update the job.
 	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
+}
+
+func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceRequest) {
+}
+
+func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceRequest) {
 }
 
 type EnforcePolicyComplianceResponse struct {
@@ -461,7 +612,13 @@ type EnforcePolicyComplianceResponse struct {
 	// clusters. Updated job settings are derived by applying policy default
 	// values to the existing job clusters in order to satisfy policy
 	// requirements.
-	Settings *JobSettings `tfsdk:"settings" tf:"optional"`
+	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
+}
+
+func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceResponse) {
+}
+
+func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceResponse) {
 }
 
 // Run was exported successfully.
@@ -474,12 +631,24 @@ type ExportRunOutput struct {
 	Views []ViewItem `tfsdk:"views" tf:"optional"`
 }
 
+func (newState *ExportRunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportRunOutput) {
+}
+
+func (newState *ExportRunOutput) SyncEffectiveFieldsDuringRead(existingState ExportRunOutput) {
+}
+
 // Export and retrieve a job run
 type ExportRunRequest struct {
 	// The canonical identifier for the run. This field is required.
 	RunId types.Int64 `tfsdk:"-"`
 	// Which views to export (CODE, DASHBOARDS, or ALL). Defaults to CODE.
 	ViewsToExport types.String `tfsdk:"-"`
+}
+
+func (newState *ExportRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportRunRequest) {
+}
+
+func (newState *ExportRunRequest) SyncEffectiveFieldsDuringRead(existingState ExportRunRequest) {
 }
 
 type FileArrivalTriggerConfiguration struct {
@@ -497,11 +666,23 @@ type FileArrivalTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds" tf:"optional"`
 }
 
+func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileArrivalTriggerConfiguration) {
+}
+
+func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState FileArrivalTriggerConfiguration) {
+}
+
 type ForEachStats struct {
 	// Sample of 3 most common error messages occurred during the iteration.
 	ErrorMessageStats []ForEachTaskErrorMessageStats `tfsdk:"error_message_stats" tf:"optional"`
 	// Describes stats of the iteration. Only latest retries are considered.
-	TaskRunStats *ForEachTaskTaskRunStats `tfsdk:"task_run_stats" tf:"optional"`
+	TaskRunStats []ForEachTaskTaskRunStats `tfsdk:"task_run_stats" tf:"optional,object"`
+}
+
+func (newState *ForEachStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachStats) {
+}
+
+func (newState *ForEachStats) SyncEffectiveFieldsDuringRead(existingState ForEachStats) {
 }
 
 type ForEachTask struct {
@@ -513,7 +694,13 @@ type ForEachTask struct {
 	// an array parameter.
 	Inputs types.String `tfsdk:"inputs" tf:""`
 	// Configuration for the task that will be run for each element in the array
-	Task Task `tfsdk:"task" tf:""`
+	Task []Task `tfsdk:"task" tf:"object"`
+}
+
+func (newState *ForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTask) {
+}
+
+func (newState *ForEachTask) SyncEffectiveFieldsDuringRead(existingState ForEachTask) {
 }
 
 type ForEachTaskErrorMessageStats struct {
@@ -524,6 +711,12 @@ type ForEachTaskErrorMessageStats struct {
 	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
 	// Describes the termination reason for the error message.
 	TerminationCategory types.String `tfsdk:"termination_category" tf:"optional"`
+}
+
+func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTaskErrorMessageStats) {
+}
+
+func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskErrorMessageStats) {
 }
 
 type ForEachTaskTaskRunStats struct {
@@ -542,10 +735,22 @@ type ForEachTaskTaskRunStats struct {
 	TotalIterations types.Int64 `tfsdk:"total_iterations" tf:"optional"`
 }
 
+func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTaskTaskRunStats) {
+}
+
+func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskTaskRunStats) {
+}
+
 // Get job permission levels
 type GetJobPermissionLevelsRequest struct {
 	// The job for which to get or manage permissions.
 	JobId types.String `tfsdk:"-"`
+}
+
+func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsRequest) {
+}
+
+func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsRequest) {
 }
 
 type GetJobPermissionLevelsResponse struct {
@@ -553,10 +758,22 @@ type GetJobPermissionLevelsResponse struct {
 	PermissionLevels []JobPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
 }
 
+func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsResponse) {
+}
+
+func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsResponse) {
+}
+
 // Get job permissions
 type GetJobPermissionsRequest struct {
 	// The job for which to get or manage permissions.
 	JobId types.String `tfsdk:"-"`
+}
+
+func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionsRequest) {
+}
+
+func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionsRequest) {
 }
 
 // Get a single job
@@ -566,10 +783,22 @@ type GetJobRequest struct {
 	JobId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetJobRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobRequest) {
+}
+
+func (newState *GetJobRequest) SyncEffectiveFieldsDuringRead(existingState GetJobRequest) {
+}
+
 // Get job policy compliance
 type GetPolicyComplianceRequest struct {
 	// The ID of the job whose compliance status you are requesting.
 	JobId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyComplianceRequest) {
+}
+
+func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceRequest) {
 }
 
 type GetPolicyComplianceResponse struct {
@@ -586,10 +815,22 @@ type GetPolicyComplianceResponse struct {
 	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
 }
 
+func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyComplianceResponse) {
+}
+
+func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceResponse) {
+}
+
 // Get the output for a single run
 type GetRunOutputRequest struct {
 	// The canonical identifier for the run.
 	RunId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunOutputRequest) {
+}
+
+func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringRead(existingState GetRunOutputRequest) {
 }
 
 // Get a single job run
@@ -598,13 +839,18 @@ type GetRunRequest struct {
 	IncludeHistory types.Bool `tfsdk:"-"`
 	// Whether to include resolved parameter values in the response.
 	IncludeResolvedValues types.Bool `tfsdk:"-"`
-	// To list the next page or the previous page of job tasks, set this field
-	// to the value of the `next_page_token` or `prev_page_token` returned in
-	// the GetJob response.
+	// To list the next page of job tasks, set this field to the value of the
+	// `next_page_token` returned in the GetJob response.
 	PageToken types.String `tfsdk:"-"`
 	// The canonical identifier of the run for which to retrieve the metadata.
 	// This field is required.
 	RunId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunRequest) {
+}
+
+func (newState *GetRunRequest) SyncEffectiveFieldsDuringRead(existingState GetRunRequest) {
 }
 
 // Read-only state of the remote repository at the time the job was run. This
@@ -614,6 +860,12 @@ type GitSnapshot struct {
 	// this points to the HEAD of the branch at the time of the run; if git_tag
 	// was specified, this points to the commit the tag points to.
 	UsedCommit types.String `tfsdk:"used_commit" tf:"optional"`
+}
+
+func (newState *GitSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSnapshot) {
+}
+
+func (newState *GitSnapshot) SyncEffectiveFieldsDuringRead(existingState GitSnapshot) {
 }
 
 // An optional specification for a remote Git repository containing the source
@@ -638,7 +890,7 @@ type GitSource struct {
 	GitProvider types.String `tfsdk:"git_provider" tf:""`
 	// Read-only state of the remote repository at the time the job was run.
 	// This field is only included on job runs.
-	GitSnapshot *GitSnapshot `tfsdk:"git_snapshot" tf:"optional"`
+	GitSnapshot []GitSnapshot `tfsdk:"git_snapshot" tf:"optional,object"`
 	// Name of the tag to be checked out and used by this job. This field cannot
 	// be specified in conjunction with git_branch or git_commit.
 	GitTag types.String `tfsdk:"tag" tf:"optional"`
@@ -646,7 +898,13 @@ type GitSource struct {
 	GitUrl types.String `tfsdk:"url" tf:""`
 	// The source of the job specification in the remote repository when the job
 	// is source controlled.
-	JobSource *JobSource `tfsdk:"job_source" tf:"optional"`
+	JobSource []JobSource `tfsdk:"job_source" tf:"optional,object"`
+}
+
+func (newState *GitSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSource) {
+}
+
+func (newState *GitSource) SyncEffectiveFieldsDuringRead(existingState GitSource) {
 }
 
 // Job was retrieved successfully.
@@ -657,6 +915,14 @@ type Job struct {
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	// The id of the budget policy used by this job for cost attribution
+	// purposes. This may be set through (in order of precedence): 1. Budget
+	// admins through the account or workspace console 2. Jobs UI in the job
+	// details page and Jobs API using `budget_policy_id` 3. Inferred default
+	// based on accessible budget policies of the run_as identity on job
+	// creation or modification.
+	EffectiveBudgetPolicyId          types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
+	EffectiveEffectiveBudgetPolicyId types.String `tfsdk:"effective_effective_budget_policy_id" tf:"computed,optional"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// The email of an active workspace user or the application ID of a service
@@ -669,7 +935,19 @@ type Job struct {
 	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
 	// Settings for this job and all of its runs. These settings can be updated
 	// using the `resetJob` method.
-	Settings *JobSettings `tfsdk:"settings" tf:"optional"`
+	Settings []JobSettings `tfsdk:"settings" tf:"optional,object"`
+}
+
+func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
+	newState.EffectiveEffectiveBudgetPolicyId = newState.EffectiveBudgetPolicyId
+	newState.EffectiveBudgetPolicyId = plan.EffectiveBudgetPolicyId
+}
+
+func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
+	newState.EffectiveEffectiveBudgetPolicyId = existingState.EffectiveEffectiveBudgetPolicyId
+	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
+		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
+	}
 }
 
 type JobAccessControlRequest struct {
@@ -681,6 +959,12 @@ type JobAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobAccessControlRequest) {
+}
+
+func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState JobAccessControlRequest) {
 }
 
 type JobAccessControlResponse struct {
@@ -696,13 +980,25 @@ type JobAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobAccessControlResponse) {
+}
+
+func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState JobAccessControlResponse) {
+}
+
 type JobCluster struct {
 	// A unique name for the job cluster. This field is required and must be
 	// unique within the job. `JobTaskSettings` may refer to this field to
 	// determine which cluster to launch for the task execution.
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:""`
 	// If new_cluster, a description of a cluster that is created for each task.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:""`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"object"`
+}
+
+func (newState *JobCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCluster) {
+}
+
+func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobCluster) {
 }
 
 type JobCompliance struct {
@@ -718,6 +1014,12 @@ type JobCompliance struct {
 	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
 }
 
+func (newState *JobCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCompliance) {
+}
+
+func (newState *JobCompliance) SyncEffectiveFieldsDuringRead(existingState JobCompliance) {
+}
+
 type JobDeployment struct {
 	// The kind of deployment that manages the job.
 	//
@@ -727,9 +1029,16 @@ type JobDeployment struct {
 	MetadataFilePath types.String `tfsdk:"metadata_file_path" tf:"optional"`
 }
 
+func (newState *JobDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobDeployment) {
+}
+
+func (newState *JobDeployment) SyncEffectiveFieldsDuringRead(existingState JobDeployment) {
+}
+
 type JobEmailNotifications struct {
 	// If true, do not send email to recipients specified in `on_failure` if the
-	// run is skipped.
+	// run is skipped. This field is `deprecated`. Please use the
+	// `notification_settings.no_alert_for_skipped_runs` field.
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
 	// A list of email addresses to be notified when the duration of a run
 	// exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in
@@ -762,13 +1071,25 @@ type JobEmailNotifications struct {
 	OnSuccess []types.String `tfsdk:"on_success" tf:"optional"`
 }
 
+func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEmailNotifications) {
+}
+
+func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringRead(existingState JobEmailNotifications) {
+}
+
 type JobEnvironment struct {
 	// The key of an environment. It has to be unique within a job.
 	EnvironmentKey types.String `tfsdk:"environment_key" tf:""`
 	// The environment entity used to preserve serverless environment side panel
 	// and jobs' environment for non-notebook task. In this minimal environment
 	// spec, only pip dependencies are supported.
-	Spec *compute.Environment `tfsdk:"spec" tf:"optional"`
+	Spec compute.Environment `tfsdk:"spec" tf:"optional,object"`
+}
+
+func (newState *JobEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEnvironment) {
+}
+
+func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobEnvironment) {
 }
 
 type JobNotificationSettings struct {
@@ -780,6 +1101,12 @@ type JobNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
 }
 
+func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobNotificationSettings) {
+}
+
+func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringRead(existingState JobNotificationSettings) {
+}
+
 type JobParameter struct {
 	// The optional default value of the parameter
 	Default types.String `tfsdk:"default" tf:"optional"`
@@ -787,6 +1114,12 @@ type JobParameter struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// The value used in the run
 	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *JobParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobParameter) {
+}
+
+func (newState *JobParameter) SyncEffectiveFieldsDuringRead(existingState JobParameter) {
 }
 
 type JobParameterDefinition struct {
@@ -797,12 +1130,24 @@ type JobParameterDefinition struct {
 	Name types.String `tfsdk:"name" tf:""`
 }
 
+func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobParameterDefinition) {
+}
+
+func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringRead(existingState JobParameterDefinition) {
+}
+
 type JobPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *JobPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermission) {
+}
+
+func (newState *JobPermission) SyncEffectiveFieldsDuringRead(existingState JobPermission) {
 }
 
 type JobPermissions struct {
@@ -813,10 +1158,22 @@ type JobPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *JobPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissions) {
+}
+
+func (newState *JobPermissions) SyncEffectiveFieldsDuringRead(existingState JobPermissions) {
+}
+
 type JobPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissionsDescription) {
+}
+
+func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState JobPermissionsDescription) {
 }
 
 type JobPermissionsRequest struct {
@@ -825,12 +1182,18 @@ type JobPermissionsRequest struct {
 	JobId types.String `tfsdk:"-"`
 }
 
-// Write-only setting, available only in Create/Update/Reset and Submit calls.
-// Specifies the user or service principal that the job runs as. If not
-// specified, the job runs as the user who created the job.
+func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissionsRequest) {
+}
+
+func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState JobPermissionsRequest) {
+}
+
+// Write-only setting. Specifies the user, service principal or group that the
+// job/pipeline runs as. If not specified, the job/pipeline runs as the user who
+// created the job/pipeline.
 //
-// Only `user_name` or `service_principal_name` can be specified. If both are
-// specified, an error is thrown.
+// Exactly one of `user_name`, `service_principal_name`, `group_name` should be
+// specified. If not, an error is thrown.
 type JobRunAs struct {
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
@@ -840,13 +1203,24 @@ type JobRunAs struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *JobRunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobRunAs) {
+}
+
+func (newState *JobRunAs) SyncEffectiveFieldsDuringRead(existingState JobRunAs) {
+}
+
 type JobSettings struct {
+	// The id of the user specified budget policy to use for this job. If not
+	// specified, a default budget policy may be applied when creating or
+	// modifying the job. See `effective_budget_policy_id` for the budget policy
+	// used by this workload.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
-	Continuous *Continuous `tfsdk:"continuous" tf:"optional"`
+	Continuous []Continuous `tfsdk:"continuous" tf:"optional,object"`
 	// Deployment information for jobs managed by external sources.
-	Deployment *JobDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []JobDeployment `tfsdk:"deployment" tf:"optional,object"`
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description" tf:"optional"`
@@ -857,9 +1231,13 @@ type JobSettings struct {
 	EditMode types.String `tfsdk:"edit_mode" tf:"optional"`
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
-	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// A list of task execution environment specifications that can be
-	// referenced by tasks of this job.
+	// referenced by serverless tasks of this job. An environment is required to
+	// be present for serverless tasks. For serverless notebook tasks, the
+	// environment is accessible in the notebook environment panel. For other
+	// serverless tasks, the task environment is required to be specified using
+	// environment_key in the task settings.
 	Environments []JobEnvironment `tfsdk:"environment" tf:"optional"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -875,9 +1253,9 @@ type JobSettings struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource *GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health *JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
@@ -900,22 +1278,22 @@ type JobSettings struct {
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// job.
-	NotificationSettings *JobNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// Job-level parameter definitions
 	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
-	Queue *QueueSettings `tfsdk:"queue" tf:"optional"`
-	// Write-only setting, available only in Create/Update/Reset and Submit
-	// calls. Specifies the user or service principal that the job runs as. If
-	// not specified, the job runs as the user who created the job.
+	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
+	// Write-only setting. Specifies the user, service principal or group that
+	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
+	// user who created the job/pipeline.
 	//
-	// Only `user_name` or `service_principal_name` can be specified. If both
-	// are specified, an error is thrown.
-	RunAs *JobRunAs `tfsdk:"run_as" tf:"optional"`
+	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
+	// be specified. If not, an error is thrown.
+	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
 	// or sending an API request to `runNow`.
-	Schedule *CronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional,object"`
 	// A map of tags associated with the job. These are forwarded to the cluster
 	// as cluster tags for jobs clusters, and are subject to the same
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
@@ -929,10 +1307,16 @@ type JobSettings struct {
 	// A configuration to trigger a run when certain conditions are met. The
 	// default behavior is that the job runs only when triggered by clicking
 	// “Run Now” in the Jobs UI or sending an API request to `runNow`.
-	Trigger *TriggerSettings `tfsdk:"trigger" tf:"optional"`
+	Trigger []TriggerSettings `tfsdk:"trigger" tf:"optional,object"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
-	WebhookNotifications *WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
+}
+
+func (newState *JobSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSettings) {
+}
+
+func (newState *JobSettings) SyncEffectiveFieldsDuringRead(existingState JobSettings) {
 }
 
 // The source of the job specification in the remote repository when the job is
@@ -952,6 +1336,12 @@ type JobSource struct {
 	ImportFromGitBranch types.String `tfsdk:"import_from_git_branch" tf:""`
 	// Path of the job YAML file that contains the job specification.
 	JobConfigPath types.String `tfsdk:"job_config_path" tf:""`
+}
+
+func (newState *JobSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSource) {
+}
+
+func (newState *JobSource) SyncEffectiveFieldsDuringRead(existingState JobSource) {
 }
 
 type JobsHealthRule struct {
@@ -976,9 +1366,21 @@ type JobsHealthRule struct {
 	Value types.Int64 `tfsdk:"value" tf:""`
 }
 
+func (newState *JobsHealthRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobsHealthRule) {
+}
+
+func (newState *JobsHealthRule) SyncEffectiveFieldsDuringRead(existingState JobsHealthRule) {
+}
+
 // An optional set of health rules that can be defined for this job.
 type JobsHealthRules struct {
 	Rules []JobsHealthRule `tfsdk:"rules" tf:"optional"`
+}
+
+func (newState *JobsHealthRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobsHealthRules) {
+}
+
+func (newState *JobsHealthRules) SyncEffectiveFieldsDuringRead(existingState JobsHealthRules) {
 }
 
 type ListJobComplianceForPolicyResponse struct {
@@ -994,6 +1396,12 @@ type ListJobComplianceForPolicyResponse struct {
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
 }
 
+func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobComplianceForPolicyResponse) {
+}
+
+func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceForPolicyResponse) {
+}
+
 // List job policy compliance
 type ListJobComplianceRequest struct {
 	// Use this field to specify the maximum number of results to be returned by
@@ -1005,6 +1413,12 @@ type ListJobComplianceRequest struct {
 	PageToken types.String `tfsdk:"-"`
 	// Canonical unique identifier for the cluster policy.
 	PolicyId types.String `tfsdk:"-"`
+}
+
+func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobComplianceRequest) {
+}
+
+func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceRequest) {
 }
 
 // List jobs
@@ -1025,6 +1439,12 @@ type ListJobsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListJobsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobsRequest) {
+}
+
+func (newState *ListJobsRequest) SyncEffectiveFieldsDuringRead(existingState ListJobsRequest) {
+}
+
 // List of jobs was retrieved successfully.
 type ListJobsResponse struct {
 	// If true, additional jobs matching the provided filter are available for
@@ -1038,6 +1458,12 @@ type ListJobsResponse struct {
 	// A token that can be used to list the previous page of jobs (if
 	// applicable).
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+}
+
+func (newState *ListJobsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobsResponse) {
+}
+
+func (newState *ListJobsResponse) SyncEffectiveFieldsDuringRead(existingState ListJobsResponse) {
 }
 
 // List job runs
@@ -1080,6 +1506,12 @@ type ListRunsRequest struct {
 	StartTimeTo types.Int64 `tfsdk:"-"`
 }
 
+func (newState *ListRunsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRunsRequest) {
+}
+
+func (newState *ListRunsRequest) SyncEffectiveFieldsDuringRead(existingState ListRunsRequest) {
+}
+
 // List of runs was retrieved successfully.
 type ListRunsResponse struct {
 	// If true, additional runs matching the provided filter are available for
@@ -1095,6 +1527,12 @@ type ListRunsResponse struct {
 	Runs []BaseRun `tfsdk:"runs" tf:"optional"`
 }
 
+func (newState *ListRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRunsResponse) {
+}
+
+func (newState *ListRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListRunsResponse) {
+}
+
 type NotebookOutput struct {
 	// The value passed to
 	// [dbutils.notebook.exit()](/notebooks/notebook-workflows.html#notebook-workflows-exit).
@@ -1105,6 +1543,12 @@ type NotebookOutput struct {
 	Result types.String `tfsdk:"result" tf:"optional"`
 	// Whether or not the result was truncated.
 	Truncated types.Bool `tfsdk:"truncated" tf:"optional"`
+}
+
+func (newState *NotebookOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookOutput) {
+}
+
+func (newState *NotebookOutput) SyncEffectiveFieldsDuringRead(existingState NotebookOutput) {
 }
 
 type NotebookTask struct {
@@ -1148,6 +1592,12 @@ type NotebookTask struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *NotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookTask) {
+}
+
+func (newState *NotebookTask) SyncEffectiveFieldsDuringRead(existingState NotebookTask) {
+}
+
 type PeriodicTriggerConfiguration struct {
 	// The interval at which the trigger should run.
 	Interval types.Int64 `tfsdk:"interval" tf:""`
@@ -1155,9 +1605,21 @@ type PeriodicTriggerConfiguration struct {
 	Unit types.String `tfsdk:"unit" tf:""`
 }
 
+func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan PeriodicTriggerConfiguration) {
+}
+
+func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState PeriodicTriggerConfiguration) {
+}
+
 type PipelineParams struct {
 	// If true, triggers a full refresh on the delta live table.
 	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
+}
+
+func (newState *PipelineParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineParams) {
+}
+
+func (newState *PipelineParams) SyncEffectiveFieldsDuringRead(existingState PipelineParams) {
 }
 
 type PipelineTask struct {
@@ -1165,6 +1627,12 @@ type PipelineTask struct {
 	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
 	// The full name of the pipeline task to execute.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:""`
+}
+
+func (newState *PipelineTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTask) {
+}
+
+func (newState *PipelineTask) SyncEffectiveFieldsDuringRead(existingState PipelineTask) {
 }
 
 type PythonWheelTask struct {
@@ -1183,9 +1651,40 @@ type PythonWheelTask struct {
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
 }
 
+func (newState *PythonWheelTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PythonWheelTask) {
+}
+
+func (newState *PythonWheelTask) SyncEffectiveFieldsDuringRead(existingState PythonWheelTask) {
+}
+
+type QueueDetails struct {
+	// The reason for queuing the run. * `ACTIVE_RUNS_LIMIT_REACHED`: The run
+	// was queued due to reaching the workspace limit of active task runs. *
+	// `MAX_CONCURRENT_RUNS_REACHED`: The run was queued due to reaching the
+	// per-job limit of concurrent job runs. *
+	// `ACTIVE_RUN_JOB_TASKS_LIMIT_REACHED`: The run was queued due to reaching
+	// the workspace limit of active run job tasks.
+	Code types.String `tfsdk:"code" tf:"optional"`
+	// A descriptive message with the queuing details. This field is
+	// unstructured, and its exact format is subject to change.
+	Message types.String `tfsdk:"message" tf:"optional"`
+}
+
+func (newState *QueueDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueueDetails) {
+}
+
+func (newState *QueueDetails) SyncEffectiveFieldsDuringRead(existingState QueueDetails) {
+}
+
 type QueueSettings struct {
 	// If true, enable queueing for the job. This is a required field.
 	Enabled types.Bool `tfsdk:"enabled" tf:""`
+}
+
+func (newState *QueueSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueueSettings) {
+}
+
+func (newState *QueueSettings) SyncEffectiveFieldsDuringRead(existingState QueueSettings) {
 }
 
 type RepairHistoryItem struct {
@@ -1196,14 +1695,22 @@ type RepairHistoryItem struct {
 	Id types.Int64 `tfsdk:"id" tf:"optional"`
 	// The start time of the (repaired) run.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
-	// The current state of the run.
-	State *RunState `tfsdk:"state" tf:"optional"`
+	// Deprecated. Please use the `status` field instead.
+	State []RunState `tfsdk:"state" tf:"optional,object"`
+	// The current status of the run
+	Status []RunStatus `tfsdk:"status" tf:"optional,object"`
 	// The run IDs of the task runs that ran as part of this repair history
 	// item.
 	TaskRunIds []types.Int64 `tfsdk:"task_run_ids" tf:"optional"`
 	// The repair history item type. Indicates whether a run is the original run
 	// or a repair run.
 	Type types.String `tfsdk:"type" tf:"optional"`
+}
+
+func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairHistoryItem) {
+}
+
+func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringRead(existingState RepairHistoryItem) {
 }
 
 type RepairRun struct {
@@ -1219,8 +1726,10 @@ type RepairRun struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables](/jobs.html\"#parameter-variables\") to set
-	// parameters containing information about job runs.
+	// Use [Task parameter variables] to set parameters containing information
+	// about job runs.
+	//
+	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	JarParams []types.String `tfsdk:"jar_params" tf:"optional"`
 	// Job-level parameters used in the run. for example `"param":
 	// "overriding_val"`
@@ -1249,8 +1758,8 @@ type RepairRun struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
-
-	PipelineParams *PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
+	// Controls whether the pipeline should perform a full refresh
+	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
 	// A list of parameters for jobs with Python tasks, for example
@@ -1307,11 +1816,23 @@ type RepairRun struct {
 	SqlParams map[string]types.String `tfsdk:"sql_params" tf:"optional"`
 }
 
+func (newState *RepairRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRun) {
+}
+
+func (newState *RepairRun) SyncEffectiveFieldsDuringRead(existingState RepairRun) {
+}
+
 // Run repair was initiated.
 type RepairRunResponse struct {
 	// The ID of the repair. Must be provided in subsequent repairs using the
 	// `latest_repair_id` field to ensure sequential repairs.
 	RepairId types.Int64 `tfsdk:"repair_id" tf:"optional"`
+}
+
+func (newState *RepairRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRunResponse) {
+}
+
+func (newState *RepairRunResponse) SyncEffectiveFieldsDuringRead(existingState RepairRunResponse) {
 }
 
 type ResetJob struct {
@@ -1322,10 +1843,22 @@ type ResetJob struct {
 	//
 	// Changes to the field `JobBaseSettings.timeout_seconds` are applied to
 	// active runs. Changes to other fields are applied to future runs only.
-	NewSettings JobSettings `tfsdk:"new_settings" tf:""`
+	NewSettings []JobSettings `tfsdk:"new_settings" tf:"object"`
+}
+
+func (newState *ResetJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetJob) {
+}
+
+func (newState *ResetJob) SyncEffectiveFieldsDuringRead(existingState ResetJob) {
 }
 
 type ResetResponse struct {
+}
+
+func (newState *ResetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetResponse) {
+}
+
+func (newState *ResetResponse) SyncEffectiveFieldsDuringRead(existingState ResetResponse) {
 }
 
 type ResolvedConditionTaskValues struct {
@@ -1334,16 +1867,40 @@ type ResolvedConditionTaskValues struct {
 	Right types.String `tfsdk:"right" tf:"optional"`
 }
 
+func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedConditionTaskValues) {
+}
+
+func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedConditionTaskValues) {
+}
+
 type ResolvedDbtTaskValues struct {
 	Commands []types.String `tfsdk:"commands" tf:"optional"`
+}
+
+func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedDbtTaskValues) {
+}
+
+func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedDbtTaskValues) {
 }
 
 type ResolvedNotebookTaskValues struct {
 	BaseParameters map[string]types.String `tfsdk:"base_parameters" tf:"optional"`
 }
 
+func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedNotebookTaskValues) {
+}
+
+func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedNotebookTaskValues) {
+}
+
 type ResolvedParamPairValues struct {
 	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
+}
+
+func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedParamPairValues) {
+}
+
+func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringRead(existingState ResolvedParamPairValues) {
 }
 
 type ResolvedPythonWheelTaskValues struct {
@@ -1352,36 +1909,60 @@ type ResolvedPythonWheelTaskValues struct {
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
 }
 
+func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedPythonWheelTaskValues) {
+}
+
+func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedPythonWheelTaskValues) {
+}
+
 type ResolvedRunJobTaskValues struct {
 	JobParameters map[string]types.String `tfsdk:"job_parameters" tf:"optional"`
 
 	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
 }
 
+func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedRunJobTaskValues) {
+}
+
+func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedRunJobTaskValues) {
+}
+
 type ResolvedStringParamsValues struct {
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
 }
 
+func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedStringParamsValues) {
+}
+
+func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringRead(existingState ResolvedStringParamsValues) {
+}
+
 type ResolvedValues struct {
-	ConditionTask *ResolvedConditionTaskValues `tfsdk:"condition_task" tf:"optional"`
+	ConditionTask []ResolvedConditionTaskValues `tfsdk:"condition_task" tf:"optional,object"`
 
-	DbtTask *ResolvedDbtTaskValues `tfsdk:"dbt_task" tf:"optional"`
+	DbtTask []ResolvedDbtTaskValues `tfsdk:"dbt_task" tf:"optional,object"`
 
-	NotebookTask *ResolvedNotebookTaskValues `tfsdk:"notebook_task" tf:"optional"`
+	NotebookTask []ResolvedNotebookTaskValues `tfsdk:"notebook_task" tf:"optional,object"`
 
-	PythonWheelTask *ResolvedPythonWheelTaskValues `tfsdk:"python_wheel_task" tf:"optional"`
+	PythonWheelTask []ResolvedPythonWheelTaskValues `tfsdk:"python_wheel_task" tf:"optional,object"`
 
-	RunJobTask *ResolvedRunJobTaskValues `tfsdk:"run_job_task" tf:"optional"`
+	RunJobTask []ResolvedRunJobTaskValues `tfsdk:"run_job_task" tf:"optional,object"`
 
-	SimulationTask *ResolvedParamPairValues `tfsdk:"simulation_task" tf:"optional"`
+	SimulationTask []ResolvedParamPairValues `tfsdk:"simulation_task" tf:"optional,object"`
 
-	SparkJarTask *ResolvedStringParamsValues `tfsdk:"spark_jar_task" tf:"optional"`
+	SparkJarTask []ResolvedStringParamsValues `tfsdk:"spark_jar_task" tf:"optional,object"`
 
-	SparkPythonTask *ResolvedStringParamsValues `tfsdk:"spark_python_task" tf:"optional"`
+	SparkPythonTask []ResolvedStringParamsValues `tfsdk:"spark_python_task" tf:"optional,object"`
 
-	SparkSubmitTask *ResolvedStringParamsValues `tfsdk:"spark_submit_task" tf:"optional"`
+	SparkSubmitTask []ResolvedStringParamsValues `tfsdk:"spark_submit_task" tf:"optional,object"`
 
-	SqlTask *ResolvedParamPairValues `tfsdk:"sql_task" tf:"optional"`
+	SqlTask []ResolvedParamPairValues `tfsdk:"sql_task" tf:"optional,object"`
+}
+
+func (newState *ResolvedValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedValues) {
+}
+
+func (newState *ResolvedValues) SyncEffectiveFieldsDuringRead(existingState ResolvedValues) {
 }
 
 // Run was retrieved successfully
@@ -1403,10 +1984,10 @@ type Run struct {
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance *ClusterInstance `tfsdk:"cluster_instance" tf:"optional"`
+	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional,object"`
 	// A snapshot of the job’s cluster specification when this run was
 	// created.
-	ClusterSpec *ClusterSpec `tfsdk:"cluster_spec" tf:"optional"`
+	ClusterSpec []ClusterSpec `tfsdk:"cluster_spec" tf:"optional,object"`
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
 	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
@@ -1433,7 +2014,7 @@ type Run struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource *GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// Only populated by for-each iterations. The parent for-each task is
 	// located in tasks array.
 	Iterations []RunTask `tfsdk:"iterations" tf:"optional"`
@@ -1459,9 +2040,7 @@ type Run struct {
 	// run_id of the original attempt; otherwise, it is the same as the run_id.
 	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id" tf:"optional"`
 	// The parameters used for this run.
-	OverridingParameters *RunParameters `tfsdk:"overriding_parameters" tf:"optional"`
-	// A token that can be used to list the previous page of sub-resources.
-	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+	OverridingParameters []RunParameters `tfsdk:"overriding_parameters" tf:"optional,object"`
 	// The time in milliseconds that the run has spent in the queue.
 	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
 	// The repair history of the run.
@@ -1486,7 +2065,7 @@ type Run struct {
 	RunType types.String `tfsdk:"run_type" tf:"optional"`
 	// The cron schedule that triggered this run if it was triggered by the
 	// periodic scheduler.
-	Schedule *CronSchedule `tfsdk:"schedule" tf:"optional"`
+	Schedule []CronSchedule `tfsdk:"schedule" tf:"optional,object"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
 	// on new clusters this is the cluster creation time, for runs that run on
 	// existing clusters this time should be very short. The duration of a task
@@ -1500,8 +2079,10 @@ type Run struct {
 	// task starts executing, for example, if the job is scheduled to run on a
 	// new cluster, this is the time the cluster creation call is issued.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
-	// The current state of the run.
-	State *RunState `tfsdk:"state" tf:"optional"`
+	// Deprecated. Please use the `status` field instead.
+	State []RunState `tfsdk:"state" tf:"optional,object"`
+	// The current status of the run
+	Status []RunStatus `tfsdk:"status" tf:"optional,object"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
 	Tasks []RunTask `tfsdk:"tasks" tf:"optional"`
@@ -1517,7 +2098,13 @@ type Run struct {
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
 	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 	// Additional details about what triggered the run
-	TriggerInfo *TriggerInfo `tfsdk:"trigger_info" tf:"optional"`
+	TriggerInfo []TriggerInfo `tfsdk:"trigger_info" tf:"optional,object"`
+}
+
+func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
+}
+
+func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
 }
 
 type RunConditionTask struct {
@@ -1543,6 +2130,12 @@ type RunConditionTask struct {
 	Right types.String `tfsdk:"right" tf:""`
 }
 
+func (newState *RunConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunConditionTask) {
+}
+
+func (newState *RunConditionTask) SyncEffectiveFieldsDuringRead(existingState RunConditionTask) {
+}
+
 type RunForEachTask struct {
 	// An optional maximum allowed number of concurrent runs of the task. Set
 	// this value if you want to be able to execute multiple runs of the task
@@ -1553,14 +2146,26 @@ type RunForEachTask struct {
 	Inputs types.String `tfsdk:"inputs" tf:""`
 	// Read only field. Populated for GetRun and ListRuns RPC calls and stores
 	// the execution stats of an For each task
-	Stats *ForEachStats `tfsdk:"stats" tf:"optional"`
+	Stats []ForEachStats `tfsdk:"stats" tf:"optional,object"`
 	// Configuration for the task that will be run for each element in the array
-	Task Task `tfsdk:"task" tf:""`
+	Task []Task `tfsdk:"task" tf:"object"`
+}
+
+func (newState *RunForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunForEachTask) {
+}
+
+func (newState *RunForEachTask) SyncEffectiveFieldsDuringRead(existingState RunForEachTask) {
 }
 
 type RunJobOutput struct {
 	// The run id of the triggered job run
 	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+}
+
+func (newState *RunJobOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobOutput) {
+}
+
+func (newState *RunJobOutput) SyncEffectiveFieldsDuringRead(existingState RunJobOutput) {
 }
 
 type RunJobTask struct {
@@ -1576,8 +2181,10 @@ type RunJobTask struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables](/jobs.html\"#parameter-variables\") to set
-	// parameters containing information about job runs.
+	// Use [Task parameter variables] to set parameters containing information
+	// about job runs.
+	//
+	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	JarParams []types.String `tfsdk:"jar_params" tf:"optional"`
 	// ID of the job to trigger.
 	JobId types.Int64 `tfsdk:"job_id" tf:""`
@@ -1603,8 +2210,8 @@ type RunJobTask struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
-
-	PipelineParams *PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
+	// Controls whether the pipeline should perform a full refresh
+	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
 	// A list of parameters for jobs with Python tasks, for example
@@ -1648,6 +2255,12 @@ type RunJobTask struct {
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
 	SqlParams map[string]types.String `tfsdk:"sql_params" tf:"optional"`
+}
+
+func (newState *RunJobTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobTask) {
+}
+
+func (newState *RunJobTask) SyncEffectiveFieldsDuringRead(existingState RunJobTask) {
 }
 
 type RunNow struct {
@@ -1678,8 +2291,10 @@ type RunNow struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables](/jobs.html\"#parameter-variables\") to set
-	// parameters containing information about job runs.
+	// Use [Task parameter variables] to set parameters containing information
+	// about job runs.
+	//
+	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	JarParams []types.String `tfsdk:"jar_params" tf:"optional"`
 	// The ID of the job to be executed
 	JobId types.Int64 `tfsdk:"job_id" tf:""`
@@ -1706,8 +2321,11 @@ type RunNow struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
-
-	PipelineParams *PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
+	// A list of task keys to run inside of the job. If this field is not
+	// provided, all tasks in the job will be run.
+	Only []types.String `tfsdk:"only" tf:"optional"`
+	// Controls whether the pipeline should perform a full refresh
+	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
 	// A list of parameters for jobs with Python tasks, for example
@@ -1729,7 +2347,7 @@ type RunNow struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	PythonParams []types.String `tfsdk:"python_params" tf:"optional"`
 	// The queue settings of the run.
-	Queue *QueueSettings `tfsdk:"queue" tf:"optional"`
+	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
 	// "org.apache.spark.examples.SparkPi"]`. The parameters are passed to
@@ -1755,6 +2373,12 @@ type RunNow struct {
 	SqlParams map[string]types.String `tfsdk:"sql_params" tf:"optional"`
 }
 
+func (newState *RunNow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNow) {
+}
+
+func (newState *RunNow) SyncEffectiveFieldsDuringRead(existingState RunNow) {
+}
+
 // Run was started successfully.
 type RunNowResponse struct {
 	// A unique identifier for this job run. This is set to the same value as
@@ -1764,10 +2388,16 @@ type RunNowResponse struct {
 	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
 }
 
+func (newState *RunNowResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNowResponse) {
+}
+
+func (newState *RunNowResponse) SyncEffectiveFieldsDuringRead(existingState RunNowResponse) {
+}
+
 // Run output was retrieved successfully.
 type RunOutput struct {
 	// The output of a dbt task, if available.
-	DbtOutput *DbtOutput `tfsdk:"dbt_output" tf:"optional"`
+	DbtOutput []DbtOutput `tfsdk:"dbt_output" tf:"optional,object"`
 	// An error message indicating why a task failed or why output is not
 	// available. The message is unstructured, and its exact format is subject
 	// to change.
@@ -1788,7 +2418,7 @@ type RunOutput struct {
 	// Whether the logs are truncated.
 	LogsTruncated types.Bool `tfsdk:"logs_truncated" tf:"optional"`
 	// All details of the run except for its output.
-	Metadata *Run `tfsdk:"metadata" tf:"optional"`
+	Metadata []Run `tfsdk:"metadata" tf:"optional,object"`
 	// The output of a notebook task, if available. A notebook task that
 	// terminates (either successfully or with a failure) without calling
 	// `dbutils.notebook.exit()` is considered to have an empty output. This
@@ -1797,11 +2427,17 @@ type RunOutput struct {
 	// the [ClusterLogConf] field to configure log storage for the job cluster.
 	//
 	// [ClusterLogConf]: https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterlogconf
-	NotebookOutput *NotebookOutput `tfsdk:"notebook_output" tf:"optional"`
+	NotebookOutput []NotebookOutput `tfsdk:"notebook_output" tf:"optional,object"`
 	// The output of a run job task, if available
-	RunJobOutput *RunJobOutput `tfsdk:"run_job_output" tf:"optional"`
+	RunJobOutput []RunJobOutput `tfsdk:"run_job_output" tf:"optional,object"`
 	// The output of a SQL task, if available.
-	SqlOutput *SqlOutput `tfsdk:"sql_output" tf:"optional"`
+	SqlOutput []SqlOutput `tfsdk:"sql_output" tf:"optional,object"`
+}
+
+func (newState *RunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunOutput) {
+}
+
+func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput) {
 }
 
 type RunParameters struct {
@@ -1817,8 +2453,10 @@ type RunParameters struct {
 	// of this field (for example `{"jar_params":["john doe","35"]}`) cannot
 	// exceed 10,000 bytes.
 	//
-	// Use [Task parameter variables](/jobs.html\"#parameter-variables\") to set
-	// parameters containing information about job runs.
+	// Use [Task parameter variables] to set parameters containing information
+	// about job runs.
+	//
+	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	JarParams []types.String `tfsdk:"jar_params" tf:"optional"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
@@ -1840,8 +2478,8 @@ type RunParameters struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
-
-	PipelineParams *PipelineParams `tfsdk:"pipeline_params" tf:"optional"`
+	// Controls whether the pipeline should perform a full refresh
+	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 
 	PythonNamedParams map[string]types.String `tfsdk:"python_named_params" tf:"optional"`
 	// A list of parameters for jobs with Python tasks, for example
@@ -1887,6 +2525,12 @@ type RunParameters struct {
 	SqlParams map[string]types.String `tfsdk:"sql_params" tf:"optional"`
 }
 
+func (newState *RunParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunParameters) {
+}
+
+func (newState *RunParameters) SyncEffectiveFieldsDuringRead(existingState RunParameters) {
+}
+
 // The current state of the run.
 type RunState struct {
 	// A value indicating the run's current lifecycle state. This field is
@@ -1903,6 +2547,29 @@ type RunState struct {
 	// A value indicating whether a run was canceled manually by a user or by
 	// the scheduler because the run timed out.
 	UserCancelledOrTimedout types.Bool `tfsdk:"user_cancelled_or_timedout" tf:"optional"`
+}
+
+func (newState *RunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunState) {
+}
+
+func (newState *RunState) SyncEffectiveFieldsDuringRead(existingState RunState) {
+}
+
+// The current status of the run
+type RunStatus struct {
+	// If the run was queued, details about the reason for queuing the run.
+	QueueDetails []QueueDetails `tfsdk:"queue_details" tf:"optional,object"`
+	// The current state of the run.
+	State types.String `tfsdk:"state" tf:"optional"`
+	// If the run is in a TERMINATING or TERMINATED state, details about the
+	// reason for terminating the run.
+	TerminationDetails []TerminationDetails `tfsdk:"termination_details" tf:"optional,object"`
+}
+
+func (newState *RunStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunStatus) {
+}
+
+func (newState *RunStatus) SyncEffectiveFieldsDuringRead(existingState RunStatus) {
 }
 
 // Used when outputting a child run, in GetRun or ListRuns.
@@ -1924,15 +2591,16 @@ type RunTask struct {
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance *ClusterInstance `tfsdk:"cluster_instance" tf:"optional"`
-	// If condition_task, specifies a condition with an outcome that can be used
-	// to control the execution of other tasks. Does not require a cluster to
-	// execute and does not support retries or notifications.
-	ConditionTask *RunConditionTask `tfsdk:"condition_task" tf:"optional"`
-	// If dbt_task, indicates that this must execute a dbt task. It requires
-	// both Databricks SQL and the ability to use a serverless or a pro SQL
-	// warehouse.
-	DbtTask *DbtTask `tfsdk:"dbt_task" tf:"optional"`
+	ClusterInstance []ClusterInstance `tfsdk:"cluster_instance" tf:"optional,object"`
+	// The task evaluates a condition that can be used to control the execution
+	// of other tasks when the `condition_task` field is present. The condition
+	// task does not require a cluster to execute and does not support retries
+	// or notifications.
+	ConditionTask []RunConditionTask `tfsdk:"condition_task" tf:"optional,object"`
+	// The task runs one or more dbt commands when the `dbt_task` field is
+	// present. The dbt task requires both Databricks SQL and the ability to use
+	// a serverless or a pro SQL warehouse.
+	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional,object"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete successfully before
 	// executing this task. The key is `task_key`, and the value is the name
@@ -1942,7 +2610,7 @@ type RunTask struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
-	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
@@ -1963,9 +2631,9 @@ type RunTask struct {
 	// to manually restart the cluster if it stops responding. We suggest
 	// running jobs and tasks on new clusters for greater reliability
 	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
-	// If for_each_task, indicates that this task must execute the nested task
-	// within it.
-	ForEachTask *RunForEachTask `tfsdk:"for_each_task" tf:"optional"`
+	// The task executes a nested task for every input provided when the
+	// `for_each_task` field is present.
+	ForEachTask []RunForEachTask `tfsdk:"for_each_task" tf:"optional,object"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks. If `git_source` is set,
@@ -1974,31 +2642,32 @@ type RunTask struct {
 	// `WORKSPACE` on the task. Note: dbt and SQL File tasks support only
 	// version-controlled sources. If dbt or SQL File tasks are used,
 	// `git_source` must be defined on the job.
-	GitSource *GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
 	// in `job.settings.job_clusters`.
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries []compute.Library `tfsdk:"library" tf:"optional"`
+	Libraries compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
-	// If notebook_task, indicates that this task must run a notebook. This
-	// field may not be specified in conjunction with spark_jar_task.
-	NotebookTask *NotebookTask `tfsdk:"notebook_task" tf:"optional"`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+	// The task runs a notebook when the `notebook_task` field is present.
+	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task run.
-	NotificationSettings *TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
-	// If pipeline_task, indicates that this task must execute a Pipeline.
-	PipelineTask *PipelineTask `tfsdk:"pipeline_task" tf:"optional"`
-	// If python_wheel_task, indicates that this job must execute a PythonWheel.
-	PythonWheelTask *PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional"`
+	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
+	// The task triggers a pipeline update when the `pipeline_task` field is
+	// present. Only pipelines configured to use triggered more are supported.
+	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional,object"`
+	// The task runs a Python wheel when the `python_wheel_task` field is
+	// present.
+	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional,object"`
 	// The time in milliseconds that the run has spent in the queue.
 	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
 	// Parameter values including resolved references
-	ResolvedValues *ResolvedValues `tfsdk:"resolved_values" tf:"optional"`
+	ResolvedValues []ResolvedValues `tfsdk:"resolved_values" tf:"optional,object"`
 	// The time in milliseconds it took the job run and all of its repairs to
 	// finish.
 	RunDuration types.Int64 `tfsdk:"run_duration" tf:"optional"`
@@ -2009,8 +2678,8 @@ type RunTask struct {
 	// omitted, defaults to `ALL_SUCCESS`. See :method:jobs/create for a list of
 	// possible values.
 	RunIf types.String `tfsdk:"run_if" tf:"optional"`
-	// If run_job_task, indicates that this task must execute another job.
-	RunJobTask *RunJobTask `tfsdk:"run_job_task" tf:"optional"`
+	// The task triggers another job when the `run_job_task` field is present.
+	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional,object"`
 
 	RunPageUrl types.String `tfsdk:"run_page_url" tf:"optional"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
@@ -2021,12 +2690,14 @@ type RunTask struct {
 	// job runs. The total duration of a multitask job run is the value of the
 	// `run_duration` field.
 	SetupDuration types.Int64 `tfsdk:"setup_duration" tf:"optional"`
-	// If spark_jar_task, indicates that this task must run a JAR.
-	SparkJarTask *SparkJarTask `tfsdk:"spark_jar_task" tf:"optional"`
-	// If spark_python_task, indicates that this task must run a Python file.
-	SparkPythonTask *SparkPythonTask `tfsdk:"spark_python_task" tf:"optional"`
-	// If `spark_submit_task`, indicates that this task must be launched by the
-	// spark submit script. This task can run only on new clusters.
+	// The task runs a JAR when the `spark_jar_task` field is present.
+	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional,object"`
+	// The task runs a Python file when the `spark_python_task` field is
+	// present.
+	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional,object"`
+	// (Legacy) The task runs the spark-submit script when the
+	// `spark_submit_task` field is present. This task can run only on new
+	// clusters and is not compatible with serverless compute.
 	//
 	// In the `new_cluster` specification, `libraries` and `spark_conf` are not
 	// supported. Instead, use `--jars` and `--py-files` to add Java and Python
@@ -2042,16 +2713,19 @@ type RunTask struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask *SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional"`
-	// If sql_task, indicates that this job must execute a SQL task.
-	SqlTask *SqlTask `tfsdk:"sql_task" tf:"optional"`
+	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional,object"`
+	// The task runs a SQL query or file, or it refreshes a SQL alert or a
+	// legacy SQL dashboard when the `sql_task` field is present.
+	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional,object"`
 	// The time at which this run was started in epoch milliseconds
 	// (milliseconds since 1/1/1970 UTC). This may not be the time when the job
 	// task starts executing, for example, if the job is scheduled to run on a
 	// new cluster, this is the time the cluster creation call is issued.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
-	// The current state of the run.
-	State *RunState `tfsdk:"state" tf:"optional"`
+	// Deprecated. Please use the `status` field instead.
+	State []RunState `tfsdk:"state" tf:"optional,object"`
+	// The current status of the run
+	Status []RunStatus `tfsdk:"status" tf:"optional,object"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
@@ -2063,7 +2737,13 @@ type RunTask struct {
 	// A collection of system notification IDs to notify when the run begins or
 	// completes. The default behavior is to not send any system notifications.
 	// Task webhooks respect the task notification settings.
-	WebhookNotifications *WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
+}
+
+func (newState *RunTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTask) {
+}
+
+func (newState *RunTask) SyncEffectiveFieldsDuringRead(existingState RunTask) {
 }
 
 type SparkJarTask struct {
@@ -2083,6 +2763,12 @@ type SparkJarTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
+}
+
+func (newState *SparkJarTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkJarTask) {
+}
+
+func (newState *SparkJarTask) SyncEffectiveFieldsDuringRead(existingState SparkJarTask) {
 }
 
 type SparkPythonTask struct {
@@ -2111,6 +2797,12 @@ type SparkPythonTask struct {
 	Source types.String `tfsdk:"source" tf:"optional"`
 }
 
+func (newState *SparkPythonTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkPythonTask) {
+}
+
+func (newState *SparkPythonTask) SyncEffectiveFieldsDuringRead(existingState SparkPythonTask) {
+}
+
 type SparkSubmitTask struct {
 	// Command-line parameters passed to spark submit.
 	//
@@ -2119,6 +2811,12 @@ type SparkSubmitTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	Parameters []types.String `tfsdk:"parameters" tf:"optional"`
+}
+
+func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkSubmitTask) {
+}
+
+func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringRead(existingState SparkSubmitTask) {
 }
 
 type SqlAlertOutput struct {
@@ -2139,6 +2837,12 @@ type SqlAlertOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlAlertOutput) {
+}
+
+func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringRead(existingState SqlAlertOutput) {
+}
+
 type SqlDashboardOutput struct {
 	// The canonical identifier of the SQL warehouse.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -2146,11 +2850,17 @@ type SqlDashboardOutput struct {
 	Widgets []SqlDashboardWidgetOutput `tfsdk:"widgets" tf:"optional"`
 }
 
+func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlDashboardOutput) {
+}
+
+func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardOutput) {
+}
+
 type SqlDashboardWidgetOutput struct {
 	// Time (in epoch milliseconds) when execution of the SQL widget ends.
 	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
 	// The information about the error when execution fails.
-	Error *SqlOutputError `tfsdk:"error" tf:"optional"`
+	Error []SqlOutputError `tfsdk:"error" tf:"optional,object"`
 	// The link to find the output results.
 	OutputLink types.String `tfsdk:"output_link" tf:"optional"`
 	// Time (in epoch milliseconds) when execution of the SQL widget starts.
@@ -2163,18 +2873,36 @@ type SqlDashboardWidgetOutput struct {
 	WidgetTitle types.String `tfsdk:"widget_title" tf:"optional"`
 }
 
+func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlDashboardWidgetOutput) {
+}
+
+func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardWidgetOutput) {
+}
+
 type SqlOutput struct {
 	// The output of a SQL alert task, if available.
-	AlertOutput *SqlAlertOutput `tfsdk:"alert_output" tf:"optional"`
+	AlertOutput []SqlAlertOutput `tfsdk:"alert_output" tf:"optional,object"`
 	// The output of a SQL dashboard task, if available.
-	DashboardOutput *SqlDashboardOutput `tfsdk:"dashboard_output" tf:"optional"`
+	DashboardOutput []SqlDashboardOutput `tfsdk:"dashboard_output" tf:"optional,object"`
 	// The output of a SQL query task, if available.
-	QueryOutput *SqlQueryOutput `tfsdk:"query_output" tf:"optional"`
+	QueryOutput []SqlQueryOutput `tfsdk:"query_output" tf:"optional,object"`
+}
+
+func (newState *SqlOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutput) {
+}
+
+func (newState *SqlOutput) SyncEffectiveFieldsDuringRead(existingState SqlOutput) {
 }
 
 type SqlOutputError struct {
 	// The error message when execution fails.
 	Message types.String `tfsdk:"message" tf:"optional"`
+}
+
+func (newState *SqlOutputError) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutputError) {
+}
+
+func (newState *SqlOutputError) SyncEffectiveFieldsDuringRead(existingState SqlOutputError) {
 }
 
 type SqlQueryOutput struct {
@@ -2190,29 +2918,47 @@ type SqlQueryOutput struct {
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
+func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlQueryOutput) {
+}
+
+func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringRead(existingState SqlQueryOutput) {
+}
+
 type SqlStatementOutput struct {
 	// A key that can be used to look up query details.
 	LookupKey types.String `tfsdk:"lookup_key" tf:"optional"`
 }
 
+func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlStatementOutput) {
+}
+
+func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringRead(existingState SqlStatementOutput) {
+}
+
 type SqlTask struct {
 	// If alert, indicates that this job must refresh a SQL alert.
-	Alert *SqlTaskAlert `tfsdk:"alert" tf:"optional"`
+	Alert []SqlTaskAlert `tfsdk:"alert" tf:"optional,object"`
 	// If dashboard, indicates that this job must refresh a SQL dashboard.
-	Dashboard *SqlTaskDashboard `tfsdk:"dashboard" tf:"optional"`
+	Dashboard []SqlTaskDashboard `tfsdk:"dashboard" tf:"optional,object"`
 	// If file, indicates that this job runs a SQL file in a remote Git
 	// repository.
-	File *SqlTaskFile `tfsdk:"file" tf:"optional"`
+	File []SqlTaskFile `tfsdk:"file" tf:"optional,object"`
 	// Parameters to be used for each run of this job. The SQL alert task does
 	// not support custom parameters.
 	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
 	// If query, indicates that this job must execute a SQL query.
-	Query *SqlTaskQuery `tfsdk:"query" tf:"optional"`
+	Query []SqlTaskQuery `tfsdk:"query" tf:"optional,object"`
 	// The canonical identifier of the SQL warehouse. Recommended to use with
 	// serverless or pro SQL warehouses. Classic SQL warehouses are only
 	// supported for SQL alert, dashboard and query tasks and are limited to
 	// scheduled single-task jobs.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:""`
+}
+
+func (newState *SqlTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTask) {
+}
+
+func (newState *SqlTask) SyncEffectiveFieldsDuringRead(existingState SqlTask) {
 }
 
 type SqlTaskAlert struct {
@@ -2222,6 +2968,12 @@ type SqlTaskAlert struct {
 	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions" tf:"optional"`
 	// If specified, alert notifications are sent to subscribers.
 	Subscriptions []SqlTaskSubscription `tfsdk:"subscriptions" tf:"optional"`
+}
+
+func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskAlert) {
+}
+
+func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringRead(existingState SqlTaskAlert) {
 }
 
 type SqlTaskDashboard struct {
@@ -2234,6 +2986,12 @@ type SqlTaskDashboard struct {
 	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions" tf:"optional"`
 	// If specified, dashboard snapshots are sent to subscriptions.
 	Subscriptions []SqlTaskSubscription `tfsdk:"subscriptions" tf:"optional"`
+}
+
+func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskDashboard) {
+}
+
+func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringRead(existingState SqlTaskDashboard) {
 }
 
 type SqlTaskFile struct {
@@ -2251,9 +3009,21 @@ type SqlTaskFile struct {
 	Source types.String `tfsdk:"source" tf:"optional"`
 }
 
+func (newState *SqlTaskFile) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskFile) {
+}
+
+func (newState *SqlTaskFile) SyncEffectiveFieldsDuringRead(existingState SqlTaskFile) {
+}
+
 type SqlTaskQuery struct {
 	// The canonical identifier of the SQL query.
 	QueryId types.String `tfsdk:"query_id" tf:""`
+}
+
+func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskQuery) {
+}
+
+func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringRead(existingState SqlTaskQuery) {
 }
 
 type SqlTaskSubscription struct {
@@ -2268,12 +3038,21 @@ type SqlTaskSubscription struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskSubscription) {
+}
+
+func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringRead(existingState SqlTaskSubscription) {
+}
+
 type SubmitRun struct {
 	// List of permissions to set on the job.
 	AccessControlList []JobAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	// The user specified id of the budget policy to use for this one-time run.
+	// If not specified, the run will be not be attributed to any budget policy.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
 	// An optional set of email addresses notified when the run begins or
 	// completes.
-	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this run.
 	Environments []JobEnvironment `tfsdk:"environments" tf:"optional"`
@@ -2287,9 +3066,9 @@ type SubmitRun struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource *GitSource `tfsdk:"git_source" tf:"optional"`
+	GitSource []GitSource `tfsdk:"git_source" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health *JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// An optional token that can be used to guarantee the idempotency of job
 	// run requests. If a run with the provided token already exists, the
 	// request does not create a new run but returns the ID of the existing run
@@ -2309,12 +3088,12 @@ type SubmitRun struct {
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// run.
-	NotificationSettings *JobNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
+	NotificationSettings []JobNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
 	// The queue settings of the one-time run.
-	Queue *QueueSettings `tfsdk:"queue" tf:"optional"`
+	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
 	// Specifies the user or service principal that the job runs as. If not
 	// specified, the job runs as the user who submits the request.
-	RunAs *JobRunAs `tfsdk:"run_as" tf:"optional"`
+	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional name for the run. The default value is `Untitled`.
 	RunName types.String `tfsdk:"run_name" tf:"optional"`
 
@@ -2324,7 +3103,13 @@ type SubmitRun struct {
 	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
 	// A collection of system notification IDs to notify when the run begins or
 	// completes.
-	WebhookNotifications *WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
+}
+
+func (newState *SubmitRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRun) {
+}
+
+func (newState *SubmitRun) SyncEffectiveFieldsDuringRead(existingState SubmitRun) {
 }
 
 // Run was created and started successfully.
@@ -2333,15 +3118,22 @@ type SubmitRunResponse struct {
 	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
 }
 
+func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRunResponse) {
+}
+
+func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringRead(existingState SubmitRunResponse) {
+}
+
 type SubmitTask struct {
-	// If condition_task, specifies a condition with an outcome that can be used
-	// to control the execution of other tasks. Does not require a cluster to
-	// execute and does not support retries or notifications.
-	ConditionTask *ConditionTask `tfsdk:"condition_task" tf:"optional"`
-	// If dbt_task, indicates that this must execute a dbt task. It requires
-	// both Databricks SQL and the ability to use a serverless or a pro SQL
-	// warehouse.
-	DbtTask *DbtTask `tfsdk:"dbt_task" tf:"optional"`
+	// The task evaluates a condition that can be used to control the execution
+	// of other tasks when the `condition_task` field is present. The condition
+	// task does not require a cluster to execute and does not support retries
+	// or notifications.
+	ConditionTask []ConditionTask `tfsdk:"condition_task" tf:"optional,object"`
+	// The task runs one or more dbt commands when the `dbt_task` field is
+	// present. The dbt task requires both Databricks SQL and the ability to use
+	// a serverless or a pro SQL warehouse.
+	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional,object"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete successfully before
 	// executing this task. The key is `task_key`, and the value is the name
@@ -2351,7 +3143,7 @@ type SubmitTask struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
-	EmailNotifications *JobEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []JobEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
 	// serverless compute.
@@ -2361,41 +3153,44 @@ type SubmitTask struct {
 	// to manually restart the cluster if it stops responding. We suggest
 	// running jobs and tasks on new clusters for greater reliability
 	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
-	// If for_each_task, indicates that this task must execute the nested task
-	// within it.
-	ForEachTask *ForEachTask `tfsdk:"for_each_task" tf:"optional"`
+	// The task executes a nested task for every input provided when the
+	// `for_each_task` field is present.
+	ForEachTask []ForEachTask `tfsdk:"for_each_task" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health *JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries []compute.Library `tfsdk:"library" tf:"optional"`
+	Libraries compute.Library `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
-	// If notebook_task, indicates that this task must run a notebook. This
-	// field may not be specified in conjunction with spark_jar_task.
-	NotebookTask *NotebookTask `tfsdk:"notebook_task" tf:"optional"`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+	// The task runs a notebook when the `notebook_task` field is present.
+	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task run.
-	NotificationSettings *TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
-	// If pipeline_task, indicates that this task must execute a Pipeline.
-	PipelineTask *PipelineTask `tfsdk:"pipeline_task" tf:"optional"`
-	// If python_wheel_task, indicates that this job must execute a PythonWheel.
-	PythonWheelTask *PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional"`
+	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
+	// The task triggers a pipeline update when the `pipeline_task` field is
+	// present. Only pipelines configured to use triggered more are supported.
+	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional,object"`
+	// The task runs a Python wheel when the `python_wheel_task` field is
+	// present.
+	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional,object"`
 	// An optional value indicating the condition that determines whether the
 	// task should be run once its dependencies have been completed. When
 	// omitted, defaults to `ALL_SUCCESS`. See :method:jobs/create for a list of
 	// possible values.
 	RunIf types.String `tfsdk:"run_if" tf:"optional"`
-	// If run_job_task, indicates that this task must execute another job.
-	RunJobTask *RunJobTask `tfsdk:"run_job_task" tf:"optional"`
-	// If spark_jar_task, indicates that this task must run a JAR.
-	SparkJarTask *SparkJarTask `tfsdk:"spark_jar_task" tf:"optional"`
-	// If spark_python_task, indicates that this task must run a Python file.
-	SparkPythonTask *SparkPythonTask `tfsdk:"spark_python_task" tf:"optional"`
-	// If `spark_submit_task`, indicates that this task must be launched by the
-	// spark submit script. This task can run only on new clusters.
+	// The task triggers another job when the `run_job_task` field is present.
+	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional,object"`
+	// The task runs a JAR when the `spark_jar_task` field is present.
+	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional,object"`
+	// The task runs a Python file when the `spark_python_task` field is
+	// present.
+	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional,object"`
+	// (Legacy) The task runs the spark-submit script when the
+	// `spark_submit_task` field is present. This task can run only on new
+	// clusters and is not compatible with serverless compute.
 	//
 	// In the `new_cluster` specification, `libraries` and `spark_conf` are not
 	// supported. Instead, use `--jars` and `--py-files` to add Java and Python
@@ -2411,9 +3206,10 @@ type SubmitTask struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask *SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional"`
-	// If sql_task, indicates that this job must execute a SQL task.
-	SqlTask *SqlTask `tfsdk:"sql_task" tf:"optional"`
+	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional,object"`
+	// The task runs a SQL query or file, or it refreshes a SQL alert or a
+	// legacy SQL dashboard when the `sql_task` field is present.
+	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional,object"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
@@ -2425,7 +3221,13 @@ type SubmitTask struct {
 	// A collection of system notification IDs to notify when the run begins or
 	// completes. The default behavior is to not send any system notifications.
 	// Task webhooks respect the task notification settings.
-	WebhookNotifications *WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
+}
+
+func (newState *SubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitTask) {
+}
+
+func (newState *SubmitTask) SyncEffectiveFieldsDuringRead(existingState SubmitTask) {
 }
 
 type TableUpdateTriggerConfiguration struct {
@@ -2445,15 +3247,22 @@ type TableUpdateTriggerConfiguration struct {
 	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds" tf:"optional"`
 }
 
+func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableUpdateTriggerConfiguration) {
+}
+
+func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState TableUpdateTriggerConfiguration) {
+}
+
 type Task struct {
-	// If condition_task, specifies a condition with an outcome that can be used
-	// to control the execution of other tasks. Does not require a cluster to
-	// execute and does not support retries or notifications.
-	ConditionTask *ConditionTask `tfsdk:"condition_task" tf:"optional"`
-	// If dbt_task, indicates that this must execute a dbt task. It requires
-	// both Databricks SQL and the ability to use a serverless or a pro SQL
-	// warehouse.
-	DbtTask *DbtTask `tfsdk:"dbt_task" tf:"optional"`
+	// The task evaluates a condition that can be used to control the execution
+	// of other tasks when the `condition_task` field is present. The condition
+	// task does not require a cluster to execute and does not support retries
+	// or notifications.
+	ConditionTask []ConditionTask `tfsdk:"condition_task" tf:"optional,object"`
+	// The task runs one or more dbt commands when the `dbt_task` field is
+	// present. The dbt task requires both Databricks SQL and the ability to use
+	// a serverless or a pro SQL warehouse.
+	DbtTask []DbtTask `tfsdk:"dbt_task" tf:"optional,object"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete before executing this
 	// task. The task will run only if the `run_if` condition is true. The key
@@ -2466,7 +3275,7 @@ type Task struct {
 	// An optional set of email addresses that is notified when runs of this
 	// task begin or complete as well as when this task is deleted. The default
 	// behavior is to not send any emails.
-	EmailNotifications *TaskEmailNotifications `tfsdk:"email_notifications" tf:"optional"`
+	EmailNotifications []TaskEmailNotifications `tfsdk:"email_notifications" tf:"optional,object"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
 	// serverless compute.
@@ -2476,17 +3285,17 @@ type Task struct {
 	// to manually restart the cluster if it stops responding. We suggest
 	// running jobs and tasks on new clusters for greater reliability
 	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
-	// If for_each_task, indicates that this task must execute the nested task
-	// within it.
-	ForEachTask *ForEachTask `tfsdk:"for_each_task" tf:"optional"`
+	// The task executes a nested task for every input provided when the
+	// `for_each_task` field is present.
+	ForEachTask []ForEachTask `tfsdk:"for_each_task" tf:"optional,object"`
 	// An optional set of health rules that can be defined for this job.
-	Health *JobsHealthRules `tfsdk:"health" tf:"optional"`
+	Health []JobsHealthRules `tfsdk:"health" tf:"optional,object"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
 	// in `job.settings.job_clusters`.
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries []compute.Library `tfsdk:"library" tf:"optional"`
+	Libraries compute.Library `tfsdk:"library" tf:"optional"`
 	// An optional maximum number of times to retry an unsuccessful run. A run
 	// is considered to be unsuccessful if it completes with the `FAILED`
 	// result_state or `INTERNAL_ERROR` `life_cycle_state`. The value `-1` means
@@ -2498,18 +3307,19 @@ type Task struct {
 	MinRetryIntervalMillis types.Int64 `tfsdk:"min_retry_interval_millis" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster *compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional"`
-	// If notebook_task, indicates that this task must run a notebook. This
-	// field may not be specified in conjunction with spark_jar_task.
-	NotebookTask *NotebookTask `tfsdk:"notebook_task" tf:"optional"`
+	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+	// The task runs a notebook when the `notebook_task` field is present.
+	NotebookTask []NotebookTask `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task.
-	NotificationSettings *TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional"`
-	// If pipeline_task, indicates that this task must execute a Pipeline.
-	PipelineTask *PipelineTask `tfsdk:"pipeline_task" tf:"optional"`
-	// If python_wheel_task, indicates that this job must execute a PythonWheel.
-	PythonWheelTask *PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional"`
+	NotificationSettings []TaskNotificationSettings `tfsdk:"notification_settings" tf:"optional,object"`
+	// The task triggers a pipeline update when the `pipeline_task` field is
+	// present. Only pipelines configured to use triggered more are supported.
+	PipelineTask []PipelineTask `tfsdk:"pipeline_task" tf:"optional,object"`
+	// The task runs a Python wheel when the `python_wheel_task` field is
+	// present.
+	PythonWheelTask []PythonWheelTask `tfsdk:"python_wheel_task" tf:"optional,object"`
 	// An optional policy to specify whether to retry a job when it times out.
 	// The default behavior is to not retry on timeout.
 	RetryOnTimeout types.Bool `tfsdk:"retry_on_timeout" tf:"optional"`
@@ -2523,14 +3333,16 @@ type Task struct {
 	// `AT_LEAST_ONE_FAILED`: At least one dependency failed * `ALL_FAILED`: ALl
 	// dependencies have failed
 	RunIf types.String `tfsdk:"run_if" tf:"optional"`
-	// If run_job_task, indicates that this task must execute another job.
-	RunJobTask *RunJobTask `tfsdk:"run_job_task" tf:"optional"`
-	// If spark_jar_task, indicates that this task must run a JAR.
-	SparkJarTask *SparkJarTask `tfsdk:"spark_jar_task" tf:"optional"`
-	// If spark_python_task, indicates that this task must run a Python file.
-	SparkPythonTask *SparkPythonTask `tfsdk:"spark_python_task" tf:"optional"`
-	// If `spark_submit_task`, indicates that this task must be launched by the
-	// spark submit script. This task can run only on new clusters.
+	// The task triggers another job when the `run_job_task` field is present.
+	RunJobTask []RunJobTask `tfsdk:"run_job_task" tf:"optional,object"`
+	// The task runs a JAR when the `spark_jar_task` field is present.
+	SparkJarTask []SparkJarTask `tfsdk:"spark_jar_task" tf:"optional,object"`
+	// The task runs a Python file when the `spark_python_task` field is
+	// present.
+	SparkPythonTask []SparkPythonTask `tfsdk:"spark_python_task" tf:"optional,object"`
+	// (Legacy) The task runs the spark-submit script when the
+	// `spark_submit_task` field is present. This task can run only on new
+	// clusters and is not compatible with serverless compute.
 	//
 	// In the `new_cluster` specification, `libraries` and `spark_conf` are not
 	// supported. Instead, use `--jars` and `--py-files` to add Java and Python
@@ -2546,9 +3358,10 @@ type Task struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask *SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional"`
-	// If sql_task, indicates that this job must execute a SQL task.
-	SqlTask *SqlTask `tfsdk:"sql_task" tf:"optional"`
+	SparkSubmitTask []SparkSubmitTask `tfsdk:"spark_submit_task" tf:"optional,object"`
+	// The task runs a SQL query or file, or it refreshes a SQL alert or a
+	// legacy SQL dashboard when the `sql_task` field is present.
+	SqlTask []SqlTask `tfsdk:"sql_task" tf:"optional,object"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
@@ -2560,7 +3373,13 @@ type Task struct {
 	// A collection of system notification IDs to notify when runs of this task
 	// begin or complete. The default behavior is to not send any system
 	// notifications.
-	WebhookNotifications *WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional"`
+	WebhookNotifications []WebhookNotifications `tfsdk:"webhook_notifications" tf:"optional,object"`
+}
+
+func (newState *Task) SyncEffectiveFieldsDuringCreateOrUpdate(plan Task) {
+}
+
+func (newState *Task) SyncEffectiveFieldsDuringRead(existingState Task) {
 }
 
 type TaskDependency struct {
@@ -2571,9 +3390,16 @@ type TaskDependency struct {
 	TaskKey types.String `tfsdk:"task_key" tf:""`
 }
 
+func (newState *TaskDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskDependency) {
+}
+
+func (newState *TaskDependency) SyncEffectiveFieldsDuringRead(existingState TaskDependency) {
+}
+
 type TaskEmailNotifications struct {
 	// If true, do not send email to recipients specified in `on_failure` if the
-	// run is skipped.
+	// run is skipped. This field is `deprecated`. Please use the
+	// `notification_settings.no_alert_for_skipped_runs` field.
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
 	// A list of email addresses to be notified when the duration of a run
 	// exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in
@@ -2606,6 +3432,12 @@ type TaskEmailNotifications struct {
 	OnSuccess []types.String `tfsdk:"on_success" tf:"optional"`
 }
 
+func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskEmailNotifications) {
+}
+
+func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringRead(existingState TaskEmailNotifications) {
+}
+
 type TaskNotificationSettings struct {
 	// If true, do not send notifications to recipients specified in `on_start`
 	// for the retried runs and do not send notifications to recipients
@@ -2619,23 +3451,108 @@ type TaskNotificationSettings struct {
 	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
 }
 
+func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskNotificationSettings) {
+}
+
+func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringRead(existingState TaskNotificationSettings) {
+}
+
+type TerminationDetails struct {
+	// The code indicates why the run was terminated. Additional codes might be
+	// introduced in future releases. * `SUCCESS`: The run was completed
+	// successfully. * `USER_CANCELED`: The run was successfully canceled during
+	// execution by a user. * `CANCELED`: The run was canceled during execution
+	// by the Databricks platform; for example, if the maximum run duration was
+	// exceeded. * `SKIPPED`: Run was never executed, for example, if the
+	// upstream task run failed, the dependency type condition was not met, or
+	// there were no material tasks to execute. * `INTERNAL_ERROR`: The run
+	// encountered an unexpected error. Refer to the state message for further
+	// details. * `DRIVER_ERROR`: The run encountered an error while
+	// communicating with the Spark Driver. * `CLUSTER_ERROR`: The run failed
+	// due to a cluster error. Refer to the state message for further details. *
+	// `REPOSITORY_CHECKOUT_FAILED`: Failed to complete the checkout due to an
+	// error when communicating with the third party service. *
+	// `INVALID_CLUSTER_REQUEST`: The run failed because it issued an invalid
+	// request to start the cluster. * `WORKSPACE_RUN_LIMIT_EXCEEDED`: The
+	// workspace has reached the quota for the maximum number of concurrent
+	// active runs. Consider scheduling the runs over a larger time frame. *
+	// `FEATURE_DISABLED`: The run failed because it tried to access a feature
+	// unavailable for the workspace. * `CLUSTER_REQUEST_LIMIT_EXCEEDED`: The
+	// number of cluster creation, start, and upsize requests have exceeded the
+	// allotted rate limit. Consider spreading the run execution over a larger
+	// time frame. * `STORAGE_ACCESS_ERROR`: The run failed due to an error when
+	// accessing the customer blob storage. Refer to the state message for
+	// further details. * `RUN_EXECUTION_ERROR`: The run was completed with task
+	// failures. For more details, refer to the state message or run output. *
+	// `UNAUTHORIZED_ERROR`: The run failed due to a permission issue while
+	// accessing a resource. Refer to the state message for further details. *
+	// `LIBRARY_INSTALLATION_ERROR`: The run failed while installing the
+	// user-requested library. Refer to the state message for further details.
+	// The causes might include, but are not limited to: The provided library is
+	// invalid, there are insufficient permissions to install the library, and
+	// so forth. * `MAX_CONCURRENT_RUNS_EXCEEDED`: The scheduled run exceeds the
+	// limit of maximum concurrent runs set for the job. *
+	// `MAX_SPARK_CONTEXTS_EXCEEDED`: The run is scheduled on a cluster that has
+	// already reached the maximum number of contexts it is configured to
+	// create. See: [Link]. * `RESOURCE_NOT_FOUND`: A resource necessary for run
+	// execution does not exist. Refer to the state message for further details.
+	// * `INVALID_RUN_CONFIGURATION`: The run failed due to an invalid
+	// configuration. Refer to the state message for further details. *
+	// `CLOUD_FAILURE`: The run failed due to a cloud provider issue. Refer to
+	// the state message for further details. * `MAX_JOB_QUEUE_SIZE_EXCEEDED`:
+	// The run was skipped due to reaching the job level queue size limit.
+	//
+	// [Link]: https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now
+	Code types.String `tfsdk:"code" tf:"optional"`
+	// A descriptive message with the termination details. This field is
+	// unstructured and the format might change.
+	Message types.String `tfsdk:"message" tf:"optional"`
+	// * `SUCCESS`: The run terminated without any issues * `INTERNAL_ERROR`: An
+	// error occurred in the Databricks platform. Please look at the [status
+	// page] or contact support if the issue persists. * `CLIENT_ERROR`: The run
+	// was terminated because of an error caused by user input or the job
+	// configuration. * `CLOUD_FAILURE`: The run was terminated because of an
+	// issue with your cloud provider.
+	//
+	// [status page]: https://status.databricks.com/
+	Type types.String `tfsdk:"type" tf:"optional"`
+}
+
+func (newState *TerminationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationDetails) {
+}
+
+func (newState *TerminationDetails) SyncEffectiveFieldsDuringRead(existingState TerminationDetails) {
+}
+
 // Additional details about what triggered the run
 type TriggerInfo struct {
 	// The run id of the Run Job task run
 	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
 }
 
+func (newState *TriggerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerInfo) {
+}
+
+func (newState *TriggerInfo) SyncEffectiveFieldsDuringRead(existingState TriggerInfo) {
+}
+
 type TriggerSettings struct {
 	// File arrival trigger settings.
-	FileArrival *FileArrivalTriggerConfiguration `tfsdk:"file_arrival" tf:"optional"`
+	FileArrival []FileArrivalTriggerConfiguration `tfsdk:"file_arrival" tf:"optional,object"`
 	// Whether this trigger is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
 	// Periodic trigger settings.
-	Periodic *PeriodicTriggerConfiguration `tfsdk:"periodic" tf:"optional"`
+	Periodic []PeriodicTriggerConfiguration `tfsdk:"periodic" tf:"optional,object"`
 	// Old table trigger settings name. Deprecated in favor of `table_update`.
-	Table *TableUpdateTriggerConfiguration `tfsdk:"table" tf:"optional"`
+	Table []TableUpdateTriggerConfiguration `tfsdk:"table" tf:"optional,object"`
 
-	TableUpdate *TableUpdateTriggerConfiguration `tfsdk:"table_update" tf:"optional"`
+	TableUpdate []TableUpdateTriggerConfiguration `tfsdk:"table_update" tf:"optional,object"`
+}
+
+func (newState *TriggerSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerSettings) {
+}
+
+func (newState *TriggerSettings) SyncEffectiveFieldsDuringRead(existingState TriggerSettings) {
 }
 
 type UpdateJob struct {
@@ -2656,10 +3573,22 @@ type UpdateJob struct {
 	//
 	// Changes to the field `JobSettings.timeout_seconds` are applied to active
 	// runs. Changes to other fields are applied to future runs only.
-	NewSettings *JobSettings `tfsdk:"new_settings" tf:"optional"`
+	NewSettings []JobSettings `tfsdk:"new_settings" tf:"optional,object"`
+}
+
+func (newState *UpdateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateJob) {
+}
+
+func (newState *UpdateJob) SyncEffectiveFieldsDuringRead(existingState UpdateJob) {
 }
 
 type UpdateResponse struct {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
 type ViewItem struct {
@@ -2673,8 +3602,20 @@ type ViewItem struct {
 	Type types.String `tfsdk:"type" tf:"optional"`
 }
 
+func (newState *ViewItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan ViewItem) {
+}
+
+func (newState *ViewItem) SyncEffectiveFieldsDuringRead(existingState ViewItem) {
+}
+
 type Webhook struct {
 	Id types.String `tfsdk:"id" tf:""`
+}
+
+func (newState *Webhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan Webhook) {
+}
+
+func (newState *Webhook) SyncEffectiveFieldsDuringRead(existingState Webhook) {
 }
 
 type WebhookNotifications struct {
@@ -2702,4 +3643,10 @@ type WebhookNotifications struct {
 	// completes successfully. A maximum of 3 destinations can be specified for
 	// the `on_success` property.
 	OnSuccess []Webhook `tfsdk:"on_success" tf:"optional"`
+}
+
+func (newState *WebhookNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan WebhookNotifications) {
+}
+
+func (newState *WebhookNotifications) SyncEffectiveFieldsDuringRead(existingState WebhookNotifications) {
 }

@@ -3,6 +3,7 @@ package tfschema
 import (
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -15,6 +16,7 @@ type SingleNestedAttributeBuilder struct {
 	Computed           bool
 	DeprecationMessage string
 	Validators         []validator.Object
+	PlanModifiers      []planmodifier.Object
 }
 
 func (a SingleNestedAttributeBuilder) BuildDataSourceAttribute() dataschema.Attribute {
@@ -38,10 +40,11 @@ func (a SingleNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute 
 		DeprecationMessage: a.DeprecationMessage,
 		Computed:           a.Computed,
 		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
 	}
 }
 
-func (a SingleNestedAttributeBuilder) SetOptional() AttributeBuilder {
+func (a SingleNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -50,7 +53,7 @@ func (a SingleNestedAttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetRequired() AttributeBuilder {
+func (a SingleNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -59,7 +62,7 @@ func (a SingleNestedAttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetSensitive() AttributeBuilder {
+func (a SingleNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -67,7 +70,7 @@ func (a SingleNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetComputed() AttributeBuilder {
+func (a SingleNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -75,7 +78,7 @@ func (a SingleNestedAttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a SingleNestedAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -85,12 +88,17 @@ func (a SingleNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a SingleNestedAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) AddValidator(v validator.Object) AttributeBuilder {
+func (a SingleNestedAttributeBuilder) AddValidator(v validator.Object) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
+	return a
+}
+
+func (a SingleNestedAttributeBuilder) AddPlanModifier(v planmodifier.Object) BaseSchemaBuilder {
+	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

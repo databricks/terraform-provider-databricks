@@ -13,6 +13,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 )
 
+const goSdkToTfSdkStructConversionFailureMessage = "gosdk to tfsdk struct conversion failure"
+const goSdkToTfSdkFieldConversionFailureMessage = "gosdk to tfsdk field conversion failure"
+
 // GoSdkToTfSdkStruct converts a gosdk struct into a tfsdk struct, with the folowing rules.
 //
 //	string -> types.String
@@ -23,11 +26,13 @@ import (
 //
 // NOTE:
 //
-//	If field name doesn't show up in ForceSendFields and the field is zero value, we set the null value on the tfsdk.
-//	types.list and types.map are not supported
-//	map keys should always be a string
-//	tfsdk structs use types.String for all enum values
-//	non-json fields will be omitted
+// # Structs in gosdk are represented as slices of structs in tfsdk, and pointers are removed
+//
+// If field name doesn't show up in ForceSendFields and the field is zero value, we set the null value on the tfsdk.
+// types.list and types.map are not supported
+// map keys should always be a string
+// tfsdk structs use types.String for all enum values
+// non-json fields will be omitted
 func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{}) diag.Diagnostics {
 
 	srcVal := reflect.ValueOf(gosdk)
@@ -38,12 +43,12 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 	}
 
 	if destVal.Kind() != reflect.Ptr {
-		return diag.Diagnostics{diag.NewErrorDiagnostic("please provide a pointer for the tfsdk struct", "tfsdk to gosdk struct conversion failure")}
+		return diag.Diagnostics{diag.NewErrorDiagnostic(goSdkToTfSdkStructConversionFailureMessage, fmt.Sprintf("please provide a pointer for the tfsdk struct, got %s", destVal.Type().Name()))}
 	}
 	destVal = destVal.Elem()
 
 	if srcVal.Kind() != reflect.Struct || destVal.Kind() != reflect.Struct {
-		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("input should be structs %s, %s", srcVal.Type().Name(), destVal.Type().Name()), "tfsdk to gosdk struct conversion failure")}
+		return diag.Diagnostics{diag.NewErrorDiagnostic(goSdkToTfSdkStructConversionFailureMessage, fmt.Sprintf("input should be structs %s, %s", srcVal.Type().Name(), destVal.Type().Name()))}
 	}
 
 	var forceSendFieldVal []string
@@ -73,7 +78,7 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 
 		err := goSdkToTfSdkSingleField(ctx, srcField, destField, fieldInForceSendFields(srcFieldName, forceSendFieldVal))
 		if err != nil {
-			return diag.Diagnostics{diag.NewErrorDiagnostic(err.Error(), "gosdk to tfsdk field conversion failure")}
+			return diag.Diagnostics{diag.NewErrorDiagnostic(goSdkToTfSdkFieldConversionFailureMessage, err.Error())}
 		}
 	}
 	return nil
@@ -97,11 +102,24 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			// Skip nils
 			return nil
 		}
-		destField.Set(reflect.New(destField.Type().Elem()))
+
+		var fieldToSetInterface any
+
+		if destField.Kind() == reflect.Slice {
+			sliceType := destField.Type()
+			newSlice := reflect.MakeSlice(sliceType, 1, 1)
+			newSlice.Index(0).Set(reflect.New(sliceType.Elem()).Elem())
+
+			destField.Set(newSlice)
+			fieldToSetInterface = newSlice.Index(0).Addr().Interface()
+		} else {
+			destField.Set(reflect.New(destField.Type().Elem()))
+			fieldToSetInterface = destField.Interface()
+		}
 
 		// Recursively populate the nested struct.
-		if GoSdkToTfSdkStruct(ctx, srcFieldValue, destField.Interface()).HasError() {
-			panic(fmt.Sprintf("Error converting gosdk to tfsdk struct. %s", common.TerraformBugErrorMessage))
+		if GoSdkToTfSdkStruct(ctx, srcFieldValue, fieldToSetInterface).HasError() {
+			panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
 		}
 	case reflect.Bool:
 		boolVal := srcFieldValue.(bool)
@@ -111,7 +129,7 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 		} else {
 			destField.Set(reflect.ValueOf(types.BoolNull()))
 		}
-	case reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		// convert any kind of integer to int64
 		intVal := srcField.Convert(reflect.TypeOf(int64(0))).Int()
 		// check if the value is non-zero or if the field is in the forceSendFields list
@@ -120,7 +138,7 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 		} else {
 			destField.Set(reflect.ValueOf(types.Int64Null()))
 		}
-	case reflect.Float64:
+	case reflect.Float32, reflect.Float64:
 		// convert any kind of float to float64
 		float64Val := srcField.Convert(reflect.TypeOf(float64(0))).Float()
 		// check if the value is non-zero or if the field is in the forceSendFields list
@@ -148,9 +166,18 @@ func goSdkToTfSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			// Skip zeros
 			return nil
 		}
+		var dest any
+		if destField.Kind() == reflect.Slice {
+			// allocate a slice first
+			destSlice := reflect.MakeSlice(destField.Type(), 1, 1)
+			destField.Set(destSlice)
+			dest = destSlice.Index(0).Addr().Interface()
+		} else {
+			dest = destField.Addr().Interface()
+		}
 		// resolve the nested struct by recursively calling the function
-		if GoSdkToTfSdkStruct(ctx, srcFieldValue, destField.Addr().Interface()).HasError() {
-			panic(fmt.Sprintf("Error converting gosdk to tfsdk struct. %s", common.TerraformBugErrorMessage))
+		if GoSdkToTfSdkStruct(ctx, srcFieldValue, dest).HasError() {
+			panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
 		}
 	case reflect.Slice:
 		if srcField.IsNil() {

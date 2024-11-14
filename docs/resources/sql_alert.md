@@ -5,7 +5,7 @@ subcategory: "Databricks SQL"
 
 This resource allows you to manage [Databricks SQL Alerts](https://docs.databricks.com/sql/user/queries/index.html).
 
-**Note:** To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
+-> To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
 
 ## Example Usage
 
@@ -57,6 +57,18 @@ The following arguments are available:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - unique ID of the SQL Alert.
+
+## Access Control
+
+[databricks_permissions](permissions.md#sql-alert-usage) can control which groups or individual users can *Manage*, *Edit*, *Run* or *View* individual alerts.
+
+## Import
+
+This resource can be imported using alert ID:
+
+```bash
+terraform import databricks_sql_alert.this <alert-id>
+```
 
 ## Related Resources
 

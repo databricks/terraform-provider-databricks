@@ -237,8 +237,8 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `config_file` - (optional) Location of the Databricks CLI credentials file created by `databricks configure --token` command (~/.databrickscfg by default). Check [Databricks CLI documentation](https://docs.databricks.com/dev-tools/cli/index.html#set-up-authentication) for more details. The provider uses configuration file credentials when you don't specify host/token/azure attributes. Alternatively, you can provide this value as an environment variable `DATABRICKS_CONFIG_FILE`. This field defaults to `~/.databrickscfg`.
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to
 `DEFAULT`.
-* `account_id` - (optional for workspace-level operations, but required for account-level) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). In the future releases of the provider this property will also be used specify account for `databricks_mws_*` resources as well.
-* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `oauth-m2m`, `azure-client-secret`, `azure-msi`, `azure-cli`, `google-credentials`, and `google-id`.
+* `account_id` - (required for account-level operations) Account ID found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). **Note:  do NOT use in the workspace-level provider to avoid `...invalid Databricks Account configuration` errors**.
+* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `oauth-m2m`, `azure-client-secret`, `azure-msi`, `azure-cli`, `github-oidc-azure`, `google-credentials`, and `google-id`.
 
 ## Special configurations for Azure
 
@@ -284,7 +284,7 @@ resource "databricks_user" "my-user" {
 }
 ```
 
-### Authenticating with Azure-managed Service Principal
+### Authenticating with Azure-managed Service Principal using Client Secret
 
 ```hcl
 provider "azurerm" {
@@ -326,6 +326,49 @@ There are `ARM_*` environment variables provide a way to share authentication co
 
 When a workspace is created using a service principal account, that service principal account is automatically added to the workspace as a member of the admins group. To add a new service principal account to an existing workspace, create a [databricks_service_principal](resources/service_principal.md).
 
+### Authenticating with Azure-managed Service Principal using GITHUB OIDC
+
+```hcl
+provider "azurerm" {
+  client_id       = var.client_id
+  tenant_id       = var.tenant_id
+  subscription_id = var.subscription_id
+  use_oidc        = true
+}
+
+resource "azurerm_databricks_workspace" "this" {
+  location            = "centralus"
+  name                = "my-workspace-name"
+  resource_group_name = var.resource_group
+  sku                 = "premium"
+}
+
+provider "databricks" {
+  host                        = azurerm_databricks_workspace.this.workspace_url
+  auth_type                   = "github-oidc-azure"
+  azure_workspace_resource_id = azurerm_databricks_workspace.this.id
+  azure_client_id             = var.client_id
+  azure_tenant_id             = var.tenant_id
+}
+
+resource "databricks_user" "my-user" {
+  user_name = "test-user@databricks.com"
+}
+```
+
+Follow the [Configuring OpenID Connect in Azure](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-azure). You can then use the Azure service principal to authenticate in databricks. 
+
+* `azure_workspace_resource_id` - (optional) `id` attribute of [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource. Combination of subscription id, resource group name, and workspace name. Required with `azure_use_msi` or `azure_client_secret`.
+
+* `azure_client_id` - (optional) This is the Azure Enterprise Application (Service principal) client id. This service principal requires contributor access to your Azure Databricks deployment. Alternatively, you can provide this value as an environment variable `ARM_CLIENT_ID`.
+* `azure_tenant_id` - (optional) This is the Azure Active Directory Tenant id in which the Enterprise Application (Service Principal)
+resides. Alternatively, you can provide this value as an environment variable `ARM_TENANT_ID`.
+* `azure_environment` - (optional) This is the Azure Environment which defaults to the `public` cloud. Other options are `german`, `china` and `usgovernment`. Alternatively, you can provide this value as an environment variable `ARM_ENVIRONMENT`.
+* `auth_type` - (required) This is the Authentication Type that is used for specifying the authenticate method. This is required for this authentication type.
+
+There are `ARM_*` environment variables provide a way to share authentication configuration using the `databricks` provider alongside the [`azurerm` provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest).
+
+When a workspace is created using a service principal account, that service principal account is automatically added to the workspace as a member of the admins group. To add a new service principal account to an existing workspace, create a [databricks_service_principal](resources/service_principal.md).
 ## Special configurations for GCP
 
 The provider works with [Google Cloud CLI authentication](https://cloud.google.com/sdk/docs/authorizing) to facilitate local development workflows. For automated scenarios, a service principal auth is necessary using `google_service_account` parameter with [impersonation](https://cloud.google.com/docs/authentication#service-accounts) and Application Default Credentials. Alternatively, you could provide the service account key directly by passing it to `google_credentials` parameter (or `GOOGLE_CREDENTIALS` environment variable)

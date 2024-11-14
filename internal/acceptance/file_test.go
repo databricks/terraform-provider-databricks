@@ -18,7 +18,7 @@ import (
 
 func TestUcAccFileDontUpdateIfNoChange(t *testing.T) {
 	createdTime := ""
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -50,7 +50,7 @@ func TestUcAccFileDontUpdateIfNoChange(t *testing.T) {
 			createdTime = m.LastModified
 			return nil
 		}),
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -86,7 +86,7 @@ func TestUcAccFileDontUpdateIfNoChange(t *testing.T) {
 
 func TestUcAccFileUpdateOnLocalContentChange(t *testing.T) {
 	createdTime := ""
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -118,7 +118,7 @@ func TestUcAccFileUpdateOnLocalContentChange(t *testing.T) {
 			createdTime = m.LastModified
 			return nil
 		}),
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -174,7 +174,7 @@ func TestUcAccFileUpdateOnLocalFileChange(t *testing.T) {
 		source = "%s"
 		path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 	}`, fileName)
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		PreConfig: func() {
 			os.Mkdir(tmpDir, 0755)
 			os.WriteFile(fileName, []byte("abc\n"), 0644)
@@ -193,7 +193,7 @@ func TestUcAccFileUpdateOnLocalFileChange(t *testing.T) {
 			createdTime = m.LastModified
 			return nil
 		}),
-	}, step{
+	}, Step{
 		PreConfig: func() {
 			os.WriteFile(fileName, []byte("def\n"), 0644)
 		},
@@ -235,7 +235,7 @@ func TestUcAccFileNoUpdateIfFileDoesNotChange(t *testing.T) {
 		source = "%s"
 		path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 	}`, fileName)
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		PreConfig: func() {
 			os.Mkdir(tmpDir, 0755)
 			os.WriteFile(fileName, []byte("abc\n"), 0644)
@@ -254,7 +254,7 @@ func TestUcAccFileNoUpdateIfFileDoesNotChange(t *testing.T) {
 			createdTime = m.LastModified
 			return nil
 		}),
-	}, step{
+	}, Step{
 		Template: template,
 		Check: resourceCheck("databricks_file.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
 			w, err := client.WorkspaceClient()
@@ -273,7 +273,7 @@ func TestUcAccFileNoUpdateIfFileDoesNotChange(t *testing.T) {
 
 func TestUcAccFileUpdateServerChange(t *testing.T) {
 	createdTime := ""
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -314,7 +314,7 @@ func TestUcAccFileUpdateServerChange(t *testing.T) {
 			return nil
 		}),
 	},
-		step{
+		Step{
 			Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -356,7 +356,7 @@ func TestUcAccFileUpdateServerChange(t *testing.T) {
 }
 
 func TestUcAccFileFullLifeCycle(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -375,7 +375,7 @@ func TestUcAccFileFullLifeCycle(t *testing.T) {
 			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -398,7 +398,7 @@ func TestUcAccFileFullLifeCycle(t *testing.T) {
 }
 
 func TestUcAccFileBase64FullLifeCycle(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"
@@ -417,7 +417,7 @@ func TestUcAccFileBase64FullLifeCycle(t *testing.T) {
 			content_base64 = "YWJjCg=="
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,
-	}, step{
+	}, Step{
 		Template: `
 		resource "databricks_schema" "this" {
 			name 		 = "schema-{var.STICKY_RANDOM}"

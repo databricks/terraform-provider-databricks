@@ -56,20 +56,6 @@ func getJSONObject(filename string) any {
 	return obj
 }
 
-func getJSONArray(filename string) any {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		panic(err)
-	}
-	var obj []any
-	err = json.Unmarshal(data, &obj)
-	if err != nil {
-		fmt.Printf("[ERROR] error! file=%s err=%v\n", filename, err)
-		fmt.Printf("[ERROR] data=%s\n", string(data))
-	}
-	return obj
-}
-
 func workspaceConfKeysToURL() string {
 	keys := make([]string, 0, len(workspaceConfKeys))
 	for k := range workspaceConfKeys {
@@ -252,7 +238,7 @@ var meAdminFixture = qa.HTTPFixture{
 var emptyPipelines = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.0/pipelines?max_results=50",
+	Resource:     "/api/2.0/pipelines?max_results=100",
 	Response:     pipelines.ListPipelinesResponse{},
 }
 
@@ -379,14 +365,14 @@ var emptySqlDashboards = qa.HTTPFixture{
 
 var emptySqlQueries = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/sql/queries?page_size=100",
+	Resource:     "/api/2.0/sql/queries?page_size=100",
 	Response:     map[string]any{},
 	ReuseRequest: true,
 }
 
 var emptySqlAlerts = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/preview/sql/alerts",
+	Resource:     "/api/2.0/sql/alerts?page_size=100",
 	Response:     []tfsql.AlertEntity{},
 	ReuseRequest: true,
 }
@@ -447,7 +433,7 @@ var emptyMetastoreList = qa.HTTPFixture{
 
 var emptyLakeviewList = qa.HTTPFixture{
 	Method:       "GET",
-	Resource:     "/api/2.0/lakeview/dashboards?page_size=100",
+	Resource:     "/api/2.0/lakeview/dashboards?page_size=1000",
 	Response:     sdk_dashboards.ListDashboardsResponse{},
 	ReuseRequest: true,
 }
@@ -850,9 +836,12 @@ func TestImportingClusters(t *testing.T) {
 				ReuseRequest: true,
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				Response: compute.GetEvents{},
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
+				},
+				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
@@ -862,7 +851,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/clusters/test1",
+				Resource: "/api/2.0/permissions/clusters/test1?",
 				Response: getJSONObject("test-data/get-cluster-permissions-test1-response.json"),
 			},
 			{
@@ -883,37 +872,13 @@ func TestImportingClusters(t *testing.T) {
 				Response: getJSONObject("test-data/get-cluster-test2-response.json"),
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "test2",
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-					Limit:      1,
-				},
-				Response:     compute.EventDetails{},
-				ReuseRequest: true,
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "test1",
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-					Limit:      1,
-				},
-				Response:     compute.EventDetails{},
-				ReuseRequest: true,
-			},
-			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
 				Response: getJSONObject("test-data/libraries-cluster-status-test2.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/clusters/test2",
+				Resource: "/api/2.0/permissions/clusters/test2?",
 				Response: getJSONObject("test-data/get-cluster-permissions-test2-response.json"),
 			},
 			{
@@ -923,7 +888,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123?",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 			{
@@ -932,24 +897,13 @@ func TestImportingClusters(t *testing.T) {
 				Response: getJSONObject("test-data/get-cluster-awscluster-response.json"),
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "awscluster",
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-					Limit:      1,
-				},
-				Response: compute.EventDetails{},
-			},
-			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=awscluster",
 				Response: getJSONObject("test-data/libraries-cluster-status-test2.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/clusters/awscluster",
+				Resource: "/api/2.0/permissions/clusters/awscluster?",
 				Response: getJSONObject("test-data/get-cluster-permissions-awscluster-response.json"),
 			},
 			{
@@ -971,7 +925,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1012,6 +966,16 @@ func TestImportingClusters(t *testing.T) {
 								},
 							},
 						},
+					},
+				},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+				ReuseRequest: true,
+				Response: scim.UserList{
+					Resources: []scim.User{
+						{ID: "123", DisplayName: "test@test.com", UserName: "test@test.com"},
 					},
 				},
 			},
@@ -1089,7 +1053,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/jobs/14",
+				Resource: "/api/2.0/permissions/jobs/14?",
 				Response: getJSONObject("test-data/get-job-permissions-14.json"),
 			},
 			{
@@ -1112,7 +1076,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1202,7 +1166,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123?",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 			{
@@ -1218,7 +1182,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1307,7 +1271,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/jobs/14",
+				Resource:     "/api/2.0/permissions/jobs/14?",
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 				ReuseRequest: true,
 			},
@@ -1331,7 +1295,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1470,7 +1434,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/cluster-policies/123",
+				Resource: "/api/2.0/permissions/cluster-policies/123?",
 				Response: getJSONObject("test-data/get-cluster-policy-permissions.json"),
 			},
 			{
@@ -1486,7 +1450,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/permissions/instance-pools/pool1",
+				Resource:     "/api/2.0/permissions/instance-pools/pool1?",
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
@@ -1777,7 +1741,7 @@ func TestImportingRepos(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/repos/121232342",
+				Resource: "/api/2.0/permissions/repos/121232342?",
 				Response: getJSONObject("test-data/get-repo-permissions.json"),
 			},
 		},
@@ -1902,7 +1866,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/directories/4451965692354143",
+				Resource: "/api/2.0/permissions/directories/4451965692354143?",
 				Response: getJSONObject("test-data/get-directory-permissions.json"),
 			},
 			{
@@ -1933,7 +1897,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/sql/warehouses/f562046bc1272886",
+				Resource: "/api/2.0/permissions/sql/warehouses/f562046bc1272886?",
 				Response: getJSONObject("test-data/get-sql-endpoint-permissions.json"),
 			},
 			{
@@ -1950,40 +1914,45 @@ func TestImportingSqlObjects(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/sql/queries?page_size=100",
-				Response:     getJSONObject("test-data/get-sql-queries.json"),
+				Resource:     "/api/2.0/sql/queries?page_size=100",
+				Response:     getJSONObject("test-data/get-queries.json"),
 				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/sql/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc",
-				Response:     getJSONObject("test-data/get-sql-query.json"),
+				Resource:     "/api/2.0/sql/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc?",
+				Response:     getJSONObject("test-data/get-query.json"),
 				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/permissions/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc",
+				Resource: "/api/2.0/preview/sql/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc",
+				Response: getJSONObject("test-data/get-sql-query.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/permissions/sql/queries/16c4f969-eea0-4aad-8f82-03d79b078dcc?",
 				Response: getJSONObject("test-data/get-sql-query-permissions.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/permissions/dashboards/9cb0c8f5-6262-4a1f-a741-2181de76028f",
+				Resource: "/api/2.0/permissions/dbsql-dashboards/9cb0c8f5-6262-4a1f-a741-2181de76028f?",
 				Response: getJSONObject("test-data/get-sql-dashboard-permissions.json"),
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/preview/sql/alerts",
-				Response:     getJSONArray("test-data/get-sql-alerts.json"),
+				Resource:     "/api/2.0/sql/alerts?page_size=100",
+				Response:     getJSONObject("test-data/get-alerts.json"),
 				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9?",
-				Response: getJSONObject("test-data/get-sql-alert.json"),
+				Resource: "/api/2.0/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9?",
+				Response: getJSONObject("test-data/get-alert.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/sql/permissions/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9",
+				Resource: "/api/2.0/permissions/sql/alerts/3cf91a42-6217-4f3c-a6f0-345d489051b9?",
 				Response: getJSONObject("test-data/get-sql-alert-permissions.json"),
 			},
 		},
@@ -1993,18 +1962,44 @@ func TestImportingSqlObjects(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.enableListing("sql-dashboards,sql-queries,sql-endpoints,sql-alerts")
-			ic.enableServices("sql-dashboards,sql-queries,sql-alerts,sql-endpoints,access,notebooks")
+			ic.enableListing("sql-dashboards,queries,sql-endpoints,alerts")
+			ic.enableServices("sql-dashboards,queries,alerts,sql-endpoints,access")
 
 			err := ic.Run()
 			assert.NoError(t, err)
 
+			// check the generated HCL for SQL Warehouses
 			content, err := os.ReadFile(tmpDir + "/sql-endpoints.tf")
 			assert.NoError(t, err)
 			contentStr := string(content)
 			assert.True(t, strings.Contains(contentStr, `enable_serverless_compute = false`))
 			assert.True(t, strings.Contains(contentStr, `resource "databricks_sql_endpoint" "test" {`))
 			assert.False(t, strings.Contains(contentStr, `tags {`))
+			// check the generated HCL for SQL Dashboards
+			content, err = os.ReadFile(tmpDir + "/sql-dashboards.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_sql_dashboard" "test_9cb0c8f5_6262_4a1f_a741_2181de76028f" {`))
+			assert.True(t, strings.Contains(contentStr, `dashboard_id = databricks_sql_dashboard.test_9cb0c8f5_6262_4a1f_a741_2181de76028f.id`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_sql_widget" "rd4dd2082685" {`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_sql_visualization" "chart_16c4f969_eea0_4aad_8f82_03d79b078dcc_1a062d3a_eefe_11eb_9559_dc7cd9c86087"`))
+			// check the generated HCL for Qieries
+			content, err = os.ReadFile(tmpDir + "/queries.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_query" "jobs_per_day_per_status_last_30_days_16c4f969_eea0_4aad_8f82_03d79b078dcc"`))
+			assert.True(t, strings.Contains(contentStr, `warehouse_id    = databricks_sql_endpoint.test.id`))
+			assert.True(t, strings.Contains(contentStr, `owner_user_name = "user@domain.com"`))
+			assert.True(t, strings.Contains(contentStr, `display_name    = "Jobs per day per status last 30 days"`))
+			// check the generated HCL for Alerts
+			content, err = os.ReadFile(tmpDir + "/alerts.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_alert" "test_alert_3cf91a42_6217_4f3c_a6f0_345d489051b9"`))
+			assert.True(t, strings.Contains(contentStr, `query_id        = databricks_query.jobs_per_day_per_status_last_30_days_16c4f969_eea0_4aad_8f82_03d79b078dcc.id`))
+			assert.True(t, strings.Contains(contentStr, `display_name    = "Test Alert"`))
+			assert.True(t, strings.Contains(contentStr, `op = "GREATER_THAN"`))
+			assert.True(t, strings.Contains(contentStr, `owner_user_name = "test@domain.com"`))
 		})
 }
 
@@ -2021,7 +2016,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			emptyIpAccessLIst,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?max_results=50",
+				Resource: "/api/2.0/pipelines?max_results=100",
 				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
@@ -2039,7 +2034,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/repos/123",
+				Resource: "/api/2.0/permissions/repos/123?",
 				Response: getJSONObject("test-data/get-repo-permissions.json"),
 			},
 			{
@@ -2085,12 +2080,12 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/pipelines/123",
+				Resource: "/api/2.0/permissions/pipelines/123?",
 				Response: getJSONObject("test-data/get-pipeline-permissions.json"),
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/notebooks/123",
+				Resource: "/api/2.0/permissions/notebooks/123?",
 				Response: getJSONObject("test-data/get-notebook-permissions.json"),
 			},
 			{
@@ -2169,7 +2164,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/files/789",
+				Resource: "/api/2.0/permissions/files/789?",
 				Response: getJSONObject("test-data/get-workspace-file-permissions.json"),
 			},
 		},
@@ -2180,7 +2175,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
 			ic.enableListing("dlt")
-			ic.enableServices("dlt,access,notebooks,users,repos,secrets")
+			ic.enableServices("dlt,access,notebooks,users,repos,secrets,wsfiles")
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -2236,7 +2231,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			userReadFixture,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?max_results=50",
+				Resource: "/api/2.0/pipelines?max_results=100",
 				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
@@ -2257,7 +2252,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/permissions/pipelines/123",
+				Resource: "/api/2.0/permissions/pipelines/123?",
 				Response: getJSONObject("test-data/get-pipeline-permissions.json"),
 			},
 			{
@@ -2322,7 +2317,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 		})
 }
 
-func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
+func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 	fileStatus := workspace.ObjectStatus{
 		ObjectID:   123,
 		ObjectType: workspace.File,
@@ -2344,7 +2339,135 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2F",
 				Response: workspace.ObjectList{
-					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus},
+					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+						{
+							ObjectID:   4567,
+							ObjectType: workspace.Notebook,
+							Path:       "/UnmatchedNotebook",
+							Language:   "PYTHON",
+						},
+						{
+							ObjectID:   1234,
+							ObjectType: workspace.File,
+							Path:       "/UnmatchedFile",
+						},
+						{
+							ObjectID:   456,
+							ObjectType: workspace.Directory,
+							Path:       "/databricks_automl",
+						},
+						{
+							ObjectID:   456,
+							ObjectType: workspace.Directory,
+							Path:       "/.bundle",
+						},
+					},
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2Fdatabricks_automl",
+				Response: workspace.ObjectList{},
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/workspace/get-status?path=%2FNotebook",
+				Response:     notebookStatus,
+				ReuseRequest: true,
+			},
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/workspace/get-status?path=%2FFile",
+				Response:     fileStatus,
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2FFile",
+				Response: workspace.ExportPath{
+					Content: "dGVzdA==",
+				},
+				ReuseRequest: true,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FNotebook",
+				Response: workspace.ExportPath{
+					Content: "dGVzdA==",
+				},
+				ReuseRequest: true,
+			},
+		},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
+			defer os.RemoveAll(tmpDir)
+
+			ic := newImportContext(client)
+			ic.Directory = tmpDir
+			ic.enableListing("notebooks,wsfiles")
+			ic.excludeRegexStr = "databricks_automl"
+			ic.matchRegexStr = "^/[FN].*$"
+
+			err := ic.Run()
+			assert.NoError(t, err)
+			// check generated code for notebooks
+			content, err := os.ReadFile(tmpDir + "/notebooks.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_notebook" "notebook_456"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/Notebook"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedNotebook`))
+			// check generated code for workspace files
+			content, err = os.ReadFile(tmpDir + "/wsfiles.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_workspace_file" "file_123"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/File"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedFile`))
+		})
+}
+
+func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
+	fileStatus := workspace.ObjectStatus{
+		ObjectID:   123,
+		ObjectType: workspace.File,
+		Path:       "/File",
+	}
+	notebookStatus := workspace.ObjectStatus{
+		ObjectID:   456,
+		ObjectType: workspace.Notebook,
+		Path:       "/Notebook",
+		Language:   "PYTHON",
+	}
+	qa.HTTPFixturesApply(t,
+		[]qa.HTTPFixture{
+			meAdminFixture,
+			noCurrentMetastoreAttached,
+			emptyRepos,
+			emptyIpAccessLIst,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/list?path=%2F",
+				Response: workspace.ObjectList{
+					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+						{
+							ObjectID:   4567,
+							ObjectType: workspace.Notebook,
+							Path:       "/UnmatchedNotebook",
+							Language:   "PYTHON",
+						},
+						{
+							ObjectID:   1234,
+							ObjectType: workspace.File,
+							Path:       "/UnmatchedFile",
+						},
+						{
+							ObjectID:   456,
+							ObjectType: workspace.Directory,
+							Path:       "/databricks_automl",
+						},
+					},
 				},
 				ReuseRequest: true,
 			},
@@ -2383,10 +2506,27 @@ func TestImportingNotebooksWorkspaceFiles(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
-			ic.enableListing("notebooks")
+			ic.enableListing("notebooks,wsfiles")
+			ic.excludeRegexStr = "databricks_automl"
+			ic.matchRegexStr = "^/[FN].*$"
+			ic.filterDirectoriesDuringWorkspaceWalking = true
 
 			err := ic.Run()
 			assert.NoError(t, err)
+			// check generated code for notebooks
+			content, err := os.ReadFile(tmpDir + "/notebooks.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_notebook" "notebook_456"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/Notebook"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedNotebook`))
+			// check generated code for workspace files
+			content, err = os.ReadFile(tmpDir + "/wsfiles.tf")
+			assert.NoError(t, err)
+			contentStr = string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_workspace_file" "file_123"`))
+			assert.True(t, strings.Contains(contentStr, `path   = "/File"`))
+			assert.False(t, strings.Contains(contentStr, `/UnmatchedFile`))
 		})
 }
 
@@ -2601,7 +2741,7 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/pipelines?max_results=50",
+				Resource: "/api/2.0/pipelines?max_results=100",
 				Response: pipelines.ListPipelinesResponse{
 					Statuses: []pipelines.PipelineStateInfo{
 						{
@@ -2795,7 +2935,7 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			noCurrentMetastoreAttached,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/lakeview/dashboards?page_size=100",
+				Resource: "/api/2.0/lakeview/dashboards?page_size=1000",
 				Response: sdk_dashboards.ListDashboardsResponse{
 					Dashboards: []sdk_dashboards.Dashboard{
 						{

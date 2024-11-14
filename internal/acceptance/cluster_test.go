@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `data "databricks_spark_version" "latest" {
 		}
 		resource "databricks_cluster" "this" {
@@ -51,7 +51,7 @@ func TestAccClusterResource_CreateClusterWithLibraries(t *testing.T) {
 	})
 }
 
-func singleNodeClusterTemplate(autoTerminationMinutes string) string {
+func singleNodeClusterTemplate(autoTerminationMinutes string, isPinned bool) string {
 	return fmt.Sprintf(`
 		data "databricks_spark_version" "latest" {
 		}
@@ -61,6 +61,7 @@ func singleNodeClusterTemplate(autoTerminationMinutes string) string {
 			instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
 			num_workers = 0
 			autotermination_minutes = %s
+			is_pinned = %t
 			spark_conf = {
 				"spark.databricks.cluster.profile" = "singleNode"
 				"spark.master" = "local[*]"
@@ -69,14 +70,14 @@ func singleNodeClusterTemplate(autoTerminationMinutes string) string {
 				"ResourceClass" = "SingleNode"
 			}
 		}
-	`, autoTerminationMinutes)
+	`, autoTerminationMinutes, isPinned)
 }
 
 func TestAccClusterResource_CreateSingleNodeCluster(t *testing.T) {
-	workspaceLevel(t, step{
-		Template: singleNodeClusterTemplate("10"),
-	}, step{
-		Template: singleNodeClusterTemplate("20"),
+	WorkspaceLevel(t, Step{
+		Template: singleNodeClusterTemplate("10", false),
+	}, Step{
+		Template: singleNodeClusterTemplate("20", false),
 	})
 }
 
@@ -103,16 +104,16 @@ func awsClusterTemplate(availability string) string {
 func TestAccClusterResource_CreateAndUpdateAwsAttributes(t *testing.T) {
 	loadWorkspaceEnv(t)
 	if isAws(t) {
-		workspaceLevel(t, step{
+		WorkspaceLevel(t, Step{
 			Template: awsClusterTemplate("SPOT"),
-		}, step{
+		}, Step{
 			Template: awsClusterTemplate("SPOT_WITH_FALLBACK"),
 		})
 	}
 }
 
 func TestAccClusterResource_CreateAndNoWait(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `data "databricks_spark_version" "latest" {
 		}
 		resource "databricks_cluster" "this" {
@@ -133,9 +134,9 @@ func TestAccClusterResource_CreateAndNoWait(t *testing.T) {
 }
 
 func TestAccClusterResource_WorkloadType(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(""),
-	}, step{
+	}, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(`
 		workload_type {
 		    clients {
@@ -147,7 +148,7 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "true"),
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "true"),
 		),
-	}, step{
+	}, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(`
 		workload_type {
 		    clients {
@@ -159,7 +160,7 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "false"),
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "false"),
 		),
-	}, step{
+	}, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(`
 		workload_type {
 		    clients { }
@@ -168,11 +169,24 @@ func TestAccClusterResource_WorkloadType(t *testing.T) {
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.jobs", "true"),
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.0.clients.0.notebooks", "true"),
 		),
-	}, step{
+	}, Step{
 		Template: testAccClusterResourceWorkloadTypeTemplate(``),
 		Check: resource.ComposeAggregateTestCheckFunc(
 			resource.TestCheckResourceAttr("databricks_cluster.this", "workload_type.#", "0"),
 		),
+	})
+}
+
+func TestAccClusterResource_PinAndUnpin(t *testing.T) {
+	WorkspaceLevel(t, Step{
+		Template: singleNodeClusterTemplate("10", false),
+		Check:    resource.TestCheckResourceAttr("databricks_cluster.this", "is_pinned", "false"),
+	}, Step{
+		Template: singleNodeClusterTemplate("10", true),
+		Check:    resource.TestCheckResourceAttr("databricks_cluster.this", "is_pinned", "true"),
+	}, Step{
+		Template: singleNodeClusterTemplate("10", false),
+		Check:    resource.TestCheckResourceAttr("databricks_cluster.this", "is_pinned", "false"),
 	})
 }
 

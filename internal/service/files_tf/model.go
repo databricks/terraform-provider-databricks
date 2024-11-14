@@ -24,7 +24,19 @@ type AddBlock struct {
 	Handle types.Int64 `tfsdk:"handle" tf:""`
 }
 
+func (newState *AddBlock) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlock) {
+}
+
+func (newState *AddBlock) SyncEffectiveFieldsDuringRead(existingState AddBlock) {
+}
+
 type AddBlockResponse struct {
+}
+
+func (newState *AddBlockResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlockResponse) {
+}
+
+func (newState *AddBlockResponse) SyncEffectiveFieldsDuringRead(existingState AddBlockResponse) {
 }
 
 type Close struct {
@@ -32,7 +44,19 @@ type Close struct {
 	Handle types.Int64 `tfsdk:"handle" tf:""`
 }
 
+func (newState *Close) SyncEffectiveFieldsDuringCreateOrUpdate(plan Close) {
+}
+
+func (newState *Close) SyncEffectiveFieldsDuringRead(existingState Close) {
+}
+
 type CloseResponse struct {
+}
+
+func (newState *CloseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloseResponse) {
+}
+
+func (newState *CloseResponse) SyncEffectiveFieldsDuringRead(existingState CloseResponse) {
 }
 
 type Create struct {
@@ -42,19 +66,43 @@ type Create struct {
 	Path types.String `tfsdk:"path" tf:""`
 }
 
+func (newState *Create) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create) {
+}
+
+func (newState *Create) SyncEffectiveFieldsDuringRead(existingState Create) {
+}
+
 // Create a directory
 type CreateDirectoryRequest struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
+func (newState *CreateDirectoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDirectoryRequest) {
+}
+
+func (newState *CreateDirectoryRequest) SyncEffectiveFieldsDuringRead(existingState CreateDirectoryRequest) {
+}
+
 type CreateDirectoryResponse struct {
+}
+
+func (newState *CreateDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDirectoryResponse) {
+}
+
+func (newState *CreateDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState CreateDirectoryResponse) {
 }
 
 type CreateResponse struct {
 	// Handle which should subsequently be passed into the AddBlock and Close
 	// calls when writing to a file through a stream.
 	Handle types.Int64 `tfsdk:"handle" tf:"optional"`
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
+}
+
+func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
 type Delete struct {
@@ -66,13 +114,31 @@ type Delete struct {
 	Recursive types.Bool `tfsdk:"recursive" tf:"optional"`
 }
 
+func (newState *Delete) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete) {
+}
+
+func (newState *Delete) SyncEffectiveFieldsDuringRead(existingState Delete) {
+}
+
 // Delete a directory
 type DeleteDirectoryRequest struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteDirectoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDirectoryRequest) {
+}
+
+func (newState *DeleteDirectoryRequest) SyncEffectiveFieldsDuringRead(existingState DeleteDirectoryRequest) {
+}
+
 type DeleteDirectoryResponse struct {
+}
+
+func (newState *DeleteDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDirectoryResponse) {
+}
+
+func (newState *DeleteDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDirectoryResponse) {
 }
 
 // Delete a file
@@ -81,7 +147,19 @@ type DeleteFileRequest struct {
 	FilePath types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteFileRequest) {
+}
+
+func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringRead(existingState DeleteFileRequest) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 type DirectoryEntry struct {
@@ -98,10 +176,22 @@ type DirectoryEntry struct {
 	Path types.String `tfsdk:"path" tf:"optional"`
 }
 
+func (newState *DirectoryEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan DirectoryEntry) {
+}
+
+func (newState *DirectoryEntry) SyncEffectiveFieldsDuringRead(existingState DirectoryEntry) {
+}
+
 // Download a file
 type DownloadRequest struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
+}
+
+func (newState *DownloadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadRequest) {
+}
+
+func (newState *DownloadRequest) SyncEffectiveFieldsDuringRead(existingState DownloadRequest) {
 }
 
 type DownloadResponse struct {
@@ -112,6 +202,12 @@ type DownloadResponse struct {
 	Contents io.ReadCloser `tfsdk:"-"`
 
 	LastModified types.String `tfsdk:"-"`
+}
+
+func (newState *DownloadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadResponse) {
+}
+
+func (newState *DownloadResponse) SyncEffectiveFieldsDuringRead(existingState DownloadResponse) {
 }
 
 type FileInfo struct {
@@ -125,19 +221,43 @@ type FileInfo struct {
 	Path types.String `tfsdk:"path" tf:"optional"`
 }
 
+func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo) {
+}
+
+func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
+}
+
 // Get directory metadata
 type GetDirectoryMetadataRequest struct {
 	// The absolute path of a directory.
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
+func (newState *GetDirectoryMetadataRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetDirectoryMetadataRequest) {
+}
+
+func (newState *GetDirectoryMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetDirectoryMetadataRequest) {
+}
+
 type GetDirectoryMetadataResponse struct {
+}
+
+func (newState *GetDirectoryMetadataResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetDirectoryMetadataResponse) {
+}
+
+func (newState *GetDirectoryMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetDirectoryMetadataResponse) {
 }
 
 // Get file metadata
 type GetMetadataRequest struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
+}
+
+func (newState *GetMetadataRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetMetadataRequest) {
+}
+
+func (newState *GetMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetMetadataRequest) {
 }
 
 type GetMetadataResponse struct {
@@ -148,6 +268,12 @@ type GetMetadataResponse struct {
 	LastModified types.String `tfsdk:"-"`
 }
 
+func (newState *GetMetadataResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetMetadataResponse) {
+}
+
+func (newState *GetMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetMetadataResponse) {
+}
+
 // Get the information of a file or directory
 type GetStatusRequest struct {
 	// The path of the file or directory. The path should be the absolute DBFS
@@ -155,11 +281,23 @@ type GetStatusRequest struct {
 	Path types.String `tfsdk:"-"`
 }
 
+func (newState *GetStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetStatusRequest) {
+}
+
+func (newState *GetStatusRequest) SyncEffectiveFieldsDuringRead(existingState GetStatusRequest) {
+}
+
 // List directory contents or file details
 type ListDbfsRequest struct {
 	// The path of the file or directory. The path should be the absolute DBFS
 	// path.
 	Path types.String `tfsdk:"-"`
+}
+
+func (newState *ListDbfsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDbfsRequest) {
+}
+
+func (newState *ListDbfsRequest) SyncEffectiveFieldsDuringRead(existingState ListDbfsRequest) {
 }
 
 // List directory contents
@@ -188,11 +326,23 @@ type ListDirectoryContentsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListDirectoryContentsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDirectoryContentsRequest) {
+}
+
+func (newState *ListDirectoryContentsRequest) SyncEffectiveFieldsDuringRead(existingState ListDirectoryContentsRequest) {
+}
+
 type ListDirectoryResponse struct {
 	// Array of DirectoryEntry.
 	Contents []DirectoryEntry `tfsdk:"contents" tf:"optional"`
 	// A token, which can be sent as `page_token` to retrieve the next page.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDirectoryResponse) {
+}
+
+func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState ListDirectoryResponse) {
 }
 
 type ListStatusResponse struct {
@@ -201,12 +351,30 @@ type ListStatusResponse struct {
 	Files []FileInfo `tfsdk:"files" tf:"optional"`
 }
 
+func (newState *ListStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListStatusResponse) {
+}
+
+func (newState *ListStatusResponse) SyncEffectiveFieldsDuringRead(existingState ListStatusResponse) {
+}
+
 type MkDirs struct {
 	// The path of the new directory. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"path" tf:""`
 }
 
+func (newState *MkDirs) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirs) {
+}
+
+func (newState *MkDirs) SyncEffectiveFieldsDuringRead(existingState MkDirs) {
+}
+
 type MkDirsResponse struct {
+}
+
+func (newState *MkDirsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirsResponse) {
+}
+
+func (newState *MkDirsResponse) SyncEffectiveFieldsDuringRead(existingState MkDirsResponse) {
 }
 
 type Move struct {
@@ -218,7 +386,19 @@ type Move struct {
 	SourcePath types.String `tfsdk:"source_path" tf:""`
 }
 
+func (newState *Move) SyncEffectiveFieldsDuringCreateOrUpdate(plan Move) {
+}
+
+func (newState *Move) SyncEffectiveFieldsDuringRead(existingState Move) {
+}
+
 type MoveResponse struct {
+}
+
+func (newState *MoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MoveResponse) {
+}
+
+func (newState *MoveResponse) SyncEffectiveFieldsDuringRead(existingState MoveResponse) {
 }
 
 type Put struct {
@@ -230,7 +410,19 @@ type Put struct {
 	Path types.String `tfsdk:"path" tf:""`
 }
 
+func (newState *Put) SyncEffectiveFieldsDuringCreateOrUpdate(plan Put) {
+}
+
+func (newState *Put) SyncEffectiveFieldsDuringRead(existingState Put) {
+}
+
 type PutResponse struct {
+}
+
+func (newState *PutResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutResponse) {
+}
+
+func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResponse) {
 }
 
 // Get the contents of a file
@@ -244,6 +436,12 @@ type ReadDbfsRequest struct {
 	Path types.String `tfsdk:"-"`
 }
 
+func (newState *ReadDbfsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadDbfsRequest) {
+}
+
+func (newState *ReadDbfsRequest) SyncEffectiveFieldsDuringRead(existingState ReadDbfsRequest) {
+}
+
 type ReadResponse struct {
 	// The number of bytes read (could be less than ``length`` if we hit end of
 	// file). This refers to number of bytes read in unencoded version (response
@@ -251,6 +449,12 @@ type ReadResponse struct {
 	BytesRead types.Int64 `tfsdk:"bytes_read" tf:"optional"`
 	// The base64-encoded contents of the file read.
 	Data types.String `tfsdk:"data" tf:"optional"`
+}
+
+func (newState *ReadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadResponse) {
+}
+
+func (newState *ReadResponse) SyncEffectiveFieldsDuringRead(existingState ReadResponse) {
 }
 
 // Upload a file
@@ -262,5 +466,17 @@ type UploadRequest struct {
 	Overwrite types.Bool `tfsdk:"-"`
 }
 
+func (newState *UploadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UploadRequest) {
+}
+
+func (newState *UploadRequest) SyncEffectiveFieldsDuringRead(existingState UploadRequest) {
+}
+
 type UploadResponse struct {
+}
+
+func (newState *UploadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UploadResponse) {
+}
+
+func (newState *UploadResponse) SyncEffectiveFieldsDuringRead(existingState UploadResponse) {
 }

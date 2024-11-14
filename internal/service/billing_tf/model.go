@@ -25,6 +25,12 @@ type ActionConfiguration struct {
 	Target types.String `tfsdk:"target" tf:"optional"`
 }
 
+func (newState *ActionConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan ActionConfiguration) {
+}
+
+func (newState *ActionConfiguration) SyncEffectiveFieldsDuringRead(existingState ActionConfiguration) {
+}
+
 type AlertConfiguration struct {
 	// Configured actions for this alert. These define what happens when an
 	// alert enters a triggered state.
@@ -44,6 +50,12 @@ type AlertConfiguration struct {
 	TriggerType types.String `tfsdk:"trigger_type" tf:"optional"`
 }
 
+func (newState *AlertConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConfiguration) {
+}
+
+func (newState *AlertConfiguration) SyncEffectiveFieldsDuringRead(existingState AlertConfiguration) {
+}
+
 type BudgetConfiguration struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
@@ -60,9 +72,15 @@ type BudgetConfiguration struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter *BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
 	// Update time of this budget configuration.
 	UpdateTime types.Int64 `tfsdk:"update_time" tf:"optional"`
+}
+
+func (newState *BudgetConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfiguration) {
+}
+
+func (newState *BudgetConfiguration) SyncEffectiveFieldsDuringRead(existingState BudgetConfiguration) {
 }
 
 type BudgetConfigurationFilter struct {
@@ -71,7 +89,13 @@ type BudgetConfigurationFilter struct {
 	// be entered exactly as they appear in your usage data.
 	Tags []BudgetConfigurationFilterTagClause `tfsdk:"tags" tf:"optional"`
 	// If provided, usage must match with the provided Databricks workspace IDs.
-	WorkspaceId *BudgetConfigurationFilterWorkspaceIdClause `tfsdk:"workspace_id" tf:"optional"`
+	WorkspaceId []BudgetConfigurationFilterWorkspaceIdClause `tfsdk:"workspace_id" tf:"optional,object"`
+}
+
+func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilter) {
+}
+
+func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilter) {
 }
 
 type BudgetConfigurationFilterClause struct {
@@ -80,16 +104,34 @@ type BudgetConfigurationFilterClause struct {
 	Values []types.String `tfsdk:"values" tf:"optional"`
 }
 
+func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterClause) {
+}
+
+func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterClause) {
+}
+
 type BudgetConfigurationFilterTagClause struct {
 	Key types.String `tfsdk:"key" tf:"optional"`
 
-	Value *BudgetConfigurationFilterClause `tfsdk:"value" tf:"optional"`
+	Value []BudgetConfigurationFilterClause `tfsdk:"value" tf:"optional,object"`
+}
+
+func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterTagClause) {
+}
+
+func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterTagClause) {
 }
 
 type BudgetConfigurationFilterWorkspaceIdClause struct {
 	Operator types.String `tfsdk:"operator" tf:"optional"`
 
 	Values []types.Int64 `tfsdk:"values" tf:"optional"`
+}
+
+func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterWorkspaceIdClause) {
+}
+
+func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterWorkspaceIdClause) {
 }
 
 type CreateBillingUsageDashboardRequest struct {
@@ -102,9 +144,21 @@ type CreateBillingUsageDashboardRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
 }
 
+func (newState *CreateBillingUsageDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBillingUsageDashboardRequest) {
+}
+
+func (newState *CreateBillingUsageDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardRequest) {
+}
+
 type CreateBillingUsageDashboardResponse struct {
 	// The unique id of the usage dashboard.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
+}
+
+func (newState *CreateBillingUsageDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBillingUsageDashboardResponse) {
+}
+
+func (newState *CreateBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardResponse) {
 }
 
 type CreateBudgetConfigurationBudget struct {
@@ -119,7 +173,13 @@ type CreateBudgetConfigurationBudget struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter *BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
+}
+
+func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudget) {
+}
+
+func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudget) {
 }
 
 type CreateBudgetConfigurationBudgetActionConfigurations struct {
@@ -127,6 +187,12 @@ type CreateBudgetConfigurationBudgetActionConfigurations struct {
 	ActionType types.String `tfsdk:"action_type" tf:"optional"`
 	// Target for the action. For example, an email address.
 	Target types.String `tfsdk:"target" tf:"optional"`
+}
+
+func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudgetActionConfigurations) {
+}
+
+func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetActionConfigurations) {
 }
 
 type CreateBudgetConfigurationBudgetAlertConfigurations struct {
@@ -146,14 +212,32 @@ type CreateBudgetConfigurationBudgetAlertConfigurations struct {
 	TriggerType types.String `tfsdk:"trigger_type" tf:"optional"`
 }
 
+func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudgetAlertConfigurations) {
+}
+
+func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetAlertConfigurations) {
+}
+
 type CreateBudgetConfigurationRequest struct {
 	// Properties of the new budget configuration.
-	Budget CreateBudgetConfigurationBudget `tfsdk:"budget" tf:""`
+	Budget []CreateBudgetConfigurationBudget `tfsdk:"budget" tf:"object"`
+}
+
+func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationRequest) {
+}
+
+func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationRequest) {
 }
 
 type CreateBudgetConfigurationResponse struct {
 	// The created budget configuration.
-	Budget *BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
+}
+
+func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationResponse) {
+}
+
+func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationResponse) {
 }
 
 type CreateLogDeliveryConfigurationParams struct {
@@ -228,13 +312,31 @@ type CreateLogDeliveryConfigurationParams struct {
 	WorkspaceIdsFilter []types.Int64 `tfsdk:"workspace_ids_filter" tf:"optional"`
 }
 
+func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateLogDeliveryConfigurationParams) {
+}
+
+func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringRead(existingState CreateLogDeliveryConfigurationParams) {
+}
+
 // Delete budget
 type DeleteBudgetConfigurationRequest struct {
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteBudgetConfigurationRequest) {
+}
+
+func (newState *DeleteBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationRequest) {
+}
+
 type DeleteBudgetConfigurationResponse struct {
+}
+
+func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteBudgetConfigurationResponse) {
+}
+
+func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationResponse) {
 }
 
 // Return billable usage logs
@@ -251,8 +353,20 @@ type DownloadRequest struct {
 	StartMonth types.String `tfsdk:"-"`
 }
 
+func (newState *DownloadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadRequest) {
+}
+
+func (newState *DownloadRequest) SyncEffectiveFieldsDuringRead(existingState DownloadRequest) {
+}
+
 type DownloadResponse struct {
 	Contents io.ReadCloser `tfsdk:"-"`
+}
+
+func (newState *DownloadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadResponse) {
+}
+
+func (newState *DownloadResponse) SyncEffectiveFieldsDuringRead(existingState DownloadResponse) {
 }
 
 // Get usage dashboard
@@ -266,11 +380,23 @@ type GetBillingUsageDashboardRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetBillingUsageDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBillingUsageDashboardRequest) {
+}
+
+func (newState *GetBillingUsageDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardRequest) {
+}
+
 type GetBillingUsageDashboardResponse struct {
 	// The unique id of the usage dashboard.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
 	// The URL of the usage dashboard.
 	DashboardUrl types.String `tfsdk:"dashboard_url" tf:"optional"`
+}
+
+func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBillingUsageDashboardResponse) {
+}
+
+func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardResponse) {
 }
 
 // Get budget
@@ -279,14 +405,32 @@ type GetBudgetConfigurationRequest struct {
 	BudgetId types.String `tfsdk:"-"`
 }
 
+func (newState *GetBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBudgetConfigurationRequest) {
+}
+
+func (newState *GetBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationRequest) {
+}
+
 type GetBudgetConfigurationResponse struct {
-	Budget *BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
+}
+
+func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBudgetConfigurationResponse) {
+}
+
+func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationResponse) {
 }
 
 // Get log delivery configuration
 type GetLogDeliveryRequest struct {
 	// Databricks log delivery configuration ID
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
+}
+
+func (newState *GetLogDeliveryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLogDeliveryRequest) {
+}
+
+func (newState *GetLogDeliveryRequest) SyncEffectiveFieldsDuringRead(existingState GetLogDeliveryRequest) {
 }
 
 // Get all budgets
@@ -297,11 +441,23 @@ type ListBudgetConfigurationsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListBudgetConfigurationsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetConfigurationsRequest) {
+}
+
+func (newState *ListBudgetConfigurationsRequest) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsRequest) {
+}
+
 type ListBudgetConfigurationsResponse struct {
 	Budgets []BudgetConfiguration `tfsdk:"budgets" tf:"optional"`
 	// Token which can be sent as `page_token` to retrieve the next page of
 	// results. If this field is omitted, there are no subsequent budgets.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListBudgetConfigurationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetConfigurationsResponse) {
+}
+
+func (newState *ListBudgetConfigurationsResponse) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsResponse) {
 }
 
 // Get all log delivery configurations
@@ -312,6 +468,12 @@ type ListLogDeliveryRequest struct {
 	Status types.String `tfsdk:"-"`
 	// Filter by storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
+}
+
+func (newState *ListLogDeliveryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListLogDeliveryRequest) {
+}
+
+func (newState *ListLogDeliveryRequest) SyncEffectiveFieldsDuringRead(existingState ListLogDeliveryRequest) {
 }
 
 type LogDeliveryConfiguration struct {
@@ -342,7 +504,7 @@ type LogDeliveryConfiguration struct {
 	// available for usage before March 2019 (`2019-03`).
 	DeliveryStartTime types.String `tfsdk:"delivery_start_time" tf:"optional"`
 	// Databricks log delivery status.
-	LogDeliveryStatus *LogDeliveryStatus `tfsdk:"log_delivery_status" tf:"optional"`
+	LogDeliveryStatus []LogDeliveryStatus `tfsdk:"log_delivery_status" tf:"optional,object"`
 	// Log delivery type. Supported values are:
 	//
 	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
@@ -398,6 +560,12 @@ type LogDeliveryConfiguration struct {
 	WorkspaceIdsFilter []types.Int64 `tfsdk:"workspace_ids_filter" tf:"optional"`
 }
 
+func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogDeliveryConfiguration) {
+}
+
+func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState LogDeliveryConfiguration) {
+}
+
 // Databricks log delivery status.
 type LogDeliveryStatus struct {
 	// The UTC time for the latest log delivery attempt.
@@ -421,7 +589,19 @@ type LogDeliveryStatus struct {
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
+func (newState *LogDeliveryStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogDeliveryStatus) {
+}
+
+func (newState *LogDeliveryStatus) SyncEffectiveFieldsDuringRead(existingState LogDeliveryStatus) {
+}
+
 type PatchStatusResponse struct {
+}
+
+func (newState *PatchStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchStatusResponse) {
+}
+
+func (newState *PatchStatusResponse) SyncEffectiveFieldsDuringRead(existingState PatchStatusResponse) {
 }
 
 type UpdateBudgetConfigurationBudget struct {
@@ -438,20 +618,38 @@ type UpdateBudgetConfigurationBudget struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter *BudgetConfigurationFilter `tfsdk:"filter" tf:"optional"`
+	Filter []BudgetConfigurationFilter `tfsdk:"filter" tf:"optional,object"`
+}
+
+func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationBudget) {
+}
+
+func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationBudget) {
 }
 
 type UpdateBudgetConfigurationRequest struct {
 	// The updated budget. This will overwrite the budget specified by the
 	// budget ID.
-	Budget UpdateBudgetConfigurationBudget `tfsdk:"budget" tf:""`
+	Budget []UpdateBudgetConfigurationBudget `tfsdk:"budget" tf:"object"`
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
 }
 
+func (newState *UpdateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationRequest) {
+}
+
+func (newState *UpdateBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationRequest) {
+}
+
 type UpdateBudgetConfigurationResponse struct {
 	// The updated budget.
-	Budget *BudgetConfiguration `tfsdk:"budget" tf:"optional"`
+	Budget []BudgetConfiguration `tfsdk:"budget" tf:"optional,object"`
+}
+
+func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationResponse) {
+}
+
+func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationResponse) {
 }
 
 type UpdateLogDeliveryConfigurationStatusRequest struct {
@@ -465,14 +663,38 @@ type UpdateLogDeliveryConfigurationStatusRequest struct {
 	Status types.String `tfsdk:"status" tf:""`
 }
 
+func (newState *UpdateLogDeliveryConfigurationStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLogDeliveryConfigurationStatusRequest) {
+}
+
+func (newState *UpdateLogDeliveryConfigurationStatusRequest) SyncEffectiveFieldsDuringRead(existingState UpdateLogDeliveryConfigurationStatusRequest) {
+}
+
 type WrappedCreateLogDeliveryConfiguration struct {
-	LogDeliveryConfiguration *CreateLogDeliveryConfigurationParams `tfsdk:"log_delivery_configuration" tf:"optional"`
+	LogDeliveryConfiguration []CreateLogDeliveryConfigurationParams `tfsdk:"log_delivery_configuration" tf:"optional,object"`
+}
+
+func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedCreateLogDeliveryConfiguration) {
+}
+
+func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState WrappedCreateLogDeliveryConfiguration) {
 }
 
 type WrappedLogDeliveryConfiguration struct {
-	LogDeliveryConfiguration *LogDeliveryConfiguration `tfsdk:"log_delivery_configuration" tf:"optional"`
+	LogDeliveryConfiguration []LogDeliveryConfiguration `tfsdk:"log_delivery_configuration" tf:"optional,object"`
+}
+
+func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfiguration) {
+}
+
+func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfiguration) {
 }
 
 type WrappedLogDeliveryConfigurations struct {
 	LogDeliveryConfigurations []LogDeliveryConfiguration `tfsdk:"log_delivery_configurations" tf:"optional"`
+}
+
+func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfigurations) {
+}
+
+func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfigurations) {
 }

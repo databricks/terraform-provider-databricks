@@ -8,7 +8,7 @@ The `databricks_job` resource allows you to manage [Databricks Jobs](https://doc
 
 ## Example Usage
 
--> **Note** In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
+-> In Terraform configuration, it is recommended to define tasks in alphabetical order of their `task_key` arguments, so that you get consistent and readable diff. Whenever tasks are added or removed, or `task_key` is renamed, you'll observe a change in the majority of tasks. It's related to the fact that the current version of the provider treats `task` blocks as an ordered list. Alternatively, `task` block could have been an unordered set, though end-users would see the entire block replaced upon a change in single property of the task.
 
 It is possible to create [a Databricks job](https://docs.databricks.com/data-engineering/jobs/jobs-user-guide.html) using `task` blocks. A single task is defined with the `task` block containing one of the `*_task` blocks, `task_key`, and additional arguments described below.
 
@@ -107,6 +107,7 @@ The resource supports the following arguments:
 * `notification_settings` - (Optional) An optional block controlling the notification settings on the job level [documented below](#notification_settings-configuration-block).
 * `health` - (Optional) An optional block that specifies the health conditions for the job [documented below](#health-configuration-block).
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
+* `budget_policy_id` - (Optional) The ID of the user-specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job.
 
 ### task Configuration Block
 
@@ -142,7 +143,7 @@ This block describes individual tasks:
 * `timeout_seconds` - (Optional) (Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout.
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 
--> **Note** If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
+-> If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
 
 #### condition_task Configuration Block
 
@@ -186,7 +187,7 @@ You also need to include a `git_source` block to configure the repository that c
 * `pipeline_id` - (Required) The pipeline's unique ID.
 * `full_refresh` - (Optional) (Bool) Specifies if there should be full refresh of the pipeline.
 
--> **Note** The following configuration blocks are only supported inside a `task` block
+-> The following configuration blocks are only supported inside a `task` block
 
 #### python_wheel_task Configuration Block
 
@@ -223,14 +224,14 @@ One of the `query`, `dashboard` or `alert` needs to be provided.
 
 * `warehouse_id` - (Required) ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now.
 * `parameters` - (Optional) (Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters.
-* `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks SQL Query ([databricks_sql_query](sql_query.md)).
+* `query` - (Optional) block consisting of single string field: `query_id` - identifier of the Databricks Query ([databricks_query](query.md)).
 * `dashboard` - (Optional) block consisting of following fields:
   * `dashboard_id` - (Required) (String) identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md).
   * `subscriptions` - (Optional) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `custom_subject` - (Optional) string specifying a custom subject of email sent.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `alert` - (Optional) block consisting of following fields:
-  * `alert_id` - (Required) (String) identifier of the Databricks SQL Alert.
+  * `alert_id` - (Required) (String) identifier of the Databricks Alert ([databricks_alert](alert.md)).
   * `subscriptions` - (Optional) a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier.
   * `pause_subscriptions` - (Optional) flag that specifies if subscriptions are paused or not.
 * `file` - (Optional) block consisting of single string fields:
@@ -318,7 +319,7 @@ This block describes upstream dependencies of a given task. For multiple upstrea
 * `task_key` - (Required) The name of the task this task depends on.
 * `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
 
--> **Note** Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
+-> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
 
 ### run_as Configuration Block
 
@@ -371,7 +372,6 @@ This block describes the queue settings of the job:
 * `periodic` - (Optional) configuration block to define a trigger for Periodic Triggers consisting of the following attributes:
   * `interval` - (Required) Specifies the interval at which the job should run. This value is required.
   * `unit` - (Required) Options are {"DAYS", "HOURS", "WEEKS"}.
-
 * `file_arrival` - (Optional) configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:
   * `url` - (Required) URL to be monitored for file arrivals. The path must point to the root or a subpath of the external location. Please note that the URL must have a trailing slash character (`/`).
   * `min_time_between_triggers_seconds` - (Optional) If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds.
@@ -434,7 +434,7 @@ webhook_notifications {
 
 * `id` - ID of the system notification that is notified when an event defined in `webhook_notifications` is triggered.
 
--> **Note** The following configuration blocks can be standalone or nested inside a `task` block
+-> The following configuration blocks can be standalone or nested inside a `task` block
 
 ### notification_settings Configuration Block
 

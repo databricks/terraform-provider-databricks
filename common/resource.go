@@ -16,17 +16,18 @@ import (
 
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
-	Create             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Read               func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Update             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Delete             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	CustomizeDiff      func(ctx context.Context, d *schema.ResourceDiff) error
-	StateUpgraders     []schema.StateUpgrader
-	Schema             map[string]*schema.Schema
-	SchemaVersion      int
-	Timeouts           *schema.ResourceTimeout
-	DeprecationMessage string
-	Importer           *schema.ResourceImporter
+	Create                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Read                            func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Update                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Delete                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	CustomizeDiff                   func(ctx context.Context, d *schema.ResourceDiff) error
+	StateUpgraders                  []schema.StateUpgrader
+	Schema                          map[string]*schema.Schema
+	SchemaVersion                   int
+	Timeouts                        *schema.ResourceTimeout
+	DeprecationMessage              string
+	Importer                        *schema.ResourceImporter
+	CanSkipReadAfterCreateAndUpdate func(d *schema.ResourceData) bool
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -93,6 +94,9 @@ func (r Resource) ToResource() *schema.Resource {
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
+			}
+			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
+				return nil
 			}
 			if err := recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
@@ -161,6 +165,9 @@ func (r Resource) ToResource() *schema.Resource {
 			if err != nil {
 				err = nicerError(ctx, err, "create")
 				return diag.FromErr(err)
+			}
+			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
+				return nil
 			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
@@ -438,6 +445,23 @@ func genericDatabricksData[T, P, C any](
 			return
 		},
 	}
+}
+
+// WorkspacePathPrefixDiffSuppress suppresses diffs for workspace paths where both sides
+// may or may not include the `/Workspace` prefix.
+//
+// This is the case for dashboards, alerts and queries where at create time, the user may include the `/Workspace`
+// prefix for the `parent_path` field, but the read response will not include the prefix.
+func WorkspacePathPrefixDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	const prefix = "/Workspace"
+	return strings.TrimPrefix(old, prefix) == strings.TrimPrefix(new, prefix)
+}
+
+// WorkspaceOrEmptyPathPrefixDiffSuppress is similar WorkspacePathPrefixDiffSuppress but also suppresses diffs
+// when the new value is empty (not specified by user).
+func WorkspaceOrEmptyPathPrefixDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	const prefix = "/Workspace"
+	return (old != "" && new == "") || strings.TrimPrefix(old, prefix) == strings.TrimPrefix(new, prefix)
 }
 
 func EqualFoldDiffSuppress(k, old, new string, d *schema.ResourceData) bool {

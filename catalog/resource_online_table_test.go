@@ -1,14 +1,17 @@
 package catalog
 
 import (
+	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -46,6 +49,13 @@ func TestOnlineTableCreate(t *testing.T) {
 			PrimaryKeyColumns:   []string{"id"},
 		},
 	}
+	otStatusNotSetWait := &catalog.WaitGetOnlineTableActive[catalog.OnlineTable]{
+		Response: otStatusNotSet,
+		Name:     "main.default.online_table",
+		Poll: func(d time.Duration, f func(*catalog.OnlineTable)) (*catalog.OnlineTable, error) {
+			return otStatusOnline, nil
+		},
+	}
 	// otStatusUnknown := &catalog.OnlineTable{
 	// 	Name: "main.default.online_table",
 	// 	Spec: &catalog.OnlineTableSpec{
@@ -59,16 +69,15 @@ func TestOnlineTableCreate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockOnlineTablesAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateOnlineTableRequest{
-				Name: "main.default.online_table",
-				Spec: &catalog.OnlineTableSpec{
-					RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
-					SourceTableFullName: "main.default.test",
-					PrimaryKeyColumns:   []string{"id"},
+				Table: &catalog.OnlineTable{
+					Name: "main.default.online_table",
+					Spec: &catalog.OnlineTableSpec{
+						RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
+						SourceTableFullName: "main.default.test",
+						PrimaryKeyColumns:   []string{"id"},
+					},
 				},
-			}).Return(otStatusNotSet, nil)
-			// TODO: how to emulate the status change
-			// e.GetByName(mock.Anything, "main.default.online_table").Return(otStatusNotSet, nil)
-			// e.GetByName(mock.Anything, "main.default.online_table").Return(otStatusUnknown, nil)
+			}).Return(otStatusNotSetWait, nil)
 			e.GetByName(mock.Anything, "main.default.online_table").Return(otStatusOnline, nil)
 		},
 		Resource: ResourceOnlineTable(),
@@ -84,11 +93,13 @@ func TestOnlineTableCreate_ErrorImmediately(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockOnlineTablesAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateOnlineTableRequest{
-				Name: "main.default.online_table",
-				Spec: &catalog.OnlineTableSpec{
-					RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
-					SourceTableFullName: "main.default.test",
-					PrimaryKeyColumns:   []string{"id"},
+				Table: &catalog.OnlineTable{
+					Name: "main.default.online_table",
+					Spec: &catalog.OnlineTableSpec{
+						RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
+						SourceTableFullName: "main.default.test",
+						PrimaryKeyColumns:   []string{"id"},
+					},
 				},
 			}).Return(nil, fmt.Errorf("error!"))
 		},
@@ -99,32 +110,42 @@ func TestOnlineTableCreate_ErrorImmediately(t *testing.T) {
 }
 
 func TestOnlineTableCreate_ErrorInWait(t *testing.T) {
-	otStatusError := &catalog.OnlineTable{
+	otStatusProvisioning := &catalog.OnlineTable{
 		Name: "main.default.online_table",
 		Spec: &catalog.OnlineTableSpec{
 			RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
 			SourceTableFullName: "main.default.test",
 			PrimaryKeyColumns:   []string{"id"},
 		},
-		Status: &catalog.OnlineTableStatus{DetailedState: catalog.OnlineTableStateOfflineFailed},
+		Status: &catalog.OnlineTableStatus{DetailedState: catalog.OnlineTableStateProvisioning},
 	}
-	qa.ResourceFixture{
+	otStatusErrorWait := &catalog.WaitGetOnlineTableActive[catalog.OnlineTable]{
+		Response: otStatusProvisioning,
+		Name:     "main.default.online_table",
+		Poll: func(d time.Duration, f func(*catalog.OnlineTable)) (*catalog.OnlineTable, error) {
+			return nil, errors.New("failed to reach ACTIVE, got OFFLINE_FAILED: error!")
+		},
+	}
+	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockOnlineTablesAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateOnlineTableRequest{
-				Name: "main.default.online_table",
-				Spec: &catalog.OnlineTableSpec{
-					RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
-					SourceTableFullName: "main.default.test",
-					PrimaryKeyColumns:   []string{"id"},
+				Table: &catalog.OnlineTable{
+					Name: "main.default.online_table",
+					Spec: &catalog.OnlineTableSpec{
+						RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
+						SourceTableFullName: "main.default.test",
+						PrimaryKeyColumns:   []string{"id"},
+					},
 				},
-			}).Return(otStatusError, nil)
-			e.GetByName(mock.Anything, "main.default.online_table").Return(otStatusError, nil)
+			}).Return(otStatusErrorWait, nil)
 		},
 		Resource: ResourceOnlineTable(),
 		HCL:      onlineTableHcl,
 		Create:   true,
-	}.ExpectError(t, "online table status returned OFFLINE_FAILED for online table: main.default.online_table")
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "failed to reach ACTIVE, got OFFLINE_FAILED: error!")
+	assert.Equal(t, "main.default.online_table", d.Id())
 }
 
 func TestOnlineTableRead(t *testing.T) {

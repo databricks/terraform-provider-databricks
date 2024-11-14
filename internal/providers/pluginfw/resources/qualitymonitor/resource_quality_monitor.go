@@ -11,6 +11,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
@@ -20,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+const resourceName = "quality_monitor"
 
 const qualityMonitorDefaultProvisionTimeout = 15 * time.Minute
 
@@ -55,6 +58,7 @@ type MonitorInfoExtended struct {
 	catalog_tf.MonitorInfo
 	WarehouseId          types.String `tfsdk:"warehouse_id" tf:"optional"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard" tf:"optional"`
+	ID                   types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
 }
 
 type QualityMonitorResource struct {
@@ -62,23 +66,25 @@ type QualityMonitorResource struct {
 }
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "databricks_quality_monitor_pluginframework"
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.SetRequired("assets_dir")
+		c.SetRequired("output_schema_name")
+		c.SetReadOnly("monitor_version")
+		c.SetReadOnly("drift_metrics_table_name")
+		c.SetReadOnly("profile_metrics_table_name")
+		c.SetReadOnly("status")
+		c.SetReadOnly("dashboard_id")
+		c.SetReadOnly("schedule", "pause_status")
+		return c
+	})
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks Quality Monitor",
-		Attributes: tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-			c.SetRequired("assets_dir")
-			c.SetRequired("output_schema_name")
-			c.SetReadOnly("monitor_version")
-			c.SetReadOnly("drift_metrics_table_name")
-			c.SetReadOnly("profile_metrics_table_name")
-			c.SetReadOnly("status")
-			c.SetReadOnly("dashboard_id")
-			c.SetReadOnly("schedule", "pause_status")
-			return c
-		}),
+		Attributes:  attrs,
+		Blocks:      blocks,
 	}
 }
 
@@ -88,7 +94,12 @@ func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 	}
 }
 
+func (d *QualityMonitorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("table_name"), req, resp)
+}
+
 func (r *QualityMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -121,10 +132,14 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	// Set the ID to the table name
+	newMonitorInfoTfSDK.ID = newMonitorInfoTfSDK.TableName
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -151,10 +166,13 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -197,6 +215,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 }
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

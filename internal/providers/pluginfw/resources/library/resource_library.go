@@ -9,7 +9,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
-	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
@@ -105,7 +104,6 @@ func (r *LibraryResource) Configure(ctx context.Context, req resource.ConfigureR
 }
 
 func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -150,7 +148,6 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -188,7 +185,6 @@ func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 	w, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

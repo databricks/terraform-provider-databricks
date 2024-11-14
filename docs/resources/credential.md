@@ -23,6 +23,7 @@ resource "databricks_credential" "external" {
   aws_iam_role {
     role_arn = aws_iam_role.external_data_access.arn
   }
+  purpose = "SERVICE"
   comment = "Managed by TF"
 }
 
@@ -43,6 +44,7 @@ resource "databricks_credential" "external_mi" {
   azure_managed_identity {
     access_connector_id = azurerm_databricks_access_connector.example.id
   }
+  purpose = "SERVICE"
   comment = "Managed identity credential managed by TF"
 }
 
@@ -60,8 +62,8 @@ resource "databricks_grants" "external_creds" {
 The following arguments are required:
 
 - `name` - Name of Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
+- `purpose` - Indicates the purpose of the credential. Can be `SERVICE`.
 - `owner` - (Optional) Username/groupname/sp application_id of the credential owner.
-- `purpose` - (Optional) Indicates the purpose of the credential. Can be `SERVICE`.
 - `read_only` - (Optional) Indicates whether the credential is only usable for read operations.
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the credential.
 - `force_destroy` - (Optional) Delete credential regardless of its dependencies.

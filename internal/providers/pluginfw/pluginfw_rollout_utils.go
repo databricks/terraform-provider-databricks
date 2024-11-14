@@ -44,6 +44,7 @@ var pluginFwOnlyResources = []func() resource.Resource{
 // List of data sources that have been onboarded to the plugin framework - not migrated from sdkv2.
 var pluginFwOnlyDataSources = []func() datasource.DataSource{
 	registered_model.DataSourceRegisteredModel,
+	registered_model.DataSourceRegisteredModelVersions,
 	notificationdestinations.DataSourceNotificationDestinations,
 	catalog.DataSourceFunctions,
 	// TODO: Add DataSourceCluster into migratedDataSources after fixing unit tests.

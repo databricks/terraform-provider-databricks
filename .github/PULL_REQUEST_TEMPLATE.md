@@ -11,3 +11,4 @@ How is this tested? Please see the checklist below and also describe any other r
 - [ ] covered with integration tests in `internal/acceptance`
 - [ ] relevant acceptance tests are passing
 - [ ] using Go SDK
+- [ ] using TF Plugin Framework

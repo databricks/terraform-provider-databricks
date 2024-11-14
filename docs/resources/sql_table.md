@@ -215,10 +215,11 @@ For table constraints
 Only `PRIMARY KEY` and `FOREIGN KEY` constraints are supported right now.
 
 * `name` - User-visible name of the constraint
-* `type` - Type of the constraint. Supported values: `PRIMARY KEY`, `FOREIGN KEY`
+* `type` - Type of the constraint. Supported values: `PRIMARY KEY`, `FOREIGN KEY`, `CHECK`
 * `key_columns` - List of the columns in the defined table that should be used for the constraint.
 * `parent_table` - (Optional) Required for `FOREIGN KEY` constraint. Full name of the parent table.
 * `parent_columns` - (Optional) Optional for `FOREIGN KEY` constraint. Should be used if column names in the parent table differ.
+* `check_formula` - (Optional) Required for `CHECK` constraint. Defines the condition that should be satisfied by each row. Note: `CHECK` constraint cannot be specified on table creation phase (Databricks supports only `PRIMARY KEY` and `FOREIGN KEY` on this stage).
 * `rely` - (Optional) Set to `true` if `RELY` option should be used for the constraint
 
 ## Attribute Reference

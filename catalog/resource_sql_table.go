@@ -35,9 +35,10 @@ type SqlColumnInfo struct {
 type ConstraintInfo struct {
 	Name          string   `json:"name"`
 	Type          string   `json:"type"`
-	KeyColumns    []string `json:"key_columns"`
+	KeyColumns    []string `json:"key_columns,omitempty"`
 	ParentTable   string   `json:"parent_table,omitempty"`
 	ParentColumns []string `json:"parent_columns,omitempty"`
+	CheckFormula  string   `json:"check_formula,omitempty"`
 	Rely          bool     `json:"rely,omitempty" tf:"default:false"`
 }
 
@@ -97,9 +98,6 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 	s.SchemaPath("partitions").SetConflictsWith([]string{"cluster_keys"})
 	s.SchemaPath("cluster_keys").SetConflictsWith([]string{"partitions"})
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
-		return getColumnType(old) == getColumnType(new)
-	})
-	s.SchemaPath("constraint", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
 		return getColumnType(old) == getColumnType(new)
 	})
 	return s
@@ -255,37 +253,48 @@ func (ti *SqlTableInfo) serializeColumnInfos() string {
 	return strings.Join(columnFragments[:], ", ") // id INT NOT NULL, name STRING, age INT
 }
 
-func serializePrimaryKeyConstraint(constraint ConstraintInfo) string {
-	constraint_clause := fmt.Sprintf("CONSTRAINT %s PRIMARY KEY(%s)", constraint.getWrappedConstraintName(), constraint.getWrappedKeyColumnNames())
-	if constraint.Rely {
+func (ti *ConstraintInfo) serializePrimaryKeyConstraint() string {
+	constraint_clause := fmt.Sprintf("CONSTRAINT %s PRIMARY KEY(%s)", ti.getWrappedConstraintName(), ti.getWrappedKeyColumnNames())
+	if ti.Rely {
 		constraint_clause += " RELY"
 	}
 	return constraint_clause
 }
 
-func serializeForeignKeyConstraint(constraint ConstraintInfo) string {
-	constraint_clause := fmt.Sprintf("CONSTRAINT %s FOREIGN KEY(%s) REFERENCES %s", constraint.getWrappedConstraintName(), constraint.getWrappedKeyColumnNames(), constraint.ParentTable)
-	if len(constraint.ParentColumns) > 0 {
-		constraint_clause += fmt.Sprintf("(%s)", constraint.getWrappedParentColumnNames())
+func (ti *ConstraintInfo) serializeForeignKeyConstraint() string {
+	constraint_clause := fmt.Sprintf("CONSTRAINT %s FOREIGN KEY(%s) REFERENCES %s", ti.getWrappedConstraintName(), ti.getWrappedKeyColumnNames(), ti.ParentTable)
+	if len(ti.ParentColumns) > 0 {
+		constraint_clause += fmt.Sprintf("(%s)", ti.getWrappedParentColumnNames())
 	}
-	if constraint.Rely {
+	if ti.Rely {
 		constraint_clause += " RELY"
 	}
 	return constraint_clause
 }
 
-func (ti *SqlTableInfo) serializeConstraints() string {
+func (ti *ConstraintInfo) serializeCheckConstraint() string {
+	constraint_clause := fmt.Sprintf("CONSTRAINT %s CHECK (%s)", ti.getWrappedConstraintName(), ti.CheckFormula)
+	if ti.Rely {
+		constraint_clause += " RELY"
+	}
+	return constraint_clause
+}
+
+func (ti *SqlTableInfo) serializeConstraintsForTableCreateStatement() (string, error) {
 	constraintFragments := make([]string, len(ti.Constraints))
 
 	for i, constraint := range ti.Constraints {
 		if constraint.Type == "PRIMARY KEY" {
-			constraintFragments[i] = serializePrimaryKeyConstraint(constraint)
+			constraintFragments[i] = constraint.serializePrimaryKeyConstraint()
 		} else if constraint.Type == "FOREIGN KEY" {
-			constraintFragments[i] = serializeForeignKeyConstraint(constraint)
+			constraintFragments[i] = constraint.serializeForeignKeyConstraint()
+		} else {
+			err := fmt.Errorf("constraint of type %s is not supported for CREATE TABLE statement", constraint.Type)
+			return "", err
 		}
 	}
 
-	return strings.Join(constraintFragments[:], ", ") // CONSTRAINT `pk`` PRIMARY KEY (`id`, `nickname`), CONSTRAINT `fk` FOREIGN KEY (`player_id`) REFERENCES players
+	return strings.Join(constraintFragments[:], ", "), nil // CONSTRAINT `pk`` PRIMARY KEY (`id`, `nickname`), CONSTRAINT `fk` FOREIGN KEY (`player_id`) REFERENCES players
 }
 
 func (ti *SqlTableInfo) serializeProperties() string {
@@ -321,7 +330,7 @@ func (ti *SqlTableInfo) getTableTypeString() string {
 	return "TABLE"
 }
 
-func (ti *SqlTableInfo) buildTableCreateStatement() string {
+func (ti *SqlTableInfo) buildTableCreateStatement() (string, error) {
 	statements := make([]string, 0, 10)
 
 	isView := ti.TableType == "VIEW"
@@ -338,7 +347,11 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	if len(ti.ColumnInfos) > 0 {
 		columnInfosClause := ti.serializeColumnInfos()
 		if len(ti.Constraints) > 0 {
-			columnInfosClause += fmt.Sprintf(", %s", ti.serializeConstraints())
+			constraintStatement, err := ti.serializeConstraintsForTableCreateStatement()
+			if err != nil {
+				return "", err
+			}
+			columnInfosClause += fmt.Sprintf(", %s", constraintStatement)
 		}
 		statements = append(statements, fmt.Sprintf(" (%s)", columnInfosClause))
 	}
@@ -379,7 +392,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 
 	statements = append(statements, ";")
 
-	return strings.Join(statements, "")
+	return strings.Join(statements, ""), nil
 }
 
 // Wrapping the column name with backticks to avoid special character messing things up.
@@ -504,9 +517,11 @@ func (ti *SqlTableInfo) addOrRemoveConstraintStatements(oldti *SqlTableInfo, sta
 		if _, exists := nameToOldConstraint[newCi.Name]; !exists {
 			var newConstraintStatement string
 			if newCi.Type == "PRIMARY KEY" {
-				newConstraintStatement = serializePrimaryKeyConstraint(newCi)
+				newConstraintStatement = newCi.serializePrimaryKeyConstraint()
 			} else if newCi.Type == "FOREIGN KEY" {
-				newConstraintStatement = serializeForeignKeyConstraint(newCi)
+				newConstraintStatement = newCi.serializeForeignKeyConstraint()
+			} else if newCi.Type == "CHECK" {
+				newConstraintStatement = newCi.serializeCheckConstraint()
 			}
 			statements = append(statements, fmt.Sprintf("ALTER %s %s ADD %s", typestring, ti.SQLFullName(), newConstraintStatement))
 		}
@@ -576,7 +591,11 @@ func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {
 }
 
 func (ti *SqlTableInfo) createTable() error {
-	return ti.applySql(ti.buildTableCreateStatement())
+	tableCreateStatement, err := ti.buildTableCreateStatement()
+	if err != nil {
+		return err
+	}
+	return ti.applySql(tableCreateStatement)
 }
 
 func (ti *SqlTableInfo) deleteTable() error {

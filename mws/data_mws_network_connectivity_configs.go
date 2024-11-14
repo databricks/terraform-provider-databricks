@@ -8,13 +8,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-func DataSourceMwsNetworkConnectivityConfig() common.Resource {
+func DataSourceMwsNetworkConnectivityConfigs() common.Resource {
 	type mwsNetworkConnectivityConfiguration struct {
-		settings.NetworkConnectivityConfiguration
+		Names []string `json:"names" tf:"computed,optional"`
 	}
 
 	type mwsNetworkConnectivityConfigurationParams struct {
-		Name string `json:"name"`
+		Names  []string `json:"names" tf:"computed,optional"`
+		Region string   `json:"region" tf:"optional"`
 	}
 
 	return common.AccountDataWithParams(func(ctx context.Context, data mwsNetworkConnectivityConfigurationParams, a *databricks.AccountClient) (*mwsNetworkConnectivityConfiguration, error) {
@@ -23,11 +24,20 @@ func DataSourceMwsNetworkConnectivityConfig() common.Resource {
 			return nil, err
 		}
 
-		for _, ncc := range list {
-			if data.Name == ncc.Name {
-				return &mwsNetworkConnectivityConfiguration{NetworkConnectivityConfiguration: ncc}, nil
+		if data.Region != "" {
+			filtered := []string{}
+			for _, ncc := range list {
+				if data.Region == ncc.Region {
+					filtered = append(filtered, ncc.Name)
+				}
 			}
+			return &mwsNetworkConnectivityConfiguration{Names: filtered}, nil
 		}
-		return nil, nil
+
+		names := []string{}
+		for _, ncc := range list {
+			names = append(names, ncc.Name)
+		}
+		return &mwsNetworkConnectivityConfiguration{Names: names}, nil
 	})
 }

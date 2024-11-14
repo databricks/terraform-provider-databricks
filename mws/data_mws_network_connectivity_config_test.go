@@ -52,17 +52,6 @@ func TestDataSourceMwsNetworkConnectivityConfig(t *testing.T) {
 	})
 }
 
-func TestDataSourceMwsNetworkConnectivityConfig_NoName(t *testing.T) {
-	qa.ResourceFixture{
-		Fixtures:    qa.HTTPFailures,
-		AccountID:   "abc",
-		Resource:    DataSourceMwsNetworkConnectivityConfig(),
-		Read:        true,
-		NonWritable: true,
-		ID:          "_",
-	}.ExpectError(t, "`name` should be provided")
-}
-
 func TestDataSourceMwsNetworkConnectivityConfig_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures:    qa.HTTPFailures,

@@ -8,13 +8,11 @@ import (
 )
 
 func TestAccDataSourceMwsNetworkConnectivityConfigTest(t *testing.T) {
+	loadWorkspaceEnv(t)
+	if isGcp(t) {
+		skipf(t)("GCP not supported")
+	}
 	AccountLevel(t,
-		Step{
-			Template: `
-			resource "databricks_mws_network_connectivity_config" "this" {
-				name = "tf-{var.RANDOM}"
-				region = "eastus2"
-			}`},
 		Step{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
@@ -24,16 +22,16 @@ func TestAccDataSourceMwsNetworkConnectivityConfigTest(t *testing.T) {
 
 			data "databricks_mws_network_connectivity_config" "this" {
 			  depends_on = [databricks_mws_network_connectivity_config.this]
-			  network_connectivity_config_id = databricks_mws_network_connectivity_config.this.network_connectivity_config_id
+			  name = databricks_mws_network_connectivity_config.this.name
 			}`,
 			Check: func(s *terraform.State) error {
 				r, ok := s.RootModule().Resources["data.databricks_mws_network_connectivity_config.this"]
 				if !ok {
 					return fmt.Errorf("data not found in state")
 				}
-				id := r.Primary.Attributes["id"]
-				if id == "" {
-					return fmt.Errorf("id is empty: %v", r.Primary.Attributes)
+				name := r.Primary.Attributes["name"]
+				if name == "" {
+					return fmt.Errorf("name is empty: %v", r.Primary.Attributes)
 				}
 				expect := "eastus2"
 				region := r.Primary.Attributes["region"]

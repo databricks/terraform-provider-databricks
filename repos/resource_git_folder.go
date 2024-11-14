@@ -3,14 +3,14 @@ package repos
 import (
 	"context"
 	"fmt"
-	"github.com/databricks/databricks-sdk-go/service/workspace"
-	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/databricks/databricks-sdk-go/service/workspace"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type gitFolderStruct workspace.RepoInfo
@@ -19,34 +19,40 @@ var aliasMap = map[string]string{
 	"provider": "git_provider",
 }
 
-func (gitFolderStruct) Aliases() map[string]map[string]string {
+func (s gitFolderStruct) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"repos.gitFolderStruct": aliasMap,
+		"repos.gitFolderStruct": {
+			"provider": "git_provider",
+		},
 	}
 }
 
 type gitFolderCreateStruct workspace.CreateRepoRequest
 
-func (gitFolderCreateStruct) Aliases() map[string]map[string]string {
+func (s gitFolderCreateStruct) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"repos.gitFolderCreateStruct": aliasMap,
+		"repos.gitFolderStruct": {
+			"provider": "git_provider",
+		},
 	}
 }
 
-func (gitFolderCreateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
-	return s
+func (s gitFolderCreateStruct) CustomizeSchema(m *common.CustomizableSchema) *common.CustomizableSchema {
+	return m
 }
 
 type gitFolderUpdateStruct workspace.UpdateRepoRequest
 
-func (gitFolderUpdateStruct) Aliases() map[string]map[string]string {
+func (s gitFolderUpdateStruct) Aliases() map[string]map[string]string {
 	return map[string]map[string]string{
-		"repos.gitFolderUpdateStruct": aliasMap,
+		"repos.gitFolderStruct": {
+			"provider": "git_provider",
+		},
 	}
 }
 
-func (gitFolderUpdateStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
-	return s
+func (s gitFolderUpdateStruct) CustomizeSchema(m *common.CustomizableSchema) *common.CustomizableSchema {
+	return m
 }
 
 var (
@@ -60,27 +66,10 @@ var (
 )
 
 func ResourceGitFolder() common.Resource {
-	s := common.StructToSchema(gitFolderStruct{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		for _, p := range []string{"git_provider", "path", "branch", "head_commit_id"} {
-			common.CustomizeSchemaPath(m, p).SetComputed()
-		}
-		for _, p := range []string{"git_provider", "url", "sparse_checkout", "path"} {
-			common.CustomizeSchemaPath(m, p).SetForceNew()
-		}
-
-		common.CustomizeSchemaPath(m, "url").SetValidateFunc(validation.IsURLWithScheme([]string{"https", "http"}))
-		common.CustomizeSchemaPath(m, "git_provider").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-		common.CustomizeSchemaPath(m, "branch").SetConflictsWith([]string{"tag"}).SetValidateFunc(validation.StringIsNotWhiteSpace)
-		common.CustomizeSchemaPath(m, "path").SetValidateFunc(validatePath)
-		common.CustomizeSchemaPath(m).AddNewField("tag", &schema.Schema{
-			Type:          schema.TypeString,
-			Optional:      true,
-			ConflictsWith: []string{"branch"},
-			ValidateFunc:  validation.StringIsNotWhiteSpace,
-		})
-
-		delete(m, "id")
-		return m
+	s := common.StructToSchema(gitFolderStruct{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s["provider"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+		delete(s, "id")
+		return s
 	})
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

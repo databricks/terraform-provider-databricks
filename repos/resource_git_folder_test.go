@@ -13,7 +13,16 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
-func TestResourceRepoRead(t *testing.T) {
+func TestGetGitProviderFromUrl(t *testing.T) {
+	assert.Equal(t, "bitbucketCloud", GetGitProviderFromUrl("https://user@bitbucket.org/user/repo.git"))
+	assert.Equal(t, "gitHub", GetGitProviderFromUrl("https://github.com//user/repo.git"))
+	assert.Equal(t, "azureDevOpsServices", GetGitProviderFromUrl("https://user@dev.azure.com/user/project/_git/repo"))
+	assert.Equal(t, "", GetGitProviderFromUrl("https://abc/user/repo.git"))
+	assert.Equal(t, "", GetGitProviderFromUrl("ewfgwergfwe"))
+	assert.Equal(t, "awsCodeCommit", GetGitProviderFromUrl("https://git-codecommit.us-east-2.amazonaws.com/v1/repos/MyDemoRepo"))
+}
+
+func TestResourceGitFolderRead(t *testing.T) {
 	repoID := 48155820875912
 	repoIDStr := fmt.Sprintf("%d", repoID)
 	url := "https://user@github.com/user/repo.git"
@@ -35,7 +44,7 @@ func TestResourceRepoRead(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		Read:     true,
 		New:      true,
 		ID:       repoIDStr,
@@ -45,7 +54,7 @@ func TestResourceRepoRead(t *testing.T) {
 			"workspace_path": "/Workspace" + path})
 }
 
-func TestResourceRepoRead_NotFound(t *testing.T) {
+func TestResourceGitFolderRead_NotFound(t *testing.T) {
 	repoID := "48155820875912"
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -59,14 +68,14 @@ func TestResourceRepoRead_NotFound(t *testing.T) {
 				Status: 404,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		Read:     true,
 		Removed:  true,
 		ID:       repoID,
 	}.Apply(t)
 }
 
-func TestResourceRepoDelete(t *testing.T) {
+func TestResourceGitFolderDelete(t *testing.T) {
 	repoID := "48155820875912"
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -76,14 +85,14 @@ func TestResourceRepoDelete(t *testing.T) {
 				Status:   http.StatusOK,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		Delete:   true,
 		ID:       repoID,
 	}.ApplyAndExpectData(t,
 		map[string]any{"id": repoID})
 }
 
-func TestResourceRepoCreateNoBranch(t *testing.T) {
+func TestResourceGitFolderCreateNoBranch(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
@@ -109,7 +118,7 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 				Response: resp,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		State: map[string]any{
 			"url": "https://github.com/user/test.git",
 		},
@@ -119,7 +128,7 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
-func TestResourceRepoCreateCustomDirectory(t *testing.T) {
+func TestResourceGitFolderCreateCustomDirectory(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
@@ -153,7 +162,7 @@ func TestResourceRepoCreateCustomDirectory(t *testing.T) {
 				Response: resp,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
 			"path": "/Repos/Production/test/",
@@ -164,7 +173,7 @@ func TestResourceRepoCreateCustomDirectory(t *testing.T) {
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
-func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
+func TestResourceGitFolderCreateCustomDirectoryError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -180,7 +189,7 @@ func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
 				Status: 400,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
 			"path": "/Repos/Production/test/",
@@ -189,9 +198,9 @@ func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
 	}.ExpectError(t, "Internal error happened")
 }
 
-func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
+func TestResourceGitFolderCreateCustomDirectoryWrongLocation(t *testing.T) {
 	qa.ResourceFixture{
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
 			"path": "/Repos/Production/test/abc/",
@@ -200,9 +209,9 @@ func TestResourceRepoCreateCustomDirectoryWrongLocation(t *testing.T) {
 	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 4. Deprecated Resource")
 }
 
-func TestResourceRepoCreateCustomDirectoryWrongPath(t *testing.T) {
+func TestResourceGitFolderCreateCustomDirectoryWrongPath(t *testing.T) {
 	qa.ResourceFixture{
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		State: map[string]any{
 			"url":  "https://github.com/user/test.git",
 			"path": "/Repos/test/",
@@ -211,7 +220,7 @@ func TestResourceRepoCreateCustomDirectoryWrongPath(t *testing.T) {
 	}.ExpectError(t, "invalid config supplied. [path] should have 3 components (/Repos/<directory>/<repo>), got 2. Deprecated Resource")
 }
 
-func TestResourceRepoCreateWithBranch(t *testing.T) {
+func TestResourceGitFolderCreateWithBranch(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
@@ -245,7 +254,7 @@ func TestResourceRepoCreateWithBranch(t *testing.T) {
 				Response: respPatch,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		State: map[string]any{
 			"url":    "https://github.com/user/test.git",
 			"branch": "releases",
@@ -256,7 +265,7 @@ func TestResourceRepoCreateWithBranch(t *testing.T) {
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
-func TestResourceRepoCreateWithTag(t *testing.T) {
+func TestResourceGitFolderCreateWithTag(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
@@ -290,7 +299,7 @@ func TestResourceRepoCreateWithTag(t *testing.T) {
 				Response: respPatch,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		State: map[string]any{
 			"url": "https://github.com/user/test.git",
 			"tag": "v0.1",
@@ -301,10 +310,10 @@ func TestResourceRepoCreateWithTag(t *testing.T) {
 			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
 }
 
-func TestResourceRepoCreateError(t *testing.T) {
+func TestResourceGitFolderCreateError(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		State: map[string]any{
 			"url": "https://somegit.com/user/test.git",
 		},
@@ -312,7 +321,7 @@ func TestResourceRepoCreateError(t *testing.T) {
 	}.ExpectError(t, "git_provider isn't specified and we can't detect provider from URL")
 }
 
-func TestResourceReposUpdateSwitchToTag(t *testing.T) {
+func TestResourceGitFoldersUpdateSwitchToTag(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
@@ -334,7 +343,7 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 				Response: resp,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		InstanceState: map[string]string{
 			"url":          "https://github.com/user/test.git",
 			"git_provider": "gitHub",
@@ -353,7 +362,7 @@ func TestResourceReposUpdateSwitchToTag(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"branch": ""})
 }
 
-func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
+func TestResourceGitFoldersUpdateSwitchToBranch(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
@@ -376,7 +385,7 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 				Response: resp,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		InstanceState: map[string]string{
 			"url":          "https://github.com/user/test.git",
 			"git_provider": "gitHub",
@@ -394,7 +403,7 @@ func TestResourceReposUpdateSwitchToBranch(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"branch": "releases"})
 }
 
-func TestResourceReposUpdateSparseCheckout(t *testing.T) {
+func TestResourceGitFoldersUpdateSparseCheckout(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
@@ -418,7 +427,7 @@ func TestResourceReposUpdateSparseCheckout(t *testing.T) {
 				Response: resp,
 			},
 		},
-		Resource: ResourceRepo(),
+		Resource: ResourceGitFolder(),
 		InstanceState: map[string]string{
 			"url":                        "https://github.com/user/test.git",
 			"git_provider":               "gitHub",
@@ -441,7 +450,7 @@ func TestResourceReposUpdateSparseCheckout(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{"branch": "main"})
 }
 
-func TestReposListAll(t *testing.T) {
+func TestGitFoldersListAll(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",
@@ -482,7 +491,7 @@ func TestReposListAll(t *testing.T) {
 	assert.Equal(t, resp.Branch, reposList[1].Branch)
 }
 
-func TestReposListWithPrefix(t *testing.T) {
+func TestGitFoldersListWithPrefix(t *testing.T) {
 	resp := ReposInformation{
 		ID:           121232342,
 		Url:          "https://github.com/user/test.git",

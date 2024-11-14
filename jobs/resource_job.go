@@ -1068,19 +1068,6 @@ func ResourceJob() common.Resource {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}
-			for _, task := range js.Tasks {
-				if task.NewCluster == nil {
-					continue
-				}
-				if err := clusters.Validate(*task.NewCluster); err != nil {
-					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
-				}
-			}
-			if js.NewCluster != nil {
-				if err := clusters.Validate(*js.NewCluster); err != nil {
-					return fmt.Errorf("invalid job cluster: %w", err)
-				}
-			}
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

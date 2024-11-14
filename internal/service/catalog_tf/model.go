@@ -181,6 +181,25 @@ func (newState *AwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan Aws
 func (newState *AwsCredentials) SyncEffectiveFieldsDuringRead(existingState AwsCredentials) {
 }
 
+// The AWS IAM role configuration
+type AwsIamRole struct {
+	// The external ID used in role assumption to prevent the confused deputy
+	// problem.
+	ExternalId types.String `tfsdk:"external_id" tf:"optional"`
+	// The Amazon Resource Name (ARN) of the AWS IAM role used to vend temporary
+	// credentials.
+	RoleArn types.String `tfsdk:"role_arn" tf:"optional"`
+	// The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks.
+	// This is the identity that is going to assume the AWS IAM role.
+	UnityCatalogIamArn types.String `tfsdk:"unity_catalog_iam_arn" tf:"optional"`
+}
+
+func (newState *AwsIamRole) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsIamRole) {
+}
+
+func (newState *AwsIamRole) SyncEffectiveFieldsDuringRead(existingState AwsIamRole) {
+}
+
 type AwsIamRoleRequest struct {
 	// The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.
 	RoleArn types.String `tfsdk:"role_arn" tf:""`
@@ -207,6 +226,47 @@ func (newState *AwsIamRoleResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *AwsIamRoleResponse) SyncEffectiveFieldsDuringRead(existingState AwsIamRoleResponse) {
+}
+
+// Azure Active Directory token, essentially the Oauth token for Azure Service
+// Principal or Managed Identity. Read more at
+// https://learn.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/aad/service-prin-aad-token
+type AzureActiveDirectoryToken struct {
+	// Opaque token that contains claims that you can use in Azure Active
+	// Directory to access cloud services.
+	AadToken types.String `tfsdk:"aad_token" tf:"optional"`
+}
+
+func (newState *AzureActiveDirectoryToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureActiveDirectoryToken) {
+}
+
+func (newState *AzureActiveDirectoryToken) SyncEffectiveFieldsDuringRead(existingState AzureActiveDirectoryToken) {
+}
+
+// The Azure managed identity configuration.
+type AzureManagedIdentity struct {
+	// The Azure resource ID of the Azure Databricks Access Connector. Use the
+	// format
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}`.
+	AccessConnectorId types.String `tfsdk:"access_connector_id" tf:"optional"`
+	// The Databricks internal ID that represents this managed identity. This
+	// field is only used to persist the credential_id once it is fetched from
+	// the credentials manager - as we only use the protobuf serializer to store
+	// credentials, this ID gets persisted to the database. .
+	CredentialId types.String `tfsdk:"credential_id" tf:"optional"`
+	// The Azure resource ID of the managed identity. Use the format,
+	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identity-name}`
+	// This is only available for user-assgined identities. For system-assigned
+	// identities, the access_connector_id is used to identify the identity. If
+	// this field is not provided, then we assume the AzureManagedIdentity is
+	// using the system-assigned identity.
+	ManagedIdentityId types.String `tfsdk:"managed_identity_id" tf:"optional"`
+}
+
+func (newState *AzureManagedIdentity) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureManagedIdentity) {
+}
+
+func (newState *AzureManagedIdentity) SyncEffectiveFieldsDuringRead(existingState AzureManagedIdentity) {
 }
 
 type AzureManagedIdentityRequest struct {
@@ -550,6 +610,29 @@ func (newState *CreateConnection) SyncEffectiveFieldsDuringCreateOrUpdate(plan C
 func (newState *CreateConnection) SyncEffectiveFieldsDuringRead(existingState CreateConnection) {
 }
 
+type CreateCredentialRequest struct {
+	// The AWS IAM role configuration
+	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
+	// The Azure managed identity configuration.
+	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	// Comment associated with the credential.
+	Comment types.String `tfsdk:"comment" tf:"optional"`
+	// The credential name. The name must be unique among storage and service
+	// credentials within the metastore.
+	Name types.String `tfsdk:"name" tf:"optional"`
+	// Indicates the purpose of the credential.
+	Purpose types.String `tfsdk:"purpose" tf:"optional"`
+	// Optional. Supplying true to this argument skips validation of the created
+	// set of credentials.
+	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
+}
+
+func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialRequest) {
+}
+
+func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringRead(existingState CreateCredentialRequest) {
+}
+
 type CreateExternalLocation struct {
 	// The AWS access point to use when accesing s3 for this external location.
 	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
@@ -728,12 +811,10 @@ func (newState *CreateMonitor) SyncEffectiveFieldsDuringCreateOrUpdate(plan Crea
 func (newState *CreateMonitor) SyncEffectiveFieldsDuringRead(existingState CreateMonitor) {
 }
 
-// Online Table information.
+// Create an Online Table
 type CreateOnlineTableRequest struct {
-	// Full three-part (catalog, schema, table) name of the table.
-	Name types.String `tfsdk:"name" tf:"optional"`
-	// Specification of the online table.
-	Spec []OnlineTableSpec `tfsdk:"spec" tf:"optional,object"`
+	// Online Table information.
+	Table []OnlineTable `tfsdk:"table" tf:"optional,object"`
 }
 
 func (newState *CreateOnlineTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOnlineTableRequest) {
@@ -852,6 +933,58 @@ func (newState *CreateVolumeRequestContent) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *CreateVolumeRequestContent) SyncEffectiveFieldsDuringRead(existingState CreateVolumeRequestContent) {
+}
+
+type CredentialInfo struct {
+	// The AWS IAM role configuration
+	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
+	// The Azure managed identity configuration.
+	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	// Comment associated with the credential.
+	Comment types.String `tfsdk:"comment" tf:"optional"`
+	// Time at which this credential was created, in epoch milliseconds.
+	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	// Username of credential creator.
+	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	// The full name of the credential.
+	FullName types.String `tfsdk:"full_name" tf:"optional"`
+	// The unique identifier of the credential.
+	Id types.String `tfsdk:"id" tf:"optional"`
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces.
+	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
+	// Unique identifier of the parent metastore.
+	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
+	// The credential name. The name must be unique among storage and service
+	// credentials within the metastore.
+	Name types.String `tfsdk:"name" tf:"optional"`
+	// Username of current owner of credential.
+	Owner types.String `tfsdk:"owner" tf:"optional"`
+	// Indicates the purpose of the credential.
+	Purpose types.String `tfsdk:"purpose" tf:"optional"`
+	// Time at which this credential was last modified, in epoch milliseconds.
+	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	// Username of user who last modified the credential.
+	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+}
+
+func (newState *CredentialInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CredentialInfo) {
+}
+
+func (newState *CredentialInfo) SyncEffectiveFieldsDuringRead(existingState CredentialInfo) {
+}
+
+type CredentialValidationResult struct {
+	// Error message would exist when the result does not equal to **PASS**.
+	Message types.String `tfsdk:"message" tf:"optional"`
+	// The results of the tested operation.
+	Result types.String `tfsdk:"result" tf:"optional"`
+}
+
+func (newState *CredentialValidationResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan CredentialValidationResult) {
+}
+
+func (newState *CredentialValidationResult) SyncEffectiveFieldsDuringRead(existingState CredentialValidationResult) {
 }
 
 // Currently assigned workspaces
@@ -981,6 +1114,29 @@ func (newState *DeleteConnectionRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *DeleteConnectionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteConnectionRequest) {
+}
+
+// Delete a credential
+type DeleteCredentialRequest struct {
+	// Force deletion even if there are dependent services.
+	Force types.Bool `tfsdk:"-"`
+	// Name of the credential.
+	NameArg types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCredentialRequest) {
+}
+
+func (newState *DeleteCredentialRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialRequest) {
+}
+
+type DeleteCredentialResponse struct {
+}
+
+func (newState *DeleteCredentialResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCredentialResponse) {
+}
+
+func (newState *DeleteCredentialResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialResponse) {
 }
 
 // Delete an external location
@@ -1353,8 +1509,7 @@ type ExternalLocationInfo struct {
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback" tf:"optional"`
-	// Whether the current securable is accessible from all workspaces or a
-	// specific set of workspaces.
+
 	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Unique identifier of metastore hosting the external location.
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
@@ -1562,6 +1717,34 @@ func (newState *GcpOauthToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpO
 func (newState *GcpOauthToken) SyncEffectiveFieldsDuringRead(existingState GcpOauthToken) {
 }
 
+// Options to customize the requested temporary credential
+type GenerateTemporaryServiceCredentialAzureOptions struct {
+	// The resources to which the temporary Azure credential should apply. These
+	// resources are the scopes that are passed to the token provider (see
+	// https://learn.microsoft.com/python/api/azure-core/azure.core.credentials.tokencredential?view=azure-python)
+	Resources []types.String `tfsdk:"resources" tf:"optional"`
+}
+
+func (newState *GenerateTemporaryServiceCredentialAzureOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialAzureOptions) {
+}
+
+func (newState *GenerateTemporaryServiceCredentialAzureOptions) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryServiceCredentialAzureOptions) {
+}
+
+type GenerateTemporaryServiceCredentialRequest struct {
+	// Options to customize the requested temporary credential
+	AzureOptions []GenerateTemporaryServiceCredentialAzureOptions `tfsdk:"azure_options" tf:"optional,object"`
+	// The name of the service credential used to generate a temporary
+	// credential
+	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
+}
+
+func (newState *GenerateTemporaryServiceCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialRequest) {
+}
+
+func (newState *GenerateTemporaryServiceCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryServiceCredentialRequest) {
+}
+
 type GenerateTemporaryTableCredentialRequest struct {
 	// The operation performed against the table data, either READ or
 	// READ_WRITE. If READ_WRITE is specified, the credentials returned will
@@ -1581,6 +1764,10 @@ type GenerateTemporaryTableCredentialResponse struct {
 	// AWS temporary credentials for API authentication. Read more at
 	// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
 	AwsTempCredentials []AwsCredentials `tfsdk:"aws_temp_credentials" tf:"optional,object"`
+	// Azure Active Directory token, essentially the Oauth token for Azure
+	// Service Principal or Managed Identity. Read more at
+	// https://learn.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/aad/service-prin-aad-token
+	AzureAad []AzureActiveDirectoryToken `tfsdk:"azure_aad" tf:"optional,object"`
 	// Azure temporary credentials for API authentication. Read more at
 	// https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
 	AzureUserDelegationSas []AzureUserDelegationSas `tfsdk:"azure_user_delegation_sas" tf:"optional,object"`
@@ -1718,6 +1905,18 @@ func (newState *GetConnectionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *GetConnectionRequest) SyncEffectiveFieldsDuringRead(existingState GetConnectionRequest) {
+}
+
+// Get a credential
+type GetCredentialRequest struct {
+	// Name of the credential.
+	NameArg types.String `tfsdk:"-"`
+}
+
+func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialRequest) {
+}
+
+func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GetCredentialRequest) {
 }
 
 // Get effective permissions
@@ -2130,6 +2329,40 @@ func (newState *ListConnectionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ListConnectionsResponse) SyncEffectiveFieldsDuringRead(existingState ListConnectionsResponse) {
 }
 
+// List credentials
+type ListCredentialsRequest struct {
+	// Maximum number of credentials to return. - If not set, the default max
+	// page size is used. - When set to a value greater than 0, the page length
+	// is the minimum of this value and a server-configured value. - When set to
+	// 0, the page length is set to a server-configured value (recommended). -
+	// When set to a value less than 0, an invalid parameter error is returned.
+	MaxResults types.Int64 `tfsdk:"-"`
+	// Opaque token to retrieve the next page of results.
+	PageToken types.String `tfsdk:"-"`
+	// Return only credentials for the specified purpose.
+	Purpose types.String `tfsdk:"-"`
+}
+
+func (newState *ListCredentialsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCredentialsRequest) {
+}
+
+func (newState *ListCredentialsRequest) SyncEffectiveFieldsDuringRead(existingState ListCredentialsRequest) {
+}
+
+type ListCredentialsResponse struct {
+	Credentials []CredentialInfo `tfsdk:"credentials" tf:"optional"`
+	// Opaque token to retrieve the next page of results. Absent if there are no
+	// more pages. __page_token__ should be set to this value for the next
+	// request (for the next page of results).
+	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCredentialsResponse) {
+}
+
+func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringRead(existingState ListCredentialsResponse) {
+}
+
 // List external locations
 type ListExternalLocationsRequest struct {
 	// Whether to include external locations in the response for which the
@@ -2529,6 +2762,9 @@ type ListTablesRequest struct {
 	OmitColumns types.Bool `tfsdk:"-"`
 	// Whether to omit the properties of the table from the response or not.
 	OmitProperties types.Bool `tfsdk:"-"`
+	// Whether to omit the username of the table (e.g. owner, updated_by,
+	// created_by) from the response or not.
+	OmitUsername types.Bool `tfsdk:"-"`
 	// Opaque token to send for the next page of results (pagination).
 	PageToken types.String `tfsdk:"-"`
 	// Parent schema of tables.
@@ -3459,10 +3695,11 @@ type StorageCredentialInfo struct {
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 	// The Databricks managed GCP service account configuration.
 	DatabricksGcpServiceAccount []DatabricksGcpServiceAccountResponse `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
+	// The full name of the credential.
+	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// The unique identifier of the credential.
 	Id types.String `tfsdk:"id" tf:"optional"`
-	// Whether the current securable is accessible from all workspaces or a
-	// specific set of workspaces.
+
 	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
@@ -3656,6 +3893,25 @@ func (newState *TableSummary) SyncEffectiveFieldsDuringCreateOrUpdate(plan Table
 func (newState *TableSummary) SyncEffectiveFieldsDuringRead(existingState TableSummary) {
 }
 
+type TemporaryCredentials struct {
+	// AWS temporary credentials for API authentication. Read more at
+	// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
+	AwsTempCredentials []AwsCredentials `tfsdk:"aws_temp_credentials" tf:"optional,object"`
+	// Azure Active Directory token, essentially the Oauth token for Azure
+	// Service Principal or Managed Identity. Read more at
+	// https://learn.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/aad/service-prin-aad-token
+	AzureAad []AzureActiveDirectoryToken `tfsdk:"azure_aad" tf:"optional,object"`
+	// Server time when the credential will expire, in epoch milliseconds. The
+	// API client is advised to cache the credential given this expiration time.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
+}
+
+func (newState *TemporaryCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan TemporaryCredentials) {
+}
+
+func (newState *TemporaryCredentials) SyncEffectiveFieldsDuringRead(existingState TemporaryCredentials) {
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // ONLINE_TRIGGERED_UPDATE or the ONLINE_NO_PENDING_UPDATE state.
 type TriggeredUpdateStatus struct {
@@ -3750,6 +4006,35 @@ func (newState *UpdateConnection) SyncEffectiveFieldsDuringCreateOrUpdate(plan U
 func (newState *UpdateConnection) SyncEffectiveFieldsDuringRead(existingState UpdateConnection) {
 }
 
+type UpdateCredentialRequest struct {
+	// The AWS IAM role configuration
+	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
+	// The Azure managed identity configuration.
+	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	// Comment associated with the credential.
+	Comment types.String `tfsdk:"comment" tf:"optional"`
+	// Force update even if there are dependent services.
+	Force types.Bool `tfsdk:"force" tf:"optional"`
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces.
+	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
+	// Name of the credential.
+	NameArg types.String `tfsdk:"-"`
+	// New name of credential.
+	NewName types.String `tfsdk:"new_name" tf:"optional"`
+	// Username of current owner of credential.
+	Owner types.String `tfsdk:"owner" tf:"optional"`
+	// Supply true to this argument to skip validation of the updated
+	// credential.
+	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
+}
+
+func (newState *UpdateCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCredentialRequest) {
+}
+
+func (newState *UpdateCredentialRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCredentialRequest) {
+}
+
 type UpdateExternalLocation struct {
 	// The AWS access point to use when accesing s3 for this external location.
 	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
@@ -3766,8 +4051,7 @@ type UpdateExternalLocation struct {
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.
 	Force types.Bool `tfsdk:"force" tf:"optional"`
-	// Whether the current securable is accessible from all workspaces or a
-	// specific set of workspaces.
+
 	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Name of the external location.
 	Name types.String `tfsdk:"-"`
@@ -3984,8 +4268,7 @@ type UpdateStorageCredential struct {
 	// Force update even if there are dependent external locations or external
 	// tables.
 	Force types.Bool `tfsdk:"force" tf:"optional"`
-	// Whether the current securable is accessible from all workspaces or a
-	// specific set of workspaces.
+
 	IsolationMode types.String `tfsdk:"isolation_mode" tf:"optional"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -4067,6 +4350,36 @@ func (newState *UpdateWorkspaceBindingsParameters) SyncEffectiveFieldsDuringCrea
 }
 
 func (newState *UpdateWorkspaceBindingsParameters) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceBindingsParameters) {
+}
+
+type ValidateCredentialRequest struct {
+	// The AWS IAM role configuration
+	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
+	// The Azure managed identity configuration.
+	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	// Required. The name of an existing credential or long-lived cloud
+	// credential to validate.
+	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
+	// The purpose of the credential. This should only be used when the
+	// credential is specified.
+	Purpose types.String `tfsdk:"purpose" tf:"optional"`
+}
+
+func (newState *ValidateCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateCredentialRequest) {
+}
+
+func (newState *ValidateCredentialRequest) SyncEffectiveFieldsDuringRead(existingState ValidateCredentialRequest) {
+}
+
+type ValidateCredentialResponse struct {
+	// The results of the validation check.
+	Results []CredentialValidationResult `tfsdk:"results" tf:"optional"`
+}
+
+func (newState *ValidateCredentialResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateCredentialResponse) {
+}
+
+func (newState *ValidateCredentialResponse) SyncEffectiveFieldsDuringRead(existingState ValidateCredentialResponse) {
 }
 
 type ValidateStorageCredential struct {

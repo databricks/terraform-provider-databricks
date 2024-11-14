@@ -398,21 +398,11 @@ func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState Compu
 	}
 }
 
+// Create an app deployment
 type CreateAppDeploymentRequest struct {
+	AppDeployment []AppDeployment `tfsdk:"app_deployment" tf:"optional,object"`
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
-	// The unique id of the deployment.
-	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
-	// The mode of which the deployment will manage the source code.
-	Mode types.String `tfsdk:"mode" tf:"optional"`
-	// The workspace file system path of the source code used to create the app
-	// deployment. This is different from
-	// `deployment_artifacts.source_code_path`, which is the path used by the
-	// deployed app. The former refers to the original source code location of
-	// the app in the workspace during deployment creation, whereas the latter
-	// provides a system generated stable snapshotted source code path used by
-	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
 }
 
 func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppDeploymentRequest) {
@@ -421,14 +411,9 @@ func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringRead(existingState CreateAppDeploymentRequest) {
 }
 
+// Create an app
 type CreateAppRequest struct {
-	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
-	// The name of the app. The name must contain only lowercase alphanumeric
-	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" tf:""`
-	// Resources for the app.
-	Resources []AppResource `tfsdk:"resources" tf:"optional"`
+	App []App `tfsdk:"app" tf:"optional,object"`
 }
 
 func (newState *CreateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppRequest) {
@@ -589,14 +574,11 @@ func (newState *StopAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sto
 func (newState *StopAppRequest) SyncEffectiveFieldsDuringRead(existingState StopAppRequest) {
 }
 
+// Update an app
 type UpdateAppRequest struct {
-	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
-	// The name of the app. The name must contain only lowercase alphanumeric
-	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" tf:""`
-	// Resources for the app.
-	Resources []AppResource `tfsdk:"resources" tf:"optional"`
+	App []App `tfsdk:"app" tf:"optional,object"`
+	// The name of the app.
+	Name types.String `tfsdk:"-"`
 }
 
 func (newState *UpdateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAppRequest) {

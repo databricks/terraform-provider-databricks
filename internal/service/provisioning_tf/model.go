@@ -277,6 +277,8 @@ type CreateWorkspaceRequest struct {
 	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
 	// The configurations for the GKE cluster of a Databricks workspace.
 	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional,object"`
+	// Whether no public IP is enabled for the workspace.
+	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
 	// account. For example, `us-east4`.
 	Location types.String `tfsdk:"location" tf:"optional"`
@@ -480,6 +482,21 @@ func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspaceRequest) {
+}
+
+type ExternalCustomerInfo struct {
+	// Email of the authoritative user.
+	AuthoritativeUserEmail types.String `tfsdk:"authoritative_user_email" tf:"optional"`
+	// The authoritative user full name.
+	AuthoritativeUserFullName types.String `tfsdk:"authoritative_user_full_name" tf:"optional"`
+	// The legal entity name for the external workspace
+	CustomerName types.String `tfsdk:"customer_name" tf:"optional"`
+}
+
+func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalCustomerInfo) {
+}
+
+func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringRead(existingState ExternalCustomerInfo) {
 }
 
 type GcpKeyInfo struct {
@@ -930,6 +947,9 @@ type UpdateWorkspaceRequest struct {
 	// switch from a Databricks-managed VPC to a customer-managed VPC by
 	// updating the workspace to add a network configuration ID.
 	NetworkId types.String `tfsdk:"network_id" tf:"optional"`
+	// The ID of the workspace's private access settings configuration object.
+	// This parameter is available only for updating failed workspaces.
+	PrivateAccessSettingsId types.String `tfsdk:"private_access_settings_id" tf:"optional"`
 	// The ID of the workspace's storage configuration object. This parameter is
 	// available only for updating failed workspaces.
 	StorageConfigurationId types.String `tfsdk:"storage_configuration_id" tf:"optional"`
@@ -1063,6 +1083,10 @@ type Workspace struct {
 	// This value must be unique across all non-deleted deployments across all
 	// AWS regions.
 	DeploymentName types.String `tfsdk:"deployment_name" tf:"optional"`
+	// If this workspace is for a external customer, then external_customer_info
+	// is populated. If this workspace is not for a external customer, then
+	// external_customer_info is empty.
+	ExternalCustomerInfo []ExternalCustomerInfo `tfsdk:"external_customer_info" tf:"optional,object"`
 	// The network settings for the workspace. The configurations are only for
 	// Databricks-managed VPCs. It is ignored if you specify a customer-managed
 	// VPC in the `network_id` field.", All the IP range configurations must be
@@ -1089,6 +1113,8 @@ type Workspace struct {
 	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
 	// The configurations for the GKE cluster of a Databricks workspace.
 	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional,object"`
+	// Whether no public IP is enabled for the workspace.
+	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
 	// account (for example, `us-east4`).
 	Location types.String `tfsdk:"location" tf:"optional"`

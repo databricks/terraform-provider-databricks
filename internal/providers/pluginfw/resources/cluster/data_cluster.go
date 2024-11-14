@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-const dataSourceName = "cluster"
+const dataSourceNameCluster = "cluster"
 
 func DataSourceCluster() datasource.DataSource {
 	return &ClusterDataSource{}
@@ -38,7 +38,7 @@ type ClusterInfo struct {
 }
 
 func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceName)
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceNameCluster)
 }
 
 func (d *ClusterDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -70,7 +70,7 @@ func validateClustersList(ctx context.Context, clusters []compute_tf.ClusterDeta
 }
 
 func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceNameCluster)
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

@@ -16,8 +16,10 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 			common.CustomizeSchemaPath(m, cred).SetAtLeastOneOf(alofServiceCreds)
 		}
 
-		common.MustSchemaPath(m, "name").Required = true
-		common.MustSchemaPath(m, "purpose").Required = true
+		for _, required := range []string{"name", "purpose"} {
+			common.MustSchemaPath(m, required).Required = true
+			common.MustSchemaPath(m, required).Optional = false
+		}
 
 		common.MustSchemaPath(m, "id").Computed = true
 		common.MustSchemaPath(m, "aws_iam_role", "external_id").Computed = true
@@ -37,6 +39,10 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 				return old == "false" && new == "true"
 			},
+		}
+		m["credential_id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
 		}
 		m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 		return m
@@ -83,6 +89,7 @@ func ResourceCredential() common.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("credential_id", cred.Id)
 			return common.StructToData(cred, credentialSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

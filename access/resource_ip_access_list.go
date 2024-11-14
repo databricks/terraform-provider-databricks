@@ -17,18 +17,18 @@ import (
 
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() common.Resource {
-	s := common.StructToSchema(settings.CreateIpAccessList{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		// nolint
-		s["enabled"] = &schema.Schema{
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  true,
+	s := common.StructToSchema(settings.IpAccessListInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		for _, required := range []string{"list_type", "label"} {
+			common.CustomizeSchemaPath(s, required).SetRequired()
 		}
-		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
-		s["ip_addresses"].Elem = &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validation.Any(validation.IsIPv4Address, validation.IsCIDR),
+
+		for _, computed := range []string{"address_count", "created_at", "created_by", "list_id", "updated_at", "updated_by"} {
+			common.CustomizeSchemaPath(s, computed).SetComputed()
 		}
+
+		common.CustomizeSchemaPath(s, "enabled").SetDefault(true)
+
+		common.CustomizeSchemaPath(s, "list_type").SetValidateFunc(validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false))
 		return s
 	})
 	return common.Resource{
@@ -49,7 +49,7 @@ func ResourceIPAccessList() common.Resource {
 				}
 				ipAclId := status.IpAccessList.ListId
 				// need to wait until the ip access list is available from get
-				retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
+				retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
 					_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
 					var apiErr *apierr.APIError
 					if !errors.As(err, &apiErr) {
@@ -70,14 +70,14 @@ func ResourceIPAccessList() common.Resource {
 					}
 				}
 				d.SetId(ipAclId)
-				return nil
+				return common.StructToData(status.IpAccessList, s, d)
 			}, func(w *databricks.WorkspaceClient) error {
 				status, err := w.IpAccessLists.Create(ctx, iacl)
 				if err != nil {
 					return err
 				}
 				d.SetId(status.IpAccessList.ListId)
-				return nil
+				return common.StructToData(status.IpAccessList, s, d)
 			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -77,6 +77,9 @@ func TestIPACLCreate(t *testing.T) {
 			}).Return(&settings.CreateIpAccessListResponse{
 				IpAccessList: TestIpAccessList,
 			}, nil)
+			e.GetByIpAccessListId(mock.Anything, TestingId).Return(&settings.GetIpAccessListResponse{
+				IpAccessList: TestIpAccessList,
+			}, nil)
 			e.Update(mock.Anything, settings.UpdateIpAccessList{
 				IpAccessListId: TestingId,
 				Enabled:        TestingEnabled,
@@ -84,9 +87,6 @@ func TestIPACLCreate(t *testing.T) {
 				ListType:       TestingListType,
 				IpAddresses:    TestingIpAddresses,
 			}).Return(nil)
-			e.GetByIpAccessListId(mock.Anything, TestingId).Return(&settings.GetIpAccessListResponse{
-				IpAccessList: TestIpAccessList,
-			}, nil)
 		},
 		Resource: ResourceIPAccessList(),
 		State: map[string]any{

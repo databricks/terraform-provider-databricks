@@ -27,11 +27,11 @@ func TestDataSourceMwsNetworkConnectivityConfig(t *testing.T) {
 
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-            api := a.GetMockNetworkConnectivityAPI().EXPECT()
+			api := a.GetMockNetworkConnectivityAPI().EXPECT()
 			api.ListNetworkConnectivityConfigurationsAll(mock.Anything, settings.ListNetworkConnectivityConfigurationsRequest{}).Return(
-                []settings.NetworkConnectivityConfiguration{ncc}, nil,
-            )
-        },
+				[]settings.NetworkConnectivityConfiguration{ncc}, nil,
+			)
+		},
 		AccountID:   "abc",
 		Read:        true,
 		NonWritable: true,
@@ -71,7 +71,7 @@ func TestDataSourceMwsNetworkConnectivityConfig_Error(t *testing.T) {
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-        HCL: `
+		HCL: `
         name = "def"
         `,
 	}.ExpectError(t, "i'm a teapot")

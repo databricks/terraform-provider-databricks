@@ -28,11 +28,11 @@ func DataSourceMwsNetworkConnectivityConfig() common.Resource {
 			return nil, err
 		}
 
-        for _, ncc := range list {
-            if data.Name == ncc.Name {
+		for _, ncc := range list {
+			if data.Name == ncc.Name {
 				return &mwsNetworkConnectivityConfiguration{NetworkConnectivityConfiguration: ncc}, nil
 			}
-        }
+		}
 		return nil, nil
 	})
 }

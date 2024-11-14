@@ -119,16 +119,16 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 - `sdkv2`: Contains the changes specific to SDKv2. This package shouldn't depend on pluginfw or common.
 
 ### Adding a new resource
-1. Check if the directory for this particular resource exists under `internal/providers/plugnifw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
-2. Create a file with resource_resource-name.go and write the CRUD methods, schema for that resource. For reference, please take a look at existing resources eg: `resource_quality_monitor.go`
+1. Check if the directory for this particular resource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
+2. Create a file with resource_resource-name.go and write the CRUD methods, schema for that resource. For reference, please take a look at existing resources eg: `resource_quality_monitor.go`. Make sure to set the user agent in all the CRUD methods. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`. 
 3. Create a file with `resource_resource-name_acc_test.go` and add integration tests here.
 4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `Resources()` method. Please update the list so that it stays in alphabetically sorted order.
 6. Create a PR and send it for review. 
 
 ### Adding a new data source
-1. Check if the directory for this particular datasource exists under `internal/providers/plugnifw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
-2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`
+1. Check if the directory for this particular datasource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
+2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`. Make sure to set the user agent in the READ method. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`. 
 3. Create a file with `data_resource-name_acc_test.go` and add integration tests here.
 4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `DataSources()` method. Please update the list so that it stays in alphabetically sorted order.

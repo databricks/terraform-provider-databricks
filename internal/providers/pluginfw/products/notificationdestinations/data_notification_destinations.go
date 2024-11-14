@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
@@ -17,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+const dataSourceName = "notification_destinations"
 
 func DataSourceNotificationDestinations() datasource.DataSource {
 	return &NotificationDestinationsDataSource{}
@@ -35,7 +38,7 @@ type NotificationDestinationsInfo struct {
 }
 
 func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "databricks_notification_destinations"
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceName)
 }
 
 func (d *NotificationDestinationsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -73,6 +76,7 @@ func AppendDiagAndCheckErrors(resp *datasource.ReadResponse, diags diag.Diagnost
 }
 
 func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 	w, diags := d.Client.GetWorkspaceClient()
 	if AppendDiagAndCheckErrors(resp, diags) {
 		return

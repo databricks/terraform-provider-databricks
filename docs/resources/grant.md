@@ -242,6 +242,7 @@ resource "databricks_credential" "external" {
   aws_iam_role {
     role_arn = aws_iam_role.external_data_access.arn
   }
+  purpose = "SERVICE"
   comment = "Managed by TF"
 }
 

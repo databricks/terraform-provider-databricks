@@ -47,6 +47,9 @@ func ResourceIPAccessList() common.Resource {
 	})
 	return common.Resource{
 		Schema: s,
+		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
+			return true
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl settings.CreateIpAccessList
 			var updateIacl settings.UpdateIpAccessList

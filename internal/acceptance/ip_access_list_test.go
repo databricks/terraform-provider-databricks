@@ -41,13 +41,13 @@ func TestMwsAccIPACLListsResourceFullLifecycle(t *testing.T) {
 		}`,
 	}, Step{
 		Template: `
-				resource "databricks_ip_access_list" "this" {
-					label = "tf-{var.RANDOM}"
-					list_type = "BLOCK"
-					ip_addresses = [
-						"10.0.11.25",
-						"10.0.11.0/24"
-					]
-				}`,
+		resource "databricks_ip_access_list" "this" {
+			label = "tf-{var.RANDOM}"
+			list_type = "BLOCK"
+			ip_addresses = [
+				"10.0.11.25",
+				"10.0.11.0/24"
+			]
+		}`,
 	})
 }

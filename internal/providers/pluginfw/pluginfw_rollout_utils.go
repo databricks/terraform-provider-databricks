@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/qualitymonitor"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/registered_model"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/serving"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/volume"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -43,6 +44,7 @@ var pluginFwOnlyResources = []func() resource.Resource{
 
 // List of data sources that have been onboarded to the plugin framework - not migrated from sdkv2.
 var pluginFwOnlyDataSources = []func() datasource.DataSource{
+	serving.DataSourceServingEndpoints,
 	registered_model.DataSourceRegisteredModel,
 	notificationdestinations.DataSourceNotificationDestinations,
 	catalog.DataSourceFunctions,

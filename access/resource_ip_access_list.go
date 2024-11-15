@@ -49,7 +49,7 @@ func ResourceIPAccessList() common.Resource {
 				}
 				ipAclId := status.IpAccessList.ListId
 				// need to wait until the ip access list is available from get
-				retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
+				retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 					_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
 					var apiErr *apierr.APIError
 					if !errors.As(err, &apiErr) {
@@ -61,13 +61,21 @@ func ResourceIPAccessList() common.Resource {
 						return retry.NonRetryableError(err)
 					}
 				})
-				//need to enable the IP Access List with update
+				//need to enable the IP Access List with update, retry if 404 is returned due to eventual consistency
 				if d.Get("enabled").(bool) {
 					updateIacl.IpAccessListId = ipAclId
-					err = acc.IpAccessLists.Update(ctx, updateIacl)
-					if err != nil {
-						return err
-					}
+					retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
+						err = acc.IpAccessLists.Update(ctx, updateIacl)
+						var apiErr *apierr.APIError
+						if !errors.As(err, &apiErr) {
+							return retry.NonRetryableError(err)
+						}
+						if apiErr.StatusCode == 404 {
+							return retry.RetryableError(err)
+						} else {
+							return retry.NonRetryableError(err)
+						}
+					})
 				}
 				d.SetId(ipAclId)
 				return common.StructToData(status.IpAccessList, s, d)

@@ -3,6 +3,7 @@ package apps
 import (
 	"context"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/apps"
@@ -11,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-const defaultAppProvisionTimeout = 10 * time.Minute
-const deleteCallTimeout = 10 * time.Second
+const (
+	defaultAppProvisionTimeout = 10 * time.Minute
+	deleteCallTimeout          = 10 * time.Second
+)
 
 var appAliasMap = map[string]string{
 	"resources": "resource",
@@ -31,12 +34,23 @@ func (appStruct) Aliases() map[string]map[string]string {
 func (appStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 
 	// Required fields & validation
-	s.SchemaPath("name").SetRequired().SetForceNew().SetValidateFunc(validation.StringLenBetween(2, 30))
+	s.SchemaPath("name").SetRequired().SetForceNew().SetValidateFunc(validation.StringMatch(regexp.MustCompile("^[a-z-]{2,30}$"), "name must contain only lowercase alphanumeric characters and hyphens, and be between 2 and 30 characters long"))
 
 	// Computed fields
-	for _, p := range []string{"active_deployment", "app_status", "compute_status", "create_time", "creator",
-		"default_source_code_path", "pending_deployment", "service_principal_id", "service_principal_name",
-		"update_time", "updater", "url"} {
+	for _, p := range []string{
+		"active_deployment",
+		"app_status",
+		"compute_status",
+		"create_time",
+		"creator",
+		"default_source_code_path",
+		"pending_deployment",
+		"service_principal_id",
+		"service_principal_name",
+		"update_time",
+		"updater",
+		"url",
+	} {
 		s.SchemaPath(p).SetComputed()
 	}
 	return s
@@ -61,6 +75,7 @@ func ResourceApp() common.Resource {
 			if err != nil {
 				return err
 			}
+			// wait for up to the create timeout, accounting for the deletion on failure.
 			app, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate) - deleteCallTimeout)
 			if err != nil {
 				log.Printf("[ERROR] Error waiting for app to be created: %s", err.Error())

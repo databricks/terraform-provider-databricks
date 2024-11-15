@@ -13,6 +13,18 @@ Apps run directly on a customer’s Databricks instance, integrate with their da
 resource "databricks_app" "this" {
   name             = "my-custom-app"
   description      = "My app"
+  sql_warehouse {
+    id = "e9ca293f79a74b5c"
+    permission = "CAN_MANAGE"
+  }
+  serving_endpoint {
+    name = "databricks-meta-llama-3-1-70b-instruct"
+    permission = "CAN_MANAGE"
+  }
+  job {
+    id = "1234"
+    permission = "CAN_MANAGE"
+  }  
 }
 ```
 
@@ -21,7 +33,7 @@ resource "databricks_app" "this" {
 The following arguments are required:
 
 * `name` - (Required) The name of the app. The name must contain only lowercase alphanumeric characters and hyphens. It must be unique within the workspace.
-* `description` - The description of the app.
+* `description` - (Optional) The description of the app.
 
 One or more `resource` block with the following arguments:
 

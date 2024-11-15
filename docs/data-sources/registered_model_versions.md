@@ -25,7 +25,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `model_versions` - list of objects describing the model versions (only filled if `include_model_versions` is set to `true`). Each object consists of following attributes:
+* `model_versions` - list of objects describing the model versions. Each object consists of following attributes:
   * `aliases` - the list of aliases associated with this model. Each item is object consisting of following attributes:
     * `alias_name` - string with the name of alias
     * `version_num` - associated model version

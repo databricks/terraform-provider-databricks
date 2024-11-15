@@ -100,7 +100,7 @@ func ResourceQualityMonitor() common.Resource {
 			var update catalog.UpdateMonitor
 			common.DataToStructPointer(d, monitorSchema, &update)
 			update.TableName = d.Get("table_name").(string)
-			updateMonitorGoSDK.PauseStatus = ""
+			update.PauseStatus = ""
 			_, err = w.QualityMonitors.Update(ctx, update)
 			if err != nil {
 				return err

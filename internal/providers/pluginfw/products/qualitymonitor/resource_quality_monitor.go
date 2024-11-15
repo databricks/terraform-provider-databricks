@@ -195,6 +195,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	updateMonitorGoSDK.PauseStatus = ""
 	monitor, err := w.QualityMonitors.Update(ctx, updateMonitorGoSDK)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update monitor", err.Error())

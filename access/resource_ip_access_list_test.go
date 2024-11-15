@@ -176,9 +176,6 @@ func TestIPACLUpdate(t *testing.T) {
 				IpAddresses:    TestingIpAddresses,
 				Enabled:        TestingEnabled,
 			}).Return(nil)
-			e.GetByIpAccessListId(mock.Anything, TestingId).Return(&settings.GetIpAccessListResponse{
-				IpAccessList: TestIpAccessList,
-			}, nil)
 		},
 		Resource: ResourceIPAccessList(),
 		State: map[string]any{

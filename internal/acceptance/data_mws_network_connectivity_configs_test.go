@@ -12,18 +12,24 @@ func TestAccDataSourceMwsNetworkConnectivityConfigsTest(t *testing.T) {
 	if isGcp(t) {
 		skipf(t)("GCP not supported")
 	}
+	var region string
+	if isAzure(t) {
+		region = "eastus2"
+	} else if isAws(t) {
+		region = "us-east-2"
+	}
 	AccountLevel(t,
 		Step{
-			Template: `
+			Template: fmt.Sprintf(`
 			resource "databricks_mws_network_connectivity_configs" "this" {
 				name = "tf-{var.RANDOM}"
-				region = "eastus2"
+				region = "%s"
 			}	
 
 			data "databricks_mws_network_connectivity_configs" "this" {
 			  depends_on = [databricks_mws_network_connectivity_config.this]
 			  region = databricks_mws_network_connectivity_config.this.region
-			}`,
+			}`, region),
 			Check: func(s *terraform.State) error {
 				r, ok := s.RootModule().Resources["data.databricks_mws_network_connectivity_configs.this"]
 				if !ok {

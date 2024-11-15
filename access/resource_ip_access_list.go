@@ -15,6 +15,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+func isRetriable(err error) *retry.RetryError {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
+		return retry.NonRetryableError(err)
+	}
+	if apiErr.StatusCode == 404 {
+		return retry.RetryableError(err)
+	} else {
+		return retry.NonRetryableError(err)
+	}
+}
+
+var ipAclTimeout = 10 * time.Minute
+
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() common.Resource {
 	s := common.StructToSchema(settings.IpAccessListInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
@@ -33,10 +47,6 @@ func ResourceIPAccessList() common.Resource {
 	})
 	return common.Resource{
 		Schema: s,
-		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
-			//only skip read after create
-			return d.IsNewResource()
-		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var iacl settings.CreateIpAccessList
 			var updateIacl settings.UpdateIpAccessList
@@ -49,32 +59,16 @@ func ResourceIPAccessList() common.Resource {
 				}
 				ipAclId := status.IpAccessList.ListId
 				// need to wait until the ip access list is available from get
-				retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
+				retry.RetryContext(ctx, ipAclTimeout, func() *retry.RetryError {
 					_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
-					var apiErr *apierr.APIError
-					if !errors.As(err, &apiErr) {
-						return retry.NonRetryableError(err)
-					}
-					if apiErr.StatusCode == 404 {
-						return retry.RetryableError(err)
-					} else {
-						return retry.NonRetryableError(err)
-					}
+					return isRetriable(err)
 				})
 				//need to enable the IP Access List with update, retry if 404 is returned due to eventual consistency
 				if d.Get("enabled").(bool) {
 					updateIacl.IpAccessListId = ipAclId
-					retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
+					retry.RetryContext(ctx, ipAclTimeout, func() *retry.RetryError {
 						err = acc.IpAccessLists.Update(ctx, updateIacl)
-						var apiErr *apierr.APIError
-						if !errors.As(err, &apiErr) {
-							return retry.NonRetryableError(err)
-						}
-						if apiErr.StatusCode == 404 {
-							return retry.RetryableError(err)
-						} else {
-							return retry.NonRetryableError(err)
-						}
+						return isRetriable(err)
 					})
 				}
 				d.SetId(ipAclId)

@@ -20,19 +20,9 @@ var (
 		}
 	}
 
-	resource "databricks_directory" "my_custom_directory" {
- 		path = "/Shared/provider-test/xx_{var.RANDOM}"
-	}
-	
-	resource "databricks_workspace_file" "this" {
-		source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
-		path = "${databricks_directory.my_custom_directory.path}/tf-test-python.py"
-	}
 	resource "databricks_app" "this" {
 		name = "{var.RANDOM}"
 		description = "%s"
-		source_code_path = databricks_directory.my_custom_directory.path
-		mode = "SNAPSHOT"
 		resource {
 			name = "warehouse"
 			description = "warehouse for app"

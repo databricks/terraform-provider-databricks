@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
@@ -15,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+const dataSourceName = "functions"
 
 func DataSourceFunctions() datasource.DataSource {
 	return &FunctionsDataSource{}
@@ -34,7 +37,7 @@ type FunctionsData struct {
 }
 
 func (d *FunctionsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "databricks_functions"
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceName)
 }
 
 func (d *FunctionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -52,6 +55,7 @@ func (d *FunctionsDataSource) Configure(_ context.Context, req datasource.Config
 }
 
 func (d *FunctionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

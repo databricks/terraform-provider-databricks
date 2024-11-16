@@ -390,7 +390,7 @@ func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]any) {
 		if k == "id" {
 			assert.Equal(t, expected, d.Id())
 		} else if that, ok := d.Get(k).(*schema.Set); ok {
-			this := expected.([]string)
+			this := expected.([]any)
 			assert.Equal(t, len(this), that.Len(), "set has different length")
 			for _, item := range this {
 				assert.True(t, that.Contains(item), "set does not contain %s", item)

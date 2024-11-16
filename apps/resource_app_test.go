@@ -11,6 +11,45 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 )
 
+func getTestAppRequest(warehouseName, endpointName string) *apps.App {
+	return &apps.App{
+		Name:        "my-custom-app",
+		Description: "My app description.",
+		Resources: []apps.AppResource{
+			{
+				Name: "sql-warehouse",
+				SqlWarehouse: &apps.AppResourceSqlWarehouse{
+					Id:         warehouseName,
+					Permission: "CAN_MANAGE",
+				},
+			},
+			{
+				Name: "job",
+				Job: &apps.AppResourceJob{
+					Id:         "1234",
+					Permission: "CAN_MANAGE",
+				},
+			},
+			{
+				Name: "serving-endpoint",
+				ServingEndpoint: &apps.AppResourceServingEndpoint{
+					Name:       endpointName,
+					Permission: "CAN_MANAGE",
+				},
+			},
+			{
+				Name:        "api-key",
+				Description: "API key for external service.",
+				Secret: &apps.AppResourceSecret{
+					Scope:      "my-scope",
+					Key:        "my-key",
+					Permission: "READ",
+				},
+			},
+		},
+	}
+}
+
 func getTestAppDeployment(path string) *apps.AppDeployment {
 	return &apps.AppDeployment{
 		DeploymentId:   "01ef0bda89f21f08a8351f41e4a9b948",
@@ -29,7 +68,7 @@ func getTestAppDeployment(path string) *apps.AppDeployment {
 	}
 }
 
-func getTestApp(warehouseName, endpointName string) *apps.App {
+func getTestAppResponse(warehouseName, endpointName string) *apps.App {
 	return &apps.App{
 		Name:        "my-custom-app",
 		Description: "My app description.",
@@ -57,14 +96,23 @@ func getTestApp(warehouseName, endpointName string) *apps.App {
 					Key:        "my-key",
 					Permission: "READ",
 				},
+			},
+			{
+				Name: "sql-warehouse",
 				SqlWarehouse: &apps.AppResourceSqlWarehouse{
 					Id:         warehouseName,
 					Permission: "CAN_MANAGE",
 				},
+			},
+			{
+				Name: "serving-endpoint",
 				ServingEndpoint: &apps.AppResourceServingEndpoint{
 					Name:       endpointName,
 					Permission: "CAN_MANAGE",
 				},
+			},
+			{
+				Name: "job",
 				Job: &apps.AppResourceJob{
 					Id:         "1234",
 					Permission: "CAN_MANAGE",
@@ -95,21 +143,42 @@ func getTestAppData(warehouseName, endpointName string) map[string]interface{} {
 			"update_time":          "2019-08-24T14:15:22Z",
 		}},
 		"resource": []any{map[string]any{
-			"name":        "api-key",
-			"description": "API key for external service.",
+			"name":             "api-key",
+			"description":      "API key for external service.",
+			"job":              []any{},
+			"sql_warehouse":    []any{},
+			"serving_endpoint": []any{},
 			"secret": []any{map[string]any{
 				"scope":      "my-scope",
 				"key":        "my-key",
 				"permission": "READ",
 			}},
+		}, map[string]any{
+			"name":             "sql-warehouse",
+			"description":      "",
+			"job":              []any{},
+			"secret":           []any{},
+			"serving_endpoint": []any{},
 			"sql_warehouse": []any{map[string]any{
 				"id":         warehouseName,
 				"permission": "CAN_MANAGE",
 			}},
+		}, map[string]any{
+			"name":          "serving-endpoint",
+			"description":   "",
+			"job":           []any{},
+			"secret":        []any{},
+			"sql_warehouse": []any{},
 			"serving_endpoint": []any{map[string]any{
 				"name":       endpointName,
 				"permission": "CAN_MANAGE",
 			}},
+		}, map[string]any{
+			"name":             "job",
+			"description":      "",
+			"sql_warehouse":    []any{},
+			"secret":           []any{},
+			"serving_endpoint": []any{},
 			"job": []any{map[string]any{
 				"id":         "1234",
 				"permission": "CAN_MANAGE",
@@ -125,36 +194,10 @@ func TestResourceAppsCreate(t *testing.T) {
 		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {
 			api := a.GetMockAppsAPI().EXPECT()
 			api.Create(mock.Anything, apps.CreateAppRequest{
-				App: &apps.App{
-					Name:        "my-custom-app",
-					Description: "My app description.",
-					Resources: []apps.AppResource{
-						{
-							Name:        "api-key",
-							Description: "API key for external service.",
-							Secret: &apps.AppResourceSecret{
-								Scope:      "my-scope",
-								Key:        "my-key",
-								Permission: "READ",
-							},
-							SqlWarehouse: &apps.AppResourceSqlWarehouse{
-								Id:         "e9ca293f79a74b5c",
-								Permission: "CAN_MANAGE",
-							},
-							ServingEndpoint: &apps.AppResourceServingEndpoint{
-								Name:       "databricks-meta-llama-3-1-70b-instruct",
-								Permission: "CAN_MANAGE",
-							},
-							Job: &apps.AppResourceJob{
-								Id:         "1234",
-								Permission: "CAN_MANAGE",
-							},
-						},
-					},
-				},
-			}).Return(&apps.WaitGetAppActive[apps.App]{Poll: poll.Simple(*getTestApp("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"))}, nil)
+				App: getTestAppRequest("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"),
+			}).Return(&apps.WaitGetAppActive[apps.App]{Poll: poll.Simple(*getTestAppResponse("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"))}, nil)
 			api.GetByName(mock.Anything, "my-custom-app").Return(
-				getTestApp("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"), nil)
+				getTestAppResponse("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"), nil)
 		},
 		Create: true,
 		HCL: `
@@ -168,19 +211,28 @@ func TestResourceAppsCreate(t *testing.T) {
 				key = "my-key"
 				permission = "READ"
 			}
+		}
+		resource {
+			name = "sql-warehouse"
 			sql_warehouse {
 				id = "e9ca293f79a74b5c"
 				permission = "CAN_MANAGE"
-			}
+			}			
+		}
+		resource {
+			name = "serving-endpoint"
 			serving_endpoint {
 				name = "databricks-meta-llama-3-1-70b-instruct"
 				permission = "CAN_MANAGE"
 			}
+		}
+		resource {
+			name = "job"
 			job {
 				id = "1234"
 				permission = "CAN_MANAGE"
-			}
-		}
+			}	
+		}			
 		`,
 		Resource: ResourceApp(),
 	}.ApplyAndExpectData(t, getTestAppData("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"))
@@ -191,7 +243,7 @@ func TestResourceAppsRead(t *testing.T) {
 		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {
 			a.GetMockAppsAPI().EXPECT().
 				GetByName(mock.Anything, "my-custom-app").
-				Return(getTestApp("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"), nil)
+				Return(getTestAppResponse("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"), nil)
 		},
 		Resource: ResourceApp(),
 		Read:     true,
@@ -206,36 +258,10 @@ func TestResourceAppsUpdate(t *testing.T) {
 			api := a.GetMockAppsAPI().EXPECT()
 			api.Update(mock.Anything, apps.UpdateAppRequest{
 				Name: "my-custom-app",
-				App: &apps.App{
-					Name:        "my-custom-app",
-					Description: "My app description.",
-					Resources: []apps.AppResource{
-						{
-							Name:        "api-key",
-							Description: "API key for external service.",
-							Secret: &apps.AppResourceSecret{
-								Scope:      "my-scope",
-								Key:        "my-key",
-								Permission: "READ",
-							},
-							SqlWarehouse: &apps.AppResourceSqlWarehouse{
-								Id:         "new_warehouse",
-								Permission: "CAN_MANAGE",
-							},
-							ServingEndpoint: &apps.AppResourceServingEndpoint{
-								Name:       "new_endpoint",
-								Permission: "CAN_MANAGE",
-							},
-							Job: &apps.AppResourceJob{
-								Id:         "1234",
-								Permission: "CAN_MANAGE",
-							},
-						},
-					},
-				},
-			}).Return(getTestApp("new_warehouse", "new_endpoint"), nil)
+				App:  getTestAppRequest("e9ca293f79a74b5c", "new_endpoint"),
+			}).Return(getTestAppResponse("e9ca293f79a74b5c", "new_endpoint"), nil)
 			api.GetByName(mock.Anything, "my-custom-app").
-				Return(getTestApp("new_warehouse", "new_endpoint"), nil)
+				Return(getTestAppResponse("e9ca293f79a74b5c", "new_endpoint"), nil)
 		},
 		Resource: ResourceApp(),
 		Update:   true,
@@ -254,28 +280,37 @@ func TestResourceAppsUpdate(t *testing.T) {
 					key = "my-key"
 					permission = "READ"
 				}
+			}
+			resource {
+				name = "sql-warehouse"
 				sql_warehouse {
-					id = "new_warehouse"
+					id = "e9ca293f79a74b5c"
 					permission = "CAN_MANAGE"
-				}
+				}			
+			}
+			resource {
+				name = "serving-endpoint"
 				serving_endpoint {
 					name = "new_endpoint"
 					permission = "CAN_MANAGE"
 				}
+			}
+			resource {
+				name = "job"
 				job {
 					id = "1234"
 					permission = "CAN_MANAGE"
-				}
-			}
+				}	
+			}	
 		`,
 		ID: "my-custom-app",
-	}.ApplyAndExpectData(t, getTestAppData("new_warehouse", "new_endpoint"))
+	}.ApplyAndExpectData(t, getTestAppData("e9ca293f79a74b5c", "new_endpoint"))
 }
 
 func TestResourceAppsDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {
-			a.GetMockAppsAPI().EXPECT().DeleteByName(mock.Anything, "my-custom-app").Return(getTestApp("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"), nil)
+			a.GetMockAppsAPI().EXPECT().DeleteByName(mock.Anything, "my-custom-app").Return(getTestAppResponse("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"), nil)
 		},
 		Resource: ResourceApp(),
 		Delete:   true,

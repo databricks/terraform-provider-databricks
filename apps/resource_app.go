@@ -35,7 +35,8 @@ func (appStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 
 	// Required fields & validation
 	s.SchemaPath("name").SetRequired().SetForceNew().SetValidateFunc(validation.StringMatch(regexp.MustCompile("^[a-z-]{2,30}$"), "name must contain only lowercase alphanumeric characters and hyphens, and be between 2 and 30 characters long"))
-
+	// Resources should be a set
+	s.SchemaPath("resource").SetSliceSet()
 	// Computed fields
 	for _, p := range []string{
 		"active_deployment",

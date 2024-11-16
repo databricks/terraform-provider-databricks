@@ -34,8 +34,16 @@ The following arguments are required:
 
 * `name` - (Required) The name of the app. The name must contain only lowercase alphanumeric characters and hyphens. It must be unique within the workspace.
 * `description` - (Optional) The description of the app.
+* `resource` - (Optional) A list of resources that the app have access to.
 
-One or more `resource` block with the following arguments:
+### resource Configuration Block
+
+This block describes individual resource.
+
+* `name` - (Required) The name of the resource.
+* `description` - (Optional) The description of the resource.
+
+Exactly one of the specific blocks described below is required:
 
 * `secret` block
   * `scope` - Scope of the secret to grant permission on.

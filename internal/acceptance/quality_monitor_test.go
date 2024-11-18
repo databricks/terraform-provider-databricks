@@ -138,6 +138,10 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 				  model_id_col = "model_id"
 				  problem_type = "PROBLEM_TYPE_REGRESSION"
 				} 
+        			schedule {
+					quartz_cron_expression = "0 0 12 * * ?", 
+					timezone_id = "PST"
+				}
 			}
 		`,
 	}, Step{
@@ -153,6 +157,10 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 			  model_id_col = "model_id"
 			  problem_type = "PROBLEM_TYPE_REGRESSION"
 			} 
+			schedule {
+				quartz_cron_expression = "0 0 11 * * ?", 
+				timezone_id = "PST"
+			}
 		}
 		`,
 	})

@@ -18,6 +18,3 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
       test_name: TestUcAccVectorSearchEndpoint
       comment: Failure due to read-after-create inconsistency. https://databricks.atlassian.net/browse/ES-1243690
-    - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
-      test_name: TestUcAccModelServingProvisionedThroughput
-      comment: Failure due to temporary incident. To be removed following resolution. https://databricks.atlassian.net/browse/ES-1306706

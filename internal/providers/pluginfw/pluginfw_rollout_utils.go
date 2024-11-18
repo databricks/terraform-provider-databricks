@@ -46,6 +46,7 @@ var pluginFwOnlyResources = []func() resource.Resource{
 var pluginFwOnlyDataSources = []func() datasource.DataSource{
 	serving.DataSourceServingEndpoints,
 	registered_model.DataSourceRegisteredModel,
+	registered_model.DataSourceRegisteredModelVersions,
 	notificationdestinations.DataSourceNotificationDestinations,
 	catalog.DataSourceFunctions,
 	// TODO: Add DataSourceCluster into migratedDataSources after fixing unit tests.

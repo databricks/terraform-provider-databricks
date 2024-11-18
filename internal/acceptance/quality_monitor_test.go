@@ -64,10 +64,10 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				  model_id_col = "model_id"
 				  problem_type = "PROBLEM_TYPE_REGRESSION"
 				} 
-    				schedule=MonitorCronSchedule(
-					quartz_cron_expression="0 0 12 * * ?", # schedules a refresh every day at 12 noon
-					timezone_id="PST"
-				)
+    				schedule {
+					quartz_cron_expression = "0 0 12 * * ?", 
+					timezone_id = "PST"
+				}
 			}
 
 			resource "databricks_sql_table" "myTimeseries" {
@@ -91,10 +91,10 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
 				} 
-        			schedule=MonitorCronSchedule(
-					quartz_cron_expression="0 0 12 * * ?", # schedules a refresh every day at 12 noon
-					timezone_id="PST"
-				)
+        			schedule {
+					quartz_cron_expression = "0 0 12 * * ?", 
+					timezone_id = "PST"
+				}
 			}
 
 			resource "databricks_sql_table" "mySnapshot" {

@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -65,7 +66,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				  problem_type = "PROBLEM_TYPE_REGRESSION"
 				} 
     				schedule {
-					quartz_cron_expression = "0 0 12 * * ?", 
+					quartz_cron_expression = "0 0 12 * * ?" 
 					timezone_id = "PST"
 				}
 			}
@@ -92,7 +93,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				  timestamp_col = "timestamp"
 				} 
         			schedule {
-					quartz_cron_expression = "0 0 12 * * ?", 
+					quartz_cron_expression = "0 0 12 * * ?"
 					timezone_id = "PST"
 				}
 			}
@@ -125,8 +126,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		t.Skipf("databricks_quality_monitor resource is not available on GCP")
 	}
-	UnityWorkspaceLevel(t, Step{
-		Template: commonPartQualityMonitoring + `
+	qmTemplate := `
 			resource "databricks_quality_monitor" "testMonitorInference" {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
@@ -139,29 +139,14 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 				  problem_type = "PROBLEM_TYPE_REGRESSION"
 				} 
         			schedule {
-					quartz_cron_expression = "0 0 12 * * ?", 
+					quartz_cron_expression = "0 0 %s * * ?"
 					timezone_id = "PST"
 				}
 			}
-		`,
+		`
+	UnityWorkspaceLevel(t, Step{
+		Template: commonPartQualityMonitoring + fmt.Sprintf(qmTemplate, "12"),
 	}, Step{
-		Template: commonPartQualityMonitoring + `
-		resource "databricks_quality_monitor" "testMonitorInference" {
-			table_name = databricks_sql_table.myInferenceTable.id
-			assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
-			output_schema_name = databricks_schema.things.id
-			inference_log  {
-			  granularities = ["1 hour"]
-			  timestamp_col = "timestamp"
-			  prediction_col = "prediction"
-			  model_id_col = "model_id"
-			  problem_type = "PROBLEM_TYPE_REGRESSION"
-			} 
-			schedule {
-				quartz_cron_expression = "0 0 11 * * ?", 
-				timezone_id = "PST"
-			}
-		}
-		`,
+		Template: commonPartQualityMonitoring + fmt.Sprintf(qmTemplate, "11"),
 	})
 }

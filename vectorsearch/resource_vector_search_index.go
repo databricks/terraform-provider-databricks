@@ -37,7 +37,8 @@ func waitForSearchIndexCreation(w *databricks.WorkspaceClient, ctx context.Conte
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
-		if index.Status.Ready { // We really need to depend on the detailed status of the index, but it's not available in the API yet
+		// We really need to depend on the detailed status of the index, but it's not available in the API yet
+		if index.Status != nil && (index.Status.Ready || index.Status.IndexedRowCount > 0) {
 			return nil
 		}
 		return retry.RetryableError(fmt.Errorf("vector search index %s is still pending", searchIndexName))

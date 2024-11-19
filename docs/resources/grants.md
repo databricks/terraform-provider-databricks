@@ -100,7 +100,7 @@ resource "databricks_grants" "things" {
 
 ## Table grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `SELECT` and `MODIFY` privileges to [_`catalog.schema.table`_](../data-sources/tables.md) specified in the `table` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `SELECT` and `MODIFY` privileges to [_`catalog.schema.table`_](sql_table.md) specified in the `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customers" {
@@ -138,7 +138,7 @@ resource "databricks_grants" "things" {
 
 ## View grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG` and `SELECT` privileges to [_`catalog.schema.view`_](../data-sources/views.md) specified in `table` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG` and `SELECT` privileges to [_`catalog.schema.view`_](sql_table.md) specified in `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customer360" {

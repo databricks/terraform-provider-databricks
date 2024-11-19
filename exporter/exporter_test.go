@@ -439,9 +439,24 @@ var emptyLakeviewList = qa.HTTPFixture{
 }
 
 var emptyDestinationNotficationsList = qa.HTTPFixture{
-	Method:   "GET",
-	Resource: "/api/2.0/notification-destinations?",
-	Response: settings.ListNotificationDestinationsResponse{},
+	Method:       "GET",
+	Resource:     "/api/2.0/notification-destinations?",
+	Response:     settings.ListNotificationDestinationsResponse{},
+	ReuseRequest: true,
+}
+
+var emptyUsersList = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/preview/scim/v2/Users?attributes=id%2CuserName&count=100&startIndex=1",
+	Response:     map[string]any{},
+	ReuseRequest: true,
+}
+
+var emptySpnsList = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/preview/scim/v2/ServicePrincipals?attributes=id%2CuserName&count=100&startIndex=1",
+	Response:     map[string]any{},
+	ReuseRequest: true,
 }
 
 func TestImportingUsersGroupsSecretScopes(t *testing.T) {
@@ -739,6 +754,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 					Groups: []scim.ComplexValue{},
 				},
 			},
+			emptyUsersList,
+			emptySpnsList,
 			noCurrentMetastoreAttached,
 			emptyLakeviewList,
 			emptyDestinationNotficationsList,

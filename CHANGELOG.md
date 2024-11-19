@@ -1,5 +1,57 @@
 # Version changelog
 
+## [Release] Release v1.58.0
+
+### Bug Fixes
+
+ * Always fill `cluster_name` in `databricks_cluster` data source ([#4197](https://github.com/databricks/terraform-provider-databricks/pull/4197)).
+ * Suppress equal fold diff for DLT pipeline resource ([#4196](https://github.com/databricks/terraform-provider-databricks/pull/4196)).
+ * Upload content `databricks_workspace_file` using raw format ([#4200](https://github.com/databricks/terraform-provider-databricks/pull/4200)).
+
+
+### Internal Changes
+
+ * Update to latest OpenAPI spec and bump Go SDK ([#4199](https://github.com/databricks/terraform-provider-databricks/pull/4199)).
+
+
+### Dependency Updates
+
+ * Bump github.com/golang-jwt/jwt/v4 from 4.5.0 to 4.5.1 ([#4191](https://github.com/databricks/terraform-provider-databricks/pull/4191)).
+
+
+## [Release] Release v1.57.0
+
+### New Features and Improvements
+
+ * Added `databricks_functions` data source ([#4154](https://github.com/databricks/terraform-provider-databricks/pull/4154)).
+
+
+### Bug Fixes
+
+ * Handle edge case for `effective_properties` in `databricks_sql_table` ([#4153](https://github.com/databricks/terraform-provider-databricks/pull/4153)).
+ * Provide more prescriptive error when users fail to create a single node cluster ([#4168](https://github.com/databricks/terraform-provider-databricks/pull/4168)).
+
+
+### Internal Changes
+
+ * Add test instructions for external contributors ([#4169](https://github.com/databricks/terraform-provider-databricks/pull/4169)).
+ * Always write message for manual test integration ([#4188](https://github.com/databricks/terraform-provider-databricks/pull/4188)).
+ * Make `Read` after `Create`/`Update` configurable ([#4190](https://github.com/databricks/terraform-provider-databricks/pull/4190)).
+ * Migrate Share Data Source to Plugin Framework ([#4161](https://github.com/databricks/terraform-provider-databricks/pull/4161)).
+ * Migrate Share Resource to Plugin Framework ([#4047](https://github.com/databricks/terraform-provider-databricks/pull/4047)).
+ * Rollout Plugin Framework  ([#4134](https://github.com/databricks/terraform-provider-databricks/pull/4134)).
+
+
+### Dependency Updates
+
+ * Bump Go SDK to v0.50.0 ([#4178](https://github.com/databricks/terraform-provider-databricks/pull/4178)).
+
+
+### Exporter
+
+ * Allow to match resource names by regular expression ([#4177](https://github.com/databricks/terraform-provider-databricks/pull/4177)).
+
+
 ## [Release] Release v1.56.0
 
 ### Bug Fixes

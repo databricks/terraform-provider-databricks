@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -390,9 +391,10 @@ func (f ResourceFixture) ApplyAndExpectData(t *testing.T, data map[string]any) {
 		if k == "id" {
 			assert.Equal(t, expected, d.Id())
 		} else if that, ok := d.Get(k).(*schema.Set); ok {
-			this := expected.([]string)
-			assert.Equal(t, len(this), that.Len(), "set has different length")
-			for _, item := range this {
+			this := reflect.ValueOf(expected)
+			assert.Equal(t, this.Len(), that.Len(), "set has different length")
+			for i := 0; i < this.Len(); i++ {
+				item := this.Index(i).Interface()
 				assert.True(t, that.Contains(item), "set does not contain %s", item)
 			}
 		} else {

@@ -135,6 +135,77 @@ func TestUpdateSchema(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateSchemaSetEmptyComment(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "d",
+			}, nil)
+			e := w.GetMockSchemasAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateSchema{
+				FullName:        "b.a",
+				Comment:         "",
+				ForceSendFields: []string{"Comment"},
+			}).Return(&catalog.SchemaInfo{
+				FullName: "b.a",
+				Owner:    "administrators",
+			}, nil)
+			e.GetByFullName(mock.Anything, "b.a").Return(&catalog.SchemaInfo{
+				Name:        "a",
+				CatalogName: "b",
+				MetastoreId: "d",
+				Owner:       "administrators",
+			}, nil)
+		},
+		Resource: ResourceSchema(),
+		Update:   true,
+		ID:       "b.a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"catalog_name": "b",
+			"comment":      "c",
+		},
+		HCL: `
+		name = "a"
+		catalog_name = "b"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"comment": "",
+	})
+}
+
+func TestUpdateSchemaChangeForceDestroy(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "d",
+			}, nil)
+			e := w.GetMockSchemasAPI().EXPECT()
+			e.GetByFullName(mock.Anything, "b.a").Return(&catalog.SchemaInfo{
+				Name:        "a",
+				CatalogName: "b",
+				MetastoreId: "d",
+				Owner:       "administrators",
+			}, nil)
+		},
+		Resource: ResourceSchema(),
+		Update:   true,
+		ID:       "b.a",
+		InstanceState: map[string]string{
+			"metastore_id":  "d",
+			"name":          "a",
+			"catalog_name":  "b",
+			"force_destroy": "true",
+		},
+		HCL: `
+		name = "a"
+		catalog_name = "b"
+		force_destroy = false
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateSchemaOwnerWithOtherFields(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

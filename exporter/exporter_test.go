@@ -836,9 +836,12 @@ func TestImportingClusters(t *testing.T) {
 				ReuseRequest: true,
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				Response: compute.GetEvents{},
+				Method:   "GET",
+				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
+				Response: compute.ListClustersResponse{
+					Clusters: []compute.ClusterDetails{},
+				},
+				ReuseRequest: true,
 			},
 			{
 				Method:       "GET",
@@ -869,30 +872,6 @@ func TestImportingClusters(t *testing.T) {
 				Response: getJSONObject("test-data/get-cluster-test2-response.json"),
 			},
 			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "test2",
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-					Limit:      1,
-				},
-				Response:     compute.EventDetails{},
-				ReuseRequest: true,
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "test1",
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-					Limit:      1,
-				},
-				Response:     compute.EventDetails{},
-				ReuseRequest: true,
-			},
-			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
 				Response: getJSONObject("test-data/libraries-cluster-status-test2.json"),
@@ -916,17 +895,6 @@ func TestImportingClusters(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.1/clusters/get?cluster_id=awscluster",
 				Response: getJSONObject("test-data/get-cluster-awscluster-response.json"),
-			},
-			{
-				Method:   "POST",
-				Resource: "/api/2.1/clusters/events",
-				ExpectedRequest: compute.GetEvents{
-					ClusterId:  "awscluster",
-					Order:      compute.GetEventsOrderDesc,
-					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
-					Limit:      1,
-				},
-				Response: compute.EventDetails{},
 			},
 			{
 				Method:   "GET",

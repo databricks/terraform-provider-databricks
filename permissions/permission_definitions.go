@@ -732,5 +732,16 @@ func allResourcePermissions() []resourcePermissions {
 			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
 			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
 		},
+		{
+			field:             "vector_search_endpoint_id",
+			objectType:        "vector-search-endpoints",
+			requestObjectType: "vector-search-endpoints",
+			allowedPermissionLevels: map[string]permissionLevelOptions{
+				"CAN_USE":    {isManagementPermission: false},
+				"CAN_MANAGE": {isManagementPermission: true},
+			},
+			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+		},
 	}
 }

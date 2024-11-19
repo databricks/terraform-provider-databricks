@@ -45,7 +45,7 @@ type CreatePipeline struct {
 	Edition types.String `tfsdk:"edition" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
 	Filters []Filters `tfsdk:"filters" tf:"optional,object"`
-	// The definition of a gateway pipeline to support CDC.
+	// The definition of a gateway pipeline to support change data capture.
 	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
@@ -60,6 +60,8 @@ type CreatePipeline struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// Restart window of this pipeline.
+	RestartWindow []RestartWindow `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -173,7 +175,7 @@ type EditPipeline struct {
 	ExpectedLastModified types.Int64 `tfsdk:"expected_last_modified" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
 	Filters []Filters `tfsdk:"filters" tf:"optional,object"`
-	// The definition of a gateway pipeline to support CDC.
+	// The definition of a gateway pipeline to support change data capture.
 	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
@@ -190,6 +192,8 @@ type EditPipeline struct {
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Unique identifier for this pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	// Restart window of this pipeline.
+	RestartWindow []RestartWindow `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -365,11 +369,11 @@ func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringRead(existingState G
 }
 
 type IngestionConfig struct {
-	// Select tables from a specific source report.
+	// Select a specific source report.
 	Report []ReportSpec `tfsdk:"report" tf:"optional,object"`
-	// Select tables from a specific source schema.
+	// Select all tables from a specific source schema.
 	Schema []SchemaSpec `tfsdk:"schema" tf:"optional,object"`
-	// Select tables from a specific source table.
+	// Select a specific source table.
 	Table []TableSpec `tfsdk:"table" tf:"optional,object"`
 }
 
@@ -380,9 +384,13 @@ func (newState *IngestionConfig) SyncEffectiveFieldsDuringRead(existingState Ing
 }
 
 type IngestionGatewayPipelineDefinition struct {
-	// Immutable. The Unity Catalog connection this gateway pipeline uses to
-	// communicate with the source.
+	// [Deprecated, use connection_name instead] Immutable. The Unity Catalog
+	// connection that this gateway pipeline uses to communicate with the
+	// source.
 	ConnectionId types.String `tfsdk:"connection_id" tf:"optional"`
+	// Immutable. The Unity Catalog connection that this gateway pipeline uses
+	// to communicate with the source.
+	ConnectionName types.String `tfsdk:"connection_name" tf:"optional"`
 	// Required, Immutable. The name of the catalog for the gateway pipeline's
 	// storage location.
 	GatewayStorageCatalog types.String `tfsdk:"gateway_storage_catalog" tf:"optional"`
@@ -403,13 +411,13 @@ func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringRea
 }
 
 type IngestionPipelineDefinition struct {
-	// Immutable. The Unity Catalog connection this ingestion pipeline uses to
-	// communicate with the source. Specify either ingestion_gateway_id or
-	// connection_name.
+	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
+	// to communicate with the source. This is used with connectors for
+	// applications like Salesforce, Workday, and so on.
 	ConnectionName types.String `tfsdk:"connection_name" tf:"optional"`
-	// Immutable. Identifier for the ingestion gateway used by this ingestion
-	// pipeline to communicate with the source. Specify either
-	// ingestion_gateway_id or connection_name.
+	// Immutable. Identifier for the gateway that is used by this ingestion
+	// pipeline to communicate with the source database. This is used with
+	// connectors to databases like SQL Server.
 	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id" tf:"optional"`
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
@@ -934,7 +942,7 @@ type PipelineSpec struct {
 	Edition types.String `tfsdk:"edition" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
 	Filters []Filters `tfsdk:"filters" tf:"optional,object"`
-	// The definition of a gateway pipeline to support CDC.
+	// The definition of a gateway pipeline to support change data capture.
 	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
@@ -949,6 +957,8 @@ type PipelineSpec struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// Restart window of this pipeline.
+	RestartWindow []RestartWindow `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -1030,6 +1040,27 @@ func (newState *ReportSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportS
 }
 
 func (newState *ReportSpec) SyncEffectiveFieldsDuringRead(existingState ReportSpec) {
+}
+
+type RestartWindow struct {
+	// Days of week in which the restart is allowed to happen (within a
+	// five-hour window starting at start_hour). If not specified all days of
+	// the week will be used.
+	DaysOfWeek types.String `tfsdk:"days_of_week" tf:"optional"`
+	// An integer between 0 and 23 denoting the start hour for the restart
+	// window in the 24-hour day. Continuous pipeline restart is triggered only
+	// within a five-hour window starting at this hour.
+	StartHour types.Int64 `tfsdk:"start_hour" tf:""`
+	// Time zone id of restart window. See
+	// https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html
+	// for details. If not specified, UTC will be used.
+	TimeZoneId types.String `tfsdk:"time_zone_id" tf:"optional"`
+}
+
+func (newState *RestartWindow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartWindow) {
+}
+
+func (newState *RestartWindow) SyncEffectiveFieldsDuringRead(existingState RestartWindow) {
 }
 
 type SchemaSpec struct {

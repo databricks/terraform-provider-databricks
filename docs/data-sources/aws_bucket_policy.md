@@ -75,6 +75,7 @@ resource "aws_s3_bucket_policy" "ds" {
 ## Argument Reference
 
 * `bucket` - (Required) AWS S3 Bucket name for which to generate the policy document.
+* `aws_partition` - (Optional) AWS partition. The options are `aws` or `aws-us-gov`. Defaults to `aws`
 * `full_access_role` - (Optional) Data access role that can have full access for this bucket
 * `databricks_e2_account_id` - (Optional) Your Databricks account ID. Used to generate  restrictive IAM policies that will increase the security of your root bucket
 

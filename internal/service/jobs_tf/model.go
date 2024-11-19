@@ -2321,6 +2321,9 @@ type RunNow struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
+	// A list of task keys to run inside of the job. If this field is not
+	// provided, all tasks in the job will be run.
+	Only []types.String `tfsdk:"only" tf:"optional"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 

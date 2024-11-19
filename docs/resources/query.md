@@ -34,7 +34,7 @@ The following arguments are available:
 * `catalog` - (Optional, String) Name of the catalog where this query will be executed.
 * `schema` - (Optional, String) Name of the schema where this query will be executed.
 * `description` - (Optional, String) General description that conveys additional information about this query such as usage notes.
-* `run_as_mode` - (Optional, String) Sets the "Run as" role for the object.
+* `run_as_mode` - (Optional, String) Sets the "Run as" role for the object.  Should be one of `OWNER`, `VIEWER`.
 * `tags` - (Optional, List of strings) Tags that will be added to the query.
 * `parameter` - (Optional, Block) Query parameter definition.  Consists of following attributes (one of `*_value` is required):
   * `name` - (Required, String) Literal parameter marker that appears between double curly braces in the query text.

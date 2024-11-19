@@ -359,6 +359,65 @@ func TestVolumesUpdate(t *testing.T) {
 	assert.Equal(t, "/Volumes/testCatalogName/testSchemaName/testNameNew", d.Get("volume_path"))
 }
 
+func TestVolumesUpdateCommentOnly(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Comment:         "",
+					ForceSendFields: []string{"Comment"},
+				},
+				Response: catalog.VolumeInfo{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "",
+					FullName:    "testCatalogName.testSchemaName.testName",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
+				Response: catalog.VolumeInfo{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("testVolumeType"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "",
+					FullName:    "testCatalogName.testSchemaName.testNameNew",
+				},
+			},
+		},
+		Resource: ResourceVolume(),
+		Update:   true,
+		InstanceState: map[string]string{
+			"name":         "testName",
+			"catalog_name": "testCatalogName",
+			"schema_name":  "testSchemaName",
+			"volume_type":  "testVolumeType",
+			"comment":      "this is a comment",
+		},
+		ID: "testCatalogName.testSchemaName.testName",
+		HCL: `
+		name = "testName"
+		volume_type = "testVolumeType"
+		catalog_name = "testCatalogName"
+		schema_name = "testSchemaName"
+		comment = ""
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":         "testName",
+		"volume_type":  "testVolumeType",
+		"catalog_name": "testCatalogName",
+		"schema_name":  "testSchemaName",
+		"comment":      "",
+		"volume_path":  "/Volumes/testCatalogName/testSchemaName/testNameNew",
+	})
+}
+
 func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -127,6 +127,10 @@ func ResourceVolume() common.Resource {
 				return nil
 			}
 
+			if d.HasChange("comment") && updateVolumeRequestContent.Comment == "" {
+				updateVolumeRequestContent.ForceSendFields = append(updateVolumeRequestContent.ForceSendFields, "Comment")
+			}
+
 			updateVolumeRequestContent.Owner = ""
 			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
 			if err != nil {

@@ -15,214 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type CentralCleanRoomInfo struct {
-	// All assets from all collaborators that are available in the clean room.
-	// Only one of table_info or notebook_info will be filled in.
-	CleanRoomAssets []CleanRoomAssetInfo `tfsdk:"clean_room_assets" tf:"optional"`
-	// All collaborators who are in the clean room.
-	Collaborators []CleanRoomCollaboratorInfo `tfsdk:"collaborators" tf:"optional"`
-	// The collaborator who created the clean room.
-	Creator []CleanRoomCollaboratorInfo `tfsdk:"creator" tf:"optional,object"`
-	// The cloud where clean room tasks will be run.
-	StationCloud types.String `tfsdk:"station_cloud" tf:"optional"`
-	// The region where clean room tasks will be run.
-	StationRegion types.String `tfsdk:"station_region" tf:"optional"`
-}
-
-func (newState *CentralCleanRoomInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CentralCleanRoomInfo) {
-}
-
-func (newState *CentralCleanRoomInfo) SyncEffectiveFieldsDuringRead(existingState CentralCleanRoomInfo) {
-}
-
-type CleanRoomAssetInfo struct {
-	// Time at which this asset was added, in epoch milliseconds.
-	AddedAt types.Int64 `tfsdk:"added_at" tf:"optional"`
-	// Details about the notebook asset.
-	NotebookInfo []CleanRoomNotebookInfo `tfsdk:"notebook_info" tf:"optional,object"`
-	// The collaborator who owns the asset.
-	Owner []CleanRoomCollaboratorInfo `tfsdk:"owner" tf:"optional,object"`
-	// Details about the table asset.
-	TableInfo []CleanRoomTableInfo `tfsdk:"table_info" tf:"optional,object"`
-	// Time at which this asset was updated, in epoch milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
-}
-
-func (newState *CleanRoomAssetInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetInfo) {
-}
-
-func (newState *CleanRoomAssetInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetInfo) {
-}
-
-type CleanRoomCatalog struct {
-	// Name of the catalog in the clean room station. Empty for notebooks.
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
-	// The details of the shared notebook files.
-	NotebookFiles []SharedDataObject `tfsdk:"notebook_files" tf:"optional"`
-	// The details of the shared tables.
-	Tables []SharedDataObject `tfsdk:"tables" tf:"optional"`
-}
-
-func (newState *CleanRoomCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCatalog) {
-}
-
-func (newState *CleanRoomCatalog) SyncEffectiveFieldsDuringRead(existingState CleanRoomCatalog) {
-}
-
-type CleanRoomCatalogUpdate struct {
-	// The name of the catalog to update assets.
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
-	// The updates to the assets in the catalog.
-	Updates []SharedDataObjectUpdate `tfsdk:"updates" tf:"optional,object"`
-}
-
-func (newState *CleanRoomCatalogUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCatalogUpdate) {
-}
-
-func (newState *CleanRoomCatalogUpdate) SyncEffectiveFieldsDuringRead(existingState CleanRoomCatalogUpdate) {
-}
-
-type CleanRoomCollaboratorInfo struct {
-	// The global Unity Catalog metastore id of the collaborator. Also known as
-	// the sharing identifier. The identifier is of format
-	// __cloud__:__region__:__metastore-uuid__.
-	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
-	// The organization name of the collaborator. This is configured in the
-	// metastore for Delta Sharing and is used to identify the organization to
-	// other collaborators.
-	OrganizationName types.String `tfsdk:"organization_name" tf:"optional"`
-}
-
-func (newState *CleanRoomCollaboratorInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCollaboratorInfo) {
-}
-
-func (newState *CleanRoomCollaboratorInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomCollaboratorInfo) {
-}
-
-type CleanRoomInfo struct {
-	// User-provided free-form text description.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
-	// Time at which this clean room was created, in epoch milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
-	// Username of clean room creator.
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
-	// Catalog aliases shared by the current collaborator with asset details.
-	LocalCatalogs []CleanRoomCatalog `tfsdk:"local_catalogs" tf:"optional"`
-	// Name of the clean room.
-	Name types.String `tfsdk:"name" tf:"optional"`
-	// Username of current owner of clean room.
-	Owner types.String `tfsdk:"owner" tf:"optional"`
-	// Central clean room details.
-	RemoteDetailedInfo []CentralCleanRoomInfo `tfsdk:"remote_detailed_info" tf:"optional,object"`
-	// Time at which this clean room was updated, in epoch milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
-	// Username of clean room updater.
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
-}
-
-func (newState *CleanRoomInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomInfo) {
-}
-
-func (newState *CleanRoomInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomInfo) {
-}
-
-type CleanRoomNotebookInfo struct {
-	// The base64 representation of the notebook content in HTML.
-	NotebookContent types.String `tfsdk:"notebook_content" tf:"optional"`
-	// The name of the notebook.
-	NotebookName types.String `tfsdk:"notebook_name" tf:"optional"`
-}
-
-func (newState *CleanRoomNotebookInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookInfo) {
-}
-
-func (newState *CleanRoomNotebookInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookInfo) {
-}
-
-type CleanRoomTableInfo struct {
-	// Name of parent catalog.
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
-	// The array of __ColumnInfo__ definitions of the table's columns.
-	Columns []ColumnInfo `tfsdk:"columns" tf:"optional"`
-	// Full name of table, in form of
-	// __catalog_name__.__schema_name__.__table_name__
-	FullName types.String `tfsdk:"full_name" tf:"optional"`
-	// Name of table, relative to parent schema.
-	Name types.String `tfsdk:"name" tf:"optional"`
-	// Name of parent schema relative to its parent catalog.
-	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
-}
-
-func (newState *CleanRoomTableInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomTableInfo) {
-}
-
-func (newState *CleanRoomTableInfo) SyncEffectiveFieldsDuringRead(existingState CleanRoomTableInfo) {
-}
-
-type ColumnInfo struct {
-	// User-provided free-form text description.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
-
-	Mask []ColumnMask `tfsdk:"mask" tf:"optional,object"`
-	// Name of Column.
-	Name types.String `tfsdk:"name" tf:"optional"`
-	// Whether field may be Null (default: true).
-	Nullable types.Bool `tfsdk:"nullable" tf:"optional"`
-	// Partition index for column.
-	PartitionIndex types.Int64 `tfsdk:"partition_index" tf:"optional"`
-	// Ordinal position of column (starting at position 0).
-	Position types.Int64 `tfsdk:"position" tf:"optional"`
-	// Format of IntervalType.
-	TypeIntervalType types.String `tfsdk:"type_interval_type" tf:"optional"`
-	// Full data type specification, JSON-serialized.
-	TypeJson types.String `tfsdk:"type_json" tf:"optional"`
-	// Name of type (INT, STRUCT, MAP, etc.).
-	TypeName types.String `tfsdk:"type_name" tf:"optional"`
-	// Digits of precision; required for DecimalTypes.
-	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
-	// Digits to right of decimal; Required for DecimalTypes.
-	TypeScale types.Int64 `tfsdk:"type_scale" tf:"optional"`
-	// Full data type specification as SQL/catalogString text.
-	TypeText types.String `tfsdk:"type_text" tf:"optional"`
-}
-
-func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo) {
-}
-
-func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
-}
-
-type ColumnMask struct {
-	// The full name of the column mask SQL UDF.
-	FunctionName types.String `tfsdk:"function_name" tf:"optional"`
-	// The list of additional table columns to be passed as input to the column
-	// mask function. The first arg of the mask function should be of the type
-	// of the column being masked and the types of the rest of the args should
-	// match the types of columns in 'using_column_names'.
-	UsingColumnNames []types.String `tfsdk:"using_column_names" tf:"optional"`
-}
-
-func (newState *ColumnMask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnMask) {
-}
-
-func (newState *ColumnMask) SyncEffectiveFieldsDuringRead(existingState ColumnMask) {
-}
-
-type CreateCleanRoom struct {
-	// User-provided free-form text description.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
-	// Name of the clean room.
-	Name types.String `tfsdk:"name" tf:""`
-	// Central clean room details.
-	RemoteDetailedInfo []CentralCleanRoomInfo `tfsdk:"remote_detailed_info" tf:"object"`
-}
-
-func (newState *CreateCleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoom) {
-}
-
-func (newState *CreateCleanRoom) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoom) {
-}
-
 type CreateProvider struct {
 	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type" tf:""`
@@ -285,18 +77,6 @@ func (newState *CreateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create
 }
 
 func (newState *CreateShare) SyncEffectiveFieldsDuringRead(existingState CreateShare) {
-}
-
-// Delete a clean room
-type DeleteCleanRoomRequest struct {
-	// The name of the clean room.
-	Name types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomRequest) {
-}
-
-func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomRequest) {
 }
 
 // Delete a provider
@@ -365,20 +145,6 @@ func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoResponse) {
 }
 
-// Get a clean room
-type GetCleanRoomRequest struct {
-	// Whether to include remote details (central) on the clean room.
-	IncludeRemoteDetails types.Bool `tfsdk:"-"`
-	// The name of the clean room.
-	Name types.String `tfsdk:"-"`
-}
-
-func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomRequest) {
-}
-
-func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomRequest) {
-}
-
 // Get a provider
 type GetProviderRequest struct {
 	// Name of the provider.
@@ -441,40 +207,6 @@ func (newState *IpAccessList) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAcc
 }
 
 func (newState *IpAccessList) SyncEffectiveFieldsDuringRead(existingState IpAccessList) {
-}
-
-// List clean rooms
-type ListCleanRoomsRequest struct {
-	// Maximum number of clean rooms to return. If not set, all the clean rooms
-	// are returned (not recommended). - when set to a value greater than 0, the
-	// page length is the minimum of this value and a server configured value; -
-	// when set to 0, the page length is set to a server configured value
-	// (recommended); - when set to a value less than 0, an invalid parameter
-	// error is returned;
-	MaxResults types.Int64 `tfsdk:"-"`
-	// Opaque pagination token to go to next page based on previous query.
-	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsRequest) {
-}
-
-func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsRequest) {
-}
-
-type ListCleanRoomsResponse struct {
-	// An array of clean rooms. Remote details (central) are not included.
-	CleanRooms []CleanRoomInfo `tfsdk:"clean_rooms" tf:"optional"`
-	// Opaque token to retrieve the next page of results. Absent if there are no
-	// more pages. __page_token__ should be set to this value for the next
-	// request (for the next page of results).
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
-}
-
-func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsResponse) {
-}
-
-func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsResponse) {
 }
 
 type ListProviderSharesResponse struct {
@@ -1030,23 +762,6 @@ func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringRead(existingState SharedDataObjectUpdate) {
-}
-
-type UpdateCleanRoom struct {
-	// Array of shared data object updates.
-	CatalogUpdates []CleanRoomCatalogUpdate `tfsdk:"catalog_updates" tf:"optional"`
-	// User-provided free-form text description.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
-	// The name of the clean room.
-	Name types.String `tfsdk:"-"`
-	// Username of current owner of clean room.
-	Owner types.String `tfsdk:"owner" tf:"optional"`
-}
-
-func (newState *UpdateCleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoom) {
-}
-
-func (newState *UpdateCleanRoom) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoom) {
 }
 
 type UpdatePermissionsResponse struct {

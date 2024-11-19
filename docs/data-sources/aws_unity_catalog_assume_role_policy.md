@@ -38,9 +38,10 @@ resource "aws_iam_role" "metastore_data_access" {
 ## Argument Reference
 
 * `aws_account_id` (Required) The Account ID of the current AWS account (not your Databricks account).
+* `aws_partition` - (Optional) AWS partition. The options are `aws` or `aws-us-gov`. Defaults to `aws`
 * `external_id` (Required) The [storage credential](../resources/storage_credential.md) external id.
 * `role_name` (Required) The name of the AWS IAM role to be created for Unity Catalog.
-* `unity_catalog_iam_arn` (Optional) The Databricks Unity Catalog IAM Role ARN. Defaults to `arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL`
+* `unity_catalog_iam_arn` (Optional) The Databricks Unity Catalog IAM Role ARN. Defaults to `arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL` on standard AWS partition selection and `arn:aws-us-gov:iam::044793339203:role/unity-catalog-prod-UCMasterRole-1QRFA8SGY15OJ` on GovCloud partition selection
 
 ## Attribute Reference
 

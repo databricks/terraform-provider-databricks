@@ -227,6 +227,67 @@ func TestUpdateCatalog(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateCatalogSetEmptyComment(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "d",
+			}, nil)
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:            "a",
+				Comment:         "",
+				ForceSendFields: []string{"Comment"},
+			}).Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "",
+			}, nil)
+			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+				Name:    "a",
+				Comment: "",
+			}, nil)
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"comment":      "c",
+		},
+		HCL: `
+		name = "a"
+		comment = ""
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestUpdateCatalogForceDestroyOnly(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "d",
+			}, nil)
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+				Name: "a",
+			}, nil)
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id":  "d",
+			"name":          "a",
+			"force_destroy": "true",
+		},
+		HCL: `
+		name = "a"
+		force_destroy = false
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateCatalogOwnerOnly(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

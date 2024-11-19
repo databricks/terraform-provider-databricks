@@ -100,6 +100,9 @@ func ResourceSchema() common.Resource {
 			if err != nil {
 				return err
 			}
+			if !d.HasChangeExcept("force_destroy") {
+				return nil
+			}
 			var updateSchemaRequest catalog.UpdateSchema
 			common.DataToStructPointer(d, s, &updateSchemaRequest)
 			updateSchemaRequest.FullName = d.Id()
@@ -116,6 +119,10 @@ func ResourceSchema() common.Resource {
 
 			if !d.HasChangeExcept("owner") {
 				return nil
+			}
+
+			if d.HasChange("comment") && updateSchemaRequest.Comment == "" {
+				updateSchemaRequest.ForceSendFields = append(updateSchemaRequest.ForceSendFields, "Comment")
 			}
 
 			updateSchemaRequest.Owner = ""

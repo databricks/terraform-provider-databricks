@@ -823,6 +823,14 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 								NotebookPath: "/Stuff",
 							},
 						},
+						{
+							TaskKey: "c",
+							NewCluster: &clusters.Cluster{
+								SparkVersion: "d",
+								NodeTypeID:   "e",
+								NumWorkers:   0,
+							},
+						},
 					},
 					MaxConcurrentRuns: 1,
 					JobClusters: []JobCluster{
@@ -839,7 +847,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 							NewCluster: &clusters.Cluster{
 								SparkVersion: "x",
 								NodeTypeID:   "y",
-								NumWorkers:   9,
+								NumWorkers:   0,
 							},
 						},
 					},
@@ -883,7 +891,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 		job_cluster {
 			job_cluster_key = "k"
 			new_cluster {
-			  num_workers   = 9
+			  num_workers   = 0
 			  spark_version = "x"
 			  node_type_id  = "y"
 			}
@@ -910,7 +918,17 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 			notebook_task {
 				notebook_path = "/Stuff"
 			}
-		}`,
+		}
+		
+		task {
+			task_key = "c"
+			new_cluster {
+				spark_version = "d"
+				node_type_id = "e"
+				num_workers = 0
+			}
+		}
+		`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "17", d.Id())
@@ -2031,48 +2049,6 @@ func TestResourceJobCreateFromGitSourceWithoutProviderFail(t *testing.T) {
 	}.ExpectError(t, "git source is not empty but Git Provider is not specified and cannot be guessed by url &{GitBranch: GitCommit: GitProvider: GitSnapshot:<nil> GitTag:0.4.8 GitUrl:https://custom.git.hosting.com/databricks/terraform-provider-databricks JobSource:<nil> ForceSendFields:[]}")
 }
 
-func TestResourceJobCreateSingleNode_Fail(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Create:   true,
-		Resource: ResourceJob(),
-		HCL: `new_cluster  {
-			num_workers   = 0
-			spark_version = "7.3.x-scala2.12"
-			node_type_id  = "Standard_DS3_v2"
-		  }	
-		max_concurrent_runs = 1
-		max_retries = 3
-		min_retry_interval_millis = 5000
-		name = "Featurizer"
-		retry_on_timeout = true
-
-		spark_jar_task {
-			main_class_name = "com.labs.BarMain"
-		}
-		library {
-			jar = "dbfs://aa/bb/cc.jar"
-		}
-		library {
-			jar = "dbfs://ff/gg/hh.jar"
-		}`,
-	}.Apply(t)
-	assert.ErrorContains(t, err, `num_workers may be 0 only for single-node clusters. To create a single node
-cluster please include the following configuration in your cluster configuration:
-
-  spark_conf = {
-    "spark.databricks.cluster.profile" : "singleNode"
-    "spark.master" : "local[*]"
-  }
-
-  custom_tags = {
-    "ResourceClass" = "SingleNode"
-  }
-
-Please note that the Databricks Terraform provider cannot detect if the above configuration
-is defined in a policy used by the cluster. Please define this in the cluster configuration
-itself to create a single node cluster.`)
-}
-
 func TestResourceJobRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -2936,44 +2912,6 @@ func TestResourceJobDelete(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
-}
-
-func TestResourceJobUpdate_FailNumWorkersZero(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		ID:       "789",
-		Update:   true,
-		Resource: ResourceJob(),
-		HCL: `new_cluster  {
-			num_workers   = 0
-			spark_version = "7.3.x-scala2.12"
-			node_type_id  = "Standard_DS3_v2"
-		  }
-		max_concurrent_runs = 1
-		max_retries = 3
-		min_retry_interval_millis = 5000
-		name = "Featurizer New"
-		retry_on_timeout = true
-
-		spark_jar_task {
-			main_class_name = "com.labs.BarMain"
-			parameters = ["--cleanup", "full"]
-		}`,
-	}.Apply(t)
-	assert.ErrorContains(t, err, `num_workers may be 0 only for single-node clusters. To create a single node
-cluster please include the following configuration in your cluster configuration:
-
-  spark_conf = {
-    "spark.databricks.cluster.profile" : "singleNode"
-    "spark.master" : "local[*]"
-  }
-
-  custom_tags = {
-    "ResourceClass" = "SingleNode"
-  }
-
-Please note that the Databricks Terraform provider cannot detect if the above configuration
-is defined in a policy used by the cluster. Please define this in the cluster configuration
-itself to create a single node cluster.`)
 }
 
 func TestJobsAPIList(t *testing.T) {

@@ -156,12 +156,8 @@ func (c controlRunStateLifecycleManagerGoSdk) OnUpdate(ctx context.Context) erro
 	return StopActiveRun(jobID, c.d.Timeout(schema.TimeoutUpdate), w, ctx)
 }
 
-func updateAndValidateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceData) error {
-	err := clusters.Validate(*clusterSpec)
-	if err != nil {
-		return err
-	}
-	err = clusters.ModifyRequestOnInstancePool(clusterSpec)
+func updateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema.ResourceData) error {
+	err := clusters.ModifyRequestOnInstancePool(clusterSpec)
 	if err != nil {
 		return err
 	}
@@ -178,21 +174,21 @@ func updateAndValidateJobClusterSpec(clusterSpec *compute.ClusterSpec, d *schema
 
 func prepareJobSettingsForUpdateGoSdk(d *schema.ResourceData, js *JobSettingsResource) error {
 	if js.NewCluster != nil {
-		err := updateAndValidateJobClusterSpec(js.NewCluster, d)
+		err := updateJobClusterSpec(js.NewCluster, d)
 		if err != nil {
 			return err
 		}
 	}
 	for _, task := range js.Tasks {
 		if task.NewCluster != nil {
-			err := updateAndValidateJobClusterSpec(task.NewCluster, d)
+			err := updateJobClusterSpec(task.NewCluster, d)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	for i := range js.JobClusters {
-		err := updateAndValidateJobClusterSpec(&js.JobClusters[i].NewCluster, d)
+		err := updateJobClusterSpec(&js.JobClusters[i].NewCluster, d)
 		if err != nil {
 			return err
 		}
@@ -205,14 +201,14 @@ func prepareJobSettingsForCreateGoSdk(d *schema.ResourceData, jc *JobCreateStruc
 	// Before the go-sdk migration, the field `num_workers` was required, so we always sent it.
 	for _, task := range jc.Tasks {
 		if task.NewCluster != nil {
-			err := updateAndValidateJobClusterSpec(task.NewCluster, d)
+			err := updateJobClusterSpec(task.NewCluster, d)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	for i := range jc.JobClusters {
-		err := updateAndValidateJobClusterSpec(&jc.JobClusters[i].NewCluster, d)
+		err := updateJobClusterSpec(&jc.JobClusters[i].NewCluster, d)
 		if err != nil {
 			return err
 		}

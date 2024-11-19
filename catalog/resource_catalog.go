@@ -124,6 +124,9 @@ func ResourceCatalog() common.Resource {
 			if err != nil {
 				return err
 			}
+			if !d.HasChangeExcept("force_destroy") {
+				return nil
+			}
 
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
@@ -141,6 +144,10 @@ func ResourceCatalog() common.Resource {
 
 			if !d.HasChangeExcept("owner") {
 				return nil
+			}
+
+			if d.HasChange("comment") && updateCatalogRequest.Comment == "" {
+				updateCatalogRequest.ForceSendFields = append(updateCatalogRequest.ForceSendFields, "Comment")
 			}
 
 			updateCatalogRequest.Owner = ""

@@ -93,6 +93,22 @@ var noopContextResource = common.Resource{
 			Type:     schema.TypeBool,
 			Required: true,
 		},
+		"nested": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"tags": {
+						Type:     schema.TypeMap,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+		},
 	},
 	Read:   noopContext,
 	Create: noopContext,
@@ -216,6 +232,37 @@ func TestResourceFixture_ApplyAndExpectData(t *testing.T) {
 		trigger = "now"
 		`,
 	}.ApplyAndExpectData(t, map[string]any{"id": "x", "dummy": true, "trigger": "now"})
+}
+
+func TestResourceFixture_ApplyAndExpectDataSet(t *testing.T) {
+	ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "text",
+				Data:       "yes",
+			}
+		},
+		Azure:    true,
+		Resource: noopContextResource,
+		ID:       "x",
+		Delete:   true,
+		HCL: `
+		dummy = true
+		trigger = "now"
+		nested {
+			tags {
+				env = "prod"
+			}
+		}
+		`,
+	}.ApplyAndExpectData(t,
+		map[string]any{
+			"id":      "x",
+			"dummy":   true,
+			"trigger": "now",
+			"nested":  []any{map[string]any{"tags": map[string]any{"env": "prod"}}},
+		},
+	)
 }
 
 func TestResourceFixture_InstanceState(t *testing.T) {

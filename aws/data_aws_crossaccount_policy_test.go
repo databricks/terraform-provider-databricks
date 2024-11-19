@@ -530,6 +530,25 @@ func TestDataAwsCrossAccountRestrictedPolicy(t *testing.T) {
 	assert.Lenf(t, j, 5725, "Strange length for policy: %s", j)
 }
 
+func TestDataAwsCrossAccountRestrictedPolicyPartitionGov(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Read:        true,
+		Resource:    DataAwsCrossaccountPolicy(),
+		NonWritable: true,
+		HCL: `
+		policy_type = "restricted"
+		aws_account_id = "123456789012"
+    aws_partition = "aws-us-gov"
+		vpc_id = "vpc-12345678"
+		region = "us-west-2"
+		security_group_id = "sg-12345678"`,
+		ID: ".",
+	}.Apply(t)
+	assert.NoError(t, err)
+	j := d.Get("json")
+	assert.Lenf(t, j, 5879, "Strange length for policy: %s", j)
+}
+
 func TestDataAwsCrossAccountInvalidPolicy(t *testing.T) {
 	qa.ResourceFixture{
 		Read:        true,
@@ -550,6 +569,16 @@ func TestDataAwsCrossAccountInvalidAccountId(t *testing.T) {
 		aws_account_id = "12345678901212"`,
 		ID: ".",
 	}.ExpectError(t, "aws_account_id must be a 12 digit number")
+}
+
+func TestDataAwsCrossAccountInvalidPartition(t *testing.T) {
+	qa.ResourceFixture{
+		Read:        true,
+		Resource:    DataAwsCrossaccountPolicy(),
+		NonWritable: true,
+		HCL:         `aws_partition = "something"`,
+		ID:          ".",
+	}.ExpectError(t, AwsPartitionsValidationError)
 }
 
 func TestDataAwsCrossAccountInvalidVpcId(t *testing.T) {

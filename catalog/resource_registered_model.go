@@ -92,6 +92,9 @@ func ResourceRegisteredModel() common.Resource {
 				return nil
 			}
 
+			if d.HasChange("comment") && u.Comment == "" {
+				u.ForceSendFields = append(u.ForceSendFields, "Comment")
+			}
 			u.Owner = ""
 			_, err = w.RegisteredModels.Update(ctx, u)
 			if err != nil {

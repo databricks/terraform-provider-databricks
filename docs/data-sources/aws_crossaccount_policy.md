@@ -21,6 +21,7 @@ data "databricks_aws_crossaccount_policy" "this" {}
 * `pass_roles` (Optional) (List) List of Data IAM role ARNs that are explicitly granted `iam:PassRole` action.
 The below arguments are only valid for `restricted` policy type
 * `aws_account_id` — Your AWS account ID, which is a number.
+* `aws_partition` - (Optional) AWS partition. The options are `aws` or `aws-us-gov`. Defaults to `aws`
 * `vpc_id` — ID of the AWS VPC where you want to launch workspaces.
 * `region` — AWS Region name for your VPC deployment, for example `us-west-2`.
 * `security_group_id` — ID of your AWS security group. When you add a security group restriction, you cannot reuse the cross-account IAM role or reference a credentials ID (`credentials_id`) for any other workspaces. For those other workspaces, you must create separate roles, policies, and credentials objects.

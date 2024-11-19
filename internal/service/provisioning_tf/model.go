@@ -947,6 +947,9 @@ type UpdateWorkspaceRequest struct {
 	// switch from a Databricks-managed VPC to a customer-managed VPC by
 	// updating the workspace to add a network configuration ID.
 	NetworkId types.String `tfsdk:"network_id" tf:"optional"`
+	// The ID of the workspace's private access settings configuration object.
+	// This parameter is available only for updating failed workspaces.
+	PrivateAccessSettingsId types.String `tfsdk:"private_access_settings_id" tf:"optional"`
 	// The ID of the workspace's storage configuration object. This parameter is
 	// available only for updating failed workspaces.
 	StorageConfigurationId types.String `tfsdk:"storage_configuration_id" tf:"optional"`

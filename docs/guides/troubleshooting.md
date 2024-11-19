@@ -228,3 +228,20 @@ There could be different reasons for this error:
 ### Provider "registry.terraform.io/databricks/databricks" planned an invalid value for ...: planned value ... for a non-computed attribute.
 
 Starting with version v1.51.0, the Terraform provider for Databricks supports `terraform` versions 1.1.5 and later. Older versions of `terraform`, such as v0.15.5, are known to erroneously generate this error. Check the version of `terraform` that you're using by running `terraform version` and upgrade it if necessary.
+
+### Error: cannot create ....: invalid Databricks Account configuration
+
+`....` is the descriptive name of a resource such as `access control rule set`. The error occurs when creating a workspace resource with a provider containing the `account_id` argument e.g.:
+
+```hcl
+provider "databricks" {
+  host          = "https://<workspace-hostname>.cloud.databricks.com"
+  client_id     = "..."
+  client_secret = "..."
+
+  # This line is the problem
+  account_id = "..."
+}
+```
+
+Remove the `account_id` argument from the workspace provider to resolve the error.

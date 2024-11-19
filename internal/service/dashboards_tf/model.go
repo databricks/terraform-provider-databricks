@@ -15,6 +15,68 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// Create dashboard
+type CreateDashboardRequest struct {
+	Dashboard []Dashboard `tfsdk:"dashboard" tf:"optional,object"`
+}
+
+func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDashboardRequest) {
+}
+
+func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateDashboardRequest) {
+}
+
+// Create dashboard schedule
+type CreateScheduleRequest struct {
+	// UUID identifying the dashboard to which the schedule belongs.
+	DashboardId          types.String `tfsdk:"-"`
+	EffectiveDashboardId types.String `tfsdk:"-"`
+
+	Schedule []Schedule `tfsdk:"schedule" tf:"optional,object"`
+}
+
+func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateScheduleRequest) {
+	newState.EffectiveDashboardId = newState.DashboardId
+	newState.DashboardId = plan.DashboardId
+}
+
+func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState CreateScheduleRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
+	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
+		newState.DashboardId = existingState.DashboardId
+	}
+}
+
+// Create schedule subscription
+type CreateSubscriptionRequest struct {
+	// UUID identifying the dashboard to which the subscription belongs.
+	DashboardId          types.String `tfsdk:"-"`
+	EffectiveDashboardId types.String `tfsdk:"-"`
+	// UUID identifying the schedule to which the subscription belongs.
+	ScheduleId          types.String `tfsdk:"-"`
+	EffectiveScheduleId types.String `tfsdk:"-"`
+
+	Subscription []Subscription `tfsdk:"subscription" tf:"optional,object"`
+}
+
+func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateSubscriptionRequest) {
+	newState.EffectiveDashboardId = newState.DashboardId
+	newState.DashboardId = plan.DashboardId
+	newState.EffectiveScheduleId = newState.ScheduleId
+	newState.ScheduleId = plan.ScheduleId
+}
+
+func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState CreateSubscriptionRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
+	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
+		newState.DashboardId = existingState.DashboardId
+	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
+	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
+		newState.ScheduleId = existingState.ScheduleId
+	}
+}
+
 type CronSchedule struct {
 	// A cron expression using quartz syntax. EX: `0 0 8 * * ?` represents
 	// everyday at 8am. See [Cron Trigger] for details.
@@ -803,6 +865,8 @@ type Schedule struct {
 	// A timestamp indicating when the schedule was last updated.
 	UpdateTime          types.String `tfsdk:"update_time" tf:"optional"`
 	EffectiveUpdateTime types.String `tfsdk:"effective_update_time" tf:"computed,optional"`
+	// The warehouse id to run the dashboard with for the schedule.
+	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
 
 func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule) {
@@ -1024,4 +1088,47 @@ func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
+}
+
+// Update dashboard
+type UpdateDashboardRequest struct {
+	Dashboard []Dashboard `tfsdk:"dashboard" tf:"optional,object"`
+	// UUID identifying the dashboard.
+	DashboardId types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDashboardRequest) {
+}
+
+func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardRequest) {
+}
+
+// Update dashboard schedule
+type UpdateScheduleRequest struct {
+	// UUID identifying the dashboard to which the schedule belongs.
+	DashboardId          types.String `tfsdk:"-"`
+	EffectiveDashboardId types.String `tfsdk:"-"`
+
+	Schedule []Schedule `tfsdk:"schedule" tf:"optional,object"`
+	// UUID identifying the schedule.
+	ScheduleId          types.String `tfsdk:"-"`
+	EffectiveScheduleId types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateScheduleRequest) {
+	newState.EffectiveDashboardId = newState.DashboardId
+	newState.DashboardId = plan.DashboardId
+	newState.EffectiveScheduleId = newState.ScheduleId
+	newState.ScheduleId = plan.ScheduleId
+}
+
+func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState UpdateScheduleRequest) {
+	newState.EffectiveDashboardId = existingState.EffectiveDashboardId
+	if existingState.EffectiveDashboardId.ValueString() == newState.DashboardId.ValueString() {
+		newState.DashboardId = existingState.DashboardId
+	}
+	newState.EffectiveScheduleId = existingState.EffectiveScheduleId
+	if existingState.EffectiveScheduleId.ValueString() == newState.ScheduleId.ValueString() {
+		newState.ScheduleId = existingState.ScheduleId
+	}
 }

@@ -103,6 +103,8 @@ func DatabricksProvider(sdkV2Fallbacks ...pluginfw.SdkV2FallbackOption) *schema.
 		"databricks_mlflow_model":                         mlflow.DataSourceModel().ToResource(),
 		"databricks_mlflow_models":                        mlflow.DataSourceModels().ToResource(),
 		"databricks_mws_credentials":                      mws.DataSourceMwsCredentials().ToResource(),
+		"databricks_mws_network_connectivity_config":      mws.DataSourceMwsNetworkConnectivityConfig().ToResource(),
+		"databricks_mws_network_connectivity_configs":     mws.DataSourceMwsNetworkConnectivityConfigs().ToResource(),
 		"databricks_mws_workspaces":                       mws.DataSourceMwsWorkspaces().ToResource(),
 		"databricks_node_type":                            clusters.DataSourceNodeType().ToResource(),
 		"databricks_notebook":                             workspace.DataSourceNotebook().ToResource(),

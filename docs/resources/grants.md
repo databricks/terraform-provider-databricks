@@ -172,7 +172,7 @@ resource "databricks_grants" "customers" {
 
 ## Volume grants
 
-You can grant `ALL_PRIVILEGES`, `READ_VOLUME` and `WRITE_VOLUME` privileges to [_`catalog.schema.volume`_](../data-sources/volumes.md) specified in the `volume` attribute.
+You can grant `ALL_PRIVILEGES`, `READ_VOLUME` and `WRITE_VOLUME` privileges to [_`catalog.schema.volume`_](volume.md) specified in the `volume` attribute.
 
 ```hcl
 resource "databricks_volume" "this" {

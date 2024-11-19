@@ -196,6 +196,47 @@ func TestRegisteredModelUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestRegisteredModelUpdateCommentOnly(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockRegisteredModelsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateRegisteredModelRequest{
+				FullName:        "catalog.schema.model",
+				Comment:         "",
+				ForceSendFields: []string{"Comment"},
+			}).Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "",
+			}, nil)
+			e.GetByFullName(mock.Anything, "catalog.schema.model").Return(&catalog.RegisteredModelInfo{
+				Name:        "model",
+				CatalogName: "catalog",
+				SchemaName:  "schema",
+				FullName:    "catalog.schema.model",
+				Comment:     "",
+			}, nil)
+		},
+		Resource: ResourceRegisteredModel(),
+		Update:   true,
+		ID:       "catalog.schema.model",
+		InstanceState: map[string]string{
+			"name":         "model",
+			"catalog_name": "catalog",
+			"schema_name":  "schema",
+			"comment":      "comment",
+		},
+		HCL: `
+			name = "model"
+			catalog_name = "catalog"
+			schema_name = "schema"
+			comment = ""
+			`,
+	}.ApplyNoError(t)
+}
+
 func TestRegisteredModelUpdateOwner(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

@@ -51,5 +51,9 @@ This data source exports the following attributes:
 
 * `names` - List of names of [databricks_mws_network_connectivity_config](./databricks_mws_network_connectivity_config.md)
 
+## Related Resources
+
+The following resources are used in the same context:
+
 * [databricks_mws_network_connectivity_config](./mws_network_connectivity_config.md) to get information about a single network connectivity configuration.
 * [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) to manage network connectivity configuration.

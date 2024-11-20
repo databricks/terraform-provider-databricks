@@ -237,7 +237,7 @@ func (newState *DeleteCredentialsResponse) SyncEffectiveFieldsDuringRead(existin
 
 // Delete a repo
 type DeleteRepoRequest struct {
-	// ID of the Git folder (repo) object in the workspace.
+	// The ID for the corresponding repo to delete.
 	RepoId types.Int64 `tfsdk:"-"`
 }
 

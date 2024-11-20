@@ -12,15 +12,16 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/catalog"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/cluster"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/library"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/notificationdestinations"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/qualitymonitor"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/registered_model"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/sharing"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/catalog"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/cluster"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/notificationdestinations"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/qualitymonitor"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/registered_model"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/serving"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sharing"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/volume"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/user"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/resources/volume"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
@@ -44,7 +45,9 @@ var pluginFwOnlyResources = []func() resource.Resource{
 
 // List of data sources that have been onboarded to the plugin framework - not migrated from sdkv2.
 var pluginFwOnlyDataSources = []func() datasource.DataSource{
+	serving.DataSourceServingEndpoints,
 	registered_model.DataSourceRegisteredModel,
+	registered_model.DataSourceRegisteredModelVersions,
 	notificationdestinations.DataSourceNotificationDestinations,
 	user.DataSourceUsers,
 	catalog.DataSourceFunctions,

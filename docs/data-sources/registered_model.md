@@ -48,6 +48,6 @@ The following attributes are exported:
 
 The following resources are often used in the same context:
 
-* [databricks_registered_model](../resources/schema.md) resource to manage models within Unity Catalog.
+* [databricks_registered_model](../resources/registered_model.md) resource to manage models within Unity Catalog.
 * [databricks_model_serving](../resources/model_serving.md) to serve this model on a Databricks serving endpoint.
 * [databricks_mlflow_experiment](../resources/mlflow_experiment.md) to manage [MLflow experiments](https://docs.databricks.com/data/data-sources/mlflow-experiment.html) in Databricks.

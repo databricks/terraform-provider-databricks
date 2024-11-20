@@ -43,6 +43,9 @@ type App struct {
 	// Resources for the app.
 	Resources []AppResource `tfsdk:"resources" tf:"optional"`
 
+	ServicePrincipalClientId          types.String `tfsdk:"service_principal_client_id" tf:"optional"`
+	EffectiveServicePrincipalClientId types.String `tfsdk:"effective_service_principal_client_id" tf:"computed,optional"`
+
 	ServicePrincipalId          types.Int64 `tfsdk:"service_principal_id" tf:"optional"`
 	EffectiveServicePrincipalId types.Int64 `tfsdk:"effective_service_principal_id" tf:"computed,optional"`
 
@@ -64,6 +67,8 @@ func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
 	newState.CreateTime = plan.CreateTime
 	newState.EffectiveCreator = newState.Creator
 	newState.Creator = plan.Creator
+	newState.EffectiveServicePrincipalClientId = newState.ServicePrincipalClientId
+	newState.ServicePrincipalClientId = plan.ServicePrincipalClientId
 	newState.EffectiveServicePrincipalId = newState.ServicePrincipalId
 	newState.ServicePrincipalId = plan.ServicePrincipalId
 	newState.EffectiveServicePrincipalName = newState.ServicePrincipalName
@@ -84,6 +89,10 @@ func (newState *App) SyncEffectiveFieldsDuringRead(existingState App) {
 	newState.EffectiveCreator = existingState.EffectiveCreator
 	if existingState.EffectiveCreator.ValueString() == newState.Creator.ValueString() {
 		newState.Creator = existingState.Creator
+	}
+	newState.EffectiveServicePrincipalClientId = existingState.EffectiveServicePrincipalClientId
+	if existingState.EffectiveServicePrincipalClientId.ValueString() == newState.ServicePrincipalClientId.ValueString() {
+		newState.ServicePrincipalClientId = existingState.ServicePrincipalClientId
 	}
 	newState.EffectiveServicePrincipalId = existingState.EffectiveServicePrincipalId
 	if existingState.EffectiveServicePrincipalId.ValueInt64() == newState.ServicePrincipalId.ValueInt64() {
@@ -144,8 +153,6 @@ func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringRead(existing
 }
 
 type AppDeployment struct {
-	// The name of the app.
-	AppName types.String `tfsdk:"-"`
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
 	CreateTime          types.String `tfsdk:"create_time" tf:"optional"`
 	EffectiveCreateTime types.String `tfsdk:"effective_create_time" tf:"computed,optional"`
@@ -400,6 +407,30 @@ func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState Compu
 	}
 }
 
+// Create an app deployment
+type CreateAppDeploymentRequest struct {
+	AppDeployment []AppDeployment `tfsdk:"app_deployment" tf:"optional,object"`
+	// The name of the app.
+	AppName types.String `tfsdk:"-"`
+}
+
+func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppDeploymentRequest) {
+}
+
+func (newState *CreateAppDeploymentRequest) SyncEffectiveFieldsDuringRead(existingState CreateAppDeploymentRequest) {
+}
+
+// Create an app
+type CreateAppRequest struct {
+	App []App `tfsdk:"app" tf:"optional,object"`
+}
+
+func (newState *CreateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppRequest) {
+}
+
+func (newState *CreateAppRequest) SyncEffectiveFieldsDuringRead(existingState CreateAppRequest) {
+}
+
 // Delete an app
 type DeleteAppRequest struct {
 	// The name of the app.
@@ -550,4 +581,18 @@ func (newState *StopAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sto
 }
 
 func (newState *StopAppRequest) SyncEffectiveFieldsDuringRead(existingState StopAppRequest) {
+}
+
+// Update an app
+type UpdateAppRequest struct {
+	App []App `tfsdk:"app" tf:"optional,object"`
+	// The name of the app. The name must contain only lowercase alphanumeric
+	// characters and hyphens. It must be unique within the workspace.
+	Name types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAppRequest) {
+}
+
+func (newState *UpdateAppRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAppRequest) {
 }

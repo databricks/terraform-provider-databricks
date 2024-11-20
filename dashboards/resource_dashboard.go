@@ -2,9 +2,11 @@ package dashboards
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -124,6 +126,14 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
+
+			// Deletion of a dashboard moves it to the trash and subsequent reads still return the trashed dashboard.
+			// It cannot be updated unless it is untrashed, so we treat it as deleted to force recreation.
+			if resp.LifecycleState == dashboards.LifecycleStateTrashed {
+				d.SetId("")
+				return nil
+			}
+
 			d.Set("dashboard_change_detected", (resp.Etag != d.Get("etag").(string)))
 			return common.StructToData(resp, dashboardSchema, d)
 		},
@@ -175,9 +185,32 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Lakeview.Trash(ctx, dashboards.TrashDashboardRequest{
+
+			// Attempt to trash the dashboard.
+			err = w.Lakeview.Trash(ctx, dashboards.TrashDashboardRequest{
 				DashboardId: d.Id(),
 			})
+
+			// If the dashboard was already trashed, we'll get a 403 (Permission Denied) error.
+			// There may be other cases where we get a 403, so we first confirm that the
+			// dashboard state is actually trashed, and if so, return success.
+			if errors.Is(err, apierr.ErrPermissionDenied) {
+				dashboard, nerr := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+					DashboardId: d.Id(),
+				})
+
+				// Return original error if we can't get the dashboard state.
+				if nerr != nil {
+					return err
+				}
+
+				// If the dashboard is trashed, return success.
+				if dashboard.LifecycleState == dashboards.LifecycleStateTrashed {
+					return nil
+				}
+			}
+
+			return err
 		},
 	}
 }

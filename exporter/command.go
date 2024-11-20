@@ -49,7 +49,7 @@ func (ic *importContext) allServicesAndListing() (string, string) {
 	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")
 }
 
-func (ic *importContext) interactivePrompts() {
+func (ic *importContext) interactivePrompts() string {
 	req, _ := http.NewRequest("GET", "/", nil)
 	for ic.Client.DatabricksClient.Config.Authenticate(req) != nil {
 		ic.Client.DatabricksClient.Config.Host = askFor("🔑 Databricks Workspace URL:")
@@ -71,20 +71,23 @@ func (ic *importContext) interactivePrompts() {
 		}
 	}
 
-	ic.listing = map[string]struct{}{}
 	keys := maps.Keys(services)
 	slices.Sort(keys)
+	enabledServices := map[string]struct{}{}
 	for _, service := range keys {
 		resources := services[service]
 		if !askFlag(fmt.Sprintf("✅ Generate for service `%s` (%s) and related resources?",
 			service, strings.Join(resources, ","))) {
 			continue
 		}
-		ic.listing[service] = struct{}{}
 		if service == "mounts" {
 			ic.mounts = true
 		}
+		enabledServices[service] = struct{}{}
 	}
+	keys = maps.Keys(enabledServices)
+	slices.Sort(keys)
+	return strings.Join(keys, ",")
 }
 
 // Run import according to flags
@@ -164,7 +167,7 @@ func Run(args ...string) error {
 		return err
 	}
 	if !skipInteractive {
-		ic.interactivePrompts()
+		configuredListing = ic.interactivePrompts()
 	}
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"

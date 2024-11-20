@@ -27,8 +27,9 @@ type UsersDataSource struct {
 }
 
 type UsersInfo struct {
-	Filter types.String  `json:"filter,omitempty"`
-	Users  []iam_tf.User `json:"users,omitempty" tf:"computed"`
+	Filter          types.String  `json:"filter,omitempty"`
+	ExtraAttributes types.String  `json:"extra_attributes,omitempty"`
+	Users           []iam_tf.User `json:"users,omitempty" tf:"computed"`
 }
 
 func (d *UsersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -51,10 +52,15 @@ func (d *UsersDataSource) Configure(_ context.Context, req datasource.ConfigureR
 
 func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var usersInfo UsersInfo
+	var attributes string = "id,userName,displayName,externalId,"
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &usersInfo)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if !(usersInfo.ExtraAttributes.IsNull()) {
+		attributes += usersInfo.ExtraAttributes.String()
 	}
 
 	var users []iam.User
@@ -67,7 +73,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			return
 		}
 
-		users, err = a.Users.ListAll(ctx, iam.ListAccountUsersRequest{Filter: usersInfo.Filter.ValueString()})
+		users, err = a.Users.ListAll(ctx, iam.ListAccountUsersRequest{Filter: usersInfo.Filter.ValueString(), Attributes: attributes})
 		if err != nil {
 			resp.Diagnostics.AddError("Error listing account users", err.Error())
 		}

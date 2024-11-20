@@ -4,6 +4,8 @@ subcategory: "Security"
 
 # databricks_users Data Source
 
+-> This data source works with both the account-level and workspace-level provider. 
+
 -> If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
 
 Retrieves information about multiple [databricks_user](../resources/user.md) resources.
@@ -32,6 +34,8 @@ resource "databricks_group_member" "add_users_to_group" {
 
 This data source allows you to filter the list of users using the following optional arguments: 
 
+-> Attribute names and operators used in filters are case-insensitive. Find more information [here](https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2.2).  
+
 - `filter` - (Optional) Query by which the results have to be filtered. If not specified, all users will be returned. Supported operators are equals (`eq`), contains (`co`), starts with (`sw`), and not equals (`ne`). Additionally, simple expressions can be formed using logical operators `and` and `or`.
 
   **Examples:**
@@ -43,6 +47,8 @@ This data source allows you to filter the list of users using the following opti
     ```hcl
       filter = "displayName co \"john\" or userName co \"@domain.org\""
     ```
+
+- `extra_attributes` - (Optional) A list of additional user attributes to include in the results. By default, the data source returns the following attributes: `id`, `userName`, `displayName`, and `externalId`. Use this argument to request additional attributes as needed. The list of all available attributes can be found in the [API reference](https://docs.databricks.com/api/workspace/users/list). 
 
 ## Attribute Reference
 
@@ -56,13 +62,26 @@ This data source exposes the following attributes:
       - `givenName` - Given name of the Databricks user.
       - `familyName` - Family name of the Databricks user.
     - `displayName` - The display name of the user. 
-    - `roles` - Indicates if the user has the admin role.
+    - `groups` - Indicates if the user is part of any groups. 
       - `$ref`
       - `value`
       - `display`
       - `primary`
       - `type`
-    - `externalId` - reserved for future use. 
+    - `entitlements` - Entitlements assigned to the user. 
+      - `$ref`
+      - `value`
+      - `display`
+      - `primary`
+      - `type`
+    - `roles` - Indicates if the user has any associated roles.
+      - `$ref`
+      - `value`
+      - `display`
+      - `primary`
+      - `type`
+    - `schemas` - The schema of the user. 
+    - `externalId` - Reserved for future use. 
     - `active` - Boolean that represents if this user is active. 
 
 ## Related Resources

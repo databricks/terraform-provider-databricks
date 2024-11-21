@@ -34,7 +34,10 @@ func (appStruct) Aliases() map[string]map[string]string {
 func (appStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 
 	// Required fields & validation
-	s.SchemaPath("name").SetRequired().SetForceNew().SetValidateFunc(validation.StringMatch(regexp.MustCompile("^[a-z-]{2,30}$"), "name must contain only lowercase alphanumeric characters and hyphens, and be between 2 and 30 characters long"))
+	appNameValidationFunc := validation.StringMatch(
+		regexp.MustCompile("^[a-z-]{2,30}$"),
+		"name must contain only lowercase alphanumeric characters and hyphens, and be between 2 and 30 characters long")
+	s.SchemaPath("name").SetRequired().SetForceNew().SetValidateFunc(appNameValidationFunc)
 	// Resources should be a set
 	s.SchemaPath("resource").SetSliceSet()
 	// Computed fields

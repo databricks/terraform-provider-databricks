@@ -13,18 +13,27 @@ Apps run directly on a customer’s Databricks instance, integrate with their da
 resource "databricks_app" "this" {
   name             = "my-custom-app"
   description      = "My app"
-  sql_warehouse {
-    id = "e9ca293f79a74b5c"
-    permission = "CAN_MANAGE"
+  resource {
+    name = "sql-warehouse"
+    sql_warehouse {
+      id = "e9ca293f79a74b5c"
+      permission = "CAN_MANAGE"
+    }
   }
-  serving_endpoint {
-    name = "databricks-meta-llama-3-1-70b-instruct"
-    permission = "CAN_MANAGE"
+  resource {
+    name = "serving-endpoint"
+    serving_endpoint {
+      name = "databricks-meta-llama-3-1-70b-instruct"
+      permission = "CAN_MANAGE"
+    }
   }
-  job {
-    id = "1234"
-    permission = "CAN_MANAGE"
-  }  
+  resource {
+    name = "job"
+    job {
+      id = "1234"
+      permission = "CAN_MANAGE"
+    }
+  } 
 }
 ```
 
@@ -90,5 +99,7 @@ terraform import databricks_app.this <app_name>
 
 The following resources are used in the same context:
 
-* [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
-* [databricks_library](library.md) to install a [library](https://docs.databricks.com/libraries/index.html) on [databricks_cluster](cluster.md).
+* [databricks_sql_endpoint](sql_endpoint.md) to manage Databricks SQL [Endpoints](https://docs.databricks.com/sql/admin/sql-endpoints.html).
+* [databricks_model_serving](model_serving.md) to serve this model on a Databricks serving endpoint.
+* [databricks_secret](secret.md) to manage [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
+* [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code.

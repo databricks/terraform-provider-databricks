@@ -272,6 +272,38 @@ func TestResourceSQLEndpointUpdateHealthNoDiff(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourceSQLEndpointUpdateNoAutoTermination(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceSqlEndpoint(),
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"name":                 "foo",
+			"cluster_size":         "Small",
+			"auto_stop_mins":       "120",
+			"enable_photon":        "true",
+			"max_num_clusters":     "1",
+			"spot_instance_policy": "COST_OPTIMIZED",
+		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"auto_stop_mins":            {Old: "120", New: "0", NewComputed: false, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"state":                     {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"odbc_params.#":             {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_clusters":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"num_active_sessions":       {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"jdbc_url":                  {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"id":                        {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"enable_serverless_compute": {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"data_source_id":            {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+			"creator_name":              {Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false},
+		},
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestResourceSQLEndpointDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {

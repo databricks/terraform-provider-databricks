@@ -1070,7 +1070,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nameNormalizationRegex.ReplaceAllString(strings.Split(s, "@")[0], "_") + "_" + d.Id()
 		},
-		// TODO: we need to add List operation here as well
+		List: func(ic *importContext) error {
+			ic.getUsersMapping()
+			ic.allUsersMutex.RLocker().Lock()
+			userMapping := maps.Clone(ic.allUsersMapping)
+			ic.allUsersMutex.RLocker().Unlock()
+			for userName, userScimId := range userMapping {
+				log.Printf("[TRACE] Emitting user %s, SCIM id=%s", userName, userScimId)
+				ic.Emit(&resource{
+					Resource: "databricks_user",
+					ID:       userScimId,
+				})
+			}
+			return nil
+		},
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findUserByName(r.Value, false)
 			if err != nil {
@@ -1113,7 +1126,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return name + "_" + d.Id()
 		},
-		// TODO: we need to add List operation here as well
+		List: func(ic *importContext) error {
+			ic.getSpsMapping()
+			ic.spsMutex.RLock()
+			spsMapping := maps.Clone(ic.allSpsMapping)
+			ic.spsMutex.RLocker().Unlock()
+			for applicationId, appScimId := range spsMapping {
+				log.Printf("[TRACE] Emitting service principal %s, SCIM id=%s", applicationId, appScimId)
+				ic.Emit(&resource{
+					Resource: "databricks_service_principal",
+					ID:       appScimId,
+				})
+			}
+			return nil
+		},
 		Search: func(ic *importContext, r *resource) error {
 			u, err := ic.findSpnByAppID(r.Value, false)
 			if err != nil {

@@ -82,6 +82,54 @@ func TestVectorSearchIndexCreate(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestVectorSearchIndexCreateNotReadyButIndexedRows(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockVectorSearchIndexesAPI().EXPECT()
+			e.CreateIndex(mock.Anything, vectorsearch.CreateVectorIndexRequest{
+				Name:         "abc",
+				EndpointName: "test",
+				PrimaryKey:   "id",
+				IndexType:    "DELTA_SYNC",
+				DeltaSyncIndexSpec: &vectorsearch.DeltaSyncVectorIndexSpecRequest{
+					SourceTable:  "main.default.test",
+					PipelineType: "TRIGGERED",
+					EmbeddingSourceColumns: []vectorsearch.EmbeddingSourceColumn{
+						{
+							Name:                       "text",
+							EmbeddingModelEndpointName: "e5_small_v2",
+						},
+					},
+				},
+			}).Return(&vectorsearch.CreateVectorIndexResponse{}, nil)
+			e.GetIndexByIndexName(mock.Anything, "abc").Return(&vectorsearch.VectorIndex{
+				Name:         "abc",
+				EndpointName: "test",
+				PrimaryKey:   "id",
+				IndexType:    "DELTA_SYNC",
+				DeltaSyncIndexSpec: &vectorsearch.DeltaSyncVectorIndexSpecResponse{
+					SourceTable:  "main.default.test",
+					PipelineType: "TRIGGERED",
+					EmbeddingSourceColumns: []vectorsearch.EmbeddingSourceColumn{
+						{
+							Name:                       "text",
+							EmbeddingModelEndpointName: "e5_small_v2",
+						},
+					},
+				},
+				Status: &vectorsearch.VectorIndexStatus{
+					IndexedRowCount: 10,
+				},
+			}, nil)
+		},
+		Resource: ResourceVectorSearchIndex(),
+		HCL:      indexHcl,
+		Create:   true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestVectorSearchIndexRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

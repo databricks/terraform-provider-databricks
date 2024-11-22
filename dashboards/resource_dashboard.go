@@ -126,6 +126,14 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
+
+			// Deletion of a dashboard moves it to the trash and subsequent reads still return the trashed dashboard.
+			// It cannot be updated unless it is untrashed, so we treat it as deleted to force recreation.
+			if resp.LifecycleState == dashboards.LifecycleStateTrashed {
+				d.SetId("")
+				return nil
+			}
+
 			d.Set("dashboard_change_detected", (resp.Etag != d.Get("etag").(string)))
 			return common.StructToData(resp, dashboardSchema, d)
 		},

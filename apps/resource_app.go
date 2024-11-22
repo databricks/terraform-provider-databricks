@@ -49,6 +49,7 @@ func (appStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 		"creator",
 		"default_source_code_path",
 		"pending_deployment",
+		"service_principal_client_id",
 		"service_principal_id",
 		"service_principal_name",
 		"update_time",

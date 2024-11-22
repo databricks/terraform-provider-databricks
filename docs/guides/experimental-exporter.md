@@ -148,7 +148,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-system-schemas` - **listing** exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `uc-tables` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_sql_table](../resources/sql_table.md) resource.
 * `uc-volumes` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_volume](../resources/volume.md)
-* `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
+* `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
 * `vector-search` - **listing** exports [databricks_vector_search_endpoint](../resources/vector_search_endpoint.md) and [databricks_vector_search_index](../resources/vector_search_index.md)
 * `workspace` - **listing** [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
 * `wsfiles` - **listing** [databricks_workspace_file](../resources/workspace_file.md).

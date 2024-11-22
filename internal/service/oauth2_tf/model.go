@@ -217,6 +217,7 @@ func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(exi
 
 // Get OAuth Custom App Integration
 type GetCustomAppIntegrationRequest struct {
+	// The OAuth app integration ID.
 	IntegrationId types.String `tfsdk:"-"`
 }
 

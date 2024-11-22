@@ -61,10 +61,20 @@ resource "aws_s3_bucket_policy" "logdelivery" {
   policy = data.databricks_aws_bucket_policy.logdelivery.json
 }
 
+resource "time_sleep" "wait" {
+  depends_on = [
+    aws_iam_role.logdelivery
+  ]
+  create_duration = "10s"
+}
+
 resource "databricks_mws_credentials" "log_writer" {
   account_id       = var.databricks_account_id
   credentials_name = "Usage Delivery"
   role_arn         = aws_iam_role.logdelivery.arn
+  depends_on = [
+    time_sleep.wait
+  ]
 }
 
 resource "databricks_mws_storage_configurations" "log_bucket" {

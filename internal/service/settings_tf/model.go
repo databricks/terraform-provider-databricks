@@ -763,7 +763,7 @@ func (newState *DeleteRestrictWorkspaceAdminsSettingResponse) SyncEffectiveField
 
 // Delete a token
 type DeleteTokenManagementRequest struct {
-	// The ID of the token to get.
+	// The ID of the token to revoke.
 	TokenId types.String `tfsdk:"-"`
 }
 
@@ -2391,7 +2391,7 @@ type UpdateNotificationDestinationRequest struct {
 	Config []Config `tfsdk:"config" tf:"optional,object"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
-
+	// UUID identifying notification destination.
 	Id types.String `tfsdk:"-"`
 }
 

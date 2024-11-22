@@ -157,6 +157,23 @@ func TestDashboardRead(t *testing.T) {
 	})
 }
 
+func TestDashboardReadTrashed(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockLakeviewAPI().EXPECT().Get(mock.Anything, dashboards.GetDashboardRequest{
+				DashboardId: "xyz",
+			}).Return(&dashboards.Dashboard{
+				DashboardId:    "xyz",
+				LifecycleState: dashboards.LifecycleStateTrashed,
+			}, nil)
+		},
+		Resource: ResourceDashboard(),
+		Read:     true,
+		Removed:  true,
+		ID:       "xyz",
+	}.ApplyNoError(t)
+}
+
 func TestDashboardUpdate(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

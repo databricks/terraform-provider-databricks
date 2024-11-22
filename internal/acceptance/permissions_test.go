@@ -947,3 +947,22 @@ func TestAccPermissions_Query(t *testing.T) {
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for query, allowed levels: CAN_MANAGE"),
 	})
 }
+
+func TestAccPermissions_App(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	queryTemplate := `
+		resource "databricks_app" "this" {
+			name = "{var.RANDOM}"
+			description = "Test app"
+		}`
+	WorkspaceLevel(t, Step{
+		Template: queryTemplate + makePermissionsTestStage("app_name", "databricks_app.this.name", groupPermissions("CAN_USE")),
+	}, Step{
+		Template: queryTemplate + makePermissionsTestStage("app_name", "databricks_app.this.name",
+			currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+	}, Step{
+		Template: queryTemplate + makePermissionsTestStage("app_name", "databricks_app.this.name",
+			currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for apps, allowed levels: CAN_MANAGE"),
+	})
+}

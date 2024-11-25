@@ -9,7 +9,8 @@ subcategory: "Unity Catalog"
 
 A credential represents an authentication and authorization mechanism for accessing services on your cloud tenant. Each credential is subject to Unity Catalog access-control policies that control which users and groups can access the credential.
 
-To create credentials, you must be a Databricks account admin or have the `CREATE SERVICE CREDENTIAL` privilege. The user who creates the credential can delegate ownership to another user or group to manage permissions on it
+The type of credential to be created is determined by the `purpose` field, which should be either `SERVICE` or `STORAGE`.
+The caller must be a metastore admin or have the metastore privilege `CREATE_STORAGE_CREDENTIAL` for storage credentials, or `CREATE_SERVICE_CREDENTIAL` for service credentials. The user who creates the credential can delegate ownership to another user or group to manage permissions on it
 
 On AWS, the IAM role for a credential requires a trust policy. See [documentation](https://docs.databricks.com/en/connect/unity-catalog/cloud-services/service-credentials.html#step-1-create-an-iam-role) for more details. The data source [databricks_aws_unity_catalog_assume_role_policy](../data-sources/aws_unity_catalog_assume_role_policy.md) can be used to create the necessary AWS Unity Catalog assume role policy.
 
@@ -62,9 +63,9 @@ resource "databricks_grants" "external_creds" {
 The following arguments are required:
 
 - `name` - Name of Credentials, which must be unique within the [databricks_metastore](metastore.md). Change forces creation of a new resource.
-- `purpose` - Indicates the purpose of the credential. Can be `SERVICE`.
+- `purpose` - Indicates the purpose of the credential. Can be `SERVICE` or `STORAGE`.
 - `owner` - (Optional) Username/groupname/sp application_id of the credential owner.
-- `read_only` - (Optional) Indicates whether the credential is only usable for read operations.
+- `read_only` - (Optional) Indicates whether the credential is only usable for read operations. Only applicable when purpose is `STORAGE`.
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the credential.
 - `force_destroy` - (Optional) Delete credential regardless of its dependencies.
 - `force_update` - (Optional) Update credential regardless of its dependents.
@@ -79,6 +80,12 @@ The following arguments are required:
 - `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`.
 
 - `managed_identity_id` - (Optional) The Resource ID of the Azure User Assigned Managed Identity associated with Azure Databricks Access Connector, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.ManagedIdentity/userAssignedIdentities/user-managed-identity-name`.
+
+`azure_service_principal` optional configuration block to use service principal as credential details for Azure. Only applicable when purpose is `STORAGE` (Legacy):
+
+- `directory_id` - The directory ID corresponding to the Azure Active Directory (AAD) tenant of the application
+- `application_id` - The application ID of the application registration within the referenced AAD tenant
+- `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
 ## Attribute Reference
 

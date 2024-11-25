@@ -396,8 +396,8 @@ type CreateJob struct {
 	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
 	// user who created the job/pipeline.
 	//
-	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
-	// be specified. If not, an error is thrown.
+	// Either `user_name` or `service_principal_name` should be specified. If
+	// not, an error is thrown.
 	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
@@ -1192,8 +1192,8 @@ func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingSta
 // job/pipeline runs as. If not specified, the job/pipeline runs as the user who
 // created the job/pipeline.
 //
-// Exactly one of `user_name`, `service_principal_name`, `group_name` should be
-// specified. If not, an error is thrown.
+// Either `user_name` or `service_principal_name` should be specified. If not,
+// an error is thrown.
 type JobRunAs struct {
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
@@ -1287,8 +1287,8 @@ type JobSettings struct {
 	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
 	// user who created the job/pipeline.
 	//
-	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
-	// be specified. If not, an error is thrown.
+	// Either `user_name` or `service_principal_name` should be specified. If
+	// not, an error is thrown.
 	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI

@@ -248,7 +248,7 @@ type AzureManagedIdentity struct {
 	// The Azure resource ID of the Azure Databricks Access Connector. Use the
 	// format
 	// `/subscriptions/{guid}/resourceGroups/{rg-name}/providers/Microsoft.Databricks/accessConnectors/{connector-name}`.
-	AccessConnectorId types.String `tfsdk:"access_connector_id" tf:"optional"`
+	AccessConnectorId types.String `tfsdk:"access_connector_id" tf:""`
 	// The Databricks internal ID that represents this managed identity. This
 	// field is only used to persist the credential_id once it is fetched from
 	// the credentials manager - as we only use the protobuf serializer to store
@@ -311,6 +311,7 @@ func (newState *AzureManagedIdentityResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *AzureManagedIdentityResponse) SyncEffectiveFieldsDuringRead(existingState AzureManagedIdentityResponse) {
 }
 
+// The Azure service principal configuration.
 type AzureServicePrincipal struct {
 	// The application ID of the application registration within the referenced
 	// AAD tenant.
@@ -615,13 +616,19 @@ type CreateCredentialRequest struct {
 	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	// The Azure service principal configuration.
+	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment              types.String           `tfsdk:"comment" tf:"optional"`
+	GcpServiceAccountKey []GcpServiceAccountKey `tfsdk:"gcp_service_account_key" tf:"optional,object"`
 	// The credential name. The name must be unique among storage and service
 	// credentials within the metastore.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name" tf:""`
 	// Indicates the purpose of the credential.
 	Purpose types.String `tfsdk:"purpose" tf:"optional"`
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
+	ReadOnly types.Bool `tfsdk:"read_only" tf:"optional"`
 	// Optional. Supplying true to this argument skips validation of the created
 	// set of credentials.
 	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
@@ -940,6 +947,8 @@ type CredentialInfo struct {
 	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	// The Azure service principal configuration.
+	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Time at which this credential was created, in epoch milliseconds.
@@ -962,10 +971,16 @@ type CredentialInfo struct {
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Indicates the purpose of the credential.
 	Purpose types.String `tfsdk:"purpose" tf:"optional"`
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
+	ReadOnly types.Bool `tfsdk:"read_only" tf:"optional"`
 	// Time at which this credential was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 	// Username of user who last modified the credential.
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	// Whether this credential is the current metastore's root storage
+	// credential. Only applicable when purpose is **STORAGE**.
+	UsedForManagedStorage types.Bool `tfsdk:"used_for_managed_storage" tf:"optional"`
 }
 
 func (newState *CredentialInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CredentialInfo) {
@@ -1118,7 +1133,9 @@ func (newState *DeleteConnectionRequest) SyncEffectiveFieldsDuringRead(existingS
 
 // Delete a credential
 type DeleteCredentialRequest struct {
-	// Force deletion even if there are dependent services.
+	// Force an update even if there are dependent services (when purpose is
+	// **SERVICE**) or dependent external locations and external tables (when
+	// purpose is **STORAGE**).
 	Force types.Bool `tfsdk:"-"`
 	// Name of the credential.
 	NameArg types.String `tfsdk:"-"`
@@ -1717,6 +1734,22 @@ func (newState *GcpOauthToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpO
 func (newState *GcpOauthToken) SyncEffectiveFieldsDuringRead(existingState GcpOauthToken) {
 }
 
+// GCP long-lived credential. GCP Service Account.
+type GcpServiceAccountKey struct {
+	// The email of the service account.
+	Email types.String `tfsdk:"email" tf:"optional"`
+	// The service account's RSA private key.
+	PrivateKey types.String `tfsdk:"private_key" tf:"optional"`
+	// The ID of the service account's private key.
+	PrivateKeyId types.String `tfsdk:"private_key_id" tf:"optional"`
+}
+
+func (newState *GcpServiceAccountKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpServiceAccountKey) {
+}
+
+func (newState *GcpServiceAccountKey) SyncEffectiveFieldsDuringRead(existingState GcpServiceAccountKey) {
+}
+
 // Options to customize the requested temporary credential
 type GenerateTemporaryServiceCredentialAzureOptions struct {
 	// The resources to which the temporary Azure credential should apply. These
@@ -1736,7 +1769,7 @@ type GenerateTemporaryServiceCredentialRequest struct {
 	AzureOptions []GenerateTemporaryServiceCredentialAzureOptions `tfsdk:"azure_options" tf:"optional,object"`
 	// The name of the service credential used to generate a temporary
 	// credential
-	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
+	CredentialName types.String `tfsdk:"credential_name" tf:""`
 }
 
 func (newState *GenerateTemporaryServiceCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialRequest) {
@@ -4011,9 +4044,13 @@ type UpdateCredentialRequest struct {
 	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	// The Azure service principal configuration.
+	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
-	// Force update even if there are dependent services.
+	// Force an update even if there are dependent services (when purpose is
+	// **SERVICE**) or dependent external locations and external tables (when
+	// purpose is **STORAGE**).
 	Force types.Bool `tfsdk:"force" tf:"optional"`
 	// Whether the current securable is accessible from all workspaces or a
 	// specific set of workspaces.
@@ -4024,6 +4061,9 @@ type UpdateCredentialRequest struct {
 	NewName types.String `tfsdk:"new_name" tf:"optional"`
 	// Username of current owner of credential.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
+	// Whether the credential is usable only for read operations. Only
+	// applicable when purpose is **STORAGE**.
+	ReadOnly types.Bool `tfsdk:"read_only" tf:"optional"`
 	// Supply true to this argument to skip validation of the updated
 	// credential.
 	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
@@ -4360,9 +4400,18 @@ type ValidateCredentialRequest struct {
 	// Required. The name of an existing credential or long-lived cloud
 	// credential to validate.
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
+	// The name of an existing external location to validate. Only applicable
+	// for storage credentials (purpose is **STORAGE**.)
+	ExternalLocationName types.String `tfsdk:"external_location_name" tf:"optional"`
 	// The purpose of the credential. This should only be used when the
 	// credential is specified.
 	Purpose types.String `tfsdk:"purpose" tf:"optional"`
+	// Whether the credential is only usable for read operations. Only
+	// applicable for storage credentials (purpose is **STORAGE**.)
+	ReadOnly types.Bool `tfsdk:"read_only" tf:"optional"`
+	// The external location url to validate. Only applicable when purpose is
+	// **STORAGE**.
+	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
 func (newState *ValidateCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ValidateCredentialRequest) {
@@ -4372,6 +4421,9 @@ func (newState *ValidateCredentialRequest) SyncEffectiveFieldsDuringRead(existin
 }
 
 type ValidateCredentialResponse struct {
+	// Whether the tested location is a directory in cloud storage. Only
+	// applicable for when purpose is **STORAGE**.
+	IsDir types.Bool `tfsdk:"isDir" tf:"optional"`
 	// The results of the validation check.
 	Results []CredentialValidationResult `tfsdk:"results" tf:"optional"`
 }

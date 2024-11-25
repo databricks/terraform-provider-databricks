@@ -108,7 +108,7 @@ func TestWorkspaceDataSourceDataUsers(t *testing.T) {
 }
 
 func TestAccDataSourceUsers_WithGroups(t *testing.T) {
-	acceptance.WorkspaceLevel(t, acceptance.Step{
+	acceptance.AccountLevel(t, acceptance.Step{
 		Template: dataSourceTemplateExtraAttributes,
 		Check:    checkUsersDataSourceWithGroups(t),
 	})

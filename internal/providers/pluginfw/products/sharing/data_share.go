@@ -7,12 +7,15 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/sharing"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
+
+const dataSourceNameShare = "share"
 
 func DataSourceShare() datasource.DataSource {
 	return &ShareDataSource{}
@@ -25,7 +28,7 @@ type ShareDataSource struct {
 }
 
 func (d *ShareDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksStagingName("share")
+	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceNameShare)
 }
 
 func (d *ShareDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -43,6 +46,7 @@ func (d *ShareDataSource) Configure(_ context.Context, req datasource.ConfigureR
 }
 
 func (d *ShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceNameShare)
 	w, diags := d.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

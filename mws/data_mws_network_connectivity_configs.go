@@ -24,17 +24,17 @@ func DataSourceMwsNetworkConnectivityConfigs() common.Resource {
 			return nil, err
 		}
 
+		names := []string{}
+
 		if data.Region != "" {
-			filtered := []string{}
 			for _, ncc := range list {
 				if data.Region == ncc.Region {
-					filtered = append(filtered, ncc.Name)
+					names = append(names, ncc.Name)
 				}
 			}
-			return &mwsNetworkConnectivityConfiguration{Names: filtered}, nil
+			return &mwsNetworkConnectivityConfiguration{Names: names}, nil
 		}
 
-		names := []string{}
 		for _, ncc := range list {
 			names = append(names, ncc.Name)
 		}

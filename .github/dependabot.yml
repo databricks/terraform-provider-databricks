@@ -6,3 +6,6 @@ updates:
       interval: "daily"
     commit-message:
       prefix: "[Dependency] "
+    ignore:
+      # Ignore Databricks Go SDK because its upgrade requires code generation
+      - dependency-name: github.com/databricks/databricks-sdk-go

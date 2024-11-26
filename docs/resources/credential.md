@@ -73,9 +73,9 @@ The following arguments are required:
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
-- `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
+- `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role you want to use to setup the trust policy, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
 
-`azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
+`azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over `azure_service_principal`):
 
 - `access_connector_id` - The Resource ID of the Azure Databricks Access Connector resource, of the form `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-name/providers/Microsoft.Databricks/accessConnectors/connector-name`.
 

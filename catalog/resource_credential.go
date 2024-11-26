@@ -11,22 +11,25 @@ import (
 
 var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity"}
+		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal"}
 		for _, cred := range alofServiceCreds {
-			common.CustomizeSchemaPath(m, cred).SetAtLeastOneOf(alofServiceCreds)
+			common.CustomizeSchemaPath(m, cred).SetExactlyOneOf(alofServiceCreds)
 		}
 
 		for _, required := range []string{"name", "purpose"} {
 			common.CustomizeSchemaPath(m, required).SetRequired()
 		}
 
-		for _, computed := range []string{"id", "created_at", "created_by", "full_name", "isolation_mode", "metastore_id", "owner", "updated_at", "updated_by"} {
+		for _, computed := range []string{"id", "created_at", "created_by", "full_name", "isolation_mode",
+			"metastore_id", "owner", "updated_at", "updated_by", "used_for_managed_storage"} {
 			common.CustomizeSchemaPath(m, computed).SetComputed()
 		}
 
 		common.MustSchemaPath(m, "aws_iam_role", "external_id").Computed = true
 		common.MustSchemaPath(m, "aws_iam_role", "unity_catalog_iam_arn").Computed = true
 		common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
+		common.MustSchemaPath(m, "azure_service_principal", "client_secret").Sensitive = true
+
 		m["force_destroy"] = &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,

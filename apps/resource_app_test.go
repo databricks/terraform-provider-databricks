@@ -263,7 +263,7 @@ func TestResourceAppsCreateExactlyOnce(t *testing.T) {
 		}		
 		`,
 		Resource: ResourceApp(),
-	}.ExpectError(t, "Exactly one resource type per resource block should be provided")
+	}.ExpectError(t, "exactly one resource type per resource block should be provided")
 }
 
 func TestResourceAppsRead(t *testing.T) {

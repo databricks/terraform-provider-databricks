@@ -91,8 +91,8 @@ func ResourceApp() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var createApp appStruct
 			common.DataToStructPointer(d, appSchema, &createApp)
-			if appHasExactlyOneOfResourceType(d) == false {
-				return errors.New("Exactly one resource type per resource block should be provided")
+			if !appHasExactlyOneOfResourceType(d) {
+				return errors.New("exactly one resource type per resource block should be provided")
 			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -133,8 +133,8 @@ func ResourceApp() common.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update appStruct
 			common.DataToStructPointer(d, appSchema, &update)
-			if appHasExactlyOneOfResourceType(d) == false {
-				return errors.New("Exactly one resource type per resource block should be provided")
+			if !appHasExactlyOneOfResourceType(d) {
+				return errors.New("exactly one resource type per resource block should be provided")
 			}
 			w, err := c.WorkspaceClient()
 			if err != nil {

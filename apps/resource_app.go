@@ -2,14 +2,13 @@ package apps
 
 import (
 	"context"
+	"errors"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -33,11 +32,8 @@ func (appStruct) Aliases() map[string]map[string]string {
 
 func (appStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 
-	// Required fields & validation
-	appNameValidationFunc := validation.StringMatch(
-		regexp.MustCompile("^[a-z-]{2,30}$"),
-		"name must contain only lowercase alphanumeric characters and hyphens, and be between 2 and 30 characters long")
-	s.SchemaPath("name").SetRequired().SetForceNew().SetValidateFunc(appNameValidationFunc)
+	// Name is required and cannot be updated
+	s.SchemaPath("name").SetRequired().SetForceNew()
 	// Resources should be a set
 	s.SchemaPath("resource").SetSliceSet()
 	// Computed fields
@@ -63,11 +59,41 @@ func (appStruct) CustomizeSchema(s *common.CustomizableSchema) *common.Customiza
 
 var appSchema = common.StructToSchema(appStruct{}, nil)
 
+// each resource block should have exactly one resource type
+func appHasExactlyOneOfResourceType(d *schema.ResourceData) bool {
+	if _, ok := d.GetOk("resource"); ok {
+		// resources is a TF set
+		resources := d.Get("resource").(*schema.Set).List()
+		for _, resource := range resources {
+			resource := resource.(map[string]interface{})
+			count := 0
+			for _, v := range resource {
+				// each resource type is stored as a list of maps. check for non-empty list
+				if value, ok := v.([]interface{}); ok {
+					if len(value) == 0 {
+						continue
+					}
+					count++
+				}
+			}
+			if count != 1 {
+				return false
+			}
+		}
+		return true
+	} else {
+		return false
+	}
+}
+
 func ResourceApp() common.Resource {
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var createApp appStruct
 			common.DataToStructPointer(d, appSchema, &createApp)
+			if appHasExactlyOneOfResourceType(d) == false {
+				return errors.New("Exactly one resource type per resource block should be provided")
+			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
@@ -80,8 +106,9 @@ func ResourceApp() common.Resource {
 			if err != nil {
 				return err
 			}
+			d.SetId(wait.Name)
 			// wait for up to the create timeout, accounting for the deletion on failure.
-			app, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate) - deleteCallTimeout)
+			_, err = wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate) - deleteCallTimeout)
 			if err != nil {
 				log.Printf("[ERROR] Error waiting for app to be created: %s", err.Error())
 				_, nestedErr := w.Apps.DeleteByName(ctx, createApp.Name)
@@ -90,7 +117,6 @@ func ResourceApp() common.Resource {
 				}
 				return err
 			}
-			d.SetId(app.Name)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -107,6 +133,9 @@ func ResourceApp() common.Resource {
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			var update appStruct
 			common.DataToStructPointer(d, appSchema, &update)
+			if appHasExactlyOneOfResourceType(d) == false {
+				return errors.New("Exactly one resource type per resource block should be provided")
+			}
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

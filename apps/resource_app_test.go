@@ -195,7 +195,10 @@ func TestResourceAppsCreate(t *testing.T) {
 			api := a.GetMockAppsAPI().EXPECT()
 			api.Create(mock.Anything, apps.CreateAppRequest{
 				App: getTestAppRequest("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"),
-			}).Return(&apps.WaitGetAppActive[apps.App]{Poll: poll.Simple(*getTestAppResponse("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"))}, nil)
+			}).Return(&apps.WaitGetAppActive[apps.App]{
+				Name: "my-custom-app",
+				Poll: poll.Simple(*getTestAppResponse("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct")),
+			}, nil)
 			api.GetByName(mock.Anything, "my-custom-app").Return(
 				getTestAppResponse("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"), nil)
 		},
@@ -236,6 +239,31 @@ func TestResourceAppsCreate(t *testing.T) {
 		`,
 		Resource: ResourceApp(),
 	}.ApplyAndExpectData(t, getTestAppData("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"))
+}
+
+func TestResourceAppsCreateExactlyOnce(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {},
+		Create:                  true,
+		HCL: `
+		name = "my-custom-app"
+		description = "My app description."
+		resource {
+			name = "api-key"
+			description = "API key for external service."
+			secret {
+				scope = "my-scope"
+				key = "my-key"
+				permission = "READ"
+			}
+			serving_endpoint {
+				name = "databricks-meta-llama-3-1-70b-instruct"
+				permission = "CAN_MANAGE"
+			}
+		}		
+		`,
+		Resource: ResourceApp(),
+	}.ExpectError(t, "Exactly one resource type per resource block should be provided")
 }
 
 func TestResourceAppsRead(t *testing.T) {

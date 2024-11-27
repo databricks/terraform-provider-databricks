@@ -64,6 +64,7 @@ func appHasExactlyOneOfResourceType(d *schema.ResourceData) bool {
 	if _, ok := d.GetOk("resource"); ok {
 		// resources is a TF set
 		resources := d.Get("resource").(*schema.Set).List()
+		log.Printf("resources: %v", resources)
 		for _, resource := range resources {
 			resource := resource.(map[string]interface{})
 			count := 0
@@ -81,9 +82,8 @@ func appHasExactlyOneOfResourceType(d *schema.ResourceData) bool {
 			}
 		}
 		return true
-	} else {
-		return false
 	}
+	return true
 }
 
 func ResourceApp() common.Resource {

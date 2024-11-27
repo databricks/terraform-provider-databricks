@@ -241,6 +241,35 @@ func TestResourceAppsCreate(t *testing.T) {
 	}.ApplyAndExpectData(t, getTestAppData("e9ca293f79a74b5c", "databricks-meta-llama-3-1-70b-instruct"))
 }
 
+var emptyApp = &apps.App{
+	Name:        "my-custom-app",
+	Description: "My app description.",
+}
+
+func TestResourceAppsCreateNoResource(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {
+			api := a.GetMockAppsAPI().EXPECT()
+			api.Create(mock.Anything, apps.CreateAppRequest{
+				App: emptyApp,
+			}).Return(&apps.WaitGetAppActive[apps.App]{
+				Name: "my-custom-app",
+				Poll: poll.Simple(*emptyApp),
+			}, nil)
+			api.GetByName(mock.Anything, "my-custom-app").Return(emptyApp, nil)
+		},
+		Create: true,
+		HCL: `
+		name = "my-custom-app"
+		description = "My app description."		
+		`,
+		Resource: ResourceApp(),
+	}.ApplyAndExpectData(t, map[string]any{
+		"name":        "my-custom-app",
+		"description": "My app description.",
+	})
+}
+
 func TestResourceAppsCreateExactlyOnce(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(a *mocks.MockWorkspaceClient) {},

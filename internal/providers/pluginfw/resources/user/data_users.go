@@ -52,7 +52,7 @@ func (d *UsersDataSource) Configure(_ context.Context, req datasource.ConfigureR
 
 func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var usersInfo UsersInfo
-	var attributes string = "id,userName,displayName,externalId,"
+	attributes := "id,userName,displayName,externalId"
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &usersInfo)...)
 	if resp.Diagnostics.HasError() {
@@ -60,6 +60,7 @@ func (d *UsersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	if !(usersInfo.ExtraAttributes.IsNull()) {
+		attributes += ","
 		attributes += usersInfo.ExtraAttributes.String()
 	}
 

@@ -48,7 +48,7 @@ This data source allows you to filter the list of users using the following opti
       filter = "displayName co \"john\" or userName co \"@domain.org\""
     ```
 
-- `extra_attributes` - (Optional) A list of additional user attributes to include in the results. By default, the data source returns the following attributes: `id`, `userName`, `displayName`, and `externalId`. Use this argument to request additional attributes as needed. The list of all available attributes can be found in the [API reference](https://docs.databricks.com/api/workspace/users/list). 
+- `extra_attributes` - (Optional) A comma-separated list of additional user attributes to include in the results. By default, the data source returns the following attributes: `id`, `userName`, `displayName`, and `externalId`. Use this argument to request additional attributes as needed. The list of all available attributes can be found in the [API reference](https://docs.databricks.com/api/workspace/users/list). 
 
 ## Attribute Reference
 

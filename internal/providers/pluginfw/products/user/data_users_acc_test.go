@@ -90,6 +90,8 @@ func checkUsersDataSourceWithGroups(t *testing.T) func(s *terraform.State) error
 
 		expectedGroupId := s.Modules[0].Resources["databricks_group.admins"].Primary.ID
 		assert.Equal(t, expectedGroupId, groupId, "group id should match the admins group id")
+
+		return nil
 	}
 }
 

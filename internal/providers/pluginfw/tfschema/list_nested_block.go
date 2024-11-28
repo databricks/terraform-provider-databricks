@@ -10,7 +10,7 @@ import (
 // ListNestedBlockBuilder represents a list of complex (non-primitive) types.
 // To be compatible with our sdkv2 schema, all struct types in the gosdk are represented with this type.
 type ListNestedBlockBuilder struct {
-	NestedObject       NestedBlockObject
+	NestedObject       *NestedBlockObject
 	Optional           bool
 	Required           bool
 	Sensitive          bool

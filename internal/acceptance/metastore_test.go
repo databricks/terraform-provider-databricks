@@ -10,36 +10,36 @@ import (
 )
 
 func getStorageRoot(t *testing.T) string {
-	if isAws(t) {
+	if IsAws(t) {
 		return "s3://{env.TEST_BUCKET}/test{var.RANDOM}"
-	} else if isAzure(t) {
+	} else if IsAzure(t) {
 		return "abfss://{var.RANDOM}@{var.RANDOM}/"
-	} else if isGcp(t) {
+	} else if IsGcp(t) {
 		return "gs://{var.RANDOM}/metastore"
 	}
 	return ""
 }
 
 func getRegion(t *testing.T) string {
-	if isAws(t) {
+	if IsAws(t) {
 		return "us-east-1"
-	} else if isAzure(t) {
+	} else if IsAzure(t) {
 		return "eastus"
-	} else if isGcp(t) {
+	} else if IsGcp(t) {
 		return "us-east1"
 	}
 	return ""
 }
 
 func TestUcAccRootlessMetastore(t *testing.T) {
-	loadUcacctEnv(t)
+	LoadUcacctEnv(t)
 	runMetastoreTest(t, map[string]any{
 		"region": getRegion(t),
 	})
 }
 
 func TestUcAccMetastore(t *testing.T) {
-	loadUcacctEnv(t)
+	LoadUcacctEnv(t)
 	runMetastoreTest(t, map[string]any{
 		"storage_root": getStorageRoot(t),
 		"region":       getRegion(t),
@@ -47,7 +47,7 @@ func TestUcAccMetastore(t *testing.T) {
 }
 
 func TestUcAccMetastoreDeltaSharing(t *testing.T) {
-	loadUcacctEnv(t)
+	LoadUcacctEnv(t)
 	runMetastoreTest(t, map[string]any{
 		"storage_root":        getStorageRoot(t),
 		"region":              getRegion(t),
@@ -58,7 +58,7 @@ func TestUcAccMetastoreDeltaSharing(t *testing.T) {
 }
 
 func TestUcAccMetastoreDeltaSharingInfiniteLifetime(t *testing.T) {
-	loadUcacctEnv(t)
+	LoadUcacctEnv(t)
 	runMetastoreTest(t, map[string]any{
 		"storage_root":        getStorageRoot(t),
 		"region":              getRegion(t),
@@ -68,7 +68,7 @@ func TestUcAccMetastoreDeltaSharingInfiniteLifetime(t *testing.T) {
 }
 
 func TestUcAccMetastoreWithOwnerUpdates(t *testing.T) {
-	loadUcacctEnv(t)
+	LoadUcacctEnv(t)
 	runMetastoreTestWithOwnerUpdates(t, map[string]any{
 		"storage_root": getStorageRoot(t),
 		"region":       getRegion(t),

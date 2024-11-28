@@ -12,7 +12,7 @@ import (
 
 // SingleNestedBlockBuilder represents a single nested complex (non-primitive) type.
 type SingleNestedBlockBuilder struct {
-	NestedObject       NestedBlockObject
+	NestedObject       *NestedBlockObject
 	Optional           bool
 	Required           bool
 	Sensitive          bool

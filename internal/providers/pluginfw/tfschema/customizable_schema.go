@@ -16,7 +16,7 @@ type CustomizableSchema struct {
 
 // ConstructCustomizableSchema constructs a CustomizableSchema given a NestedBlockObject.
 func ConstructCustomizableSchema(nestedObject NestedBlockObject) *CustomizableSchema {
-	attr := AttributeBuilder(SingleNestedBlockBuilder{NestedObject: nestedObject})
+	attr := AttributeBuilder(SingleNestedBlockBuilder{NestedObject: &nestedObject})
 	return &CustomizableSchema{attr: attr}
 }
 
@@ -60,6 +60,8 @@ func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSc
 		case ListAttributeBuilder:
 			return a.AddValidator(v.(validator.List))
 		case ListNestedAttributeBuilder:
+			return a.AddValidator(v.(validator.List))
+		case ListNestedBlockBuilder:
 			return a.AddValidator(v.(validator.List))
 		case MapAttributeBuilder:
 			return a.AddValidator(v.(validator.Map))
@@ -168,6 +170,16 @@ func (s *CustomizableSchema) SetComputed(path ...string) *CustomizableSchema {
 func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
 		return attr.SetReadOnly()
+	}
+
+	navigateSchemaWithCallback(&s.attr, cb, path...)
+
+	return s
+}
+
+func (s *CustomizableSchema) Transform(transformer func(BaseSchemaBuilder) BaseSchemaBuilder, path ...string) *CustomizableSchema {
+	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
+		return transformer(attr)
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)

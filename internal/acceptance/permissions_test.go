@@ -68,7 +68,7 @@ func currentPrincipalPermission(t *testing.T, permissionLevel string) func(*make
 		skipCreation:    true,
 	}
 	return func(config *makePermissionsConfig) {
-		if isGcp(t) {
+		if IsGcp(t) {
 			config.user = append(config.user, settings)
 		} else {
 			config.servicePrincipal = append(config.servicePrincipal, settings)
@@ -77,7 +77,7 @@ func currentPrincipalPermission(t *testing.T, permissionLevel string) func(*make
 }
 
 func currentPrincipalType(t *testing.T) string {
-	if isGcp(t) {
+	if IsGcp(t) {
 		return "user"
 	}
 	return "service_principal"
@@ -583,7 +583,7 @@ func TestAccPermissions_Repo_Path(t *testing.T) {
 }
 
 func TestAccPermissions_Authorization_Passwords(t *testing.T) {
-	skipf(t)("ACLs for passwords are disabled on testing workspaces")
+	Skipf(t)("ACLs for passwords are disabled on testing workspaces")
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	WorkspaceLevel(t, Step{
 		Template: makePermissionsTestStage("authorization", "\"passwords\"", groupPermissions("CAN_USE")),
@@ -833,8 +833,8 @@ func TestAccPermissions_RegisteredModel_Root(t *testing.T) {
 
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if isGcp(t) {
-		skipf(t)("Serving endpoints are not supported on GCP")
+	if IsGcp(t) {
+		Skipf(t)("Serving endpoints are not supported on GCP")
 	}
 	endpointTemplate := `
 	resource "databricks_model_serving" "endpoint" {
@@ -950,8 +950,8 @@ func TestAccPermissions_Query(t *testing.T) {
 
 func TestAccPermissions_App(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if isGcp(t) {
-		skipf(t)("not available on GCP")
+	if IsGcp(t) {
+		Skipf(t)("not available on GCP")
 	}
 	queryTemplate := `
 		resource "databricks_app" "this" {

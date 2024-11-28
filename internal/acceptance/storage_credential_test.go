@@ -5,8 +5,8 @@ import (
 )
 
 func TestUcAccStorageCredential(t *testing.T) {
-	loadUcwsEnv(t)
-	if isAws(t) {
+	LoadUcwsEnv(t)
+	if IsAws(t) {
 		UnityWorkspaceLevel(t, Step{
 			Template: `
 				resource "databricks_storage_credential" "external" {
@@ -28,7 +28,7 @@ func TestUcAccStorageCredential(t *testing.T) {
 					comment = "Managed by TF"
 				}`,
 		})
-	} else if isGcp(t) {
+	} else if IsGcp(t) {
 		UnityWorkspaceLevel(t, Step{
 			Template: `
 				resource "databricks_storage_credential" "external" {

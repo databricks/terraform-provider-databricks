@@ -102,8 +102,8 @@ func awsClusterTemplate(availability string) string {
 }
 
 func TestAccClusterResource_CreateAndUpdateAwsAttributes(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isAws(t) {
+	LoadWorkspaceEnv(t)
+	if IsAws(t) {
 		WorkspaceLevel(t, Step{
 			Template: awsClusterTemplate("SPOT"),
 		}, Step{

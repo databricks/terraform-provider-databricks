@@ -23,7 +23,6 @@ const tfSdkToGoSdkFieldConversionFailureMessage = "tfsdk to gosdk field conversi
 //	types.Bool -> bool
 //	types.Int64 -> int64
 //	types.Float64 -> float64
-//	types.String -> string
 //
 // NOTE:
 //
@@ -166,17 +165,17 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 	switch v := srcFieldValue.(type) {
 	case types.Bool:
 		destField.SetBool(v.ValueBool())
-		if !v.IsNull() {
+		if !v.IsNull() && !v.IsUnknown() {
 			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.Int64:
 		destField.SetInt(v.ValueInt64())
-		if !v.IsNull() {
+		if !v.IsNull() && !v.IsUnknown() {
 			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.Float64:
 		destField.SetFloat(v.ValueFloat64())
-		if !v.IsNull() {
+		if !v.IsNull() && !v.IsUnknown() {
 			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.String:
@@ -209,7 +208,7 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 			destField.Set(destVal.Elem())
 		} else {
 			destField.SetString(v.ValueString())
-			if !v.IsNull() {
+			if !v.IsNull() && !v.IsUnknown() {
 				addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 			}
 		}

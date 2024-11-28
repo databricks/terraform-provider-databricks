@@ -8,9 +8,9 @@ import (
 )
 
 func TestUcAccVectorSearchEndpoint(t *testing.T) {
-	loadUcwsEnv(t)
-	if isGcp(t) {
-		skipf(t)("not available on GCP")
+	LoadUcwsEnv(t)
+	if IsGcp(t) {
+		Skipf(t)("not available on GCP")
 	}
 
 	name := fmt.Sprintf("terraform-test-vector-search-%[1]s",

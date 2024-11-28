@@ -92,7 +92,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 					validators = append(validators, listvalidator.SizeAtMost(1))
 				}
 				scmBlock[fieldName] = ListNestedBlockBuilder{
-					NestedObject: NestedBlockObject{
+					NestedObject: &NestedBlockObject{
 						Attributes: nestedScm.Attributes,
 						Blocks:     nestedScm.Blocks,
 					},
@@ -187,7 +187,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 				sv := reflect.New(elem)
 				nestedScm := typeToSchema(sv)
 				scmBlock[fieldName] = ListNestedBlockBuilder{
-					NestedObject: nestedScm,
+					NestedObject: &nestedScm,
 					Optional:     structTag.optional,
 					Required:     !structTag.optional,
 					Computed:     structTag.computed,

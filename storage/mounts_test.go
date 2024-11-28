@@ -74,8 +74,8 @@ func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount
 
 type mockMount struct{}
 
-func (t mockMount) Source() string { return "fake-mount" }
-func (t mockMount) Name() string   { return "fake-mount" }
+func (t mockMount) Source(_ *common.DatabricksClient) string { return "fake-mount" }
+func (t mockMount) Name() string                             { return "fake-mount" }
 func (t mockMount) Config(client *common.DatabricksClient) map[string]string {
 	return map[string]string{"fake-key": "fake-value"}
 }
@@ -84,6 +84,14 @@ func (m mockMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *comm
 }
 
 func TestMountPoint_Mount(t *testing.T) {
+	client := common.DatabricksClient{
+		DatabricksClient: &client.DatabricksClient{
+			Config: &config.Config{
+				Host:  ".",
+				Token: ".",
+			},
+		},
+	}
 	mount := mockMount{}
 	expectedMountSource := "fake-mount"
 	expectedMountConfig := `{"fake-key":"fake-value"}`
@@ -108,14 +116,6 @@ func TestMountPoint_Mount(t *testing.T) {
 		dbutils.notebook.exit(mount_source)
 	`, mountName, expectedMountSource, expectedMountConfig)
 	testMountFuncHelper(t, func(mp MountPoint, mount Mount) (s string, e error) {
-		client := common.DatabricksClient{
-			DatabricksClient: &client.DatabricksClient{
-				Config: &config.Config{
-					Host:  ".",
-					Token: ".",
-				},
-			},
-		}
 		return mp.Mount(mount, &client)
 	}, mount, mountName, expectedCommand)
 }

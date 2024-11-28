@@ -2,9 +2,12 @@ package library
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -35,28 +38,42 @@ func ResourceLibrary() resource.Resource {
 	return &LibraryResource{}
 }
 
-func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams compute.Wait, libraryRep string, libraryExtended *LibraryExtended) diag.Diagnostics {
+var clusterDoesNotExistRegex = regexp.MustCompile(`Cluster [a-z1-9-]+ does not exist`)
+
+// readLibrary reads the status of the specified library on the specified cluster and returns the library metadata.
+// If library cannot be found, either because the cluster doesn't exist, the library is not installed, or some other error, the first return value will be nil.
+// The returned diagnostics will contain any errors or warnings that occurred during the operation, and the caller should check for errors before continuing.
+func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams compute.Wait, libraryRep string) (*LibraryExtended, diag.Diagnostics) {
+	var d diag.Diagnostics
 	res, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, waitParams, libraryDefaultInstallationTimeout)
+	var apierr *apierr.APIError
+	if errors.As(err, &apierr) && clusterDoesNotExistRegex.MatchString(apierr.Message) {
+		d.AddWarning("cluster not found", fmt.Sprintf("cluster %s not found", waitParams.ClusterID))
+		return nil, d
+	}
 	if err != nil {
-		return diag.Diagnostics{diag.NewErrorDiagnostic("failed to wait for library installation", err.Error())}
+		d.AddError("failed to wait for library installation", err.Error())
+		return nil, d
 	}
 
 	for _, v := range res.LibraryStatuses {
 		thisRep := v.Library.String()
 		if thisRep == libraryRep {
+			libraryExtended := &LibraryExtended{}
 			// This is not entirely necessary as we can directly write the fields in the config into the state, because there's no computed field.
-			diags := converters.GoSdkToTfSdkStruct(ctx, v.Library, libraryExtended)
+			d.Append(converters.GoSdkToTfSdkStruct(ctx, v.Library, libraryExtended)...)
 
-			if diags.HasError() {
-				return diags
+			if d.HasError() {
+				return nil, d
 			}
 
 			libraryExtended.ClusterId = types.StringValue(waitParams.ClusterID)
 
-			return nil
+			return libraryExtended, d
 		}
 	}
-	return diag.Diagnostics{diag.NewErrorDiagnostic("failed to find the installed library", fmt.Sprintf("failed to find %s on %s", libraryRep, waitParams.ClusterID))}
+	d.AddError("failed to find the installed library", fmt.Sprintf("failed to find %s on %s", libraryRep, waitParams.ClusterID))
+	return nil, d
 }
 
 type LibraryExtended struct {
@@ -136,16 +153,18 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 		IsRunning: true,
 	}
 	libraryRep := libGoSDK.String()
-	installedLib := LibraryExtended{}
 
-	resp.Diagnostics.Append(readLibrary(ctx, w, waitParams, libraryRep, &installedLib)...)
-
-	installedLib.ID = types.StringValue(libGoSDK.String())
-
+	installedLib, diags := readLibrary(ctx, w, waitParams, libraryRep)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if installedLib == nil {
+		resp.Diagnostics.AddError("failed to install library", fmt.Sprintf("the installed library %s was not found. Please report this to the maintainers of terraform-provider-databricks.", libraryRep))
+		return
+	}
 
+	installedLib.ID = types.StringValue(libGoSDK.String())
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
 }
 
@@ -168,15 +187,19 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 	clusterId := libraryTfSDK.ClusterId.ValueString()
 	libraryRep := libGoSDK.String()
-	installedLib := LibraryExtended{}
 	waitParams := compute.Wait{
 		ClusterID: clusterId,
 		IsRefresh: true,
 	}
 
-	resp.Diagnostics.Append(readLibrary(ctx, w, waitParams, libraryRep, &installedLib)...)
-
+	installedLib, diags := readLibrary(ctx, w, waitParams, libraryRep)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	if installedLib == nil {
+		resp.Diagnostics.AddWarning("library not found", fmt.Sprintf("library %s not found on cluster %s, marking as deleted", libraryRep, clusterId))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -207,6 +230,10 @@ func (r *LibraryResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 	libraryRep := libGoSDK.String()
 	_, err := clusters.StartClusterAndGetInfo(ctx, w, clusterID)
+	if apierr.IsMissing(err) {
+		resp.Diagnostics.AddWarning("cluster not found", fmt.Sprintf("cluster %s not found, skipping library uninstallation", clusterID))
+		return
+	}
 	if err != nil {
 		resp.Diagnostics.AddError("failed to start and get cluster", err.Error())
 		return

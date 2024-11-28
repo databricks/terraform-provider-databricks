@@ -98,3 +98,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the Notification Destination.
 * `destination_type` - the type of Notification Destination.
+
+## Import
+
+This resource can be imported by notification ID:
+
+```bash
+terraform import databricks_notification_destination.this <notification-id>
+```

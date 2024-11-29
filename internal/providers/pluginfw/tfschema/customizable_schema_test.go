@@ -130,3 +130,12 @@ func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
 
 	assert.True(t, len(scm.Blocks["nested_slice_object"].(schema.ListNestedBlock).Validators) == 1)
 }
+
+func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.SetRequired("nested")
+			return c
+		})
+	})
+}

@@ -398,6 +398,13 @@ This resource can be imported by Databricks account ID and workspace ID.
 terraform import databricks_mws_networks.this '<account_id>/<workspace_id>'
 ```
 
+~> Not all fields of `databricks_mws_workspaces` can be updated without causing the workspace to be recreated.
+   If the configuration for these immutable fields does not match the existing workspace, the workspace will
+   be deleted and recreated in the next `terraform apply`. After importing, verify that the configuration
+   matches the existing resource by running `terraform plan`. The only fields that can be updated are
+   `credentials_id`, `network_id`, `storage_customer_managed_key_id`, `private_access_settings_id`,
+   `managed_services_customer_managed_key_id`, and `custom_tags`.
+
 ## Related Resources
 
 The following resources are used in the same context:

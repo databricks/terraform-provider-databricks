@@ -215,7 +215,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-!> Importing this resource is not currently supported.
+This resource can be imported by Databricks account ID and network ID.
+
+```sh
+terraform import databricks_mws_networks.this '<account_id>/<network_id>'
+```
 
 ## Related Resources
 

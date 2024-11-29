@@ -253,7 +253,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-!> Importing this resource is not currently supported.
+This resource can be imported by Databricks account ID and customer managed key ID.
+
+```sh
+terraform import databricks_mws_customer_managed_keys.this '<account_id>/<customer_managed_key_id>'
+```
 
 ## Related Resources
 

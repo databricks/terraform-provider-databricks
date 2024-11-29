@@ -85,7 +85,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-!> Importing this resource is not currently supported.
+This resource can be imported by Databricks account ID and private access settings ID.
+
+```sh
+terraform import databricks_mws_private_access_settings.this '<account_id>/<private_access_settings_id>'
+```
 
 ## Related Resources
 

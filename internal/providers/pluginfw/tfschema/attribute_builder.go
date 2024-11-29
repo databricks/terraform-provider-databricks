@@ -10,6 +10,25 @@ import (
 // This common interface prevents us from keeping two copies of StructToSchema and CustomizableSchema.
 type AttributeBuilder interface {
 	BaseSchemaBuilder
+
+	// SetOptional sets the attribute as optional in the schema. This does not affect whether the attribute is computed.
+	// It fails if the attribute is already optional.
+	SetOptional() BaseSchemaBuilder
+
+	// SetRequired sets the attribute as required in the schema. This does not affect whether the attribute is computed.
+	// It fails if the attribute is already required.
+	SetRequired() BaseSchemaBuilder
+
+	// SetSensitive sets the attribute as sensitive in the schema. It fails if the attribute is already sensitive.
+	SetSensitive() BaseSchemaBuilder
+
+	// SetComputed sets the attribute as computed in the schema. It fails if the attribute is already computed.
+	SetComputed() BaseSchemaBuilder
+
+	// Sets the attribute as read-only in the schema, i.e. computed and neither optional or required. It fails if the
+	// attribute is already read-only.
+	SetReadOnly() BaseSchemaBuilder
+
 	BuildDataSourceAttribute() dataschema.Attribute
 	BuildResourceAttribute() schema.Attribute
 }

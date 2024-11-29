@@ -13,10 +13,6 @@ import (
 // SingleNestedBlockBuilder represents a single nested complex (non-primitive) type.
 type SingleNestedBlockBuilder struct {
 	NestedObject       NestedBlockObject
-	Optional           bool
-	Required           bool
-	Sensitive          bool
-	Computed           bool
 	DeprecationMessage string
 	Validators         []validator.Object
 	PlanModifiers      []planmodifier.Object
@@ -47,50 +43,6 @@ func (a SingleNestedBlockBuilder) BuildResourceBlock() schema.Block {
 		Validators:         a.Validators,
 		PlanModifiers:      a.PlanModifiers,
 	}
-}
-
-func (a SingleNestedBlockBuilder) SetOptional() BaseSchemaBuilder {
-	if a.Optional && !a.Required {
-		panic("attribute is already optional")
-	}
-	a.Optional = true
-	a.Required = false
-	return a
-}
-
-func (a SingleNestedBlockBuilder) SetRequired() BaseSchemaBuilder {
-	if !a.Optional && a.Required {
-		panic("attribute is already required")
-	}
-	a.Optional = false
-	a.Required = true
-	return a
-}
-
-func (a SingleNestedBlockBuilder) SetSensitive() BaseSchemaBuilder {
-	if a.Sensitive {
-		panic("attribute is already sensitive")
-	}
-	a.Sensitive = true
-	return a
-}
-
-func (a SingleNestedBlockBuilder) SetComputed() BaseSchemaBuilder {
-	if a.Computed {
-		panic("attribute is already computed")
-	}
-	a.Computed = true
-	return a
-}
-
-func (a SingleNestedBlockBuilder) SetReadOnly() BaseSchemaBuilder {
-	if a.Computed && !a.Optional && !a.Required {
-		panic("attribute is already read only")
-	}
-	a.Computed = true
-	a.Optional = false
-	a.Required = false
-	return a
 }
 
 func (a SingleNestedBlockBuilder) SetDeprecated(msg string) BaseSchemaBuilder {

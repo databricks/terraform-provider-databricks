@@ -1600,17 +1600,13 @@ type NccAzurePrivateEndpointRule struct {
 	// clean-up.
 	ConnectionState types.String `tfsdk:"connection_state" tf:"optional"`
 	// Time in epoch milliseconds when this object was created.
-	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional"`
-	EffectiveCreationTime types.Int64 `tfsdk:"effective_creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Whether this private endpoint is deactivated.
-	Deactivated          types.Bool `tfsdk:"deactivated" tf:"optional"`
-	EffectiveDeactivated types.Bool `tfsdk:"effective_deactivated" tf:"computed,optional"`
+	Deactivated types.Bool `tfsdk:"deactivated" tf:"computed,optional"`
 	// Time in epoch milliseconds when this object was deactivated.
-	DeactivatedAt          types.Int64 `tfsdk:"deactivated_at" tf:"optional"`
-	EffectiveDeactivatedAt types.Int64 `tfsdk:"effective_deactivated_at" tf:"computed,optional"`
+	DeactivatedAt types.Int64 `tfsdk:"deactivated_at" tf:"computed,optional"`
 	// The name of the Azure private endpoint resource.
-	EndpointName          types.String `tfsdk:"endpoint_name" tf:"optional"`
-	EffectiveEndpointName types.String `tfsdk:"effective_endpoint_name" tf:"computed,optional"`
+	EndpointName types.String `tfsdk:"endpoint_name" tf:"computed,optional"`
 	// The sub-resource type (group ID) of the target resource. Note that to
 	// connect to workspace root storage (root DBFS), you need two endpoints,
 	// one for `blob` and one for `dfs`.
@@ -1621,53 +1617,15 @@ type NccAzurePrivateEndpointRule struct {
 	// The Azure resource ID of the target resource.
 	ResourceId types.String `tfsdk:"resource_id" tf:"optional"`
 	// The ID of a private endpoint rule.
-	RuleId          types.String `tfsdk:"rule_id" tf:"optional"`
-	EffectiveRuleId types.String `tfsdk:"effective_rule_id" tf:"computed,optional"`
+	RuleId types.String `tfsdk:"rule_id" tf:"computed,optional"`
 	// Time in epoch milliseconds when this object was updated.
-	UpdatedTime          types.Int64 `tfsdk:"updated_time" tf:"optional"`
-	EffectiveUpdatedTime types.Int64 `tfsdk:"effective_updated_time" tf:"computed,optional"`
+	UpdatedTime types.Int64 `tfsdk:"updated_time" tf:"computed,optional"`
 }
 
 func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAzurePrivateEndpointRule) {
-	newState.EffectiveCreationTime = newState.CreationTime
-	newState.CreationTime = plan.CreationTime
-	newState.EffectiveDeactivated = newState.Deactivated
-	newState.Deactivated = plan.Deactivated
-	newState.EffectiveDeactivatedAt = newState.DeactivatedAt
-	newState.DeactivatedAt = plan.DeactivatedAt
-	newState.EffectiveEndpointName = newState.EndpointName
-	newState.EndpointName = plan.EndpointName
-	newState.EffectiveRuleId = newState.RuleId
-	newState.RuleId = plan.RuleId
-	newState.EffectiveUpdatedTime = newState.UpdatedTime
-	newState.UpdatedTime = plan.UpdatedTime
 }
 
 func (newState *NccAzurePrivateEndpointRule) SyncEffectiveFieldsDuringRead(existingState NccAzurePrivateEndpointRule) {
-	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
-	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
-		newState.CreationTime = existingState.CreationTime
-	}
-	newState.EffectiveDeactivated = existingState.EffectiveDeactivated
-	if existingState.EffectiveDeactivated.ValueBool() == newState.Deactivated.ValueBool() {
-		newState.Deactivated = existingState.Deactivated
-	}
-	newState.EffectiveDeactivatedAt = existingState.EffectiveDeactivatedAt
-	if existingState.EffectiveDeactivatedAt.ValueInt64() == newState.DeactivatedAt.ValueInt64() {
-		newState.DeactivatedAt = existingState.DeactivatedAt
-	}
-	newState.EffectiveEndpointName = existingState.EffectiveEndpointName
-	if existingState.EffectiveEndpointName.ValueString() == newState.EndpointName.ValueString() {
-		newState.EndpointName = existingState.EndpointName
-	}
-	newState.EffectiveRuleId = existingState.EffectiveRuleId
-	if existingState.EffectiveRuleId.ValueString() == newState.RuleId.ValueString() {
-		newState.RuleId = existingState.RuleId
-	}
-	newState.EffectiveUpdatedTime = existingState.EffectiveUpdatedTime
-	if existingState.EffectiveUpdatedTime.ValueInt64() == newState.UpdatedTime.ValueInt64() {
-		newState.UpdatedTime = existingState.UpdatedTime
-	}
 }
 
 // The stable Azure service endpoints. You can configure the firewall of your
@@ -1695,8 +1653,7 @@ type NccEgressConfig struct {
 	// The network connectivity rules that are applied by default without
 	// resource specific configurations. You can find the stable network
 	// information of your serverless compute resources here.
-	DefaultRules          []NccEgressDefaultRules `tfsdk:"default_rules" tf:"optional,object"`
-	EffectiveDefaultRules []NccEgressDefaultRules `tfsdk:"effective_default_rules" tf:"computed,optional"`
+	DefaultRules []NccEgressDefaultRules `tfsdk:"default_rules" tf:"computed,optional"`
 	// The network connectivity rules that configured for each destinations.
 	// These rules override default rules.
 	TargetRules []NccEgressTargetRules `tfsdk:"target_rules" tf:"optional,object"`
@@ -1744,8 +1701,7 @@ type NetworkConnectivityConfiguration struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// Time in epoch milliseconds when this object was created.
-	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional"`
-	EffectiveCreationTime types.Int64 `tfsdk:"effective_creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// The network connectivity rules that apply to network traffic from your
 	// serverless compute resources.
 	EgressConfig []NccEgressConfig `tfsdk:"egress_config" tf:"optional,object"`
@@ -1755,39 +1711,19 @@ type NetworkConnectivityConfiguration struct {
 	// `^[0-9a-zA-Z-_]{3,30}$`.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Databricks network connectivity configuration ID.
-	NetworkConnectivityConfigId          types.String `tfsdk:"network_connectivity_config_id" tf:"optional"`
-	EffectiveNetworkConnectivityConfigId types.String `tfsdk:"effective_network_connectivity_config_id" tf:"computed,optional"`
+	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id" tf:"computed,optional"`
 	// The region for the network connectivity configuration. Only workspaces in
 	// the same region can be attached to the network connectivity
 	// configuration.
 	Region types.String `tfsdk:"region" tf:"optional"`
 	// Time in epoch milliseconds when this object was updated.
-	UpdatedTime          types.Int64 `tfsdk:"updated_time" tf:"optional"`
-	EffectiveUpdatedTime types.Int64 `tfsdk:"effective_updated_time" tf:"computed,optional"`
+	UpdatedTime types.Int64 `tfsdk:"updated_time" tf:"computed,optional"`
 }
 
 func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkConnectivityConfiguration) {
-	newState.EffectiveCreationTime = newState.CreationTime
-	newState.CreationTime = plan.CreationTime
-	newState.EffectiveNetworkConnectivityConfigId = newState.NetworkConnectivityConfigId
-	newState.NetworkConnectivityConfigId = plan.NetworkConnectivityConfigId
-	newState.EffectiveUpdatedTime = newState.UpdatedTime
-	newState.UpdatedTime = plan.UpdatedTime
 }
 
 func (newState *NetworkConnectivityConfiguration) SyncEffectiveFieldsDuringRead(existingState NetworkConnectivityConfiguration) {
-	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
-	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
-		newState.CreationTime = existingState.CreationTime
-	}
-	newState.EffectiveNetworkConnectivityConfigId = existingState.EffectiveNetworkConnectivityConfigId
-	if existingState.EffectiveNetworkConnectivityConfigId.ValueString() == newState.NetworkConnectivityConfigId.ValueString() {
-		newState.NetworkConnectivityConfigId = existingState.NetworkConnectivityConfigId
-	}
-	newState.EffectiveUpdatedTime = existingState.EffectiveUpdatedTime
-	if existingState.EffectiveUpdatedTime.ValueInt64() == newState.UpdatedTime.ValueInt64() {
-		newState.UpdatedTime = existingState.UpdatedTime
-	}
 }
 
 type NotificationDestination struct {

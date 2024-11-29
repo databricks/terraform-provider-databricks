@@ -28,8 +28,7 @@ type BaseJob struct {
 	// details page and Jobs API using `budget_policy_id` 3. Inferred default
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
-	EffectiveBudgetPolicyId          types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
-	EffectiveEffectiveBudgetPolicyId types.String `tfsdk:"effective_effective_budget_policy_id" tf:"computed,optional"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed,optional"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// Settings for this job and all of its runs. These settings can be updated
@@ -38,15 +37,9 @@ type BaseJob struct {
 }
 
 func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
-	newState.EffectiveEffectiveBudgetPolicyId = newState.EffectiveBudgetPolicyId
-	newState.EffectiveBudgetPolicyId = plan.EffectiveBudgetPolicyId
 }
 
 func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
-	newState.EffectiveEffectiveBudgetPolicyId = existingState.EffectiveEffectiveBudgetPolicyId
-	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
-		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
-	}
 }
 
 type BaseRun struct {
@@ -921,8 +914,7 @@ type Job struct {
 	// details page and Jobs API using `budget_policy_id` 3. Inferred default
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
-	EffectiveBudgetPolicyId          types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
-	EffectiveEffectiveBudgetPolicyId types.String `tfsdk:"effective_effective_budget_policy_id" tf:"computed,optional"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed,optional"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// The email of an active workspace user or the application ID of a service
@@ -939,15 +931,9 @@ type Job struct {
 }
 
 func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
-	newState.EffectiveEffectiveBudgetPolicyId = newState.EffectiveBudgetPolicyId
-	newState.EffectiveBudgetPolicyId = plan.EffectiveBudgetPolicyId
 }
 
 func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
-	newState.EffectiveEffectiveBudgetPolicyId = existingState.EffectiveEffectiveBudgetPolicyId
-	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
-		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
-	}
 }
 
 type JobAccessControlRequest struct {

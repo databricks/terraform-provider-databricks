@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -38,16 +37,13 @@ func ResourceLibrary() resource.Resource {
 	return &LibraryResource{}
 }
 
-var clusterDoesNotExistRegex = regexp.MustCompile(`Cluster [a-z1-9-]+ does not exist`)
-
 // readLibrary reads the status of the specified library on the specified cluster and returns the library metadata.
 // If library cannot be found, either because the cluster doesn't exist, the library is not installed, or some other error, the first return value will be nil.
 // The returned diagnostics will contain any errors or warnings that occurred during the operation, and the caller should check for errors before continuing.
 func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams compute.Wait, libraryRep string) (*LibraryExtended, diag.Diagnostics) {
 	var d diag.Diagnostics
 	res, err := libraries.WaitForLibrariesInstalledSdk(ctx, w, waitParams, libraryDefaultInstallationTimeout)
-	var apierr *apierr.APIError
-	if errors.As(err, &apierr) && clusterDoesNotExistRegex.MatchString(apierr.Message) {
+	if errors.Is(err, databricks.ErrInvalidParameterValue) {
 		d.AddWarning("cluster not found", fmt.Sprintf("cluster %s not found", waitParams.ClusterID))
 		return nil, d
 	}

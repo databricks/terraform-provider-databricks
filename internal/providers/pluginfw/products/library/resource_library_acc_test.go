@@ -2,9 +2,12 @@ package library_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
@@ -44,7 +47,7 @@ func TestAccLibraryCreation(t *testing.T) {
 	})
 }
 
-func TestAccLibraryReinstalledIfClusterTerminated(t *testing.T) {
+func TestAccLibraryReinstalledIfClusterDeleted(t *testing.T) {
 	var clusterId string
 	acceptance.WorkspaceLevel(t,
 		acceptance.Step{
@@ -63,9 +66,21 @@ func TestAccLibraryReinstalledIfClusterTerminated(t *testing.T) {
 		// If the cluster is terminated before apply, it should be restarted and the library reinstalled.
 		acceptance.Step{
 			PreConfig: func() {
-				// Terminate the created cluster
+				// Delete the created cluster
 				w := databricks.Must(databricks.NewWorkspaceClient())
 				w.Clusters.PermanentDeleteByClusterId(context.Background(), clusterId)
+				// Wait for the cluster to be completely deleted
+				errClusterExists := errors.New("cluster still exists")
+				retries.New[struct{}](retries.OnErrors(errClusterExists)).Wait(context.Background(), func(ctx context.Context) error {
+					_, err := w.Clusters.GetByClusterId(context.Background(), clusterId)
+					if err != nil && apierr.IsMissing(err) {
+						return nil
+					}
+					if err != nil {
+						return err
+					}
+					return errClusterExists
+				})
 			},
 			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
 				cluster_id = databricks_cluster.this.id

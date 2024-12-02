@@ -45,7 +45,7 @@ func (a ListAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a ListAttributeBuilder) SetOptional() BaseSchemaBuilder {
+func (a ListAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -54,7 +54,7 @@ func (a ListAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetRequired() BaseSchemaBuilder {
+func (a ListAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -63,7 +63,7 @@ func (a ListAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetSensitive() BaseSchemaBuilder {
+func (a ListAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -71,7 +71,7 @@ func (a ListAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetComputed() BaseSchemaBuilder {
+func (a ListAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -79,7 +79,7 @@ func (a ListAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
+func (a ListAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -94,12 +94,12 @@ func (a ListAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) AddValidator(v validator.List) BaseSchemaBuilder {
+func (a ListAttributeBuilder) AddValidator(v validator.List) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a ListAttributeBuilder) AddPlanModifier(v planmodifier.List) BaseSchemaBuilder {
+func (a ListAttributeBuilder) AddPlanModifier(v planmodifier.List) AttributeBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

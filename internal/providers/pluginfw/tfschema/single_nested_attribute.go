@@ -44,7 +44,7 @@ func (a SingleNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute 
 	}
 }
 
-func (a SingleNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
+func (a SingleNestedAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -53,7 +53,7 @@ func (a SingleNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
+func (a SingleNestedAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -62,7 +62,7 @@ func (a SingleNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
+func (a SingleNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -70,7 +70,7 @@ func (a SingleNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
+func (a SingleNestedAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -78,7 +78,7 @@ func (a SingleNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
+func (a SingleNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -93,12 +93,12 @@ func (a SingleNestedAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilde
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) AddValidator(v validator.Object) BaseSchemaBuilder {
+func (a SingleNestedAttributeBuilder) AddValidator(v validator.Object) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a SingleNestedAttributeBuilder) AddPlanModifier(v planmodifier.Object) BaseSchemaBuilder {
+func (a SingleNestedAttributeBuilder) AddPlanModifier(v planmodifier.Object) AttributeBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

@@ -27,6 +27,15 @@ func TestAccWorkspaceFileEmptyFile(t *testing.T) {
 	})
 }
 
+func TestAccWorkspaceFileZipFile(t *testing.T) {
+	WorkspaceLevel(t, Step{
+		Template: `resource "databricks_workspace_file" "zipfile" {
+			source = "{var.CWD}/../../workspace/acceptance/testdata/zipfile.zip"
+			path = "/Shared/provider-test/zipfile_{var.RANDOM}.zip"
+		}`,
+	})
+}
+
 func TestAccWorkspaceFileBase64(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: `resource "databricks_workspace_file" "this2" {

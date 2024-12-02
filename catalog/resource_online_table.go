@@ -16,29 +16,6 @@ import (
 
 const onlineTableDefaultProvisionTimeout = 90 * time.Minute
 
-func waitForOnlineTableCreation(w *databricks.WorkspaceClient, ctx context.Context, onlineTableName string) error {
-	return retry.RetryContext(ctx, onlineTableDefaultProvisionTimeout, func() *retry.RetryError {
-		endpoint, err := w.OnlineTables.GetByName(ctx, onlineTableName)
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-		if endpoint.Status == nil {
-			return retry.RetryableError(fmt.Errorf("online table status is not available yet"))
-		}
-		switch endpoint.Status.DetailedState {
-		case catalog.OnlineTableStateOnline, catalog.OnlineTableStateOnlineContinuousUpdate,
-			catalog.OnlineTableStateOnlineNoPendingUpdate, catalog.OnlineTableStateOnlineTriggeredUpdate:
-			return nil
-
-		// does catalog.OnlineTableStateOffline means that it's failed?
-		case catalog.OnlineTableStateOfflineFailed, catalog.OnlineTableStateOnlinePipelineFailed:
-			return retry.NonRetryableError(fmt.Errorf("online table status returned %s for online table: %s",
-				endpoint.Status.DetailedState.String(), onlineTableName))
-		}
-		return retry.RetryableError(fmt.Errorf("online table %s is still pending", onlineTableName))
-	})
-}
-
 func waitForOnlineTableDeletion(w *databricks.WorkspaceClient, ctx context.Context, onlineTableName string) error {
 	return retry.RetryContext(ctx, onlineTableDefaultProvisionTimeout, func() *retry.RetryError {
 		_, err := w.OnlineTables.GetByName(ctx, onlineTableName)
@@ -59,6 +36,7 @@ func ResourceOnlineTable() common.Resource {
 			common.CustomizeSchemaPath(m, "spec", "source_table_full_name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 			common.CustomizeSchemaPath(m, "name").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(m, "status").SetReadOnly()
+			common.CustomizeSchemaPath(m, "unity_catalog_provisioning_state").SetReadOnly()
 			common.CustomizeSchemaPath(m, "table_serving_url").SetReadOnly()
 			common.CustomizeSchemaPath(m, "spec", "pipeline_id").SetReadOnly()
 
@@ -74,9 +52,9 @@ func ResourceOnlineTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			var req catalog.CreateOnlineTableRequest
-			common.DataToStructPointer(d, s, &req)
-			res, err := w.OnlineTables.Create(ctx, req)
+			var table catalog.OnlineTable
+			common.DataToStructPointer(d, s, &table)
+			res, err := w.OnlineTables.Create(ctx, catalog.CreateOnlineTableRequest{Table: &table})
 			if err != nil {
 				return err
 			}
@@ -84,7 +62,7 @@ func ResourceOnlineTable() common.Resource {
 			// If the resource creation timeout is exceeded while waiting for the online table to be ready, this ensures the online table is persisted in the state.
 			d.SetId(res.Name)
 			// this should be specified in the API Spec - filed a ticket to add it
-			err = waitForOnlineTableCreation(w, ctx, res.Name)
+			_, err = res.GetWithTimeout(onlineTableDefaultProvisionTimeout)
 			if err != nil {
 				return err
 			}

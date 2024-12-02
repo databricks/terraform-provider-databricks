@@ -30,11 +30,15 @@ See [databricks_grants Metastore grants](grants.md#metastore-grants) for the lis
 
 ```hcl
 resource "databricks_grant" "sandbox_data_engineers" {
+  metastore = "metastore_id"
+
   principal  = "Data Engineers"
   privileges = ["CREATE_CATALOG", "CREATE_EXTERNAL_LOCATION"]
 }
 
 resource "databricks_grant" "sandbox_data_sharer" {
+  metastore = "metastore_id"
+
   principal  = "Data Sharer"
   privileges = ["CREATE_RECIPIENT", "CREATE_SHARE"]
 }
@@ -46,7 +50,6 @@ See [databricks_grants Catalog grants](grants.md#catalog-grants) for the list of
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  metastore_id = databricks_metastore.this.id
   name         = "sandbox"
   comment      = "this catalog is managed by terraform"
   properties = {
@@ -226,6 +229,28 @@ resource "databricks_grant" "udf_data_analysts" {
 
   principal  = "Data Analysts"
   privileges = ["EXECUTE"]
+}
+```
+
+## Service credential grants
+
+See [databricks_grants Service credential grants](grants.md#service-credential-grants) for the list of privileges that apply to Service credentials.
+
+```hcl
+resource "databricks_credential" "external" {
+  name = aws_iam_role.external_data_access.name
+  aws_iam_role {
+    role_arn = aws_iam_role.external_data_access.arn
+  }
+  purpose = "SERVICE"
+  comment = "Managed by TF"
+}
+
+resource "databricks_grant" "external_creds" {
+  credential = databricks_credential.external.id
+
+  principal  = "Data Engineers"
+  privileges = ["ACCESS"]
 }
 ```
 

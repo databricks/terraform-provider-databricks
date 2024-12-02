@@ -70,6 +70,12 @@ type Activity struct {
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
 
+func (newState *Activity) SyncEffectiveFieldsDuringCreateOrUpdate(plan Activity) {
+}
+
+func (newState *Activity) SyncEffectiveFieldsDuringRead(existingState Activity) {
+}
+
 type ApproveTransitionRequest struct {
 	// Specifies whether to archive all current model versions in the target
 	// stage.
@@ -92,9 +98,21 @@ type ApproveTransitionRequest struct {
 	Version types.String `tfsdk:"version" tf:""`
 }
 
+func (newState *ApproveTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApproveTransitionRequest) {
+}
+
+func (newState *ApproveTransitionRequest) SyncEffectiveFieldsDuringRead(existingState ApproveTransitionRequest) {
+}
+
 type ApproveTransitionRequestResponse struct {
 	// Activity recorded for the action.
-	Activity *Activity `tfsdk:"activity" tf:"optional"`
+	Activity []Activity `tfsdk:"activity" tf:"optional,object"`
+}
+
+func (newState *ApproveTransitionRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApproveTransitionRequestResponse) {
+}
+
+func (newState *ApproveTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState ApproveTransitionRequestResponse) {
 }
 
 // Comment details.
@@ -113,6 +131,12 @@ type CommentObject struct {
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
 
+func (newState *CommentObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan CommentObject) {
+}
+
+func (newState *CommentObject) SyncEffectiveFieldsDuringRead(existingState CommentObject) {
+}
+
 type CreateComment struct {
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment" tf:""`
@@ -122,9 +146,21 @@ type CreateComment struct {
 	Version types.String `tfsdk:"version" tf:""`
 }
 
+func (newState *CreateComment) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateComment) {
+}
+
+func (newState *CreateComment) SyncEffectiveFieldsDuringRead(existingState CreateComment) {
+}
+
 type CreateCommentResponse struct {
 	// Comment details.
-	Comment *CommentObject `tfsdk:"comment" tf:"optional"`
+	Comment []CommentObject `tfsdk:"comment" tf:"optional,object"`
+}
+
+func (newState *CreateCommentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCommentResponse) {
+}
+
+func (newState *CreateCommentResponse) SyncEffectiveFieldsDuringRead(existingState CreateCommentResponse) {
 }
 
 type CreateExperiment struct {
@@ -141,9 +177,21 @@ type CreateExperiment struct {
 	Tags []ExperimentTag `tfsdk:"tags" tf:"optional"`
 }
 
+func (newState *CreateExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExperiment) {
+}
+
+func (newState *CreateExperiment) SyncEffectiveFieldsDuringRead(existingState CreateExperiment) {
+}
+
 type CreateExperimentResponse struct {
 	// Unique identifier for the experiment.
 	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+}
+
+func (newState *CreateExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExperimentResponse) {
+}
+
+func (newState *CreateExperimentResponse) SyncEffectiveFieldsDuringRead(existingState CreateExperimentResponse) {
 }
 
 type CreateModelRequest struct {
@@ -155,8 +203,20 @@ type CreateModelRequest struct {
 	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
 }
 
+func (newState *CreateModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelRequest) {
+}
+
+func (newState *CreateModelRequest) SyncEffectiveFieldsDuringRead(existingState CreateModelRequest) {
+}
+
 type CreateModelResponse struct {
-	RegisteredModel *Model `tfsdk:"registered_model" tf:"optional"`
+	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional,object"`
+}
+
+func (newState *CreateModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelResponse) {
+}
+
+func (newState *CreateModelResponse) SyncEffectiveFieldsDuringRead(existingState CreateModelResponse) {
 }
 
 type CreateModelVersionRequest struct {
@@ -176,9 +236,21 @@ type CreateModelVersionRequest struct {
 	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional"`
 }
 
+func (newState *CreateModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelVersionRequest) {
+}
+
+func (newState *CreateModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState CreateModelVersionRequest) {
+}
+
 type CreateModelVersionResponse struct {
 	// Return new version number generated for this model in registry.
-	ModelVersion *ModelVersion `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional,object"`
+}
+
+func (newState *CreateModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelVersionResponse) {
+}
+
+func (newState *CreateModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState CreateModelVersionResponse) {
 }
 
 type CreateRegistryWebhook struct {
@@ -219,9 +291,9 @@ type CreateRegistryWebhook struct {
 	// version be archived.
 	Events []types.String `tfsdk:"events" tf:""`
 
-	HttpUrlSpec *HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional,object"`
 
-	JobSpec *JobSpec `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional,object"`
 	// Name of the model whose events would trigger this webhook.
 	ModelName types.String `tfsdk:"model_name" tf:"optional"`
 	// Enable or disable triggering the webhook, or put the webhook into test
@@ -233,6 +305,12 @@ type CreateRegistryWebhook struct {
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
 	Status types.String `tfsdk:"status" tf:"optional"`
+}
+
+func (newState *CreateRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRegistryWebhook) {
+}
+
+func (newState *CreateRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState CreateRegistryWebhook) {
 }
 
 type CreateRun struct {
@@ -248,9 +326,21 @@ type CreateRun struct {
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
 
+func (newState *CreateRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRun) {
+}
+
+func (newState *CreateRun) SyncEffectiveFieldsDuringRead(existingState CreateRun) {
+}
+
 type CreateRunResponse struct {
 	// The newly created run.
-	Run *Run `tfsdk:"run" tf:"optional"`
+	Run []Run `tfsdk:"run" tf:"optional,object"`
+}
+
+func (newState *CreateRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRunResponse) {
+}
+
+func (newState *CreateRunResponse) SyncEffectiveFieldsDuringRead(existingState CreateRunResponse) {
 }
 
 type CreateTransitionRequest struct {
@@ -272,13 +362,31 @@ type CreateTransitionRequest struct {
 	Version types.String `tfsdk:"version" tf:""`
 }
 
+func (newState *CreateTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTransitionRequest) {
+}
+
+func (newState *CreateTransitionRequest) SyncEffectiveFieldsDuringRead(existingState CreateTransitionRequest) {
+}
+
 type CreateTransitionRequestResponse struct {
 	// Transition request details.
-	Request *TransitionRequest `tfsdk:"request" tf:"optional"`
+	Request []TransitionRequest `tfsdk:"request" tf:"optional,object"`
+}
+
+func (newState *CreateTransitionRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTransitionRequestResponse) {
+}
+
+func (newState *CreateTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState CreateTransitionRequestResponse) {
 }
 
 type CreateWebhookResponse struct {
-	Webhook *RegistryWebhook `tfsdk:"webhook" tf:"optional"`
+	Webhook []RegistryWebhook `tfsdk:"webhook" tf:"optional,object"`
+}
+
+func (newState *CreateWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWebhookResponse) {
+}
+
+func (newState *CreateWebhookResponse) SyncEffectiveFieldsDuringRead(existingState CreateWebhookResponse) {
 }
 
 type Dataset struct {
@@ -304,12 +412,24 @@ type Dataset struct {
 	SourceType types.String `tfsdk:"source_type" tf:"optional"`
 }
 
+func (newState *Dataset) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dataset) {
+}
+
+func (newState *Dataset) SyncEffectiveFieldsDuringRead(existingState Dataset) {
+}
+
 type DatasetInput struct {
 	// The dataset being used as a Run input.
-	Dataset *Dataset `tfsdk:"dataset" tf:"optional"`
+	Dataset []Dataset `tfsdk:"dataset" tf:"optional,object"`
 	// A list of tags for the dataset input, e.g. a “context” tag with value
 	// “training”
 	Tags []InputTag `tfsdk:"tags" tf:"optional"`
+}
+
+func (newState *DatasetInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatasetInput) {
+}
+
+func (newState *DatasetInput) SyncEffectiveFieldsDuringRead(existingState DatasetInput) {
 }
 
 // Delete a comment
@@ -317,7 +437,19 @@ type DeleteCommentRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteCommentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCommentRequest) {
+}
+
+func (newState *DeleteCommentRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCommentRequest) {
+}
+
 type DeleteCommentResponse struct {
+}
+
+func (newState *DeleteCommentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCommentResponse) {
+}
+
+func (newState *DeleteCommentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCommentResponse) {
 }
 
 type DeleteExperiment struct {
@@ -325,7 +457,19 @@ type DeleteExperiment struct {
 	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
 }
 
+func (newState *DeleteExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExperiment) {
+}
+
+func (newState *DeleteExperiment) SyncEffectiveFieldsDuringRead(existingState DeleteExperiment) {
+}
+
 type DeleteExperimentResponse struct {
+}
+
+func (newState *DeleteExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExperimentResponse) {
+}
+
+func (newState *DeleteExperimentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteExperimentResponse) {
 }
 
 // Delete a model
@@ -334,7 +478,19 @@ type DeleteModelRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelRequest) {
+}
+
+func (newState *DeleteModelRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelRequest) {
+}
+
 type DeleteModelResponse struct {
+}
+
+func (newState *DeleteModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelResponse) {
+}
+
+func (newState *DeleteModelResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelResponse) {
 }
 
 // Delete a model tag
@@ -346,7 +502,19 @@ type DeleteModelTagRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteModelTagRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelTagRequest) {
+}
+
+func (newState *DeleteModelTagRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelTagRequest) {
+}
+
 type DeleteModelTagResponse struct {
+}
+
+func (newState *DeleteModelTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelTagResponse) {
+}
+
+func (newState *DeleteModelTagResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelTagResponse) {
 }
 
 // Delete a model version.
@@ -357,7 +525,19 @@ type DeleteModelVersionRequest struct {
 	Version types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelVersionRequest) {
+}
+
+func (newState *DeleteModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionRequest) {
+}
+
 type DeleteModelVersionResponse struct {
+}
+
+func (newState *DeleteModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelVersionResponse) {
+}
+
+func (newState *DeleteModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionResponse) {
 }
 
 // Delete a model version tag
@@ -371,7 +551,19 @@ type DeleteModelVersionTagRequest struct {
 	Version types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteModelVersionTagRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelVersionTagRequest) {
+}
+
+func (newState *DeleteModelVersionTagRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionTagRequest) {
+}
+
 type DeleteModelVersionTagResponse struct {
+}
+
+func (newState *DeleteModelVersionTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteModelVersionTagResponse) {
+}
+
+func (newState *DeleteModelVersionTagResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionTagResponse) {
 }
 
 type DeleteRun struct {
@@ -379,7 +571,19 @@ type DeleteRun struct {
 	RunId types.String `tfsdk:"run_id" tf:""`
 }
 
+func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRun) {
+}
+
+func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
+}
+
 type DeleteRunResponse struct {
+}
+
+func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRunResponse) {
+}
+
+func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunResponse) {
 }
 
 type DeleteRuns struct {
@@ -394,9 +598,21 @@ type DeleteRuns struct {
 	MaxTimestampMillis types.Int64 `tfsdk:"max_timestamp_millis" tf:""`
 }
 
+func (newState *DeleteRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRuns) {
+}
+
+func (newState *DeleteRuns) SyncEffectiveFieldsDuringRead(existingState DeleteRuns) {
+}
+
 type DeleteRunsResponse struct {
 	// The number of runs deleted.
 	RunsDeleted types.Int64 `tfsdk:"runs_deleted" tf:"optional"`
+}
+
+func (newState *DeleteRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRunsResponse) {
+}
+
+func (newState *DeleteRunsResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunsResponse) {
 }
 
 type DeleteTag struct {
@@ -406,7 +622,19 @@ type DeleteTag struct {
 	RunId types.String `tfsdk:"run_id" tf:""`
 }
 
+func (newState *DeleteTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTag) {
+}
+
+func (newState *DeleteTag) SyncEffectiveFieldsDuringRead(existingState DeleteTag) {
+}
+
 type DeleteTagResponse struct {
+}
+
+func (newState *DeleteTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTagResponse) {
+}
+
+func (newState *DeleteTagResponse) SyncEffectiveFieldsDuringRead(existingState DeleteTagResponse) {
 }
 
 // Delete a transition request
@@ -433,7 +661,19 @@ type DeleteTransitionRequestRequest struct {
 	Version types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteTransitionRequestRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTransitionRequestRequest) {
+}
+
+func (newState *DeleteTransitionRequestRequest) SyncEffectiveFieldsDuringRead(existingState DeleteTransitionRequestRequest) {
+}
+
 type DeleteTransitionRequestResponse struct {
+}
+
+func (newState *DeleteTransitionRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTransitionRequestResponse) {
+}
+
+func (newState *DeleteTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState DeleteTransitionRequestResponse) {
 }
 
 // Delete a webhook
@@ -442,7 +682,19 @@ type DeleteWebhookRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteWebhookRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWebhookRequest) {
+}
+
+func (newState *DeleteWebhookRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWebhookRequest) {
+}
+
 type DeleteWebhookResponse struct {
+}
+
+func (newState *DeleteWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWebhookResponse) {
+}
+
+func (newState *DeleteWebhookResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWebhookResponse) {
 }
 
 type Experiment struct {
@@ -463,6 +715,12 @@ type Experiment struct {
 	Tags []ExperimentTag `tfsdk:"tags" tf:"optional"`
 }
 
+func (newState *Experiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Experiment) {
+}
+
+func (newState *Experiment) SyncEffectiveFieldsDuringRead(existingState Experiment) {
+}
+
 type ExperimentAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -472,6 +730,12 @@ type ExperimentAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *ExperimentAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentAccessControlRequest) {
+}
+
+func (newState *ExperimentAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ExperimentAccessControlRequest) {
 }
 
 type ExperimentAccessControlResponse struct {
@@ -487,12 +751,24 @@ type ExperimentAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *ExperimentAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentAccessControlResponse) {
+}
+
+func (newState *ExperimentAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ExperimentAccessControlResponse) {
+}
+
 type ExperimentPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *ExperimentPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentPermission) {
+}
+
+func (newState *ExperimentPermission) SyncEffectiveFieldsDuringRead(existingState ExperimentPermission) {
 }
 
 type ExperimentPermissions struct {
@@ -503,10 +779,22 @@ type ExperimentPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *ExperimentPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentPermissions) {
+}
+
+func (newState *ExperimentPermissions) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissions) {
+}
+
 type ExperimentPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *ExperimentPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentPermissionsDescription) {
+}
+
+func (newState *ExperimentPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissionsDescription) {
 }
 
 type ExperimentPermissionsRequest struct {
@@ -515,11 +803,23 @@ type ExperimentPermissionsRequest struct {
 	ExperimentId types.String `tfsdk:"-"`
 }
 
+func (newState *ExperimentPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentPermissionsRequest) {
+}
+
+func (newState *ExperimentPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissionsRequest) {
+}
+
 type ExperimentTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// The tag value.
 	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *ExperimentTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentTag) {
+}
+
+func (newState *ExperimentTag) SyncEffectiveFieldsDuringRead(existingState ExperimentTag) {
 }
 
 type FileInfo struct {
@@ -531,10 +831,22 @@ type FileInfo struct {
 	Path types.String `tfsdk:"path" tf:"optional"`
 }
 
+func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo) {
+}
+
+func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
+}
+
 // Get metadata
 type GetByNameRequest struct {
 	// Name of the associated experiment.
 	ExperimentName types.String `tfsdk:"-"`
+}
+
+func (newState *GetByNameRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetByNameRequest) {
+}
+
+func (newState *GetByNameRequest) SyncEffectiveFieldsDuringRead(existingState GetByNameRequest) {
 }
 
 // Get experiment permission levels
@@ -543,9 +855,21 @@ type GetExperimentPermissionLevelsRequest struct {
 	ExperimentId types.String `tfsdk:"-"`
 }
 
+func (newState *GetExperimentPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentPermissionLevelsRequest) {
+}
+
+func (newState *GetExperimentPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetExperimentPermissionLevelsRequest) {
+}
+
 type GetExperimentPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []ExperimentPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetExperimentPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentPermissionLevelsResponse) {
+}
+
+func (newState *GetExperimentPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetExperimentPermissionLevelsResponse) {
 }
 
 // Get experiment permissions
@@ -554,15 +878,33 @@ type GetExperimentPermissionsRequest struct {
 	ExperimentId types.String `tfsdk:"-"`
 }
 
+func (newState *GetExperimentPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentPermissionsRequest) {
+}
+
+func (newState *GetExperimentPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetExperimentPermissionsRequest) {
+}
+
 // Get an experiment
 type GetExperimentRequest struct {
 	// ID of the associated experiment.
 	ExperimentId types.String `tfsdk:"-"`
 }
 
+func (newState *GetExperimentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentRequest) {
+}
+
+func (newState *GetExperimentRequest) SyncEffectiveFieldsDuringRead(existingState GetExperimentRequest) {
+}
+
 type GetExperimentResponse struct {
 	// Experiment details.
-	Experiment *Experiment `tfsdk:"experiment" tf:"optional"`
+	Experiment []Experiment `tfsdk:"experiment" tf:"optional,object"`
+}
+
+func (newState *GetExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentResponse) {
+}
+
+func (newState *GetExperimentResponse) SyncEffectiveFieldsDuringRead(existingState GetExperimentResponse) {
 }
 
 // Get history of a given metric within a run
@@ -582,6 +924,12 @@ type GetHistoryRequest struct {
 	RunUuid types.String `tfsdk:"-"`
 }
 
+func (newState *GetHistoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetHistoryRequest) {
+}
+
+func (newState *GetHistoryRequest) SyncEffectiveFieldsDuringRead(existingState GetHistoryRequest) {
+}
+
 type GetLatestVersionsRequest struct {
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name" tf:""`
@@ -589,11 +937,23 @@ type GetLatestVersionsRequest struct {
 	Stages []types.String `tfsdk:"stages" tf:"optional"`
 }
 
+func (newState *GetLatestVersionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionsRequest) {
+}
+
+func (newState *GetLatestVersionsRequest) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionsRequest) {
+}
+
 type GetLatestVersionsResponse struct {
 	// Latest version models for each requests stage. Only return models with
 	// current `READY` status. If no `stages` provided, returns the latest
 	// version for each stage, including `"None"`.
 	ModelVersions []ModelVersion `tfsdk:"model_versions" tf:"optional"`
+}
+
+func (newState *GetLatestVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionsResponse) {
+}
+
+func (newState *GetLatestVersionsResponse) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionsResponse) {
 }
 
 type GetMetricHistoryResponse struct {
@@ -604,14 +964,32 @@ type GetMetricHistoryResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+func (newState *GetMetricHistoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetMetricHistoryResponse) {
+}
+
+func (newState *GetMetricHistoryResponse) SyncEffectiveFieldsDuringRead(existingState GetMetricHistoryResponse) {
+}
+
 // Get model
 type GetModelRequest struct {
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *GetModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelRequest) {
+}
+
+func (newState *GetModelRequest) SyncEffectiveFieldsDuringRead(existingState GetModelRequest) {
+}
+
 type GetModelResponse struct {
-	RegisteredModelDatabricks *ModelDatabricks `tfsdk:"registered_model_databricks" tf:"optional"`
+	RegisteredModelDatabricks []ModelDatabricks `tfsdk:"registered_model_databricks" tf:"optional,object"`
+}
+
+func (newState *GetModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelResponse) {
+}
+
+func (newState *GetModelResponse) SyncEffectiveFieldsDuringRead(existingState GetModelResponse) {
 }
 
 // Get a model version URI
@@ -622,9 +1000,21 @@ type GetModelVersionDownloadUriRequest struct {
 	Version types.String `tfsdk:"-"`
 }
 
+func (newState *GetModelVersionDownloadUriRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelVersionDownloadUriRequest) {
+}
+
+func (newState *GetModelVersionDownloadUriRequest) SyncEffectiveFieldsDuringRead(existingState GetModelVersionDownloadUriRequest) {
+}
+
 type GetModelVersionDownloadUriResponse struct {
 	// URI corresponding to where artifacts for this model version are stored.
 	ArtifactUri types.String `tfsdk:"artifact_uri" tf:"optional"`
+}
+
+func (newState *GetModelVersionDownloadUriResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelVersionDownloadUriResponse) {
+}
+
+func (newState *GetModelVersionDownloadUriResponse) SyncEffectiveFieldsDuringRead(existingState GetModelVersionDownloadUriResponse) {
 }
 
 // Get a model version
@@ -635,8 +1025,20 @@ type GetModelVersionRequest struct {
 	Version types.String `tfsdk:"-"`
 }
 
+func (newState *GetModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelVersionRequest) {
+}
+
+func (newState *GetModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState GetModelVersionRequest) {
+}
+
 type GetModelVersionResponse struct {
-	ModelVersion *ModelVersion `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional,object"`
+}
+
+func (newState *GetModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelVersionResponse) {
+}
+
+func (newState *GetModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState GetModelVersionResponse) {
 }
 
 // Get registered model permission levels
@@ -645,15 +1047,33 @@ type GetRegisteredModelPermissionLevelsRequest struct {
 	RegisteredModelId types.String `tfsdk:"-"`
 }
 
+func (newState *GetRegisteredModelPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRegisteredModelPermissionLevelsRequest) {
+}
+
+func (newState *GetRegisteredModelPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetRegisteredModelPermissionLevelsRequest) {
+}
+
 type GetRegisteredModelPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []RegisteredModelPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetRegisteredModelPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRegisteredModelPermissionLevelsResponse) {
+}
+
+func (newState *GetRegisteredModelPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetRegisteredModelPermissionLevelsResponse) {
 }
 
 // Get registered model permissions
 type GetRegisteredModelPermissionsRequest struct {
 	// The registered model for which to get or manage permissions.
 	RegisteredModelId types.String `tfsdk:"-"`
+}
+
+func (newState *GetRegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRegisteredModelPermissionsRequest) {
+}
+
+func (newState *GetRegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetRegisteredModelPermissionsRequest) {
 }
 
 // Get a run
@@ -665,10 +1085,22 @@ type GetRunRequest struct {
 	RunUuid types.String `tfsdk:"-"`
 }
 
+func (newState *GetRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunRequest) {
+}
+
+func (newState *GetRunRequest) SyncEffectiveFieldsDuringRead(existingState GetRunRequest) {
+}
+
 type GetRunResponse struct {
 	// Run metadata (name, start time, etc) and data (metrics, params, and
 	// tags).
-	Run *Run `tfsdk:"run" tf:"optional"`
+	Run []Run `tfsdk:"run" tf:"optional,object"`
+}
+
+func (newState *GetRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunResponse) {
+}
+
+func (newState *GetRunResponse) SyncEffectiveFieldsDuringRead(existingState GetRunResponse) {
 }
 
 type HttpUrlSpec struct {
@@ -693,6 +1125,12 @@ type HttpUrlSpec struct {
 	Url types.String `tfsdk:"url" tf:""`
 }
 
+func (newState *HttpUrlSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan HttpUrlSpec) {
+}
+
+func (newState *HttpUrlSpec) SyncEffectiveFieldsDuringRead(existingState HttpUrlSpec) {
+}
+
 type HttpUrlSpecWithoutSecret struct {
 	// Enable/disable SSL certificate validation. Default is true. For
 	// self-signed certificates, this field must be false AND the destination
@@ -706,11 +1144,23 @@ type HttpUrlSpecWithoutSecret struct {
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
 
+func (newState *HttpUrlSpecWithoutSecret) SyncEffectiveFieldsDuringCreateOrUpdate(plan HttpUrlSpecWithoutSecret) {
+}
+
+func (newState *HttpUrlSpecWithoutSecret) SyncEffectiveFieldsDuringRead(existingState HttpUrlSpecWithoutSecret) {
+}
+
 type InputTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// The tag value.
 	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *InputTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan InputTag) {
+}
+
+func (newState *InputTag) SyncEffectiveFieldsDuringRead(existingState InputTag) {
 }
 
 type JobSpec struct {
@@ -724,6 +1174,12 @@ type JobSpec struct {
 	WorkspaceUrl types.String `tfsdk:"workspace_url" tf:"optional"`
 }
 
+func (newState *JobSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSpec) {
+}
+
+func (newState *JobSpec) SyncEffectiveFieldsDuringRead(existingState JobSpec) {
+}
+
 type JobSpecWithoutSecret struct {
 	// ID of the job that the webhook runs.
 	JobId types.String `tfsdk:"job_id" tf:"optional"`
@@ -731,6 +1187,12 @@ type JobSpecWithoutSecret struct {
 	// to the workspace URL in which the webhook is created. If not specified,
 	// the job’s workspace is assumed to be the same as the webhook’s.
 	WorkspaceUrl types.String `tfsdk:"workspace_url" tf:"optional"`
+}
+
+func (newState *JobSpecWithoutSecret) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSpecWithoutSecret) {
+}
+
+func (newState *JobSpecWithoutSecret) SyncEffectiveFieldsDuringRead(existingState JobSpecWithoutSecret) {
 }
 
 // Get all artifacts
@@ -752,6 +1214,12 @@ type ListArtifactsRequest struct {
 	RunUuid types.String `tfsdk:"-"`
 }
 
+func (newState *ListArtifactsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListArtifactsRequest) {
+}
+
+func (newState *ListArtifactsRequest) SyncEffectiveFieldsDuringRead(existingState ListArtifactsRequest) {
+}
+
 type ListArtifactsResponse struct {
 	// File location and metadata for artifacts.
 	Files []FileInfo `tfsdk:"files" tf:"optional"`
@@ -759,6 +1227,12 @@ type ListArtifactsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Root artifact directory for the run.
 	RootUri types.String `tfsdk:"root_uri" tf:"optional"`
+}
+
+func (newState *ListArtifactsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListArtifactsResponse) {
+}
+
+func (newState *ListArtifactsResponse) SyncEffectiveFieldsDuringRead(existingState ListArtifactsResponse) {
 }
 
 // List experiments
@@ -776,6 +1250,12 @@ type ListExperimentsRequest struct {
 	ViewType types.String `tfsdk:"-"`
 }
 
+func (newState *ListExperimentsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExperimentsRequest) {
+}
+
+func (newState *ListExperimentsRequest) SyncEffectiveFieldsDuringRead(existingState ListExperimentsRequest) {
+}
+
 type ListExperimentsResponse struct {
 	// Paginated Experiments beginning with the first item on the requested
 	// page.
@@ -783,6 +1263,12 @@ type ListExperimentsResponse struct {
 	// Token that can be used to retrieve the next page of experiments. Empty
 	// token means no more experiment is available for retrieval.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListExperimentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExperimentsResponse) {
+}
+
+func (newState *ListExperimentsResponse) SyncEffectiveFieldsDuringRead(existingState ListExperimentsResponse) {
 }
 
 // List models
@@ -793,6 +1279,12 @@ type ListModelsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListModelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListModelsRequest) {
+}
+
+func (newState *ListModelsRequest) SyncEffectiveFieldsDuringRead(existingState ListModelsRequest) {
+}
+
 type ListModelsResponse struct {
 	// Pagination token to request next page of models for the same query.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -800,11 +1292,23 @@ type ListModelsResponse struct {
 	RegisteredModels []Model `tfsdk:"registered_models" tf:"optional"`
 }
 
+func (newState *ListModelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListModelsResponse) {
+}
+
+func (newState *ListModelsResponse) SyncEffectiveFieldsDuringRead(existingState ListModelsResponse) {
+}
+
 type ListRegistryWebhooks struct {
 	// Token that can be used to retrieve the next page of artifact results
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Array of registry webhooks.
 	Webhooks []RegistryWebhook `tfsdk:"webhooks" tf:"optional"`
+}
+
+func (newState *ListRegistryWebhooks) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRegistryWebhooks) {
+}
+
+func (newState *ListRegistryWebhooks) SyncEffectiveFieldsDuringRead(existingState ListRegistryWebhooks) {
 }
 
 // List transition requests
@@ -815,9 +1319,21 @@ type ListTransitionRequestsRequest struct {
 	Version types.String `tfsdk:"-"`
 }
 
+func (newState *ListTransitionRequestsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTransitionRequestsRequest) {
+}
+
+func (newState *ListTransitionRequestsRequest) SyncEffectiveFieldsDuringRead(existingState ListTransitionRequestsRequest) {
+}
+
 type ListTransitionRequestsResponse struct {
 	// Array of open transition requests.
 	Requests []Activity `tfsdk:"requests" tf:"optional"`
+}
+
+func (newState *ListTransitionRequestsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTransitionRequestsResponse) {
+}
+
+func (newState *ListTransitionRequestsResponse) SyncEffectiveFieldsDuringRead(existingState ListTransitionRequestsResponse) {
 }
 
 // List registry webhooks
@@ -831,6 +1347,12 @@ type ListWebhooksRequest struct {
 	ModelName types.String `tfsdk:"-"`
 	// Token indicating the page of artifact results to fetch
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListWebhooksRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListWebhooksRequest) {
+}
+
+func (newState *ListWebhooksRequest) SyncEffectiveFieldsDuringRead(existingState ListWebhooksRequest) {
 }
 
 type LogBatch struct {
@@ -847,7 +1369,19 @@ type LogBatch struct {
 	Tags []RunTag `tfsdk:"tags" tf:"optional"`
 }
 
+func (newState *LogBatch) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogBatch) {
+}
+
+func (newState *LogBatch) SyncEffectiveFieldsDuringRead(existingState LogBatch) {
+}
+
 type LogBatchResponse struct {
+}
+
+func (newState *LogBatchResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogBatchResponse) {
+}
+
+func (newState *LogBatchResponse) SyncEffectiveFieldsDuringRead(existingState LogBatchResponse) {
 }
 
 type LogInputs struct {
@@ -857,7 +1391,19 @@ type LogInputs struct {
 	RunId types.String `tfsdk:"run_id" tf:"optional"`
 }
 
+func (newState *LogInputs) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogInputs) {
+}
+
+func (newState *LogInputs) SyncEffectiveFieldsDuringRead(existingState LogInputs) {
+}
+
 type LogInputsResponse struct {
+}
+
+func (newState *LogInputsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogInputsResponse) {
+}
+
+func (newState *LogInputsResponse) SyncEffectiveFieldsDuringRead(existingState LogInputsResponse) {
 }
 
 type LogMetric struct {
@@ -876,7 +1422,19 @@ type LogMetric struct {
 	Value types.Float64 `tfsdk:"value" tf:""`
 }
 
+func (newState *LogMetric) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogMetric) {
+}
+
+func (newState *LogMetric) SyncEffectiveFieldsDuringRead(existingState LogMetric) {
+}
+
 type LogMetricResponse struct {
+}
+
+func (newState *LogMetricResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogMetricResponse) {
+}
+
+func (newState *LogMetricResponse) SyncEffectiveFieldsDuringRead(existingState LogMetricResponse) {
 }
 
 type LogModel struct {
@@ -886,7 +1444,19 @@ type LogModel struct {
 	RunId types.String `tfsdk:"run_id" tf:"optional"`
 }
 
+func (newState *LogModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogModel) {
+}
+
+func (newState *LogModel) SyncEffectiveFieldsDuringRead(existingState LogModel) {
+}
+
 type LogModelResponse struct {
+}
+
+func (newState *LogModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogModelResponse) {
+}
+
+func (newState *LogModelResponse) SyncEffectiveFieldsDuringRead(existingState LogModelResponse) {
 }
 
 type LogParam struct {
@@ -901,7 +1471,19 @@ type LogParam struct {
 	Value types.String `tfsdk:"value" tf:""`
 }
 
+func (newState *LogParam) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogParam) {
+}
+
+func (newState *LogParam) SyncEffectiveFieldsDuringRead(existingState LogParam) {
+}
+
 type LogParamResponse struct {
+}
+
+func (newState *LogParamResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogParamResponse) {
+}
+
+func (newState *LogParamResponse) SyncEffectiveFieldsDuringRead(existingState LogParamResponse) {
 }
 
 type Metric struct {
@@ -913,6 +1495,12 @@ type Metric struct {
 	Timestamp types.Int64 `tfsdk:"timestamp" tf:"optional"`
 	// Value associated with this metric.
 	Value types.Float64 `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *Metric) SyncEffectiveFieldsDuringCreateOrUpdate(plan Metric) {
+}
+
+func (newState *Metric) SyncEffectiveFieldsDuringRead(existingState Metric) {
 }
 
 type Model struct {
@@ -932,6 +1520,12 @@ type Model struct {
 	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
 	// User that created this `registered_model`
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
+}
+
+func (newState *Model) SyncEffectiveFieldsDuringCreateOrUpdate(plan Model) {
+}
+
+func (newState *Model) SyncEffectiveFieldsDuringRead(existingState Model) {
 }
 
 type ModelDatabricks struct {
@@ -956,11 +1550,23 @@ type ModelDatabricks struct {
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
 
+func (newState *ModelDatabricks) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelDatabricks) {
+}
+
+func (newState *ModelDatabricks) SyncEffectiveFieldsDuringRead(existingState ModelDatabricks) {
+}
+
 type ModelTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// The tag value.
 	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *ModelTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelTag) {
+}
+
+func (newState *ModelTag) SyncEffectiveFieldsDuringRead(existingState ModelTag) {
 }
 
 type ModelVersion struct {
@@ -993,6 +1599,12 @@ type ModelVersion struct {
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 	// Model's version number.
 	Version types.String `tfsdk:"version" tf:"optional"`
+}
+
+func (newState *ModelVersion) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelVersion) {
+}
+
+func (newState *ModelVersion) SyncEffectiveFieldsDuringRead(existingState ModelVersion) {
 }
 
 type ModelVersionDatabricks struct {
@@ -1046,6 +1658,12 @@ type ModelVersionDatabricks struct {
 	Version types.String `tfsdk:"version" tf:"optional"`
 }
 
+func (newState *ModelVersionDatabricks) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelVersionDatabricks) {
+}
+
+func (newState *ModelVersionDatabricks) SyncEffectiveFieldsDuringRead(existingState ModelVersionDatabricks) {
+}
+
 type ModelVersionTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key" tf:"optional"`
@@ -1053,11 +1671,23 @@ type ModelVersionTag struct {
 	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
+func (newState *ModelVersionTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelVersionTag) {
+}
+
+func (newState *ModelVersionTag) SyncEffectiveFieldsDuringRead(existingState ModelVersionTag) {
+}
+
 type Param struct {
 	// Key identifying this param.
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// Value associated with this param.
 	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *Param) SyncEffectiveFieldsDuringCreateOrUpdate(plan Param) {
+}
+
+func (newState *Param) SyncEffectiveFieldsDuringRead(existingState Param) {
 }
 
 type RegisteredModelAccessControlRequest struct {
@@ -1069,6 +1699,12 @@ type RegisteredModelAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *RegisteredModelAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelAccessControlRequest) {
+}
+
+func (newState *RegisteredModelAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState RegisteredModelAccessControlRequest) {
 }
 
 type RegisteredModelAccessControlResponse struct {
@@ -1084,12 +1720,24 @@ type RegisteredModelAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *RegisteredModelAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelAccessControlResponse) {
+}
+
+func (newState *RegisteredModelAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState RegisteredModelAccessControlResponse) {
+}
+
 type RegisteredModelPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
 	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+}
+
+func (newState *RegisteredModelPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelPermission) {
+}
+
+func (newState *RegisteredModelPermission) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermission) {
 }
 
 type RegisteredModelPermissions struct {
@@ -1100,16 +1748,34 @@ type RegisteredModelPermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *RegisteredModelPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelPermissions) {
+}
+
+func (newState *RegisteredModelPermissions) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissions) {
+}
+
 type RegisteredModelPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *RegisteredModelPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelPermissionsDescription) {
+}
+
+func (newState *RegisteredModelPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissionsDescription) {
+}
+
 type RegisteredModelPermissionsRequest struct {
 	AccessControlList []RegisteredModelAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The registered model for which to get or manage permissions.
 	RegisteredModelId types.String `tfsdk:"-"`
+}
+
+func (newState *RegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelPermissionsRequest) {
+}
+
+func (newState *RegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissionsRequest) {
 }
 
 type RegistryWebhook struct {
@@ -1152,11 +1818,11 @@ type RegistryWebhook struct {
 	// version be archived.
 	Events []types.String `tfsdk:"events" tf:"optional"`
 
-	HttpUrlSpec *HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec" tf:"optional,object"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	JobSpec *JobSpecWithoutSecret `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpecWithoutSecret `tfsdk:"job_spec" tf:"optional,object"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// Name of the model whose events would trigger this webhook.
@@ -1170,6 +1836,12 @@ type RegistryWebhook struct {
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
 	Status types.String `tfsdk:"status" tf:"optional"`
+}
+
+func (newState *RegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegistryWebhook) {
+}
+
+func (newState *RegistryWebhook) SyncEffectiveFieldsDuringRead(existingState RegistryWebhook) {
 }
 
 type RejectTransitionRequest struct {
@@ -1191,9 +1863,21 @@ type RejectTransitionRequest struct {
 	Version types.String `tfsdk:"version" tf:""`
 }
 
+func (newState *RejectTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RejectTransitionRequest) {
+}
+
+func (newState *RejectTransitionRequest) SyncEffectiveFieldsDuringRead(existingState RejectTransitionRequest) {
+}
+
 type RejectTransitionRequestResponse struct {
 	// Activity recorded for the action.
-	Activity *Activity `tfsdk:"activity" tf:"optional"`
+	Activity []Activity `tfsdk:"activity" tf:"optional,object"`
+}
+
+func (newState *RejectTransitionRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RejectTransitionRequestResponse) {
+}
+
+func (newState *RejectTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState RejectTransitionRequestResponse) {
 }
 
 type RenameModelRequest struct {
@@ -1203,8 +1887,20 @@ type RenameModelRequest struct {
 	NewName types.String `tfsdk:"new_name" tf:"optional"`
 }
 
+func (newState *RenameModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RenameModelRequest) {
+}
+
+func (newState *RenameModelRequest) SyncEffectiveFieldsDuringRead(existingState RenameModelRequest) {
+}
+
 type RenameModelResponse struct {
-	RegisteredModel *Model `tfsdk:"registered_model" tf:"optional"`
+	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional,object"`
+}
+
+func (newState *RenameModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RenameModelResponse) {
+}
+
+func (newState *RenameModelResponse) SyncEffectiveFieldsDuringRead(existingState RenameModelResponse) {
 }
 
 type RestoreExperiment struct {
@@ -1212,7 +1908,19 @@ type RestoreExperiment struct {
 	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
 }
 
+func (newState *RestoreExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreExperiment) {
+}
+
+func (newState *RestoreExperiment) SyncEffectiveFieldsDuringRead(existingState RestoreExperiment) {
+}
+
 type RestoreExperimentResponse struct {
+}
+
+func (newState *RestoreExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreExperimentResponse) {
+}
+
+func (newState *RestoreExperimentResponse) SyncEffectiveFieldsDuringRead(existingState RestoreExperimentResponse) {
 }
 
 type RestoreRun struct {
@@ -1220,7 +1928,19 @@ type RestoreRun struct {
 	RunId types.String `tfsdk:"run_id" tf:""`
 }
 
+func (newState *RestoreRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRun) {
+}
+
+func (newState *RestoreRun) SyncEffectiveFieldsDuringRead(existingState RestoreRun) {
+}
+
 type RestoreRunResponse struct {
+}
+
+func (newState *RestoreRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRunResponse) {
+}
+
+func (newState *RestoreRunResponse) SyncEffectiveFieldsDuringRead(existingState RestoreRunResponse) {
 }
 
 type RestoreRuns struct {
@@ -1235,18 +1955,36 @@ type RestoreRuns struct {
 	MinTimestampMillis types.Int64 `tfsdk:"min_timestamp_millis" tf:""`
 }
 
+func (newState *RestoreRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRuns) {
+}
+
+func (newState *RestoreRuns) SyncEffectiveFieldsDuringRead(existingState RestoreRuns) {
+}
+
 type RestoreRunsResponse struct {
 	// The number of runs restored.
 	RunsRestored types.Int64 `tfsdk:"runs_restored" tf:"optional"`
 }
 
+func (newState *RestoreRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRunsResponse) {
+}
+
+func (newState *RestoreRunsResponse) SyncEffectiveFieldsDuringRead(existingState RestoreRunsResponse) {
+}
+
 type Run struct {
 	// Run data.
-	Data *RunData `tfsdk:"data" tf:"optional"`
+	Data []RunData `tfsdk:"data" tf:"optional,object"`
 	// Run metadata.
-	Info *RunInfo `tfsdk:"info" tf:"optional"`
+	Info []RunInfo `tfsdk:"info" tf:"optional,object"`
 	// Run inputs.
-	Inputs *RunInputs `tfsdk:"inputs" tf:"optional"`
+	Inputs []RunInputs `tfsdk:"inputs" tf:"optional,object"`
+}
+
+func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
+}
+
+func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
 }
 
 type RunData struct {
@@ -1256,6 +1994,12 @@ type RunData struct {
 	Params []Param `tfsdk:"params" tf:"optional"`
 	// Additional metadata key-value pairs.
 	Tags []RunTag `tfsdk:"tags" tf:"optional"`
+}
+
+func (newState *RunData) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunData) {
+}
+
+func (newState *RunData) SyncEffectiveFieldsDuringRead(existingState RunData) {
 }
 
 type RunInfo struct {
@@ -1285,9 +2029,21 @@ type RunInfo struct {
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
 
+func (newState *RunInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunInfo) {
+}
+
+func (newState *RunInfo) SyncEffectiveFieldsDuringRead(existingState RunInfo) {
+}
+
 type RunInputs struct {
 	// Run metrics.
 	DatasetInputs []DatasetInput `tfsdk:"dataset_inputs" tf:"optional"`
+}
+
+func (newState *RunInputs) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunInputs) {
+}
+
+func (newState *RunInputs) SyncEffectiveFieldsDuringRead(existingState RunInputs) {
 }
 
 type RunTag struct {
@@ -1295,6 +2051,12 @@ type RunTag struct {
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// The tag value.
 	Value types.String `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *RunTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTag) {
+}
+
+func (newState *RunTag) SyncEffectiveFieldsDuringRead(existingState RunTag) {
 }
 
 type SearchExperiments struct {
@@ -1315,12 +2077,24 @@ type SearchExperiments struct {
 	ViewType types.String `tfsdk:"view_type" tf:"optional"`
 }
 
+func (newState *SearchExperiments) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchExperiments) {
+}
+
+func (newState *SearchExperiments) SyncEffectiveFieldsDuringRead(existingState SearchExperiments) {
+}
+
 type SearchExperimentsResponse struct {
 	// Experiments that match the search criteria
 	Experiments []Experiment `tfsdk:"experiments" tf:"optional"`
 	// Token that can be used to retrieve the next page of experiments. An empty
 	// token means that no more experiments are available for retrieval.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *SearchExperimentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchExperimentsResponse) {
+}
+
+func (newState *SearchExperimentsResponse) SyncEffectiveFieldsDuringRead(existingState SearchExperimentsResponse) {
 }
 
 // Searches model versions
@@ -1339,12 +2113,24 @@ type SearchModelVersionsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *SearchModelVersionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchModelVersionsRequest) {
+}
+
+func (newState *SearchModelVersionsRequest) SyncEffectiveFieldsDuringRead(existingState SearchModelVersionsRequest) {
+}
+
 type SearchModelVersionsResponse struct {
 	// Models that match the search criteria
 	ModelVersions []ModelVersion `tfsdk:"model_versions" tf:"optional"`
 	// Pagination token to request next page of models for the same search
 	// query.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *SearchModelVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchModelVersionsResponse) {
+}
+
+func (newState *SearchModelVersionsResponse) SyncEffectiveFieldsDuringRead(existingState SearchModelVersionsResponse) {
 }
 
 // Search models
@@ -1363,11 +2149,23 @@ type SearchModelsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *SearchModelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchModelsRequest) {
+}
+
+func (newState *SearchModelsRequest) SyncEffectiveFieldsDuringRead(existingState SearchModelsRequest) {
+}
+
 type SearchModelsResponse struct {
 	// Pagination token to request the next page of models.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Registered Models that match the search criteria.
 	RegisteredModels []Model `tfsdk:"registered_models" tf:"optional"`
+}
+
+func (newState *SearchModelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchModelsResponse) {
+}
+
+func (newState *SearchModelsResponse) SyncEffectiveFieldsDuringRead(existingState SearchModelsResponse) {
 }
 
 type SearchRuns struct {
@@ -1402,11 +2200,23 @@ type SearchRuns struct {
 	RunViewType types.String `tfsdk:"run_view_type" tf:"optional"`
 }
 
+func (newState *SearchRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchRuns) {
+}
+
+func (newState *SearchRuns) SyncEffectiveFieldsDuringRead(existingState SearchRuns) {
+}
+
 type SearchRunsResponse struct {
 	// Token for the next page of runs.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Runs that match the search criteria.
 	Runs []Run `tfsdk:"runs" tf:"optional"`
+}
+
+func (newState *SearchRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchRunsResponse) {
+}
+
+func (newState *SearchRunsResponse) SyncEffectiveFieldsDuringRead(existingState SearchRunsResponse) {
 }
 
 type SetExperimentTag struct {
@@ -1421,7 +2231,19 @@ type SetExperimentTag struct {
 	Value types.String `tfsdk:"value" tf:""`
 }
 
+func (newState *SetExperimentTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetExperimentTag) {
+}
+
+func (newState *SetExperimentTag) SyncEffectiveFieldsDuringRead(existingState SetExperimentTag) {
+}
+
 type SetExperimentTagResponse struct {
+}
+
+func (newState *SetExperimentTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetExperimentTagResponse) {
+}
+
+func (newState *SetExperimentTagResponse) SyncEffectiveFieldsDuringRead(existingState SetExperimentTagResponse) {
 }
 
 type SetModelTagRequest struct {
@@ -1438,7 +2260,19 @@ type SetModelTagRequest struct {
 	Value types.String `tfsdk:"value" tf:""`
 }
 
+func (newState *SetModelTagRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetModelTagRequest) {
+}
+
+func (newState *SetModelTagRequest) SyncEffectiveFieldsDuringRead(existingState SetModelTagRequest) {
+}
+
 type SetModelTagResponse struct {
+}
+
+func (newState *SetModelTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetModelTagResponse) {
+}
+
+func (newState *SetModelTagResponse) SyncEffectiveFieldsDuringRead(existingState SetModelTagResponse) {
 }
 
 type SetModelVersionTagRequest struct {
@@ -1457,7 +2291,19 @@ type SetModelVersionTagRequest struct {
 	Version types.String `tfsdk:"version" tf:""`
 }
 
+func (newState *SetModelVersionTagRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetModelVersionTagRequest) {
+}
+
+func (newState *SetModelVersionTagRequest) SyncEffectiveFieldsDuringRead(existingState SetModelVersionTagRequest) {
+}
+
 type SetModelVersionTagResponse struct {
+}
+
+func (newState *SetModelVersionTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetModelVersionTagResponse) {
+}
+
+func (newState *SetModelVersionTagResponse) SyncEffectiveFieldsDuringRead(existingState SetModelVersionTagResponse) {
 }
 
 type SetTag struct {
@@ -1475,7 +2321,19 @@ type SetTag struct {
 	Value types.String `tfsdk:"value" tf:""`
 }
 
+func (newState *SetTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetTag) {
+}
+
+func (newState *SetTag) SyncEffectiveFieldsDuringRead(existingState SetTag) {
+}
+
 type SetTagResponse struct {
+}
+
+func (newState *SetTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetTagResponse) {
+}
+
+func (newState *SetTagResponse) SyncEffectiveFieldsDuringRead(existingState SetTagResponse) {
 }
 
 // Test webhook response object.
@@ -1484,6 +2342,12 @@ type TestRegistryWebhook struct {
 	Body types.String `tfsdk:"body" tf:"optional"`
 	// Status code returned by the webhook URL
 	StatusCode types.Int64 `tfsdk:"status_code" tf:"optional"`
+}
+
+func (newState *TestRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhook) {
+}
+
+func (newState *TestRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhook) {
 }
 
 type TestRegistryWebhookRequest struct {
@@ -1495,9 +2359,21 @@ type TestRegistryWebhookRequest struct {
 	Id types.String `tfsdk:"id" tf:""`
 }
 
+func (newState *TestRegistryWebhookRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhookRequest) {
+}
+
+func (newState *TestRegistryWebhookRequest) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhookRequest) {
+}
+
 type TestRegistryWebhookResponse struct {
 	// Test webhook response object.
-	Webhook *TestRegistryWebhook `tfsdk:"webhook" tf:"optional"`
+	Webhook []TestRegistryWebhook `tfsdk:"webhook" tf:"optional,object"`
+}
+
+func (newState *TestRegistryWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhookResponse) {
+}
+
+func (newState *TestRegistryWebhookResponse) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhookResponse) {
 }
 
 type TransitionModelVersionStageDatabricks struct {
@@ -1520,6 +2396,12 @@ type TransitionModelVersionStageDatabricks struct {
 	Stage types.String `tfsdk:"stage" tf:""`
 	// Version of the model.
 	Version types.String `tfsdk:"version" tf:""`
+}
+
+func (newState *TransitionModelVersionStageDatabricks) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionModelVersionStageDatabricks) {
+}
+
+func (newState *TransitionModelVersionStageDatabricks) SyncEffectiveFieldsDuringRead(existingState TransitionModelVersionStageDatabricks) {
 }
 
 // Transition request details.
@@ -1545,8 +2427,20 @@ type TransitionRequest struct {
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
 
+func (newState *TransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionRequest) {
+}
+
+func (newState *TransitionRequest) SyncEffectiveFieldsDuringRead(existingState TransitionRequest) {
+}
+
 type TransitionStageResponse struct {
-	ModelVersion *ModelVersionDatabricks `tfsdk:"model_version" tf:"optional"`
+	ModelVersion []ModelVersionDatabricks `tfsdk:"model_version" tf:"optional,object"`
+}
+
+func (newState *TransitionStageResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionStageResponse) {
+}
+
+func (newState *TransitionStageResponse) SyncEffectiveFieldsDuringRead(existingState TransitionStageResponse) {
 }
 
 type UpdateComment struct {
@@ -1556,9 +2450,21 @@ type UpdateComment struct {
 	Id types.String `tfsdk:"id" tf:""`
 }
 
+func (newState *UpdateComment) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateComment) {
+}
+
+func (newState *UpdateComment) SyncEffectiveFieldsDuringRead(existingState UpdateComment) {
+}
+
 type UpdateCommentResponse struct {
 	// Comment details.
-	Comment *CommentObject `tfsdk:"comment" tf:"optional"`
+	Comment []CommentObject `tfsdk:"comment" tf:"optional,object"`
+}
+
+func (newState *UpdateCommentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCommentResponse) {
+}
+
+func (newState *UpdateCommentResponse) SyncEffectiveFieldsDuringRead(existingState UpdateCommentResponse) {
 }
 
 type UpdateExperiment struct {
@@ -1569,7 +2475,19 @@ type UpdateExperiment struct {
 	NewName types.String `tfsdk:"new_name" tf:"optional"`
 }
 
+func (newState *UpdateExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExperiment) {
+}
+
+func (newState *UpdateExperiment) SyncEffectiveFieldsDuringRead(existingState UpdateExperiment) {
+}
+
 type UpdateExperimentResponse struct {
+}
+
+func (newState *UpdateExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExperimentResponse) {
+}
+
+func (newState *UpdateExperimentResponse) SyncEffectiveFieldsDuringRead(existingState UpdateExperimentResponse) {
 }
 
 type UpdateModelRequest struct {
@@ -1579,7 +2497,19 @@ type UpdateModelRequest struct {
 	Name types.String `tfsdk:"name" tf:""`
 }
 
+func (newState *UpdateModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelRequest) {
+}
+
+func (newState *UpdateModelRequest) SyncEffectiveFieldsDuringRead(existingState UpdateModelRequest) {
+}
+
 type UpdateModelResponse struct {
+}
+
+func (newState *UpdateModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelResponse) {
+}
+
+func (newState *UpdateModelResponse) SyncEffectiveFieldsDuringRead(existingState UpdateModelResponse) {
 }
 
 type UpdateModelVersionRequest struct {
@@ -1591,7 +2521,19 @@ type UpdateModelVersionRequest struct {
 	Version types.String `tfsdk:"version" tf:""`
 }
 
+func (newState *UpdateModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelVersionRequest) {
+}
+
+func (newState *UpdateModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionRequest) {
+}
+
 type UpdateModelVersionResponse struct {
+}
+
+func (newState *UpdateModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelVersionResponse) {
+}
+
+func (newState *UpdateModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionResponse) {
 }
 
 type UpdateRegistryWebhook struct {
@@ -1632,11 +2574,11 @@ type UpdateRegistryWebhook struct {
 	// version be archived.
 	Events []types.String `tfsdk:"events" tf:"optional"`
 
-	HttpUrlSpec *HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional"`
+	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional,object"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:""`
 
-	JobSpec *JobSpec `tfsdk:"job_spec" tf:"optional"`
+	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional,object"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -1646,6 +2588,12 @@ type UpdateRegistryWebhook struct {
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
 	Status types.String `tfsdk:"status" tf:"optional"`
+}
+
+func (newState *UpdateRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRegistryWebhook) {
+}
+
+func (newState *UpdateRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState UpdateRegistryWebhook) {
 }
 
 type UpdateRun struct {
@@ -1660,10 +2608,28 @@ type UpdateRun struct {
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
 
+func (newState *UpdateRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRun) {
+}
+
+func (newState *UpdateRun) SyncEffectiveFieldsDuringRead(existingState UpdateRun) {
+}
+
 type UpdateRunResponse struct {
 	// Updated metadata of the run.
-	RunInfo *RunInfo `tfsdk:"run_info" tf:"optional"`
+	RunInfo []RunInfo `tfsdk:"run_info" tf:"optional,object"`
+}
+
+func (newState *UpdateRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRunResponse) {
+}
+
+func (newState *UpdateRunResponse) SyncEffectiveFieldsDuringRead(existingState UpdateRunResponse) {
 }
 
 type UpdateWebhookResponse struct {
+}
+
+func (newState *UpdateWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWebhookResponse) {
+}
+
+func (newState *UpdateWebhookResponse) SyncEffectiveFieldsDuringRead(existingState UpdateWebhookResponse) {
 }

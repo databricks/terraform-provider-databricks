@@ -12,6 +12,7 @@ import (
 func TestAddContextToAllResources(t *testing.T) {
 	check := func(ctx context.Context, rd *schema.ResourceData, i any) diag.Diagnostics {
 		assert.Equal(t, "bar", ResourceName.GetOrUnknown(ctx))
+		assert.Equal(t, "sdkv2", Sdk.GetOrUnknown(ctx))
 		return nil
 	}
 	p := &schema.Provider{

@@ -2,9 +2,11 @@ package dashboards
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -68,22 +70,22 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			var newDashboardRequest dashboards.CreateDashboardRequest
-			common.DataToStructPointer(d, dashboardSchema, &newDashboardRequest)
+			var dashboard dashboards.Dashboard
+			common.DataToStructPointer(d, dashboardSchema, &dashboard)
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
 			}
 			d.Set("md5", md5Hash)
-			newDashboardRequest.SerializedDashboard = content
-			createdDashboard, err := w.Lakeview.Create(ctx, newDashboardRequest)
+			dashboard.SerializedDashboard = content
+			createdDashboard, err := w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: &dashboard})
 			if err != nil && isParentDoesntExistError(err) {
-				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", newDashboardRequest.ParentPath)
-				err = w.Workspace.MkdirsByPath(ctx, newDashboardRequest.ParentPath)
+				log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", dashboard.ParentPath)
+				err = w.Workspace.MkdirsByPath(ctx, dashboard.ParentPath)
 				if err != nil {
 					return err
 				}
-				createdDashboard, err = w.Lakeview.Create(ctx, newDashboardRequest)
+				createdDashboard, err = w.Lakeview.Create(ctx, dashboards.CreateDashboardRequest{Dashboard: &dashboard})
 			}
 			if err != nil {
 				return err
@@ -124,6 +126,14 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
+
+			// Deletion of a dashboard moves it to the trash and subsequent reads still return the trashed dashboard.
+			// It cannot be updated unless it is untrashed, so we treat it as deleted to force recreation.
+			if resp.LifecycleState == dashboards.LifecycleStateTrashed {
+				d.SetId("")
+				return nil
+			}
+
 			d.Set("dashboard_change_detected", (resp.Etag != d.Get("etag").(string)))
 			return common.StructToData(resp, dashboardSchema, d)
 		},
@@ -132,16 +142,19 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			var updateDashboardRequest dashboards.UpdateDashboardRequest
-			common.DataToStructPointer(d, dashboardSchema, &updateDashboardRequest)
-			updateDashboardRequest.DashboardId = d.Id()
+			var dashboard dashboards.Dashboard
+			common.DataToStructPointer(d, dashboardSchema, &dashboard)
+			dashboard.DashboardId = d.Id()
 			content, md5Hash, err := common.ReadSerializedJsonContent(d.Get("serialized_dashboard").(string), d.Get("file_path").(string))
 			if err != nil {
 				return err
 			}
 			d.Set("md5", md5Hash)
-			updateDashboardRequest.SerializedDashboard = content
-			updatedDashboard, err := w.Lakeview.Update(ctx, updateDashboardRequest)
+			dashboard.SerializedDashboard = content
+			updatedDashboard, err := w.Lakeview.Update(ctx, dashboards.UpdateDashboardRequest{
+				DashboardId: dashboard.DashboardId,
+				Dashboard:   &dashboard,
+			})
 			if err != nil {
 				return err
 			}
@@ -172,9 +185,32 @@ func ResourceDashboard() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Lakeview.Trash(ctx, dashboards.TrashDashboardRequest{
+
+			// Attempt to trash the dashboard.
+			err = w.Lakeview.Trash(ctx, dashboards.TrashDashboardRequest{
 				DashboardId: d.Id(),
 			})
+
+			// If the dashboard was already trashed, we'll get a 403 (Permission Denied) error.
+			// There may be other cases where we get a 403, so we first confirm that the
+			// dashboard state is actually trashed, and if so, return success.
+			if errors.Is(err, apierr.ErrPermissionDenied) {
+				dashboard, nerr := w.Lakeview.Get(ctx, dashboards.GetDashboardRequest{
+					DashboardId: d.Id(),
+				})
+
+				// Return original error if we can't get the dashboard state.
+				if nerr != nil {
+					return err
+				}
+
+				// If the dashboard is trashed, return success.
+				if dashboard.LifecycleState == dashboards.LifecycleStateTrashed {
+					return nil
+				}
+			}
+
+			return err
 		},
 	}
 }

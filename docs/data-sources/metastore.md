@@ -14,6 +14,10 @@ Retrieves information about metastore for a given id of [databricks_metastore](.
 MetastoreInfo response for a given metastore id
 
 ```hcl
+resource "aws_s3_bucket" "metastore" {
+  bucket        = "${var.prefix}-metastore"
+  force_destroy = true
+}
 
 resource "databricks_metastore" "this" {
   provider      = databricks.workspace

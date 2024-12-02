@@ -13,7 +13,7 @@ Retrieves information about [databricks_instance_pool](../resources/instance_poo
 Referring to an instance pool by name:
 
 ```hcl
-data "databricks_instance_pool" "Pool" {
+data "databricks_instance_pool" "pool" {
   name = "All spot"
 }
 

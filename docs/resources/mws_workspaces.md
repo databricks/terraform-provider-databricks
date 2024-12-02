@@ -26,7 +26,7 @@ To get workspace running, you have to configure a couple of things:
 
 * [databricks_mws_credentials](mws_credentials.md) - You can share a credentials (cross-account IAM role) configuration ID with multiple workspaces. It is not required to create a new one for each workspace.
 * [databricks_mws_storage_configurations](mws_storage_configurations.md) - You can share a root S3 bucket with multiple workspaces in a single account. You do not have to create new ones for each workspace. If you share a root S3 bucket for multiple workspaces in an account, data on the root S3 bucket is partitioned into separate directories by workspace.
-* [databricks_mws_networks](mws_networks.md) - (optional, but recommended) You can share one [customer-managed VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) with multiple workspaces in a single account. You do not have to create a new VPC for each workspace. However, you cannot reuse subnets or security groups with other resources, including other workspaces or non-Databricks resources. If you plan to share one VPC with multiple workspaces, be sure to size your VPC and subnets accordingly. Because a Databricks [databricks_mws_networks](mws_networks.md) encapsulates this information, you cannot reuse it across workspaces.
+* [databricks_mws_networks](mws_networks.md) - (optional, but recommended) You can share one [customer-managed VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) with multiple workspaces in a single account. However, Databricks recommends using unique subnets and security groups for each workspace. If you plan to share one VPC with multiple workspaces, be sure to size your VPC and subnets accordingly. Because a Databricks [databricks_mws_networks](mws_networks.md) encapsulates this information, you cannot reuse it across workspaces.
 * [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) - You can share a customer-managed key across workspaces.
 
 ```hcl
@@ -392,7 +392,18 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 
 ## Import
 
-!> Importing this resource is not currently supported.
+This resource can be imported by Databricks account ID and workspace ID.
+
+```sh
+terraform import databricks_mws_networks.this '<account_id>/<workspace_id>'
+```
+
+~> Not all fields of `databricks_mws_workspaces` can be updated without causing the workspace to be recreated.
+   If the configuration for these immutable fields does not match the existing workspace, the workspace will
+   be deleted and recreated in the next `terraform apply`. After importing, verify that the configuration
+   matches the existing resource by running `terraform plan`. The only fields that can be updated are
+   `credentials_id`, `network_id`, `storage_customer_managed_key_id`, `private_access_settings_id`,
+   `managed_services_customer_managed_key_id`, and `custom_tags`.
 
 ## Related Resources
 

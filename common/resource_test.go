@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -36,6 +37,94 @@ func TestImportingCallsRead(t *testing.T) {
 	assert.True(t, r.Schema["foo"].ForceNew)
 	assert.Equal(t, "abc", d.Id())
 	assert.Equal(t, 1, d.Get("foo"))
+}
+
+func createTestResourceForSkipRead(skipRead bool) Resource {
+	res := Resource{
+		Create: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			log.Println("[DEBUG] Create called")
+			return d.Set("foo", 1)
+		},
+		Read: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			log.Println("[DEBUG] Read called")
+			d.Set("foo", 2)
+			return nil
+		},
+		Update: func(ctx context.Context,
+			d *schema.ResourceData,
+			c *DatabricksClient) error {
+			log.Println("[DEBUG] Update called")
+			return d.Set("foo", 3)
+		},
+		Schema: map[string]*schema.Schema{
+			"foo": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+		},
+	}
+	if skipRead {
+		res.CanSkipReadAfterCreateAndUpdate = func(d *schema.ResourceData) bool {
+			return true
+		}
+	}
+	return res
+}
+
+func TestCreateSkipRead(t *testing.T) {
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	r := createTestResourceForSkipRead(true).ToResource()
+	d := r.TestResourceData()
+	diags := r.CreateContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, 1, d.Get("foo"))
+}
+
+func TestCreateDontSkipRead(t *testing.T) {
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	r := createTestResourceForSkipRead(false).ToResource()
+	d := r.TestResourceData()
+	diags := r.CreateContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, 2, d.Get("foo"))
+}
+
+func TestUpdateSkipRead(t *testing.T) {
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	r := createTestResourceForSkipRead(true).ToResource()
+	d := r.TestResourceData()
+	datas, err := r.Importer.StateContext(ctx, d, client)
+	require.NoError(t, err)
+	assert.Len(t, datas, 1)
+	assert.False(t, r.Schema["foo"].ForceNew)
+	assert.Equal(t, "", d.Id())
+
+	diags := r.UpdateContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, 3, d.Get("foo"))
+}
+
+func TestUpdateDontSkipRead(t *testing.T) {
+	client := &DatabricksClient{}
+	ctx := context.Background()
+	r := createTestResourceForSkipRead(false).ToResource()
+	d := r.TestResourceData()
+	datas, err := r.Importer.StateContext(ctx, d, client)
+	require.NoError(t, err)
+	assert.Len(t, datas, 1)
+	assert.False(t, r.Schema["foo"].ForceNew)
+	assert.Equal(t, "", d.Id())
+
+	diags := r.UpdateContext(ctx, d, client)
+	assert.False(t, diags.HasError())
+	assert.Equal(t, 2, d.Get("foo"))
 }
 
 func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {
@@ -185,6 +274,15 @@ func TestWorkspacePathPrefixDiffSuppress(t *testing.T) {
 	assert.True(t, WorkspacePathPrefixDiffSuppress("k", "/foo/bar", "/Workspace/foo/bar", nil))
 	assert.True(t, WorkspacePathPrefixDiffSuppress("k", "/foo/bar", "/foo/bar", nil))
 	assert.False(t, WorkspacePathPrefixDiffSuppress("k", "/Workspace/1", "/Workspace/2", nil))
+}
+
+func TestWorkspaceOrEmptyPathPrefixDiffSuppress(t *testing.T) {
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/Workspace/foo/bar", "/Workspace/foo/bar", nil))
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/Workspace/foo/bar", "/foo/bar", nil))
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/foo/bar", "/Workspace/foo/bar", nil))
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/foo/bar", "/foo/bar", nil))
+	assert.True(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/foo/bar", "", nil))
+	assert.False(t, WorkspaceOrEmptyPathPrefixDiffSuppress("k", "/Workspace/1", "/Workspace/2", nil))
 }
 
 func TestEqualFoldDiffSuppress(t *testing.T) {

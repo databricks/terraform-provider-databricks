@@ -466,17 +466,22 @@ func TestAccPermissions_WorkspaceFile_Path(t *testing.T) {
 		}
 		resource "databricks_workspace_file" "this" {
 			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
-			path = "${databricks_directory.this.path}/test_notebook"
+			path = "${databricks_directory.this.path}/test_ws_file"
 		}`
 	WorkspaceLevel(t, Step{
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id", groupPermissions("CAN_RUN")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id",
+			groupPermissions("CAN_RUN")),
 	}, Step{
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id",
+			currentPrincipalPermission(t, "CAN_MANAGE"),
+			allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
 	}, Step{
 		// The current user can be removed from permissions since they inherit permissions from the directory they created.
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id", allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id",
+			allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
 	}, Step{
-		Template:    workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id", currentPrincipalPermission(t, "CAN_READ")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_path", "databricks_workspace_file.this.id",
+			currentPrincipalPermission(t, "CAN_READ")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for file, allowed levels: CAN_MANAGE"),
 	})
 }
@@ -489,17 +494,22 @@ func TestAccPermissions_WorkspaceFile_Id(t *testing.T) {
 		}
 		resource "databricks_workspace_file" "this" {
 			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
-			path = "${databricks_directory.this.path}/test_notebook"
+			path = "${databricks_directory.this.path}/test_ws_file"
 		}`
 	WorkspaceLevel(t, Step{
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id", groupPermissions("CAN_RUN")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id",
+			groupPermissions("CAN_RUN")),
 	}, Step{
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id",
+			currentPrincipalPermission(t, "CAN_MANAGE"),
+			allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
 	}, Step{
 		// The current user can be removed from permissions since they inherit permissions from the directory they created.
-		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id", allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id",
+			allPrincipalPermissions("CAN_RUN", "CAN_READ", "CAN_EDIT", "CAN_MANAGE")),
 	}, Step{
-		Template:    workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id", currentPrincipalPermission(t, "CAN_READ")),
+		Template: workspaceFile + makePermissionsTestStage("workspace_file_id", "databricks_workspace_file.this.object_id",
+			currentPrincipalPermission(t, "CAN_READ")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for file, allowed levels: CAN_MANAGE"),
 	})
 }
@@ -508,8 +518,8 @@ func TestAccPermissions_Repo_Id(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	template := `
 		resource "databricks_repo" "this" {
-			url = "https://github.com/databrickslabs/tempo.git"
-			path = "/Repos/terraform-tests/tempo-{var.STICKY_RANDOM}"
+			url = "https://github.com/databricks/databricks-sdk-go.git"
+			path = "/Repos/terraform-tests/databricks-sdk-go-{var.STICKY_RANDOM}"
 		}
 		`
 	WorkspaceLevel(t, Step{
@@ -542,8 +552,8 @@ func TestAccPermissions_Repo_Path(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	template := `
 		resource "databricks_repo" "this" {
-			url = "https://github.com/databrickslabs/tempo.git"
-			path = "/Repos/terraform-tests/tempo-{var.STICKY_RANDOM}"
+			url = "https://github.com/databricks/databricks-sdk-go.git"
+			path = "/Repos/terraform-tests/databricks-sdk-go-{var.STICKY_RANDOM}"
 		}
 		`
 	WorkspaceLevel(t, Step{
@@ -617,7 +627,16 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 		resource "databricks_sql_endpoint" "this" {
 			name = "{var.STICKY_RANDOM}"
 			cluster_size = "2X-Small"
+			tags {
+				custom_tags {
+					key   = "Owner"
+					value = "eng-dev-ecosystem-team_at_databricks.com"
+				}
+			}
 		}`
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	var warehouseId string
 	WorkspaceLevel(t, Step{
 		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
 	}, Step{
@@ -638,15 +657,24 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 	}, Step{
 		Template: sqlWarehouseTemplate,
 		Check: func(s *terraform.State) error {
-			w := databricks.Must(databricks.NewWorkspaceClient())
-			id := s.RootModule().Resources["databricks_sql_endpoint.this"].Primary.ID
-			warehouse, err := w.Warehouses.GetById(context.Background(), id)
+			warehouseId = s.RootModule().Resources["databricks_sql_endpoint.this"].Primary.ID
+			warehouse, err := w.Warehouses.GetById(ctx, warehouseId)
 			assert.NoError(t, err)
-			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "warehouses", id)
+			permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "warehouses", warehouseId)
 			assert.NoError(t, err)
 			assertContainsPermission(t, permissions, currentPrincipalType(t), warehouse.CreatorName, iam.PermissionLevelIsOwner)
 			return nil
 		},
+	}, Step{
+		// To test import, a new permission must be added to the warehouse, as it is not possible to import databricks_permissions
+		// for a warehouse that has the default permissions (i.e. current user has IS_OWNER and admins have CAN_MANAGE).
+		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
+	}, Step{
+		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
+		// Verify that we can use "/warehouses/<ID>" instead of "/sql/warehouses/<ID>"
+		ResourceName:      "databricks_permissions.this",
+		ImportState:       true,
+		ImportStateIdFunc: func(s *terraform.State) (string, error) { return "/warehouses/" + warehouseId, nil },
 	})
 }
 
@@ -835,5 +863,87 @@ func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	}, Step{
 		Template:    endpointTemplate + makePermissionsTestStage("serving_endpoint_id", "databricks_model_serving.endpoint.serving_endpoint_id", currentPrincipalPermission(t, "CAN_VIEW"), groupPermissions("CAN_VIEW", "CAN_QUERY", "CAN_MANAGE")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for serving-endpoint, allowed levels: CAN_MANAGE"),
+	})
+}
+
+// AlexOtt: Temporary disable as it takes too long to create a new vector search endpoint
+// Testing is done in the `vector_search_test.go`
+// func TestAccPermissions_VectorSearchEndpoint(t *testing.T) {
+// 	loadDebugEnvIfRunsFromIDE(t, "workspace")
+// 	if isGcp(t) {
+// 		skipf(t)("Vector Search endpoints are not supported on GCP")
+// 	}
+// 	endpointTemplate := `
+// 	resource "databricks_vector_search_endpoint" "endpoint" {
+// 		name = "{var.STICKY_RANDOM}"
+// 		endpoint_type = "STANDARD"
+// 	}
+// `
+// 	WorkspaceLevel(t, Step{
+// 		Template: endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", groupPermissions("CAN_USE")),
+// 	}, Step{
+// 		Template: endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE")),
+// 	}, Step{
+// 		Template:    endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE")),
+// 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for mlflowExperiment, allowed levels: CAN_MANAGE"),
+// 	})
+// }
+
+func TestAccPermissions_Alert(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	alertTemplate := `
+		resource "databricks_query" "this" {
+			display_name = "{var.STICKY_RANDOM}-query"
+			query_text = "SELECT 1 AS p1, 2 as p2"
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+		}
+
+		resource "databricks_alert" "this" {
+  			query_id     = databricks_query.this.id
+  			display_name = "{var.STICKY_RANDOM}-alert"
+			condition {
+    			op = "GREATER_THAN"
+    			operand {
+      				column {
+        				name = "p1"
+      				}
+    			}
+    			threshold {
+      				value {
+        				double_value = 42
+      				}
+    			}
+  			}
+		}
+`
+	WorkspaceLevel(t, Step{
+		Template: alertTemplate + makePermissionsTestStage("sql_alert_id", "databricks_alert.this.id", groupPermissions("CAN_VIEW")),
+	}, Step{
+		Template: alertTemplate + makePermissionsTestStage("sql_alert_id", "databricks_alert.this.id",
+			currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_VIEW", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
+	}, Step{
+		Template: alertTemplate + makePermissionsTestStage("sql_alert_id", "databricks_alert.this.id",
+			currentPrincipalPermission(t, "CAN_VIEW"), groupPermissions("CAN_VIEW", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
+		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for alert, allowed levels: CAN_MANAGE"),
+	})
+}
+
+func TestAccPermissions_Query(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	queryTemplate := `
+		resource "databricks_query" "this" {
+			display_name = "{var.STICKY_RANDOM}-query"
+			query_text = "SELECT 1 AS p1, 2 as p2"
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+		}`
+	WorkspaceLevel(t, Step{
+		Template: queryTemplate + makePermissionsTestStage("sql_query_id", "databricks_query.this.id", groupPermissions("CAN_VIEW")),
+	}, Step{
+		Template: queryTemplate + makePermissionsTestStage("sql_query_id", "databricks_query.this.id",
+			currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_VIEW", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
+	}, Step{
+		Template: queryTemplate + makePermissionsTestStage("sql_query_id", "databricks_query.this.id",
+			currentPrincipalPermission(t, "CAN_VIEW"), groupPermissions("CAN_VIEW", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
+		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for query, allowed levels: CAN_MANAGE"),
 	})
 }

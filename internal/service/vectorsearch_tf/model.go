@@ -19,6 +19,12 @@ type ColumnInfo struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
+func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo) {
+}
+
+func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
+}
+
 type CreateEndpoint struct {
 	// Type of endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type" tf:""`
@@ -26,13 +32,19 @@ type CreateEndpoint struct {
 	Name types.String `tfsdk:"name" tf:""`
 }
 
+func (newState *CreateEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateEndpoint) {
+}
+
+func (newState *CreateEndpoint) SyncEffectiveFieldsDuringRead(existingState CreateEndpoint) {
+}
+
 type CreateVectorIndexRequest struct {
 	// Specification for Delta Sync Index. Required if `index_type` is
 	// `DELTA_SYNC`.
-	DeltaSyncIndexSpec *DeltaSyncVectorIndexSpecRequest `tfsdk:"delta_sync_index_spec" tf:"optional"`
+	DeltaSyncIndexSpec []DeltaSyncVectorIndexSpecRequest `tfsdk:"delta_sync_index_spec" tf:"optional,object"`
 	// Specification for Direct Vector Access Index. Required if `index_type` is
 	// `DIRECT_ACCESS`.
-	DirectAccessIndexSpec *DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional"`
+	DirectAccessIndexSpec []DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional,object"`
 	// Name of the endpoint to be used for serving the index
 	EndpointName types.String `tfsdk:"endpoint_name" tf:""`
 	// There are 2 types of Vector Search indexes:
@@ -49,8 +61,20 @@ type CreateVectorIndexRequest struct {
 	PrimaryKey types.String `tfsdk:"primary_key" tf:""`
 }
 
+func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVectorIndexRequest) {
+}
+
+func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexRequest) {
+}
+
 type CreateVectorIndexResponse struct {
-	VectorIndex *VectorIndex `tfsdk:"vector_index" tf:"optional"`
+	VectorIndex []VectorIndex `tfsdk:"vector_index" tf:"optional,object"`
+}
+
+func (newState *CreateVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVectorIndexResponse) {
+}
+
+func (newState *CreateVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexResponse) {
 }
 
 // Result of the upsert or delete operation.
@@ -59,6 +83,12 @@ type DeleteDataResult struct {
 	FailedPrimaryKeys []types.String `tfsdk:"failed_primary_keys" tf:"optional"`
 	// Count of successfully processed rows.
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count" tf:"optional"`
+}
+
+func (newState *DeleteDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataResult) {
+}
+
+func (newState *DeleteDataResult) SyncEffectiveFieldsDuringRead(existingState DeleteDataResult) {
 }
 
 // Request payload for deleting data from a vector index.
@@ -70,12 +100,24 @@ type DeleteDataVectorIndexRequest struct {
 	PrimaryKeys []types.String `tfsdk:"primary_keys" tf:""`
 }
 
+func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexRequest) {
+}
+
+func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexRequest) {
+}
+
 // Response to a delete data vector index request.
 type DeleteDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
-	Result *DeleteDataResult `tfsdk:"result" tf:"optional"`
+	Result []DeleteDataResult `tfsdk:"result" tf:"optional,object"`
 	// Status of the delete operation.
 	Status types.String `tfsdk:"status" tf:"optional"`
+}
+
+func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexResponse) {
+}
+
+func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexResponse) {
 }
 
 // Delete an endpoint
@@ -84,7 +126,19 @@ type DeleteEndpointRequest struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEndpointRequest) {
+}
+
+func (newState *DeleteEndpointRequest) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointRequest) {
+}
+
 type DeleteEndpointResponse struct {
+}
+
+func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEndpointResponse) {
+}
+
+func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointResponse) {
 }
 
 // Delete an index
@@ -93,7 +147,19 @@ type DeleteIndexRequest struct {
 	IndexName types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteIndexRequest) {
+}
+
+func (newState *DeleteIndexRequest) SyncEffectiveFieldsDuringRead(existingState DeleteIndexRequest) {
+}
+
 type DeleteIndexResponse struct {
+}
+
+func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteIndexResponse) {
+}
+
+func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteIndexResponse) {
 }
 
 type DeltaSyncVectorIndexSpecRequest struct {
@@ -124,6 +190,12 @@ type DeltaSyncVectorIndexSpecRequest struct {
 	SourceTable types.String `tfsdk:"source_table" tf:"optional"`
 }
 
+func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecRequest) {
+}
+
+func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecRequest) {
+}
+
 type DeltaSyncVectorIndexSpecResponse struct {
 	// The columns that contain the embedding source.
 	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns" tf:"optional"`
@@ -147,6 +219,12 @@ type DeltaSyncVectorIndexSpecResponse struct {
 	SourceTable types.String `tfsdk:"source_table" tf:"optional"`
 }
 
+func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecResponse) {
+}
+
+func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecResponse) {
+}
+
 type DirectAccessVectorIndexSpec struct {
 	// Contains the optional model endpoint to use during query time.
 	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns" tf:"optional"`
@@ -161,11 +239,23 @@ type DirectAccessVectorIndexSpec struct {
 	SchemaJson types.String `tfsdk:"schema_json" tf:"optional"`
 }
 
+func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan DirectAccessVectorIndexSpec) {
+}
+
+func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringRead(existingState DirectAccessVectorIndexSpec) {
+}
+
 type EmbeddingSourceColumn struct {
 	// Name of the embedding model endpoint
 	EmbeddingModelEndpointName types.String `tfsdk:"embedding_model_endpoint_name" tf:"optional"`
 	// Name of the column
 	Name types.String `tfsdk:"name" tf:"optional"`
+}
+
+func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingSourceColumn) {
+}
+
+func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingSourceColumn) {
 }
 
 type EmbeddingVectorColumn struct {
@@ -175,13 +265,19 @@ type EmbeddingVectorColumn struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
+func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingVectorColumn) {
+}
+
+func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingVectorColumn) {
+}
+
 type EndpointInfo struct {
 	// Timestamp of endpoint creation
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
 	// Creator of the endpoint
 	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// Current status of the endpoint
-	EndpointStatus *EndpointStatus `tfsdk:"endpoint_status" tf:"optional"`
+	EndpointStatus []EndpointStatus `tfsdk:"endpoint_status" tf:"optional,object"`
 	// Type of endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type" tf:"optional"`
 	// Unique identifier of the endpoint
@@ -196,6 +292,12 @@ type EndpointInfo struct {
 	NumIndexes types.Int64 `tfsdk:"num_indexes" tf:"optional"`
 }
 
+func (newState *EndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointInfo) {
+}
+
+func (newState *EndpointInfo) SyncEffectiveFieldsDuringRead(existingState EndpointInfo) {
+}
+
 // Status information of an endpoint
 type EndpointStatus struct {
 	// Additional status message
@@ -204,16 +306,34 @@ type EndpointStatus struct {
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
+func (newState *EndpointStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointStatus) {
+}
+
+func (newState *EndpointStatus) SyncEffectiveFieldsDuringRead(existingState EndpointStatus) {
+}
+
 // Get an endpoint
 type GetEndpointRequest struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
 }
 
+func (newState *GetEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEndpointRequest) {
+}
+
+func (newState *GetEndpointRequest) SyncEffectiveFieldsDuringRead(existingState GetEndpointRequest) {
+}
+
 // Get an index
 type GetIndexRequest struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
+}
+
+func (newState *GetIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIndexRequest) {
+}
+
+func (newState *GetIndexRequest) SyncEffectiveFieldsDuringRead(existingState GetIndexRequest) {
 }
 
 type ListEndpointResponse struct {
@@ -224,10 +344,22 @@ type ListEndpointResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointResponse) {
+}
+
+func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringRead(existingState ListEndpointResponse) {
+}
+
 // List all endpoints
 type ListEndpointsRequest struct {
 	// Token for pagination
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListEndpointsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointsRequest) {
+}
+
+func (newState *ListEndpointsRequest) SyncEffectiveFieldsDuringRead(existingState ListEndpointsRequest) {
 }
 
 // List indexes
@@ -238,8 +370,20 @@ type ListIndexesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListIndexesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListIndexesRequest) {
+}
+
+func (newState *ListIndexesRequest) SyncEffectiveFieldsDuringRead(existingState ListIndexesRequest) {
+}
+
 type ListValue struct {
 	Values []Value `tfsdk:"values" tf:"optional"`
+}
+
+func (newState *ListValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListValue) {
+}
+
+func (newState *ListValue) SyncEffectiveFieldsDuringRead(existingState ListValue) {
 }
 
 type ListVectorIndexesResponse struct {
@@ -250,12 +394,24 @@ type ListVectorIndexesResponse struct {
 	VectorIndexes []MiniVectorIndex `tfsdk:"vector_indexes" tf:"optional"`
 }
 
+func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVectorIndexesResponse) {
+}
+
+func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringRead(existingState ListVectorIndexesResponse) {
+}
+
 // Key-value pair.
 type MapStringValueEntry struct {
 	// Column name.
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// Column value, nullable.
-	Value *Value `tfsdk:"value" tf:"optional"`
+	Value []Value `tfsdk:"value" tf:"optional,object"`
+}
+
+func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan MapStringValueEntry) {
+}
+
+func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringRead(existingState MapStringValueEntry) {
 }
 
 type MiniVectorIndex struct {
@@ -277,6 +433,12 @@ type MiniVectorIndex struct {
 	PrimaryKey types.String `tfsdk:"primary_key" tf:"optional"`
 }
 
+func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan MiniVectorIndex) {
+}
+
+func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringRead(existingState MiniVectorIndex) {
+}
+
 // Request payload for getting next page of results.
 type QueryVectorIndexNextPageRequest struct {
 	// Name of the endpoint.
@@ -286,6 +448,12 @@ type QueryVectorIndexNextPageRequest struct {
 	// Page token returned from previous `QueryVectorIndex` or
 	// `QueryVectorIndexNextPage` API.
 	PageToken types.String `tfsdk:"page_token" tf:"optional"`
+}
+
+func (newState *QueryVectorIndexNextPageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexNextPageRequest) {
+}
+
+func (newState *QueryVectorIndexNextPageRequest) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexNextPageRequest) {
 }
 
 type QueryVectorIndexRequest struct {
@@ -313,15 +481,27 @@ type QueryVectorIndexRequest struct {
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold" tf:"optional"`
 }
 
+func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexRequest) {
+}
+
+func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexRequest) {
+}
+
 type QueryVectorIndexResponse struct {
 	// Metadata about the result set.
-	Manifest *ResultManifest `tfsdk:"manifest" tf:"optional"`
+	Manifest []ResultManifest `tfsdk:"manifest" tf:"optional,object"`
 	// [Optional] Token that can be used in `QueryVectorIndexNextPage` API to
 	// get next page of results. If more than 1000 results satisfy the query,
 	// they are returned in groups of 1000. Empty value means no more results.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Data returned in the query result.
-	Result *ResultData `tfsdk:"result" tf:"optional"`
+	Result []ResultData `tfsdk:"result" tf:"optional,object"`
+}
+
+func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexResponse) {
+}
+
+func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexResponse) {
 }
 
 // Data returned in the query result.
@@ -332,12 +512,24 @@ type ResultData struct {
 	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
 }
 
+func (newState *ResultData) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultData) {
+}
+
+func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultData) {
+}
+
 // Metadata about the result set.
 type ResultManifest struct {
 	// Number of columns in the result set.
 	ColumnCount types.Int64 `tfsdk:"column_count" tf:"optional"`
 	// Information about each column in the result set.
 	Columns []ColumnInfo `tfsdk:"columns" tf:"optional"`
+}
+
+func (newState *ResultManifest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultManifest) {
+}
+
+func (newState *ResultManifest) SyncEffectiveFieldsDuringRead(existingState ResultManifest) {
 }
 
 // Request payload for scanning data from a vector index.
@@ -350,6 +542,12 @@ type ScanVectorIndexRequest struct {
 	NumResults types.Int64 `tfsdk:"num_results" tf:"optional"`
 }
 
+func (newState *ScanVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ScanVectorIndexRequest) {
+}
+
+func (newState *ScanVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexRequest) {
+}
+
 // Response to a scan vector index request.
 type ScanVectorIndexResponse struct {
 	// List of data entries
@@ -358,9 +556,21 @@ type ScanVectorIndexResponse struct {
 	LastPrimaryKey types.String `tfsdk:"last_primary_key" tf:"optional"`
 }
 
+func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ScanVectorIndexResponse) {
+}
+
+func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexResponse) {
+}
+
 type Struct struct {
 	// Data entry, corresponding to a row in a vector index.
 	Fields []MapStringValueEntry `tfsdk:"fields" tf:"optional"`
+}
+
+func (newState *Struct) SyncEffectiveFieldsDuringCreateOrUpdate(plan Struct) {
+}
+
+func (newState *Struct) SyncEffectiveFieldsDuringRead(existingState Struct) {
 }
 
 // Synchronize an index
@@ -369,7 +579,19 @@ type SyncIndexRequest struct {
 	IndexName types.String `tfsdk:"-"`
 }
 
+func (newState *SyncIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncIndexRequest) {
+}
+
+func (newState *SyncIndexRequest) SyncEffectiveFieldsDuringRead(existingState SyncIndexRequest) {
+}
+
 type SyncIndexResponse struct {
+}
+
+func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncIndexResponse) {
+}
+
+func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringRead(existingState SyncIndexResponse) {
 }
 
 // Result of the upsert or delete operation.
@@ -378,6 +600,12 @@ type UpsertDataResult struct {
 	FailedPrimaryKeys []types.String `tfsdk:"failed_primary_keys" tf:"optional"`
 	// Count of successfully processed rows.
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count" tf:"optional"`
+}
+
+func (newState *UpsertDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataResult) {
+}
+
+func (newState *UpsertDataResult) SyncEffectiveFieldsDuringRead(existingState UpsertDataResult) {
 }
 
 // Request payload for upserting data into a vector index.
@@ -389,18 +617,30 @@ type UpsertDataVectorIndexRequest struct {
 	InputsJson types.String `tfsdk:"inputs_json" tf:""`
 }
 
+func (newState *UpsertDataVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataVectorIndexRequest) {
+}
+
+func (newState *UpsertDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexRequest) {
+}
+
 // Response to an upsert data vector index request.
 type UpsertDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
-	Result *UpsertDataResult `tfsdk:"result" tf:"optional"`
+	Result []UpsertDataResult `tfsdk:"result" tf:"optional,object"`
 	// Status of the upsert operation.
 	Status types.String `tfsdk:"status" tf:"optional"`
+}
+
+func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataVectorIndexResponse) {
+}
+
+func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexResponse) {
 }
 
 type Value struct {
 	BoolValue types.Bool `tfsdk:"bool_value" tf:"optional"`
 
-	ListValue *ListValue `tfsdk:"list_value" tf:"optional"`
+	ListValue []ListValue `tfsdk:"list_value" tf:"optional,object"`
 
 	NullValue types.String `tfsdk:"null_value" tf:"optional"`
 
@@ -408,16 +648,22 @@ type Value struct {
 
 	StringValue types.String `tfsdk:"string_value" tf:"optional"`
 
-	StructValue *Struct `tfsdk:"struct_value" tf:"optional"`
+	StructValue []Struct `tfsdk:"struct_value" tf:"optional,object"`
+}
+
+func (newState *Value) SyncEffectiveFieldsDuringCreateOrUpdate(plan Value) {
+}
+
+func (newState *Value) SyncEffectiveFieldsDuringRead(existingState Value) {
 }
 
 type VectorIndex struct {
 	// The user who created the index.
 	Creator types.String `tfsdk:"creator" tf:"optional"`
 
-	DeltaSyncIndexSpec *DeltaSyncVectorIndexSpecResponse `tfsdk:"delta_sync_index_spec" tf:"optional"`
+	DeltaSyncIndexSpec []DeltaSyncVectorIndexSpecResponse `tfsdk:"delta_sync_index_spec" tf:"optional,object"`
 
-	DirectAccessIndexSpec *DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional"`
+	DirectAccessIndexSpec []DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional,object"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name" tf:"optional"`
 	// There are 2 types of Vector Search indexes:
@@ -433,7 +679,13 @@ type VectorIndex struct {
 	// Primary key of the index
 	PrimaryKey types.String `tfsdk:"primary_key" tf:"optional"`
 
-	Status *VectorIndexStatus `tfsdk:"status" tf:"optional"`
+	Status []VectorIndexStatus `tfsdk:"status" tf:"optional,object"`
+}
+
+func (newState *VectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndex) {
+}
+
+func (newState *VectorIndex) SyncEffectiveFieldsDuringRead(existingState VectorIndex) {
 }
 
 type VectorIndexStatus struct {
@@ -445,4 +697,10 @@ type VectorIndexStatus struct {
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Whether the index is ready for search
 	Ready types.Bool `tfsdk:"ready" tf:"optional"`
+}
+
+func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndexStatus) {
+}
+
+func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringRead(existingState VectorIndexStatus) {
 }

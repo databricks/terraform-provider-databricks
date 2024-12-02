@@ -230,6 +230,11 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("edition").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 	s.SchemaPath("storage").SetCustomSuppressDiff(suppressStorageDiff)
 
+	// As of 6th Nov 2024, the DLT API only normalizes the catalog name when creating
+	// a pipeline. So we only ignore the equal fold diff for the catalog name and not other
+	// UC resources like target, schema or ingestion_definition.connection_name.
+	s.SchemaPath("catalog").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+
 	// Deprecated fields
 	s.SchemaPath("cluster", "init_scripts", "dbfs").SetDeprecated(clusters.DbfsDeprecationWarning)
 	s.SchemaPath("library", "whl").SetDeprecated("The 'whl' field is deprecated")
@@ -246,6 +251,8 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("storage").SetConflictsWith([]string{"catalog"})
 	s.SchemaPath("catalog").SetConflictsWith([]string{"storage"})
 	s.SchemaPath("ingestion_definition", "connection_name").SetConflictsWith([]string{"ingestion_definition.0.ingestion_gateway_id"})
+	s.SchemaPath("target").SetConflictsWith([]string{"schema"})
+	s.SchemaPath("schema").SetConflictsWith([]string{"target"})
 
 	// MinItems fields
 	s.SchemaPath("library").SetMinItems(1)

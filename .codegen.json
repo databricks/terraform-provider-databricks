@@ -1,5 +1,6 @@
 {
     "formatter": "make fmt",
+    "mode": "tf_v1",
     "packages": {
         ".codegen/model.go.tmpl": "internal/service/{{.Name}}_tf/model.go"
     },

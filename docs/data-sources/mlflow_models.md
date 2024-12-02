@@ -22,14 +22,14 @@ data "databricks_mlflow_models" "this" {}
 
 check "model_list_not_empty" {
   assert {
-    condition = length(data.databricks_mlflow_models.this.names) != 0
+    condition     = length(data.databricks_mlflow_models.this.names) != 0
     error_message = "Model list is empty."
   }
 }
 
 check "model_list_contains_model" {
   assert {
-    condition = contains(data.databricks_mlflow_models.this.names, "model_1")
+    condition     = contains(data.databricks_mlflow_models.this.names, "model_1")
     error_message = "model_1 is missing in model list."
   }
 }

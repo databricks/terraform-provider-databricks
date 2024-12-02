@@ -21,6 +21,7 @@ import (
 )
 
 var MaxSqlExecWaitTimeout = 50
+var optionPrefixes = []string{"option.", "spark.sql.dataSourceOptions."}
 
 type SqlColumnInfo struct {
 	Name     string         `json:"name"`
@@ -67,7 +68,6 @@ type SqlTableInfo struct {
 }
 
 func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
-
 	caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 	for _, field := range caseInsensitiveFields {
 		s.SchemaPath(field).SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
@@ -146,8 +146,11 @@ func reconstructIdentity(c *SqlColumnInfo) (IdentityColumn, error) {
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	defaultClusterName := "terraform-sql-table"
 	clustersAPI := clusters.NewClustersAPI(ctx, c)
-	// if a cluster id is specified, start the cluster
-	if ci, ok := d.GetOk("cluster_id"); ok {
+	// if a warehouse id is specified, use the warehouse
+	if wi, ok := d.GetOk("warehouse_id"); ok {
+		ti.WarehouseID = wi.(string)
+	} else if ci, ok := d.GetOk("cluster_id"); ok {
+		// if a cluster id is specified, start the cluster
 		ti.ClusterID = ci.(string)
 		_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
 		if apierr.IsMissing(err) {
@@ -161,11 +164,8 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 		if err != nil {
 			return
 		}
-		// if a warehouse id is specified, use the warehouse
-	} else if wi, ok := d.GetOk("warehouse_id"); ok {
-		ti.WarehouseID = wi.(string)
-		// else, create a default cluster
 	} else {
+		// else, create a default cluster
 		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
 		if err != nil {
 			return
@@ -598,18 +598,31 @@ func ResourceSqlTable() common.Resource {
 			// If the user specified a property but the value of that property has changed, that will appear
 			// as a change in the effective property/option. To cause a diff to be detected, we need to
 			// reset the effective property/option to the requested value.
-			userSpecifiedProperties := d.Get("properties").(map[string]interface{})
-			userSpecifiedOptions := d.Get("options").(map[string]interface{})
-			effectiveProperties := d.Get("effective_properties").(map[string]interface{})
-			diff := make(map[string]interface{})
+			userSpecifiedProperties := d.Get("properties").(map[string]any)
+			userSpecifiedOptions := d.Get("options").(map[string]any)
+			effectiveProperties := d.Get("effective_properties").(map[string]any)
+			diff := make(map[string]any)
 			for k, userSpecifiedValue := range userSpecifiedProperties {
 				if effectiveValue, ok := effectiveProperties[k]; !ok || effectiveValue != userSpecifiedValue {
 					diff[k] = userSpecifiedValue
 				}
 			}
-			for k, userSpecifiedValue := range userSpecifiedOptions {
-				if effectiveValue, ok := effectiveProperties["option."+k]; !ok || effectiveValue != userSpecifiedValue {
-					diff["option."+k] = userSpecifiedValue
+			for userOptName, userSpecifiedValue := range userSpecifiedOptions {
+				var found bool
+				var effectiveValue any
+				var effectOptName string
+				// If the option is not found, check if the user specified the option without the prefix
+				// i.e. if user specified `multiLine` for JSON, then backend returns `spark.sql.dataSourceOptions.multiLine`
+				for _, prefix := range optionPrefixes {
+					effectOptName = prefix + userOptName
+					if v, ok := effectiveProperties[effectOptName]; ok {
+						found = true
+						effectiveValue = v
+						break
+					}
+				}
+				if !found || effectiveValue != userSpecifiedValue {
+					diff[effectOptName] = userSpecifiedValue
 				}
 			}
 			if len(diff) > 0 {

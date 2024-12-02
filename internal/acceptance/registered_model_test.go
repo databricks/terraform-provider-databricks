@@ -43,6 +43,18 @@ func TestUcAccRegisteredModel(t *testing.T) {
 				owner = "account users"
 				comment = "new comment"
 			}
+			data "databricks_registered_model" "model" {
+				full_name = databricks_registered_model.model.id
+			}
+			data "databricks_registered_model_versions" "model_versions" {
+				full_name = databricks_registered_model.model.id
+			}
+			output "model" {
+				value = data.databricks_registered_model.model
+			}
+			output "model_versions" {
+				value = data.databricks_registered_model_versions.model_versions
+			}
 		`,
 		},
 	)

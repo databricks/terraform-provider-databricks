@@ -435,22 +435,6 @@ type Cluster struct {
 }
 
 // TODO: Remove this once all the resources using clusters are migrated to Go SDK.
-// They would then be using Validate(cluster compute.CreateCluster) defined in resource_cluster.go that is a duplicate of this method but uses Go SDK.
-func (cluster Cluster) Validate() error {
-	// TODO: rewrite with CustomizeDiff
-	if cluster.NumWorkers > 0 || cluster.Autoscale != nil {
-		return nil
-	}
-	profile := cluster.SparkConf["spark.databricks.cluster.profile"]
-	master := cluster.SparkConf["spark.master"]
-	resourceClass := cluster.CustomTags["ResourceClass"]
-	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
-		return nil
-	}
-	return fmt.Errorf("NumWorkers could be 0 only for SingleNode clusters. See https://docs.databricks.com/clusters/single-node.html for more details")
-}
-
-// TODO: Remove this once all the resources using clusters are migrated to Go SDK.
 // They would then be using ModifyRequestOnInstancePool(cluster *compute.CreateCluster) defined in resource_cluster.go that is a duplicate of this method but uses Go SDK.
 // ModifyRequestOnInstancePool helps remove all request fields that should not be submitted when instance pool is selected.
 func (cluster *Cluster) ModifyRequestOnInstancePool() {

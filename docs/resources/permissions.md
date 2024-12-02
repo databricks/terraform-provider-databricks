@@ -232,6 +232,8 @@ There are four assignable [permission levels](https://docs.databricks.com/securi
 - Read [main documentation](https://docs.databricks.com/security/access-control/dlt-acl.html) for additional detail.
 
 ```hcl
+data "databricks_current_user" "me" {}
+
 resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
@@ -637,6 +639,35 @@ resource "databricks_permissions" "ml_serving_usage" {
 }
 ```
 
+## Mosaic AI Vector Search usage
+
+Valid permission levels for [databricks_vector_search_endpoint](vector_search_endpoint.md) are: `CAN_USE` and `CAN_MANAGE`.
+
+```hcl
+resource "databricks_vector_search_endpoint" "this" {
+  name          = "vector-search-test"
+  endpoint_type = "STANDARD"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "vector_search_endpoint_usage" {
+  vector_search_endpoint_id = databricks_vector_search_endpoint.this.endpoint_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
 ## Passwords usage
 
 By default on AWS deployments, all admin users can sign in to Databricks using either SSO or their username and password, and all API users can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users’ and API users’ ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.
@@ -893,6 +924,7 @@ Exactly one of the following arguments is required:
 - `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
 - `registered_model_id` - [MLflow registered model](mlflow_model.md) id
 - `serving_endpoint_id` - [Model Serving](model_serving.md) endpoint id.
+- `vector_search_endpoint_id` - [Vector Search](vector_search_endpoint.md) endpoint id.
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id

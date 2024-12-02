@@ -45,7 +45,7 @@ func (a ListAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a ListAttributeBuilder) SetOptional() AttributeBuilder {
+func (a ListAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -54,7 +54,7 @@ func (a ListAttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetRequired() AttributeBuilder {
+func (a ListAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -63,7 +63,7 @@ func (a ListAttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetSensitive() AttributeBuilder {
+func (a ListAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -71,7 +71,7 @@ func (a ListAttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetComputed() AttributeBuilder {
+func (a ListAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -79,7 +79,7 @@ func (a ListAttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a ListAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -89,17 +89,17 @@ func (a ListAttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a ListAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a ListAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a ListAttributeBuilder) AddValidator(v validator.List) AttributeBuilder {
+func (a ListAttributeBuilder) AddValidator(v validator.List) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a ListAttributeBuilder) AddPlanModifier(v planmodifier.List) AttributeBuilder {
+func (a ListAttributeBuilder) AddPlanModifier(v planmodifier.List) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

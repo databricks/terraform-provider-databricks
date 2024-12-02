@@ -36,7 +36,7 @@ type CreatePipeline struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment *PipelineDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []PipelineDeployment `tfsdk:"deployment" tf:"optional,object"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 
@@ -44,14 +44,14 @@ type CreatePipeline struct {
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters *Filters `tfsdk:"filters" tf:"optional"`
-	// The definition of a gateway pipeline to support CDC.
-	GatewayDefinition *IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
+	Filters []Filters `tfsdk:"filters" tf:"optional,object"`
+	// The definition of a gateway pipeline to support change data capture.
+	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition []IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional,object"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -60,6 +60,8 @@ type CreatePipeline struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// Restart window of this pipeline.
+	RestartWindow []RestartWindow `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -73,21 +75,39 @@ type CreatePipeline struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger *PipelineTrigger `tfsdk:"trigger" tf:"optional"`
+	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional,object"`
+}
+
+func (newState *CreatePipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipeline) {
+}
+
+func (newState *CreatePipeline) SyncEffectiveFieldsDuringRead(existingState CreatePipeline) {
 }
 
 type CreatePipelineResponse struct {
 	// Only returned when dry_run is true.
-	EffectiveSettings *PipelineSpec `tfsdk:"effective_settings" tf:"optional"`
+	EffectiveSettings []PipelineSpec `tfsdk:"effective_settings" tf:"optional,object"`
 	// The unique identifier for the newly created pipeline. Only returned when
 	// dry_run is false.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+}
+
+func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipelineResponse) {
+}
+
+func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringRead(existingState CreatePipelineResponse) {
 }
 
 type CronTrigger struct {
 	QuartzCronSchedule types.String `tfsdk:"quartz_cron_schedule" tf:"optional"`
 
 	TimezoneId types.String `tfsdk:"timezone_id" tf:"optional"`
+}
+
+func (newState *CronTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronTrigger) {
+}
+
+func (newState *CronTrigger) SyncEffectiveFieldsDuringRead(existingState CronTrigger) {
 }
 
 type DataPlaneId struct {
@@ -97,12 +117,30 @@ type DataPlaneId struct {
 	SeqNo types.Int64 `tfsdk:"seq_no" tf:"optional"`
 }
 
+func (newState *DataPlaneId) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneId) {
+}
+
+func (newState *DataPlaneId) SyncEffectiveFieldsDuringRead(existingState DataPlaneId) {
+}
+
 // Delete a pipeline
 type DeletePipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *DeletePipelineRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineRequest) {
+}
+
+func (newState *DeletePipelineRequest) SyncEffectiveFieldsDuringRead(existingState DeletePipelineRequest) {
+}
+
 type DeletePipelineResponse struct {
+}
+
+func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineResponse) {
+}
+
+func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringRead(existingState DeletePipelineResponse) {
 }
 
 type EditPipeline struct {
@@ -126,7 +164,7 @@ type EditPipeline struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment *PipelineDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []PipelineDeployment `tfsdk:"deployment" tf:"optional,object"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 	// Pipeline product edition.
@@ -136,14 +174,14 @@ type EditPipeline struct {
 	// will fail with a conflict.
 	ExpectedLastModified types.Int64 `tfsdk:"expected_last_modified" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters *Filters `tfsdk:"filters" tf:"optional"`
-	// The definition of a gateway pipeline to support CDC.
-	GatewayDefinition *IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
+	Filters []Filters `tfsdk:"filters" tf:"optional,object"`
+	// The definition of a gateway pipeline to support change data capture.
+	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition []IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional,object"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -154,6 +192,8 @@ type EditPipeline struct {
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Unique identifier for this pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	// Restart window of this pipeline.
+	RestartWindow []RestartWindow `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -167,10 +207,22 @@ type EditPipeline struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger *PipelineTrigger `tfsdk:"trigger" tf:"optional"`
+	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional,object"`
+}
+
+func (newState *EditPipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipeline) {
+}
+
+func (newState *EditPipeline) SyncEffectiveFieldsDuringRead(existingState EditPipeline) {
 }
 
 type EditPipelineResponse struct {
+}
+
+func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipelineResponse) {
+}
+
+func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringRead(existingState EditPipelineResponse) {
 }
 
 type ErrorDetail struct {
@@ -180,9 +232,21 @@ type ErrorDetail struct {
 	Fatal types.Bool `tfsdk:"fatal" tf:"optional"`
 }
 
+func (newState *ErrorDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan ErrorDetail) {
+}
+
+func (newState *ErrorDetail) SyncEffectiveFieldsDuringRead(existingState ErrorDetail) {
+}
+
 type FileLibrary struct {
 	// The absolute path of the file.
 	Path types.String `tfsdk:"path" tf:"optional"`
+}
+
+func (newState *FileLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileLibrary) {
+}
+
+func (newState *FileLibrary) SyncEffectiveFieldsDuringRead(existingState FileLibrary) {
 }
 
 type Filters struct {
@@ -192,15 +256,33 @@ type Filters struct {
 	Include []types.String `tfsdk:"include" tf:"optional"`
 }
 
+func (newState *Filters) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filters) {
+}
+
+func (newState *Filters) SyncEffectiveFieldsDuringRead(existingState Filters) {
+}
+
 // Get pipeline permission levels
 type GetPipelinePermissionLevelsRequest struct {
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPipelinePermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsRequest) {
+}
+
+func (newState *GetPipelinePermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsRequest) {
+}
+
 type GetPipelinePermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels []PipelinePermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+}
+
+func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsResponse) {
+}
+
+func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsResponse) {
 }
 
 // Get pipeline permissions
@@ -209,9 +291,21 @@ type GetPipelinePermissionsRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionsRequest) {
+}
+
+func (newState *GetPipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionsRequest) {
+}
+
 // Get a pipeline
 type GetPipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineRequest) {
+}
+
+func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelineRequest) {
 }
 
 type GetPipelineResponse struct {
@@ -238,9 +332,15 @@ type GetPipelineResponse struct {
 	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
 	// The pipeline specification. This field is not returned when called by
 	// `ListPipelines`.
-	Spec *PipelineSpec `tfsdk:"spec" tf:"optional"`
+	Spec []PipelineSpec `tfsdk:"spec" tf:"optional,object"`
 	// The pipeline state.
 	State types.String `tfsdk:"state" tf:"optional"`
+}
+
+func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineResponse) {
+}
+
+func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelineResponse) {
 }
 
 // Get a pipeline update
@@ -251,22 +351,46 @@ type GetUpdateRequest struct {
 	UpdateId types.String `tfsdk:"-"`
 }
 
+func (newState *GetUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateRequest) {
+}
+
+func (newState *GetUpdateRequest) SyncEffectiveFieldsDuringRead(existingState GetUpdateRequest) {
+}
+
 type GetUpdateResponse struct {
 	// The current update info.
-	Update *UpdateInfo `tfsdk:"update" tf:"optional"`
+	Update []UpdateInfo `tfsdk:"update" tf:"optional,object"`
+}
+
+func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateResponse) {
+}
+
+func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringRead(existingState GetUpdateResponse) {
 }
 
 type IngestionConfig struct {
-	// Select tables from a specific source schema.
-	Schema *SchemaSpec `tfsdk:"schema" tf:"optional"`
-	// Select tables from a specific source table.
-	Table *TableSpec `tfsdk:"table" tf:"optional"`
+	// Select a specific source report.
+	Report []ReportSpec `tfsdk:"report" tf:"optional,object"`
+	// Select all tables from a specific source schema.
+	Schema []SchemaSpec `tfsdk:"schema" tf:"optional,object"`
+	// Select a specific source table.
+	Table []TableSpec `tfsdk:"table" tf:"optional,object"`
+}
+
+func (newState *IngestionConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionConfig) {
+}
+
+func (newState *IngestionConfig) SyncEffectiveFieldsDuringRead(existingState IngestionConfig) {
 }
 
 type IngestionGatewayPipelineDefinition struct {
-	// Immutable. The Unity Catalog connection this gateway pipeline uses to
-	// communicate with the source.
+	// [Deprecated, use connection_name instead] Immutable. The Unity Catalog
+	// connection that this gateway pipeline uses to communicate with the
+	// source.
 	ConnectionId types.String `tfsdk:"connection_id" tf:"optional"`
+	// Immutable. The Unity Catalog connection that this gateway pipeline uses
+	// to communicate with the source.
+	ConnectionName types.String `tfsdk:"connection_name" tf:"optional"`
 	// Required, Immutable. The name of the catalog for the gateway pipeline's
 	// storage location.
 	GatewayStorageCatalog types.String `tfsdk:"gateway_storage_catalog" tf:"optional"`
@@ -280,21 +404,33 @@ type IngestionGatewayPipelineDefinition struct {
 	GatewayStorageSchema types.String `tfsdk:"gateway_storage_schema" tf:"optional"`
 }
 
+func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionGatewayPipelineDefinition) {
+}
+
+func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionGatewayPipelineDefinition) {
+}
+
 type IngestionPipelineDefinition struct {
-	// Immutable. The Unity Catalog connection this ingestion pipeline uses to
-	// communicate with the source. Specify either ingestion_gateway_id or
-	// connection_name.
+	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
+	// to communicate with the source. This is used with connectors for
+	// applications like Salesforce, Workday, and so on.
 	ConnectionName types.String `tfsdk:"connection_name" tf:"optional"`
-	// Immutable. Identifier for the ingestion gateway used by this ingestion
-	// pipeline to communicate with the source. Specify either
-	// ingestion_gateway_id or connection_name.
+	// Immutable. Identifier for the gateway that is used by this ingestion
+	// pipeline to communicate with the source database. This is used with
+	// connectors to databases like SQL Server.
 	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id" tf:"optional"`
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
 	Objects []IngestionConfig `tfsdk:"objects" tf:"optional"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
-	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
+	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional,object"`
+}
+
+func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinition) {
+}
+
+func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionPipelineDefinition) {
 }
 
 // List pipeline events
@@ -324,6 +460,12 @@ type ListPipelineEventsRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsRequest) {
+}
+
+func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsRequest) {
+}
+
 type ListPipelineEventsResponse struct {
 	// The list of events matching the request criteria.
 	Events []PipelineEvent `tfsdk:"events" tf:"optional"`
@@ -331,6 +473,12 @@ type ListPipelineEventsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// If present, a token to fetch the previous page of events.
 	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+}
+
+func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsResponse) {
+}
+
+func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsResponse) {
 }
 
 // List pipelines
@@ -358,11 +506,23 @@ type ListPipelinesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesRequest) {
+}
+
+func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringRead(existingState ListPipelinesRequest) {
+}
+
 type ListPipelinesResponse struct {
 	// If present, a token to fetch the next page of events.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// The list of events matching the request criteria.
 	Statuses []PipelineStateInfo `tfsdk:"statuses" tf:"optional"`
+}
+
+func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesResponse) {
+}
+
+func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelinesResponse) {
 }
 
 // List pipeline updates
@@ -377,6 +537,12 @@ type ListUpdatesRequest struct {
 	UntilUpdateId types.String `tfsdk:"-"`
 }
 
+func (newState *ListUpdatesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesRequest) {
+}
+
+func (newState *ListUpdatesRequest) SyncEffectiveFieldsDuringRead(existingState ListUpdatesRequest) {
+}
+
 type ListUpdatesResponse struct {
 	// If present, then there are more results, and this a token to be used in a
 	// subsequent request to fetch the next page.
@@ -388,12 +554,30 @@ type ListUpdatesResponse struct {
 	Updates []UpdateInfo `tfsdk:"updates" tf:"optional"`
 }
 
+func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesResponse) {
+}
+
+func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringRead(existingState ListUpdatesResponse) {
+}
+
 type ManualTrigger struct {
+}
+
+func (newState *ManualTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan ManualTrigger) {
+}
+
+func (newState *ManualTrigger) SyncEffectiveFieldsDuringRead(existingState ManualTrigger) {
 }
 
 type NotebookLibrary struct {
 	// The absolute path of the notebook.
 	Path types.String `tfsdk:"path" tf:"optional"`
+}
+
+func (newState *NotebookLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookLibrary) {
+}
+
+func (newState *NotebookLibrary) SyncEffectiveFieldsDuringRead(existingState NotebookLibrary) {
 }
 
 type Notifications struct {
@@ -407,6 +591,12 @@ type Notifications struct {
 	Alerts []types.String `tfsdk:"alerts" tf:"optional"`
 	// A list of email addresses notified when a configured alert is triggered.
 	EmailRecipients []types.String `tfsdk:"email_recipients" tf:"optional"`
+}
+
+func (newState *Notifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan Notifications) {
+}
+
+func (newState *Notifications) SyncEffectiveFieldsDuringRead(existingState Notifications) {
 }
 
 type Origin struct {
@@ -447,6 +637,12 @@ type Origin struct {
 	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
 }
 
+func (newState *Origin) SyncEffectiveFieldsDuringCreateOrUpdate(plan Origin) {
+}
+
+func (newState *Origin) SyncEffectiveFieldsDuringRead(existingState Origin) {
+}
+
 type PipelineAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -456,6 +652,12 @@ type PipelineAccessControlRequest struct {
 	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
 	// name of the user
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlRequest) {
+}
+
+func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlRequest) {
 }
 
 type PipelineAccessControlResponse struct {
@@ -471,6 +673,12 @@ type PipelineAccessControlResponse struct {
 	UserName types.String `tfsdk:"user_name" tf:"optional"`
 }
 
+func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlResponse) {
+}
+
+func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlResponse) {
+}
+
 type PipelineCluster struct {
 	// Note: This field won't be persisted. Only API users will check this
 	// field.
@@ -478,20 +686,20 @@ type PipelineCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale *PipelineClusterAutoscale `tfsdk:"autoscale" tf:"optional"`
+	Autoscale []PipelineClusterAutoscale `tfsdk:"autoscale" tf:"optional,object"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes *compute.AwsAttributes `tfsdk:"aws_attributes" tf:"optional"`
+	AwsAttributes compute.AwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes *compute.AzureAttributes `tfsdk:"azure_attributes" tf:"optional"`
+	AzureAttributes compute.AzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Only dbfs destinations are supported. Only one destination
 	// can be specified for one cluster. If the conf is given, the logs will be
 	// delivered to the destination every `5 mins`. The destination of driver
 	// logs is `$destination/$clusterId/driver`, while the destination of
 	// executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf *compute.ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional"`
+	ClusterLogConf compute.ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -513,12 +721,12 @@ type PipelineCluster struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes *compute.GcpAttributes `tfsdk:"gcp_attributes" tf:"optional"`
+	GcpAttributes compute.GcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []compute.InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts compute.InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
 	// A label for the cluster specification, either `default` to configure the
@@ -568,6 +776,12 @@ type PipelineCluster struct {
 	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
 }
 
+func (newState *PipelineCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineCluster) {
+}
+
+func (newState *PipelineCluster) SyncEffectiveFieldsDuringRead(existingState PipelineCluster) {
+}
+
 type PipelineClusterAutoscale struct {
 	// The maximum number of workers to which the cluster can scale up when
 	// overloaded. `max_workers` must be strictly greater than `min_workers`.
@@ -584,6 +798,12 @@ type PipelineClusterAutoscale struct {
 	Mode types.String `tfsdk:"mode" tf:"optional"`
 }
 
+func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineClusterAutoscale) {
+}
+
+func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringRead(existingState PipelineClusterAutoscale) {
+}
+
 type PipelineDeployment struct {
 	// The deployment method that manages the pipeline.
 	Kind types.String `tfsdk:"kind" tf:"optional"`
@@ -591,9 +811,15 @@ type PipelineDeployment struct {
 	MetadataFilePath types.String `tfsdk:"metadata_file_path" tf:"optional"`
 }
 
+func (newState *PipelineDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineDeployment) {
+}
+
+func (newState *PipelineDeployment) SyncEffectiveFieldsDuringRead(existingState PipelineDeployment) {
+}
+
 type PipelineEvent struct {
 	// Information about an error captured by the event.
-	Error *ErrorDetail `tfsdk:"error" tf:"optional"`
+	Error []ErrorDetail `tfsdk:"error" tf:"optional,object"`
 	// The event type. Should always correspond to the details
 	EventType types.String `tfsdk:"event_type" tf:"optional"`
 	// A time-based, globally unique id.
@@ -605,26 +831,38 @@ type PipelineEvent struct {
 	// The display message associated with the event.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Describes where the event originates from.
-	Origin *Origin `tfsdk:"origin" tf:"optional"`
+	Origin []Origin `tfsdk:"origin" tf:"optional,object"`
 	// A sequencing object to identify and order events.
-	Sequence *Sequencing `tfsdk:"sequence" tf:"optional"`
+	Sequence []Sequencing `tfsdk:"sequence" tf:"optional,object"`
 	// The time of the event.
 	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
+}
+
+func (newState *PipelineEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineEvent) {
+}
+
+func (newState *PipelineEvent) SyncEffectiveFieldsDuringRead(existingState PipelineEvent) {
 }
 
 type PipelineLibrary struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
-	File *FileLibrary `tfsdk:"file" tf:"optional"`
+	File []FileLibrary `tfsdk:"file" tf:"optional,object"`
 	// URI of the jar to be installed. Currently only DBFS is supported.
 	Jar types.String `tfsdk:"jar" tf:"optional"`
 	// Specification of a maven library to be installed.
-	Maven *compute.MavenLibrary `tfsdk:"maven" tf:"optional"`
+	Maven compute.MavenLibrary `tfsdk:"maven" tf:"optional,object"`
 	// The path to a notebook that defines a pipeline and is stored in the
 	// Databricks workspace.
-	Notebook *NotebookLibrary `tfsdk:"notebook" tf:"optional"`
+	Notebook []NotebookLibrary `tfsdk:"notebook" tf:"optional,object"`
 	// URI of the whl to be installed.
 	Whl types.String `tfsdk:"whl" tf:"optional"`
+}
+
+func (newState *PipelineLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineLibrary) {
+}
+
+func (newState *PipelineLibrary) SyncEffectiveFieldsDuringRead(existingState PipelineLibrary) {
 }
 
 type PipelinePermission struct {
@@ -635,6 +873,12 @@ type PipelinePermission struct {
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *PipelinePermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermission) {
+}
+
+func (newState *PipelinePermission) SyncEffectiveFieldsDuringRead(existingState PipelinePermission) {
+}
+
 type PipelinePermissions struct {
 	AccessControlList []PipelineAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
 
@@ -643,16 +887,34 @@ type PipelinePermissions struct {
 	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
 }
 
+func (newState *PipelinePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissions) {
+}
+
+func (newState *PipelinePermissions) SyncEffectiveFieldsDuringRead(existingState PipelinePermissions) {
+}
+
 type PipelinePermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
 
+func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsDescription) {
+}
+
+func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsDescription) {
+}
+
 type PipelinePermissionsRequest struct {
 	AccessControlList []PipelineAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsRequest) {
+}
+
+func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsRequest) {
 }
 
 type PipelineSpec struct {
@@ -673,20 +935,20 @@ type PipelineSpec struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment *PipelineDeployment `tfsdk:"deployment" tf:"optional"`
+	Deployment []PipelineDeployment `tfsdk:"deployment" tf:"optional,object"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters *Filters `tfsdk:"filters" tf:"optional"`
-	// The definition of a gateway pipeline to support CDC.
-	GatewayDefinition *IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional"`
+	Filters []Filters `tfsdk:"filters" tf:"optional,object"`
+	// The definition of a gateway pipeline to support change data capture.
+	GatewayDefinition []IngestionGatewayPipelineDefinition `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition *IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional"`
+	IngestionDefinition []IngestionPipelineDefinition `tfsdk:"ingestion_definition" tf:"optional,object"`
 	// Libraries or code needed by this deployment.
 	Libraries []PipelineLibrary `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -695,6 +957,8 @@ type PipelineSpec struct {
 	Notifications []Notifications `tfsdk:"notifications" tf:"optional"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	// Restart window of this pipeline.
+	RestartWindow []RestartWindow `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -708,7 +972,13 @@ type PipelineSpec struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger *PipelineTrigger `tfsdk:"trigger" tf:"optional"`
+	Trigger []PipelineTrigger `tfsdk:"trigger" tf:"optional,object"`
+}
+
+func (newState *PipelineSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineSpec) {
+}
+
+func (newState *PipelineSpec) SyncEffectiveFieldsDuringRead(existingState PipelineSpec) {
 }
 
 type PipelineStateInfo struct {
@@ -732,10 +1002,65 @@ type PipelineStateInfo struct {
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
-type PipelineTrigger struct {
-	Cron *CronTrigger `tfsdk:"cron" tf:"optional"`
+func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineStateInfo) {
+}
 
-	Manual *ManualTrigger `tfsdk:"manual" tf:"optional"`
+func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringRead(existingState PipelineStateInfo) {
+}
+
+type PipelineTrigger struct {
+	Cron []CronTrigger `tfsdk:"cron" tf:"optional,object"`
+
+	Manual []ManualTrigger `tfsdk:"manual" tf:"optional,object"`
+}
+
+func (newState *PipelineTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTrigger) {
+}
+
+func (newState *PipelineTrigger) SyncEffectiveFieldsDuringRead(existingState PipelineTrigger) {
+}
+
+type ReportSpec struct {
+	// Required. Destination catalog to store table.
+	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
+	// Required. Destination schema to store table.
+	DestinationSchema types.String `tfsdk:"destination_schema" tf:"optional"`
+	// Required. Destination table name. The pipeline fails if a table with that
+	// name already exists.
+	DestinationTable types.String `tfsdk:"destination_table" tf:"optional"`
+	// Required. Report URL in the source system.
+	SourceUrl types.String `tfsdk:"source_url" tf:"optional"`
+	// Configuration settings to control the ingestion of tables. These settings
+	// override the table_configuration defined in the
+	// IngestionPipelineDefinition object.
+	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional,object"`
+}
+
+func (newState *ReportSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportSpec) {
+}
+
+func (newState *ReportSpec) SyncEffectiveFieldsDuringRead(existingState ReportSpec) {
+}
+
+type RestartWindow struct {
+	// Days of week in which the restart is allowed to happen (within a
+	// five-hour window starting at start_hour). If not specified all days of
+	// the week will be used.
+	DaysOfWeek types.String `tfsdk:"days_of_week" tf:"optional"`
+	// An integer between 0 and 23 denoting the start hour for the restart
+	// window in the 24-hour day. Continuous pipeline restart is triggered only
+	// within a five-hour window starting at this hour.
+	StartHour types.Int64 `tfsdk:"start_hour" tf:""`
+	// Time zone id of restart window. See
+	// https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html
+	// for details. If not specified, UTC will be used.
+	TimeZoneId types.String `tfsdk:"time_zone_id" tf:"optional"`
+}
+
+func (newState *RestartWindow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartWindow) {
+}
+
+func (newState *RestartWindow) SyncEffectiveFieldsDuringRead(existingState RestartWindow) {
 }
 
 type SchemaSpec struct {
@@ -753,14 +1078,26 @@ type SchemaSpec struct {
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in this schema and override the
 	// table_configuration defined in the IngestionPipelineDefinition object.
-	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
+	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional,object"`
+}
+
+func (newState *SchemaSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaSpec) {
+}
+
+func (newState *SchemaSpec) SyncEffectiveFieldsDuringRead(existingState SchemaSpec) {
 }
 
 type Sequencing struct {
 	// A sequence number, unique and increasing within the control plane.
 	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no" tf:"optional"`
 	// the ID assigned by the data plane.
-	DataPlaneId *DataPlaneId `tfsdk:"data_plane_id" tf:"optional"`
+	DataPlaneId []DataPlaneId `tfsdk:"data_plane_id" tf:"optional,object"`
+}
+
+func (newState *Sequencing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sequencing) {
+}
+
+func (newState *Sequencing) SyncEffectiveFieldsDuringRead(existingState Sequencing) {
 }
 
 type SerializedException struct {
@@ -772,6 +1109,12 @@ type SerializedException struct {
 	Stack []StackFrame `tfsdk:"stack" tf:"optional"`
 }
 
+func (newState *SerializedException) SyncEffectiveFieldsDuringCreateOrUpdate(plan SerializedException) {
+}
+
+func (newState *SerializedException) SyncEffectiveFieldsDuringRead(existingState SerializedException) {
+}
+
 type StackFrame struct {
 	// Class from which the method call originated
 	DeclaringClass types.String `tfsdk:"declaring_class" tf:"optional"`
@@ -781,6 +1124,12 @@ type StackFrame struct {
 	LineNumber types.Int64 `tfsdk:"line_number" tf:"optional"`
 	// Name of the method which was called
 	MethodName types.String `tfsdk:"method_name" tf:"optional"`
+}
+
+func (newState *StackFrame) SyncEffectiveFieldsDuringCreateOrUpdate(plan StackFrame) {
+}
+
+func (newState *StackFrame) SyncEffectiveFieldsDuringRead(existingState StackFrame) {
 }
 
 type StartUpdate struct {
@@ -804,11 +1153,29 @@ type StartUpdate struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
 }
 
+func (newState *StartUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdate) {
+}
+
+func (newState *StartUpdate) SyncEffectiveFieldsDuringRead(existingState StartUpdate) {
+}
+
 type StartUpdateResponse struct {
 	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
 }
 
+func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdateResponse) {
+}
+
+func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringRead(existingState StartUpdateResponse) {
+}
+
 type StopPipelineResponse struct {
+}
+
+func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopPipelineResponse) {
+}
+
+func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringRead(existingState StopPipelineResponse) {
 }
 
 // Stop a pipeline
@@ -816,12 +1183,18 @@ type StopRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *StopRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopRequest) {
+}
+
+func (newState *StopRequest) SyncEffectiveFieldsDuringRead(existingState StopRequest) {
+}
+
 type TableSpec struct {
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
 	// Required. Destination schema to store table.
 	DestinationSchema types.String `tfsdk:"destination_schema" tf:"optional"`
-	// Optional. Destination table name. The pipeline fails If a table with that
+	// Optional. Destination table name. The pipeline fails if a table with that
 	// name already exists. If not set, the source table name is used.
 	DestinationTable types.String `tfsdk:"destination_table" tf:"optional"`
 	// Source catalog name. Might be optional depending on the type of source.
@@ -834,7 +1207,13 @@ type TableSpec struct {
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the
 	// IngestionPipelineDefinition object and the SchemaSpec.
-	TableConfiguration *TableSpecificConfig `tfsdk:"table_configuration" tf:"optional"`
+	TableConfiguration []TableSpecificConfig `tfsdk:"table_configuration" tf:"optional,object"`
+}
+
+func (newState *TableSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpec) {
+}
+
+func (newState *TableSpec) SyncEffectiveFieldsDuringRead(existingState TableSpec) {
 }
 
 type TableSpecificConfig struct {
@@ -845,6 +1224,16 @@ type TableSpecificConfig struct {
 	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields" tf:"optional"`
 	// The SCD type to use to ingest the table.
 	ScdType types.String `tfsdk:"scd_type" tf:"optional"`
+	// The column names specifying the logical order of events in the source
+	// data. Delta Live Tables uses this sequencing to handle change events that
+	// arrive out of order.
+	SequenceBy []types.String `tfsdk:"sequence_by" tf:"optional"`
+}
+
+func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpecificConfig) {
+}
+
+func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringRead(existingState TableSpecificConfig) {
 }
 
 type UpdateInfo struct {
@@ -854,7 +1243,7 @@ type UpdateInfo struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// The pipeline configuration with system defaults applied where unspecified
 	// by the user. Not returned by ListUpdates.
-	Config *PipelineSpec `tfsdk:"config" tf:"optional"`
+	Config []PipelineSpec `tfsdk:"config" tf:"optional,object"`
 	// The time when this update was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// If true, this update will reset all tables before running.
@@ -880,10 +1269,22 @@ type UpdateInfo struct {
 	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
 }
 
+func (newState *UpdateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInfo) {
+}
+
+func (newState *UpdateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateInfo) {
+}
+
 type UpdateStateInfo struct {
 	CreationTime types.String `tfsdk:"creation_time" tf:"optional"`
 
 	State types.String `tfsdk:"state" tf:"optional"`
 
 	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
+}
+
+func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateStateInfo) {
+}
+
+func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateStateInfo) {
 }

@@ -44,7 +44,7 @@ func (a MapNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a MapNestedAttributeBuilder) SetOptional() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -53,7 +53,7 @@ func (a MapNestedAttributeBuilder) SetOptional() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetRequired() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -62,7 +62,7 @@ func (a MapNestedAttributeBuilder) SetRequired() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetSensitive() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -70,7 +70,7 @@ func (a MapNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetComputed() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -78,7 +78,7 @@ func (a MapNestedAttributeBuilder) SetComputed() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -88,17 +88,17 @@ func (a MapNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	return a
 }
 
-func (a MapNestedAttributeBuilder) SetDeprecated(msg string) AttributeBuilder {
+func (a MapNestedAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	a.DeprecationMessage = msg
 	return a
 }
 
-func (a MapNestedAttributeBuilder) AddValidator(v validator.Map) AttributeBuilder {
+func (a MapNestedAttributeBuilder) AddValidator(v validator.Map) BaseSchemaBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a MapNestedAttributeBuilder) AddPlanModifier(v planmodifier.Map) AttributeBuilder {
+func (a MapNestedAttributeBuilder) AddPlanModifier(v planmodifier.Map) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

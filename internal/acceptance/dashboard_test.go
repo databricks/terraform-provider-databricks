@@ -315,11 +315,14 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
 			_, err = w.Lakeview.Update(context.Background(), dashboards.UpdateDashboardRequest{
-				DashboardId:         dashboard_id,
-				DisplayName:         display_name,
-				Etag:                etag,
-				WarehouseId:         warehouse_id,
-				SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
+				DashboardId: dashboard_id,
+				Dashboard: &dashboards.Dashboard{
+					DashboardId:         dashboard_id,
+					DisplayName:         display_name,
+					Etag:                etag,
+					WarehouseId:         warehouse_id,
+					SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
+				},
 			})
 			require.NoError(t, err)
 		},
@@ -419,11 +422,14 @@ func TestAccDashboardTestAll(t *testing.T) {
 			w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 			require.NoError(t, err)
 			_, err = w.Lakeview.Update(context.Background(), dashboards.UpdateDashboardRequest{
-				DashboardId:         dashboard_id,
-				DisplayName:         display_name,
-				Etag:                etag,
-				WarehouseId:         warehouse_id,
-				SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
+				DashboardId: dashboard_id,
+				Dashboard: &dashboards.Dashboard{
+					DashboardId:         dashboard_id,
+					DisplayName:         display_name,
+					Etag:                etag,
+					WarehouseId:         warehouse_id,
+					SerializedDashboard: "{\"pages\":[{\"name\":\"b532570b\",\"displayName\":\"New Page Modified Remote\"}]}",
+				},
 			})
 			require.NoError(t, err)
 		},

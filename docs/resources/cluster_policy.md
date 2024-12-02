@@ -132,7 +132,7 @@ locals {
 
 resource "databricks_cluster_policy" "personal_vm" {
   policy_family_id                   = "personal-vm"
-  policy_family_definition_overrides = jsonencode(personal_vm_override)
+  policy_family_definition_overrides = jsonencode(local.personal_vm_override)
   name                               = "Personal Compute"
 }
 ```

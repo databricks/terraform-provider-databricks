@@ -15,7 +15,13 @@ import (
 )
 
 type AwsCredentials struct {
-	StsRole *StsRole `tfsdk:"sts_role" tf:"optional"`
+	StsRole []StsRole `tfsdk:"sts_role" tf:"optional,object"`
+}
+
+func (newState *AwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsCredentials) {
+}
+
+func (newState *AwsCredentials) SyncEffectiveFieldsDuringRead(existingState AwsCredentials) {
 }
 
 type AwsKeyInfo struct {
@@ -32,6 +38,12 @@ type AwsKeyInfo struct {
 	ReuseKeyForClusterVolumes types.Bool `tfsdk:"reuse_key_for_cluster_volumes" tf:"optional"`
 }
 
+func (newState *AwsKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsKeyInfo) {
+}
+
+func (newState *AwsKeyInfo) SyncEffectiveFieldsDuringRead(existingState AwsKeyInfo) {
+}
+
 type AzureWorkspaceInfo struct {
 	// Azure Resource Group name
 	ResourceGroup types.String `tfsdk:"resource_group" tf:"optional"`
@@ -39,10 +51,22 @@ type AzureWorkspaceInfo struct {
 	SubscriptionId types.String `tfsdk:"subscription_id" tf:"optional"`
 }
 
+func (newState *AzureWorkspaceInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureWorkspaceInfo) {
+}
+
+func (newState *AzureWorkspaceInfo) SyncEffectiveFieldsDuringRead(existingState AzureWorkspaceInfo) {
+}
+
 // The general workspace configurations that are specific to cloud providers.
 type CloudResourceContainer struct {
 	// The general workspace configurations that are specific to Google Cloud.
-	Gcp *CustomerFacingGcpCloudResourceContainer `tfsdk:"gcp" tf:"optional"`
+	Gcp []CustomerFacingGcpCloudResourceContainer `tfsdk:"gcp" tf:"optional,object"`
+}
+
+func (newState *CloudResourceContainer) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudResourceContainer) {
+}
+
+func (newState *CloudResourceContainer) SyncEffectiveFieldsDuringRead(existingState CloudResourceContainer) {
 }
 
 type CreateAwsKeyInfo struct {
@@ -58,14 +82,32 @@ type CreateAwsKeyInfo struct {
 	ReuseKeyForClusterVolumes types.Bool `tfsdk:"reuse_key_for_cluster_volumes" tf:"optional"`
 }
 
+func (newState *CreateAwsKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAwsKeyInfo) {
+}
+
+func (newState *CreateAwsKeyInfo) SyncEffectiveFieldsDuringRead(existingState CreateAwsKeyInfo) {
+}
+
 type CreateCredentialAwsCredentials struct {
-	StsRole *CreateCredentialStsRole `tfsdk:"sts_role" tf:"optional"`
+	StsRole []CreateCredentialStsRole `tfsdk:"sts_role" tf:"optional,object"`
+}
+
+func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialAwsCredentials) {
+}
+
+func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringRead(existingState CreateCredentialAwsCredentials) {
 }
 
 type CreateCredentialRequest struct {
-	AwsCredentials CreateCredentialAwsCredentials `tfsdk:"aws_credentials" tf:""`
+	AwsCredentials []CreateCredentialAwsCredentials `tfsdk:"aws_credentials" tf:"object"`
 	// The human-readable name of the credential configuration object.
 	CredentialsName types.String `tfsdk:"credentials_name" tf:""`
+}
+
+func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialRequest) {
+}
+
+func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringRead(existingState CreateCredentialRequest) {
 }
 
 type CreateCredentialStsRole struct {
@@ -73,12 +115,24 @@ type CreateCredentialStsRole struct {
 	RoleArn types.String `tfsdk:"role_arn" tf:"optional"`
 }
 
-type CreateCustomerManagedKeyRequest struct {
-	AwsKeyInfo *CreateAwsKeyInfo `tfsdk:"aws_key_info" tf:"optional"`
+func (newState *CreateCredentialStsRole) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialStsRole) {
+}
 
-	GcpKeyInfo *CreateGcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional"`
+func (newState *CreateCredentialStsRole) SyncEffectiveFieldsDuringRead(existingState CreateCredentialStsRole) {
+}
+
+type CreateCustomerManagedKeyRequest struct {
+	AwsKeyInfo []CreateAwsKeyInfo `tfsdk:"aws_key_info" tf:"optional,object"`
+
+	GcpKeyInfo []CreateGcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional,object"`
 	// The cases that the key can be used for.
 	UseCases []types.String `tfsdk:"use_cases" tf:""`
+}
+
+func (newState *CreateCustomerManagedKeyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomerManagedKeyRequest) {
+}
+
+func (newState *CreateCustomerManagedKeyRequest) SyncEffectiveFieldsDuringRead(existingState CreateCustomerManagedKeyRequest) {
 }
 
 type CreateGcpKeyInfo struct {
@@ -86,10 +140,16 @@ type CreateGcpKeyInfo struct {
 	KmsKeyId types.String `tfsdk:"kms_key_id" tf:""`
 }
 
+func (newState *CreateGcpKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateGcpKeyInfo) {
+}
+
+func (newState *CreateGcpKeyInfo) SyncEffectiveFieldsDuringRead(existingState CreateGcpKeyInfo) {
+}
+
 type CreateNetworkRequest struct {
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
-	GcpNetworkInfo *GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional"`
+	GcpNetworkInfo []GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional,object"`
 	// The human-readable name of the network configuration.
 	NetworkName types.String `tfsdk:"network_name" tf:""`
 	// IDs of one to five security groups associated with this network. Security
@@ -102,17 +162,29 @@ type CreateNetworkRequest struct {
 	// communication from this VPC over [AWS PrivateLink].
 	//
 	// [AWS PrivateLink]: https://aws.amazon.com/privatelink/
-	VpcEndpoints *NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional"`
+	VpcEndpoints []NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional,object"`
 	// The ID of the VPC associated with this network. VPC IDs can be used in
 	// multiple network configurations.
 	VpcId types.String `tfsdk:"vpc_id" tf:"optional"`
 }
 
+func (newState *CreateNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateNetworkRequest) {
+}
+
+func (newState *CreateNetworkRequest) SyncEffectiveFieldsDuringRead(existingState CreateNetworkRequest) {
+}
+
 type CreateStorageConfigurationRequest struct {
 	// Root S3 bucket information.
-	RootBucketInfo RootBucketInfo `tfsdk:"root_bucket_info" tf:""`
+	RootBucketInfo []RootBucketInfo `tfsdk:"root_bucket_info" tf:"object"`
 	// The human-readable name of the storage configuration.
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name" tf:""`
+}
+
+func (newState *CreateStorageConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateStorageConfigurationRequest) {
+}
+
+func (newState *CreateStorageConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState CreateStorageConfigurationRequest) {
 }
 
 type CreateVpcEndpointRequest struct {
@@ -120,11 +192,17 @@ type CreateVpcEndpointRequest struct {
 	AwsVpcEndpointId types.String `tfsdk:"aws_vpc_endpoint_id" tf:"optional"`
 	// The Google Cloud specific information for this Private Service Connect
 	// endpoint.
-	GcpVpcEndpointInfo *GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional"`
+	GcpVpcEndpointInfo []GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional,object"`
 	// The AWS region in which this VPC endpoint object exists.
 	Region types.String `tfsdk:"region" tf:"optional"`
 	// The human-readable name of the storage configuration.
 	VpcEndpointName types.String `tfsdk:"vpc_endpoint_name" tf:""`
+}
+
+func (newState *CreateVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVpcEndpointRequest) {
+}
+
+func (newState *CreateVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState CreateVpcEndpointRequest) {
 }
 
 type CreateWorkspaceRequest struct {
@@ -135,7 +213,7 @@ type CreateWorkspaceRequest struct {
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
 	// The general workspace configurations that are specific to cloud
 	// providers.
-	CloudResourceContainer *CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional"`
+	CloudResourceContainer []CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional,object"`
 	// ID of the workspace's credential configuration object.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The custom tags key-value pairing that is attached to this workspace. The
@@ -196,9 +274,11 @@ type CreateWorkspaceRequest struct {
 	// for a new workspace].
 	//
 	// [calculate subnet sizes for a new workspace]: https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/network-sizing.html
-	GcpManagedNetworkConfig *GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional"`
+	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
 	// The configurations for the GKE cluster of a Databricks workspace.
-	GkeConfig *GkeConfig `tfsdk:"gke_config" tf:"optional"`
+	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional,object"`
+	// Whether no public IP is enabled for the workspace.
+	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
 	// account. For example, `us-east4`.
 	Location types.String `tfsdk:"location" tf:"optional"`
@@ -238,17 +318,29 @@ type CreateWorkspaceRequest struct {
 	WorkspaceName types.String `tfsdk:"workspace_name" tf:""`
 }
 
+func (newState *CreateWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWorkspaceRequest) {
+}
+
+func (newState *CreateWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState CreateWorkspaceRequest) {
+}
+
 type Credential struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 
-	AwsCredentials *AwsCredentials `tfsdk:"aws_credentials" tf:"optional"`
+	AwsCredentials []AwsCredentials `tfsdk:"aws_credentials" tf:"optional,object"`
 	// Time in epoch milliseconds when the credential was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Databricks credential configuration ID.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The human-readable name of the credential configuration object.
 	CredentialsName types.String `tfsdk:"credentials_name" tf:"optional"`
+}
+
+func (newState *Credential) SyncEffectiveFieldsDuringCreateOrUpdate(plan Credential) {
+}
+
+func (newState *Credential) SyncEffectiveFieldsDuringRead(existingState Credential) {
 }
 
 // The general workspace configurations that are specific to Google Cloud.
@@ -258,19 +350,31 @@ type CustomerFacingGcpCloudResourceContainer struct {
 	ProjectId types.String `tfsdk:"project_id" tf:"optional"`
 }
 
+func (newState *CustomerFacingGcpCloudResourceContainer) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerFacingGcpCloudResourceContainer) {
+}
+
+func (newState *CustomerFacingGcpCloudResourceContainer) SyncEffectiveFieldsDuringRead(existingState CustomerFacingGcpCloudResourceContainer) {
+}
+
 type CustomerManagedKey struct {
 	// The Databricks account ID that holds the customer-managed key.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 
-	AwsKeyInfo *AwsKeyInfo `tfsdk:"aws_key_info" tf:"optional"`
+	AwsKeyInfo []AwsKeyInfo `tfsdk:"aws_key_info" tf:"optional,object"`
 	// Time in epoch milliseconds when the customer key was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// ID of the encryption key configuration object.
 	CustomerManagedKeyId types.String `tfsdk:"customer_managed_key_id" tf:"optional"`
 
-	GcpKeyInfo *GcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional"`
+	GcpKeyInfo []GcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional,object"`
 	// The cases that the key can be used for.
 	UseCases []types.String `tfsdk:"use_cases" tf:"optional"`
+}
+
+func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerManagedKey) {
+}
+
+func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringRead(existingState CustomerManagedKey) {
 }
 
 // Delete credential configuration
@@ -279,10 +383,22 @@ type DeleteCredentialRequest struct {
 	CredentialsId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCredentialRequest) {
+}
+
+func (newState *DeleteCredentialRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialRequest) {
+}
+
 // Delete encryption key configuration
 type DeleteEncryptionKeyRequest struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteEncryptionKeyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEncryptionKeyRequest) {
+}
+
+func (newState *DeleteEncryptionKeyRequest) SyncEffectiveFieldsDuringRead(existingState DeleteEncryptionKeyRequest) {
 }
 
 // Delete a network configuration
@@ -291,13 +407,31 @@ type DeleteNetworkRequest struct {
 	NetworkId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteNetworkRequest) {
+}
+
+func (newState *DeleteNetworkRequest) SyncEffectiveFieldsDuringRead(existingState DeleteNetworkRequest) {
+}
+
 // Delete a private access settings object
 type DeletePrivateAccesRequest struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
 }
 
+func (newState *DeletePrivateAccesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePrivateAccesRequest) {
+}
+
+func (newState *DeletePrivateAccesRequest) SyncEffectiveFieldsDuringRead(existingState DeletePrivateAccesRequest) {
+}
+
 type DeleteResponse struct {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 // Delete storage configuration
@@ -306,10 +440,22 @@ type DeleteStorageRequest struct {
 	StorageConfigurationId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteStorageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteStorageRequest) {
+}
+
+func (newState *DeleteStorageRequest) SyncEffectiveFieldsDuringRead(existingState DeleteStorageRequest) {
+}
+
 // Delete VPC endpoint configuration
 type DeleteVpcEndpointRequest struct {
 	// Databricks VPC endpoint ID.
 	VpcEndpointId types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteVpcEndpointRequest) {
+}
+
+func (newState *DeleteVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState DeleteVpcEndpointRequest) {
 }
 
 // Delete a workspace
@@ -318,9 +464,36 @@ type DeleteWorkspaceRequest struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWorkspaceRequest) {
+}
+
+func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspaceRequest) {
+}
+
+type ExternalCustomerInfo struct {
+	// Email of the authoritative user.
+	AuthoritativeUserEmail types.String `tfsdk:"authoritative_user_email" tf:"optional"`
+	// The authoritative user full name.
+	AuthoritativeUserFullName types.String `tfsdk:"authoritative_user_full_name" tf:"optional"`
+	// The legal entity name for the external workspace
+	CustomerName types.String `tfsdk:"customer_name" tf:"optional"`
+}
+
+func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalCustomerInfo) {
+}
+
+func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringRead(existingState ExternalCustomerInfo) {
+}
+
 type GcpKeyInfo struct {
 	// The GCP KMS key's resource name
 	KmsKeyId types.String `tfsdk:"kms_key_id" tf:""`
+}
+
+func (newState *GcpKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpKeyInfo) {
+}
+
+func (newState *GcpKeyInfo) SyncEffectiveFieldsDuringRead(existingState GcpKeyInfo) {
 }
 
 // The network settings for the workspace. The configurations are only for
@@ -358,6 +531,12 @@ type GcpManagedNetworkConfig struct {
 	SubnetCidr types.String `tfsdk:"subnet_cidr" tf:"optional"`
 }
 
+func (newState *GcpManagedNetworkConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpManagedNetworkConfig) {
+}
+
+func (newState *GcpManagedNetworkConfig) SyncEffectiveFieldsDuringRead(existingState GcpManagedNetworkConfig) {
+}
+
 // The Google Cloud specific information for this network (for example, the VPC
 // ID, subnet ID, and secondary IP ranges).
 type GcpNetworkInfo struct {
@@ -381,6 +560,12 @@ type GcpNetworkInfo struct {
 	VpcId types.String `tfsdk:"vpc_id" tf:""`
 }
 
+func (newState *GcpNetworkInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpNetworkInfo) {
+}
+
+func (newState *GcpNetworkInfo) SyncEffectiveFieldsDuringRead(existingState GcpNetworkInfo) {
+}
+
 // The Google Cloud specific information for this Private Service Connect
 // endpoint.
 type GcpVpcEndpointInfo struct {
@@ -397,10 +582,22 @@ type GcpVpcEndpointInfo struct {
 	ServiceAttachmentId types.String `tfsdk:"service_attachment_id" tf:"optional"`
 }
 
+func (newState *GcpVpcEndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpVpcEndpointInfo) {
+}
+
+func (newState *GcpVpcEndpointInfo) SyncEffectiveFieldsDuringRead(existingState GcpVpcEndpointInfo) {
+}
+
 // Get credential configuration
 type GetCredentialRequest struct {
 	// Databricks Account API credential configuration ID
 	CredentialsId types.String `tfsdk:"-"`
+}
+
+func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialRequest) {
+}
+
+func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GetCredentialRequest) {
 }
 
 // Get encryption key configuration
@@ -409,10 +606,22 @@ type GetEncryptionKeyRequest struct {
 	CustomerManagedKeyId types.String `tfsdk:"-"`
 }
 
+func (newState *GetEncryptionKeyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEncryptionKeyRequest) {
+}
+
+func (newState *GetEncryptionKeyRequest) SyncEffectiveFieldsDuringRead(existingState GetEncryptionKeyRequest) {
+}
+
 // Get a network configuration
 type GetNetworkRequest struct {
 	// Databricks Account API network configuration ID.
 	NetworkId types.String `tfsdk:"-"`
+}
+
+func (newState *GetNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetNetworkRequest) {
+}
+
+func (newState *GetNetworkRequest) SyncEffectiveFieldsDuringRead(existingState GetNetworkRequest) {
 }
 
 // Get a private access settings object
@@ -421,10 +630,22 @@ type GetPrivateAccesRequest struct {
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPrivateAccesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPrivateAccesRequest) {
+}
+
+func (newState *GetPrivateAccesRequest) SyncEffectiveFieldsDuringRead(existingState GetPrivateAccesRequest) {
+}
+
 // Get storage configuration
 type GetStorageRequest struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
+}
+
+func (newState *GetStorageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetStorageRequest) {
+}
+
+func (newState *GetStorageRequest) SyncEffectiveFieldsDuringRead(existingState GetStorageRequest) {
 }
 
 // Get a VPC endpoint configuration
@@ -433,10 +654,22 @@ type GetVpcEndpointRequest struct {
 	VpcEndpointId types.String `tfsdk:"-"`
 }
 
+func (newState *GetVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetVpcEndpointRequest) {
+}
+
+func (newState *GetVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState GetVpcEndpointRequest) {
+}
+
 // Get a workspace
 type GetWorkspaceRequest struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceRequest) {
+}
+
+func (newState *GetWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceRequest) {
 }
 
 // The configurations for the GKE cluster of a Databricks workspace.
@@ -457,16 +690,22 @@ type GkeConfig struct {
 	MasterIpRange types.String `tfsdk:"master_ip_range" tf:"optional"`
 }
 
+func (newState *GkeConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GkeConfig) {
+}
+
+func (newState *GkeConfig) SyncEffectiveFieldsDuringRead(existingState GkeConfig) {
+}
+
 type Network struct {
 	// The Databricks account ID associated with this network configuration.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// Time in epoch milliseconds when the network was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Array of error messages about the network configuration.
-	ErrorMessages []NetworkHealth `tfsdk:"error_messages" tf:"optional"`
+	ErrorMessages []NetworkHealth `tfsdk:"error_messages" tf:"computed,optional"`
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
-	GcpNetworkInfo *GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional"`
+	GcpNetworkInfo []GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional,object"`
 	// The Databricks network configuration ID.
 	NetworkId types.String `tfsdk:"network_id" tf:"optional"`
 	// The human-readable name of the network configuration.
@@ -479,18 +718,24 @@ type Network struct {
 	// communication from this VPC over [AWS PrivateLink].
 	//
 	// [AWS PrivateLink]: https://aws.amazon.com/privatelink/
-	VpcEndpoints *NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional"`
+	VpcEndpoints []NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional,object"`
 	// The ID of the VPC associated with this network configuration. VPC IDs can
 	// be used in multiple networks.
 	VpcId types.String `tfsdk:"vpc_id" tf:"optional"`
 	// The status of this network configuration object in terms of its use in a
 	// workspace: * `UNATTACHED`: Unattached. * `VALID`: Valid. * `BROKEN`:
 	// Broken. * `WARNED`: Warned.
-	VpcStatus types.String `tfsdk:"vpc_status" tf:"optional"`
+	VpcStatus types.String `tfsdk:"vpc_status" tf:"computed,optional"`
 	// Array of warning messages about the network configuration.
-	WarningMessages []NetworkWarning `tfsdk:"warning_messages" tf:"optional"`
+	WarningMessages []NetworkWarning `tfsdk:"warning_messages" tf:"computed,optional"`
 	// Workspace ID associated with this network configuration.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
+}
+
+func (newState *Network) SyncEffectiveFieldsDuringCreateOrUpdate(plan Network) {
+}
+
+func (newState *Network) SyncEffectiveFieldsDuringRead(existingState Network) {
 }
 
 type NetworkHealth struct {
@@ -499,6 +744,12 @@ type NetworkHealth struct {
 	// The AWS resource associated with this error: credentials, VPC, subnet,
 	// security group, or network ACL.
 	ErrorType types.String `tfsdk:"error_type" tf:"optional"`
+}
+
+func (newState *NetworkHealth) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkHealth) {
+}
+
+func (newState *NetworkHealth) SyncEffectiveFieldsDuringRead(existingState NetworkHealth) {
 }
 
 // If specified, contains the VPC endpoints used to allow cluster communication
@@ -514,12 +765,24 @@ type NetworkVpcEndpoints struct {
 	RestApi []types.String `tfsdk:"rest_api" tf:""`
 }
 
+func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkVpcEndpoints) {
+}
+
+func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringRead(existingState NetworkVpcEndpoints) {
+}
+
 type NetworkWarning struct {
 	// Details of the warning.
 	WarningMessage types.String `tfsdk:"warning_message" tf:"optional"`
 	// The AWS resource associated with this warning: a subnet or a security
 	// group.
 	WarningType types.String `tfsdk:"warning_type" tf:"optional"`
+}
+
+func (newState *NetworkWarning) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkWarning) {
+}
+
+func (newState *NetworkWarning) SyncEffectiveFieldsDuringRead(existingState NetworkWarning) {
 }
 
 type PrivateAccessSettings struct {
@@ -549,7 +812,19 @@ type PrivateAccessSettings struct {
 	Region types.String `tfsdk:"region" tf:"optional"`
 }
 
+func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrivateAccessSettings) {
+}
+
+func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringRead(existingState PrivateAccessSettings) {
+}
+
 type ReplaceResponse struct {
+}
+
+func (newState *ReplaceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReplaceResponse) {
+}
+
+func (newState *ReplaceResponse) SyncEffectiveFieldsDuringRead(existingState ReplaceResponse) {
 }
 
 // Root S3 bucket information.
@@ -558,17 +833,29 @@ type RootBucketInfo struct {
 	BucketName types.String `tfsdk:"bucket_name" tf:"optional"`
 }
 
+func (newState *RootBucketInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RootBucketInfo) {
+}
+
+func (newState *RootBucketInfo) SyncEffectiveFieldsDuringRead(existingState RootBucketInfo) {
+}
+
 type StorageConfiguration struct {
 	// The Databricks account ID that hosts the credential.
-	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	AccountId types.String `tfsdk:"account_id" tf:"computed,optional"`
 	// Time in epoch milliseconds when the storage configuration was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Root S3 bucket information.
-	RootBucketInfo *RootBucketInfo `tfsdk:"root_bucket_info" tf:"optional"`
+	RootBucketInfo []RootBucketInfo `tfsdk:"root_bucket_info" tf:"optional,object"`
 	// Databricks storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"storage_configuration_id" tf:"optional"`
 	// The human-readable name of the storage configuration.
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name" tf:"optional"`
+}
+
+func (newState *StorageConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan StorageConfiguration) {
+}
+
+func (newState *StorageConfiguration) SyncEffectiveFieldsDuringRead(existingState StorageConfiguration) {
 }
 
 type StsRole struct {
@@ -579,7 +866,19 @@ type StsRole struct {
 	RoleArn types.String `tfsdk:"role_arn" tf:"optional"`
 }
 
+func (newState *StsRole) SyncEffectiveFieldsDuringCreateOrUpdate(plan StsRole) {
+}
+
+func (newState *StsRole) SyncEffectiveFieldsDuringRead(existingState StsRole) {
+}
+
 type UpdateResponse struct {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
 type UpdateWorkspaceRequest struct {
@@ -604,6 +903,9 @@ type UpdateWorkspaceRequest struct {
 	// switch from a Databricks-managed VPC to a customer-managed VPC by
 	// updating the workspace to add a network configuration ID.
 	NetworkId types.String `tfsdk:"network_id" tf:"optional"`
+	// The ID of the workspace's private access settings configuration object.
+	// This parameter is available only for updating failed workspaces.
+	PrivateAccessSettingsId types.String `tfsdk:"private_access_settings_id" tf:"optional"`
 	// The ID of the workspace's storage configuration object. This parameter is
 	// available only for updating failed workspaces.
 	StorageConfigurationId types.String `tfsdk:"storage_configuration_id" tf:"optional"`
@@ -612,6 +914,12 @@ type UpdateWorkspaceRequest struct {
 	StorageCustomerManagedKeyId types.String `tfsdk:"storage_customer_managed_key_id" tf:"optional"`
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *UpdateWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateWorkspaceRequest) {
+}
+
+func (newState *UpdateWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceRequest) {
 }
 
 type UpsertPrivateAccessSettingsRequest struct {
@@ -652,6 +960,12 @@ type UpsertPrivateAccessSettingsRequest struct {
 	Region types.String `tfsdk:"region" tf:""`
 }
 
+func (newState *UpsertPrivateAccessSettingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertPrivateAccessSettingsRequest) {
+}
+
+func (newState *UpsertPrivateAccessSettingsRequest) SyncEffectiveFieldsDuringRead(existingState UpsertPrivateAccessSettingsRequest) {
+}
+
 type VpcEndpoint struct {
 	// The Databricks account ID that hosts the VPC endpoint configuration.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
@@ -668,7 +982,7 @@ type VpcEndpoint struct {
 	AwsVpcEndpointId types.String `tfsdk:"aws_vpc_endpoint_id" tf:"optional"`
 	// The Google Cloud specific information for this Private Service Connect
 	// endpoint.
-	GcpVpcEndpointInfo *GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional"`
+	GcpVpcEndpointInfo []GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional,object"`
 	// The AWS region in which this VPC endpoint object exists.
 	Region types.String `tfsdk:"region" tf:"optional"`
 	// The current state (such as `available` or `rejected`) of the VPC
@@ -690,20 +1004,26 @@ type VpcEndpoint struct {
 	VpcEndpointName types.String `tfsdk:"vpc_endpoint_name" tf:"optional"`
 }
 
+func (newState *VpcEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan VpcEndpoint) {
+}
+
+func (newState *VpcEndpoint) SyncEffectiveFieldsDuringRead(existingState VpcEndpoint) {
+}
+
 type Workspace struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// The AWS region of the workspace data plane (for example, `us-west-2`).
 	AwsRegion types.String `tfsdk:"aws_region" tf:"optional"`
 
-	AzureWorkspaceInfo *AzureWorkspaceInfo `tfsdk:"azure_workspace_info" tf:"optional"`
+	AzureWorkspaceInfo []AzureWorkspaceInfo `tfsdk:"azure_workspace_info" tf:"optional,object"`
 	// The cloud name. This field always has the value `gcp`.
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
 	// The general workspace configurations that are specific to cloud
 	// providers.
-	CloudResourceContainer *CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional"`
+	CloudResourceContainer []CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional,object"`
 	// Time in epoch milliseconds when the workspace was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// ID of the workspace's credential configuration object.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The custom tags key-value pairing that is attached to this workspace. The
@@ -718,6 +1038,10 @@ type Workspace struct {
 	// This value must be unique across all non-deleted deployments across all
 	// AWS regions.
 	DeploymentName types.String `tfsdk:"deployment_name" tf:"optional"`
+	// If this workspace is for a external customer, then external_customer_info
+	// is populated. If this workspace is not for a external customer, then
+	// external_customer_info is empty.
+	ExternalCustomerInfo []ExternalCustomerInfo `tfsdk:"external_customer_info" tf:"optional,object"`
 	// The network settings for the workspace. The configurations are only for
 	// Databricks-managed VPCs. It is ignored if you specify a customer-managed
 	// VPC in the `network_id` field.", All the IP range configurations must be
@@ -741,9 +1065,11 @@ type Workspace struct {
 	// for a new workspace].
 	//
 	// [calculate subnet sizes for a new workspace]: https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/network-sizing.html
-	GcpManagedNetworkConfig *GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional"`
+	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
 	// The configurations for the GKE cluster of a Databricks workspace.
-	GkeConfig *GkeConfig `tfsdk:"gke_config" tf:"optional"`
+	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional,object"`
+	// Whether no public IP is enabled for the workspace.
+	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
 	// account (for example, `us-east4`).
 	Location types.String `tfsdk:"location" tf:"optional"`
@@ -779,7 +1105,13 @@ type Workspace struct {
 	// The status of the workspace. For workspace creation, usually it is set to
 	// `PROVISIONING` initially. Continue to check the status until the status
 	// is `RUNNING`.
-	WorkspaceStatus types.String `tfsdk:"workspace_status" tf:"optional"`
+	WorkspaceStatus types.String `tfsdk:"workspace_status" tf:"computed,optional"`
 	// Message describing the current workspace status.
-	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message" tf:"optional"`
+	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message" tf:"computed,optional"`
+}
+
+func (newState *Workspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspace) {
+}
+
+func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace) {
 }

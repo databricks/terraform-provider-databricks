@@ -20,8 +20,20 @@ type AddExchangeForListingRequest struct {
 	ListingId types.String `tfsdk:"listing_id" tf:""`
 }
 
+func (newState *AddExchangeForListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddExchangeForListingRequest) {
+}
+
+func (newState *AddExchangeForListingRequest) SyncEffectiveFieldsDuringRead(existingState AddExchangeForListingRequest) {
+}
+
 type AddExchangeForListingResponse struct {
-	ExchangeForListing *ExchangeListing `tfsdk:"exchange_for_listing" tf:"optional"`
+	ExchangeForListing []ExchangeListing `tfsdk:"exchange_for_listing" tf:"optional,object"`
+}
+
+func (newState *AddExchangeForListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddExchangeForListingResponse) {
+}
+
+func (newState *AddExchangeForListingResponse) SyncEffectiveFieldsDuringRead(existingState AddExchangeForListingResponse) {
 }
 
 // Get one batch of listings. One may specify up to 50 IDs per request.
@@ -29,8 +41,20 @@ type BatchGetListingsRequest struct {
 	Ids []types.String `tfsdk:"-"`
 }
 
+func (newState *BatchGetListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetListingsRequest) {
+}
+
+func (newState *BatchGetListingsRequest) SyncEffectiveFieldsDuringRead(existingState BatchGetListingsRequest) {
+}
+
 type BatchGetListingsResponse struct {
 	Listings []Listing `tfsdk:"listings" tf:"optional"`
+}
+
+func (newState *BatchGetListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetListingsResponse) {
+}
+
+func (newState *BatchGetListingsResponse) SyncEffectiveFieldsDuringRead(existingState BatchGetListingsResponse) {
 }
 
 // Get one batch of providers. One may specify up to 50 IDs per request.
@@ -38,12 +62,30 @@ type BatchGetProvidersRequest struct {
 	Ids []types.String `tfsdk:"-"`
 }
 
+func (newState *BatchGetProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetProvidersRequest) {
+}
+
+func (newState *BatchGetProvidersRequest) SyncEffectiveFieldsDuringRead(existingState BatchGetProvidersRequest) {
+}
+
 type BatchGetProvidersResponse struct {
 	Providers []ProviderInfo `tfsdk:"providers" tf:"optional"`
 }
 
+func (newState *BatchGetProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetProvidersResponse) {
+}
+
+func (newState *BatchGetProvidersResponse) SyncEffectiveFieldsDuringRead(existingState BatchGetProvidersResponse) {
+}
+
 type ConsumerTerms struct {
 	Version types.String `tfsdk:"version" tf:""`
+}
+
+func (newState *ConsumerTerms) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConsumerTerms) {
+}
+
+func (newState *ConsumerTerms) SyncEffectiveFieldsDuringRead(existingState ConsumerTerms) {
 }
 
 // contact info for the consumer requesting data or performing a listing
@@ -58,40 +100,82 @@ type ContactInfo struct {
 	LastName types.String `tfsdk:"last_name" tf:"optional"`
 }
 
+func (newState *ContactInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContactInfo) {
+}
+
+func (newState *ContactInfo) SyncEffectiveFieldsDuringRead(existingState ContactInfo) {
+}
+
 type CreateExchangeFilterRequest struct {
-	Filter ExchangeFilter `tfsdk:"filter" tf:""`
+	Filter []ExchangeFilter `tfsdk:"filter" tf:"object"`
+}
+
+func (newState *CreateExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeFilterRequest) {
+}
+
+func (newState *CreateExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState CreateExchangeFilterRequest) {
 }
 
 type CreateExchangeFilterResponse struct {
 	FilterId types.String `tfsdk:"filter_id" tf:"optional"`
 }
 
+func (newState *CreateExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeFilterResponse) {
+}
+
+func (newState *CreateExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState CreateExchangeFilterResponse) {
+}
+
 type CreateExchangeRequest struct {
-	Exchange Exchange `tfsdk:"exchange" tf:""`
+	Exchange []Exchange `tfsdk:"exchange" tf:"object"`
+}
+
+func (newState *CreateExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeRequest) {
+}
+
+func (newState *CreateExchangeRequest) SyncEffectiveFieldsDuringRead(existingState CreateExchangeRequest) {
 }
 
 type CreateExchangeResponse struct {
 	ExchangeId types.String `tfsdk:"exchange_id" tf:"optional"`
 }
 
+func (newState *CreateExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeResponse) {
+}
+
+func (newState *CreateExchangeResponse) SyncEffectiveFieldsDuringRead(existingState CreateExchangeResponse) {
+}
+
 type CreateFileRequest struct {
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 
-	FileParent FileParent `tfsdk:"file_parent" tf:""`
+	FileParent []FileParent `tfsdk:"file_parent" tf:"object"`
 
 	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:""`
 
 	MimeType types.String `tfsdk:"mime_type" tf:""`
 }
 
+func (newState *CreateFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFileRequest) {
+}
+
+func (newState *CreateFileRequest) SyncEffectiveFieldsDuringRead(existingState CreateFileRequest) {
+}
+
 type CreateFileResponse struct {
-	FileInfo *FileInfo `tfsdk:"file_info" tf:"optional"`
+	FileInfo []FileInfo `tfsdk:"file_info" tf:"optional,object"`
 	// Pre-signed POST URL to blob storage
 	UploadUrl types.String `tfsdk:"upload_url" tf:"optional"`
 }
 
+func (newState *CreateFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFileResponse) {
+}
+
+func (newState *CreateFileResponse) SyncEffectiveFieldsDuringRead(existingState CreateFileResponse) {
+}
+
 type CreateInstallationRequest struct {
-	AcceptedConsumerTerms *ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:"optional"`
+	AcceptedConsumerTerms []ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:"optional,object"`
 
 	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
 
@@ -99,22 +183,40 @@ type CreateInstallationRequest struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 	// for git repo installations
-	RepoDetail *RepoInstallation `tfsdk:"repo_detail" tf:"optional"`
+	RepoDetail []RepoInstallation `tfsdk:"repo_detail" tf:"optional,object"`
 
 	ShareName types.String `tfsdk:"share_name" tf:"optional"`
 }
 
+func (newState *CreateInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstallationRequest) {
+}
+
+func (newState *CreateInstallationRequest) SyncEffectiveFieldsDuringRead(existingState CreateInstallationRequest) {
+}
+
 type CreateListingRequest struct {
-	Listing Listing `tfsdk:"listing" tf:""`
+	Listing []Listing `tfsdk:"listing" tf:"object"`
+}
+
+func (newState *CreateListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateListingRequest) {
+}
+
+func (newState *CreateListingRequest) SyncEffectiveFieldsDuringRead(existingState CreateListingRequest) {
 }
 
 type CreateListingResponse struct {
 	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
 }
 
+func (newState *CreateListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateListingResponse) {
+}
+
+func (newState *CreateListingResponse) SyncEffectiveFieldsDuringRead(existingState CreateListingResponse) {
+}
+
 // Data request messages also creates a lead (maybe)
 type CreatePersonalizationRequest struct {
-	AcceptedConsumerTerms ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:""`
+	AcceptedConsumerTerms []ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:"object"`
 
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
@@ -133,16 +235,40 @@ type CreatePersonalizationRequest struct {
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 }
 
+func (newState *CreatePersonalizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePersonalizationRequest) {
+}
+
+func (newState *CreatePersonalizationRequest) SyncEffectiveFieldsDuringRead(existingState CreatePersonalizationRequest) {
+}
+
 type CreatePersonalizationRequestResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 }
 
+func (newState *CreatePersonalizationRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePersonalizationRequestResponse) {
+}
+
+func (newState *CreatePersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState CreatePersonalizationRequestResponse) {
+}
+
 type CreateProviderRequest struct {
-	Provider ProviderInfo `tfsdk:"provider" tf:""`
+	Provider []ProviderInfo `tfsdk:"provider" tf:"object"`
+}
+
+func (newState *CreateProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProviderRequest) {
+}
+
+func (newState *CreateProviderRequest) SyncEffectiveFieldsDuringRead(existingState CreateProviderRequest) {
 }
 
 type CreateProviderResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
+}
+
+func (newState *CreateProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProviderResponse) {
+}
+
+func (newState *CreateProviderResponse) SyncEffectiveFieldsDuringRead(existingState CreateProviderResponse) {
 }
 
 type DataRefreshInfo struct {
@@ -151,12 +277,30 @@ type DataRefreshInfo struct {
 	Unit types.String `tfsdk:"unit" tf:""`
 }
 
+func (newState *DataRefreshInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataRefreshInfo) {
+}
+
+func (newState *DataRefreshInfo) SyncEffectiveFieldsDuringRead(existingState DataRefreshInfo) {
+}
+
 // Delete an exchange filter
 type DeleteExchangeFilterRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExchangeFilterRequest) {
+}
+
+func (newState *DeleteExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeFilterRequest) {
+}
+
 type DeleteExchangeFilterResponse struct {
+}
+
+func (newState *DeleteExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExchangeFilterResponse) {
+}
+
+func (newState *DeleteExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeFilterResponse) {
 }
 
 // Delete an exchange
@@ -164,7 +308,19 @@ type DeleteExchangeRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExchangeRequest) {
+}
+
+func (newState *DeleteExchangeRequest) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeRequest) {
+}
+
 type DeleteExchangeResponse struct {
+}
+
+func (newState *DeleteExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExchangeResponse) {
+}
+
+func (newState *DeleteExchangeResponse) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeResponse) {
 }
 
 // Delete a file
@@ -172,7 +328,19 @@ type DeleteFileRequest struct {
 	FileId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteFileRequest) {
+}
+
+func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringRead(existingState DeleteFileRequest) {
+}
+
 type DeleteFileResponse struct {
+}
+
+func (newState *DeleteFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteFileResponse) {
+}
+
+func (newState *DeleteFileResponse) SyncEffectiveFieldsDuringRead(existingState DeleteFileResponse) {
 }
 
 // Uninstall from a listing
@@ -182,7 +350,19 @@ type DeleteInstallationRequest struct {
 	ListingId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstallationRequest) {
+}
+
+func (newState *DeleteInstallationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteInstallationRequest) {
+}
+
 type DeleteInstallationResponse struct {
+}
+
+func (newState *DeleteInstallationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstallationResponse) {
+}
+
+func (newState *DeleteInstallationResponse) SyncEffectiveFieldsDuringRead(existingState DeleteInstallationResponse) {
 }
 
 // Delete a listing
@@ -190,7 +370,19 @@ type DeleteListingRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteListingRequest) {
+}
+
+func (newState *DeleteListingRequest) SyncEffectiveFieldsDuringRead(existingState DeleteListingRequest) {
+}
+
 type DeleteListingResponse struct {
+}
+
+func (newState *DeleteListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteListingResponse) {
+}
+
+func (newState *DeleteListingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteListingResponse) {
 }
 
 // Delete provider
@@ -198,7 +390,19 @@ type DeleteProviderRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderRequest) {
+}
+
+func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest) {
+}
+
 type DeleteProviderResponse struct {
+}
+
+func (newState *DeleteProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderResponse) {
+}
+
+func (newState *DeleteProviderResponse) SyncEffectiveFieldsDuringRead(existingState DeleteProviderResponse) {
 }
 
 type Exchange struct {
@@ -221,6 +425,12 @@ type Exchange struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *Exchange) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exchange) {
+}
+
+func (newState *Exchange) SyncEffectiveFieldsDuringRead(existingState Exchange) {
+}
+
 type ExchangeFilter struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -241,6 +451,12 @@ type ExchangeFilter struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *ExchangeFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeFilter) {
+}
+
+func (newState *ExchangeFilter) SyncEffectiveFieldsDuringRead(existingState ExchangeFilter) {
+}
+
 type ExchangeListing struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -257,6 +473,12 @@ type ExchangeListing struct {
 	ListingName types.String `tfsdk:"listing_name" tf:"optional"`
 }
 
+func (newState *ExchangeListing) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeListing) {
+}
+
+func (newState *ExchangeListing) SyncEffectiveFieldsDuringRead(existingState ExchangeListing) {
+}
+
 type FileInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 	// Name displayed to users for applicable files, e.g. embedded notebooks
@@ -264,7 +486,7 @@ type FileInfo struct {
 
 	DownloadLink types.String `tfsdk:"download_link" tf:"optional"`
 
-	FileParent *FileParent `tfsdk:"file_parent" tf:"optional"`
+	FileParent []FileParent `tfsdk:"file_parent" tf:"optional,object"`
 
 	Id types.String `tfsdk:"id" tf:"optional"`
 
@@ -280,10 +502,22 @@ type FileInfo struct {
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 }
 
+func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo) {
+}
+
+func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
+}
+
 type FileParent struct {
 	FileParentType types.String `tfsdk:"file_parent_type" tf:"optional"`
 	// TODO make the following fields required
 	ParentId types.String `tfsdk:"parent_id" tf:"optional"`
+}
+
+func (newState *FileParent) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileParent) {
+}
+
+func (newState *FileParent) SyncEffectiveFieldsDuringRead(existingState FileParent) {
 }
 
 // Get an exchange
@@ -291,8 +525,20 @@ type GetExchangeRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *GetExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExchangeRequest) {
+}
+
+func (newState *GetExchangeRequest) SyncEffectiveFieldsDuringRead(existingState GetExchangeRequest) {
+}
+
 type GetExchangeResponse struct {
-	Exchange *Exchange `tfsdk:"exchange" tf:"optional"`
+	Exchange []Exchange `tfsdk:"exchange" tf:"optional,object"`
+}
+
+func (newState *GetExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExchangeResponse) {
+}
+
+func (newState *GetExchangeResponse) SyncEffectiveFieldsDuringRead(existingState GetExchangeResponse) {
 }
 
 // Get a file
@@ -300,13 +546,31 @@ type GetFileRequest struct {
 	FileId types.String `tfsdk:"-"`
 }
 
+func (newState *GetFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetFileRequest) {
+}
+
+func (newState *GetFileRequest) SyncEffectiveFieldsDuringRead(existingState GetFileRequest) {
+}
+
 type GetFileResponse struct {
-	FileInfo *FileInfo `tfsdk:"file_info" tf:"optional"`
+	FileInfo []FileInfo `tfsdk:"file_info" tf:"optional,object"`
+}
+
+func (newState *GetFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetFileResponse) {
+}
+
+func (newState *GetFileResponse) SyncEffectiveFieldsDuringRead(existingState GetFileResponse) {
 }
 
 type GetLatestVersionProviderAnalyticsDashboardResponse struct {
 	// version here is latest logical version of the dashboard template
 	Version types.Int64 `tfsdk:"version" tf:"optional"`
+}
+
+func (newState *GetLatestVersionProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionProviderAnalyticsDashboardResponse) {
+}
+
+func (newState *GetLatestVersionProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionProviderAnalyticsDashboardResponse) {
 }
 
 // Get listing content metadata
@@ -318,10 +582,22 @@ type GetListingContentMetadataRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *GetListingContentMetadataRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingContentMetadataRequest) {
+}
+
+func (newState *GetListingContentMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetListingContentMetadataRequest) {
+}
+
 type GetListingContentMetadataResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
 	SharedDataObjects []SharedDataObject `tfsdk:"shared_data_objects" tf:"optional"`
+}
+
+func (newState *GetListingContentMetadataResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingContentMetadataResponse) {
+}
+
+func (newState *GetListingContentMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetListingContentMetadataResponse) {
 }
 
 // Get listing
@@ -329,8 +605,20 @@ type GetListingRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *GetListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingRequest) {
+}
+
+func (newState *GetListingRequest) SyncEffectiveFieldsDuringRead(existingState GetListingRequest) {
+}
+
 type GetListingResponse struct {
-	Listing *Listing `tfsdk:"listing" tf:"optional"`
+	Listing []Listing `tfsdk:"listing" tf:"optional,object"`
+}
+
+func (newState *GetListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingResponse) {
+}
+
+func (newState *GetListingResponse) SyncEffectiveFieldsDuringRead(existingState GetListingResponse) {
 }
 
 // List listings
@@ -340,10 +628,22 @@ type GetListingsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *GetListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingsRequest) {
+}
+
+func (newState *GetListingsRequest) SyncEffectiveFieldsDuringRead(existingState GetListingsRequest) {
+}
+
 type GetListingsResponse struct {
 	Listings []Listing `tfsdk:"listings" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *GetListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingsResponse) {
+}
+
+func (newState *GetListingsResponse) SyncEffectiveFieldsDuringRead(existingState GetListingsResponse) {
 }
 
 // Get the personalization request for a listing
@@ -351,8 +651,20 @@ type GetPersonalizationRequestRequest struct {
 	ListingId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPersonalizationRequestRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPersonalizationRequestRequest) {
+}
+
+func (newState *GetPersonalizationRequestRequest) SyncEffectiveFieldsDuringRead(existingState GetPersonalizationRequestRequest) {
+}
+
 type GetPersonalizationRequestResponse struct {
 	PersonalizationRequests []PersonalizationRequest `tfsdk:"personalization_requests" tf:"optional"`
+}
+
+func (newState *GetPersonalizationRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPersonalizationRequestResponse) {
+}
+
+func (newState *GetPersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState GetPersonalizationRequestResponse) {
 }
 
 // Get a provider
@@ -360,12 +672,30 @@ type GetProviderRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *GetProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderRequest) {
+}
+
+func (newState *GetProviderRequest) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest) {
+}
+
 type GetProviderResponse struct {
-	Provider *ProviderInfo `tfsdk:"provider" tf:"optional"`
+	Provider []ProviderInfo `tfsdk:"provider" tf:"optional,object"`
+}
+
+func (newState *GetProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderResponse) {
+}
+
+func (newState *GetProviderResponse) SyncEffectiveFieldsDuringRead(existingState GetProviderResponse) {
 }
 
 type Installation struct {
-	Installation *InstallationDetail `tfsdk:"installation" tf:"optional"`
+	Installation []InstallationDetail `tfsdk:"installation" tf:"optional,object"`
+}
+
+func (newState *Installation) SyncEffectiveFieldsDuringCreateOrUpdate(plan Installation) {
+}
+
+func (newState *Installation) SyncEffectiveFieldsDuringRead(existingState Installation) {
 }
 
 type InstallationDetail struct {
@@ -391,9 +721,15 @@ type InstallationDetail struct {
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 
-	TokenDetail *TokenDetail `tfsdk:"token_detail" tf:"optional"`
+	TokenDetail []TokenDetail `tfsdk:"token_detail" tf:"optional,object"`
 
 	Tokens []TokenInfo `tfsdk:"tokens" tf:"optional"`
+}
+
+func (newState *InstallationDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallationDetail) {
+}
+
+func (newState *InstallationDetail) SyncEffectiveFieldsDuringRead(existingState InstallationDetail) {
 }
 
 // List all installations
@@ -403,10 +739,22 @@ type ListAllInstallationsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListAllInstallationsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllInstallationsRequest) {
+}
+
+func (newState *ListAllInstallationsRequest) SyncEffectiveFieldsDuringRead(existingState ListAllInstallationsRequest) {
+}
+
 type ListAllInstallationsResponse struct {
 	Installations []InstallationDetail `tfsdk:"installations" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListAllInstallationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllInstallationsResponse) {
+}
+
+func (newState *ListAllInstallationsResponse) SyncEffectiveFieldsDuringRead(existingState ListAllInstallationsResponse) {
 }
 
 // List all personalization requests
@@ -416,10 +764,22 @@ type ListAllPersonalizationRequestsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListAllPersonalizationRequestsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllPersonalizationRequestsRequest) {
+}
+
+func (newState *ListAllPersonalizationRequestsRequest) SyncEffectiveFieldsDuringRead(existingState ListAllPersonalizationRequestsRequest) {
+}
+
 type ListAllPersonalizationRequestsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
 	PersonalizationRequests []PersonalizationRequest `tfsdk:"personalization_requests" tf:"optional"`
+}
+
+func (newState *ListAllPersonalizationRequestsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllPersonalizationRequestsResponse) {
+}
+
+func (newState *ListAllPersonalizationRequestsResponse) SyncEffectiveFieldsDuringRead(existingState ListAllPersonalizationRequestsResponse) {
 }
 
 // List exchange filters
@@ -431,10 +791,22 @@ type ListExchangeFiltersRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListExchangeFiltersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangeFiltersRequest) {
+}
+
+func (newState *ListExchangeFiltersRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangeFiltersRequest) {
+}
+
 type ListExchangeFiltersResponse struct {
 	Filters []ExchangeFilter `tfsdk:"filters" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListExchangeFiltersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangeFiltersResponse) {
+}
+
+func (newState *ListExchangeFiltersResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangeFiltersResponse) {
 }
 
 // List exchanges for listing
@@ -446,10 +818,22 @@ type ListExchangesForListingRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListExchangesForListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesForListingRequest) {
+}
+
+func (newState *ListExchangesForListingRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangesForListingRequest) {
+}
+
 type ListExchangesForListingResponse struct {
 	ExchangeListing []ExchangeListing `tfsdk:"exchange_listing" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListExchangesForListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesForListingResponse) {
+}
+
+func (newState *ListExchangesForListingResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangesForListingResponse) {
 }
 
 // List exchanges
@@ -459,25 +843,49 @@ type ListExchangesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListExchangesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesRequest) {
+}
+
+func (newState *ListExchangesRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangesRequest) {
+}
+
 type ListExchangesResponse struct {
 	Exchanges []Exchange `tfsdk:"exchanges" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
+func (newState *ListExchangesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesResponse) {
+}
+
+func (newState *ListExchangesResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangesResponse) {
+}
+
 // List files
 type ListFilesRequest struct {
-	FileParent FileParent `tfsdk:"-"`
+	FileParent []FileParent `tfsdk:"-"`
 
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListFilesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFilesRequest) {
+}
+
+func (newState *ListFilesRequest) SyncEffectiveFieldsDuringRead(existingState ListFilesRequest) {
+}
+
 type ListFilesResponse struct {
 	FileInfos []FileInfo `tfsdk:"file_infos" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListFilesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFilesResponse) {
+}
+
+func (newState *ListFilesResponse) SyncEffectiveFieldsDuringRead(existingState ListFilesResponse) {
 }
 
 // List all listing fulfillments
@@ -489,10 +897,22 @@ type ListFulfillmentsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListFulfillmentsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFulfillmentsRequest) {
+}
+
+func (newState *ListFulfillmentsRequest) SyncEffectiveFieldsDuringRead(existingState ListFulfillmentsRequest) {
+}
+
 type ListFulfillmentsResponse struct {
 	Fulfillments []ListingFulfillment `tfsdk:"fulfillments" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListFulfillmentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFulfillmentsResponse) {
+}
+
+func (newState *ListFulfillmentsResponse) SyncEffectiveFieldsDuringRead(existingState ListFulfillmentsResponse) {
 }
 
 // List installations for a listing
@@ -504,10 +924,22 @@ type ListInstallationsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListInstallationsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstallationsRequest) {
+}
+
+func (newState *ListInstallationsRequest) SyncEffectiveFieldsDuringRead(existingState ListInstallationsRequest) {
+}
+
 type ListInstallationsResponse struct {
 	Installations []InstallationDetail `tfsdk:"installations" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListInstallationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstallationsResponse) {
+}
+
+func (newState *ListInstallationsResponse) SyncEffectiveFieldsDuringRead(existingState ListInstallationsResponse) {
 }
 
 // List listings for exchange
@@ -519,10 +951,22 @@ type ListListingsForExchangeRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListListingsForExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsForExchangeRequest) {
+}
+
+func (newState *ListListingsForExchangeRequest) SyncEffectiveFieldsDuringRead(existingState ListListingsForExchangeRequest) {
+}
+
 type ListListingsForExchangeResponse struct {
 	ExchangeListings []ExchangeListing `tfsdk:"exchange_listings" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListListingsForExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsForExchangeResponse) {
+}
+
+func (newState *ListListingsForExchangeResponse) SyncEffectiveFieldsDuringRead(existingState ListListingsForExchangeResponse) {
 }
 
 // List listings
@@ -547,10 +991,22 @@ type ListListingsRequest struct {
 	Tags []ListingTag `tfsdk:"-"`
 }
 
+func (newState *ListListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsRequest) {
+}
+
+func (newState *ListListingsRequest) SyncEffectiveFieldsDuringRead(existingState ListListingsRequest) {
+}
+
 type ListListingsResponse struct {
 	Listings []Listing `tfsdk:"listings" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *ListListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsResponse) {
+}
+
+func (newState *ListListingsResponse) SyncEffectiveFieldsDuringRead(existingState ListListingsResponse) {
 }
 
 type ListProviderAnalyticsDashboardResponse struct {
@@ -562,6 +1018,12 @@ type ListProviderAnalyticsDashboardResponse struct {
 	Version types.Int64 `tfsdk:"version" tf:"optional"`
 }
 
+func (newState *ListProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderAnalyticsDashboardResponse) {
+}
+
+func (newState *ListProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState ListProviderAnalyticsDashboardResponse) {
+}
+
 // List providers
 type ListProvidersRequest struct {
 	IsFeatured types.Bool `tfsdk:"-"`
@@ -571,18 +1033,36 @@ type ListProvidersRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersRequest) {
+}
+
+func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest) {
+}
+
 type ListProvidersResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
 	Providers []ProviderInfo `tfsdk:"providers" tf:"optional"`
 }
 
+func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersResponse) {
+}
+
+func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringRead(existingState ListProvidersResponse) {
+}
+
 type Listing struct {
-	Detail *ListingDetail `tfsdk:"detail" tf:"optional"`
+	Detail []ListingDetail `tfsdk:"detail" tf:"optional,object"`
 
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Next Number: 26
-	Summary ListingSummary `tfsdk:"summary" tf:""`
+	Summary []ListingSummary `tfsdk:"summary" tf:"object"`
+}
+
+func (newState *Listing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Listing) {
+}
+
+func (newState *Listing) SyncEffectiveFieldsDuringRead(existingState Listing) {
 }
 
 type ListingDetail struct {
@@ -594,7 +1074,7 @@ type ListingDetail struct {
 	// The starting date timestamp for when the data spans
 	CollectionDateStart types.Int64 `tfsdk:"collection_date_start" tf:"optional"`
 	// Smallest unit of time in the dataset
-	CollectionGranularity *DataRefreshInfo `tfsdk:"collection_granularity" tf:"optional"`
+	CollectionGranularity []DataRefreshInfo `tfsdk:"collection_granularity" tf:"optional,object"`
 	// Whether the dataset is free or paid
 	Cost types.String `tfsdk:"cost" tf:"optional"`
 	// Where/how the data is sourced
@@ -633,7 +1113,13 @@ type ListingDetail struct {
 
 	TermsOfService types.String `tfsdk:"terms_of_service" tf:"optional"`
 	// How often data is updated
-	UpdateFrequency *DataRefreshInfo `tfsdk:"update_frequency" tf:"optional"`
+	UpdateFrequency []DataRefreshInfo `tfsdk:"update_frequency" tf:"optional,object"`
+}
+
+func (newState *ListingDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingDetail) {
+}
+
+func (newState *ListingDetail) SyncEffectiveFieldsDuringRead(existingState ListingDetail) {
 }
 
 type ListingFulfillment struct {
@@ -643,13 +1129,25 @@ type ListingFulfillment struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
-	RepoInfo *RepoInfo `tfsdk:"repo_info" tf:"optional"`
+	RepoInfo []RepoInfo `tfsdk:"repo_info" tf:"optional,object"`
 
-	ShareInfo *ShareInfo `tfsdk:"share_info" tf:"optional"`
+	ShareInfo []ShareInfo `tfsdk:"share_info" tf:"optional,object"`
+}
+
+func (newState *ListingFulfillment) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingFulfillment) {
+}
+
+func (newState *ListingFulfillment) SyncEffectiveFieldsDuringRead(existingState ListingFulfillment) {
 }
 
 type ListingSetting struct {
 	Visibility types.String `tfsdk:"visibility" tf:"optional"`
+}
+
+func (newState *ListingSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingSetting) {
+}
+
+func (newState *ListingSetting) SyncEffectiveFieldsDuringRead(existingState ListingSetting) {
 }
 
 // Next Number: 26
@@ -665,7 +1163,7 @@ type ListingSummary struct {
 	ExchangeIds []types.String `tfsdk:"exchange_ids" tf:"optional"`
 	// if a git repo is being created, a listing will be initialized with this
 	// field as opposed to a share
-	GitRepo *RepoInfo `tfsdk:"git_repo" tf:"optional"`
+	GitRepo []RepoInfo `tfsdk:"git_repo" tf:"optional,object"`
 
 	ListingType types.String `tfsdk:"listingType" tf:""`
 
@@ -673,15 +1171,15 @@ type ListingSummary struct {
 
 	ProviderId types.String `tfsdk:"provider_id" tf:"optional"`
 
-	ProviderRegion *RegionInfo `tfsdk:"provider_region" tf:"optional"`
+	ProviderRegion []RegionInfo `tfsdk:"provider_region" tf:"optional,object"`
 
 	PublishedAt types.Int64 `tfsdk:"published_at" tf:"optional"`
 
 	PublishedBy types.String `tfsdk:"published_by" tf:"optional"`
 
-	Setting *ListingSetting `tfsdk:"setting" tf:"optional"`
+	Setting []ListingSetting `tfsdk:"setting" tf:"optional,object"`
 
-	Share *ShareInfo `tfsdk:"share" tf:"optional"`
+	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
 	// Enums
 	Status types.String `tfsdk:"status" tf:"optional"`
 
@@ -694,6 +1192,12 @@ type ListingSummary struct {
 	UpdatedById types.Int64 `tfsdk:"updated_by_id" tf:"optional"`
 }
 
+func (newState *ListingSummary) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingSummary) {
+}
+
+func (newState *ListingSummary) SyncEffectiveFieldsDuringRead(existingState ListingSummary) {
+}
+
 type ListingTag struct {
 	// Tag name (enum)
 	TagName types.String `tfsdk:"tag_name" tf:"optional"`
@@ -702,13 +1206,19 @@ type ListingTag struct {
 	TagValues []types.String `tfsdk:"tag_values" tf:"optional"`
 }
 
+func (newState *ListingTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingTag) {
+}
+
+func (newState *ListingTag) SyncEffectiveFieldsDuringRead(existingState ListingTag) {
+}
+
 type PersonalizationRequest struct {
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
-	ConsumerRegion RegionInfo `tfsdk:"consumer_region" tf:""`
+	ConsumerRegion []RegionInfo `tfsdk:"consumer_region" tf:"object"`
 	// contact info for the consumer requesting data or performing a listing
 	// installation
-	ContactInfo *ContactInfo `tfsdk:"contact_info" tf:"optional"`
+	ContactInfo []ContactInfo `tfsdk:"contact_info" tf:"optional,object"`
 
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -728,7 +1238,7 @@ type PersonalizationRequest struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
-	Share *ShareInfo `tfsdk:"share" tf:"optional"`
+	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 
@@ -737,8 +1247,20 @@ type PersonalizationRequest struct {
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 }
 
+func (newState *PersonalizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalizationRequest) {
+}
+
+func (newState *PersonalizationRequest) SyncEffectiveFieldsDuringRead(existingState PersonalizationRequest) {
+}
+
 type ProviderAnalyticsDashboard struct {
 	Id types.String `tfsdk:"id" tf:""`
+}
+
+func (newState *ProviderAnalyticsDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderAnalyticsDashboard) {
+}
+
+func (newState *ProviderAnalyticsDashboard) SyncEffectiveFieldsDuringRead(existingState ProviderAnalyticsDashboard) {
 }
 
 type ProviderInfo struct {
@@ -771,10 +1293,22 @@ type ProviderInfo struct {
 	TermOfServiceLink types.String `tfsdk:"term_of_service_link" tf:""`
 }
 
+func (newState *ProviderInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderInfo) {
+}
+
+func (newState *ProviderInfo) SyncEffectiveFieldsDuringRead(existingState ProviderInfo) {
+}
+
 type RegionInfo struct {
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
 
 	Region types.String `tfsdk:"region" tf:"optional"`
+}
+
+func (newState *RegionInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegionInfo) {
+}
+
+func (newState *RegionInfo) SyncEffectiveFieldsDuringRead(existingState RegionInfo) {
 }
 
 // Remove an exchange for listing
@@ -782,12 +1316,30 @@ type RemoveExchangeForListingRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *RemoveExchangeForListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveExchangeForListingRequest) {
+}
+
+func (newState *RemoveExchangeForListingRequest) SyncEffectiveFieldsDuringRead(existingState RemoveExchangeForListingRequest) {
+}
+
 type RemoveExchangeForListingResponse struct {
+}
+
+func (newState *RemoveExchangeForListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveExchangeForListingResponse) {
+}
+
+func (newState *RemoveExchangeForListingResponse) SyncEffectiveFieldsDuringRead(existingState RemoveExchangeForListingResponse) {
 }
 
 type RepoInfo struct {
 	// the git repo url e.g. https://github.com/databrickslabs/dolly.git
 	GitRepoUrl types.String `tfsdk:"git_repo_url" tf:""`
+}
+
+func (newState *RepoInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInfo) {
+}
+
+func (newState *RepoInfo) SyncEffectiveFieldsDuringRead(existingState RepoInfo) {
 }
 
 type RepoInstallation struct {
@@ -797,6 +1349,12 @@ type RepoInstallation struct {
 	// entrypoint (e.g. a README.md file, or the repo file view in the unified
 	// UI) should just be a relative path
 	RepoPath types.String `tfsdk:"repo_path" tf:""`
+}
+
+func (newState *RepoInstallation) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInstallation) {
+}
+
+func (newState *RepoInstallation) SyncEffectiveFieldsDuringRead(existingState RepoInstallation) {
 }
 
 // Search listings
@@ -819,10 +1377,22 @@ type SearchListingsRequest struct {
 	Query types.String `tfsdk:"-"`
 }
 
+func (newState *SearchListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchListingsRequest) {
+}
+
+func (newState *SearchListingsRequest) SyncEffectiveFieldsDuringRead(existingState SearchListingsRequest) {
+}
+
 type SearchListingsResponse struct {
 	Listings []Listing `tfsdk:"listings" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+}
+
+func (newState *SearchListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchListingsResponse) {
+}
+
+func (newState *SearchListingsResponse) SyncEffectiveFieldsDuringRead(existingState SearchListingsResponse) {
 }
 
 type ShareInfo struct {
@@ -831,12 +1401,24 @@ type ShareInfo struct {
 	Type types.String `tfsdk:"type" tf:""`
 }
 
+func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo) {
+}
+
+func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
+}
+
 type SharedDataObject struct {
 	// The type of the data object. Could be one of: TABLE, SCHEMA,
 	// NOTEBOOK_FILE, MODEL, VOLUME
 	DataObjectType types.String `tfsdk:"data_object_type" tf:"optional"`
 	// Name of the shared object
 	Name types.String `tfsdk:"name" tf:"optional"`
+}
+
+func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject) {
+}
+
+func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState SharedDataObject) {
 }
 
 type TokenDetail struct {
@@ -849,6 +1431,12 @@ type TokenDetail struct {
 	// message: RetrieveToken.Response in
 	// managed-catalog/api/messages/recipient.proto
 	ShareCredentialsVersion types.Int64 `tfsdk:"shareCredentialsVersion" tf:"optional"`
+}
+
+func (newState *TokenDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenDetail) {
+}
+
+func (newState *TokenDetail) SyncEffectiveFieldsDuringRead(existingState TokenDetail) {
 }
 
 type TokenInfo struct {
@@ -869,28 +1457,58 @@ type TokenInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
+func (newState *TokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenInfo) {
+}
+
+func (newState *TokenInfo) SyncEffectiveFieldsDuringRead(existingState TokenInfo) {
+}
+
 type UpdateExchangeFilterRequest struct {
-	Filter ExchangeFilter `tfsdk:"filter" tf:""`
+	Filter []ExchangeFilter `tfsdk:"filter" tf:"object"`
 
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeFilterRequest) {
+}
+
+func (newState *UpdateExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeFilterRequest) {
 }
 
 type UpdateExchangeFilterResponse struct {
-	Filter *ExchangeFilter `tfsdk:"filter" tf:"optional"`
+	Filter []ExchangeFilter `tfsdk:"filter" tf:"optional,object"`
+}
+
+func (newState *UpdateExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeFilterResponse) {
+}
+
+func (newState *UpdateExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeFilterResponse) {
 }
 
 type UpdateExchangeRequest struct {
-	Exchange Exchange `tfsdk:"exchange" tf:""`
+	Exchange []Exchange `tfsdk:"exchange" tf:"object"`
 
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *UpdateExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeRequest) {
+}
+
+func (newState *UpdateExchangeRequest) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeRequest) {
+}
+
 type UpdateExchangeResponse struct {
-	Exchange *Exchange `tfsdk:"exchange" tf:"optional"`
+	Exchange []Exchange `tfsdk:"exchange" tf:"optional,object"`
+}
+
+func (newState *UpdateExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeResponse) {
+}
+
+func (newState *UpdateExchangeResponse) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeResponse) {
 }
 
 type UpdateInstallationRequest struct {
-	Installation InstallationDetail `tfsdk:"installation" tf:""`
+	Installation []InstallationDetail `tfsdk:"installation" tf:"object"`
 
 	InstallationId types.String `tfsdk:"-"`
 
@@ -899,18 +1517,42 @@ type UpdateInstallationRequest struct {
 	RotateToken types.Bool `tfsdk:"rotate_token" tf:"optional"`
 }
 
+func (newState *UpdateInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInstallationRequest) {
+}
+
+func (newState *UpdateInstallationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateInstallationRequest) {
+}
+
 type UpdateInstallationResponse struct {
-	Installation *InstallationDetail `tfsdk:"installation" tf:"optional"`
+	Installation []InstallationDetail `tfsdk:"installation" tf:"optional,object"`
+}
+
+func (newState *UpdateInstallationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInstallationResponse) {
+}
+
+func (newState *UpdateInstallationResponse) SyncEffectiveFieldsDuringRead(existingState UpdateInstallationResponse) {
 }
 
 type UpdateListingRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Listing Listing `tfsdk:"listing" tf:""`
+	Listing []Listing `tfsdk:"listing" tf:"object"`
+}
+
+func (newState *UpdateListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateListingRequest) {
+}
+
+func (newState *UpdateListingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateListingRequest) {
 }
 
 type UpdateListingResponse struct {
-	Listing *Listing `tfsdk:"listing" tf:"optional"`
+	Listing []Listing `tfsdk:"listing" tf:"optional,object"`
+}
+
+func (newState *UpdateListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateListingResponse) {
+}
+
+func (newState *UpdateListingResponse) SyncEffectiveFieldsDuringRead(existingState UpdateListingResponse) {
 }
 
 type UpdatePersonalizationRequestRequest struct {
@@ -920,13 +1562,25 @@ type UpdatePersonalizationRequestRequest struct {
 
 	RequestId types.String `tfsdk:"-"`
 
-	Share *ShareInfo `tfsdk:"share" tf:"optional"`
+	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
 
 	Status types.String `tfsdk:"status" tf:""`
 }
 
+func (newState *UpdatePersonalizationRequestRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalizationRequestRequest) {
+}
+
+func (newState *UpdatePersonalizationRequestRequest) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalizationRequestRequest) {
+}
+
 type UpdatePersonalizationRequestResponse struct {
-	Request *PersonalizationRequest `tfsdk:"request" tf:"optional"`
+	Request []PersonalizationRequest `tfsdk:"request" tf:"optional,object"`
+}
+
+func (newState *UpdatePersonalizationRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalizationRequestResponse) {
+}
+
+func (newState *UpdatePersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalizationRequestResponse) {
 }
 
 type UpdateProviderAnalyticsDashboardRequest struct {
@@ -938,6 +1592,12 @@ type UpdateProviderAnalyticsDashboardRequest struct {
 	Version types.Int64 `tfsdk:"version" tf:"optional"`
 }
 
+func (newState *UpdateProviderAnalyticsDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderAnalyticsDashboardRequest) {
+}
+
+func (newState *UpdateProviderAnalyticsDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateProviderAnalyticsDashboardRequest) {
+}
+
 type UpdateProviderAnalyticsDashboardResponse struct {
 	// this is newly created Lakeview dashboard for the user
 	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
@@ -947,12 +1607,30 @@ type UpdateProviderAnalyticsDashboardResponse struct {
 	Version types.Int64 `tfsdk:"version" tf:"optional"`
 }
 
+func (newState *UpdateProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderAnalyticsDashboardResponse) {
+}
+
+func (newState *UpdateProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UpdateProviderAnalyticsDashboardResponse) {
+}
+
 type UpdateProviderRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Provider ProviderInfo `tfsdk:"provider" tf:""`
+	Provider []ProviderInfo `tfsdk:"provider" tf:"object"`
+}
+
+func (newState *UpdateProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderRequest) {
+}
+
+func (newState *UpdateProviderRequest) SyncEffectiveFieldsDuringRead(existingState UpdateProviderRequest) {
 }
 
 type UpdateProviderResponse struct {
-	Provider *ProviderInfo `tfsdk:"provider" tf:"optional"`
+	Provider []ProviderInfo `tfsdk:"provider" tf:"optional,object"`
+}
+
+func (newState *UpdateProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderResponse) {
+}
+
+func (newState *UpdateProviderResponse) SyncEffectiveFieldsDuringRead(existingState UpdateProviderResponse) {
 }

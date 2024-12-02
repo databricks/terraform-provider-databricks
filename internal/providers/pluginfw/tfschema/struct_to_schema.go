@@ -96,9 +96,6 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 						Attributes: nestedScm.Attributes,
 						Blocks:     nestedScm.Blocks,
 					},
-					Optional:   structTag.optional,
-					Required:   !structTag.optional,
-					Computed:   structTag.computed,
 					Validators: validators,
 				}
 			}
@@ -188,9 +185,6 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 				nestedScm := typeToSchema(sv)
 				scmBlock[fieldName] = ListNestedBlockBuilder{
 					NestedObject: nestedScm,
-					Optional:     structTag.optional,
-					Required:     !structTag.optional,
-					Computed:     structTag.computed,
 				}
 			}
 		} else {

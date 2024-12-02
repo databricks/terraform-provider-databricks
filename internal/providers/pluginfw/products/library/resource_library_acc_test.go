@@ -2,12 +2,17 @@ package library_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 var commonClusterConfig = `data "databricks_spark_version" "latest" {
@@ -40,6 +45,51 @@ func TestAccLibraryCreation(t *testing.T) {
 		}
 		`,
 	})
+}
+
+func TestAccLibraryReinstalledIfClusterDeleted(t *testing.T) {
+	var clusterId string
+	acceptance.WorkspaceLevel(t,
+		acceptance.Step{
+			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
+				cluster_id = databricks_cluster.this.id
+				pypi {
+					repo = "https://pypi.org/dummy"
+					package = "databricks-sdk"
+				}
+		    }`,
+			Check: func(s *terraform.State) error {
+				clusterId = s.RootModule().Resources["databricks_cluster.this"].Primary.ID
+				return nil
+			},
+		},
+		// If the cluster is terminated before apply, it should be restarted and the library reinstalled.
+		acceptance.Step{
+			PreConfig: func() {
+				// Delete the created cluster
+				w := databricks.Must(databricks.NewWorkspaceClient())
+				w.Clusters.PermanentDeleteByClusterId(context.Background(), clusterId)
+				// Wait for the cluster to be completely deleted
+				errClusterExists := errors.New("cluster still exists")
+				retries.New[struct{}](retries.OnErrors(errClusterExists)).Wait(context.Background(), func(ctx context.Context) error {
+					_, err := w.Clusters.GetByClusterId(context.Background(), clusterId)
+					if err != nil && apierr.IsMissing(err) {
+						return nil
+					}
+					if err != nil {
+						return err
+					}
+					return errClusterExists
+				})
+			},
+			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
+				cluster_id = databricks_cluster.this.id
+				pypi {
+					repo = "https://pypi.org/dummy"
+					package = "databricks-sdk"
+				}
+		    }`,
+		})
 }
 
 func TestAccLibraryUpdate(t *testing.T) {

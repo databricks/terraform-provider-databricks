@@ -26,26 +26,6 @@ var clusterSchema = resourceClusterSchema()
 var clusterSchemaVersion = 4
 
 const (
-	numWorkerErr = `num_workers may be 0 only for single-node clusters. To create a single node
-cluster please include the following configuration in your cluster configuration:
-
-  spark_conf = {
-    "spark.databricks.cluster.profile" : "singleNode"
-    "spark.master" : "local[*]"
-  }
-
-  custom_tags = {
-    "ResourceClass" = "SingleNode"
-  }
-
-Please note that the Databricks Terraform provider cannot detect if the above configuration
-is defined in a policy used by the cluster. Please define this in the cluster configuration
-itself to create a single node cluster.
-
-For more details please see:
-  1. https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/cluster#fixed-size-or-autoscaling-cluster
-  2. https://docs.databricks.com/clusters/single-node.html`
-
 	unsupportedExceptCreateEditClusterSpecErr = "unsupported type %T, must be one of %scompute.CreateCluster, %scompute.ClusterSpec or %scompute.EditCluster. Please report this issue to the GitHub repo"
 )
 
@@ -128,41 +108,6 @@ func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 		return true
 	}
 	return false
-}
-
-// This method is a duplicate of Validate() in clusters/clusters_api.go that uses Go SDK.
-// Long term, Validate() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
-func Validate(cluster any) error {
-	var profile, master, resourceClass string
-	switch c := cluster.(type) {
-	case compute.CreateCluster:
-		if c.NumWorkers > 0 || c.Autoscale != nil {
-			return nil
-		}
-		profile = c.SparkConf["spark.databricks.cluster.profile"]
-		master = c.SparkConf["spark.master"]
-		resourceClass = c.CustomTags["ResourceClass"]
-	case compute.EditCluster:
-		if c.NumWorkers > 0 || c.Autoscale != nil {
-			return nil
-		}
-		profile = c.SparkConf["spark.databricks.cluster.profile"]
-		master = c.SparkConf["spark.master"]
-		resourceClass = c.CustomTags["ResourceClass"]
-	case compute.ClusterSpec:
-		if c.NumWorkers > 0 || c.Autoscale != nil {
-			return nil
-		}
-		profile = c.SparkConf["spark.databricks.cluster.profile"]
-		master = c.SparkConf["spark.master"]
-		resourceClass = c.CustomTags["ResourceClass"]
-	default:
-		return fmt.Errorf(unsupportedExceptCreateEditClusterSpecErr, cluster, "", "", "")
-	}
-	if profile == "singleNode" && strings.HasPrefix(master, "local") && resourceClass == "SingleNode" {
-		return nil
-	}
-	return errors.New(numWorkerErr)
 }
 
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
@@ -445,9 +390,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 	clusters := w.Clusters
 	var createClusterRequest compute.CreateCluster
 	common.DataToStructPointer(d, clusterSchema, &createClusterRequest)
-	if err := Validate(createClusterRequest); err != nil {
-		return err
-	}
 	if err = ModifyRequestOnInstancePool(&createClusterRequest); err != nil {
 		return err
 	}
@@ -513,20 +455,23 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 }
 
 func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI compute.ClustersInterface) error {
-	events, err := clusterAPI.EventsAll(ctx, compute.GetEvents{
-		ClusterId:  d.Id(),
-		Limit:      1,
-		Order:      compute.GetEventsOrderDesc,
-		EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
+	clusterDetails := clusterAPI.List(ctx, compute.ListClustersRequest{
+		FilterBy: &compute.ListClustersFilterBy{
+			IsPinned: true,
+		},
+		PageSize: 100, // pinned cluster limit - just get all of them
 	})
-	if err != nil {
-		return err
+
+	for clusterDetails.HasNext(ctx) {
+		detail, err := clusterDetails.Next(ctx)
+		if err != nil {
+			return err
+		}
+		if detail.ClusterId == d.Id() {
+			return d.Set("is_pinned", true)
+		}
 	}
-	pinnedEvent := compute.EventTypeUnpinned
-	if len(events) > 0 {
-		pinnedEvent = events[0].Type
-	}
-	return d.Set("is_pinned", pinnedEvent == compute.EventTypePinned)
+	return d.Set("is_pinned", false)
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -595,9 +540,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, c *commo
 
 	if hasClusterConfigChanged(d) {
 		log.Printf("[DEBUG] Cluster state has changed!")
-		if err := Validate(cluster); err != nil {
-			return err
-		}
 		if err = ModifyRequestOnInstancePool(&cluster); err != nil {
 			return err
 		}
@@ -755,7 +697,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	err = w.Clusters.PermanentDeleteByClusterId(ctx, d.Id())
-	if err == nil {
+	if err == nil || apierr.IsMissing(err) {
 		return nil
 	}
 	if !strings.Contains(err.Error(), "unpin the cluster first") {

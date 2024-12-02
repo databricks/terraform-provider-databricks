@@ -130,3 +130,48 @@ func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
 
 	assert.True(t, len(scm.Blocks["nested_slice_object"].(schema.ListNestedBlock).Validators) == 1)
 }
+
+func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.SetRequired("nested")
+			return c
+		})
+	})
+}
+
+func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.SetOptional("nested")
+			return c
+		})
+	})
+}
+
+func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.SetSensitive("nested")
+			return c
+		})
+	})
+}
+
+func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.SetReadOnly("nested")
+			return c
+		})
+	})
+}
+
+func TestCustomizeSchema_SetComputed_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.SetComputed("nested")
+			return c
+		})
+	})
+}

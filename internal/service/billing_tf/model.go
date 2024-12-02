@@ -401,7 +401,7 @@ func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(
 
 // Get budget
 type GetBudgetConfigurationRequest struct {
-	// The Databricks budget configuration ID.
+	// The budget configuration ID
 	BudgetId types.String `tfsdk:"-"`
 }
 

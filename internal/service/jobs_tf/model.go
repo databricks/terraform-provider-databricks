@@ -28,8 +28,7 @@ type BaseJob struct {
 	// details page and Jobs API using `budget_policy_id` 3. Inferred default
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
-	EffectiveBudgetPolicyId          types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
-	EffectiveEffectiveBudgetPolicyId types.String `tfsdk:"effective_effective_budget_policy_id" tf:"computed,optional"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed,optional"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// Settings for this job and all of its runs. These settings can be updated
@@ -38,15 +37,9 @@ type BaseJob struct {
 }
 
 func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
-	newState.EffectiveEffectiveBudgetPolicyId = newState.EffectiveBudgetPolicyId
-	newState.EffectiveBudgetPolicyId = plan.EffectiveBudgetPolicyId
 }
 
 func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
-	newState.EffectiveEffectiveBudgetPolicyId = existingState.EffectiveEffectiveBudgetPolicyId
-	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
-		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
-	}
 }
 
 type BaseRun struct {
@@ -396,8 +389,8 @@ type CreateJob struct {
 	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
 	// user who created the job/pipeline.
 	//
-	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
-	// be specified. If not, an error is thrown.
+	// Either `user_name` or `service_principal_name` should be specified. If
+	// not, an error is thrown.
 	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
@@ -921,8 +914,7 @@ type Job struct {
 	// details page and Jobs API using `budget_policy_id` 3. Inferred default
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
-	EffectiveBudgetPolicyId          types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
-	EffectiveEffectiveBudgetPolicyId types.String `tfsdk:"effective_effective_budget_policy_id" tf:"computed,optional"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed,optional"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// The email of an active workspace user or the application ID of a service
@@ -939,15 +931,9 @@ type Job struct {
 }
 
 func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
-	newState.EffectiveEffectiveBudgetPolicyId = newState.EffectiveBudgetPolicyId
-	newState.EffectiveBudgetPolicyId = plan.EffectiveBudgetPolicyId
 }
 
 func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
-	newState.EffectiveEffectiveBudgetPolicyId = existingState.EffectiveEffectiveBudgetPolicyId
-	if existingState.EffectiveEffectiveBudgetPolicyId.ValueString() == newState.EffectiveBudgetPolicyId.ValueString() {
-		newState.EffectiveBudgetPolicyId = existingState.EffectiveBudgetPolicyId
-	}
 }
 
 type JobAccessControlRequest struct {
@@ -1192,8 +1178,8 @@ func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingSta
 // job/pipeline runs as. If not specified, the job/pipeline runs as the user who
 // created the job/pipeline.
 //
-// Exactly one of `user_name`, `service_principal_name`, `group_name` should be
-// specified. If not, an error is thrown.
+// Either `user_name` or `service_principal_name` should be specified. If not,
+// an error is thrown.
 type JobRunAs struct {
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
@@ -1287,8 +1273,8 @@ type JobSettings struct {
 	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
 	// user who created the job/pipeline.
 	//
-	// Exactly one of `user_name`, `service_principal_name`, `group_name` should
-	// be specified. If not, an error is thrown.
+	// Either `user_name` or `service_principal_name` should be specified. If
+	// not, an error is thrown.
 	RunAs []JobRunAs `tfsdk:"run_as" tf:"optional,object"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
@@ -2321,6 +2307,9 @@ type RunNow struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams map[string]types.String `tfsdk:"notebook_params" tf:"optional"`
+	// A list of task keys to run inside of the job. If this field is not
+	// provided, all tasks in the job will be run.
+	Only []types.String `tfsdk:"only" tf:"optional"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams []PipelineParams `tfsdk:"pipeline_params" tf:"optional,object"`
 

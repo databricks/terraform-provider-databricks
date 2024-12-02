@@ -120,7 +120,7 @@ func TestResourceWorkspaceFileCreate_DirectoryExist(t *testing.T) {
 					Content:   dummyWorkspaceFilePayload,
 					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
-					Format:    "AUTO",
+					Format:    "RAW",
 				},
 			},
 			{
@@ -168,7 +168,7 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 					Content:   dummyWorkspaceFilePayload,
 					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
-					Format:    "AUTO",
+					Format:    "RAW",
 				},
 				Response: map[string]string{
 					"error_code": "RESOURCE_DOES_NOT_EXIST",
@@ -183,7 +183,7 @@ func TestResourceWorkspaceFileCreate_DirectoryDoesntExist(t *testing.T) {
 					Content:   dummyWorkspaceFilePayload,
 					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
-					Format:    "AUTO",
+					Format:    "RAW",
 				},
 			},
 			{
@@ -236,7 +236,7 @@ func TestResourceWorkspaceFileCreate_DirectoryCreateError(t *testing.T) {
 					Content:   dummyWorkspaceFilePayload,
 					Path:      dummyWorkspaceFilePath,
 					Overwrite: true,
-					Format:    "AUTO",
+					Format:    "RAW",
 				},
 				Response: map[string]string{
 					"error_code": "RESOURCE_DOES_NOT_EXIST",
@@ -267,7 +267,7 @@ func TestResourceWorkspaceFileCreateSource(t *testing.T) {
 						"NPTU1BTkQgLS0tLS0tLS0tLQoKCg==",
 					Path:      "/Dashboard",
 					Overwrite: true,
-					Format:    "AUTO",
+					Format:    "RAW",
 				},
 			},
 			{
@@ -301,7 +301,7 @@ func TestResourceWorkspaceFileCreateEmptyFileSource(t *testing.T) {
 					Content:         "",
 					Path:            "/__init__.py",
 					Overwrite:       true,
-					Format:          "AUTO",
+					Format:          "RAW",
 					ForceSendFields: []string{"Content"},
 				},
 			},
@@ -334,7 +334,7 @@ func TestResourceWorkspaceFileCreate_Error(t *testing.T) {
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: map[string]interface{}{
 					"content":   dummyWorkspaceFilePayload,
-					"format":    "AUTO",
+					"format":    "RAW",
 					"overwrite": true,
 					"path":      "/path.py",
 				},
@@ -384,7 +384,7 @@ func TestResourceWorkspaceFileUpdate(t *testing.T) {
 				Method:   "POST",
 				Resource: "/api/2.0/workspace/import",
 				ExpectedRequest: ws_api.Import{
-					Format:    "AUTO",
+					Format:    "RAW",
 					Overwrite: true,
 					Content:   dummyWorkspaceFilePayload,
 					Path:      "abc",

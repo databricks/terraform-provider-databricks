@@ -1097,7 +1097,7 @@ type UpdateWorkspaceAssignments struct {
 	Permissions []types.String `tfsdk:"permissions" tf:"optional"`
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
-	// The workspace ID for the account.
+	// The workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 

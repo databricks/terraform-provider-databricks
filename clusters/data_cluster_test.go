@@ -37,6 +37,7 @@ func TestClusterDataByID(t *testing.T) {
 		"cluster_info.0.node_type_id":            "i3.xlarge",
 		"cluster_info.0.autoscale.0.max_workers": 4,
 		"cluster_info.0.state":                   "RUNNING",
+		"cluster_name":                           "Shared Autoscaling",
 	})
 }
 
@@ -68,6 +69,7 @@ func TestClusterDataByName(t *testing.T) {
 		"cluster_info.0.node_type_id":            "i3.xlarge",
 		"cluster_info.0.autoscale.0.max_workers": 4,
 		"cluster_info.0.state":                   "RUNNING",
+		"cluster_id":                             "abc",
 	})
 }
 

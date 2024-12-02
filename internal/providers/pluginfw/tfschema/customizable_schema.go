@@ -205,7 +205,7 @@ func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 // points to an attribute, not a block.
 func (s *CustomizableSchema) ConvertToAttribute(path ...string) *CustomizableSchema {
 	if len(path) == 0 {
-		panic(fmt.Errorf("ToAttribute called on root schema. %s", common.TerraformBugErrorMessage))
+		panic(fmt.Errorf("ConvertToAttribute called on root schema. %s", common.TerraformBugErrorMessage))
 	}
 	field := path[len(path)-1]
 

@@ -227,7 +227,7 @@ func (m mockValidator) ValidateObject(context.Context, validator.ObjectRequest, 
 var _ validator.List = mockValidator{}
 var _ validator.Object = mockValidator{}
 
-func TestCustomizeSchema_ToAttribute(t *testing.T) {
+func TestCustomizeSchema_ConvertToAttribute(t *testing.T) {
 	v := mockValidator{}
 	pm := mockPlanModifier{}
 	testCases := []struct {

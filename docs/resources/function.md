@@ -85,15 +85,42 @@ The following arguments are supported:
     * `name` - (Required) The name of the parameter.
     * `type` - (Required) The data type of the parameter (e.g., `DOUBLE`, `INT`, etc.).
 * `data_type` - (Required) The return data type of the function (e.g., `DOUBLE`).
-* `routine_body` - (Required) Specifies the body type of the function, either `SQL` for SQL-based functions or `EXTERNAL` for functions in external languages.
+* `full_data_type` - (Required) Pretty printed function data type (e.g. `string`).
+* `return_params` - (Optional) A list of objects specifying the function's return parameters.
+    * `parameters` - (Required) An array of objects describing the function's return parameters. Each object includes:
+        * `name` - (Required) The name of the return parameter.
+        * `type_text` - (Required) The full data type specification as SQL/catalog string text.
+        * `type_json` - The full data type specification as JSON-serialized text.
+        * `type_name` - (Required) The name of the data type (e.g., `BOOLEAN`, `INT`, `STRING`, etc.).
+        * `type_precision` - (Required for `DecimalTypes`) Digits of precision for the type.
+        * `type_scale` - (Required for `DecimalTypes`) Digits to the right of the decimal for the type.
+        * `type_interval_type` - The format of `IntervalType`.
+        * `position` - (Required) The ordinal position of the parameter (starting at 0).
+        * `parameter_mode` - The mode of the parameter. Possible value: `IN`.
+        * `parameter_type` - The type of the parameter. Possible values:
+            * `PARAM` - Represents a generic parameter.
+            * `COLUMN` - Represents a column parameter.
+        * `parameter_default` - The default value for the parameter, if any.
+        * `comment` - User-provided free-form text description of the parameter.
 * `routine_definition` - (Required) The actual definition of the function, expressed in SQL or the specified external language.
-* `language` - (Required) The language of the function, e.g., `SQL` or `Python`. 
-* `is_deterministic`- (Optional, `bool`) Whether the function is deterministic. Default is `true`.
-* `sql_data_Access`- (Optional) The SQL data access level for the function. Possible values are: 
+* `routine_dependencies` - (Optional) A list of objects specifying the function's dependencies. Each object includes:
+    * `dependencies` - (Optional) An array of objects describing the dependencies. Each object includes:
+        * `table` - (Optional) An object representing a table that is dependent on the SQL object.
+        * `function` - (Optional) An object representing a function that is dependent on the SQL object.
+* `is_deterministic`- (Required, `bool`) Whether the function is deterministic. Default is `true`.
+* `is_null_call` - (Required, `bool`) Indicates whether the function should handle `NULL` input arguments explicitly. 
+* `specific_name` - (Required) Specific name of the function. Reserverd for future use.
+* `external_name` - (Optional) External function name.
+* `sql_path` - (Optional) The fully qualified SQL path where the function resides, including catalog and schema information.
+* `comment` - (Optional) User-provided free-form text description.
+* `properties` - (Optional) A key-value pair object representing additional metadata or attributes associated with the function.
+* `routine_body` - (Required) Specifies the body type of the function, either `SQL` for SQL-based functions or `EXTERNAL` for functions in external languages.
+* `security_type` - (Required) The security type of the function, generally `DEFINER`.
+* `sql_data_access`- (Required) The SQL data access level for the function. Possible values are: 
     * `CONTAINS_SQL` - The function contains SQL statements.
     * `READS_SQL_DATA` - The function reads SQL data but does not modify it. 
     * `NO_SQL` - The function does not contain SQL.
-* `security_type` - (Optional) The security type of the function, generally `DEFINER`.
+* `parameter_style` - (Required) Function parameter style (e.g, `S` for SQL).
 
 ## Attribute Reference
 

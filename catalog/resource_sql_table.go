@@ -56,6 +56,7 @@ type SqlTableInfo struct {
 	ViewDefinition        string            `json:"view_definition,omitempty"`
 	Comment               string            `json:"comment,omitempty"`
 	Properties            map[string]string `json:"properties,omitempty"`
+	Tags                  map[string]string `json:"tags,omitempty"`
 	Options               map[string]string `json:"options,omitempty" tf:"force_new"`
 	// EffectiveProperties includes both properties and options. Options are prefixed with `option.`.
 	EffectiveProperties map[string]string `json:"effective_properties" tf:"computed"`
@@ -243,19 +244,23 @@ func (ti *SqlTableInfo) serializeColumnInfos() string {
 }
 
 func (ti *SqlTableInfo) serializeProperties() string {
-	propsMap := make([]string, 0, len(ti.Properties))
-	for key, value := range ti.Properties {
-		propsMap = append(propsMap, fmt.Sprintf("'%s'='%s'", key, value))
-	}
-	return strings.Join(propsMap[:], ", ") // 'foo'='bar', 'this'='that'
+	return serializeMapField(ti.Properties)
 }
 
 func (ti *SqlTableInfo) serializeOptions() string {
-	optionsMap := make([]string, 0, len(ti.Options))
-	for key, value := range ti.Options {
-		optionsMap = append(optionsMap, fmt.Sprintf("'%s'='%s'", key, value))
+	return serializeMapField(ti.Options)
+}
+
+func (ti *SqlTableInfo) serializeTags() string {
+	return serializeMapField(ti.Tags)
+}
+
+func serializeMapField(field map[string]string) string {
+	propsMap := make([]string, 0, len(field))
+	for key, value := range field {
+		propsMap = append(propsMap, fmt.Sprintf("'%s'='%s'", key, value))
 	}
-	return strings.Join(optionsMap[:], ", ") // 'foo'='bar', 'this'='that'
+	return strings.Join(propsMap[:], ", ") // 'foo'='bar', 'this'='that'
 }
 
 func (ti *SqlTableInfo) buildLocationStatement() string {
@@ -276,7 +281,7 @@ func (ti *SqlTableInfo) getTableTypeString() string {
 }
 
 func (ti *SqlTableInfo) buildTableCreateStatement() string {
-	statements := make([]string, 0, 10)
+	statements := make([]string, 0, 11)
 
 	isView := ti.TableType == "VIEW"
 
@@ -288,6 +293,10 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	createType := ti.getTableTypeString()
 
 	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.SQLFullName()))
+
+	if len(ti.Tags) > 0 {
+		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TAGS (%s);", createType, ti.SQLFullName(), ti.serializeTags()))
+	}
 
 	if len(ti.ColumnInfos) > 0 {
 		statements = append(statements, fmt.Sprintf(" (%s)", ti.serializeColumnInfos()))
@@ -328,6 +337,10 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	}
 
 	statements = append(statements, ";")
+
+	if len(ti.Tags) > 0 {
+		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TAGS (%s);", createType, ti.SQLFullName(), ti.serializeTags()))
+	}
 
 	return strings.Join(statements, "")
 }
@@ -451,6 +464,23 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		}
 		// Next handle property changes and additions
 		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TBLPROPERTIES (%s)", typestring, ti.SQLFullName(), ti.serializeProperties()))
+	}
+
+	if !reflect.DeepEqual(ti.Tags, oldti.Tags) {
+		// First handle removal of tags
+		removeTags := make([]string, 0)
+		for key := range oldti.Tags {
+			if _, ok := ti.Tags[key]; !ok {
+				// These come from the terraform state rather than the api so they aren't escaped
+				removeTags = append(removeTags, fmt.Sprintf("'%s'", key))
+			}
+		}
+
+		if len(removeTags) > 0 {
+			statements = append(statements, fmt.Sprintf("ALTER %s %s UNSET TAGS (%s)", typestring, ti.SQLFullName(), strings.Join(removeTags, ",")))
+		}
+		// Next handle property changes and additions
+		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TAGS (%s)", typestring, ti.SQLFullName(), ti.serializeTags()))
 	}
 
 	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)
@@ -600,6 +630,7 @@ func ResourceSqlTable() common.Resource {
 			// reset the effective property/option to the requested value.
 			userSpecifiedProperties := d.Get("properties").(map[string]any)
 			userSpecifiedOptions := d.Get("options").(map[string]any)
+			userSpecifiedTags := d.Get("tags").(map[string]any)
 			effectiveProperties := d.Get("effective_properties").(map[string]any)
 			diff := make(map[string]any)
 			for k, userSpecifiedValue := range userSpecifiedProperties {
@@ -623,6 +654,11 @@ func ResourceSqlTable() common.Resource {
 				}
 				if !found || effectiveValue != userSpecifiedValue {
 					diff[effectOptName] = userSpecifiedValue
+				}
+			}
+			for k, userSpecifiedValue := range userSpecifiedTags {
+				if effectiveValue, ok := effectiveProperties[k]; !ok || effectiveValue != userSpecifiedValue {
+					diff[k] = userSpecifiedValue
 				}
 			}
 			if len(diff) > 0 {
@@ -688,6 +724,15 @@ func ResourceSqlTable() common.Resource {
 				return err
 			}
 			oldti, err := NewSqlTablesAPI(ctx, c).getTable(d.Id())
+			// The databricks API doesn't return tags with the table object so we use the terraform state
+			if d.HasChange("tags") && oldti.Tags == nil {
+				oldti.Tags = make(map[string]string)
+				old, _ := d.GetChange("tags")
+				oldProps := old.(map[string]any)
+				for key := range oldProps {
+					oldti.Tags[key] = oldProps[key].(string)
+				}
+			}
 			if err != nil {
 				return err
 			}

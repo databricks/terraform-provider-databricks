@@ -141,6 +141,28 @@ func TestResourceSqlTableCreateStatement_Partition(t *testing.T) {
 	assert.Contains(t, stmt, "PARTITIONED BY (baz, bazz)")
 }
 
+func TestResourceSqlTableCreateStatement_Tags(t *testing.T) {
+	ti := &SqlTableInfo{
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "TABLE",
+		DataSourceFormat:      "DELTA",
+		StorageLocation:       "s3://ext-main/foo/bar1",
+		StorageCredentialName: "somecred",
+		Comment:               "terraform managed",
+		Tags:                  map[string]string{"foo": "bar", "fizz": "buzz"},
+	}
+	stmt := ti.buildTableCreateStatement()
+	assert.Contains(t, stmt, "CREATE TABLE `main`.`foo`.`bar`")
+	assert.Contains(t, stmt, "USING DELTA")
+	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
+	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
+	assert.Contains(t, stmt, ";ALTER TABLE `main`.`foo`.`bar` SET TAGS (")
+	assert.Contains(t, stmt, "'foo'='bar'")
+	assert.Contains(t, stmt, "'fizz'='buzz'")
+}
+
 func TestResourceSqlTableCreateStatement_Liquid(t *testing.T) {
 	ti := &SqlTableInfo{
 		Name:                  "bar",
@@ -209,6 +231,10 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 		  comment   = "name of thing"
 		}
 		comment = "this table is managed by terraform"
+		tags = {
+			fizz = "buzz"
+			foo  = "bar"
+		}
 		`,
 		Fixtures: append([]qa.HTTPFixture{
 			{
@@ -226,6 +252,10 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 					Properties: map[string]string{
 						"one":   "two",
 						"three": "four",
+					},
+					Tags: map[string]string{
+						"foo":  "bar",
+						"fizz": "buzz",
 					},
 				},
 			},
@@ -1080,6 +1110,17 @@ func TestResourceSqlTableUpdateTable_ColumnsTypeUpperLowerCaseThrowsError(t *tes
 			expectedErrorMsg: "",
 		},
 	)
+}
+
+func TestResourceSqlTableSerializeTags(t *testing.T) {
+	ti := &SqlTableInfo{
+		Tags: map[string]string{
+			"one":   "two",
+			"three": "four",
+		},
+	}
+	assert.Contains(t, ti.serializeTags(), "'one'='two'")
+	assert.Contains(t, ti.serializeTags(), "'three'='four'")
 }
 
 func TestResourceSqlTableUpdateTable_ColumnsAdditionAndUpdateThrowsError(t *testing.T) {

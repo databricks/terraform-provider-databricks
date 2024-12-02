@@ -120,6 +120,7 @@ func (r *FunctionResource) Create(ctx context.Context, req resource.CreateReques
 	funcInfo, err := w.Functions.Create(ctx, createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create function", err.Error())
+		return
 	}
 
 	resp.Diagnostics.Append(waitForFunction(ctx, w, funcInfo)...)
@@ -159,6 +160,7 @@ func (r *FunctionResource) Update(ctx context.Context, req resource.UpdateReques
 	funcInfo, err := w.Functions.Update(ctx, updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update function", err.Error())
+		return
 	}
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, funcInfo, &planFunc)...)

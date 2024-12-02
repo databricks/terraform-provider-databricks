@@ -10,6 +10,12 @@ import (
 // This common interface prevents us from keeping two copies of StructToSchema and CustomizableSchema.
 type BlockBuilder interface {
 	BaseSchemaBuilder
+
+	// ToAttribute converts a block to its corresponding attribute type. Currently, ResourceStructToSchema converts all
+	// nested struct fields and slices to blocks. This method is used to convert those blocks to their corresponding
+	// attribute type. The resulting attribute will not have any of the Computed/Optional/Required/Sensitive flags set.
+	ToAttribute() AttributeBuilder
+
 	BuildDataSourceBlock() dataschema.Block
 	BuildResourceBlock() schema.Block
 }

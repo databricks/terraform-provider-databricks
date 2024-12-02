@@ -16,6 +16,15 @@ type ListNestedBlockBuilder struct {
 	PlanModifiers      []planmodifier.List
 }
 
+func (a ListNestedBlockBuilder) ToAttribute() AttributeBuilder {
+	return ListNestedAttributeBuilder{
+		NestedObject:       a.NestedObject.ToNestedAttributeObject(),
+		DeprecationMessage: a.DeprecationMessage,
+		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
+	}
+}
+
 func (a ListNestedBlockBuilder) BuildDataSourceBlock() dataschema.Block {
 	return dataschema.ListNestedBlock{
 		NestedObject:       a.NestedObject.BuildDataSourceAttribute(),

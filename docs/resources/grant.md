@@ -232,6 +232,28 @@ resource "databricks_grant" "udf_data_analysts" {
 }
 ```
 
+## Service credential grants
+
+See [databricks_grants Service credential grants](grants.md#service-credential-grants) for the list of privileges that apply to Service credentials.
+
+```hcl
+resource "databricks_credential" "external" {
+  name = aws_iam_role.external_data_access.name
+  aws_iam_role {
+    role_arn = aws_iam_role.external_data_access.arn
+  }
+  purpose = "SERVICE"
+  comment = "Managed by TF"
+}
+
+resource "databricks_grant" "external_creds" {
+  credential = databricks_credential.external.id
+
+  principal  = "Data Engineers"
+  privileges = ["ACCESS"]
+}
+```
+
 ## Storage credential grants
 
 See [databricks_grants Storage credential grants](grants.md#storage-credential-grants) for the list of privileges that apply to Storage credentials.

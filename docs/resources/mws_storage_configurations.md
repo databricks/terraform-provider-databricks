@@ -55,7 +55,15 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-!> Importing this resource is not currently supported.
+This resource can be imported by Databricks account ID and storage configuration ID.
+
+```sh
+terraform import databricks_mws_storage_configurations.this '<account_id>/<storage_configuration_id>'
+```
+
+~> This resource does not support updates. If your configuration does not match the existing resource,
+   the next `terraform apply` will cause the resource to be destroyed and recreated. After importing,
+   verify that the configuration matches the existing resource by running `terraform plan`.
 
 ## Related Resources
 

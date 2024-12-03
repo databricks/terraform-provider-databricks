@@ -330,8 +330,7 @@ type Credential struct {
 
 	AwsCredentials []AwsCredentials `tfsdk:"aws_credentials" tf:"optional,object"`
 	// Time in epoch milliseconds when the credential was created.
-	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional"`
-	EffectiveCreationTime types.Int64 `tfsdk:"effective_creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Databricks credential configuration ID.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The human-readable name of the credential configuration object.
@@ -339,15 +338,9 @@ type Credential struct {
 }
 
 func (newState *Credential) SyncEffectiveFieldsDuringCreateOrUpdate(plan Credential) {
-	newState.EffectiveCreationTime = newState.CreationTime
-	newState.CreationTime = plan.CreationTime
 }
 
 func (newState *Credential) SyncEffectiveFieldsDuringRead(existingState Credential) {
-	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
-	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
-		newState.CreationTime = existingState.CreationTime
-	}
 }
 
 // The general workspace configurations that are specific to Google Cloud.
@@ -369,8 +362,7 @@ type CustomerManagedKey struct {
 
 	AwsKeyInfo []AwsKeyInfo `tfsdk:"aws_key_info" tf:"optional,object"`
 	// Time in epoch milliseconds when the customer key was created.
-	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional"`
-	EffectiveCreationTime types.Int64 `tfsdk:"effective_creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// ID of the encryption key configuration object.
 	CustomerManagedKeyId types.String `tfsdk:"customer_managed_key_id" tf:"optional"`
 
@@ -380,15 +372,9 @@ type CustomerManagedKey struct {
 }
 
 func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerManagedKey) {
-	newState.EffectiveCreationTime = newState.CreationTime
-	newState.CreationTime = plan.CreationTime
 }
 
 func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringRead(existingState CustomerManagedKey) {
-	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
-	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
-		newState.CreationTime = existingState.CreationTime
-	}
 }
 
 // Delete credential configuration
@@ -714,11 +700,9 @@ type Network struct {
 	// The Databricks account ID associated with this network configuration.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// Time in epoch milliseconds when the network was created.
-	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional"`
-	EffectiveCreationTime types.Int64 `tfsdk:"effective_creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Array of error messages about the network configuration.
-	ErrorMessages          []NetworkHealth `tfsdk:"error_messages" tf:"optional"`
-	EffectiveErrorMessages []NetworkHealth `tfsdk:"effective_error_messages" tf:"computed,optional"`
+	ErrorMessages []NetworkHealth `tfsdk:"error_messages" tf:"computed,optional"`
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
 	GcpNetworkInfo []GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional,object"`
@@ -741,31 +725,17 @@ type Network struct {
 	// The status of this network configuration object in terms of its use in a
 	// workspace: * `UNATTACHED`: Unattached. * `VALID`: Valid. * `BROKEN`:
 	// Broken. * `WARNED`: Warned.
-	VpcStatus          types.String `tfsdk:"vpc_status" tf:"optional"`
-	EffectiveVpcStatus types.String `tfsdk:"effective_vpc_status" tf:"computed,optional"`
+	VpcStatus types.String `tfsdk:"vpc_status" tf:"computed,optional"`
 	// Array of warning messages about the network configuration.
-	WarningMessages          []NetworkWarning `tfsdk:"warning_messages" tf:"optional"`
-	EffectiveWarningMessages []NetworkWarning `tfsdk:"effective_warning_messages" tf:"computed,optional"`
+	WarningMessages []NetworkWarning `tfsdk:"warning_messages" tf:"computed,optional"`
 	// Workspace ID associated with this network configuration.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
 }
 
 func (newState *Network) SyncEffectiveFieldsDuringCreateOrUpdate(plan Network) {
-	newState.EffectiveCreationTime = newState.CreationTime
-	newState.CreationTime = plan.CreationTime
-	newState.EffectiveVpcStatus = newState.VpcStatus
-	newState.VpcStatus = plan.VpcStatus
 }
 
 func (newState *Network) SyncEffectiveFieldsDuringRead(existingState Network) {
-	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
-	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
-		newState.CreationTime = existingState.CreationTime
-	}
-	newState.EffectiveVpcStatus = existingState.EffectiveVpcStatus
-	if existingState.EffectiveVpcStatus.ValueString() == newState.VpcStatus.ValueString() {
-		newState.VpcStatus = existingState.VpcStatus
-	}
 }
 
 type NetworkHealth struct {
@@ -871,11 +841,9 @@ func (newState *RootBucketInfo) SyncEffectiveFieldsDuringRead(existingState Root
 
 type StorageConfiguration struct {
 	// The Databricks account ID that hosts the credential.
-	AccountId          types.String `tfsdk:"account_id" tf:"optional"`
-	EffectiveAccountId types.String `tfsdk:"effective_account_id" tf:"computed,optional"`
+	AccountId types.String `tfsdk:"account_id" tf:"computed,optional"`
 	// Time in epoch milliseconds when the storage configuration was created.
-	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional"`
-	EffectiveCreationTime types.Int64 `tfsdk:"effective_creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Root S3 bucket information.
 	RootBucketInfo []RootBucketInfo `tfsdk:"root_bucket_info" tf:"optional,object"`
 	// Databricks storage configuration ID.
@@ -885,21 +853,9 @@ type StorageConfiguration struct {
 }
 
 func (newState *StorageConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan StorageConfiguration) {
-	newState.EffectiveAccountId = newState.AccountId
-	newState.AccountId = plan.AccountId
-	newState.EffectiveCreationTime = newState.CreationTime
-	newState.CreationTime = plan.CreationTime
 }
 
 func (newState *StorageConfiguration) SyncEffectiveFieldsDuringRead(existingState StorageConfiguration) {
-	newState.EffectiveAccountId = existingState.EffectiveAccountId
-	if existingState.EffectiveAccountId.ValueString() == newState.AccountId.ValueString() {
-		newState.AccountId = existingState.AccountId
-	}
-	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
-	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
-		newState.CreationTime = existingState.CreationTime
-	}
 }
 
 type StsRole struct {
@@ -1067,8 +1023,7 @@ type Workspace struct {
 	// providers.
 	CloudResourceContainer []CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional,object"`
 	// Time in epoch milliseconds when the workspace was created.
-	CreationTime          types.Int64 `tfsdk:"creation_time" tf:"optional"`
-	EffectiveCreationTime types.Int64 `tfsdk:"effective_creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// ID of the workspace's credential configuration object.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The custom tags key-value pairing that is attached to this workspace. The
@@ -1150,33 +1105,13 @@ type Workspace struct {
 	// The status of the workspace. For workspace creation, usually it is set to
 	// `PROVISIONING` initially. Continue to check the status until the status
 	// is `RUNNING`.
-	WorkspaceStatus          types.String `tfsdk:"workspace_status" tf:"optional"`
-	EffectiveWorkspaceStatus types.String `tfsdk:"effective_workspace_status" tf:"computed,optional"`
+	WorkspaceStatus types.String `tfsdk:"workspace_status" tf:"computed,optional"`
 	// Message describing the current workspace status.
-	WorkspaceStatusMessage          types.String `tfsdk:"workspace_status_message" tf:"optional"`
-	EffectiveWorkspaceStatusMessage types.String `tfsdk:"effective_workspace_status_message" tf:"computed,optional"`
+	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message" tf:"computed,optional"`
 }
 
 func (newState *Workspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspace) {
-	newState.EffectiveCreationTime = newState.CreationTime
-	newState.CreationTime = plan.CreationTime
-	newState.EffectiveWorkspaceStatus = newState.WorkspaceStatus
-	newState.WorkspaceStatus = plan.WorkspaceStatus
-	newState.EffectiveWorkspaceStatusMessage = newState.WorkspaceStatusMessage
-	newState.WorkspaceStatusMessage = plan.WorkspaceStatusMessage
 }
 
 func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace) {
-	newState.EffectiveCreationTime = existingState.EffectiveCreationTime
-	if existingState.EffectiveCreationTime.ValueInt64() == newState.CreationTime.ValueInt64() {
-		newState.CreationTime = existingState.CreationTime
-	}
-	newState.EffectiveWorkspaceStatus = existingState.EffectiveWorkspaceStatus
-	if existingState.EffectiveWorkspaceStatus.ValueString() == newState.WorkspaceStatus.ValueString() {
-		newState.WorkspaceStatus = existingState.WorkspaceStatus
-	}
-	newState.EffectiveWorkspaceStatusMessage = existingState.EffectiveWorkspaceStatusMessage
-	if existingState.EffectiveWorkspaceStatusMessage.ValueString() == newState.WorkspaceStatusMessage.ValueString() {
-		newState.WorkspaceStatusMessage = existingState.WorkspaceStatusMessage
-	}
 }

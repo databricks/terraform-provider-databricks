@@ -697,7 +697,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	err = w.Clusters.PermanentDeleteByClusterId(ctx, d.Id())
-	if err == nil {
+	if err == nil || apierr.IsMissing(err) {
 		return nil
 	}
 	if !strings.Contains(err.Error(), "unpin the cluster first") {

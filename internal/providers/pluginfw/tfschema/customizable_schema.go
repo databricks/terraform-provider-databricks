@@ -16,8 +16,7 @@ type CustomizableSchema struct {
 
 // ConstructCustomizableSchema constructs a CustomizableSchema given a NestedBlockObject.
 func ConstructCustomizableSchema(nestedObject NestedBlockObject) *CustomizableSchema {
-	attr := AttributeBuilder(SingleNestedBlockBuilder{NestedObject: &nestedObject})
-	return &CustomizableSchema{attr: attr}
+	return &CustomizableSchema{attr: SingleNestedBlockBuilder{NestedObject: nestedObject}}
 }
 
 // ToAttributeMap converts CustomizableSchema into BaseSchemaBuilder.
@@ -118,7 +117,12 @@ func (s *CustomizableSchema) AddPlanModifier(v any, path ...string) *Customizabl
 
 func (s *CustomizableSchema) SetOptional(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetOptional()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetOptional()
+		default:
+			panic(fmt.Errorf("SetOptional called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -128,7 +132,12 @@ func (s *CustomizableSchema) SetOptional(path ...string) *CustomizableSchema {
 
 func (s *CustomizableSchema) SetRequired(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetRequired()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetRequired()
+		default:
+			panic(fmt.Errorf("SetRequired called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -138,7 +147,12 @@ func (s *CustomizableSchema) SetRequired(path ...string) *CustomizableSchema {
 
 func (s *CustomizableSchema) SetSensitive(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetSensitive()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetSensitive()
+		default:
+			panic(fmt.Errorf("SetSensitive called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -157,7 +171,12 @@ func (s *CustomizableSchema) SetDeprecated(msg string, path ...string) *Customiz
 
 func (s *CustomizableSchema) SetComputed(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetComputed()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetComputed()
+		default:
+			panic(fmt.Errorf("SetComputed called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -169,7 +188,12 @@ func (s *CustomizableSchema) SetComputed(path ...string) *CustomizableSchema {
 // by the platform.
 func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetReadOnly()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetReadOnly()
+		default:
+			panic(fmt.Errorf("SetReadOnly called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)

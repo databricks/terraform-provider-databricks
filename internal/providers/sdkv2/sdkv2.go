@@ -141,6 +141,7 @@ func DatabricksProvider(sdkV2Fallbacks ...pluginfw.SdkV2FallbackOption) *schema.
 		"databricks_budget":                          finops.ResourceBudget().ToResource(),
 		"databricks_catalog":                         catalog.ResourceCatalog().ToResource(),
 		"databricks_catalog_workspace_binding":       catalog.ResourceCatalogWorkspaceBinding().ToResource(),
+		"databricks_credential":                      catalog.ResourceCredential().ToResource(),
 		"databricks_custom_app_integration":          apps.ResourceCustomAppIntegration().ToResource(),
 		"databricks_connection":                      catalog.ResourceConnection().ToResource(),
 		"databricks_cluster":                         clusters.ResourceCluster().ToResource(),

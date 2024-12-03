@@ -23,11 +23,9 @@ type App struct {
 
 	ComputeStatus []ComputeStatus `tfsdk:"compute_status" tf:"optional,object"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
-	CreateTime          types.String `tfsdk:"create_time" tf:"optional"`
-	EffectiveCreateTime types.String `tfsdk:"effective_create_time" tf:"computed,optional"`
+	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
 	// The email of the user that created the app.
-	Creator          types.String `tfsdk:"creator" tf:"optional"`
-	EffectiveCreator types.String `tfsdk:"effective_creator" tf:"computed,optional"`
+	Creator types.String `tfsdk:"creator" tf:"computed,optional"`
 	// The default workspace file system path of the source code from which app
 	// deployment are created. This field tracks the workspace source code path
 	// of the last active deployment.
@@ -43,77 +41,23 @@ type App struct {
 	// Resources for the app.
 	Resources []AppResource `tfsdk:"resources" tf:"optional"`
 
-	ServicePrincipalClientId          types.String `tfsdk:"service_principal_client_id" tf:"optional"`
-	EffectiveServicePrincipalClientId types.String `tfsdk:"effective_service_principal_client_id" tf:"computed,optional"`
+	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id" tf:"computed,optional"`
 
-	ServicePrincipalId          types.Int64 `tfsdk:"service_principal_id" tf:"optional"`
-	EffectiveServicePrincipalId types.Int64 `tfsdk:"effective_service_principal_id" tf:"computed,optional"`
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"computed,optional"`
 
-	ServicePrincipalName          types.String `tfsdk:"service_principal_name" tf:"optional"`
-	EffectiveServicePrincipalName types.String `tfsdk:"effective_service_principal_name" tf:"computed,optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"computed,optional"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
-	UpdateTime          types.String `tfsdk:"update_time" tf:"optional"`
-	EffectiveUpdateTime types.String `tfsdk:"effective_update_time" tf:"computed,optional"`
+	UpdateTime types.String `tfsdk:"update_time" tf:"computed,optional"`
 	// The email of the user that last updated the app.
-	Updater          types.String `tfsdk:"updater" tf:"optional"`
-	EffectiveUpdater types.String `tfsdk:"effective_updater" tf:"computed,optional"`
+	Updater types.String `tfsdk:"updater" tf:"computed,optional"`
 	// The URL of the app once it is deployed.
-	Url          types.String `tfsdk:"url" tf:"optional"`
-	EffectiveUrl types.String `tfsdk:"effective_url" tf:"computed,optional"`
+	Url types.String `tfsdk:"url" tf:"computed,optional"`
 }
 
 func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
-	newState.EffectiveCreateTime = newState.CreateTime
-	newState.CreateTime = plan.CreateTime
-	newState.EffectiveCreator = newState.Creator
-	newState.Creator = plan.Creator
-	newState.EffectiveServicePrincipalClientId = newState.ServicePrincipalClientId
-	newState.ServicePrincipalClientId = plan.ServicePrincipalClientId
-	newState.EffectiveServicePrincipalId = newState.ServicePrincipalId
-	newState.ServicePrincipalId = plan.ServicePrincipalId
-	newState.EffectiveServicePrincipalName = newState.ServicePrincipalName
-	newState.ServicePrincipalName = plan.ServicePrincipalName
-	newState.EffectiveUpdateTime = newState.UpdateTime
-	newState.UpdateTime = plan.UpdateTime
-	newState.EffectiveUpdater = newState.Updater
-	newState.Updater = plan.Updater
-	newState.EffectiveUrl = newState.Url
-	newState.Url = plan.Url
 }
 
 func (newState *App) SyncEffectiveFieldsDuringRead(existingState App) {
-	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
-	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
-		newState.CreateTime = existingState.CreateTime
-	}
-	newState.EffectiveCreator = existingState.EffectiveCreator
-	if existingState.EffectiveCreator.ValueString() == newState.Creator.ValueString() {
-		newState.Creator = existingState.Creator
-	}
-	newState.EffectiveServicePrincipalClientId = existingState.EffectiveServicePrincipalClientId
-	if existingState.EffectiveServicePrincipalClientId.ValueString() == newState.ServicePrincipalClientId.ValueString() {
-		newState.ServicePrincipalClientId = existingState.ServicePrincipalClientId
-	}
-	newState.EffectiveServicePrincipalId = existingState.EffectiveServicePrincipalId
-	if existingState.EffectiveServicePrincipalId.ValueInt64() == newState.ServicePrincipalId.ValueInt64() {
-		newState.ServicePrincipalId = existingState.ServicePrincipalId
-	}
-	newState.EffectiveServicePrincipalName = existingState.EffectiveServicePrincipalName
-	if existingState.EffectiveServicePrincipalName.ValueString() == newState.ServicePrincipalName.ValueString() {
-		newState.ServicePrincipalName = existingState.ServicePrincipalName
-	}
-	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
-	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
-		newState.UpdateTime = existingState.UpdateTime
-	}
-	newState.EffectiveUpdater = existingState.EffectiveUpdater
-	if existingState.EffectiveUpdater.ValueString() == newState.Updater.ValueString() {
-		newState.Updater = existingState.Updater
-	}
-	newState.EffectiveUrl = existingState.EffectiveUrl
-	if existingState.EffectiveUrl.ValueString() == newState.Url.ValueString() {
-		newState.Url = existingState.Url
-	}
 }
 
 type AppAccessControlRequest struct {
@@ -154,11 +98,9 @@ func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringRead(existing
 
 type AppDeployment struct {
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
-	CreateTime          types.String `tfsdk:"create_time" tf:"optional"`
-	EffectiveCreateTime types.String `tfsdk:"effective_create_time" tf:"computed,optional"`
+	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
 	// The email of the user creates the deployment.
-	Creator          types.String `tfsdk:"creator" tf:"optional"`
-	EffectiveCreator types.String `tfsdk:"effective_creator" tf:"computed,optional"`
+	Creator types.String `tfsdk:"creator" tf:"computed,optional"`
 	// The deployment artifacts for an app.
 	DeploymentArtifacts []AppDeploymentArtifacts `tfsdk:"deployment_artifacts" tf:"optional,object"`
 	// The unique id of the deployment.
@@ -176,32 +118,13 @@ type AppDeployment struct {
 	// Status and status message of the deployment
 	Status []AppDeploymentStatus `tfsdk:"status" tf:"optional,object"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
-	UpdateTime          types.String `tfsdk:"update_time" tf:"optional"`
-	EffectiveUpdateTime types.String `tfsdk:"effective_update_time" tf:"computed,optional"`
+	UpdateTime types.String `tfsdk:"update_time" tf:"computed,optional"`
 }
 
 func (newState *AppDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeployment) {
-	newState.EffectiveCreateTime = newState.CreateTime
-	newState.CreateTime = plan.CreateTime
-	newState.EffectiveCreator = newState.Creator
-	newState.Creator = plan.Creator
-	newState.EffectiveUpdateTime = newState.UpdateTime
-	newState.UpdateTime = plan.UpdateTime
 }
 
 func (newState *AppDeployment) SyncEffectiveFieldsDuringRead(existingState AppDeployment) {
-	newState.EffectiveCreateTime = existingState.EffectiveCreateTime
-	if existingState.EffectiveCreateTime.ValueString() == newState.CreateTime.ValueString() {
-		newState.CreateTime = existingState.CreateTime
-	}
-	newState.EffectiveCreator = existingState.EffectiveCreator
-	if existingState.EffectiveCreator.ValueString() == newState.Creator.ValueString() {
-		newState.Creator = existingState.Creator
-	}
-	newState.EffectiveUpdateTime = existingState.EffectiveUpdateTime
-	if existingState.EffectiveUpdateTime.ValueString() == newState.UpdateTime.ValueString() {
-		newState.UpdateTime = existingState.UpdateTime
-	}
 }
 
 type AppDeploymentArtifacts struct {
@@ -218,22 +141,15 @@ func (newState *AppDeploymentArtifacts) SyncEffectiveFieldsDuringRead(existingSt
 
 type AppDeploymentStatus struct {
 	// Message corresponding with the deployment state.
-	Message          types.String `tfsdk:"message" tf:"optional"`
-	EffectiveMessage types.String `tfsdk:"effective_message" tf:"computed,optional"`
+	Message types.String `tfsdk:"message" tf:"computed,optional"`
 	// State of the deployment.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentStatus) {
-	newState.EffectiveMessage = newState.Message
-	newState.Message = plan.Message
 }
 
 func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringRead(existingState AppDeploymentStatus) {
-	newState.EffectiveMessage = existingState.EffectiveMessage
-	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
-		newState.Message = existingState.Message
-	}
 }
 
 type AppPermission struct {
@@ -369,42 +285,28 @@ func (newState *AppResourceSqlWarehouse) SyncEffectiveFieldsDuringRead(existingS
 
 type ApplicationStatus struct {
 	// Application status message
-	Message          types.String `tfsdk:"message" tf:"optional"`
-	EffectiveMessage types.String `tfsdk:"effective_message" tf:"computed,optional"`
+	Message types.String `tfsdk:"message" tf:"computed,optional"`
 	// State of the application.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 func (newState *ApplicationStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApplicationStatus) {
-	newState.EffectiveMessage = newState.Message
-	newState.Message = plan.Message
 }
 
 func (newState *ApplicationStatus) SyncEffectiveFieldsDuringRead(existingState ApplicationStatus) {
-	newState.EffectiveMessage = existingState.EffectiveMessage
-	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
-		newState.Message = existingState.Message
-	}
 }
 
 type ComputeStatus struct {
 	// Compute status message
-	Message          types.String `tfsdk:"message" tf:"optional"`
-	EffectiveMessage types.String `tfsdk:"effective_message" tf:"computed,optional"`
+	Message types.String `tfsdk:"message" tf:"computed,optional"`
 	// State of the app compute.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
 
 func (newState *ComputeStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComputeStatus) {
-	newState.EffectiveMessage = newState.Message
-	newState.Message = plan.Message
 }
 
 func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState ComputeStatus) {
-	newState.EffectiveMessage = existingState.EffectiveMessage
-	if existingState.EffectiveMessage.ValueString() == newState.Message.ValueString() {
-		newState.Message = existingState.Message
-	}
 }
 
 // Create an app deployment

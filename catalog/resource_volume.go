@@ -53,6 +53,12 @@ func ResourceVolume() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			}
+			// As of 3rd December 2024, the Volumes create API returns an incorrect
+			// error message "CreateVolume Missing required field: volume_type"
+			// if you entire an invalid value for volume_type (i.e. not one of "MANAGED" or "EXTERNAL").
+			//
+			// If server side validation is added in the future, this validation function 
+			// can be removed. 
 			m["volume_type"].ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
 				s, ok := i.(string)
 				if !ok {

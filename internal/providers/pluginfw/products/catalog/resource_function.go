@@ -2,12 +2,8 @@ package catalog
 
 import (
 	"context"
-	"fmt"
-	"time"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -15,7 +11,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -27,28 +22,6 @@ var _ resource.ResourceWithConfigure = &FunctionResource{}
 
 func ResourceFunction() resource.Resource {
 	return &FunctionResource{}
-}
-
-func waitForFunction(ctx context.Context, w *databricks.WorkspaceClient, funcInfo *catalog.FunctionInfo) diag.Diagnostics {
-	const timeout = 5 * time.Minute
-
-	result, err := retries.Poll[catalog.FunctionInfo](ctx, timeout, func() (*catalog.FunctionInfo, *retries.Err) {
-		attempt, err := w.Functions.GetByName(ctx, funcInfo.FullName)
-		if err != nil {
-			if apierr.IsMissing(err) {
-				return nil, retries.Continue(fmt.Errorf("function %s is not yet available", funcInfo.FullName))
-			}
-			return nil, retries.Halt(fmt.Errorf("failed to get function: %s", err))
-		}
-		return attempt, nil
-	})
-
-	if err != nil {
-		return diag.Diagnostics{diag.NewErrorDiagnostic("failed to create function", err.Error())}
-	}
-
-	*funcInfo = *result
-	return nil
 }
 
 type FunctionResource struct {
@@ -126,11 +99,6 @@ func (r *FunctionResource) Create(ctx context.Context, req resource.CreateReques
 	funcInfo, err := w.Functions.Create(ctx, createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create function", err.Error())
-		return
-	}
-
-	resp.Diagnostics.Append(waitForFunction(ctx, w, funcInfo)...)
-	if resp.Diagnostics.HasError() {
 		return
 	}
 

@@ -57,8 +57,8 @@ func ResourceVolume() common.Resource {
 			// error message "CreateVolume Missing required field: volume_type"
 			// if you specify an invalid value for volume_type (i.e. not one of "MANAGED" or "EXTERNAL").
 			//
-			// If server side validation is added in the future, this validation function 
-			// can be removed. 
+			// If server side validation is added in the future, this validation function
+			// can be removed.
 			m["volume_type"].ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
 				s, ok := i.(string)
 				if !ok {

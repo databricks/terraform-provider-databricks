@@ -495,7 +495,7 @@ func TestVolumesValidateOnVolumesType(t *testing.T) {
 		comment = "This is a new test comment."		
 		`,
 	}.Apply(t)
-	assert.ErrorContains(t, err, "value unknown is not one of EXTERNAL, MANAGED")
+	assert.ErrorContains(t, err, "expected volume_type to be one of [MANAGED EXTERNAL], got unknown")
 }
 
 func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {

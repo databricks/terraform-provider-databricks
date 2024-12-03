@@ -3,14 +3,12 @@ package catalog
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // This structure contains the fields of catalog.UpdateVolumeRequestContent and catalog.CreateVolumeRequestContent
@@ -59,19 +57,7 @@ func ResourceVolume() common.Resource {
 			//
 			// If server side validation is added in the future, this validation function
 			// can be removed.
-			m["volume_type"].ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
-				s, ok := i.(string)
-				if !ok {
-					return diag.Errorf("expected string, got %s", reflect.TypeOf(i))
-				}
-
-				v := catalog.VolumeType("")
-				err := v.Set(s)
-				if err != nil {
-					return diag.Errorf("invalid volume type %s: %s", s, err)
-				}
-				return nil
-			}
+			common.CustomizeSchemaPath(m, "volume_type").SetValidateFunc(validation.StringInSlice([]string{"MANAGED", "EXTERNAL"}, false))
 			return m
 		})
 	return common.Resource{

@@ -15,6 +15,19 @@ type NestedBlockObject struct {
 	PlanModifiers []planmodifier.Object
 }
 
+func (a NestedBlockObject) ToNestedAttributeObject() NestedAttributeObject {
+	attributes := make(map[string]AttributeBuilder)
+	for k, v := range a.Attributes {
+		attributes[k] = v
+	}
+	for k, v := range a.Blocks {
+		attributes[k] = v.ToAttribute()
+	}
+	return NestedAttributeObject{
+		Attributes: attributes,
+	}
+}
+
 func (a NestedBlockObject) BuildDataSourceAttribute() dataschema.NestedBlockObject {
 	dataSourceAttributes := BuildDataSourceAttributeMap(a.Attributes)
 	dataSourceBlocks := BuildDataSourceBlockMap(a.Blocks)

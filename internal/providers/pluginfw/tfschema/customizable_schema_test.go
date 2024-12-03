@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -174,4 +175,220 @@ func TestCustomizeSchema_SetComputed_PanicOnBlock(t *testing.T) {
 			return c
 		})
 	})
+}
+
+type mockPlanModifier struct{}
+
+// Description implements planmodifier.List.
+func (m mockPlanModifier) Description(context.Context) string {
+	panic("unimplemented")
+}
+
+// MarkdownDescription implements planmodifier.List.
+func (m mockPlanModifier) MarkdownDescription(context.Context) string {
+	panic("unimplemented")
+}
+
+// PlanModifyList implements planmodifier.List.
+func (m mockPlanModifier) PlanModifyList(context.Context, planmodifier.ListRequest, *planmodifier.ListResponse) {
+	panic("unimplemented")
+}
+
+// PlanModifyList implements planmodifier.List.
+func (m mockPlanModifier) PlanModifyObject(context.Context, planmodifier.ObjectRequest, *planmodifier.ObjectResponse) {
+	panic("unimplemented")
+}
+
+var _ planmodifier.List = mockPlanModifier{}
+var _ planmodifier.Object = mockPlanModifier{}
+
+type mockValidator struct{}
+
+// Description implements validator.List.
+func (m mockValidator) Description(context.Context) string {
+	panic("unimplemented")
+}
+
+// MarkdownDescription implements validator.List.
+func (m mockValidator) MarkdownDescription(context.Context) string {
+	panic("unimplemented")
+}
+
+// ValidateList implements validator.List.
+func (m mockValidator) ValidateList(context.Context, validator.ListRequest, *validator.ListResponse) {
+	panic("unimplemented")
+}
+
+// ValidateList implements validator.Object.
+func (m mockValidator) ValidateObject(context.Context, validator.ObjectRequest, *validator.ObjectResponse) {
+	panic("unimplemented")
+}
+
+var _ validator.List = mockValidator{}
+var _ validator.Object = mockValidator{}
+
+func TestCustomizeSchema_ConvertToAttribute(t *testing.T) {
+	v := mockValidator{}
+	pm := mockPlanModifier{}
+	testCases := []struct {
+		name        string
+		baseSchema  NestedBlockObject
+		path        []string
+		want        NestedBlockObject
+		expectPanic bool
+	}{
+		{
+			name: "ListNestedBlock",
+			baseSchema: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"list": ListNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Attributes: map[string]AttributeBuilder{
+								"attr": StringAttributeBuilder{},
+							},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.List{v},
+						PlanModifiers:      []planmodifier.List{pm},
+					},
+				},
+			},
+			path: []string{"list"},
+			want: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"list": ListNestedAttributeBuilder{
+						NestedObject: NestedAttributeObject{
+							Attributes: map[string]AttributeBuilder{
+								"attr": StringAttributeBuilder{},
+							},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.List{v},
+						PlanModifiers:      []planmodifier.List{pm},
+					},
+				},
+			},
+		},
+		{
+			name: "ListNestedBlock/CalledOnInnerBlock",
+			baseSchema: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"list": ListNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Blocks: map[string]BlockBuilder{
+								"nested_block": ListNestedBlockBuilder{
+									NestedObject: NestedBlockObject{
+										Attributes: map[string]AttributeBuilder{
+											"attr": StringAttributeBuilder{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			path: []string{"list", "nested_block"},
+			want: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"list": ListNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Attributes: map[string]AttributeBuilder{
+								"nested_block": ListNestedAttributeBuilder{
+									NestedObject: NestedAttributeObject{
+										Attributes: map[string]AttributeBuilder{
+											"attr": StringAttributeBuilder{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "SingleNestedBlock",
+			baseSchema: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"single": SingleNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Attributes: map[string]AttributeBuilder{
+								"attr": StringAttributeBuilder{},
+							},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.Object{v},
+						PlanModifiers:      []planmodifier.Object{pm},
+					},
+				},
+			},
+			path: []string{"single"},
+			want: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"single": SingleNestedAttributeBuilder{
+						Attributes: map[string]AttributeBuilder{
+							"attr": StringAttributeBuilder{},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.Object{v},
+						PlanModifiers:      []planmodifier.Object{pm},
+					},
+				},
+			},
+		},
+		{
+			name: "SingleNestedBlock/RecursiveBlocks",
+			baseSchema: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"single": SingleNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Blocks: map[string]BlockBuilder{
+								"nested_block": ListNestedBlockBuilder{
+									NestedObject: NestedBlockObject{
+										Attributes: map[string]AttributeBuilder{
+											"attr": StringAttributeBuilder{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			path: []string{"single"},
+			want: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"single": SingleNestedAttributeBuilder{
+						Attributes: map[string]AttributeBuilder{
+							"nested_block": ListNestedAttributeBuilder{
+								NestedObject: NestedAttributeObject{
+									Attributes: map[string]AttributeBuilder{
+										"attr": StringAttributeBuilder{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:        "PanicOnEmptyPath",
+			path:        nil,
+			expectPanic: true,
+		},
+	}
+	for _, c := range testCases {
+		t.Run(c.name, func(t *testing.T) {
+			if c.expectPanic {
+				assert.Panics(t, func() {
+					ConstructCustomizableSchema(c.baseSchema).ConvertToAttribute(c.path...)
+				})
+			} else {
+				got := ConstructCustomizableSchema(c.baseSchema).ConvertToAttribute(c.path...)
+				assert.Equal(t, c.want, got.attr.(SingleNestedBlockBuilder).NestedObject)
+			}
+		})
+	}
 }

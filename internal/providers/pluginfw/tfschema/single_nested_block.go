@@ -18,6 +18,15 @@ type SingleNestedBlockBuilder struct {
 	PlanModifiers      []planmodifier.Object
 }
 
+func (a SingleNestedBlockBuilder) ToAttribute() AttributeBuilder {
+	return SingleNestedAttributeBuilder{
+		Attributes:         a.NestedObject.ToNestedAttributeObject().Attributes,
+		DeprecationMessage: a.DeprecationMessage,
+		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
+	}
+}
+
 func (a SingleNestedBlockBuilder) BuildDataSourceAttribute() dataschema.Attribute {
 	panic(fmt.Errorf("BuildDataSourceBlock should never be called for SingleNestedBlockBuilder. %s", common.TerraformBugErrorMessage))
 }

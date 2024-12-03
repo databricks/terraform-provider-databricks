@@ -3,10 +3,13 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -49,6 +52,19 @@ func ResourceVolume() common.Resource {
 			m["volume_path"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
+			}
+			m["volume_type"].ValidateDiagFunc = func(i interface{}, p cty.Path) diag.Diagnostics {
+				s, ok := i.(string)
+				if !ok {
+					return diag.Errorf("expected string, got %s", reflect.TypeOf(i))
+				}
+
+				v := catalog.VolumeType("")
+				err := v.Set(s)
+				if err != nil {
+					return diag.Errorf("invalid volume type %s: %s", s, err)
+				}
+				return nil
 			}
 			return m
 		})

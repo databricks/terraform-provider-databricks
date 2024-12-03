@@ -40,7 +40,7 @@ func (a StringAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a StringAttributeBuilder) SetOptional() BaseSchemaBuilder {
+func (a StringAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -49,7 +49,7 @@ func (a StringAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetRequired() BaseSchemaBuilder {
+func (a StringAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -58,7 +58,7 @@ func (a StringAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetSensitive() BaseSchemaBuilder {
+func (a StringAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -66,7 +66,7 @@ func (a StringAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetComputed() BaseSchemaBuilder {
+func (a StringAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -74,7 +74,7 @@ func (a StringAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
+func (a StringAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -89,12 +89,12 @@ func (a StringAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	return a
 }
 
-func (a StringAttributeBuilder) AddValidator(v validator.String) BaseSchemaBuilder {
+func (a StringAttributeBuilder) AddValidator(v validator.String) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a StringAttributeBuilder) AddPlanModifier(v planmodifier.String) BaseSchemaBuilder {
+func (a StringAttributeBuilder) AddPlanModifier(v planmodifier.String) AttributeBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

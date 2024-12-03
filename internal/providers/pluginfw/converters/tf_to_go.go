@@ -165,17 +165,17 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 	switch v := srcFieldValue.(type) {
 	case types.Bool:
 		destField.SetBool(v.ValueBool())
-		if !v.IsNull() && !v.IsUnknown() {
+		if !v.IsNull() {
 			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.Int64:
 		destField.SetInt(v.ValueInt64())
-		if !v.IsNull() && !v.IsUnknown() {
+		if !v.IsNull() {
 			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.Float64:
 		destField.SetFloat(v.ValueFloat64())
-		if !v.IsNull() && !v.IsUnknown() {
+		if !v.IsNull() {
 			addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
 		}
 	case types.String:

@@ -12,16 +12,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/apps_tf"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const (
@@ -42,30 +36,16 @@ func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest,
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
 }
 
-type makeListBlockUnknownIfNotInState struct{}
-
-func (m makeListBlockUnknownIfNotInState) Description(_ context.Context) string {
-	return "Make the field unknown if not in state"
-}
-
-func (m makeListBlockUnknownIfNotInState) MarkdownDescription(_ context.Context) string {
-	return "Make the field unknown if not in state"
-}
-
-func (m makeListBlockUnknownIfNotInState) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	if req.StateValue.IsNull() {
-		elem := types.ObjectUnknown(req.PlanValue.ElementType(ctx).(basetypes.ObjectType).AttrTypes)
-		var d diag.Diagnostics
-		resp.PlanValue, d = types.ListValue(req.PlanValue.ElementType(ctx), []attr.Value{elem})
-		resp.Diagnostics.Append(d...)
-		return
-	}
-	listplanmodifier.UseStateForUnknown().PlanModifyList(ctx, req, resp)
-}
-
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = tfschema.ResourceStructToSchema(apps_tf.App{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		cs.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
+		// All pointers are treated as list blocks to be compatible with resources implemented in SDKv2.
+		// The plugin framework requires that the number of blocks in the config and plan match. This means that
+		// it isn't possible to have a computed list block that is not part of the config. To work around this,
+		// we need to treat these blocks as attributes in the schema, which allows us to set them as computed.
+		for _, p := range []string{"active_deployment", "app_status", "compute_status", "pending_deployment"} {
+			cs.ConvertToAttribute(p)
+		}
 		// Computed fields
 		for _, p := range []string{
 			"active_deployment",
@@ -84,33 +64,12 @@ func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, res
 		} {
 			cs.SetReadOnly(p)
 		}
-		// All pointers are treated as list blocks to be compatible with resources implemented in SDKv2.
-		// The plugin framework requires that the number of blocks in the config and plan match. This means that
-		// it isn't possible to have a computed list block that is not part of the config. To work around this,
-		// we need to treat these blocks as attributes in the schema, which allows us to set them as computed.
-		for _, p := range []string{"app_status", "compute_status"} {
-			cs.Transform(func(bsb tfschema.BaseSchemaBuilder) tfschema.BaseSchemaBuilder {
-				switch b := bsb.(type) {
-				case tfschema.ListNestedBlockBuilder:
-					return tfschema.SingleNestedBlockBuilder{
-						NestedObject: b.NestedObject,
-						Computed:     true,
-					}
-				}
-				return bsb
-			}, p)
-		}
 		exclusiveFields := []string{"job", "secret", "serving_endpoint", "sql_warehouse"}
-		for _, field := range exclusiveFields {
-			paths := path.Expressions{}
-			for _, f := range exclusiveFields {
-				if f == field {
-					continue
-				}
-				paths = append(paths, path.MatchRelative().AtParent().AtName(f))
-			}
-			cs.AddValidator(listvalidator.ExactlyOneOf(paths...), "resources", field)
+		paths := path.Expressions{}
+		for _, field := range exclusiveFields[1:] {
+			paths = append(paths, path.MatchRelative().AtParent().AtName(field))
 		}
+		cs.AddValidator(objectvalidator.ExactlyOneOf(paths...), "resources", exclusiveFields[0])
 		return cs
 	})
 }

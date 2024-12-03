@@ -8,7 +8,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 )
 
-const baseResources = `
+/*
 	resource "databricks_sql_endpoint" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 		cluster_size = "2X-Small"
@@ -26,16 +26,6 @@ const baseResources = `
 		name = "tf-{var.STICKY_RANDOM}"
 	}
 
-	resource "databricks_secret_scope" "this" {
-		name = "tf-{var.STICKY_RANDOM}"
-	}
-
-	resource "databricks_secret" "this" {
-	    scope = databricks_secret_scope.this.name
-		key = "tf-{var.STICKY_RANDOM}"
-		string_value = "secret"
-	}
-
 	resource "databricks_model_serving" "this" {
 		name = "tf-{var.STICKY_RANDOM}"
 		config {
@@ -48,28 +38,29 @@ const baseResources = `
 			}
 		}
 	}
+*/
+const baseResources = `
+
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+
 `
 
-func makeTemplate(description string) string {
-	appTemplate := baseResources + `
-	resource "databricks_app" "this" {
-		name = "{var.STICKY_RANDOM}"
-		description = "%s"
+/*
+
 		resources {
 			name = "warehouse"
 			description = "warehouse for app"
 			job {
 				id = databricks_job.this.id
 				permission = "CAN_MANAGE"
-			}
-		}
-		resources {
-			name = "secret"
-			description = "secret for app"
-			secret {
-				scope = databricks_secret_scope.this.name
-				key = databricks_secret.this.key
-				permission = "MANAGE"
 			}
 		}
 		resources {
@@ -88,6 +79,21 @@ func makeTemplate(description string) string {
 				permission = "CAN_MANAGE"
 			}
 		}
+*/
+func makeTemplate(description string) string {
+	appTemplate := baseResources + `
+	resource "databricks_app" "this" {
+		name = "{var.STICKY_RANDOM}"
+		description = "%s"
+		resources {
+			name = "secret"
+			description = "secret for app"
+			secret {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}
 	}`
 	return fmt.Sprintf(appTemplate, description)
 }
@@ -99,9 +105,10 @@ var templateWithInvalidResource = `
 		resources {
 			name = "invalid resource"
 			description = "invalid resource for app"
-			job {
-				id = "123"
+			secret {
 				permission = "CAN_MANAGE"
+				key = "test"
+				scope = "test"
 			}
 			sql_warehouse {
 				id = "123"
@@ -110,11 +117,11 @@ var templateWithInvalidResource = `
 		}
 	}`
 
-func TestAccAppInvalidResource(t *testing.T) {
+func TestAccApp_InvalidResource(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: templateWithInvalidResource,
 		ExpectError: regexp.MustCompile(regexp.QuoteMeta(`2 attributes specified when one (and only one) of
-[resources[0].secret.<.job,resources[0].secret.<.serving_endpoint,resources[0].secret.<.sql_warehouse]
+[resources[0].job.<.secret,resources[0].job.<.serving_endpoint,resources[0].job.<.sql_warehouse]
 is required`)),
 	})
 }

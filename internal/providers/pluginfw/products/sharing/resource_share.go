@@ -145,8 +145,8 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
 
 		c.SetRequired("object", "data_object_type")
-		c.SetRequired("object", "partitions", "values", "op")
-		c.SetRequired("object", "partitions", "values", "name")
+		c.SetRequired("object", "partition", "value", "op")
+		c.SetRequired("object", "partition", "value", "name")
 		return c
 	})
 	resp.Schema = schema.Schema{

@@ -11,15 +11,16 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package apps_tf
 
 import (
+	"context"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type App struct {
 	// The active deployment of the app. A deployment is considered active when
 	// it has been deployed to the app compute.
-	ActiveDeployment []AppDeployment `tfsdk:"active_deployment" tf:"optional,object"`
+	ActiveDeployment types.Object `tfsdk:"active_deployment" tf:"optional,object"`
 
-	AppStatus []ApplicationStatus `tfsdk:"app_status" tf:"optional,object"`
+	AppStatus types.List `tfsdk:"app_status" tf:"optional,object" tftype:"ApplicationStatus"`
 
 	ComputeStatus []ComputeStatus `tfsdk:"compute_status" tf:"optional,object"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
@@ -37,7 +38,7 @@ type App struct {
 	Name types.String `tfsdk:"name" tf:""`
 	// The pending deployment of the app. A deployment is considered pending
 	// when it is being prepared for deployment to the app compute.
-	PendingDeployment []AppDeployment `tfsdk:"pending_deployment" tf:"optional,object"`
+	PendingDeployment AppDeployments `tfsdk:"pending_deployment" tf:"optional,object"`
 	// Resources for the app.
 	Resources []AppResource `tfsdk:"resources" tf:"optional"`
 
@@ -52,6 +53,12 @@ type App struct {
 	Updater types.String `tfsdk:"updater" tf:"computed,optional"`
 	// The URL of the app once it is deployed.
 	Url types.String `tfsdk:"url" tf:"computed,optional"`
+}
+
+func (a *App) GetNestedTypes() map[string]any {
+	return map[string]any{
+		"active_deployment": AppDeployment{},
+	}
 }
 
 func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
@@ -94,6 +101,24 @@ func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *AppAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState AppAccessControlResponse) {
+}
+
+type AppDeployments []AppDeployment
+
+func (a AppDeployments) SetUnknown(context.Context, bool) error {
+	return nil
+}
+
+func (a AppDeployments) SetValue(context.Context, any) error {
+	return nil
+}
+
+func (a AppDeployments) GetUnknown(context.Context) bool {
+	return false
+}
+
+func (a AppDeployments) GetValue(context.Context) any {
+	return a
 }
 
 type AppDeployment struct {
@@ -281,6 +306,24 @@ func (newState *AppResourceSqlWarehouse) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *AppResourceSqlWarehouse) SyncEffectiveFieldsDuringRead(existingState AppResourceSqlWarehouse) {
+}
+
+type ApplicationStatuses []ApplicationStatus
+
+func (a ApplicationStatuses) SetUnknown(context.Context, bool) error {
+	return nil
+}
+
+func (a ApplicationStatuses) SetValue(context.Context, any) error {
+	return nil
+}
+
+func (a ApplicationStatuses) GetUnknown(context.Context) bool {
+	return false
+}
+
+func (a ApplicationStatuses) GetValue(context.Context) any {
+	return a
 }
 
 type ApplicationStatus struct {

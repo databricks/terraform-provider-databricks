@@ -33,7 +33,7 @@ The following arguments are required:
 
 * `workspace_id` - ID of the workspace. Change forces creation of a new resource.
 * `securable_name` - Name of securable. Change forces creation of a new resource.
-* `securable_type` - Type of securable. Can be `catalog`, `external-location`, `storage-credential` or `service_credential`. Default to `catalog`. Change forces creation of a new resource.
+* `securable_type` - Type of securable. Can be `catalog`, `external_location`, `storage_credential` or `credential`. Default to `catalog`. Change forces creation of a new resource.
 * `binding_type` - (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`.
 
 ## Import

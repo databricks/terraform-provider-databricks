@@ -11,9 +11,12 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package iam_tf
 
 import (
+	"context"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type AccessControlRequest struct {
@@ -35,6 +38,17 @@ func (newState *AccessControlRequest) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a AccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type AccessControlResponse struct {
@@ -62,6 +76,20 @@ func (a AccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a AccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: Permission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type ComplexValue struct {
 	Display types.String `tfsdk:"display" tf:"optional"`
 
@@ -84,6 +112,18 @@ func (a ComplexValue) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ComplexValue) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Display": types.StringType,
+			"Primary": types.BoolType,
+			"Ref":     types.StringType,
+			"Type":    types.StringType,
+			"Value":   types.StringType,
+		},
+	}
+}
+
 // Delete a group
 type DeleteAccountGroupRequest struct {
 	// Unique ID for a group in the Databricks account.
@@ -98,6 +138,14 @@ func (newState *DeleteAccountGroupRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a DeleteAccountGroupRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteAccountGroupRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 // Delete a service principal
@@ -116,6 +164,14 @@ func (a DeleteAccountServicePrincipalRequest) GetComplexFieldTypes() map[string]
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteAccountServicePrincipalRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
+}
+
 // Delete a user
 type DeleteAccountUserRequest struct {
 	// Unique ID for a user in the Databricks account.
@@ -130,6 +186,14 @@ func (newState *DeleteAccountUserRequest) SyncEffectiveFieldsDuringRead(existing
 
 func (a DeleteAccountUserRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteAccountUserRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 // Delete a group
@@ -148,6 +212,14 @@ func (a DeleteGroupRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteGroupRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
+}
+
 type DeleteResponse struct {
 }
 
@@ -159,6 +231,12 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState Dele
 
 func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete a service principal
@@ -177,6 +255,14 @@ func (a DeleteServicePrincipalRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteServicePrincipalRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
+}
+
 // Delete a user
 type DeleteUserRequest struct {
 	// Unique ID for a user in the Databricks workspace.
@@ -191,6 +277,14 @@ func (newState *DeleteUserRequest) SyncEffectiveFieldsDuringRead(existingState D
 
 func (a DeleteUserRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteUserRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 // Delete permissions assignment
@@ -211,6 +305,15 @@ func (a DeleteWorkspaceAssignmentRequest) GetComplexFieldTypes() map[string]refl
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteWorkspaceAssignmentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PrincipalId": types.Int64Type,
+			"WorkspaceId": types.Int64Type,
+		},
+	}
+}
+
 type DeleteWorkspacePermissionAssignmentResponse struct {
 }
 
@@ -222,6 +325,12 @@ func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFields
 
 func (a DeleteWorkspacePermissionAssignmentResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteWorkspacePermissionAssignmentResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Get group details
@@ -240,6 +349,14 @@ func (a GetAccountGroupRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetAccountGroupRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
+}
+
 // Get service principal details
 type GetAccountServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks account.
@@ -254,6 +371,14 @@ func (newState *GetAccountServicePrincipalRequest) SyncEffectiveFieldsDuringRead
 
 func (a GetAccountServicePrincipalRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetAccountServicePrincipalRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 // Get user details
@@ -293,6 +418,21 @@ func (a GetAccountUserRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetAccountUserRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":         types.StringType,
+			"Count":              types.Int64Type,
+			"ExcludedAttributes": types.StringType,
+			"Filter":             types.StringType,
+			"Id":                 types.StringType,
+			"SortBy":             types.StringType,
+			"SortOrder":          types.StringType,
+			"StartIndex":         types.Int64Type,
+		},
+	}
+}
+
 // Get assignable roles for a resource
 type GetAssignableRolesForResourceRequest struct {
 	// The resource name for which assignable roles will be listed.
@@ -309,6 +449,14 @@ func (a GetAssignableRolesForResourceRequest) GetComplexFieldTypes() map[string]
 	return map[string]reflect.Type{}
 }
 
+func (a GetAssignableRolesForResourceRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Resource": types.StringType,
+		},
+	}
+}
+
 type GetAssignableRolesForResourceResponse struct {
 	Roles types.List `tfsdk:"roles" tf:"optional"`
 }
@@ -322,6 +470,16 @@ func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuring
 func (a GetAssignableRolesForResourceResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Roles": reflect.TypeOf(Role{}),
+	}
+}
+
+func (a GetAssignableRolesForResourceResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Roles": basetypes.ListType{
+				ElemType: Role{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -341,6 +499,14 @@ func (a GetGroupRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetGroupRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
+}
+
 type GetPasswordPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
@@ -355,6 +521,16 @@ func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringRe
 func (a GetPasswordPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PermissionLevels": reflect.TypeOf(PasswordPermissionsDescription{}),
+	}
+}
+
+func (a GetPasswordPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: PasswordPermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -376,6 +552,15 @@ func (a GetPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a GetPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RequestObjectId":   types.StringType,
+			"RequestObjectType": types.StringType,
+		},
+	}
+}
+
 type GetPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
@@ -390,6 +575,16 @@ func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(exist
 func (a GetPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PermissionLevels": reflect.TypeOf(PermissionsDescription{}),
+	}
+}
+
+func (a GetPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: PermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -413,6 +608,15 @@ func (newState *GetPermissionRequest) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a GetPermissionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetPermissionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RequestObjectId":   types.StringType,
+			"RequestObjectType": types.StringType,
+		},
+	}
 }
 
 // Get a rule set
@@ -440,6 +644,15 @@ func (a GetRuleSetRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetRuleSetRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+			"Name": types.StringType,
+		},
+	}
+}
+
 // Get service principal details
 type GetServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks workspace.
@@ -454,6 +667,14 @@ func (newState *GetServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existi
 
 func (a GetServicePrincipalRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetServicePrincipalRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 // Get user details
@@ -493,6 +714,21 @@ func (a GetUserRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetUserRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":         types.StringType,
+			"Count":              types.Int64Type,
+			"ExcludedAttributes": types.StringType,
+			"Filter":             types.StringType,
+			"Id":                 types.StringType,
+			"SortBy":             types.StringType,
+			"SortOrder":          types.StringType,
+			"StartIndex":         types.Int64Type,
+		},
+	}
+}
+
 // List workspace permissions
 type GetWorkspaceAssignmentRequest struct {
 	// The workspace ID.
@@ -507,6 +743,14 @@ func (newState *GetWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringRead(exi
 
 func (a GetWorkspaceAssignmentRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetWorkspaceAssignmentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"WorkspaceId": types.Int64Type,
+		},
+	}
 }
 
 type GrantRule struct {
@@ -524,7 +768,18 @@ func (newState *GrantRule) SyncEffectiveFieldsDuringRead(existingState GrantRule
 
 func (a GrantRule) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Principals": reflect.TypeOf(""),
+		"Principals": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a GrantRule) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Principals": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Role": types.StringType,
+		},
 	}
 }
 
@@ -545,7 +800,7 @@ type Group struct {
 
 	Members types.List `tfsdk:"members" tf:"optional"`
 	// Container for the group identifier. Workspace local versus account.
-	Meta types.Object `tfsdk:"meta" tf:"optional,object"`
+	Meta types.List `tfsdk:"meta" tf:"optional,object"`
 	// Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles" tf:"optional"`
 	// The schema of the group.
@@ -565,7 +820,33 @@ func (a Group) GetComplexFieldTypes() map[string]reflect.Type {
 		"Members":      reflect.TypeOf(ComplexValue{}),
 		"Meta":         reflect.TypeOf(ResourceMeta{}),
 		"Roles":        reflect.TypeOf(ComplexValue{}),
-		"Schemas":      reflect.TypeOf(""),
+		"Schemas":      reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a Group) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DisplayName": types.StringType,
+			"Entitlements": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"ExternalId": types.StringType,
+			"Groups": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"Id": types.StringType,
+			"Members": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"Meta": ResourceMeta{}.ToAttrType(ctx),
+			"Roles": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"Schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -603,6 +884,20 @@ func (a ListAccountGroupsRequest) GetComplexFieldTypes() map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
+func (a ListAccountGroupsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":         types.StringType,
+			"Count":              types.Int64Type,
+			"ExcludedAttributes": types.StringType,
+			"Filter":             types.StringType,
+			"SortBy":             types.StringType,
+			"SortOrder":          types.StringType,
+			"StartIndex":         types.Int64Type,
+		},
+	}
+}
+
 // List service principals
 type ListAccountServicePrincipalsRequest struct {
 	// Comma-separated list of attributes to return in response.
@@ -635,6 +930,20 @@ func (newState *ListAccountServicePrincipalsRequest) SyncEffectiveFieldsDuringRe
 
 func (a ListAccountServicePrincipalsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListAccountServicePrincipalsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":         types.StringType,
+			"Count":              types.Int64Type,
+			"ExcludedAttributes": types.StringType,
+			"Filter":             types.StringType,
+			"SortBy":             types.StringType,
+			"SortOrder":          types.StringType,
+			"StartIndex":         types.Int64Type,
+		},
+	}
 }
 
 // List users
@@ -672,6 +981,20 @@ func (a ListAccountUsersRequest) GetComplexFieldTypes() map[string]reflect.Type 
 	return map[string]reflect.Type{}
 }
 
+func (a ListAccountUsersRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":         types.StringType,
+			"Count":              types.Int64Type,
+			"ExcludedAttributes": types.StringType,
+			"Filter":             types.StringType,
+			"SortBy":             types.StringType,
+			"SortOrder":          types.StringType,
+			"StartIndex":         types.Int64Type,
+		},
+	}
+}
+
 // List group details
 type ListGroupsRequest struct {
 	// Comma-separated list of attributes to return in response.
@@ -706,6 +1029,20 @@ func (a ListGroupsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListGroupsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":         types.StringType,
+			"Count":              types.Int64Type,
+			"ExcludedAttributes": types.StringType,
+			"Filter":             types.StringType,
+			"SortBy":             types.StringType,
+			"SortOrder":          types.StringType,
+			"StartIndex":         types.Int64Type,
+		},
+	}
+}
+
 type ListGroupsResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
@@ -729,7 +1066,23 @@ func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringRead(existingState 
 func (a ListGroupsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Resources": reflect.TypeOf(Group{}),
-		"Schemas":   reflect.TypeOf(""),
+		"Schemas":   reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ListGroupsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ItemsPerPage": types.Int64Type,
+			"Resources": basetypes.ListType{
+				ElemType: Group{}.ToAttrType(ctx),
+			},
+			"Schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"StartIndex":   types.Int64Type,
+			"TotalResults": types.Int64Type,
+		},
 	}
 }
 
@@ -756,7 +1109,23 @@ func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringRead(exis
 func (a ListServicePrincipalResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Resources": reflect.TypeOf(ServicePrincipal{}),
-		"Schemas":   reflect.TypeOf(""),
+		"Schemas":   reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ListServicePrincipalResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ItemsPerPage": types.Int64Type,
+			"Resources": basetypes.ListType{
+				ElemType: ServicePrincipal{}.ToAttrType(ctx),
+			},
+			"Schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"StartIndex":   types.Int64Type,
+			"TotalResults": types.Int64Type,
+		},
 	}
 }
 
@@ -794,6 +1163,20 @@ func (a ListServicePrincipalsRequest) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a ListServicePrincipalsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":         types.StringType,
+			"Count":              types.Int64Type,
+			"ExcludedAttributes": types.StringType,
+			"Filter":             types.StringType,
+			"SortBy":             types.StringType,
+			"SortOrder":          types.StringType,
+			"StartIndex":         types.Int64Type,
+		},
+	}
+}
+
 // List users
 type ListUsersRequest struct {
 	// Comma-separated list of attributes to return in response.
@@ -829,6 +1212,20 @@ func (a ListUsersRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListUsersRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":         types.StringType,
+			"Count":              types.Int64Type,
+			"ExcludedAttributes": types.StringType,
+			"Filter":             types.StringType,
+			"SortBy":             types.StringType,
+			"SortOrder":          types.StringType,
+			"StartIndex":         types.Int64Type,
+		},
+	}
+}
+
 type ListUsersResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
@@ -852,7 +1249,23 @@ func (newState *ListUsersResponse) SyncEffectiveFieldsDuringRead(existingState L
 func (a ListUsersResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Resources": reflect.TypeOf(User{}),
-		"Schemas":   reflect.TypeOf(""),
+		"Schemas":   reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ListUsersResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ItemsPerPage": types.Int64Type,
+			"Resources": basetypes.ListType{
+				ElemType: User{}.ToAttrType(ctx),
+			},
+			"Schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"StartIndex":   types.Int64Type,
+			"TotalResults": types.Int64Type,
+		},
 	}
 }
 
@@ -870,6 +1283,14 @@ func (newState *ListWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringRead(ex
 
 func (a ListWorkspaceAssignmentRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListWorkspaceAssignmentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"WorkspaceId": types.Int64Type,
+		},
+	}
 }
 
 type MigratePermissionsRequest struct {
@@ -894,6 +1315,17 @@ func (a MigratePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a MigratePermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FromWorkspaceGroupName": types.StringType,
+			"Size":                   types.Int64Type,
+			"ToAccountGroupName":     types.StringType,
+			"WorkspaceId":            types.Int64Type,
+		},
+	}
+}
+
 type MigratePermissionsResponse struct {
 	// Number of permissions migrated.
 	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated" tf:"optional"`
@@ -907,6 +1339,14 @@ func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringRead(existi
 
 func (a MigratePermissionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a MigratePermissionsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionsMigrated": types.Int64Type,
+		},
+	}
 }
 
 type Name struct {
@@ -924,6 +1364,15 @@ func (newState *Name) SyncEffectiveFieldsDuringRead(existingState Name) {
 
 func (a Name) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a Name) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FamilyName": types.StringType,
+			"GivenName":  types.StringType,
+		},
+	}
 }
 
 type ObjectPermissions struct {
@@ -946,6 +1395,18 @@ func (a ObjectPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ObjectPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: AccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type PartialUpdate struct {
 	// Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -965,7 +1426,21 @@ func (newState *PartialUpdate) SyncEffectiveFieldsDuringRead(existingState Parti
 func (a PartialUpdate) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Operations": reflect.TypeOf(Patch{}),
-		"Schemas":    reflect.TypeOf(""),
+		"Schemas":    reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a PartialUpdate) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+			"Operations": basetypes.ListType{
+				ElemType: Patch{}.ToAttrType(ctx),
+			},
+			"Schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -988,6 +1463,17 @@ func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringRead(exis
 
 func (a PasswordAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PasswordAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type PasswordAccessControlResponse struct {
@@ -1015,6 +1501,20 @@ func (a PasswordAccessControlResponse) GetComplexFieldTypes() map[string]reflect
 	}
 }
 
+func (a PasswordAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: PasswordPermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type PasswordPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -1031,7 +1531,19 @@ func (newState *PasswordPermission) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a PasswordPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a PasswordPermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -1055,6 +1567,18 @@ func (a PasswordPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a PasswordPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: PasswordAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type PasswordPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -1071,6 +1595,15 @@ func (a PasswordPermissionsDescription) GetComplexFieldTypes() map[string]reflec
 	return map[string]reflect.Type{}
 }
 
+func (a PasswordPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
+}
+
 type PasswordPermissionsRequest struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 }
@@ -1084,6 +1617,16 @@ func (newState *PasswordPermissionsRequest) SyncEffectiveFieldsDuringRead(existi
 func (a PasswordPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AccessControlList": reflect.TypeOf(PasswordAccessControlRequest{}),
+	}
+}
+
+func (a PasswordPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: PasswordAccessControlRequest{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -1106,6 +1649,16 @@ func (a Patch) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a Patch) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Op":    types.StringType,
+			"Path":  types.StringType,
+			"Value": types.ObjectType{},
+		},
+	}
+}
+
 type PatchResponse struct {
 }
 
@@ -1117,6 +1670,12 @@ func (newState *PatchResponse) SyncEffectiveFieldsDuringRead(existingState Patch
 
 func (a PatchResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PatchResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type Permission struct {
@@ -1135,7 +1694,19 @@ func (newState *Permission) SyncEffectiveFieldsDuringRead(existingState Permissi
 
 func (a Permission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a Permission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -1147,7 +1718,7 @@ type PermissionAssignment struct {
 	// The permissions level of the principal.
 	Permissions types.List `tfsdk:"permissions" tf:"optional"`
 	// Information about the principal assigned to the workspace.
-	Principal types.Object `tfsdk:"principal" tf:"optional,object"`
+	Principal types.List `tfsdk:"principal" tf:"optional,object"`
 }
 
 func (newState *PermissionAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignment) {
@@ -1158,8 +1729,20 @@ func (newState *PermissionAssignment) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a PermissionAssignment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Permissions": reflect.TypeOf(""),
+		"Permissions": reflect.TypeOf(types.StringType),
 		"Principal":   reflect.TypeOf(PrincipalOutput{}),
+	}
+}
+
+func (a PermissionAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Error": types.StringType,
+			"Permissions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Principal": PrincipalOutput{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1180,6 +1763,16 @@ func (a PermissionAssignments) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a PermissionAssignments) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionAssignments": basetypes.ListType{
+				ElemType: PermissionAssignment{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type PermissionOutput struct {
 	// The results of a permissions query.
 	Description types.String `tfsdk:"description" tf:"optional"`
@@ -1197,6 +1790,15 @@ func (a PermissionOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PermissionOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
+}
+
 type PermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -1211,6 +1813,15 @@ func (newState *PermissionsDescription) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a PermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type PermissionsRequest struct {
@@ -1234,6 +1845,18 @@ func (newState *PermissionsRequest) SyncEffectiveFieldsDuringRead(existingState 
 func (a PermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AccessControlList": reflect.TypeOf(AccessControlRequest{}),
+	}
+}
+
+func (a PermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: AccessControlRequest{}.ToAttrType(ctx),
+			},
+			"RequestObjectId":   types.StringType,
+			"RequestObjectType": types.StringType,
+		},
 	}
 }
 
@@ -1262,6 +1885,18 @@ func (a PrincipalOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PrincipalOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"PrincipalId":          types.Int64Type,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type ResourceMeta struct {
 	// Identifier for group type. Can be local workspace group
 	// (`WorkspaceGroup`) or account group (`Group`).
@@ -1278,6 +1913,14 @@ func (a ResourceMeta) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ResourceMeta) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ResourceType": types.StringType,
+		},
+	}
+}
+
 type Role struct {
 	// Role to assign to a principal or a list of principals on a resource.
 	Name types.String `tfsdk:"name" tf:""`
@@ -1291,6 +1934,14 @@ func (newState *Role) SyncEffectiveFieldsDuringRead(existingState Role) {
 
 func (a Role) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a Role) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
 }
 
 type RuleSetResponse struct {
@@ -1314,6 +1965,18 @@ func (a RuleSetResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a RuleSetResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+			"GrantRules": basetypes.ListType{
+				ElemType: GrantRule{}.ToAttrType(ctx),
+			},
+			"Name": types.StringType,
+		},
+	}
+}
+
 type RuleSetUpdateRequest struct {
 	// The expected etag of the rule set to update. The update will fail if the
 	// value does not match the value that is stored in account access control
@@ -1334,6 +1997,18 @@ func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringRead(existingStat
 func (a RuleSetUpdateRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"GrantRules": reflect.TypeOf(GrantRule{}),
+	}
+}
+
+func (a RuleSetUpdateRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+			"GrantRules": basetypes.ListType{
+				ElemType: GrantRule{}.ToAttrType(ctx),
+			},
+			"Name": types.StringType,
+		},
 	}
 }
 
@@ -1372,7 +2047,31 @@ func (a ServicePrincipal) GetComplexFieldTypes() map[string]reflect.Type {
 		"Entitlements": reflect.TypeOf(ComplexValue{}),
 		"Groups":       reflect.TypeOf(ComplexValue{}),
 		"Roles":        reflect.TypeOf(ComplexValue{}),
-		"Schemas":      reflect.TypeOf(""),
+		"Schemas":      reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ServicePrincipal) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Active":        types.BoolType,
+			"ApplicationId": types.StringType,
+			"DisplayName":   types.StringType,
+			"Entitlements": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"ExternalId": types.StringType,
+			"Groups": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"Id": types.StringType,
+			"Roles": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"Schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1389,11 +2088,17 @@ func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type UpdateRuleSetRequest struct {
 	// Name of the rule set.
 	Name types.String `tfsdk:"name" tf:""`
 
-	RuleSet types.Object `tfsdk:"rule_set" tf:"object"`
+	RuleSet types.List `tfsdk:"rule_set" tf:"object"`
 }
 
 func (newState *UpdateRuleSetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRuleSetRequest) {
@@ -1405,6 +2110,15 @@ func (newState *UpdateRuleSetRequest) SyncEffectiveFieldsDuringRead(existingStat
 func (a UpdateRuleSetRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"RuleSet": reflect.TypeOf(RuleSetUpdateRequest{}),
+	}
+}
+
+func (a UpdateRuleSetRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name":    types.StringType,
+			"RuleSet": RuleSetUpdateRequest{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1430,7 +2144,19 @@ func (newState *UpdateWorkspaceAssignments) SyncEffectiveFieldsDuringRead(existi
 
 func (a UpdateWorkspaceAssignments) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Permissions": reflect.TypeOf(""),
+		"Permissions": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a UpdateWorkspaceAssignments) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Permissions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PrincipalId": types.Int64Type,
+			"WorkspaceId": types.Int64Type,
+		},
 	}
 }
 
@@ -1459,7 +2185,7 @@ type User struct {
 	// provided by the client will be ignored.
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Name types.Object `tfsdk:"name" tf:"optional,object"`
+	Name types.List `tfsdk:"name" tf:"optional,object"`
 	// Corresponds to AWS instance profile/arn role.
 	Roles types.List `tfsdk:"roles" tf:"optional"`
 	// The schema of the user.
@@ -1481,7 +2207,35 @@ func (a User) GetComplexFieldTypes() map[string]reflect.Type {
 		"Groups":       reflect.TypeOf(ComplexValue{}),
 		"Name":         reflect.TypeOf(Name{}),
 		"Roles":        reflect.TypeOf(ComplexValue{}),
-		"Schemas":      reflect.TypeOf(""),
+		"Schemas":      reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a User) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Active":      types.BoolType,
+			"DisplayName": types.StringType,
+			"Emails": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"Entitlements": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"ExternalId": types.StringType,
+			"Groups": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"Id":   types.StringType,
+			"Name": Name{}.ToAttrType(ctx),
+			"Roles": basetypes.ListType{
+				ElemType: ComplexValue{}.ToAttrType(ctx),
+			},
+			"Schemas": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"UserName": types.StringType,
+		},
 	}
 }
 
@@ -1499,5 +2253,15 @@ func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringRead(existingStat
 func (a WorkspacePermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Permissions": reflect.TypeOf(PermissionOutput{}),
+	}
+}
+
+func (a WorkspacePermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Permissions": basetypes.ListType{
+				ElemType: PermissionOutput{}.ToAttrType(ctx),
+			},
+		},
 	}
 }

@@ -11,10 +11,13 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package billing_tf
 
 import (
+	"context"
 	"io"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type ActionConfiguration struct {
@@ -34,6 +37,16 @@ func (newState *ActionConfiguration) SyncEffectiveFieldsDuringRead(existingState
 
 func (a ActionConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ActionConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ActionConfigurationId": types.StringType,
+			"ActionType":            types.StringType,
+			"Target":                types.StringType,
+		},
+	}
 }
 
 type AlertConfiguration struct {
@@ -67,6 +80,21 @@ func (a AlertConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a AlertConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ActionConfigurations": basetypes.ListType{
+				ElemType: ActionConfiguration{}.ToAttrType(ctx),
+			},
+			"AlertConfigurationId": types.StringType,
+			"QuantityThreshold":    types.StringType,
+			"QuantityType":         types.StringType,
+			"TimePeriod":           types.StringType,
+			"TriggerType":          types.StringType,
+		},
+	}
+}
+
 type BudgetConfiguration struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
@@ -83,7 +111,7 @@ type BudgetConfiguration struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter types.Object `tfsdk:"filter" tf:"optional,object"`
+	Filter types.List `tfsdk:"filter" tf:"optional,object"`
 	// Update time of this budget configuration.
 	UpdateTime types.Int64 `tfsdk:"update_time" tf:"optional"`
 }
@@ -101,13 +129,29 @@ func (a BudgetConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a BudgetConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccountId": types.StringType,
+			"AlertConfigurations": basetypes.ListType{
+				ElemType: AlertConfiguration{}.ToAttrType(ctx),
+			},
+			"BudgetConfigurationId": types.StringType,
+			"CreateTime":            types.Int64Type,
+			"DisplayName":           types.StringType,
+			"Filter":                BudgetConfigurationFilter{}.ToAttrType(ctx),
+			"UpdateTime":            types.Int64Type,
+		},
+	}
+}
+
 type BudgetConfigurationFilter struct {
 	// A list of tag keys and values that will limit the budget to usage that
 	// includes those specific custom tags. Tags are case-sensitive and should
 	// be entered exactly as they appear in your usage data.
 	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// If provided, usage must match with the provided Databricks workspace IDs.
-	WorkspaceId types.Object `tfsdk:"workspace_id" tf:"optional,object"`
+	WorkspaceId types.List `tfsdk:"workspace_id" tf:"optional,object"`
 }
 
 func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilter) {
@@ -120,6 +164,17 @@ func (a BudgetConfigurationFilter) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{
 		"Tags":        reflect.TypeOf(BudgetConfigurationFilterTagClause{}),
 		"WorkspaceId": reflect.TypeOf(BudgetConfigurationFilterWorkspaceIdClause{}),
+	}
+}
+
+func (a BudgetConfigurationFilter) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Tags": basetypes.ListType{
+				ElemType: BudgetConfigurationFilterTagClause{}.ToAttrType(ctx),
+			},
+			"WorkspaceId": BudgetConfigurationFilterWorkspaceIdClause{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -137,14 +192,25 @@ func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringRead(e
 
 func (a BudgetConfigurationFilterClause) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Values": reflect.TypeOf(""),
+		"Values": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a BudgetConfigurationFilterClause) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Operator": types.StringType,
+			"Values": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
 type BudgetConfigurationFilterTagClause struct {
 	Key types.String `tfsdk:"key" tf:"optional"`
 
-	Value types.Object `tfsdk:"value" tf:"optional,object"`
+	Value types.List `tfsdk:"value" tf:"optional,object"`
 }
 
 func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringCreateOrUpdate(plan BudgetConfigurationFilterTagClause) {
@@ -156,6 +222,15 @@ func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringRea
 func (a BudgetConfigurationFilterTagClause) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Value": reflect.TypeOf(BudgetConfigurationFilterClause{}),
+	}
+}
+
+func (a BudgetConfigurationFilterTagClause) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Key":   types.StringType,
+			"Value": BudgetConfigurationFilterClause{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -173,7 +248,18 @@ func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsD
 
 func (a BudgetConfigurationFilterWorkspaceIdClause) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Values": reflect.TypeOf(0),
+		"Values": reflect.TypeOf(types.Int64Type),
+	}
+}
+
+func (a BudgetConfigurationFilterWorkspaceIdClause) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Operator": types.StringType,
+			"Values": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+		},
 	}
 }
 
@@ -197,6 +283,15 @@ func (a CreateBillingUsageDashboardRequest) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a CreateBillingUsageDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DashboardType": types.StringType,
+			"WorkspaceId":   types.Int64Type,
+		},
+	}
+}
+
 type CreateBillingUsageDashboardResponse struct {
 	// The unique id of the usage dashboard.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
@@ -212,6 +307,14 @@ func (a CreateBillingUsageDashboardResponse) GetComplexFieldTypes() map[string]r
 	return map[string]reflect.Type{}
 }
 
+func (a CreateBillingUsageDashboardResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DashboardId": types.StringType,
+		},
+	}
+}
+
 type CreateBudgetConfigurationBudget struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
@@ -224,7 +327,7 @@ type CreateBudgetConfigurationBudget struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter types.Object `tfsdk:"filter" tf:"optional,object"`
+	Filter types.List `tfsdk:"filter" tf:"optional,object"`
 }
 
 func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationBudget) {
@@ -237,6 +340,19 @@ func (a CreateBudgetConfigurationBudget) GetComplexFieldTypes() map[string]refle
 	return map[string]reflect.Type{
 		"AlertConfigurations": reflect.TypeOf(CreateBudgetConfigurationBudgetAlertConfigurations{}),
 		"Filter":              reflect.TypeOf(BudgetConfigurationFilter{}),
+	}
+}
+
+func (a CreateBudgetConfigurationBudget) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccountId": types.StringType,
+			"AlertConfigurations": basetypes.ListType{
+				ElemType: CreateBudgetConfigurationBudgetAlertConfigurations{}.ToAttrType(ctx),
+			},
+			"DisplayName": types.StringType,
+			"Filter":      BudgetConfigurationFilter{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -255,6 +371,15 @@ func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffecti
 
 func (a CreateBudgetConfigurationBudgetActionConfigurations) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CreateBudgetConfigurationBudgetActionConfigurations) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ActionType": types.StringType,
+			"Target":     types.StringType,
+		},
+	}
 }
 
 type CreateBudgetConfigurationBudgetAlertConfigurations struct {
@@ -286,9 +411,23 @@ func (a CreateBudgetConfigurationBudgetAlertConfigurations) GetComplexFieldTypes
 	}
 }
 
+func (a CreateBudgetConfigurationBudgetAlertConfigurations) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ActionConfigurations": basetypes.ListType{
+				ElemType: CreateBudgetConfigurationBudgetActionConfigurations{}.ToAttrType(ctx),
+			},
+			"QuantityThreshold": types.StringType,
+			"QuantityType":      types.StringType,
+			"TimePeriod":        types.StringType,
+			"TriggerType":       types.StringType,
+		},
+	}
+}
+
 type CreateBudgetConfigurationRequest struct {
 	// Properties of the new budget configuration.
-	Budget types.Object `tfsdk:"budget" tf:"object"`
+	Budget types.List `tfsdk:"budget" tf:"object"`
 }
 
 func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationRequest) {
@@ -303,9 +442,17 @@ func (a CreateBudgetConfigurationRequest) GetComplexFieldTypes() map[string]refl
 	}
 }
 
+func (a CreateBudgetConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Budget": CreateBudgetConfigurationBudget{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type CreateBudgetConfigurationResponse struct {
 	// The created budget configuration.
-	Budget types.Object `tfsdk:"budget" tf:"optional,object"`
+	Budget types.List `tfsdk:"budget" tf:"optional,object"`
 }
 
 func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateBudgetConfigurationResponse) {
@@ -317,6 +464,14 @@ func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead
 func (a CreateBudgetConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Budget": reflect.TypeOf(BudgetConfiguration{}),
+	}
+}
+
+func (a CreateBudgetConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Budget": BudgetConfiguration{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -400,7 +555,25 @@ func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringR
 
 func (a CreateLogDeliveryConfigurationParams) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"WorkspaceIdsFilter": reflect.TypeOf(0),
+		"WorkspaceIdsFilter": reflect.TypeOf(types.Int64Type),
+	}
+}
+
+func (a CreateLogDeliveryConfigurationParams) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ConfigName":             types.StringType,
+			"CredentialsId":          types.StringType,
+			"DeliveryPathPrefix":     types.StringType,
+			"DeliveryStartTime":      types.StringType,
+			"LogType":                types.StringType,
+			"OutputFormat":           types.StringType,
+			"Status":                 types.StringType,
+			"StorageConfigurationId": types.StringType,
+			"WorkspaceIdsFilter": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+		},
 	}
 }
 
@@ -420,6 +593,14 @@ func (a DeleteBudgetConfigurationRequest) GetComplexFieldTypes() map[string]refl
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteBudgetConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BudgetId": types.StringType,
+		},
+	}
+}
+
 type DeleteBudgetConfigurationResponse struct {
 }
 
@@ -431,6 +612,12 @@ func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead
 
 func (a DeleteBudgetConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteBudgetConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Return billable usage logs
@@ -457,6 +644,16 @@ func (a DownloadRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DownloadRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"EndMonth":     types.StringType,
+			"PersonalData": types.BoolType,
+			"StartMonth":   types.StringType,
+		},
+	}
+}
+
 type DownloadResponse struct {
 	Contents io.ReadCloser `tfsdk:"-"`
 }
@@ -469,6 +666,14 @@ func (newState *DownloadResponse) SyncEffectiveFieldsDuringRead(existingState Do
 
 func (a DownloadResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DownloadResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Contents": types.ObjectType{},
+		},
+	}
 }
 
 // Get usage dashboard
@@ -492,6 +697,15 @@ func (a GetBillingUsageDashboardRequest) GetComplexFieldTypes() map[string]refle
 	return map[string]reflect.Type{}
 }
 
+func (a GetBillingUsageDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DashboardType": types.StringType,
+			"WorkspaceId":   types.Int64Type,
+		},
+	}
+}
+
 type GetBillingUsageDashboardResponse struct {
 	// The unique id of the usage dashboard.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
@@ -507,6 +721,15 @@ func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(
 
 func (a GetBillingUsageDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetBillingUsageDashboardResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DashboardId":  types.StringType,
+			"DashboardUrl": types.StringType,
+		},
+	}
 }
 
 // Get budget
@@ -525,8 +748,16 @@ func (a GetBudgetConfigurationRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a GetBudgetConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BudgetId": types.StringType,
+		},
+	}
+}
+
 type GetBudgetConfigurationResponse struct {
-	Budget types.Object `tfsdk:"budget" tf:"optional,object"`
+	Budget types.List `tfsdk:"budget" tf:"optional,object"`
 }
 
 func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBudgetConfigurationResponse) {
@@ -538,6 +769,14 @@ func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(ex
 func (a GetBudgetConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Budget": reflect.TypeOf(BudgetConfiguration{}),
+	}
+}
+
+func (a GetBudgetConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Budget": BudgetConfiguration{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -557,6 +796,14 @@ func (a GetLogDeliveryRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetLogDeliveryRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LogDeliveryConfigurationId": types.StringType,
+		},
+	}
+}
+
 // Get all budgets
 type ListBudgetConfigurationsRequest struct {
 	// A page token received from a previous get all budget configurations call.
@@ -573,6 +820,14 @@ func (newState *ListBudgetConfigurationsRequest) SyncEffectiveFieldsDuringRead(e
 
 func (a ListBudgetConfigurationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListBudgetConfigurationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PageToken": types.StringType,
+		},
+	}
 }
 
 type ListBudgetConfigurationsResponse struct {
@@ -594,6 +849,17 @@ func (a ListBudgetConfigurationsResponse) GetComplexFieldTypes() map[string]refl
 	}
 }
 
+func (a ListBudgetConfigurationsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Budgets": basetypes.ListType{
+				ElemType: BudgetConfiguration{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
+	}
+}
+
 // Get all log delivery configurations
 type ListLogDeliveryRequest struct {
 	// Filter by credential configuration ID.
@@ -612,6 +878,16 @@ func (newState *ListLogDeliveryRequest) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a ListLogDeliveryRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListLogDeliveryRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialsId":          types.StringType,
+			"Status":                 types.StringType,
+			"StorageConfigurationId": types.StringType,
+		},
+	}
 }
 
 type LogDeliveryConfiguration struct {
@@ -642,7 +918,7 @@ type LogDeliveryConfiguration struct {
 	// available for usage before March 2019 (`2019-03`).
 	DeliveryStartTime types.String `tfsdk:"delivery_start_time" tf:"optional"`
 	// Databricks log delivery status.
-	LogDeliveryStatus types.Object `tfsdk:"log_delivery_status" tf:"optional,object"`
+	LogDeliveryStatus types.List `tfsdk:"log_delivery_status" tf:"optional,object"`
 	// Log delivery type. Supported values are:
 	//
 	// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the
@@ -707,7 +983,30 @@ func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existing
 func (a LogDeliveryConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"LogDeliveryStatus":  reflect.TypeOf(LogDeliveryStatus{}),
-		"WorkspaceIdsFilter": reflect.TypeOf(0),
+		"WorkspaceIdsFilter": reflect.TypeOf(types.Int64Type),
+	}
+}
+
+func (a LogDeliveryConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccountId":              types.StringType,
+			"ConfigId":               types.StringType,
+			"ConfigName":             types.StringType,
+			"CreationTime":           types.Int64Type,
+			"CredentialsId":          types.StringType,
+			"DeliveryPathPrefix":     types.StringType,
+			"DeliveryStartTime":      types.StringType,
+			"LogDeliveryStatus":      LogDeliveryStatus{}.ToAttrType(ctx),
+			"LogType":                types.StringType,
+			"OutputFormat":           types.StringType,
+			"Status":                 types.StringType,
+			"StorageConfigurationId": types.StringType,
+			"UpdateTime":             types.Int64Type,
+			"WorkspaceIdsFilter": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+		},
 	}
 }
 
@@ -744,6 +1043,17 @@ func (a LogDeliveryStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a LogDeliveryStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LastAttemptTime":           types.StringType,
+			"LastSuccessfulAttemptTime": types.StringType,
+			"Message":                   types.StringType,
+			"Status":                    types.StringType,
+		},
+	}
+}
+
 type PatchStatusResponse struct {
 }
 
@@ -755,6 +1065,12 @@ func (newState *PatchStatusResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a PatchStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PatchStatusResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type UpdateBudgetConfigurationBudget struct {
@@ -771,7 +1087,7 @@ type UpdateBudgetConfigurationBudget struct {
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
 	// matched for usage to be included.
-	Filter types.Object `tfsdk:"filter" tf:"optional,object"`
+	Filter types.List `tfsdk:"filter" tf:"optional,object"`
 }
 
 func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationBudget) {
@@ -787,10 +1103,24 @@ func (a UpdateBudgetConfigurationBudget) GetComplexFieldTypes() map[string]refle
 	}
 }
 
+func (a UpdateBudgetConfigurationBudget) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccountId": types.StringType,
+			"AlertConfigurations": basetypes.ListType{
+				ElemType: AlertConfiguration{}.ToAttrType(ctx),
+			},
+			"BudgetConfigurationId": types.StringType,
+			"DisplayName":           types.StringType,
+			"Filter":                BudgetConfigurationFilter{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type UpdateBudgetConfigurationRequest struct {
 	// The updated budget. This will overwrite the budget specified by the
 	// budget ID.
-	Budget types.Object `tfsdk:"budget" tf:"object"`
+	Budget types.List `tfsdk:"budget" tf:"object"`
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
 }
@@ -807,9 +1137,18 @@ func (a UpdateBudgetConfigurationRequest) GetComplexFieldTypes() map[string]refl
 	}
 }
 
+func (a UpdateBudgetConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Budget":   UpdateBudgetConfigurationBudget{}.ToAttrType(ctx),
+			"BudgetId": types.StringType,
+		},
+	}
+}
+
 type UpdateBudgetConfigurationResponse struct {
 	// The updated budget.
-	Budget types.Object `tfsdk:"budget" tf:"optional,object"`
+	Budget types.List `tfsdk:"budget" tf:"optional,object"`
 }
 
 func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetConfigurationResponse) {
@@ -821,6 +1160,14 @@ func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead
 func (a UpdateBudgetConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Budget": reflect.TypeOf(BudgetConfiguration{}),
+	}
+}
+
+func (a UpdateBudgetConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Budget": BudgetConfiguration{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -845,8 +1192,17 @@ func (a UpdateLogDeliveryConfigurationStatusRequest) GetComplexFieldTypes() map[
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateLogDeliveryConfigurationStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LogDeliveryConfigurationId": types.StringType,
+			"Status":                     types.StringType,
+		},
+	}
+}
+
 type WrappedCreateLogDeliveryConfiguration struct {
-	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration" tf:"optional,object"`
+	LogDeliveryConfiguration types.List `tfsdk:"log_delivery_configuration" tf:"optional,object"`
 }
 
 func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedCreateLogDeliveryConfiguration) {
@@ -861,8 +1217,16 @@ func (a WrappedCreateLogDeliveryConfiguration) GetComplexFieldTypes() map[string
 	}
 }
 
+func (a WrappedCreateLogDeliveryConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LogDeliveryConfiguration": CreateLogDeliveryConfigurationParams{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type WrappedLogDeliveryConfiguration struct {
-	LogDeliveryConfiguration types.Object `tfsdk:"log_delivery_configuration" tf:"optional,object"`
+	LogDeliveryConfiguration types.List `tfsdk:"log_delivery_configuration" tf:"optional,object"`
 }
 
 func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan WrappedLogDeliveryConfiguration) {
@@ -874,6 +1238,14 @@ func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(e
 func (a WrappedLogDeliveryConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"LogDeliveryConfiguration": reflect.TypeOf(LogDeliveryConfiguration{}),
+	}
+}
+
+func (a WrappedLogDeliveryConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LogDeliveryConfiguration": LogDeliveryConfiguration{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -890,5 +1262,15 @@ func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringRead(
 func (a WrappedLogDeliveryConfigurations) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"LogDeliveryConfigurations": reflect.TypeOf(LogDeliveryConfiguration{}),
+	}
+}
+
+func (a WrappedLogDeliveryConfigurations) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LogDeliveryConfigurations": basetypes.ListType{
+				ElemType: LogDeliveryConfiguration{}.ToAttrType(ctx),
+			},
+		},
 	}
 }

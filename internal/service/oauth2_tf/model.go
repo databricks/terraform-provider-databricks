@@ -11,6 +11,8 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package oauth2_tf
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -21,18 +23,26 @@ type CreateCustomAppIntegration struct {
 	// Name of the custom OAuth app
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// List of OAuth redirect urls
-	RedirectUrls []types.String `tfsdk:"redirect_urls" tf:"optional"`
+	RedirectUrls types.List `tfsdk:"redirect_urls" tf:"optional"`
 	// OAuth scopes granted to the application. Supported scopes: all-apis, sql,
 	// offline_access, openid, profile, email.
-	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
+	Scopes types.List `tfsdk:"scopes" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegration) {
 }
 
 func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegration) {
+}
+
+func (a CreateCustomAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RedirectUrls":      reflect.TypeOf(""),
+		"Scopes":            reflect.TypeOf(""),
+		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
 }
 
 type CreateCustomAppIntegrationOutput struct {
@@ -51,18 +61,28 @@ func (newState *CreateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreat
 func (newState *CreateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegrationOutput) {
 }
 
+func (a CreateCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreatePublishedAppIntegration struct {
 	// App id of the OAuth published app integration. For example power-bi,
 	// tableau-deskop
 	AppId types.String `tfsdk:"app_id" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegration) {
 }
 
 func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegration) {
+}
+
+func (a CreatePublishedAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
 }
 
 type CreatePublishedAppIntegrationOutput struct {
@@ -76,6 +96,10 @@ func (newState *CreatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCr
 func (newState *CreatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegrationOutput) {
 }
 
+func (a CreatePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Create service principal secret
 type CreateServicePrincipalSecretRequest struct {
 	// The service principal ID.
@@ -86,6 +110,10 @@ func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringCr
 }
 
 func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretRequest) {
+}
+
+func (a CreateServicePrincipalSecretRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type CreateServicePrincipalSecretResponse struct {
@@ -109,6 +137,10 @@ func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringC
 func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretResponse) {
 }
 
+func (a CreateServicePrincipalSecretResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DataPlaneInfo struct {
 	// Authorization details as a string.
 	AuthorizationDetails types.String `tfsdk:"authorization_details" tf:"optional"`
@@ -122,6 +154,10 @@ func (newState *DataPlaneInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Data
 func (newState *DataPlaneInfo) SyncEffectiveFieldsDuringRead(existingState DataPlaneInfo) {
 }
 
+func (a DataPlaneInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteCustomAppIntegrationOutput struct {
 }
 
@@ -129,6 +165,10 @@ func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreat
 }
 
 func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationOutput) {
+}
+
+func (a DeleteCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete Custom OAuth App Integration
@@ -142,6 +182,10 @@ func (newState *DeleteCustomAppIntegrationRequest) SyncEffectiveFieldsDuringCrea
 func (newState *DeleteCustomAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationRequest) {
 }
 
+func (a DeleteCustomAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeletePublishedAppIntegrationOutput struct {
 }
 
@@ -149,6 +193,10 @@ func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCr
 }
 
 func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationOutput) {
+}
+
+func (a DeletePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete Published OAuth App Integration
@@ -162,6 +210,10 @@ func (newState *DeletePublishedAppIntegrationRequest) SyncEffectiveFieldsDuringC
 func (newState *DeletePublishedAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationRequest) {
 }
 
+func (a DeletePublishedAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteResponse struct {
 }
 
@@ -169,6 +221,10 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 }
 
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+}
+
+func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete service principal secret
@@ -183,6 +239,10 @@ func (newState *DeleteServicePrincipalSecretRequest) SyncEffectiveFieldsDuringCr
 }
 
 func (newState *DeleteServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRead(existingState DeleteServicePrincipalSecretRequest) {
+}
+
+func (a DeleteServicePrincipalSecretRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type GetCustomAppIntegrationOutput struct {
@@ -202,17 +262,25 @@ type GetCustomAppIntegrationOutput struct {
 	// The display name of the custom OAuth app
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// List of OAuth redirect urls
-	RedirectUrls []types.String `tfsdk:"redirect_urls" tf:"optional"`
+	RedirectUrls types.List `tfsdk:"redirect_urls" tf:"optional"`
 
-	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
+	Scopes types.List `tfsdk:"scopes" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput) {
 }
 
 func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationOutput) {
+}
+
+func (a GetCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RedirectUrls":      reflect.TypeOf(""),
+		"Scopes":            reflect.TypeOf(""),
+		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
 }
 
 // Get OAuth Custom App Integration
@@ -227,9 +295,13 @@ func (newState *GetCustomAppIntegrationRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *GetCustomAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationRequest) {
 }
 
+func (a GetCustomAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetCustomAppIntegrationsOutput struct {
 	// List of Custom OAuth App Integrations defined for the account.
-	Apps []GetCustomAppIntegrationOutput `tfsdk:"apps" tf:"optional"`
+	Apps types.List `tfsdk:"apps" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -238,6 +310,12 @@ func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationsOutput) {
+}
+
+func (a GetCustomAppIntegrationsOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Apps": reflect.TypeOf(GetCustomAppIntegrationOutput{}),
+	}
 }
 
 type GetPublishedAppIntegrationOutput struct {
@@ -252,13 +330,19 @@ type GetPublishedAppIntegrationOutput struct {
 	// Display name of the published OAuth app
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationOutput) {
 }
 
 func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationOutput) {
+}
+
+func (a GetPublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
 }
 
 // Get OAuth Published App Integration
@@ -272,9 +356,13 @@ func (newState *GetPublishedAppIntegrationRequest) SyncEffectiveFieldsDuringCrea
 func (newState *GetPublishedAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationRequest) {
 }
 
+func (a GetPublishedAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetPublishedAppIntegrationsOutput struct {
 	// List of Published OAuth App Integrations defined for the account.
-	Apps []GetPublishedAppIntegrationOutput `tfsdk:"apps" tf:"optional"`
+	Apps types.List `tfsdk:"apps" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -285,9 +373,15 @@ func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringCrea
 func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationsOutput) {
 }
 
+func (a GetPublishedAppIntegrationsOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Apps": reflect.TypeOf(GetPublishedAppIntegrationOutput{}),
+	}
+}
+
 type GetPublishedAppsOutput struct {
 	// List of Published OAuth Apps.
-	Apps []PublishedAppOutput `tfsdk:"apps" tf:"optional"`
+	Apps types.List `tfsdk:"apps" tf:"optional"`
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -297,6 +391,12 @@ func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppsOutput) {
+}
+
+func (a GetPublishedAppsOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Apps": reflect.TypeOf(PublishedAppOutput{}),
+	}
 }
 
 // Get custom oauth app integrations
@@ -314,6 +414,10 @@ func (newState *ListCustomAppIntegrationsRequest) SyncEffectiveFieldsDuringCreat
 func (newState *ListCustomAppIntegrationsRequest) SyncEffectiveFieldsDuringRead(existingState ListCustomAppIntegrationsRequest) {
 }
 
+func (a ListCustomAppIntegrationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get all the published OAuth apps
 type ListOAuthPublishedAppsRequest struct {
 	// The max number of OAuth published apps to return in one page.
@@ -328,6 +432,10 @@ func (newState *ListOAuthPublishedAppsRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListOAuthPublishedAppsRequest) SyncEffectiveFieldsDuringRead(existingState ListOAuthPublishedAppsRequest) {
 }
 
+func (a ListOAuthPublishedAppsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get published oauth app integrations
 type ListPublishedAppIntegrationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
@@ -339,6 +447,10 @@ func (newState *ListPublishedAppIntegrationsRequest) SyncEffectiveFieldsDuringCr
 }
 
 func (newState *ListPublishedAppIntegrationsRequest) SyncEffectiveFieldsDuringRead(existingState ListPublishedAppIntegrationsRequest) {
+}
+
+func (a ListPublishedAppIntegrationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // List service principal secrets
@@ -363,17 +475,27 @@ func (newState *ListServicePrincipalSecretsRequest) SyncEffectiveFieldsDuringCre
 func (newState *ListServicePrincipalSecretsRequest) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsRequest) {
 }
 
+func (a ListServicePrincipalSecretsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListServicePrincipalSecretsResponse struct {
 	// A token, which can be sent as `page_token` to retrieve the next page.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// List of the secrets
-	Secrets []SecretInfo `tfsdk:"secrets" tf:"optional"`
+	Secrets types.List `tfsdk:"secrets" tf:"optional"`
 }
 
 func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListServicePrincipalSecretsResponse) {
 }
 
 func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsResponse) {
+}
+
+func (a ListServicePrincipalSecretsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Secrets": reflect.TypeOf(SecretInfo{}),
+	}
 }
 
 type PublishedAppOutput struct {
@@ -390,15 +512,22 @@ type PublishedAppOutput struct {
 	// The display name of the published OAuth app.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Redirect URLs of the published OAuth app.
-	RedirectUrls []types.String `tfsdk:"redirect_urls" tf:"optional"`
+	RedirectUrls types.List `tfsdk:"redirect_urls" tf:"optional"`
 	// Required scopes for the published OAuth app.
-	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
+	Scopes types.List `tfsdk:"scopes" tf:"optional"`
 }
 
 func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedAppOutput) {
 }
 
 func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringRead(existingState PublishedAppOutput) {
+}
+
+func (a PublishedAppOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RedirectUrls": reflect.TypeOf(""),
+		"Scopes":       reflect.TypeOf(""),
+	}
 }
 
 type SecretInfo struct {
@@ -420,6 +549,10 @@ func (newState *SecretInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretI
 func (newState *SecretInfo) SyncEffectiveFieldsDuringRead(existingState SecretInfo) {
 }
 
+func (a SecretInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type TokenAccessPolicy struct {
 	// access token time to live in minutes
 	AccessTokenTtlInMinutes types.Int64 `tfsdk:"access_token_ttl_in_minutes" tf:"optional"`
@@ -433,19 +566,30 @@ func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringRead(existingState TokenAccessPolicy) {
 }
 
+func (a TokenAccessPolicy) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateCustomAppIntegration struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// List of OAuth redirect urls to be updated in the custom OAuth app
 	// integration
-	RedirectUrls []types.String `tfsdk:"redirect_urls" tf:"optional"`
+	RedirectUrls types.List `tfsdk:"redirect_urls" tf:"optional"`
 	// Token access policy to be updated in the custom OAuth app integration
-	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegration) {
 }
 
 func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegration) {
+}
+
+func (a UpdateCustomAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RedirectUrls":      reflect.TypeOf(""),
+		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
 }
 
 type UpdateCustomAppIntegrationOutput struct {
@@ -457,16 +601,26 @@ func (newState *UpdateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreat
 func (newState *UpdateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegrationOutput) {
 }
 
+func (a UpdateCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdatePublishedAppIntegration struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// Token access policy to be updated in the published OAuth app integration
-	TokenAccessPolicy []TokenAccessPolicy `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegration) {
 }
 
 func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegration) {
+}
+
+func (a UpdatePublishedAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
 }
 
 type UpdatePublishedAppIntegrationOutput struct {
@@ -476,4 +630,8 @@ func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCr
 }
 
 func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegrationOutput) {
+}
+
+func (a UpdatePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }

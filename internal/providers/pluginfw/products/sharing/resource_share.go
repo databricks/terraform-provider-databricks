@@ -13,11 +13,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "share"
@@ -214,9 +216,16 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan.ShareInfo)
-	for i := range newState.Objects {
-		newState.Objects[i].SyncEffectiveFieldsDuringCreateOrUpdate(plan.Objects[i])
+	planObjects := []sharing_tf.SharedDataObject{}
+	resp.Diagnostics.Append(plan.Objects.ElementsAs(ctx, &planObjects, true)...)
+	newStateObjects := []sharing_tf.SharedDataObject{}
+	resp.Diagnostics.Append(newState.Objects.ElementsAs(ctx, &newStateObjects, true)...)
+	for i := range newStateObjects {
+		newStateObjects[i].SyncEffectiveFieldsDuringCreateOrUpdate(planObjects[i])
 	}
+	var d diag.Diagnostics
+	newState.Objects, d = basetypes.NewListValueFrom(ctx, newState.Objects.ElementType(ctx), newStateObjects)
+	resp.Diagnostics.Append(d...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
@@ -272,9 +281,16 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	newState.SyncEffectiveFieldsDuringRead(existingState.ShareInfo)
-	for i := range newState.Objects {
-		newState.Objects[i].SyncEffectiveFieldsDuringRead(existingState.Objects[i])
+	var existingObjects []sharing_tf.SharedDataObject
+	resp.Diagnostics.Append(existingState.Objects.ElementsAs(ctx, &existingObjects, true)...)
+	var newStateObjects []sharing_tf.SharedDataObject
+	resp.Diagnostics.Append(newState.Objects.ElementsAs(ctx, &newStateObjects, true)...)
+	for i := range newStateObjects {
+		newStateObjects[i].SyncEffectiveFieldsDuringRead(existingObjects[i])
 	}
+	var d diag.Diagnostics
+	newState.Objects, d = basetypes.NewListValueFrom(ctx, newState.Objects.ElementType(ctx), newStateObjects)
+	resp.Diagnostics.Append(d...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
@@ -371,9 +387,16 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan.ShareInfo)
-	for i := range state.Objects {
-		state.Objects[i].SyncEffectiveFieldsDuringCreateOrUpdate(plan.Objects[i])
+	planObjects := []sharing_tf.SharedDataObject{}
+	resp.Diagnostics.Append(plan.Objects.ElementsAs(ctx, &planObjects, true)...)
+	stateObjects := []sharing_tf.SharedDataObject{}
+	resp.Diagnostics.Append(state.Objects.ElementsAs(ctx, &stateObjects, true)...)
+	for i := range stateObjects {
+		stateObjects[i].SyncEffectiveFieldsDuringCreateOrUpdate(planObjects[i])
 	}
+	var d diag.Diagnostics
+	state.Objects, d = basetypes.NewListValueFrom(ctx, state.Objects.ElementType(ctx), stateObjects)
+	resp.Diagnostics.Append(d...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }

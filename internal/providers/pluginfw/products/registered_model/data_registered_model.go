@@ -14,7 +14,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const dataSourceName = "registered_model"
@@ -86,8 +88,10 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if modelInfo.Aliases == nil {
-		modelInfo.Aliases = []catalog_tf.RegisteredModelAlias{}
+	if modelInfo.Aliases.IsNull() {
+		var d diag.Diagnostics
+		modelInfo.Aliases, d = basetypes.NewListValueFrom(ctx, modelInfo.Aliases.ElementType(ctx), []catalog_tf.RegisteredModelAlias{})
+		resp.Diagnostics.Append(d...)
 	}
 	registeredModel.ModelInfo = append(registeredModel.ModelInfo, modelInfo)
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModel)...)

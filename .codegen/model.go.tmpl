@@ -55,8 +55,34 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
   {{- end}}
 }
 
+func (a {{.PascalName}}) GetComplexFieldTypes() map[string]reflect.Type {
+  return map[string]reflect.Type{
+    {{- range .Fields -}}
+    {{- if or .Entity.IsObject .Entity.ArrayValue .Entity.MapValue}}
+    "{{.PascalName}}": reflect.TypeOf({{ template "complex-field-value" .Entity }}),
+    {{- end}}
+    {{- end}}
+  }
+}
+
 {{end}}
 {{end}}
+
+{{define "complex-field-value" -}}
+  {{- if .ArrayValue }}{{ template "complex-field-value" .ArrayValue }}
+  {{- else if .MapValue }}{{ template "complex-field-value" .MapValue }}
+  {{- else -}}
+    {{- if .IsExternal -}}{{.Package.Name}}.{{- end -}}
+    {{- if or .IsString .Enum -}}""
+    {{- else if .IsBool -}}false
+    {{- else if .IsInt64 -}}0
+    {{- else if .IsFloat64 -}}0.0
+    {{- else if .IsInt -}}0
+    {{- else if .IsAny -}}struct{}{}
+    {{- else if .IsObject -}}{{.PascalName}}{}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 
 {{- define "field" -}}
 {{if .effective}}Effective{{end}}{{.field.PascalName}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
@@ -91,12 +117,9 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
     {{- else if .IsFloat64}}types.Float64
     {{- else if .IsInt}}types.Int64
     {{- else if .IsByteStream}}io.ReadCloser
-    {{- else if .ArrayValue }}
-        {{- if .ArrayValue.IsObject }}{{template "type" .ArrayValue}}
-        {{- else }}[]{{template "type" .ArrayValue}}
-        {{- end }}
-    {{- else if .MapValue }}map[string]{{template "type" .MapValue}}
-    {{- else if .IsObject }}[]{{.PascalName}}
+    {{- else if .ArrayValue }}types.List
+    {{- else if .MapValue }}types.Map
+    {{- else if .IsObject }}types.Object
     {{- else if .Enum }}types.String
     {{- else}}any /* MISSING TYPE */
     {{- end -}}

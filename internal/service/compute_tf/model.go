@@ -11,6 +11,8 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package compute_tf
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -49,6 +51,10 @@ func (newState *AddInstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *AddInstanceProfile) SyncEffectiveFieldsDuringRead(existingState AddInstanceProfile) {
 }
 
+func (a AddInstanceProfile) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type AddResponse struct {
 }
 
@@ -56,6 +62,10 @@ func (newState *AddResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddRes
 }
 
 func (newState *AddResponse) SyncEffectiveFieldsDuringRead(existingState AddResponse) {
+}
+
+func (a AddResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Adlsgen2Info struct {
@@ -68,6 +78,10 @@ func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringCreateOrUpdate(plan Adlsg
 }
 
 func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringRead(existingState Adlsgen2Info) {
+}
+
+func (a Adlsgen2Info) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type AutoScale struct {
@@ -85,6 +99,10 @@ func (newState *AutoScale) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoScal
 }
 
 func (newState *AutoScale) SyncEffectiveFieldsDuringRead(existingState AutoScale) {
+}
+
+func (a AutoScale) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type AwsAttributes struct {
@@ -179,6 +197,10 @@ func (newState *AwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsA
 func (newState *AwsAttributes) SyncEffectiveFieldsDuringRead(existingState AwsAttributes) {
 }
 
+func (a AwsAttributes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type AzureAttributes struct {
 	// Availability type used for all subsequent nodes past the
 	// `first_on_demand` ones. Note: If `first_on_demand` is zero (which only
@@ -196,7 +218,7 @@ type AzureAttributes struct {
 	// mutated over the lifetime of a cluster.
 	FirstOnDemand types.Int64 `tfsdk:"first_on_demand" tf:"optional"`
 	// Defines values necessary to configure and run Azure Log Analytics agent
-	LogAnalyticsInfo []LogAnalyticsInfo `tfsdk:"log_analytics_info" tf:"optional,object"`
+	LogAnalyticsInfo types.Object `tfsdk:"log_analytics_info" tf:"optional,object"`
 	// The max bid price to be used for Azure spot instances. The Max price for
 	// the bid cannot be higher than the on-demand price of the instance. If not
 	// specified, the default value is -1, which specifies that the instance
@@ -209,6 +231,12 @@ func (newState *AzureAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan Az
 }
 
 func (newState *AzureAttributes) SyncEffectiveFieldsDuringRead(existingState AzureAttributes) {
+}
+
+func (a AzureAttributes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"LogAnalyticsInfo": reflect.TypeOf(LogAnalyticsInfo{}),
+	}
 }
 
 type CancelCommand struct {
@@ -225,6 +253,10 @@ func (newState *CancelCommand) SyncEffectiveFieldsDuringCreateOrUpdate(plan Canc
 func (newState *CancelCommand) SyncEffectiveFieldsDuringRead(existingState CancelCommand) {
 }
 
+func (a CancelCommand) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CancelResponse struct {
 }
 
@@ -232,6 +264,10 @@ func (newState *CancelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Can
 }
 
 func (newState *CancelResponse) SyncEffectiveFieldsDuringRead(existingState CancelResponse) {
+}
+
+func (a CancelResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type ChangeClusterOwner struct {
@@ -247,6 +283,10 @@ func (newState *ChangeClusterOwner) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ChangeClusterOwner) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwner) {
 }
 
+func (a ChangeClusterOwner) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ChangeClusterOwnerResponse struct {
 }
 
@@ -254,6 +294,10 @@ func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwnerResponse) {
+}
+
+func (a ChangeClusterOwnerResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type ClientsTypes struct {
@@ -269,6 +313,10 @@ func (newState *ClientsTypes) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clien
 func (newState *ClientsTypes) SyncEffectiveFieldsDuringRead(existingState ClientsTypes) {
 }
 
+func (a ClientsTypes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CloneCluster struct {
 	// The cluster that is being cloned.
 	SourceClusterId types.String `tfsdk:"source_cluster_id" tf:""`
@@ -280,14 +328,24 @@ func (newState *CloneCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clone
 func (newState *CloneCluster) SyncEffectiveFieldsDuringRead(existingState CloneCluster) {
 }
 
+func (a CloneCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CloudProviderNodeInfo struct {
-	Status []types.String `tfsdk:"status" tf:"optional"`
+	Status types.List `tfsdk:"status" tf:"optional"`
 }
 
 func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudProviderNodeInfo) {
 }
 
 func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringRead(existingState CloudProviderNodeInfo) {
+}
+
+func (a CloudProviderNodeInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Status": reflect.TypeOf(""),
+	}
 }
 
 type ClusterAccessControlRequest struct {
@@ -307,9 +365,13 @@ func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ClusterAccessControlRequest) {
 }
 
+func (a ClusterAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ClusterAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []ClusterPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
@@ -326,6 +388,12 @@ func (newState *ClusterAccessControlResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *ClusterAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ClusterAccessControlResponse) {
 }
 
+func (a ClusterAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllPermissions": reflect.TypeOf(ClusterPermission{}),
+	}
+}
+
 type ClusterAttributes struct {
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
@@ -335,17 +403,17 @@ type ClusterAttributes struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -357,7 +425,7 @@ type ClusterAttributes struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -382,7 +450,7 @@ type ClusterAttributes struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -400,12 +468,12 @@ type ClusterAttributes struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
@@ -432,7 +500,7 @@ type ClusterAttributes struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[string]types.String `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -446,7 +514,7 @@ type ClusterAttributes struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[string]types.String `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -454,15 +522,31 @@ type ClusterAttributes struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *ClusterAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAttributes) {
 }
 
 func (newState *ClusterAttributes) SyncEffectiveFieldsDuringRead(existingState ClusterAttributes) {
+}
+
+func (a ClusterAttributes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
+		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
+		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
+		"CustomTags":      reflect.TypeOf(""),
+		"DockerImage":     reflect.TypeOf(DockerImage{}),
+		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
+		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
+		"SparkConf":       reflect.TypeOf(""),
+		"SparkEnvVars":    reflect.TypeOf(""),
+		"SshPublicKeys":   reflect.TypeOf(""),
+		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
 }
 
 type ClusterCompliance struct {
@@ -475,7 +559,7 @@ type ClusterCompliance struct {
 	// validation errors. The keys indicate the path where the policy validation
 	// error is occurring. The values indicate an error message describing the
 	// policy validation error.
-	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
+	Violations types.Map `tfsdk:"violations" tf:"optional"`
 }
 
 func (newState *ClusterCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterCompliance) {
@@ -484,11 +568,17 @@ func (newState *ClusterCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ClusterCompliance) SyncEffectiveFieldsDuringRead(existingState ClusterCompliance) {
 }
 
+func (a ClusterCompliance) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Violations": reflect.TypeOf(""),
+	}
+}
+
 type ClusterDetails struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -497,10 +587,10 @@ type ClusterDetails struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// Number of CPU cores available for this cluster. Note that this can be
 	// fractional, e.g. 7.5 cores, since certain node types are configured to
 	// share cores between Spark nodes on the same instance.
@@ -514,9 +604,9 @@ type ClusterDetails struct {
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster log delivery status.
-	ClusterLogStatus []LogSyncStatus `tfsdk:"cluster_log_status" tf:"optional,object"`
+	ClusterLogStatus types.Object `tfsdk:"cluster_log_status" tf:"optional,object"`
 	// Total amount of cluster memory, in megabytes
 	ClusterMemoryMb types.Int64 `tfsdk:"cluster_memory_mb" tf:"optional"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
@@ -537,7 +627,7 @@ type ClusterDetails struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -573,13 +663,13 @@ type ClusterDetails struct {
 	// - ClusterId: <id_of_cluster>
 	//
 	// - Name: <Databricks internal use>
-	DefaultTags map[string]types.String `tfsdk:"default_tags" tf:"optional"`
+	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
 
-	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
 	// Node on which the Spark driver resides. The driver node contains the
 	// Spark master and the Databricks application that manages the per-notebook
 	// Spark REPLs.
-	Driver []SparkNode `tfsdk:"driver" tf:"optional,object"`
+	Driver types.Object `tfsdk:"driver" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -596,15 +686,15 @@ type ClusterDetails struct {
 	// Whether to enable LUKS on cluster VMs' local disks
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Nodes on which the Spark executors reside.
-	Executors []SparkNode `tfsdk:"executors" tf:"optional"`
+	Executors types.List `tfsdk:"executors" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
 	// Port on which Spark JDBC server is listening, in the driver nod. No
@@ -650,7 +740,7 @@ type ClusterDetails struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[string]types.String `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
 	// A canonical SparkContext identifier. This value *does* change when the
 	// Spark driver restarts. The pair `(cluster_id, spark_context_id)` is a
 	// globally unique identifier over all Spark contexts.
@@ -668,7 +758,7 @@ type ClusterDetails struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[string]types.String `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -677,11 +767,11 @@ type ClusterDetails struct {
 	// or edit this cluster. The contents of `spec` can be used in the body of a
 	// create cluster request. This field might not be populated for older
 	// clusters. Note: not included in the response of the ListClusters API.
-	Spec []ClusterSpec `tfsdk:"spec" tf:"optional,object"`
+	Spec types.Object `tfsdk:"spec" tf:"optional,object"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 	// Time (in epoch milliseconds) when the cluster creation request was
 	// received (when the cluster entered a `PENDING` state).
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
@@ -695,9 +785,9 @@ type ClusterDetails struct {
 	TerminatedTime types.Int64 `tfsdk:"terminated_time" tf:"optional"`
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
-	TerminationReason []TerminationReason `tfsdk:"termination_reason" tf:"optional,object"`
+	TerminationReason types.Object `tfsdk:"termination_reason" tf:"optional,object"`
 
-	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *ClusterDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterDetails) {
@@ -706,13 +796,36 @@ func (newState *ClusterDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clu
 func (newState *ClusterDetails) SyncEffectiveFieldsDuringRead(existingState ClusterDetails) {
 }
 
+func (a ClusterDetails) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Autoscale":         reflect.TypeOf(AutoScale{}),
+		"AwsAttributes":     reflect.TypeOf(AwsAttributes{}),
+		"AzureAttributes":   reflect.TypeOf(AzureAttributes{}),
+		"ClusterLogConf":    reflect.TypeOf(ClusterLogConf{}),
+		"ClusterLogStatus":  reflect.TypeOf(LogSyncStatus{}),
+		"CustomTags":        reflect.TypeOf(""),
+		"DefaultTags":       reflect.TypeOf(""),
+		"DockerImage":       reflect.TypeOf(DockerImage{}),
+		"Driver":            reflect.TypeOf(SparkNode{}),
+		"Executors":         reflect.TypeOf(SparkNode{}),
+		"GcpAttributes":     reflect.TypeOf(GcpAttributes{}),
+		"InitScripts":       reflect.TypeOf(InitScriptInfo{}),
+		"SparkConf":         reflect.TypeOf(""),
+		"SparkEnvVars":      reflect.TypeOf(""),
+		"Spec":              reflect.TypeOf(ClusterSpec{}),
+		"SshPublicKeys":     reflect.TypeOf(""),
+		"TerminationReason": reflect.TypeOf(TerminationReason{}),
+		"WorkloadType":      reflect.TypeOf(WorkloadType{}),
+	}
+}
+
 type ClusterEvent struct {
 	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// <needs content added>
-	DataPlaneEventDetails []DataPlaneEventDetails `tfsdk:"data_plane_event_details" tf:"optional,object"`
+	DataPlaneEventDetails types.Object `tfsdk:"data_plane_event_details" tf:"optional,object"`
 	// <needs content added>
-	Details []EventDetails `tfsdk:"details" tf:"optional,object"`
+	Details types.Object `tfsdk:"details" tf:"optional,object"`
 	// The timestamp when the event occurred, stored as the number of
 	// milliseconds since the Unix epoch. If not provided, this will be assigned
 	// by the Timeline service.
@@ -727,11 +840,18 @@ func (newState *ClusterEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clust
 func (newState *ClusterEvent) SyncEffectiveFieldsDuringRead(existingState ClusterEvent) {
 }
 
+func (a ClusterEvent) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DataPlaneEventDetails": reflect.TypeOf(DataPlaneEventDetails{}),
+		"Details":               reflect.TypeOf(EventDetails{}),
+	}
+}
+
 type ClusterLibraryStatuses struct {
 	// Unique identifier for the cluster.
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// Status of all libraries on the cluster.
-	LibraryStatuses []LibraryFullStatus `tfsdk:"library_statuses" tf:"optional"`
+	LibraryStatuses types.List `tfsdk:"library_statuses" tf:"optional"`
 }
 
 func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLibraryStatuses) {
@@ -740,16 +860,22 @@ func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringRead(existingState ClusterLibraryStatuses) {
 }
 
+func (a ClusterLibraryStatuses) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"LibraryStatuses": reflect.TypeOf(LibraryFullStatus{}),
+	}
+}
+
 type ClusterLogConf struct {
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
-	Dbfs []DbfsStorageInfo `tfsdk:"dbfs" tf:"optional,object"`
+	Dbfs types.Object `tfsdk:"dbfs" tf:"optional,object"`
 	// destination and either the region or endpoint need to be provided. e.g.
 	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
 	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
-	S3 []S3StorageInfo `tfsdk:"s3" tf:"optional,object"`
+	S3 types.Object `tfsdk:"s3" tf:"optional,object"`
 }
 
 func (newState *ClusterLogConf) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLogConf) {
@@ -758,10 +884,17 @@ func (newState *ClusterLogConf) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clu
 func (newState *ClusterLogConf) SyncEffectiveFieldsDuringRead(existingState ClusterLogConf) {
 }
 
+func (a ClusterLogConf) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Dbfs": reflect.TypeOf(DbfsStorageInfo{}),
+		"S3":   reflect.TypeOf(S3StorageInfo{}),
+	}
+}
+
 type ClusterPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
@@ -772,8 +905,14 @@ func (newState *ClusterPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ClusterPermission) SyncEffectiveFieldsDuringRead(existingState ClusterPermission) {
 }
 
+func (a ClusterPermission) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InheritedFromObject": reflect.TypeOf(""),
+	}
+}
+
 type ClusterPermissions struct {
-	AccessControlList []ClusterAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
@@ -784,6 +923,12 @@ func (newState *ClusterPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *ClusterPermissions) SyncEffectiveFieldsDuringRead(existingState ClusterPermissions) {
+}
+
+func (a ClusterPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(ClusterAccessControlResponse{}),
+	}
 }
 
 type ClusterPermissionsDescription struct {
@@ -798,8 +943,12 @@ func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringCreateOr
 func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsDescription) {
 }
 
+func (a ClusterPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ClusterPermissionsRequest struct {
-	AccessControlList []ClusterAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// The cluster for which to get or manage permissions.
 	ClusterId types.String `tfsdk:"-"`
 }
@@ -808,6 +957,12 @@ func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsRequest) {
+}
+
+func (a ClusterPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(ClusterAccessControlRequest{}),
+	}
 }
 
 type ClusterPolicyAccessControlRequest struct {
@@ -827,9 +982,13 @@ func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringCrea
 func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyAccessControlRequest) {
 }
 
+func (a ClusterPolicyAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ClusterPolicyAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []ClusterPolicyPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
@@ -846,10 +1005,16 @@ func (newState *ClusterPolicyAccessControlResponse) SyncEffectiveFieldsDuringCre
 func (newState *ClusterPolicyAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyAccessControlResponse) {
 }
 
+func (a ClusterPolicyAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllPermissions": reflect.TypeOf(ClusterPolicyPermission{}),
+	}
+}
+
 type ClusterPolicyPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
@@ -860,8 +1025,14 @@ func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermission) {
 }
 
+func (a ClusterPolicyPermission) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InheritedFromObject": reflect.TypeOf(""),
+	}
+}
+
 type ClusterPolicyPermissions struct {
-	AccessControlList []ClusterPolicyAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
@@ -872,6 +1043,12 @@ func (newState *ClusterPolicyPermissions) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *ClusterPolicyPermissions) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissions) {
+}
+
+func (a ClusterPolicyPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(ClusterPolicyAccessControlResponse{}),
+	}
 }
 
 type ClusterPolicyPermissionsDescription struct {
@@ -886,8 +1063,12 @@ func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringCr
 func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsDescription) {
 }
 
+func (a ClusterPolicyPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ClusterPolicyPermissionsRequest struct {
-	AccessControlList []ClusterPolicyAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-"`
 }
@@ -896,6 +1077,12 @@ func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringCreate
 }
 
 func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsRequest) {
+}
+
+func (a ClusterPolicyPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(ClusterPolicyAccessControlRequest{}),
+	}
 }
 
 // Represents a change to the cluster settings required for the cluster to
@@ -921,11 +1108,15 @@ func (newState *ClusterSettingsChange) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState ClusterSettingsChange) {
 }
 
+func (a ClusterSettingsChange) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ClusterSize struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -945,6 +1136,12 @@ func (newState *ClusterSize) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cluste
 func (newState *ClusterSize) SyncEffectiveFieldsDuringRead(existingState ClusterSize) {
 }
 
+func (a ClusterSize) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Autoscale": reflect.TypeOf(AutoScale{}),
+	}
+}
+
 type ClusterSpec struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
@@ -953,7 +1150,7 @@ type ClusterSpec struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -962,17 +1159,17 @@ type ClusterSpec struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -984,7 +1181,7 @@ type ClusterSpec struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -1009,7 +1206,7 @@ type ClusterSpec struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -1027,12 +1224,12 @@ type ClusterSpec struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
@@ -1070,7 +1267,7 @@ type ClusterSpec struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[string]types.String `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -1084,7 +1281,7 @@ type ClusterSpec struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[string]types.String `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -1092,15 +1289,32 @@ type ClusterSpec struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
 }
 
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
+}
+
+func (a ClusterSpec) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Autoscale":       reflect.TypeOf(AutoScale{}),
+		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
+		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
+		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
+		"CustomTags":      reflect.TypeOf(""),
+		"DockerImage":     reflect.TypeOf(DockerImage{}),
+		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
+		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
+		"SparkConf":       reflect.TypeOf(""),
+		"SparkEnvVars":    reflect.TypeOf(""),
+		"SshPublicKeys":   reflect.TypeOf(""),
+		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
 }
 
 // Get status
@@ -1113,6 +1327,10 @@ func (newState *ClusterStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clus
 }
 
 func (newState *ClusterStatus) SyncEffectiveFieldsDuringRead(existingState ClusterStatus) {
+}
+
+func (a ClusterStatus) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Command struct {
@@ -1132,6 +1350,10 @@ func (newState *Command) SyncEffectiveFieldsDuringCreateOrUpdate(plan Command) {
 func (newState *Command) SyncEffectiveFieldsDuringRead(existingState Command) {
 }
 
+func (a Command) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get command info
 type CommandStatusRequest struct {
 	ClusterId types.String `tfsdk:"-"`
@@ -1147,10 +1369,14 @@ func (newState *CommandStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *CommandStatusRequest) SyncEffectiveFieldsDuringRead(existingState CommandStatusRequest) {
 }
 
+func (a CommandStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CommandStatusResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Results []Results `tfsdk:"results" tf:"optional,object"`
+	Results types.Object `tfsdk:"results" tf:"optional,object"`
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
@@ -1159,6 +1385,12 @@ func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringRead(existingState CommandStatusResponse) {
+}
+
+func (a CommandStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Results": reflect.TypeOf(Results{}),
+	}
 }
 
 // Get status
@@ -1174,6 +1406,10 @@ func (newState *ContextStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ContextStatusRequest) SyncEffectiveFieldsDuringRead(existingState ContextStatusRequest) {
 }
 
+func (a ContextStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ContextStatusResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 
@@ -1186,6 +1422,10 @@ func (newState *ContextStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ContextStatusResponse) SyncEffectiveFieldsDuringRead(existingState ContextStatusResponse) {
 }
 
+func (a ContextStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateCluster struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
@@ -1194,7 +1434,7 @@ type CreateCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -1203,20 +1443,20 @@ type CreateCluster struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// When specified, this clones libraries from a source cluster during the
 	// creation of a new cluster.
-	CloneFrom []CloneCluster `tfsdk:"clone_from" tf:"optional,object"`
+	CloneFrom types.Object `tfsdk:"clone_from" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -1228,7 +1468,7 @@ type CreateCluster struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -1253,7 +1493,7 @@ type CreateCluster struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -1271,12 +1511,12 @@ type CreateCluster struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
@@ -1314,7 +1554,7 @@ type CreateCluster struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[string]types.String `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -1328,7 +1568,7 @@ type CreateCluster struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[string]types.String `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -1336,15 +1576,33 @@ type CreateCluster struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *CreateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCluster) {
 }
 
 func (newState *CreateCluster) SyncEffectiveFieldsDuringRead(existingState CreateCluster) {
+}
+
+func (a CreateCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Autoscale":       reflect.TypeOf(AutoScale{}),
+		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
+		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
+		"CloneFrom":       reflect.TypeOf(CloneCluster{}),
+		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
+		"CustomTags":      reflect.TypeOf(""),
+		"DockerImage":     reflect.TypeOf(DockerImage{}),
+		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
+		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
+		"SparkConf":       reflect.TypeOf(""),
+		"SparkEnvVars":    reflect.TypeOf(""),
+		"SshPublicKeys":   reflect.TypeOf(""),
+		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
 }
 
 type CreateClusterResponse struct {
@@ -1355,6 +1613,10 @@ func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringRead(existingState CreateClusterResponse) {
+}
+
+func (a CreateClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type CreateContext struct {
@@ -1370,22 +1632,26 @@ func (newState *CreateContext) SyncEffectiveFieldsDuringCreateOrUpdate(plan Crea
 func (newState *CreateContext) SyncEffectiveFieldsDuringRead(existingState CreateContext) {
 }
 
+func (a CreateContext) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes []InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes []InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec []DiskSpec `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.Object `tfsdk:"disk_spec" tf:"optional,object"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -1394,7 +1660,7 @@ type CreateInstancePool struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes []InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -1419,18 +1685,30 @@ type CreateInstancePool struct {
 	// :method:clusters/listNodeTypes API call.
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:""`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages []DockerImage `tfsdk:"preloaded_docker_images" tf:"optional"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images" tf:"optional"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions" tf:"optional"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions" tf:"optional"`
 }
 
 func (newState *CreateInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePool) {
 }
 
 func (newState *CreateInstancePool) SyncEffectiveFieldsDuringRead(existingState CreateInstancePool) {
+}
+
+func (a CreateInstancePool) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AwsAttributes":          reflect.TypeOf(InstancePoolAwsAttributes{}),
+		"AzureAttributes":        reflect.TypeOf(InstancePoolAzureAttributes{}),
+		"CustomTags":             reflect.TypeOf(""),
+		"DiskSpec":               reflect.TypeOf(DiskSpec{}),
+		"GcpAttributes":          reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"PreloadedDockerImages":  reflect.TypeOf(DockerImage{}),
+		"PreloadedSparkVersions": reflect.TypeOf(""),
+	}
 }
 
 type CreateInstancePoolResponse struct {
@@ -1444,6 +1722,10 @@ func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState CreateInstancePoolResponse) {
 }
 
+func (a CreateInstancePoolResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreatePolicy struct {
 	// Policy definition document expressed in [Databricks Cluster Policy
 	// Definition Language].
@@ -1454,7 +1736,7 @@ type CreatePolicy struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries []Library `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries" tf:"optional"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
 	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user" tf:"optional"`
@@ -1486,6 +1768,12 @@ func (newState *CreatePolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan Creat
 func (newState *CreatePolicy) SyncEffectiveFieldsDuringRead(existingState CreatePolicy) {
 }
 
+func (a CreatePolicy) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Libraries": reflect.TypeOf(Library{}),
+	}
+}
+
 type CreatePolicyResponse struct {
 	// Canonical unique identifier for the cluster policy.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
@@ -1495,6 +1783,10 @@ func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringRead(existingState CreatePolicyResponse) {
+}
+
+func (a CreatePolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type CreateResponse struct {
@@ -1508,6 +1800,10 @@ func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
+func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Created struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 }
@@ -1516,6 +1812,10 @@ func (newState *Created) SyncEffectiveFieldsDuringCreateOrUpdate(plan Created) {
 }
 
 func (newState *Created) SyncEffectiveFieldsDuringRead(existingState Created) {
+}
+
+func (a Created) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DataPlaneEventDetails struct {
@@ -1535,6 +1835,10 @@ func (newState *DataPlaneEventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DataPlaneEventDetails) SyncEffectiveFieldsDuringRead(existingState DataPlaneEventDetails) {
 }
 
+func (a DataPlaneEventDetails) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DbfsStorageInfo struct {
 	// dbfs destination, e.g. `dbfs:/my/path`
 	Destination types.String `tfsdk:"destination" tf:""`
@@ -1544,6 +1848,10 @@ func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Db
 }
 
 func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringRead(existingState DbfsStorageInfo) {
+}
+
+func (a DbfsStorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DeleteCluster struct {
@@ -1557,6 +1865,10 @@ func (newState *DeleteCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dele
 func (newState *DeleteCluster) SyncEffectiveFieldsDuringRead(existingState DeleteCluster) {
 }
 
+func (a DeleteCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteClusterResponse struct {
 }
 
@@ -1564,6 +1876,10 @@ func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingState DeleteClusterResponse) {
+}
+
+func (a DeleteClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete init script
@@ -1578,6 +1894,10 @@ func (newState *DeleteGlobalInitScriptRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *DeleteGlobalInitScriptRequest) SyncEffectiveFieldsDuringRead(existingState DeleteGlobalInitScriptRequest) {
 }
 
+func (a DeleteGlobalInitScriptRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteInstancePool struct {
 	// The instance pool to be terminated.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:""`
@@ -1589,6 +1909,10 @@ func (newState *DeleteInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DeleteInstancePool) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePool) {
 }
 
+func (a DeleteInstancePool) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteInstancePoolResponse struct {
 }
 
@@ -1596,6 +1920,10 @@ func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePoolResponse) {
+}
+
+func (a DeleteInstancePoolResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DeletePolicy struct {
@@ -1609,6 +1937,10 @@ func (newState *DeletePolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delet
 func (newState *DeletePolicy) SyncEffectiveFieldsDuringRead(existingState DeletePolicy) {
 }
 
+func (a DeletePolicy) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeletePolicyResponse struct {
 }
 
@@ -1618,6 +1950,10 @@ func (newState *DeletePolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DeletePolicyResponse) SyncEffectiveFieldsDuringRead(existingState DeletePolicyResponse) {
 }
 
+func (a DeletePolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteResponse struct {
 }
 
@@ -1625,6 +1961,10 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 }
 
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+}
+
+func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DestroyContext struct {
@@ -1639,6 +1979,10 @@ func (newState *DestroyContext) SyncEffectiveFieldsDuringCreateOrUpdate(plan Des
 func (newState *DestroyContext) SyncEffectiveFieldsDuringRead(existingState DestroyContext) {
 }
 
+func (a DestroyContext) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DestroyResponse struct {
 }
 
@@ -1646,6 +1990,10 @@ func (newState *DestroyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan De
 }
 
 func (newState *DestroyResponse) SyncEffectiveFieldsDuringRead(existingState DestroyResponse) {
+}
+
+func (a DestroyResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DiskSpec struct {
@@ -1680,13 +2028,19 @@ type DiskSpec struct {
 
 	DiskThroughput types.Int64 `tfsdk:"disk_throughput" tf:"optional"`
 	// The type of disks that will be launched with this cluster.
-	DiskType []DiskType `tfsdk:"disk_type" tf:"optional,object"`
+	DiskType types.Object `tfsdk:"disk_type" tf:"optional,object"`
 }
 
 func (newState *DiskSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskSpec) {
 }
 
 func (newState *DiskSpec) SyncEffectiveFieldsDuringRead(existingState DiskSpec) {
+}
+
+func (a DiskSpec) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DiskType": reflect.TypeOf(DiskType{}),
+	}
 }
 
 type DiskType struct {
@@ -1699,6 +2053,10 @@ func (newState *DiskType) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskType)
 }
 
 func (newState *DiskType) SyncEffectiveFieldsDuringRead(existingState DiskType) {
+}
+
+func (a DiskType) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DockerBasicAuth struct {
@@ -1714,8 +2072,12 @@ func (newState *DockerBasicAuth) SyncEffectiveFieldsDuringCreateOrUpdate(plan Do
 func (newState *DockerBasicAuth) SyncEffectiveFieldsDuringRead(existingState DockerBasicAuth) {
 }
 
+func (a DockerBasicAuth) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DockerImage struct {
-	BasicAuth []DockerBasicAuth `tfsdk:"basic_auth" tf:"optional,object"`
+	BasicAuth types.Object `tfsdk:"basic_auth" tf:"optional,object"`
 	// URL of the docker image.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -1726,6 +2088,12 @@ func (newState *DockerImage) SyncEffectiveFieldsDuringCreateOrUpdate(plan Docker
 func (newState *DockerImage) SyncEffectiveFieldsDuringRead(existingState DockerImage) {
 }
 
+func (a DockerImage) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"BasicAuth": reflect.TypeOf(DockerBasicAuth{}),
+	}
+}
+
 type EditCluster struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
@@ -1734,7 +2102,7 @@ type EditCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -1743,10 +2111,10 @@ type EditCluster struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// ID of the cluster
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// The configuration for delivering spark logs to a long-term storage
@@ -1755,7 +2123,7 @@ type EditCluster struct {
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -1767,7 +2135,7 @@ type EditCluster struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -1792,7 +2160,7 @@ type EditCluster struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -1810,12 +2178,12 @@ type EditCluster struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
@@ -1853,7 +2221,7 @@ type EditCluster struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[string]types.String `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -1867,7 +2235,7 @@ type EditCluster struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[string]types.String `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -1875,15 +2243,32 @@ type EditCluster struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *EditCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditCluster) {
 }
 
 func (newState *EditCluster) SyncEffectiveFieldsDuringRead(existingState EditCluster) {
+}
+
+func (a EditCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Autoscale":       reflect.TypeOf(AutoScale{}),
+		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
+		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
+		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
+		"CustomTags":      reflect.TypeOf(""),
+		"DockerImage":     reflect.TypeOf(DockerImage{}),
+		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
+		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
+		"SparkConf":       reflect.TypeOf(""),
+		"SparkEnvVars":    reflect.TypeOf(""),
+		"SshPublicKeys":   reflect.TypeOf(""),
+		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
 }
 
 type EditClusterResponse struct {
@@ -1895,13 +2280,17 @@ func (newState *EditClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *EditClusterResponse) SyncEffectiveFieldsDuringRead(existingState EditClusterResponse) {
 }
 
+func (a EditClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type EditInstancePool struct {
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -1935,6 +2324,12 @@ func (newState *EditInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan E
 func (newState *EditInstancePool) SyncEffectiveFieldsDuringRead(existingState EditInstancePool) {
 }
 
+func (a EditInstancePool) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"CustomTags": reflect.TypeOf(""),
+	}
+}
+
 type EditInstancePoolResponse struct {
 }
 
@@ -1942,6 +2337,10 @@ func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState EditInstancePoolResponse) {
+}
+
+func (a EditInstancePoolResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type EditPolicy struct {
@@ -1954,7 +2353,7 @@ type EditPolicy struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries []Library `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries" tf:"optional"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
 	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user" tf:"optional"`
@@ -1988,6 +2387,12 @@ func (newState *EditPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPol
 func (newState *EditPolicy) SyncEffectiveFieldsDuringRead(existingState EditPolicy) {
 }
 
+func (a EditPolicy) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Libraries": reflect.TypeOf(Library{}),
+	}
+}
+
 type EditPolicyResponse struct {
 }
 
@@ -1997,6 +2402,10 @@ func (newState *EditPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *EditPolicyResponse) SyncEffectiveFieldsDuringRead(existingState EditPolicyResponse) {
 }
 
+func (a EditPolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type EditResponse struct {
 }
 
@@ -2004,6 +2413,10 @@ func (newState *EditResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditR
 }
 
 func (newState *EditResponse) SyncEffectiveFieldsDuringRead(existingState EditResponse) {
+}
+
+func (a EditResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type EnforceClusterComplianceRequest struct {
@@ -2020,10 +2433,14 @@ func (newState *EnforceClusterComplianceRequest) SyncEffectiveFieldsDuringCreate
 func (newState *EnforceClusterComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceRequest) {
 }
 
+func (a EnforceClusterComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type EnforceClusterComplianceResponse struct {
 	// A list of changes that have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
-	Changes []ClusterSettingsChange `tfsdk:"changes" tf:"optional"`
+	Changes types.List `tfsdk:"changes" tf:"optional"`
 	// Whether any changes have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
 	HasChanges types.Bool `tfsdk:"has_changes" tf:"optional"`
@@ -2033,6 +2450,12 @@ func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringCreat
 }
 
 func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceResponse) {
+}
+
+func (a EnforceClusterComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Changes": reflect.TypeOf(ClusterSettingsChange{}),
+	}
 }
 
 // The environment entity used to preserve serverless environment side panel and
@@ -2050,7 +2473,7 @@ type Environment struct {
 	// dependency could be <requirement specifier>, <archive url/path>, <local
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
-	Dependencies []types.String `tfsdk:"dependencies" tf:"optional"`
+	Dependencies types.List `tfsdk:"dependencies" tf:"optional"`
 }
 
 func (newState *Environment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Environment) {
@@ -2059,14 +2482,20 @@ func (newState *Environment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Enviro
 func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environment) {
 }
 
+func (a Environment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Dependencies": reflect.TypeOf(""),
+	}
+}
+
 type EventDetails struct {
 	// * For created clusters, the attributes of the cluster. * For edited
 	// clusters, the new attributes of the cluster.
-	Attributes []ClusterAttributes `tfsdk:"attributes" tf:"optional,object"`
+	Attributes types.Object `tfsdk:"attributes" tf:"optional,object"`
 	// The cause of a change in target size.
 	Cause types.String `tfsdk:"cause" tf:"optional"`
 	// The actual cluster size that was set in the cluster creation or edit.
-	ClusterSize []ClusterSize `tfsdk:"cluster_size" tf:"optional,object"`
+	ClusterSize types.Object `tfsdk:"cluster_size" tf:"optional,object"`
 	// The current number of vCPUs in the cluster.
 	CurrentNumVcpus types.Int64 `tfsdk:"current_num_vcpus" tf:"optional"`
 	// The current number of nodes in the cluster.
@@ -2084,7 +2513,7 @@ type EventDetails struct {
 	FreeSpace types.Int64 `tfsdk:"free_space" tf:"optional"`
 	// List of global and cluster init scripts associated with this cluster
 	// event.
-	InitScripts []InitScriptEventDetails `tfsdk:"init_scripts" tf:"optional,object"`
+	InitScripts types.Object `tfsdk:"init_scripts" tf:"optional,object"`
 	// Instance Id where the event originated from
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 	// Unique identifier of the specific job run associated with this cluster
@@ -2092,15 +2521,15 @@ type EventDetails struct {
 	// cluster name
 	JobRunName types.String `tfsdk:"job_run_name" tf:"optional"`
 	// The cluster attributes before a cluster was edited.
-	PreviousAttributes []ClusterAttributes `tfsdk:"previous_attributes" tf:"optional,object"`
+	PreviousAttributes types.Object `tfsdk:"previous_attributes" tf:"optional,object"`
 	// The size of the cluster before an edit or resize.
-	PreviousClusterSize []ClusterSize `tfsdk:"previous_cluster_size" tf:"optional,object"`
+	PreviousClusterSize types.Object `tfsdk:"previous_cluster_size" tf:"optional,object"`
 	// Previous disk size in bytes
 	PreviousDiskSize types.Int64 `tfsdk:"previous_disk_size" tf:"optional"`
 	// A termination reason: * On a TERMINATED event, this is the reason of the
 	// termination. * On a RESIZE_COMPLETE event, this indicates the reason that
 	// we failed to acquire some nodes.
-	Reason []TerminationReason `tfsdk:"reason" tf:"optional,object"`
+	Reason types.Object `tfsdk:"reason" tf:"optional,object"`
 	// The targeted number of vCPUs in the cluster.
 	TargetNumVcpus types.Int64 `tfsdk:"target_num_vcpus" tf:"optional"`
 	// The targeted number of nodes in the cluster.
@@ -2114,6 +2543,17 @@ func (newState *EventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan Event
 }
 
 func (newState *EventDetails) SyncEffectiveFieldsDuringRead(existingState EventDetails) {
+}
+
+func (a EventDetails) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Attributes":          reflect.TypeOf(ClusterAttributes{}),
+		"ClusterSize":         reflect.TypeOf(ClusterSize{}),
+		"InitScripts":         reflect.TypeOf(InitScriptEventDetails{}),
+		"PreviousAttributes":  reflect.TypeOf(ClusterAttributes{}),
+		"PreviousClusterSize": reflect.TypeOf(ClusterSize{}),
+		"Reason":              reflect.TypeOf(TerminationReason{}),
+	}
 }
 
 type GcpAttributes struct {
@@ -2156,6 +2596,10 @@ func (newState *GcpAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpA
 func (newState *GcpAttributes) SyncEffectiveFieldsDuringRead(existingState GcpAttributes) {
 }
 
+func (a GcpAttributes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GcsStorageInfo struct {
 	// GCS destination/URI, e.g. `gs://my-bucket/some-prefix`
 	Destination types.String `tfsdk:"destination" tf:""`
@@ -2165,6 +2609,10 @@ func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Gcs
 }
 
 func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringRead(existingState GcsStorageInfo) {
+}
+
+func (a GcsStorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get cluster policy compliance
@@ -2179,6 +2627,10 @@ func (newState *GetClusterComplianceRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *GetClusterComplianceRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterComplianceRequest) {
 }
 
+func (a GetClusterComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetClusterComplianceResponse struct {
 	// Whether the cluster is compliant with its policy or not. Clusters could
 	// be out of compliance if the policy was updated after the cluster was last
@@ -2188,13 +2640,19 @@ type GetClusterComplianceResponse struct {
 	// validation errors. The keys indicate the path where the policy validation
 	// error is occurring. The values indicate an error message describing the
 	// policy validation error.
-	Violations map[string]types.String `tfsdk:"violations" tf:"optional"`
+	Violations types.Map `tfsdk:"violations" tf:"optional"`
 }
 
 func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterComplianceResponse) {
 }
 
 func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterComplianceResponse) {
+}
+
+func (a GetClusterComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Violations": reflect.TypeOf(""),
+	}
 }
 
 // Get cluster permission levels
@@ -2209,15 +2667,25 @@ func (newState *GetClusterPermissionLevelsRequest) SyncEffectiveFieldsDuringCrea
 func (newState *GetClusterPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionLevelsRequest) {
 }
 
+func (a GetClusterPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetClusterPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []ClusterPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
 }
 
 func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsResponse) {
 }
 
 func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionLevelsResponse) {
+}
+
+func (a GetClusterPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionLevels": reflect.TypeOf(ClusterPermissionsDescription{}),
+	}
 }
 
 // Get cluster permissions
@@ -2232,6 +2700,10 @@ func (newState *GetClusterPermissionsRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *GetClusterPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionsRequest) {
 }
 
+func (a GetClusterPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get cluster policy permission levels
 type GetClusterPolicyPermissionLevelsRequest struct {
 	// The cluster policy for which to get or manage permissions.
@@ -2244,15 +2716,25 @@ func (newState *GetClusterPolicyPermissionLevelsRequest) SyncEffectiveFieldsDuri
 func (newState *GetClusterPolicyPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsRequest) {
 }
 
+func (a GetClusterPolicyPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetClusterPolicyPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []ClusterPolicyPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
 }
 
 func (newState *GetClusterPolicyPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsResponse) {
 }
 
 func (newState *GetClusterPolicyPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsResponse) {
+}
+
+func (a GetClusterPolicyPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionLevels": reflect.TypeOf(ClusterPolicyPermissionsDescription{}),
+	}
 }
 
 // Get cluster policy permissions
@@ -2267,6 +2749,10 @@ func (newState *GetClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringCre
 func (newState *GetClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionsRequest) {
 }
 
+func (a GetClusterPolicyPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get a cluster policy
 type GetClusterPolicyRequest struct {
 	// Canonical unique identifier for the Cluster Policy.
@@ -2277,6 +2763,10 @@ func (newState *GetClusterPolicyRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *GetClusterPolicyRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyRequest) {
+}
+
+func (a GetClusterPolicyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get cluster info
@@ -2291,6 +2781,10 @@ func (newState *GetClusterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GetClusterRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterRequest) {
 }
 
+func (a GetClusterRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetEvents struct {
 	// The ID of the cluster to retrieve events about.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -2299,7 +2793,7 @@ type GetEvents struct {
 	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
 	// An optional set of event types to filter on. If empty, all event types
 	// are returned.
-	EventTypes []types.String `tfsdk:"event_types" tf:"optional"`
+	EventTypes types.List `tfsdk:"event_types" tf:"optional"`
 	// The maximum number of events to include in a page of events. Defaults to
 	// 50, and maximum allowed value is 500.
 	Limit types.Int64 `tfsdk:"limit" tf:"optional"`
@@ -2320,12 +2814,18 @@ func (newState *GetEvents) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEvent
 func (newState *GetEvents) SyncEffectiveFieldsDuringRead(existingState GetEvents) {
 }
 
+func (a GetEvents) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"EventTypes": reflect.TypeOf(""),
+	}
+}
+
 type GetEventsResponse struct {
 	// <content needs to be added>
-	Events []ClusterEvent `tfsdk:"events" tf:"optional"`
+	Events types.List `tfsdk:"events" tf:"optional"`
 	// The parameters required to retrieve the next page of events. Omitted if
 	// there are no more events to read.
-	NextPage []GetEvents `tfsdk:"next_page" tf:"optional,object"`
+	NextPage types.Object `tfsdk:"next_page" tf:"optional,object"`
 	// The total number of events filtered by the start_time, end_time, and
 	// event_types.
 	TotalCount types.Int64 `tfsdk:"total_count" tf:"optional"`
@@ -2335,6 +2835,13 @@ func (newState *GetEventsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *GetEventsResponse) SyncEffectiveFieldsDuringRead(existingState GetEventsResponse) {
+}
+
+func (a GetEventsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Events":   reflect.TypeOf(ClusterEvent{}),
+		"NextPage": reflect.TypeOf(GetEvents{}),
+	}
 }
 
 // Get an init script
@@ -2349,19 +2856,23 @@ func (newState *GetGlobalInitScriptRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *GetGlobalInitScriptRequest) SyncEffectiveFieldsDuringRead(existingState GetGlobalInitScriptRequest) {
 }
 
+func (a GetGlobalInitScriptRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes []InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes []InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
 	//
@@ -2372,10 +2883,10 @@ type GetInstancePool struct {
 	// - InstancePoolName: <name_of_pool>
 	//
 	// - InstancePoolId: <id_of_pool>
-	DefaultTags map[string]types.String `tfsdk:"default_tags" tf:"optional"`
+	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec []DiskSpec `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.Object `tfsdk:"disk_spec" tf:"optional,object"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -2384,7 +2895,7 @@ type GetInstancePool struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes []InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -2411,24 +2922,39 @@ type GetInstancePool struct {
 	// :method:clusters/listNodeTypes API call.
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages []DockerImage `tfsdk:"preloaded_docker_images" tf:"optional"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images" tf:"optional"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions" tf:"optional"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions" tf:"optional"`
 	// Current state of the instance pool.
 	State types.String `tfsdk:"state" tf:"optional"`
 	// Usage statistics about the instance pool.
-	Stats []InstancePoolStats `tfsdk:"stats" tf:"optional,object"`
+	Stats types.Object `tfsdk:"stats" tf:"optional,object"`
 	// Status of failed pending instances in the pool.
-	Status []InstancePoolStatus `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status" tf:"optional,object"`
 }
 
 func (newState *GetInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePool) {
 }
 
 func (newState *GetInstancePool) SyncEffectiveFieldsDuringRead(existingState GetInstancePool) {
+}
+
+func (a GetInstancePool) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AwsAttributes":          reflect.TypeOf(InstancePoolAwsAttributes{}),
+		"AzureAttributes":        reflect.TypeOf(InstancePoolAzureAttributes{}),
+		"CustomTags":             reflect.TypeOf(""),
+		"DefaultTags":            reflect.TypeOf(""),
+		"DiskSpec":               reflect.TypeOf(DiskSpec{}),
+		"GcpAttributes":          reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"PreloadedDockerImages":  reflect.TypeOf(DockerImage{}),
+		"PreloadedSparkVersions": reflect.TypeOf(""),
+		"Stats":                  reflect.TypeOf(InstancePoolStats{}),
+		"Status":                 reflect.TypeOf(InstancePoolStatus{}),
+	}
 }
 
 // Get instance pool permission levels
@@ -2443,15 +2969,25 @@ func (newState *GetInstancePoolPermissionLevelsRequest) SyncEffectiveFieldsDurin
 func (newState *GetInstancePoolPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionLevelsRequest) {
 }
 
+func (a GetInstancePoolPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetInstancePoolPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []InstancePoolPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
 }
 
 func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsResponse) {
 }
 
 func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionLevelsResponse) {
+}
+
+func (a GetInstancePoolPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionLevels": reflect.TypeOf(InstancePoolPermissionsDescription{}),
+	}
 }
 
 // Get instance pool permissions
@@ -2466,6 +3002,10 @@ func (newState *GetInstancePoolPermissionsRequest) SyncEffectiveFieldsDuringCrea
 func (newState *GetInstancePoolPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionsRequest) {
 }
 
+func (a GetInstancePoolPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get instance pool information
 type GetInstancePoolRequest struct {
 	// The canonical unique identifier for the instance pool.
@@ -2476,6 +3016,10 @@ func (newState *GetInstancePoolRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *GetInstancePoolRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolRequest) {
+}
+
+func (a GetInstancePoolRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get policy family information
@@ -2493,15 +3037,25 @@ func (newState *GetPolicyFamilyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *GetPolicyFamilyRequest) SyncEffectiveFieldsDuringRead(existingState GetPolicyFamilyRequest) {
 }
 
+func (a GetPolicyFamilyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetSparkVersionsResponse struct {
 	// All the available Spark versions.
-	Versions []SparkVersion `tfsdk:"versions" tf:"optional"`
+	Versions types.List `tfsdk:"versions" tf:"optional"`
 }
 
 func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSparkVersionsResponse) {
 }
 
 func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringRead(existingState GetSparkVersionsResponse) {
+}
+
+func (a GetSparkVersionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Versions": reflect.TypeOf(SparkVersion{}),
+	}
 }
 
 type GlobalInitScriptCreateRequest struct {
@@ -2531,6 +3085,10 @@ func (newState *GlobalInitScriptCreateRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *GlobalInitScriptCreateRequest) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptCreateRequest) {
 }
 
+func (a GlobalInitScriptCreateRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GlobalInitScriptDetails struct {
 	// Time when the script was created, represented as a Unix timestamp in
 	// milliseconds.
@@ -2557,6 +3115,10 @@ func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptDetails) {
+}
+
+func (a GlobalInitScriptDetails) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type GlobalInitScriptDetailsWithContent struct {
@@ -2589,6 +3151,10 @@ func (newState *GlobalInitScriptDetailsWithContent) SyncEffectiveFieldsDuringCre
 func (newState *GlobalInitScriptDetailsWithContent) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptDetailsWithContent) {
 }
 
+func (a GlobalInitScriptDetailsWithContent) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GlobalInitScriptUpdateRequest struct {
 	// Specifies whether the script is enabled. The script runs only if enabled.
 	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
@@ -2619,11 +3185,15 @@ func (newState *GlobalInitScriptUpdateRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *GlobalInitScriptUpdateRequest) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptUpdateRequest) {
 }
 
+func (a GlobalInitScriptUpdateRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type InitScriptEventDetails struct {
 	// The cluster scoped init scripts associated with this cluster event
-	Cluster []InitScriptInfoAndExecutionDetails `tfsdk:"cluster" tf:"optional"`
+	Cluster types.List `tfsdk:"cluster" tf:"optional"`
 	// The global init scripts associated with this cluster event
-	Global []InitScriptInfoAndExecutionDetails `tfsdk:"global" tf:"optional"`
+	Global types.List `tfsdk:"global" tf:"optional"`
 	// The private ip address of the node where the init scripts were run.
 	ReportedForNode types.String `tfsdk:"reported_for_node" tf:"optional"`
 }
@@ -2632,6 +3202,13 @@ func (newState *InitScriptEventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *InitScriptEventDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptEventDetails) {
+}
+
+func (a InitScriptEventDetails) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Cluster": reflect.TypeOf(InitScriptInfoAndExecutionDetails{}),
+		"Global":  reflect.TypeOf(InitScriptInfoAndExecutionDetails{}),
+	}
 }
 
 type InitScriptExecutionDetails struct {
@@ -2649,32 +3226,36 @@ func (newState *InitScriptExecutionDetails) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *InitScriptExecutionDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptExecutionDetails) {
 }
 
+func (a InitScriptExecutionDetails) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type InitScriptInfo struct {
 	// destination needs to be provided. e.g. `{ "abfss" : { "destination" :
 	// "abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>"
 	// } }
-	Abfss []Adlsgen2Info `tfsdk:"abfss" tf:"optional,object"`
+	Abfss types.Object `tfsdk:"abfss" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
-	Dbfs []DbfsStorageInfo `tfsdk:"dbfs" tf:"optional,object"`
+	Dbfs types.Object `tfsdk:"dbfs" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "file" : { "destination" :
 	// "file:/my/local/file.sh" } }`
-	File []LocalFileInfo `tfsdk:"file" tf:"optional,object"`
+	File types.Object `tfsdk:"file" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "gcs": { "destination":
 	// "gs://my-bucket/file.sh" } }`
-	Gcs []GcsStorageInfo `tfsdk:"gcs" tf:"optional,object"`
+	Gcs types.Object `tfsdk:"gcs" tf:"optional,object"`
 	// destination and either the region or endpoint need to be provided. e.g.
 	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
 	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
-	S3 []S3StorageInfo `tfsdk:"s3" tf:"optional,object"`
+	S3 types.Object `tfsdk:"s3" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "volumes" : { "destination" :
 	// "/Volumes/my-init.sh" } }`
-	Volumes []VolumesStorageInfo `tfsdk:"volumes" tf:"optional,object"`
+	Volumes types.Object `tfsdk:"volumes" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "workspace" : { "destination" :
 	// "/Users/user1@databricks.com/my-init.sh" } }`
-	Workspace []WorkspaceStorageInfo `tfsdk:"workspace" tf:"optional,object"`
+	Workspace types.Object `tfsdk:"workspace" tf:"optional,object"`
 }
 
 func (newState *InitScriptInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfo) {
@@ -2683,11 +3264,23 @@ func (newState *InitScriptInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ini
 func (newState *InitScriptInfo) SyncEffectiveFieldsDuringRead(existingState InitScriptInfo) {
 }
 
+func (a InitScriptInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Abfss":     reflect.TypeOf(Adlsgen2Info{}),
+		"Dbfs":      reflect.TypeOf(DbfsStorageInfo{}),
+		"File":      reflect.TypeOf(LocalFileInfo{}),
+		"Gcs":       reflect.TypeOf(GcsStorageInfo{}),
+		"S3":        reflect.TypeOf(S3StorageInfo{}),
+		"Volumes":   reflect.TypeOf(VolumesStorageInfo{}),
+		"Workspace": reflect.TypeOf(WorkspaceStorageInfo{}),
+	}
+}
+
 type InitScriptInfoAndExecutionDetails struct {
 	// Details about the script
-	ExecutionDetails []InitScriptExecutionDetails `tfsdk:"execution_details" tf:"optional,object"`
+	ExecutionDetails types.Object `tfsdk:"execution_details" tf:"optional,object"`
 	// The script
-	Script []InitScriptInfo `tfsdk:"script" tf:"optional,object"`
+	Script types.Object `tfsdk:"script" tf:"optional,object"`
 }
 
 func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfoAndExecutionDetails) {
@@ -2696,17 +3289,30 @@ func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringCrea
 func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptInfoAndExecutionDetails) {
 }
 
+func (a InitScriptInfoAndExecutionDetails) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ExecutionDetails": reflect.TypeOf(InitScriptExecutionDetails{}),
+		"Script":           reflect.TypeOf(InitScriptInfo{}),
+	}
+}
+
 type InstallLibraries struct {
 	// Unique identifier for the cluster on which to install these libraries.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// The libraries to install.
-	Libraries []Library `tfsdk:"libraries" tf:""`
+	Libraries types.List `tfsdk:"libraries" tf:""`
 }
 
 func (newState *InstallLibraries) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallLibraries) {
 }
 
 func (newState *InstallLibraries) SyncEffectiveFieldsDuringRead(existingState InstallLibraries) {
+}
+
+func (a InstallLibraries) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Libraries": reflect.TypeOf(Library{}),
+	}
 }
 
 type InstallLibrariesResponse struct {
@@ -2716,6 +3322,10 @@ func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existingState InstallLibrariesResponse) {
+}
+
+func (a InstallLibrariesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type InstancePoolAccessControlRequest struct {
@@ -2735,9 +3345,13 @@ func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringCreat
 func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState InstancePoolAccessControlRequest) {
 }
 
+func (a InstancePoolAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type InstancePoolAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []InstancePoolPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
@@ -2754,19 +3368,25 @@ func (newState *InstancePoolAccessControlResponse) SyncEffectiveFieldsDuringCrea
 func (newState *InstancePoolAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState InstancePoolAccessControlResponse) {
 }
 
+func (a InstancePoolAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllPermissions": reflect.TypeOf(InstancePoolPermission{}),
+	}
+}
+
 type InstancePoolAndStats struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes []InstancePoolAwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes []InstancePoolAzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
 	//
@@ -2777,10 +3397,10 @@ type InstancePoolAndStats struct {
 	// - InstancePoolName: <name_of_pool>
 	//
 	// - InstancePoolId: <id_of_pool>
-	DefaultTags map[string]types.String `tfsdk:"default_tags" tf:"optional"`
+	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec []DiskSpec `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.Object `tfsdk:"disk_spec" tf:"optional,object"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -2789,7 +3409,7 @@ type InstancePoolAndStats struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes []InstancePoolGcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -2816,24 +3436,39 @@ type InstancePoolAndStats struct {
 	// :method:clusters/listNodeTypes API call.
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages []DockerImage `tfsdk:"preloaded_docker_images" tf:"optional"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images" tf:"optional"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions []types.String `tfsdk:"preloaded_spark_versions" tf:"optional"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions" tf:"optional"`
 	// Current state of the instance pool.
 	State types.String `tfsdk:"state" tf:"optional"`
 	// Usage statistics about the instance pool.
-	Stats []InstancePoolStats `tfsdk:"stats" tf:"optional,object"`
+	Stats types.Object `tfsdk:"stats" tf:"optional,object"`
 	// Status of failed pending instances in the pool.
-	Status []InstancePoolStatus `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status" tf:"optional,object"`
 }
 
 func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAndStats) {
 }
 
 func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringRead(existingState InstancePoolAndStats) {
+}
+
+func (a InstancePoolAndStats) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AwsAttributes":          reflect.TypeOf(InstancePoolAwsAttributes{}),
+		"AzureAttributes":        reflect.TypeOf(InstancePoolAzureAttributes{}),
+		"CustomTags":             reflect.TypeOf(""),
+		"DefaultTags":            reflect.TypeOf(""),
+		"DiskSpec":               reflect.TypeOf(DiskSpec{}),
+		"GcpAttributes":          reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"PreloadedDockerImages":  reflect.TypeOf(DockerImage{}),
+		"PreloadedSparkVersions": reflect.TypeOf(""),
+		"Stats":                  reflect.TypeOf(InstancePoolStats{}),
+		"Status":                 reflect.TypeOf(InstancePoolStatus{}),
+	}
 }
 
 type InstancePoolAwsAttributes struct {
@@ -2874,6 +3509,10 @@ func (newState *InstancePoolAwsAttributes) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *InstancePoolAwsAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolAwsAttributes) {
 }
 
+func (a InstancePoolAwsAttributes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type InstancePoolAzureAttributes struct {
 	// Shows the Availability type used for the spot nodes.
 	//
@@ -2889,6 +3528,10 @@ func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolAzureAttributes) {
+}
+
+func (a InstancePoolAzureAttributes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type InstancePoolGcpAttributes struct {
@@ -2928,10 +3571,14 @@ func (newState *InstancePoolGcpAttributes) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *InstancePoolGcpAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolGcpAttributes) {
 }
 
+func (a InstancePoolGcpAttributes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type InstancePoolPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
@@ -2942,8 +3589,14 @@ func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermission) {
 }
 
+func (a InstancePoolPermission) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InheritedFromObject": reflect.TypeOf(""),
+	}
+}
+
 type InstancePoolPermissions struct {
-	AccessControlList []InstancePoolAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
@@ -2954,6 +3607,12 @@ func (newState *InstancePoolPermissions) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *InstancePoolPermissions) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissions) {
+}
+
+func (a InstancePoolPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(InstancePoolAccessControlResponse{}),
+	}
 }
 
 type InstancePoolPermissionsDescription struct {
@@ -2968,8 +3627,12 @@ func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringCre
 func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsDescription) {
 }
 
+func (a InstancePoolPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type InstancePoolPermissionsRequest struct {
-	AccessControlList []InstancePoolAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// The instance pool for which to get or manage permissions.
 	InstancePoolId types.String `tfsdk:"-"`
 }
@@ -2978,6 +3641,12 @@ func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsRequest) {
+}
+
+func (a InstancePoolPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(InstancePoolAccessControlRequest{}),
+	}
 }
 
 type InstancePoolStats struct {
@@ -2997,18 +3666,28 @@ func (newState *InstancePoolStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *InstancePoolStats) SyncEffectiveFieldsDuringRead(existingState InstancePoolStats) {
 }
 
+func (a InstancePoolStats) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type InstancePoolStatus struct {
 	// List of error messages for the failed pending instances. The
 	// pending_instance_errors follows FIFO with maximum length of the min_idle
 	// of the pool. The pending_instance_errors is emptied once the number of
 	// exiting available instances reaches the min_idle of the pool.
-	PendingInstanceErrors []PendingInstanceError `tfsdk:"pending_instance_errors" tf:"optional"`
+	PendingInstanceErrors types.List `tfsdk:"pending_instance_errors" tf:"optional"`
 }
 
 func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolStatus) {
 }
 
 func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringRead(existingState InstancePoolStatus) {
+}
+
+func (a InstancePoolStatus) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PendingInstanceErrors": reflect.TypeOf(PendingInstanceError{}),
+	}
 }
 
 type InstanceProfile struct {
@@ -3038,9 +3717,13 @@ func (newState *InstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan In
 func (newState *InstanceProfile) SyncEffectiveFieldsDuringRead(existingState InstanceProfile) {
 }
 
+func (a InstanceProfile) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Library struct {
 	// Specification of a CRAN library to be installed as part of the library
-	Cran []RCranLibrary `tfsdk:"cran" tf:"optional,object"`
+	Cran types.Object `tfsdk:"cran" tf:"optional,object"`
 	// Deprecated. URI of the egg library to install. Installing Python egg
 	// files is deprecated and is not supported in Databricks Runtime 14.0 and
 	// above.
@@ -3055,10 +3738,10 @@ type Library struct {
 	Jar types.String `tfsdk:"jar" tf:"optional"`
 	// Specification of a maven library to be installed. For example: `{
 	// "coordinates": "org.jsoup:jsoup:1.7.2" }`
-	Maven []MavenLibrary `tfsdk:"maven" tf:"optional,object"`
+	Maven types.Object `tfsdk:"maven" tf:"optional,object"`
 	// Specification of a PyPi library to be installed. For example: `{
 	// "package": "simplejson" }`
-	Pypi []PythonPyPiLibrary `tfsdk:"pypi" tf:"optional,object"`
+	Pypi types.Object `tfsdk:"pypi" tf:"optional,object"`
 	// URI of the requirements.txt file to install. Only Workspace paths and
 	// Unity Catalog Volumes paths are supported. For example: `{
 	// "requirements": "/Workspace/path/to/requirements.txt" }` or `{
@@ -3080,16 +3763,24 @@ func (newState *Library) SyncEffectiveFieldsDuringCreateOrUpdate(plan Library) {
 func (newState *Library) SyncEffectiveFieldsDuringRead(existingState Library) {
 }
 
+func (a Library) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Cran":  reflect.TypeOf(RCranLibrary{}),
+		"Maven": reflect.TypeOf(MavenLibrary{}),
+		"Pypi":  reflect.TypeOf(PythonPyPiLibrary{}),
+	}
+}
+
 // The status of the library on a specific cluster.
 type LibraryFullStatus struct {
 	// Whether the library was set to be installed on all clusters via the
 	// libraries UI.
 	IsLibraryForAllClusters types.Bool `tfsdk:"is_library_for_all_clusters" tf:"optional"`
 	// Unique identifier for the library.
-	Library []Library `tfsdk:"library" tf:"optional,object"`
+	Library types.Object `tfsdk:"library" tf:"optional,object"`
 	// All the info and warning messages that have occurred so far for this
 	// library.
-	Messages []types.String `tfsdk:"messages" tf:"optional"`
+	Messages types.List `tfsdk:"messages" tf:"optional"`
 	// Status of installing the library on the cluster.
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
@@ -3100,9 +3791,16 @@ func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringRead(existingState LibraryFullStatus) {
 }
 
+func (a LibraryFullStatus) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Library":  reflect.TypeOf(Library{}),
+		"Messages": reflect.TypeOf(""),
+	}
+}
+
 type ListAllClusterLibraryStatusesResponse struct {
 	// A list of cluster statuses.
-	Statuses []ClusterLibraryStatuses `tfsdk:"statuses" tf:"optional"`
+	Statuses types.List `tfsdk:"statuses" tf:"optional"`
 }
 
 func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllClusterLibraryStatusesResponse) {
@@ -3111,18 +3809,30 @@ func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuring
 func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuringRead(existingState ListAllClusterLibraryStatusesResponse) {
 }
 
+func (a ListAllClusterLibraryStatusesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Statuses": reflect.TypeOf(ClusterLibraryStatuses{}),
+	}
+}
+
 type ListAvailableZonesResponse struct {
 	// The availability zone if no `zone_id` is provided in the cluster creation
 	// request.
 	DefaultZone types.String `tfsdk:"default_zone" tf:"optional"`
 	// The list of available zones (e.g., ['us-west-2c', 'us-east-2']).
-	Zones []types.String `tfsdk:"zones" tf:"optional"`
+	Zones types.List `tfsdk:"zones" tf:"optional"`
 }
 
 func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAvailableZonesResponse) {
 }
 
 func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringRead(existingState ListAvailableZonesResponse) {
+}
+
+func (a ListAvailableZonesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Zones": reflect.TypeOf(""),
+	}
 }
 
 // List cluster policy compliance
@@ -3144,9 +3854,13 @@ func (newState *ListClusterCompliancesRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListClusterCompliancesRequest) SyncEffectiveFieldsDuringRead(existingState ListClusterCompliancesRequest) {
 }
 
+func (a ListClusterCompliancesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListClusterCompliancesResponse struct {
 	// A list of clusters and their policy compliance statuses.
-	Clusters []ClusterCompliance `tfsdk:"clusters" tf:"optional"`
+	Clusters types.List `tfsdk:"clusters" tf:"optional"`
 	// This field represents the pagination token to retrieve the next page of
 	// results. If the value is "", it means no further results for the request.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -3160,6 +3874,12 @@ func (newState *ListClusterCompliancesResponse) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *ListClusterCompliancesResponse) SyncEffectiveFieldsDuringRead(existingState ListClusterCompliancesResponse) {
+}
+
+func (a ListClusterCompliancesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Clusters": reflect.TypeOf(ClusterCompliance{}),
+	}
 }
 
 // List cluster policies
@@ -3179,11 +3899,15 @@ func (newState *ListClusterPoliciesRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ListClusterPoliciesRequest) SyncEffectiveFieldsDuringRead(existingState ListClusterPoliciesRequest) {
 }
 
+func (a ListClusterPoliciesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListClustersFilterBy struct {
 	// The source of cluster creation.
-	ClusterSources []types.String `tfsdk:"cluster_sources" tf:"optional"`
+	ClusterSources types.List `tfsdk:"cluster_sources" tf:"optional"`
 	// The current state of the clusters.
-	ClusterStates []types.String `tfsdk:"cluster_states" tf:"optional"`
+	ClusterStates types.List `tfsdk:"cluster_states" tf:"optional"`
 	// Whether the clusters are pinned or not.
 	IsPinned types.Bool `tfsdk:"is_pinned" tf:"optional"`
 	// The ID of the cluster policy used to create the cluster if applicable.
@@ -3196,10 +3920,17 @@ func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringRead(existingState ListClustersFilterBy) {
 }
 
+func (a ListClustersFilterBy) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ClusterSources": reflect.TypeOf(""),
+		"ClusterStates":  reflect.TypeOf(""),
+	}
+}
+
 // List clusters
 type ListClustersRequest struct {
 	// Filters to apply to the list of clusters.
-	FilterBy []ListClustersFilterBy `tfsdk:"-"`
+	FilterBy types.Object `tfsdk:"-"`
 	// Use this field to specify the maximum number of results to be returned by
 	// the server. The server may further constrain the maximum number of
 	// results returned in a single page.
@@ -3208,7 +3939,7 @@ type ListClustersRequest struct {
 	// to list the next or previous page of clusters respectively.
 	PageToken types.String `tfsdk:"-"`
 	// Sort the list of clusters by a specific criteria.
-	SortBy []ListClustersSortBy `tfsdk:"-"`
+	SortBy types.Object `tfsdk:"-"`
 }
 
 func (newState *ListClustersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersRequest) {
@@ -3217,9 +3948,16 @@ func (newState *ListClustersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ListClustersRequest) SyncEffectiveFieldsDuringRead(existingState ListClustersRequest) {
 }
 
+func (a ListClustersRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FilterBy": reflect.TypeOf(ListClustersFilterBy{}),
+		"SortBy":   reflect.TypeOf(ListClustersSortBy{}),
+	}
+}
+
 type ListClustersResponse struct {
 	// <needs content added>
-	Clusters []ClusterDetails `tfsdk:"clusters" tf:"optional"`
+	Clusters types.List `tfsdk:"clusters" tf:"optional"`
 	// This field represents the pagination token to retrieve the next page of
 	// results. If the value is "", it means no further results for the request.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -3233,6 +3971,12 @@ func (newState *ListClustersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *ListClustersResponse) SyncEffectiveFieldsDuringRead(existingState ListClustersResponse) {
+}
+
+func (a ListClustersResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Clusters": reflect.TypeOf(ClusterDetails{}),
+	}
 }
 
 type ListClustersSortBy struct {
@@ -3250,8 +3994,12 @@ func (newState *ListClustersSortBy) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListClustersSortBy) SyncEffectiveFieldsDuringRead(existingState ListClustersSortBy) {
 }
 
+func (a ListClustersSortBy) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListGlobalInitScriptsResponse struct {
-	Scripts []GlobalInitScriptDetails `tfsdk:"scripts" tf:"optional"`
+	Scripts types.List `tfsdk:"scripts" tf:"optional"`
 }
 
 func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListGlobalInitScriptsResponse) {
@@ -3260,8 +4008,14 @@ func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringRead(existingState ListGlobalInitScriptsResponse) {
 }
 
+func (a ListGlobalInitScriptsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Scripts": reflect.TypeOf(GlobalInitScriptDetails{}),
+	}
+}
+
 type ListInstancePools struct {
-	InstancePools []InstancePoolAndStats `tfsdk:"instance_pools" tf:"optional"`
+	InstancePools types.List `tfsdk:"instance_pools" tf:"optional"`
 }
 
 func (newState *ListInstancePools) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstancePools) {
@@ -3270,9 +4024,15 @@ func (newState *ListInstancePools) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ListInstancePools) SyncEffectiveFieldsDuringRead(existingState ListInstancePools) {
 }
 
+func (a ListInstancePools) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InstancePools": reflect.TypeOf(InstancePoolAndStats{}),
+	}
+}
+
 type ListInstanceProfilesResponse struct {
 	// A list of instance profiles that the user can access.
-	InstanceProfiles []InstanceProfile `tfsdk:"instance_profiles" tf:"optional"`
+	InstanceProfiles types.List `tfsdk:"instance_profiles" tf:"optional"`
 }
 
 func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstanceProfilesResponse) {
@@ -3281,9 +4041,15 @@ func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringRead(existingState ListInstanceProfilesResponse) {
 }
 
+func (a ListInstanceProfilesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InstanceProfiles": reflect.TypeOf(InstanceProfile{}),
+	}
+}
+
 type ListNodeTypesResponse struct {
 	// The list of available Spark node types.
-	NodeTypes []NodeType `tfsdk:"node_types" tf:"optional"`
+	NodeTypes types.List `tfsdk:"node_types" tf:"optional"`
 }
 
 func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNodeTypesResponse) {
@@ -3292,15 +4058,27 @@ func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringRead(existingState ListNodeTypesResponse) {
 }
 
+func (a ListNodeTypesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"NodeTypes": reflect.TypeOf(NodeType{}),
+	}
+}
+
 type ListPoliciesResponse struct {
 	// List of policies.
-	Policies []Policy `tfsdk:"policies" tf:"optional"`
+	Policies types.List `tfsdk:"policies" tf:"optional"`
 }
 
 func (newState *ListPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPoliciesResponse) {
 }
 
 func (newState *ListPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListPoliciesResponse) {
+}
+
+func (a ListPoliciesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Policies": reflect.TypeOf(Policy{}),
+	}
 }
 
 // List policy families
@@ -3317,18 +4095,28 @@ func (newState *ListPolicyFamiliesRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ListPolicyFamiliesRequest) SyncEffectiveFieldsDuringRead(existingState ListPolicyFamiliesRequest) {
 }
 
+func (a ListPolicyFamiliesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListPolicyFamiliesResponse struct {
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// List of policy families.
-	PolicyFamilies []PolicyFamily `tfsdk:"policy_families" tf:"optional"`
+	PolicyFamilies types.List `tfsdk:"policy_families" tf:"optional"`
 }
 
 func (newState *ListPolicyFamiliesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesResponse) {
 }
 
 func (newState *ListPolicyFamiliesResponse) SyncEffectiveFieldsDuringRead(existingState ListPolicyFamiliesResponse) {
+}
+
+func (a ListPolicyFamiliesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PolicyFamilies": reflect.TypeOf(PolicyFamily{}),
+	}
 }
 
 type LocalFileInfo struct {
@@ -3342,6 +4130,10 @@ func (newState *LocalFileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Loca
 func (newState *LocalFileInfo) SyncEffectiveFieldsDuringRead(existingState LocalFileInfo) {
 }
 
+func (a LocalFileInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type LogAnalyticsInfo struct {
 	// <needs content added>
 	LogAnalyticsPrimaryKey types.String `tfsdk:"log_analytics_primary_key" tf:"optional"`
@@ -3353,6 +4145,10 @@ func (newState *LogAnalyticsInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 }
 
 func (newState *LogAnalyticsInfo) SyncEffectiveFieldsDuringRead(existingState LogAnalyticsInfo) {
+}
+
+func (a LogAnalyticsInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type LogSyncStatus struct {
@@ -3370,6 +4166,10 @@ func (newState *LogSyncStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogS
 func (newState *LogSyncStatus) SyncEffectiveFieldsDuringRead(existingState LogSyncStatus) {
 }
 
+func (a LogSyncStatus) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type MavenLibrary struct {
 	// Gradle-style maven coordinates. For example: "org.jsoup:jsoup:1.7.2".
 	Coordinates types.String `tfsdk:"coordinates" tf:""`
@@ -3378,7 +4178,7 @@ type MavenLibrary struct {
 	//
 	// Maven dependency exclusions:
 	// https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html.
-	Exclusions []types.String `tfsdk:"exclusions" tf:"optional"`
+	Exclusions types.List `tfsdk:"exclusions" tf:"optional"`
 	// Maven repo to install the Maven package from. If omitted, both Maven
 	// Central Repository and Spark Packages are searched.
 	Repo types.String `tfsdk:"repo" tf:"optional"`
@@ -3388,6 +4188,12 @@ func (newState *MavenLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan Maven
 }
 
 func (newState *MavenLibrary) SyncEffectiveFieldsDuringRead(existingState MavenLibrary) {
+}
+
+func (a MavenLibrary) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Exclusions": reflect.TypeOf(""),
+	}
 }
 
 type NodeInstanceType struct {
@@ -3406,6 +4212,10 @@ func (newState *NodeInstanceType) SyncEffectiveFieldsDuringCreateOrUpdate(plan N
 }
 
 func (newState *NodeInstanceType) SyncEffectiveFieldsDuringRead(existingState NodeInstanceType) {
+}
+
+func (a NodeInstanceType) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type NodeType struct {
@@ -3432,9 +4242,9 @@ type NodeType struct {
 	// Memory (in MB) available for this node type.
 	MemoryMb types.Int64 `tfsdk:"memory_mb" tf:""`
 
-	NodeInfo []CloudProviderNodeInfo `tfsdk:"node_info" tf:"optional,object"`
+	NodeInfo types.Object `tfsdk:"node_info" tf:"optional,object"`
 
-	NodeInstanceType []NodeInstanceType `tfsdk:"node_instance_type" tf:"optional,object"`
+	NodeInstanceType types.Object `tfsdk:"node_instance_type" tf:"optional,object"`
 	// Unique identifier for this node type.
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:""`
 	// Number of CPU cores available for this node type. Note that this can be
@@ -3464,6 +4274,13 @@ func (newState *NodeType) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeType)
 func (newState *NodeType) SyncEffectiveFieldsDuringRead(existingState NodeType) {
 }
 
+func (a NodeType) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"NodeInfo":         reflect.TypeOf(CloudProviderNodeInfo{}),
+		"NodeInstanceType": reflect.TypeOf(NodeInstanceType{}),
+	}
+}
+
 type PendingInstanceError struct {
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 
@@ -3474,6 +4291,10 @@ func (newState *PendingInstanceError) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *PendingInstanceError) SyncEffectiveFieldsDuringRead(existingState PendingInstanceError) {
+}
+
+func (a PendingInstanceError) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type PermanentDeleteCluster struct {
@@ -3487,6 +4308,10 @@ func (newState *PermanentDeleteCluster) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *PermanentDeleteCluster) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteCluster) {
 }
 
+func (a PermanentDeleteCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PermanentDeleteClusterResponse struct {
 }
 
@@ -3494,6 +4319,10 @@ func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteClusterResponse) {
+}
+
+func (a PermanentDeleteClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type PinCluster struct {
@@ -3507,6 +4336,10 @@ func (newState *PinCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PinClus
 func (newState *PinCluster) SyncEffectiveFieldsDuringRead(existingState PinCluster) {
 }
 
+func (a PinCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PinClusterResponse struct {
 }
 
@@ -3514,6 +4347,10 @@ func (newState *PinClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *PinClusterResponse) SyncEffectiveFieldsDuringRead(existingState PinClusterResponse) {
+}
+
+func (a PinClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Describes a Cluster Policy entity.
@@ -3537,7 +4374,7 @@ type Policy struct {
 	IsDefault types.Bool `tfsdk:"is_default" tf:"optional"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries []Library `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries" tf:"optional"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
 	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user" tf:"optional"`
@@ -3571,6 +4408,12 @@ func (newState *Policy) SyncEffectiveFieldsDuringCreateOrUpdate(plan Policy) {
 func (newState *Policy) SyncEffectiveFieldsDuringRead(existingState Policy) {
 }
 
+func (a Policy) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Libraries": reflect.TypeOf(Library{}),
+	}
+}
+
 type PolicyFamily struct {
 	// Policy definition document expressed in [Databricks Cluster Policy
 	// Definition Language].
@@ -3591,6 +4434,10 @@ func (newState *PolicyFamily) SyncEffectiveFieldsDuringCreateOrUpdate(plan Polic
 func (newState *PolicyFamily) SyncEffectiveFieldsDuringRead(existingState PolicyFamily) {
 }
 
+func (a PolicyFamily) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PythonPyPiLibrary struct {
 	// The name of the pypi package to install. An optional exact version
 	// specification is also supported. Examples: "simplejson" and
@@ -3607,6 +4454,10 @@ func (newState *PythonPyPiLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *PythonPyPiLibrary) SyncEffectiveFieldsDuringRead(existingState PythonPyPiLibrary) {
 }
 
+func (a PythonPyPiLibrary) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RCranLibrary struct {
 	// The name of the CRAN package to install.
 	Package types.String `tfsdk:"package" tf:""`
@@ -3621,6 +4472,10 @@ func (newState *RCranLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan RCran
 func (newState *RCranLibrary) SyncEffectiveFieldsDuringRead(existingState RCranLibrary) {
 }
 
+func (a RCranLibrary) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RemoveInstanceProfile struct {
 	// The ARN of the instance profile to remove. This field is required.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:""`
@@ -3632,6 +4487,10 @@ func (newState *RemoveInstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *RemoveInstanceProfile) SyncEffectiveFieldsDuringRead(existingState RemoveInstanceProfile) {
 }
 
+func (a RemoveInstanceProfile) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RemoveResponse struct {
 }
 
@@ -3641,11 +4500,15 @@ func (newState *RemoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Rem
 func (newState *RemoveResponse) SyncEffectiveFieldsDuringRead(existingState RemoveResponse) {
 }
 
+func (a RemoveResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ResizeCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
 	// The cluster to be resized.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// Number of worker nodes that this cluster should have. A cluster has one
@@ -3667,6 +4530,12 @@ func (newState *ResizeCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Resi
 func (newState *ResizeCluster) SyncEffectiveFieldsDuringRead(existingState ResizeCluster) {
 }
 
+func (a ResizeCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Autoscale": reflect.TypeOf(AutoScale{}),
+	}
+}
+
 type ResizeClusterResponse struct {
 }
 
@@ -3674,6 +4543,10 @@ func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringRead(existingState ResizeClusterResponse) {
+}
+
+func (a ResizeClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RestartCluster struct {
@@ -3689,6 +4562,10 @@ func (newState *RestartCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Res
 func (newState *RestartCluster) SyncEffectiveFieldsDuringRead(existingState RestartCluster) {
 }
 
+func (a RestartCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RestartClusterResponse struct {
 }
 
@@ -3696,6 +4573,10 @@ func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringRead(existingState RestartClusterResponse) {
+}
+
+func (a RestartClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Results struct {
@@ -3706,7 +4587,7 @@ type Results struct {
 	// The image filename
 	FileName types.String `tfsdk:"fileName" tf:"optional"`
 
-	FileNames []types.String `tfsdk:"fileNames" tf:"optional"`
+	FileNames types.List `tfsdk:"fileNames" tf:"optional"`
 	// true if a JSON schema is returned instead of a string representation of
 	// the Hive type.
 	IsJsonSchema types.Bool `tfsdk:"isJsonSchema" tf:"optional"`
@@ -3715,7 +4596,7 @@ type Results struct {
 
 	ResultType types.String `tfsdk:"resultType" tf:"optional"`
 	// The table schema
-	Schema []map[string]any `tfsdk:"schema" tf:"optional"`
+	Schema types.List `tfsdk:"schema" tf:"optional"`
 	// The summary of the error
 	Summary types.String `tfsdk:"summary" tf:"optional"`
 	// true if partial results are returned.
@@ -3726,6 +4607,13 @@ func (newState *Results) SyncEffectiveFieldsDuringCreateOrUpdate(plan Results) {
 }
 
 func (newState *Results) SyncEffectiveFieldsDuringRead(existingState Results) {
+}
+
+func (a Results) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FileNames": reflect.TypeOf(""),
+		"Schema":    reflect.TypeOf(struct{}{}),
+	}
 }
 
 type S3StorageInfo struct {
@@ -3767,13 +4655,17 @@ func (newState *S3StorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan S3St
 func (newState *S3StorageInfo) SyncEffectiveFieldsDuringRead(existingState S3StorageInfo) {
 }
 
+func (a S3StorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SparkNode struct {
 	// The private IP address of the host instance.
 	HostPrivateIp types.String `tfsdk:"host_private_ip" tf:"optional"`
 	// Globally unique identifier for the host instance from the cloud provider.
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 	// Attributes specific to AWS for a Spark node.
-	NodeAwsAttributes []SparkNodeAwsAttributes `tfsdk:"node_aws_attributes" tf:"optional,object"`
+	NodeAwsAttributes types.Object `tfsdk:"node_aws_attributes" tf:"optional,object"`
 	// Globally unique identifier for this node.
 	NodeId types.String `tfsdk:"node_id" tf:"optional"`
 	// Private IP address (typically a 10.x.x.x address) of the Spark node. Note
@@ -3801,6 +4693,12 @@ func (newState *SparkNode) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkNod
 func (newState *SparkNode) SyncEffectiveFieldsDuringRead(existingState SparkNode) {
 }
 
+func (a SparkNode) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"NodeAwsAttributes": reflect.TypeOf(SparkNodeAwsAttributes{}),
+	}
+}
+
 type SparkNodeAwsAttributes struct {
 	// Whether this node is on an Amazon spot instance.
 	IsSpot types.Bool `tfsdk:"is_spot" tf:"optional"`
@@ -3810,6 +4708,10 @@ func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringRead(existingState SparkNodeAwsAttributes) {
+}
+
+func (a SparkNodeAwsAttributes) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type SparkVersion struct {
@@ -3829,6 +4731,10 @@ func (newState *SparkVersion) SyncEffectiveFieldsDuringCreateOrUpdate(plan Spark
 func (newState *SparkVersion) SyncEffectiveFieldsDuringRead(existingState SparkVersion) {
 }
 
+func (a SparkVersion) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type StartCluster struct {
 	// The cluster to be started.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -3840,6 +4746,10 @@ func (newState *StartCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Start
 func (newState *StartCluster) SyncEffectiveFieldsDuringRead(existingState StartCluster) {
 }
 
+func (a StartCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type StartClusterResponse struct {
 }
 
@@ -3849,12 +4759,16 @@ func (newState *StartClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *StartClusterResponse) SyncEffectiveFieldsDuringRead(existingState StartClusterResponse) {
 }
 
+func (a StartClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type TerminationReason struct {
 	// status code indicating why the cluster was terminated
 	Code types.String `tfsdk:"code" tf:"optional"`
 	// list of parameters that provide additional information about why the
 	// cluster was terminated
-	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
+	Parameters types.Map `tfsdk:"parameters" tf:"optional"`
 	// type of the termination
 	Type types.String `tfsdk:"type" tf:"optional"`
 }
@@ -3865,17 +4779,29 @@ func (newState *TerminationReason) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState TerminationReason) {
 }
 
+func (a TerminationReason) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Parameters": reflect.TypeOf(""),
+	}
+}
+
 type UninstallLibraries struct {
 	// Unique identifier for the cluster on which to uninstall these libraries.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// The libraries to uninstall.
-	Libraries []Library `tfsdk:"libraries" tf:""`
+	Libraries types.List `tfsdk:"libraries" tf:""`
 }
 
 func (newState *UninstallLibraries) SyncEffectiveFieldsDuringCreateOrUpdate(plan UninstallLibraries) {
 }
 
 func (newState *UninstallLibraries) SyncEffectiveFieldsDuringRead(existingState UninstallLibraries) {
+}
+
+func (a UninstallLibraries) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Libraries": reflect.TypeOf(Library{}),
+	}
 }
 
 type UninstallLibrariesResponse struct {
@@ -3885,6 +4811,10 @@ func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existingState UninstallLibrariesResponse) {
+}
+
+func (a UninstallLibrariesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type UnpinCluster struct {
@@ -3898,6 +4828,10 @@ func (newState *UnpinCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Unpin
 func (newState *UnpinCluster) SyncEffectiveFieldsDuringRead(existingState UnpinCluster) {
 }
 
+func (a UnpinCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UnpinClusterResponse struct {
 }
 
@@ -3907,9 +4841,13 @@ func (newState *UnpinClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *UnpinClusterResponse) SyncEffectiveFieldsDuringRead(existingState UnpinClusterResponse) {
 }
 
+func (a UnpinClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateCluster struct {
 	// The cluster to be updated.
-	Cluster []UpdateClusterResource `tfsdk:"cluster" tf:"optional,object"`
+	Cluster types.Object `tfsdk:"cluster" tf:"optional,object"`
 	// ID of the cluster.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// Specifies which fields of the cluster will be updated. This is required
@@ -3926,11 +4864,17 @@ func (newState *UpdateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upda
 func (newState *UpdateCluster) SyncEffectiveFieldsDuringRead(existingState UpdateCluster) {
 }
 
+func (a UpdateCluster) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Cluster": reflect.TypeOf(UpdateClusterResource{}),
+	}
+}
+
 type UpdateClusterResource struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale []AutoScale `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -3939,17 +4883,17 @@ type UpdateClusterResource struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes []AwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes []AzureAttributes `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf []ClusterLogConf `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -3961,7 +4905,7 @@ type UpdateClusterResource struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
@@ -3986,7 +4930,7 @@ type UpdateClusterResource struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage []DockerImage `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -4004,12 +4948,12 @@ type UpdateClusterResource struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes []GcpAttributes `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts []InitScriptInfo `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
@@ -4047,7 +4991,7 @@ type UpdateClusterResource struct {
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf map[string]types.String `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -4061,7 +5005,7 @@ type UpdateClusterResource struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars map[string]types.String `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
@@ -4069,15 +5013,32 @@ type UpdateClusterResource struct {
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys []types.String `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType []WorkloadType `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateClusterResource) {
 }
 
 func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringRead(existingState UpdateClusterResource) {
+}
+
+func (a UpdateClusterResource) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Autoscale":       reflect.TypeOf(AutoScale{}),
+		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
+		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
+		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
+		"CustomTags":      reflect.TypeOf(""),
+		"DockerImage":     reflect.TypeOf(DockerImage{}),
+		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
+		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
+		"SparkConf":       reflect.TypeOf(""),
+		"SparkEnvVars":    reflect.TypeOf(""),
+		"SshPublicKeys":   reflect.TypeOf(""),
+		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
 }
 
 type UpdateClusterResponse struct {
@@ -4089,6 +5050,10 @@ func (newState *UpdateClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *UpdateClusterResponse) SyncEffectiveFieldsDuringRead(existingState UpdateClusterResponse) {
 }
 
+func (a UpdateClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateResponse struct {
 }
 
@@ -4096,6 +5061,10 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upd
 }
 
 func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
+}
+
+func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type VolumesStorageInfo struct {
@@ -4109,15 +5078,25 @@ func (newState *VolumesStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *VolumesStorageInfo) SyncEffectiveFieldsDuringRead(existingState VolumesStorageInfo) {
 }
 
+func (a VolumesStorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type WorkloadType struct {
 	// defined what type of clients can use the cluster. E.g. Notebooks, Jobs
-	Clients []ClientsTypes `tfsdk:"clients" tf:"object"`
+	Clients types.Object `tfsdk:"clients" tf:"object"`
 }
 
 func (newState *WorkloadType) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkloadType) {
 }
 
 func (newState *WorkloadType) SyncEffectiveFieldsDuringRead(existingState WorkloadType) {
+}
+
+func (a WorkloadType) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Clients": reflect.TypeOf(ClientsTypes{}),
+	}
 }
 
 type WorkspaceStorageInfo struct {
@@ -4130,4 +5109,8 @@ func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringRead(existingState WorkspaceStorageInfo) {
+}
+
+func (a WorkspaceStorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }

@@ -11,6 +11,8 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package sharing_tf
 
 import (
+	"reflect"
+
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -33,6 +35,10 @@ func (newState *CreateProvider) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateProvider) SyncEffectiveFieldsDuringRead(existingState CreateProvider) {
 }
 
+func (a CreateProvider) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateRecipient struct {
 	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type" tf:""`
@@ -46,13 +52,13 @@ type CreateRecipient struct {
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// IP Access List
-	IpAccessList []IpAccessList `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Name of Recipient.
 	Name types.String `tfsdk:"name" tf:""`
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Recipient properties as map of string key-value pairs.
-	PropertiesKvpairs []SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional,object"`
+	PropertiesKvpairs types.Object `tfsdk:"properties_kvpairs" tf:"optional,object"`
 	// The one-time sharing code provided by the data recipient. This field is
 	// required when the __authentication_type__ is **DATABRICKS**.
 	SharingCode types.String `tfsdk:"sharing_code" tf:"optional"`
@@ -62,6 +68,13 @@ func (newState *CreateRecipient) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cr
 }
 
 func (newState *CreateRecipient) SyncEffectiveFieldsDuringRead(existingState CreateRecipient) {
+}
+
+func (a CreateRecipient) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"IpAccessList":      reflect.TypeOf(IpAccessList{}),
+		"PropertiesKvpairs": reflect.TypeOf(SecurablePropertiesKvPairs{}),
+	}
 }
 
 type CreateShare struct {
@@ -79,6 +92,10 @@ func (newState *CreateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create
 func (newState *CreateShare) SyncEffectiveFieldsDuringRead(existingState CreateShare) {
 }
 
+func (a CreateShare) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a provider
 type DeleteProviderRequest struct {
 	// Name of the provider.
@@ -89,6 +106,10 @@ func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest) {
+}
+
+func (a DeleteProviderRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a share recipient
@@ -103,6 +124,10 @@ func (newState *DeleteRecipientRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteRecipientRequest) SyncEffectiveFieldsDuringRead(existingState DeleteRecipientRequest) {
 }
 
+func (a DeleteRecipientRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteResponse struct {
 }
 
@@ -110,6 +135,10 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 }
 
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+}
+
+func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a share
@@ -124,6 +153,10 @@ func (newState *DeleteShareRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DeleteShareRequest) SyncEffectiveFieldsDuringRead(existingState DeleteShareRequest) {
 }
 
+func (a DeleteShareRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get a share activation URL
 type GetActivationUrlInfoRequest struct {
 	// The one time activation url. It also accepts activation token.
@@ -136,6 +169,10 @@ func (newState *GetActivationUrlInfoRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *GetActivationUrlInfoRequest) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoRequest) {
 }
 
+func (a GetActivationUrlInfoRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetActivationUrlInfoResponse struct {
 }
 
@@ -143,6 +180,10 @@ func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringCreateOrU
 }
 
 func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoResponse) {
+}
+
+func (a GetActivationUrlInfoResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get a provider
@@ -157,6 +198,10 @@ func (newState *GetProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetProviderRequest) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest) {
 }
 
+func (a GetProviderRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get a share recipient
 type GetRecipientRequest struct {
 	// Name of the recipient.
@@ -169,19 +214,29 @@ func (newState *GetRecipientRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetRecipientRequest) SyncEffectiveFieldsDuringRead(existingState GetRecipientRequest) {
 }
 
+func (a GetRecipientRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetRecipientSharePermissionsResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of data share permissions for a recipient.
-	PermissionsOut []ShareToPrivilegeAssignment `tfsdk:"permissions_out" tf:"optional"`
+	PermissionsOut types.List `tfsdk:"permissions_out" tf:"optional"`
 }
 
 func (newState *GetRecipientSharePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientSharePermissionsResponse) {
 }
 
 func (newState *GetRecipientSharePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState GetRecipientSharePermissionsResponse) {
+}
+
+func (a GetRecipientSharePermissionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionsOut": reflect.TypeOf(ShareToPrivilegeAssignment{}),
+	}
 }
 
 // Get a share
@@ -198,9 +253,13 @@ func (newState *GetShareRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 func (newState *GetShareRequest) SyncEffectiveFieldsDuringRead(existingState GetShareRequest) {
 }
 
+func (a GetShareRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type IpAccessList struct {
 	// Allowed IP Addresses in CIDR notation. Limit of 100.
-	AllowedIpAddresses []types.String `tfsdk:"allowed_ip_addresses" tf:"optional"`
+	AllowedIpAddresses types.List `tfsdk:"allowed_ip_addresses" tf:"optional"`
 }
 
 func (newState *IpAccessList) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAccessList) {
@@ -209,19 +268,31 @@ func (newState *IpAccessList) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAcc
 func (newState *IpAccessList) SyncEffectiveFieldsDuringRead(existingState IpAccessList) {
 }
 
+func (a IpAccessList) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllowedIpAddresses": reflect.TypeOf(""),
+	}
+}
+
 type ListProviderSharesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of provider shares.
-	Shares []ProviderShare `tfsdk:"shares" tf:"optional"`
+	Shares types.List `tfsdk:"shares" tf:"optional"`
 }
 
 func (newState *ListProviderSharesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderSharesResponse) {
 }
 
 func (newState *ListProviderSharesResponse) SyncEffectiveFieldsDuringRead(existingState ListProviderSharesResponse) {
+}
+
+func (a ListProviderSharesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Shares": reflect.TypeOf(ProviderShare{}),
+	}
 }
 
 // List providers
@@ -249,19 +320,29 @@ func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest) {
 }
 
+func (a ListProvidersRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListProvidersResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of provider information objects.
-	Providers []ProviderInfo `tfsdk:"providers" tf:"optional"`
+	Providers types.List `tfsdk:"providers" tf:"optional"`
 }
 
 func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersResponse) {
 }
 
 func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringRead(existingState ListProvidersResponse) {
+}
+
+func (a ListProvidersResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Providers": reflect.TypeOf(ProviderInfo{}),
+	}
 }
 
 // List share recipients
@@ -289,19 +370,29 @@ func (newState *ListRecipientsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListRecipientsRequest) SyncEffectiveFieldsDuringRead(existingState ListRecipientsRequest) {
 }
 
+func (a ListRecipientsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListRecipientsResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of recipient information objects.
-	Recipients []RecipientInfo `tfsdk:"recipients" tf:"optional"`
+	Recipients types.List `tfsdk:"recipients" tf:"optional"`
 }
 
 func (newState *ListRecipientsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsResponse) {
 }
 
 func (newState *ListRecipientsResponse) SyncEffectiveFieldsDuringRead(existingState ListRecipientsResponse) {
+}
+
+func (a ListRecipientsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Recipients": reflect.TypeOf(RecipientInfo{}),
+	}
 }
 
 // List shares by Provider
@@ -328,13 +419,17 @@ func (newState *ListSharesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ListSharesRequest) SyncEffectiveFieldsDuringRead(existingState ListSharesRequest) {
 }
 
+func (a ListSharesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListSharesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// An array of data share information objects.
-	Shares []ShareInfo `tfsdk:"shares" tf:"optional"`
+	Shares types.List `tfsdk:"shares" tf:"optional"`
 }
 
 func (newState *ListSharesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesResponse) {
@@ -343,15 +438,27 @@ func (newState *ListSharesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListSharesResponse) SyncEffectiveFieldsDuringRead(existingState ListSharesResponse) {
 }
 
+func (a ListSharesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Shares": reflect.TypeOf(ShareInfo{}),
+	}
+}
+
 type Partition struct {
 	// An array of partition values.
-	Values []PartitionValue `tfsdk:"value" tf:"optional"`
+	Values types.List `tfsdk:"value" tf:"optional"`
 }
 
 func (newState *Partition) SyncEffectiveFieldsDuringCreateOrUpdate(plan Partition) {
 }
 
 func (newState *Partition) SyncEffectiveFieldsDuringRead(existingState Partition) {
+}
+
+func (a Partition) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Values": reflect.TypeOf(PartitionValue{}),
+	}
 }
 
 type PartitionValue struct {
@@ -375,17 +482,27 @@ func (newState *PartitionValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan Par
 func (newState *PartitionValue) SyncEffectiveFieldsDuringRead(existingState PartitionValue) {
 }
 
+func (a PartitionValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal" tf:"optional"`
 	// The privileges assigned to the principal.
-	Privileges []types.String `tfsdk:"privileges" tf:"optional"`
+	Privileges types.List `tfsdk:"privileges" tf:"optional"`
 }
 
 func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrivilegeAssignment) {
 }
 
 func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState PrivilegeAssignment) {
+}
+
+func (a PrivilegeAssignment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Privileges": reflect.TypeOf(""),
+	}
 }
 
 type ProviderInfo struct {
@@ -413,7 +530,7 @@ type ProviderInfo struct {
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// The recipient profile. This field is only present when the
 	// authentication_type is `TOKEN`.
-	RecipientProfile []RecipientProfile `tfsdk:"recipient_profile" tf:"optional,object"`
+	RecipientProfile types.Object `tfsdk:"recipient_profile" tf:"optional,object"`
 	// This field is only present when the authentication_type is `TOKEN` or not
 	// provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str" tf:"optional"`
@@ -432,6 +549,12 @@ func (newState *ProviderInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Provi
 func (newState *ProviderInfo) SyncEffectiveFieldsDuringRead(existingState ProviderInfo) {
 }
 
+func (a ProviderInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RecipientProfile": reflect.TypeOf(RecipientProfile{}),
+	}
+}
+
 type ProviderShare struct {
 	// The name of the Provider Share.
 	Name types.String `tfsdk:"name" tf:"optional"`
@@ -441,6 +564,10 @@ func (newState *ProviderShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan Prov
 }
 
 func (newState *ProviderShare) SyncEffectiveFieldsDuringRead(existingState ProviderShare) {
+}
+
+func (a ProviderShare) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RecipientInfo struct {
@@ -467,7 +594,7 @@ type RecipientInfo struct {
 	// __cloud__:__region__:__metastore-uuid__.
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id" tf:"optional"`
 	// IP Access List
-	IpAccessList []IpAccessList `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Unique identifier of recipient's Unity Catalog metastore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
@@ -476,7 +603,7 @@ type RecipientInfo struct {
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Recipient properties as map of string key-value pairs.
-	PropertiesKvpairs []SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional,object"`
+	PropertiesKvpairs types.Object `tfsdk:"properties_kvpairs" tf:"optional,object"`
 	// Cloud region of the recipient's Unity Catalog Metstore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**.
 	Region types.String `tfsdk:"region" tf:"optional"`
@@ -484,7 +611,7 @@ type RecipientInfo struct {
 	// only present when the __authentication_type__ is **DATABRICKS**.
 	SharingCode types.String `tfsdk:"sharing_code" tf:"optional"`
 	// This field is only present when the __authentication_type__ is **TOKEN**.
-	Tokens []RecipientTokenInfo `tfsdk:"tokens" tf:"optional"`
+	Tokens types.List `tfsdk:"tokens" tf:"optional"`
 	// Time at which the recipient was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
 	// Username of recipient updater.
@@ -495,6 +622,14 @@ func (newState *RecipientInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Reci
 }
 
 func (newState *RecipientInfo) SyncEffectiveFieldsDuringRead(existingState RecipientInfo) {
+}
+
+func (a RecipientInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"IpAccessList":      reflect.TypeOf(IpAccessList{}),
+		"PropertiesKvpairs": reflect.TypeOf(SecurablePropertiesKvPairs{}),
+		"Tokens":            reflect.TypeOf(RecipientTokenInfo{}),
+	}
 }
 
 type RecipientProfile struct {
@@ -510,6 +645,10 @@ func (newState *RecipientProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan R
 }
 
 func (newState *RecipientProfile) SyncEffectiveFieldsDuringRead(existingState RecipientProfile) {
+}
+
+func (a RecipientProfile) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RecipientTokenInfo struct {
@@ -536,6 +675,10 @@ func (newState *RecipientTokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *RecipientTokenInfo) SyncEffectiveFieldsDuringRead(existingState RecipientTokenInfo) {
 }
 
+func (a RecipientTokenInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get an access token
 type RetrieveTokenRequest struct {
 	// The one time activation url. It also accepts activation token.
@@ -546,6 +689,10 @@ func (newState *RetrieveTokenRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *RetrieveTokenRequest) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenRequest) {
+}
+
+func (a RetrieveTokenRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RetrieveTokenResponse struct {
@@ -565,6 +712,10 @@ func (newState *RetrieveTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *RetrieveTokenResponse) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenResponse) {
 }
 
+func (a RetrieveTokenResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RotateRecipientToken struct {
 	// The expiration time of the bearer token in ISO 8601 format. This will set
 	// the expiration_time of existing token only to a smaller timestamp, it
@@ -581,17 +732,27 @@ func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringRead(existingState RotateRecipientToken) {
 }
 
+func (a RotateRecipientToken) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // An object with __properties__ containing map of key-value properties attached
 // to the securable.
 type SecurablePropertiesKvPairs struct {
 	// A map of key-value properties attached to the securable.
-	Properties map[string]types.String `tfsdk:"properties" tf:""`
+	Properties types.Map `tfsdk:"properties" tf:""`
 }
 
 func (newState *SecurablePropertiesKvPairs) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecurablePropertiesKvPairs) {
 }
 
 func (newState *SecurablePropertiesKvPairs) SyncEffectiveFieldsDuringRead(existingState SecurablePropertiesKvPairs) {
+}
+
+func (a SecurablePropertiesKvPairs) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Properties": reflect.TypeOf(""),
+	}
 }
 
 type ShareInfo struct {
@@ -604,10 +765,9 @@ type ShareInfo struct {
 	// Name of the share.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// A list of shared data objects within the share.
-	Objects []SharedDataObject `tfsdk:"object" tf:"optional"`
+	Objects types.List `tfsdk:"object" tf:"optional"`
 	// Username of current owner of share.
-	Owner          types.String `tfsdk:"owner" tf:"optional"`
-	EffectiveOwner types.String `tfsdk:"effective_owner" tf:"computed,optional"`
+	Owner types.String `tfsdk:"owner" tf:"computed,optional"`
 	// Storage Location URL (full path) for the share.
 	StorageLocation types.String `tfsdk:"storage_location" tf:"optional"`
 	// Storage root URL for the share.
@@ -619,14 +779,14 @@ type ShareInfo struct {
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo) {
-	newState.EffectiveOwner = newState.Owner
-	newState.Owner = plan.Owner
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
-	newState.EffectiveOwner = existingState.EffectiveOwner
-	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
-		newState.Owner = existingState.Owner
+}
+
+func (a ShareInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Objects": reflect.TypeOf(SharedDataObject{}),
 	}
 }
 
@@ -654,9 +814,13 @@ func (newState *SharePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *SharePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState SharePermissionsRequest) {
 }
 
+func (a SharePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ShareToPrivilegeAssignment struct {
 	// The privileges assigned to the principal.
-	PrivilegeAssignments []PrivilegeAssignment `tfsdk:"privilege_assignments" tf:"optional"`
+	PrivilegeAssignments types.List `tfsdk:"privilege_assignments" tf:"optional"`
 	// The share name.
 	ShareName types.String `tfsdk:"share_name" tf:"optional"`
 }
@@ -667,6 +831,12 @@ func (newState *ShareToPrivilegeAssignment) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ShareToPrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState ShareToPrivilegeAssignment) {
 }
 
+func (a ShareToPrivilegeAssignment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PrivilegeAssignments": reflect.TypeOf(PrivilegeAssignment{}),
+	}
+}
+
 type SharedDataObject struct {
 	// The time when this data object is added to the share, in epoch
 	// milliseconds.
@@ -674,8 +844,7 @@ type SharedDataObject struct {
 	// Username of the sharer.
 	AddedBy types.String `tfsdk:"added_by" tf:"computed,optional"`
 	// Whether to enable cdf or indicate if cdf is enabled on the shared object.
-	CdfEnabled          types.Bool `tfsdk:"cdf_enabled" tf:"optional"`
-	EffectiveCdfEnabled types.Bool `tfsdk:"effective_cdf_enabled" tf:"computed,optional"`
+	CdfEnabled types.Bool `tfsdk:"cdf_enabled" tf:"computed,optional"`
 	// A user-provided comment when adding the data object to the share.
 	// [Update:OPT]
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -687,21 +856,19 @@ type SharedDataObject struct {
 	DataObjectType types.String `tfsdk:"data_object_type" tf:"optional"`
 	// Whether to enable or disable sharing of data history. If not specified,
 	// the default is **DISABLED**.
-	HistoryDataSharingStatus          types.String `tfsdk:"history_data_sharing_status" tf:"optional"`
-	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status" tf:"computed,optional"`
+	HistoryDataSharingStatus types.String `tfsdk:"history_data_sharing_status" tf:"computed,optional"`
 	// A fully qualified name that uniquely identifies a data object.
 	//
 	// For example, a table's fully qualified name is in the format of
 	// `<catalog>.<schema>.<table>`.
 	Name types.String `tfsdk:"name" tf:""`
 	// Array of partitions for the shared data.
-	Partitions []Partition `tfsdk:"partition" tf:"optional"`
+	Partitions types.List `tfsdk:"partition" tf:"optional"`
 	// A user-provided new name for the data object within the share. If this
 	// new name is not provided, the object's original name will be used as the
 	// `shared_as` name. The `shared_as` name must be unique within a share. For
 	// tables, the new name must follow the format of `<schema>.<table>`.
-	SharedAs          types.String `tfsdk:"shared_as" tf:"optional"`
-	EffectiveSharedAs types.String `tfsdk:"effective_shared_as" tf:"computed,optional"`
+	SharedAs types.String `tfsdk:"shared_as" tf:"computed,optional"`
 	// The start version associated with the object. This allows data providers
 	// to control the lowest object version that is accessible by clients. If
 	// specified, clients can query snapshots or changes for versions >=
@@ -709,8 +876,7 @@ type SharedDataObject struct {
 	// version of the object at the time it was added to the share.
 	//
 	// NOTE: The start_version should be <= the `current` version of the object.
-	StartVersion          types.Int64 `tfsdk:"start_version" tf:"optional"`
-	EffectiveStartVersion types.Int64 `tfsdk:"effective_start_version" tf:"computed,optional"`
+	StartVersion types.Int64 `tfsdk:"start_version" tf:"computed,optional"`
 	// One of: **ACTIVE**, **PERMISSION_DENIED**.
 	Status types.String `tfsdk:"status" tf:"computed,optional"`
 	// A user-provided new name for the data object within the share. If this
@@ -722,32 +888,14 @@ type SharedDataObject struct {
 }
 
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject) {
-	newState.EffectiveCdfEnabled = newState.CdfEnabled
-	newState.CdfEnabled = plan.CdfEnabled
-	newState.EffectiveHistoryDataSharingStatus = newState.HistoryDataSharingStatus
-	newState.HistoryDataSharingStatus = plan.HistoryDataSharingStatus
-	newState.EffectiveSharedAs = newState.SharedAs
-	newState.SharedAs = plan.SharedAs
-	newState.EffectiveStartVersion = newState.StartVersion
-	newState.StartVersion = plan.StartVersion
 }
 
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState SharedDataObject) {
-	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
-	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
-		newState.CdfEnabled = existingState.CdfEnabled
-	}
-	newState.EffectiveHistoryDataSharingStatus = existingState.EffectiveHistoryDataSharingStatus
-	if existingState.EffectiveHistoryDataSharingStatus.ValueString() == newState.HistoryDataSharingStatus.ValueString() {
-		newState.HistoryDataSharingStatus = existingState.HistoryDataSharingStatus
-	}
-	newState.EffectiveSharedAs = existingState.EffectiveSharedAs
-	if existingState.EffectiveSharedAs.ValueString() == newState.SharedAs.ValueString() {
-		newState.SharedAs = existingState.SharedAs
-	}
-	newState.EffectiveStartVersion = existingState.EffectiveStartVersion
-	if existingState.EffectiveStartVersion.ValueInt64() == newState.StartVersion.ValueInt64() {
-		newState.StartVersion = existingState.StartVersion
+}
+
+func (a SharedDataObject) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Partitions": reflect.TypeOf(Partition{}),
 	}
 }
 
@@ -755,13 +903,19 @@ type SharedDataObjectUpdate struct {
 	// One of: **ADD**, **REMOVE**, **UPDATE**.
 	Action types.String `tfsdk:"action" tf:"optional"`
 	// The data object that is being added, removed, or updated.
-	DataObject []SharedDataObject `tfsdk:"data_object" tf:"optional,object"`
+	DataObject types.Object `tfsdk:"data_object" tf:"optional,object"`
 }
 
 func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObjectUpdate) {
 }
 
 func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringRead(existingState SharedDataObjectUpdate) {
+}
+
+func (a SharedDataObjectUpdate) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DataObject": reflect.TypeOf(SharedDataObject{}),
+	}
 }
 
 type UpdatePermissionsResponse struct {
@@ -771,6 +925,10 @@ func (newState *UpdatePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *UpdatePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState UpdatePermissionsResponse) {
+}
+
+func (a UpdatePermissionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type UpdateProvider struct {
@@ -793,13 +951,17 @@ func (newState *UpdateProvider) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upd
 func (newState *UpdateProvider) SyncEffectiveFieldsDuringRead(existingState UpdateProvider) {
 }
 
+func (a UpdateProvider) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateRecipient struct {
 	// Description about the recipient.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// IP Access List
-	IpAccessList []IpAccessList `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
 	// New name for the recipient.
@@ -810,13 +972,20 @@ type UpdateRecipient struct {
 	// update request, the specified properties will override the existing
 	// properties. To add and remove properties, one would need to perform a
 	// read-modify-write.
-	PropertiesKvpairs []SecurablePropertiesKvPairs `tfsdk:"properties_kvpairs" tf:"optional,object"`
+	PropertiesKvpairs types.Object `tfsdk:"properties_kvpairs" tf:"optional,object"`
 }
 
 func (newState *UpdateRecipient) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRecipient) {
 }
 
 func (newState *UpdateRecipient) SyncEffectiveFieldsDuringRead(existingState UpdateRecipient) {
+}
+
+func (a UpdateRecipient) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"IpAccessList":      reflect.TypeOf(IpAccessList{}),
+		"PropertiesKvpairs": reflect.TypeOf(SecurablePropertiesKvPairs{}),
+	}
 }
 
 type UpdateResponse struct {
@@ -828,6 +997,10 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upd
 func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
+func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateShare struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -836,29 +1009,28 @@ type UpdateShare struct {
 	// New name for the share.
 	NewName types.String `tfsdk:"new_name" tf:"optional"`
 	// Username of current owner of share.
-	Owner          types.String `tfsdk:"owner" tf:"optional"`
-	EffectiveOwner types.String `tfsdk:"effective_owner" tf:"computed,optional"`
+	Owner types.String `tfsdk:"owner" tf:"computed,optional"`
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 	// Array of shared data object updates.
-	Updates []SharedDataObjectUpdate `tfsdk:"updates" tf:"optional"`
+	Updates types.List `tfsdk:"updates" tf:"optional"`
 }
 
 func (newState *UpdateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateShare) {
-	newState.EffectiveOwner = newState.Owner
-	newState.Owner = plan.Owner
 }
 
 func (newState *UpdateShare) SyncEffectiveFieldsDuringRead(existingState UpdateShare) {
-	newState.EffectiveOwner = existingState.EffectiveOwner
-	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
-		newState.Owner = existingState.Owner
+}
+
+func (a UpdateShare) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Updates": reflect.TypeOf(SharedDataObjectUpdate{}),
 	}
 }
 
 type UpdateSharePermissions struct {
 	// Array of permission changes.
-	Changes catalog.PermissionsChange `tfsdk:"changes" tf:"optional"`
+	Changes types.List `tfsdk:"changes" tf:"optional"`
 	// Maximum number of permissions to return. - when set to 0, the page length
 	// is set to a server configured value (recommended); - when set to a value
 	// greater than 0, the page length is the minimum of this value and a server
@@ -879,4 +1051,10 @@ func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringRead(existingState UpdateSharePermissions) {
+}
+
+func (a UpdateSharePermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Changes": reflect.TypeOf(catalog.PermissionsChange{}),
+	}
 }

@@ -11,6 +11,8 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package vectorsearch_tf
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -23,6 +25,10 @@ func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnI
 }
 
 func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
+}
+
+func (a ColumnInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type CreateEndpoint struct {
@@ -38,13 +44,17 @@ func (newState *CreateEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateEndpoint) SyncEffectiveFieldsDuringRead(existingState CreateEndpoint) {
 }
 
+func (a CreateEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateVectorIndexRequest struct {
 	// Specification for Delta Sync Index. Required if `index_type` is
 	// `DELTA_SYNC`.
-	DeltaSyncIndexSpec []DeltaSyncVectorIndexSpecRequest `tfsdk:"delta_sync_index_spec" tf:"optional,object"`
+	DeltaSyncIndexSpec types.Object `tfsdk:"delta_sync_index_spec" tf:"optional,object"`
 	// Specification for Direct Vector Access Index. Required if `index_type` is
 	// `DIRECT_ACCESS`.
-	DirectAccessIndexSpec []DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional,object"`
+	DirectAccessIndexSpec types.Object `tfsdk:"direct_access_index_spec" tf:"optional,object"`
 	// Name of the endpoint to be used for serving the index
 	EndpointName types.String `tfsdk:"endpoint_name" tf:""`
 	// There are 2 types of Vector Search indexes:
@@ -67,8 +77,15 @@ func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexRequest) {
 }
 
+func (a CreateVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DeltaSyncIndexSpec":    reflect.TypeOf(DeltaSyncVectorIndexSpecRequest{}),
+		"DirectAccessIndexSpec": reflect.TypeOf(DirectAccessVectorIndexSpec{}),
+	}
+}
+
 type CreateVectorIndexResponse struct {
-	VectorIndex []VectorIndex `tfsdk:"vector_index" tf:"optional,object"`
+	VectorIndex types.Object `tfsdk:"vector_index" tf:"optional,object"`
 }
 
 func (newState *CreateVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVectorIndexResponse) {
@@ -77,10 +94,16 @@ func (newState *CreateVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *CreateVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexResponse) {
 }
 
+func (a CreateVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"VectorIndex": reflect.TypeOf(VectorIndex{}),
+	}
+}
+
 // Result of the upsert or delete operation.
 type DeleteDataResult struct {
 	// List of primary keys for rows that failed to process.
-	FailedPrimaryKeys []types.String `tfsdk:"failed_primary_keys" tf:"optional"`
+	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys" tf:"optional"`
 	// Count of successfully processed rows.
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count" tf:"optional"`
 }
@@ -91,13 +114,19 @@ func (newState *DeleteDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 func (newState *DeleteDataResult) SyncEffectiveFieldsDuringRead(existingState DeleteDataResult) {
 }
 
+func (a DeleteDataResult) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FailedPrimaryKeys": reflect.TypeOf(""),
+	}
+}
+
 // Request payload for deleting data from a vector index.
 type DeleteDataVectorIndexRequest struct {
 	// Name of the vector index where data is to be deleted. Must be a Direct
 	// Vector Access Index.
 	IndexName types.String `tfsdk:"-"`
 	// List of primary keys for the data to be deleted.
-	PrimaryKeys []types.String `tfsdk:"primary_keys" tf:""`
+	PrimaryKeys types.List `tfsdk:"primary_keys" tf:""`
 }
 
 func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexRequest) {
@@ -106,10 +135,16 @@ func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexRequest) {
 }
 
+func (a DeleteDataVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PrimaryKeys": reflect.TypeOf(""),
+	}
+}
+
 // Response to a delete data vector index request.
 type DeleteDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
-	Result []DeleteDataResult `tfsdk:"result" tf:"optional,object"`
+	Result types.Object `tfsdk:"result" tf:"optional,object"`
 	// Status of the delete operation.
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
@@ -118,6 +153,12 @@ func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOr
 }
 
 func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexResponse) {
+}
+
+func (a DeleteDataVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Result": reflect.TypeOf(DeleteDataResult{}),
+	}
 }
 
 // Delete an endpoint
@@ -132,6 +173,10 @@ func (newState *DeleteEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteEndpointRequest) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointRequest) {
 }
 
+func (a DeleteEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteEndpointResponse struct {
 }
 
@@ -139,6 +184,10 @@ func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointResponse) {
+}
+
+func (a DeleteEndpointResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete an index
@@ -153,6 +202,10 @@ func (newState *DeleteIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DeleteIndexRequest) SyncEffectiveFieldsDuringRead(existingState DeleteIndexRequest) {
 }
 
+func (a DeleteIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteIndexResponse struct {
 }
 
@@ -162,17 +215,21 @@ func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteIndexResponse) {
 }
 
+func (a DeleteIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeltaSyncVectorIndexSpecRequest struct {
 	// [Optional] Select the columns to sync with the vector index. If you leave
 	// this field blank, all columns from the source table are synced with the
 	// index. The primary key column and embedding source column or embedding
 	// vector column are always synced.
-	ColumnsToSync []types.String `tfsdk:"columns_to_sync" tf:"optional"`
+	ColumnsToSync types.List `tfsdk:"columns_to_sync" tf:"optional"`
 	// The columns that contain the embedding source.
-	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns" tf:"optional"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns" tf:"optional"`
 	// The columns that contain the embedding vectors. The format should be
 	// array[double].
-	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns" tf:"optional"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns" tf:"optional"`
 	// [Optional] Automatically sync the vector index contents and computed
 	// embeddings to the specified Delta table. The only supported table name is
 	// the index name with the suffix `_writeback_table`.
@@ -196,11 +253,19 @@ func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringCreate
 func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecRequest) {
 }
 
+func (a DeltaSyncVectorIndexSpecRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ColumnsToSync":          reflect.TypeOf(""),
+		"EmbeddingSourceColumns": reflect.TypeOf(EmbeddingSourceColumn{}),
+		"EmbeddingVectorColumns": reflect.TypeOf(EmbeddingVectorColumn{}),
+	}
+}
+
 type DeltaSyncVectorIndexSpecResponse struct {
 	// The columns that contain the embedding source.
-	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns" tf:"optional"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns" tf:"optional"`
 	// The columns that contain the embedding vectors.
-	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns" tf:"optional"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns" tf:"optional"`
 	// [Optional] Name of the Delta table to sync the vector index contents and
 	// computed embeddings to.
 	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table" tf:"optional"`
@@ -225,11 +290,18 @@ func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringCreat
 func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecResponse) {
 }
 
+func (a DeltaSyncVectorIndexSpecResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"EmbeddingSourceColumns": reflect.TypeOf(EmbeddingSourceColumn{}),
+		"EmbeddingVectorColumns": reflect.TypeOf(EmbeddingVectorColumn{}),
+	}
+}
+
 type DirectAccessVectorIndexSpec struct {
 	// Contains the optional model endpoint to use during query time.
-	EmbeddingSourceColumns []EmbeddingSourceColumn `tfsdk:"embedding_source_columns" tf:"optional"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns" tf:"optional"`
 
-	EmbeddingVectorColumns []EmbeddingVectorColumn `tfsdk:"embedding_vector_columns" tf:"optional"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns" tf:"optional"`
 	// The schema of the index in JSON format.
 	//
 	// Supported types are `integer`, `long`, `float`, `double`, `boolean`,
@@ -245,6 +317,13 @@ func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringRead(existingState DirectAccessVectorIndexSpec) {
 }
 
+func (a DirectAccessVectorIndexSpec) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"EmbeddingSourceColumns": reflect.TypeOf(EmbeddingSourceColumn{}),
+		"EmbeddingVectorColumns": reflect.TypeOf(EmbeddingVectorColumn{}),
+	}
+}
+
 type EmbeddingSourceColumn struct {
 	// Name of the embedding model endpoint
 	EmbeddingModelEndpointName types.String `tfsdk:"embedding_model_endpoint_name" tf:"optional"`
@@ -256,6 +335,10 @@ func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingSourceColumn) {
+}
+
+func (a EmbeddingSourceColumn) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type EmbeddingVectorColumn struct {
@@ -271,13 +354,17 @@ func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingVectorColumn) {
 }
 
+func (a EmbeddingVectorColumn) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type EndpointInfo struct {
 	// Timestamp of endpoint creation
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
 	// Creator of the endpoint
 	Creator types.String `tfsdk:"creator" tf:"optional"`
 	// Current status of the endpoint
-	EndpointStatus []EndpointStatus `tfsdk:"endpoint_status" tf:"optional,object"`
+	EndpointStatus types.Object `tfsdk:"endpoint_status" tf:"optional,object"`
 	// Type of endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type" tf:"optional"`
 	// Unique identifier of the endpoint
@@ -298,6 +385,12 @@ func (newState *EndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Endpo
 func (newState *EndpointInfo) SyncEffectiveFieldsDuringRead(existingState EndpointInfo) {
 }
 
+func (a EndpointInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"EndpointStatus": reflect.TypeOf(EndpointStatus{}),
+	}
+}
+
 // Status information of an endpoint
 type EndpointStatus struct {
 	// Additional status message
@@ -312,6 +405,10 @@ func (newState *EndpointStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan End
 func (newState *EndpointStatus) SyncEffectiveFieldsDuringRead(existingState EndpointStatus) {
 }
 
+func (a EndpointStatus) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get an endpoint
 type GetEndpointRequest struct {
 	// Name of the endpoint
@@ -322,6 +419,10 @@ func (newState *GetEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *GetEndpointRequest) SyncEffectiveFieldsDuringRead(existingState GetEndpointRequest) {
+}
+
+func (a GetEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get an index
@@ -336,9 +437,13 @@ func (newState *GetIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 func (newState *GetIndexRequest) SyncEffectiveFieldsDuringRead(existingState GetIndexRequest) {
 }
 
+func (a GetIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListEndpointResponse struct {
 	// An array of Endpoint objects
-	Endpoints []EndpointInfo `tfsdk:"endpoints" tf:"optional"`
+	Endpoints types.List `tfsdk:"endpoints" tf:"optional"`
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -348,6 +453,12 @@ func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringRead(existingState ListEndpointResponse) {
+}
+
+func (a ListEndpointResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Endpoints": reflect.TypeOf(EndpointInfo{}),
+	}
 }
 
 // List all endpoints
@@ -360,6 +471,10 @@ func (newState *ListEndpointsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *ListEndpointsRequest) SyncEffectiveFieldsDuringRead(existingState ListEndpointsRequest) {
+}
+
+func (a ListEndpointsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // List indexes
@@ -376,8 +491,12 @@ func (newState *ListIndexesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListIndexesRequest) SyncEffectiveFieldsDuringRead(existingState ListIndexesRequest) {
 }
 
+func (a ListIndexesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListValue struct {
-	Values []Value `tfsdk:"values" tf:"optional"`
+	Values types.List `tfsdk:"values" tf:"optional"`
 }
 
 func (newState *ListValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListValue) {
@@ -386,12 +505,18 @@ func (newState *ListValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListValu
 func (newState *ListValue) SyncEffectiveFieldsDuringRead(existingState ListValue) {
 }
 
+func (a ListValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Values": reflect.TypeOf(Value{}),
+	}
+}
+
 type ListVectorIndexesResponse struct {
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	VectorIndexes []MiniVectorIndex `tfsdk:"vector_indexes" tf:"optional"`
+	VectorIndexes types.List `tfsdk:"vector_indexes" tf:"optional"`
 }
 
 func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVectorIndexesResponse) {
@@ -400,18 +525,30 @@ func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringRead(existingState ListVectorIndexesResponse) {
 }
 
+func (a ListVectorIndexesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"VectorIndexes": reflect.TypeOf(MiniVectorIndex{}),
+	}
+}
+
 // Key-value pair.
 type MapStringValueEntry struct {
 	// Column name.
 	Key types.String `tfsdk:"key" tf:"optional"`
 	// Column value, nullable.
-	Value []Value `tfsdk:"value" tf:"optional,object"`
+	Value types.Object `tfsdk:"value" tf:"optional,object"`
 }
 
 func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan MapStringValueEntry) {
 }
 
 func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringRead(existingState MapStringValueEntry) {
+}
+
+func (a MapStringValueEntry) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Value": reflect.TypeOf(Value{}),
+	}
 }
 
 type MiniVectorIndex struct {
@@ -439,6 +576,10 @@ func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan Mi
 func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringRead(existingState MiniVectorIndex) {
 }
 
+func (a MiniVectorIndex) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Request payload for getting next page of results.
 type QueryVectorIndexNextPageRequest struct {
 	// Name of the endpoint.
@@ -456,9 +597,13 @@ func (newState *QueryVectorIndexNextPageRequest) SyncEffectiveFieldsDuringCreate
 func (newState *QueryVectorIndexNextPageRequest) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexNextPageRequest) {
 }
 
+func (a QueryVectorIndexNextPageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type QueryVectorIndexRequest struct {
 	// List of column names to include in the response.
-	Columns []types.String `tfsdk:"columns" tf:""`
+	Columns types.List `tfsdk:"columns" tf:""`
 	// JSON string representing query filters.
 	//
 	// Example filters: - `{"id <": 5}`: Filter for id less than 5. - `{"id >":
@@ -476,7 +621,7 @@ type QueryVectorIndexRequest struct {
 	QueryType types.String `tfsdk:"query_type" tf:"optional"`
 	// Query vector. Required for Direct Vector Access Index and Delta Sync
 	// Index using self-managed vectors.
-	QueryVector []types.Float64 `tfsdk:"query_vector" tf:"optional"`
+	QueryVector types.List `tfsdk:"query_vector" tf:"optional"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold" tf:"optional"`
 }
@@ -487,15 +632,22 @@ func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexRequest) {
 }
 
+func (a QueryVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Columns":     reflect.TypeOf(""),
+		"QueryVector": reflect.TypeOf(0.0),
+	}
+}
+
 type QueryVectorIndexResponse struct {
 	// Metadata about the result set.
-	Manifest []ResultManifest `tfsdk:"manifest" tf:"optional,object"`
+	Manifest types.Object `tfsdk:"manifest" tf:"optional,object"`
 	// [Optional] Token that can be used in `QueryVectorIndexNextPage` API to
 	// get next page of results. If more than 1000 results satisfy the query,
 	// they are returned in groups of 1000. Empty value means no more results.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Data returned in the query result.
-	Result []ResultData `tfsdk:"result" tf:"optional,object"`
+	Result types.Object `tfsdk:"result" tf:"optional,object"`
 }
 
 func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexResponse) {
@@ -504,10 +656,17 @@ func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexResponse) {
 }
 
+func (a QueryVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Manifest": reflect.TypeOf(ResultManifest{}),
+		"Result":   reflect.TypeOf(ResultData{}),
+	}
+}
+
 // Data returned in the query result.
 type ResultData struct {
 	// Data rows returned in the query.
-	DataArray [][]types.String `tfsdk:"data_array" tf:"optional"`
+	DataArray types.List `tfsdk:"data_array" tf:"optional"`
 	// Number of rows in the result set.
 	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
 }
@@ -518,18 +677,30 @@ func (newState *ResultData) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultD
 func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultData) {
 }
 
+func (a ResultData) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DataArray": reflect.TypeOf(""),
+	}
+}
+
 // Metadata about the result set.
 type ResultManifest struct {
 	// Number of columns in the result set.
 	ColumnCount types.Int64 `tfsdk:"column_count" tf:"optional"`
 	// Information about each column in the result set.
-	Columns []ColumnInfo `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns" tf:"optional"`
 }
 
 func (newState *ResultManifest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultManifest) {
 }
 
 func (newState *ResultManifest) SyncEffectiveFieldsDuringRead(existingState ResultManifest) {
+}
+
+func (a ResultManifest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Columns": reflect.TypeOf(ColumnInfo{}),
+	}
 }
 
 // Request payload for scanning data from a vector index.
@@ -548,10 +719,14 @@ func (newState *ScanVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ScanVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexRequest) {
 }
 
+func (a ScanVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Response to a scan vector index request.
 type ScanVectorIndexResponse struct {
 	// List of data entries
-	Data []Struct `tfsdk:"data" tf:"optional"`
+	Data types.List `tfsdk:"data" tf:"optional"`
 	// Primary key of the last entry.
 	LastPrimaryKey types.String `tfsdk:"last_primary_key" tf:"optional"`
 }
@@ -562,15 +737,27 @@ func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexResponse) {
 }
 
+func (a ScanVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Data": reflect.TypeOf(Struct{}),
+	}
+}
+
 type Struct struct {
 	// Data entry, corresponding to a row in a vector index.
-	Fields []MapStringValueEntry `tfsdk:"fields" tf:"optional"`
+	Fields types.List `tfsdk:"fields" tf:"optional"`
 }
 
 func (newState *Struct) SyncEffectiveFieldsDuringCreateOrUpdate(plan Struct) {
 }
 
 func (newState *Struct) SyncEffectiveFieldsDuringRead(existingState Struct) {
+}
+
+func (a Struct) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Fields": reflect.TypeOf(MapStringValueEntry{}),
+	}
 }
 
 // Synchronize an index
@@ -585,6 +772,10 @@ func (newState *SyncIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *SyncIndexRequest) SyncEffectiveFieldsDuringRead(existingState SyncIndexRequest) {
 }
 
+func (a SyncIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SyncIndexResponse struct {
 }
 
@@ -594,10 +785,14 @@ func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringRead(existingState SyncIndexResponse) {
 }
 
+func (a SyncIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Result of the upsert or delete operation.
 type UpsertDataResult struct {
 	// List of primary keys for rows that failed to process.
-	FailedPrimaryKeys []types.String `tfsdk:"failed_primary_keys" tf:"optional"`
+	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys" tf:"optional"`
 	// Count of successfully processed rows.
 	SuccessRowCount types.Int64 `tfsdk:"success_row_count" tf:"optional"`
 }
@@ -606,6 +801,12 @@ func (newState *UpsertDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan U
 }
 
 func (newState *UpsertDataResult) SyncEffectiveFieldsDuringRead(existingState UpsertDataResult) {
+}
+
+func (a UpsertDataResult) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FailedPrimaryKeys": reflect.TypeOf(""),
+	}
 }
 
 // Request payload for upserting data into a vector index.
@@ -623,10 +824,14 @@ func (newState *UpsertDataVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *UpsertDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexRequest) {
 }
 
+func (a UpsertDataVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Response to an upsert data vector index request.
 type UpsertDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
-	Result []UpsertDataResult `tfsdk:"result" tf:"optional,object"`
+	Result types.Object `tfsdk:"result" tf:"optional,object"`
 	// Status of the upsert operation.
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
@@ -637,10 +842,16 @@ func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOr
 func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexResponse) {
 }
 
+func (a UpsertDataVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Result": reflect.TypeOf(UpsertDataResult{}),
+	}
+}
+
 type Value struct {
 	BoolValue types.Bool `tfsdk:"bool_value" tf:"optional"`
 
-	ListValue []ListValue `tfsdk:"list_value" tf:"optional,object"`
+	ListValue types.Object `tfsdk:"list_value" tf:"optional,object"`
 
 	NullValue types.String `tfsdk:"null_value" tf:"optional"`
 
@@ -648,7 +859,7 @@ type Value struct {
 
 	StringValue types.String `tfsdk:"string_value" tf:"optional"`
 
-	StructValue []Struct `tfsdk:"struct_value" tf:"optional,object"`
+	StructValue types.Object `tfsdk:"struct_value" tf:"optional,object"`
 }
 
 func (newState *Value) SyncEffectiveFieldsDuringCreateOrUpdate(plan Value) {
@@ -657,13 +868,20 @@ func (newState *Value) SyncEffectiveFieldsDuringCreateOrUpdate(plan Value) {
 func (newState *Value) SyncEffectiveFieldsDuringRead(existingState Value) {
 }
 
+func (a Value) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ListValue":   reflect.TypeOf(ListValue{}),
+		"StructValue": reflect.TypeOf(Struct{}),
+	}
+}
+
 type VectorIndex struct {
 	// The user who created the index.
 	Creator types.String `tfsdk:"creator" tf:"optional"`
 
-	DeltaSyncIndexSpec []DeltaSyncVectorIndexSpecResponse `tfsdk:"delta_sync_index_spec" tf:"optional,object"`
+	DeltaSyncIndexSpec types.Object `tfsdk:"delta_sync_index_spec" tf:"optional,object"`
 
-	DirectAccessIndexSpec []DirectAccessVectorIndexSpec `tfsdk:"direct_access_index_spec" tf:"optional,object"`
+	DirectAccessIndexSpec types.Object `tfsdk:"direct_access_index_spec" tf:"optional,object"`
 	// Name of the endpoint associated with the index
 	EndpointName types.String `tfsdk:"endpoint_name" tf:"optional"`
 	// There are 2 types of Vector Search indexes:
@@ -679,13 +897,21 @@ type VectorIndex struct {
 	// Primary key of the index
 	PrimaryKey types.String `tfsdk:"primary_key" tf:"optional"`
 
-	Status []VectorIndexStatus `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status" tf:"optional,object"`
 }
 
 func (newState *VectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndex) {
 }
 
 func (newState *VectorIndex) SyncEffectiveFieldsDuringRead(existingState VectorIndex) {
+}
+
+func (a VectorIndex) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DeltaSyncIndexSpec":    reflect.TypeOf(DeltaSyncVectorIndexSpecResponse{}),
+		"DirectAccessIndexSpec": reflect.TypeOf(DirectAccessVectorIndexSpec{}),
+		"Status":                reflect.TypeOf(VectorIndexStatus{}),
+	}
 }
 
 type VectorIndexStatus struct {
@@ -703,4 +929,8 @@ func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringRead(existingState VectorIndexStatus) {
+}
+
+func (a VectorIndexStatus) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }

@@ -74,7 +74,7 @@ func workspaceBindingTemplateWithWorkspaceId(workspaceId string) string {
 		
 		resource "databricks_workspace_binding" "service_cred" {
 			securable_name = databricks_credential.credential.id
-			securable_type = "service_credential"
+			securable_type = "credential"
 			workspace_id   = %[1]s
 		}
 	`, workspaceId)

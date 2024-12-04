@@ -110,9 +110,9 @@ func (a NotebooksAPI) Create(r ImportPath) (ImportResponse, error) {
 		mtx.Lock()
 		defer mtx.Unlock()
 	}
-	var responce ImportResponse
-	err := a.client.Post(a.context, "/workspace/import", r, &responce)
-	return responce, err
+	var response ImportResponse
+	err := a.client.Post(a.context, "/workspace/import", r, &response)
+	return response, err
 }
 
 // Read returns the notebook metadata and not the contents

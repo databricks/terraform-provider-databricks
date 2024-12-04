@@ -2970,7 +2970,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				if isolationMode == "ISOLATION_MODE_ISOLATED" {
 					purpose := r.Data.Get("purpose").(string)
 					if purpose == "SERVICE" {
-						ic.emitWorkspaceBindings("service_credential", r.ID)
+						ic.emitWorkspaceBindings("credential", r.ID)
 					} else if purpose == "STORAGE" {
 						ic.emitWorkspaceBindings("storage_credential", r.ID)
 					}

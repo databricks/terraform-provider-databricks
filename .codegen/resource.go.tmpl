@@ -1,0 +1,82 @@
+{{- $resourceName := concat .TFSDK.ModelName "Resource" -}}
+{{- $extendedStructName := concat .TFSDK.ModelName "Extended" -}}
+{{- $clientLevel := "" -}}
+{{- if .IsAccountLevel -}}
+  {{- $clientLevel = "Account" -}}
+{{- else -}}
+  {{- $clientLevel = "Workspace" -}}
+{{- end -}}
+
+package {{ .PackageName }}
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/databricks/terraform-provider-databricks/internal/service/{{ .PackageName }}_tf"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
+
+const resourceName = "{{ .PackageName }}"
+
+var _ resource.ResourceWithConfigure = &{{ $resourceName }}{}
+
+func Resource{{ .TFSDK.ModelName }}() resource.Resource {
+	return &{{ $resourceName }}{}
+}
+
+type {{ $extendedStructName }} struct {
+	{{ .PackageName }}_tf.{{ .TFSDK.ModelName }}
+}
+
+type {{ $resourceName }} struct {
+	Client *common.DatabricksClient
+}
+
+func (r *{{ $resourceName }}) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
+}
+
+func (r *{{ $resourceName }}) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap({{ $extendedStructName }}{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+        return c
+	})
+	resp.Schema = schema.Schema{
+		Description: "Terraform schema for Databricks {{ .TFSDK.ModelName }}",
+		Attributes:  attrs,
+		Blocks:      blocks,
+	}
+}
+
+func (r *{{ $resourceName }}) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if r.Client == nil {
+		r.Client = pluginfwcommon.ConfigureResource(req, resp)
+	}
+}
+
+func (r *{{ $resourceName }}) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+    // DECO-24155
+}
+
+func (r *{{ $resourceName }}) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+    // DECO-24156
+}
+
+func (r *{{ $resourceName }}) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+    // DECO-24157
+}
+
+func (r *{{ $resourceName }}) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+    // DECO-24158
+}

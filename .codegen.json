@@ -4,6 +4,15 @@
     "packages": {
         ".codegen/model.go.tmpl": "internal/service/{{.Name}}_tf/model.go"
     },
+    "terraform": {
+        "auto_generate": false,
+        "included_services": [
+        ],
+        "artifacts": {
+            ".codegen/resource.go.tmpl": "internal/providers/pluginfw/products/{{.PackageName}}/resource_{{.PackageName}}.go"
+        }
+
+    },
     "changelog_config": ".codegen/changelog_config.yml",
     "version": {
         "common/version.go": "version = \"$VERSION\""

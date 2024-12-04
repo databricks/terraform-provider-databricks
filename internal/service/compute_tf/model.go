@@ -11,9 +11,12 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package compute_tf
 
 import (
+	"context"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type AddInstanceProfile struct {
@@ -55,6 +58,17 @@ func (a AddInstanceProfile) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AddInstanceProfile) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IamRoleArn":            types.StringType,
+			"InstanceProfileArn":    types.StringType,
+			"IsMetaInstanceProfile": types.BoolType,
+			"SkipValidation":        types.BoolType,
+		},
+	}
+}
+
 type AddResponse struct {
 }
 
@@ -66,6 +80,12 @@ func (newState *AddResponse) SyncEffectiveFieldsDuringRead(existingState AddResp
 
 func (a AddResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AddResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type Adlsgen2Info struct {
@@ -82,6 +102,14 @@ func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringRead(existingState Adlsge
 
 func (a Adlsgen2Info) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a Adlsgen2Info) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Destination": types.StringType,
+		},
+	}
 }
 
 type AutoScale struct {
@@ -103,6 +131,15 @@ func (newState *AutoScale) SyncEffectiveFieldsDuringRead(existingState AutoScale
 
 func (a AutoScale) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AutoScale) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxWorkers": types.Int64Type,
+			"MinWorkers": types.Int64Type,
+		},
+	}
 }
 
 type AwsAttributes struct {
@@ -201,6 +238,23 @@ func (a AwsAttributes) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AwsAttributes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Availability":        types.StringType,
+			"EbsVolumeCount":      types.Int64Type,
+			"EbsVolumeIops":       types.Int64Type,
+			"EbsVolumeSize":       types.Int64Type,
+			"EbsVolumeThroughput": types.Int64Type,
+			"EbsVolumeType":       types.StringType,
+			"FirstOnDemand":       types.Int64Type,
+			"InstanceProfileArn":  types.StringType,
+			"SpotBidPricePercent": types.Int64Type,
+			"ZoneId":              types.StringType,
+		},
+	}
+}
+
 type AzureAttributes struct {
 	// Availability type used for all subsequent nodes past the
 	// `first_on_demand` ones. Note: If `first_on_demand` is zero (which only
@@ -218,7 +272,7 @@ type AzureAttributes struct {
 	// mutated over the lifetime of a cluster.
 	FirstOnDemand types.Int64 `tfsdk:"first_on_demand" tf:"optional"`
 	// Defines values necessary to configure and run Azure Log Analytics agent
-	LogAnalyticsInfo types.Object `tfsdk:"log_analytics_info" tf:"optional,object"`
+	LogAnalyticsInfo types.List `tfsdk:"log_analytics_info" tf:"optional,object"`
 	// The max bid price to be used for Azure spot instances. The Max price for
 	// the bid cannot be higher than the on-demand price of the instance. If not
 	// specified, the default value is -1, which specifies that the instance
@@ -236,6 +290,17 @@ func (newState *AzureAttributes) SyncEffectiveFieldsDuringRead(existingState Azu
 func (a AzureAttributes) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"LogAnalyticsInfo": reflect.TypeOf(LogAnalyticsInfo{}),
+	}
+}
+
+func (a AzureAttributes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Availability":     types.StringType,
+			"FirstOnDemand":    types.Int64Type,
+			"LogAnalyticsInfo": LogAnalyticsInfo{}.ToAttrType(ctx),
+			"SpotBidMaxPrice":  types.Float64Type,
+		},
 	}
 }
 
@@ -257,6 +322,16 @@ func (a CancelCommand) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CancelCommand) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"CommandId": types.StringType,
+			"ContextId": types.StringType,
+		},
+	}
+}
+
 type CancelResponse struct {
 }
 
@@ -268,6 +343,12 @@ func (newState *CancelResponse) SyncEffectiveFieldsDuringRead(existingState Canc
 
 func (a CancelResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CancelResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type ChangeClusterOwner struct {
@@ -287,6 +368,15 @@ func (a ChangeClusterOwner) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ChangeClusterOwner) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId":     types.StringType,
+			"OwnerUsername": types.StringType,
+		},
+	}
+}
+
 type ChangeClusterOwnerResponse struct {
 }
 
@@ -298,6 +388,12 @@ func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringRead(existi
 
 func (a ChangeClusterOwnerResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ChangeClusterOwnerResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type ClientsTypes struct {
@@ -317,6 +413,15 @@ func (a ClientsTypes) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ClientsTypes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Jobs":      types.BoolType,
+			"Notebooks": types.BoolType,
+		},
+	}
+}
+
 type CloneCluster struct {
 	// The cluster that is being cloned.
 	SourceClusterId types.String `tfsdk:"source_cluster_id" tf:""`
@@ -332,6 +437,14 @@ func (a CloneCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CloneCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"SourceClusterId": types.StringType,
+		},
+	}
+}
+
 type CloudProviderNodeInfo struct {
 	Status types.List `tfsdk:"status" tf:"optional"`
 }
@@ -344,7 +457,17 @@ func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a CloudProviderNodeInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Status": reflect.TypeOf(""),
+		"Status": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a CloudProviderNodeInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Status": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -367,6 +490,17 @@ func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringRead(exist
 
 func (a ClusterAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ClusterAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type ClusterAccessControlResponse struct {
@@ -394,6 +528,20 @@ func (a ClusterAccessControlResponse) GetComplexFieldTypes() map[string]reflect.
 	}
 }
 
+func (a ClusterAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: ClusterPermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type ClusterAttributes struct {
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
@@ -403,17 +551,17 @@ type ClusterAttributes struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -450,7 +598,7 @@ type ClusterAttributes struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -468,7 +616,7 @@ type ClusterAttributes struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -524,7 +672,7 @@ type ClusterAttributes struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *ClusterAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAttributes) {
@@ -538,14 +686,55 @@ func (a ClusterAttributes) GetComplexFieldTypes() map[string]reflect.Type {
 		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
 		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
 		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
-		"CustomTags":      reflect.TypeOf(""),
+		"CustomTags":      reflect.TypeOf(types.StringType),
 		"DockerImage":     reflect.TypeOf(DockerImage{}),
 		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
 		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
-		"SparkConf":       reflect.TypeOf(""),
-		"SparkEnvVars":    reflect.TypeOf(""),
-		"SshPublicKeys":   reflect.TypeOf(""),
+		"SparkConf":       reflect.TypeOf(types.StringType),
+		"SparkEnvVars":    reflect.TypeOf(types.StringType),
+		"SshPublicKeys":   reflect.TypeOf(types.StringType),
 		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
+}
+
+func (a ClusterAttributes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AutoterminationMinutes": types.Int64Type,
+			"AwsAttributes":          AwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes":        AzureAttributes{}.ToAttrType(ctx),
+			"ClusterLogConf":         ClusterLogConf{}.ToAttrType(ctx),
+			"ClusterName":            types.StringType,
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DataSecurityMode":          types.StringType,
+			"DockerImage":               DockerImage{}.ToAttrType(ctx),
+			"DriverInstancePoolId":      types.StringType,
+			"DriverNodeTypeId":          types.StringType,
+			"EnableElasticDisk":         types.BoolType,
+			"EnableLocalDiskEncryption": types.BoolType,
+			"GcpAttributes":             GcpAttributes{}.ToAttrType(ctx),
+			"InitScripts": basetypes.ListType{
+				ElemType: InitScriptInfo{}.ToAttrType(ctx),
+			},
+			"InstancePoolId": types.StringType,
+			"NodeTypeId":     types.StringType,
+			"PolicyId":       types.StringType,
+			"RuntimeEngine":  types.StringType,
+			"SingleUserName": types.StringType,
+			"SparkConf": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkEnvVars": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkVersion": types.StringType,
+			"SshPublicKeys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"WorkloadType": WorkloadType{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -570,7 +759,19 @@ func (newState *ClusterCompliance) SyncEffectiveFieldsDuringRead(existingState C
 
 func (a ClusterCompliance) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Violations": reflect.TypeOf(""),
+		"Violations": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ClusterCompliance) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId":   types.StringType,
+			"IsCompliant": types.BoolType,
+			"Violations": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -578,7 +779,7 @@ type ClusterDetails struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -587,10 +788,10 @@ type ClusterDetails struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// Number of CPU cores available for this cluster. Note that this can be
 	// fractional, e.g. 7.5 cores, since certain node types are configured to
 	// share cores between Spark nodes on the same instance.
@@ -604,9 +805,9 @@ type ClusterDetails struct {
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster log delivery status.
-	ClusterLogStatus types.Object `tfsdk:"cluster_log_status" tf:"optional,object"`
+	ClusterLogStatus types.List `tfsdk:"cluster_log_status" tf:"optional,object"`
 	// Total amount of cluster memory, in megabytes
 	ClusterMemoryMb types.Int64 `tfsdk:"cluster_memory_mb" tf:"optional"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
@@ -665,11 +866,11 @@ type ClusterDetails struct {
 	// - Name: <Databricks internal use>
 	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
 
-	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
 	// Node on which the Spark driver resides. The driver node contains the
 	// Spark master and the Databricks application that manages the per-notebook
 	// Spark REPLs.
-	Driver types.Object `tfsdk:"driver" tf:"optional,object"`
+	Driver types.List `tfsdk:"driver" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -689,7 +890,7 @@ type ClusterDetails struct {
 	Executors types.List `tfsdk:"executors" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -767,7 +968,7 @@ type ClusterDetails struct {
 	// or edit this cluster. The contents of `spec` can be used in the body of a
 	// create cluster request. This field might not be populated for older
 	// clusters. Note: not included in the response of the ListClusters API.
-	Spec types.Object `tfsdk:"spec" tf:"optional,object"`
+	Spec types.List `tfsdk:"spec" tf:"optional,object"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
@@ -785,9 +986,9 @@ type ClusterDetails struct {
 	TerminatedTime types.Int64 `tfsdk:"terminated_time" tf:"optional"`
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
-	TerminationReason types.Object `tfsdk:"termination_reason" tf:"optional,object"`
+	TerminationReason types.List `tfsdk:"termination_reason" tf:"optional,object"`
 
-	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *ClusterDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterDetails) {
@@ -803,19 +1004,85 @@ func (a ClusterDetails) GetComplexFieldTypes() map[string]reflect.Type {
 		"AzureAttributes":   reflect.TypeOf(AzureAttributes{}),
 		"ClusterLogConf":    reflect.TypeOf(ClusterLogConf{}),
 		"ClusterLogStatus":  reflect.TypeOf(LogSyncStatus{}),
-		"CustomTags":        reflect.TypeOf(""),
-		"DefaultTags":       reflect.TypeOf(""),
+		"CustomTags":        reflect.TypeOf(types.StringType),
+		"DefaultTags":       reflect.TypeOf(types.StringType),
 		"DockerImage":       reflect.TypeOf(DockerImage{}),
 		"Driver":            reflect.TypeOf(SparkNode{}),
 		"Executors":         reflect.TypeOf(SparkNode{}),
 		"GcpAttributes":     reflect.TypeOf(GcpAttributes{}),
 		"InitScripts":       reflect.TypeOf(InitScriptInfo{}),
-		"SparkConf":         reflect.TypeOf(""),
-		"SparkEnvVars":      reflect.TypeOf(""),
+		"SparkConf":         reflect.TypeOf(types.StringType),
+		"SparkEnvVars":      reflect.TypeOf(types.StringType),
 		"Spec":              reflect.TypeOf(ClusterSpec{}),
-		"SshPublicKeys":     reflect.TypeOf(""),
+		"SshPublicKeys":     reflect.TypeOf(types.StringType),
 		"TerminationReason": reflect.TypeOf(TerminationReason{}),
 		"WorkloadType":      reflect.TypeOf(WorkloadType{}),
+	}
+}
+
+func (a ClusterDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Autoscale":              AutoScale{}.ToAttrType(ctx),
+			"AutoterminationMinutes": types.Int64Type,
+			"AwsAttributes":          AwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes":        AzureAttributes{}.ToAttrType(ctx),
+			"ClusterCores":           types.Float64Type,
+			"ClusterId":              types.StringType,
+			"ClusterLogConf":         ClusterLogConf{}.ToAttrType(ctx),
+			"ClusterLogStatus":       LogSyncStatus{}.ToAttrType(ctx),
+			"ClusterMemoryMb":        types.Int64Type,
+			"ClusterName":            types.StringType,
+			"ClusterSource":          types.StringType,
+			"CreatorUserName":        types.StringType,
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DataSecurityMode": types.StringType,
+			"DefaultTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DockerImage":               DockerImage{}.ToAttrType(ctx),
+			"Driver":                    SparkNode{}.ToAttrType(ctx),
+			"DriverInstancePoolId":      types.StringType,
+			"DriverNodeTypeId":          types.StringType,
+			"EnableElasticDisk":         types.BoolType,
+			"EnableLocalDiskEncryption": types.BoolType,
+			"Executors": basetypes.ListType{
+				ElemType: SparkNode{}.ToAttrType(ctx),
+			},
+			"GcpAttributes": GcpAttributes{}.ToAttrType(ctx),
+			"InitScripts": basetypes.ListType{
+				ElemType: InitScriptInfo{}.ToAttrType(ctx),
+			},
+			"InstancePoolId":    types.StringType,
+			"JdbcPort":          types.Int64Type,
+			"LastRestartedTime": types.Int64Type,
+			"LastStateLossTime": types.Int64Type,
+			"NodeTypeId":        types.StringType,
+			"NumWorkers":        types.Int64Type,
+			"PolicyId":          types.StringType,
+			"RuntimeEngine":     types.StringType,
+			"SingleUserName":    types.StringType,
+			"SparkConf": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkContextId": types.Int64Type,
+			"SparkEnvVars": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkVersion": types.StringType,
+			"Spec":         ClusterSpec{}.ToAttrType(ctx),
+			"SshPublicKeys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"StartTime":         types.Int64Type,
+			"State":             types.StringType,
+			"StateMessage":      types.StringType,
+			"TerminatedTime":    types.Int64Type,
+			"TerminationReason": TerminationReason{}.ToAttrType(ctx),
+			"WorkloadType":      WorkloadType{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -823,9 +1090,9 @@ type ClusterEvent struct {
 	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// <needs content added>
-	DataPlaneEventDetails types.Object `tfsdk:"data_plane_event_details" tf:"optional,object"`
+	DataPlaneEventDetails types.List `tfsdk:"data_plane_event_details" tf:"optional,object"`
 	// <needs content added>
-	Details types.Object `tfsdk:"details" tf:"optional,object"`
+	Details types.List `tfsdk:"details" tf:"optional,object"`
 	// The timestamp when the event occurred, stored as the number of
 	// milliseconds since the Unix epoch. If not provided, this will be assigned
 	// by the Timeline service.
@@ -844,6 +1111,18 @@ func (a ClusterEvent) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"DataPlaneEventDetails": reflect.TypeOf(DataPlaneEventDetails{}),
 		"Details":               reflect.TypeOf(EventDetails{}),
+	}
+}
+
+func (a ClusterEvent) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId":             types.StringType,
+			"DataPlaneEventDetails": DataPlaneEventDetails{}.ToAttrType(ctx),
+			"Details":               EventDetails{}.ToAttrType(ctx),
+			"Timestamp":             types.Int64Type,
+			"Type":                  types.StringType,
+		},
 	}
 }
 
@@ -866,16 +1145,27 @@ func (a ClusterLibraryStatuses) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ClusterLibraryStatuses) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"LibraryStatuses": basetypes.ListType{
+				ElemType: LibraryFullStatus{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ClusterLogConf struct {
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
-	Dbfs types.Object `tfsdk:"dbfs" tf:"optional,object"`
+	Dbfs types.List `tfsdk:"dbfs" tf:"optional,object"`
 	// destination and either the region or endpoint need to be provided. e.g.
 	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
 	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
-	S3 types.Object `tfsdk:"s3" tf:"optional,object"`
+	S3 types.List `tfsdk:"s3" tf:"optional,object"`
 }
 
 func (newState *ClusterLogConf) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLogConf) {
@@ -888,6 +1178,15 @@ func (a ClusterLogConf) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Dbfs": reflect.TypeOf(DbfsStorageInfo{}),
 		"S3":   reflect.TypeOf(S3StorageInfo{}),
+	}
+}
+
+func (a ClusterLogConf) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Dbfs": DbfsStorageInfo{}.ToAttrType(ctx),
+			"S3":   S3StorageInfo{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -907,7 +1206,19 @@ func (newState *ClusterPermission) SyncEffectiveFieldsDuringRead(existingState C
 
 func (a ClusterPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ClusterPermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -931,6 +1242,18 @@ func (a ClusterPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ClusterPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: ClusterAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type ClusterPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -945,6 +1268,15 @@ func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringRead(exi
 
 func (a ClusterPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ClusterPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type ClusterPermissionsRequest struct {
@@ -962,6 +1294,17 @@ func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringRead(existin
 func (a ClusterPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AccessControlList": reflect.TypeOf(ClusterAccessControlRequest{}),
+	}
+}
+
+func (a ClusterPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: ClusterAccessControlRequest{}.ToAttrType(ctx),
+			},
+			"ClusterId": types.StringType,
+		},
 	}
 }
 
@@ -984,6 +1327,17 @@ func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringRead
 
 func (a ClusterPolicyAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ClusterPolicyAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type ClusterPolicyAccessControlResponse struct {
@@ -1011,6 +1365,20 @@ func (a ClusterPolicyAccessControlResponse) GetComplexFieldTypes() map[string]re
 	}
 }
 
+func (a ClusterPolicyAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: ClusterPolicyPermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type ClusterPolicyPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -1027,7 +1395,19 @@ func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringRead(existingS
 
 func (a ClusterPolicyPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ClusterPolicyPermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -1051,6 +1431,18 @@ func (a ClusterPolicyPermissions) GetComplexFieldTypes() map[string]reflect.Type
 	}
 }
 
+func (a ClusterPolicyPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: ClusterPolicyAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type ClusterPolicyPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -1065,6 +1457,15 @@ func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringRe
 
 func (a ClusterPolicyPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ClusterPolicyPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type ClusterPolicyPermissionsRequest struct {
@@ -1082,6 +1483,17 @@ func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRead(e
 func (a ClusterPolicyPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AccessControlList": reflect.TypeOf(ClusterPolicyAccessControlRequest{}),
+	}
+}
+
+func (a ClusterPolicyPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: ClusterPolicyAccessControlRequest{}.ToAttrType(ctx),
+			},
+			"ClusterPolicyId": types.StringType,
+		},
 	}
 }
 
@@ -1112,11 +1524,21 @@ func (a ClusterSettingsChange) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ClusterSettingsChange) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Field":         types.StringType,
+			"NewValue":      types.StringType,
+			"PreviousValue": types.StringType,
+		},
+	}
+}
+
 type ClusterSize struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -1142,6 +1564,15 @@ func (a ClusterSize) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ClusterSize) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Autoscale":  AutoScale{}.ToAttrType(ctx),
+			"NumWorkers": types.Int64Type,
+		},
+	}
+}
+
 type ClusterSpec struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
@@ -1150,7 +1581,7 @@ type ClusterSpec struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -1159,17 +1590,17 @@ type ClusterSpec struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -1206,7 +1637,7 @@ type ClusterSpec struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -1224,7 +1655,7 @@ type ClusterSpec struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -1291,7 +1722,7 @@ type ClusterSpec struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
@@ -1306,14 +1737,58 @@ func (a ClusterSpec) GetComplexFieldTypes() map[string]reflect.Type {
 		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
 		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
 		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
-		"CustomTags":      reflect.TypeOf(""),
+		"CustomTags":      reflect.TypeOf(types.StringType),
 		"DockerImage":     reflect.TypeOf(DockerImage{}),
 		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
 		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
-		"SparkConf":       reflect.TypeOf(""),
-		"SparkEnvVars":    reflect.TypeOf(""),
-		"SshPublicKeys":   reflect.TypeOf(""),
+		"SparkConf":       reflect.TypeOf(types.StringType),
+		"SparkEnvVars":    reflect.TypeOf(types.StringType),
+		"SshPublicKeys":   reflect.TypeOf(types.StringType),
 		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
+}
+
+func (a ClusterSpec) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ApplyPolicyDefaultValues": types.BoolType,
+			"Autoscale":                AutoScale{}.ToAttrType(ctx),
+			"AutoterminationMinutes":   types.Int64Type,
+			"AwsAttributes":            AwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes":          AzureAttributes{}.ToAttrType(ctx),
+			"ClusterLogConf":           ClusterLogConf{}.ToAttrType(ctx),
+			"ClusterName":              types.StringType,
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DataSecurityMode":          types.StringType,
+			"DockerImage":               DockerImage{}.ToAttrType(ctx),
+			"DriverInstancePoolId":      types.StringType,
+			"DriverNodeTypeId":          types.StringType,
+			"EnableElasticDisk":         types.BoolType,
+			"EnableLocalDiskEncryption": types.BoolType,
+			"GcpAttributes":             GcpAttributes{}.ToAttrType(ctx),
+			"InitScripts": basetypes.ListType{
+				ElemType: InitScriptInfo{}.ToAttrType(ctx),
+			},
+			"InstancePoolId": types.StringType,
+			"NodeTypeId":     types.StringType,
+			"NumWorkers":     types.Int64Type,
+			"PolicyId":       types.StringType,
+			"RuntimeEngine":  types.StringType,
+			"SingleUserName": types.StringType,
+			"SparkConf": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkEnvVars": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkVersion": types.StringType,
+			"SshPublicKeys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"WorkloadType": WorkloadType{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1331,6 +1806,14 @@ func (newState *ClusterStatus) SyncEffectiveFieldsDuringRead(existingState Clust
 
 func (a ClusterStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ClusterStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
 }
 
 type Command struct {
@@ -1354,6 +1837,17 @@ func (a Command) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a Command) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"Command":   types.StringType,
+			"ContextId": types.StringType,
+			"Language":  types.StringType,
+		},
+	}
+}
+
 // Get command info
 type CommandStatusRequest struct {
 	ClusterId types.String `tfsdk:"-"`
@@ -1373,10 +1867,20 @@ func (a CommandStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CommandStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"CommandId": types.StringType,
+			"ContextId": types.StringType,
+		},
+	}
+}
+
 type CommandStatusResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Results types.Object `tfsdk:"results" tf:"optional,object"`
+	Results types.List `tfsdk:"results" tf:"optional,object"`
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 }
@@ -1390,6 +1894,16 @@ func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringRead(existingSta
 func (a CommandStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Results": reflect.TypeOf(Results{}),
+	}
+}
+
+func (a CommandStatusResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id":      types.StringType,
+			"Results": Results{}.ToAttrType(ctx),
+			"Status":  types.StringType,
+		},
 	}
 }
 
@@ -1410,6 +1924,15 @@ func (a ContextStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ContextStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"ContextId": types.StringType,
+		},
+	}
+}
+
 type ContextStatusResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 
@@ -1426,6 +1949,15 @@ func (a ContextStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ContextStatusResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id":     types.StringType,
+			"Status": types.StringType,
+		},
+	}
+}
+
 type CreateCluster struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
@@ -1434,7 +1966,7 @@ type CreateCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -1443,20 +1975,20 @@ type CreateCluster struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// When specified, this clones libraries from a source cluster during the
 	// creation of a new cluster.
-	CloneFrom types.Object `tfsdk:"clone_from" tf:"optional,object"`
+	CloneFrom types.List `tfsdk:"clone_from" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -1493,7 +2025,7 @@ type CreateCluster struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -1511,7 +2043,7 @@ type CreateCluster struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -1578,7 +2110,7 @@ type CreateCluster struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *CreateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCluster) {
@@ -1594,14 +2126,59 @@ func (a CreateCluster) GetComplexFieldTypes() map[string]reflect.Type {
 		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
 		"CloneFrom":       reflect.TypeOf(CloneCluster{}),
 		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
-		"CustomTags":      reflect.TypeOf(""),
+		"CustomTags":      reflect.TypeOf(types.StringType),
 		"DockerImage":     reflect.TypeOf(DockerImage{}),
 		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
 		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
-		"SparkConf":       reflect.TypeOf(""),
-		"SparkEnvVars":    reflect.TypeOf(""),
-		"SshPublicKeys":   reflect.TypeOf(""),
+		"SparkConf":       reflect.TypeOf(types.StringType),
+		"SparkEnvVars":    reflect.TypeOf(types.StringType),
+		"SshPublicKeys":   reflect.TypeOf(types.StringType),
 		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
+}
+
+func (a CreateCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ApplyPolicyDefaultValues": types.BoolType,
+			"Autoscale":                AutoScale{}.ToAttrType(ctx),
+			"AutoterminationMinutes":   types.Int64Type,
+			"AwsAttributes":            AwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes":          AzureAttributes{}.ToAttrType(ctx),
+			"CloneFrom":                CloneCluster{}.ToAttrType(ctx),
+			"ClusterLogConf":           ClusterLogConf{}.ToAttrType(ctx),
+			"ClusterName":              types.StringType,
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DataSecurityMode":          types.StringType,
+			"DockerImage":               DockerImage{}.ToAttrType(ctx),
+			"DriverInstancePoolId":      types.StringType,
+			"DriverNodeTypeId":          types.StringType,
+			"EnableElasticDisk":         types.BoolType,
+			"EnableLocalDiskEncryption": types.BoolType,
+			"GcpAttributes":             GcpAttributes{}.ToAttrType(ctx),
+			"InitScripts": basetypes.ListType{
+				ElemType: InitScriptInfo{}.ToAttrType(ctx),
+			},
+			"InstancePoolId": types.StringType,
+			"NodeTypeId":     types.StringType,
+			"NumWorkers":     types.Int64Type,
+			"PolicyId":       types.StringType,
+			"RuntimeEngine":  types.StringType,
+			"SingleUserName": types.StringType,
+			"SparkConf": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkEnvVars": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkVersion": types.StringType,
+			"SshPublicKeys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"WorkloadType": WorkloadType{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1617,6 +2194,14 @@ func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a CreateClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CreateClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
 }
 
 type CreateContext struct {
@@ -1636,13 +2221,22 @@ func (a CreateContext) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CreateContext) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"Language":  types.StringType,
+		},
+	}
+}
+
 type CreateInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -1651,7 +2245,7 @@ type CreateInstancePool struct {
 	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec types.Object `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.List `tfsdk:"disk_spec" tf:"optional,object"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -1660,7 +2254,7 @@ type CreateInstancePool struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -1703,11 +2297,37 @@ func (a CreateInstancePool) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AwsAttributes":          reflect.TypeOf(InstancePoolAwsAttributes{}),
 		"AzureAttributes":        reflect.TypeOf(InstancePoolAzureAttributes{}),
-		"CustomTags":             reflect.TypeOf(""),
+		"CustomTags":             reflect.TypeOf(types.StringType),
 		"DiskSpec":               reflect.TypeOf(DiskSpec{}),
 		"GcpAttributes":          reflect.TypeOf(InstancePoolGcpAttributes{}),
 		"PreloadedDockerImages":  reflect.TypeOf(DockerImage{}),
-		"PreloadedSparkVersions": reflect.TypeOf(""),
+		"PreloadedSparkVersions": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a CreateInstancePool) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsAttributes":   InstancePoolAwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes": InstancePoolAzureAttributes{}.ToAttrType(ctx),
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DiskSpec":                           DiskSpec{}.ToAttrType(ctx),
+			"EnableElasticDisk":                  types.BoolType,
+			"GcpAttributes":                      InstancePoolGcpAttributes{}.ToAttrType(ctx),
+			"IdleInstanceAutoterminationMinutes": types.Int64Type,
+			"InstancePoolName":                   types.StringType,
+			"MaxCapacity":                        types.Int64Type,
+			"MinIdleInstances":                   types.Int64Type,
+			"NodeTypeId":                         types.StringType,
+			"PreloadedDockerImages": basetypes.ListType{
+				ElemType: DockerImage{}.ToAttrType(ctx),
+			},
+			"PreloadedSparkVersions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1724,6 +2344,14 @@ func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringRead(existi
 
 func (a CreateInstancePoolResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CreateInstancePoolResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstancePoolId": types.StringType,
+		},
+	}
 }
 
 type CreatePolicy struct {
@@ -1774,6 +2402,22 @@ func (a CreatePolicy) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a CreatePolicy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Definition":  types.StringType,
+			"Description": types.StringType,
+			"Libraries": basetypes.ListType{
+				ElemType: Library{}.ToAttrType(ctx),
+			},
+			"MaxClustersPerUser":              types.Int64Type,
+			"Name":                            types.StringType,
+			"PolicyFamilyDefinitionOverrides": types.StringType,
+			"PolicyFamilyId":                  types.StringType,
+		},
+	}
+}
+
 type CreatePolicyResponse struct {
 	// Canonical unique identifier for the cluster policy.
 	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
@@ -1787,6 +2431,14 @@ func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a CreatePolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CreatePolicyResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PolicyId": types.StringType,
+		},
+	}
 }
 
 type CreateResponse struct {
@@ -1804,6 +2456,14 @@ func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CreateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ScriptId": types.StringType,
+		},
+	}
+}
+
 type Created struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 }
@@ -1816,6 +2476,14 @@ func (newState *Created) SyncEffectiveFieldsDuringRead(existingState Created) {
 
 func (a Created) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a Created) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 type DataPlaneEventDetails struct {
@@ -1839,6 +2507,17 @@ func (a DataPlaneEventDetails) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DataPlaneEventDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"EventType":        types.StringType,
+			"ExecutorFailures": types.Int64Type,
+			"HostId":           types.StringType,
+			"Timestamp":        types.Int64Type,
+		},
+	}
+}
+
 type DbfsStorageInfo struct {
 	// dbfs destination, e.g. `dbfs:/my/path`
 	Destination types.String `tfsdk:"destination" tf:""`
@@ -1852,6 +2531,14 @@ func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringRead(existingState Dbf
 
 func (a DbfsStorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DbfsStorageInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Destination": types.StringType,
+		},
+	}
 }
 
 type DeleteCluster struct {
@@ -1869,6 +2556,14 @@ func (a DeleteCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
+}
+
 type DeleteClusterResponse struct {
 }
 
@@ -1880,6 +2575,12 @@ func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a DeleteClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete init script
@@ -1898,6 +2599,14 @@ func (a DeleteGlobalInitScriptRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteGlobalInitScriptRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ScriptId": types.StringType,
+		},
+	}
+}
+
 type DeleteInstancePool struct {
 	// The instance pool to be terminated.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:""`
@@ -1913,6 +2622,14 @@ func (a DeleteInstancePool) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteInstancePool) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstancePoolId": types.StringType,
+		},
+	}
+}
+
 type DeleteInstancePoolResponse struct {
 }
 
@@ -1924,6 +2641,12 @@ func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringRead(existi
 
 func (a DeleteInstancePoolResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteInstancePoolResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type DeletePolicy struct {
@@ -1941,6 +2664,14 @@ func (a DeletePolicy) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeletePolicy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PolicyId": types.StringType,
+		},
+	}
+}
+
 type DeletePolicyResponse struct {
 }
 
@@ -1954,6 +2685,12 @@ func (a DeletePolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeletePolicyResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type DeleteResponse struct {
 }
 
@@ -1965,6 +2702,12 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState Dele
 
 func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type DestroyContext struct {
@@ -1983,6 +2726,15 @@ func (a DestroyContext) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DestroyContext) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"ContextId": types.StringType,
+		},
+	}
+}
+
 type DestroyResponse struct {
 }
 
@@ -1994,6 +2746,12 @@ func (newState *DestroyResponse) SyncEffectiveFieldsDuringRead(existingState Des
 
 func (a DestroyResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DestroyResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type DiskSpec struct {
@@ -2028,7 +2786,7 @@ type DiskSpec struct {
 
 	DiskThroughput types.Int64 `tfsdk:"disk_throughput" tf:"optional"`
 	// The type of disks that will be launched with this cluster.
-	DiskType types.Object `tfsdk:"disk_type" tf:"optional,object"`
+	DiskType types.List `tfsdk:"disk_type" tf:"optional,object"`
 }
 
 func (newState *DiskSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskSpec) {
@@ -2040,6 +2798,18 @@ func (newState *DiskSpec) SyncEffectiveFieldsDuringRead(existingState DiskSpec) 
 func (a DiskSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"DiskType": reflect.TypeOf(DiskType{}),
+	}
+}
+
+func (a DiskSpec) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DiskCount":      types.Int64Type,
+			"DiskIops":       types.Int64Type,
+			"DiskSize":       types.Int64Type,
+			"DiskThroughput": types.Int64Type,
+			"DiskType":       DiskType{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -2059,6 +2829,15 @@ func (a DiskType) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DiskType) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AzureDiskVolumeType": types.StringType,
+			"EbsVolumeType":       types.StringType,
+		},
+	}
+}
+
 type DockerBasicAuth struct {
 	// Password of the user
 	Password types.String `tfsdk:"password" tf:"optional"`
@@ -2076,8 +2855,17 @@ func (a DockerBasicAuth) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DockerBasicAuth) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Password": types.StringType,
+			"Username": types.StringType,
+		},
+	}
+}
+
 type DockerImage struct {
-	BasicAuth types.Object `tfsdk:"basic_auth" tf:"optional,object"`
+	BasicAuth types.List `tfsdk:"basic_auth" tf:"optional,object"`
 	// URL of the docker image.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -2094,6 +2882,15 @@ func (a DockerImage) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a DockerImage) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BasicAuth": DockerBasicAuth{}.ToAttrType(ctx),
+			"Url":       types.StringType,
+		},
+	}
+}
+
 type EditCluster struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
@@ -2102,7 +2899,7 @@ type EditCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -2111,10 +2908,10 @@ type EditCluster struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// ID of the cluster
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// The configuration for delivering spark logs to a long-term storage
@@ -2123,7 +2920,7 @@ type EditCluster struct {
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -2160,7 +2957,7 @@ type EditCluster struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -2178,7 +2975,7 @@ type EditCluster struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -2245,7 +3042,7 @@ type EditCluster struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *EditCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditCluster) {
@@ -2260,14 +3057,59 @@ func (a EditCluster) GetComplexFieldTypes() map[string]reflect.Type {
 		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
 		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
 		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
-		"CustomTags":      reflect.TypeOf(""),
+		"CustomTags":      reflect.TypeOf(types.StringType),
 		"DockerImage":     reflect.TypeOf(DockerImage{}),
 		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
 		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
-		"SparkConf":       reflect.TypeOf(""),
-		"SparkEnvVars":    reflect.TypeOf(""),
-		"SshPublicKeys":   reflect.TypeOf(""),
+		"SparkConf":       reflect.TypeOf(types.StringType),
+		"SparkEnvVars":    reflect.TypeOf(types.StringType),
+		"SshPublicKeys":   reflect.TypeOf(types.StringType),
 		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
+}
+
+func (a EditCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ApplyPolicyDefaultValues": types.BoolType,
+			"Autoscale":                AutoScale{}.ToAttrType(ctx),
+			"AutoterminationMinutes":   types.Int64Type,
+			"AwsAttributes":            AwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes":          AzureAttributes{}.ToAttrType(ctx),
+			"ClusterId":                types.StringType,
+			"ClusterLogConf":           ClusterLogConf{}.ToAttrType(ctx),
+			"ClusterName":              types.StringType,
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DataSecurityMode":          types.StringType,
+			"DockerImage":               DockerImage{}.ToAttrType(ctx),
+			"DriverInstancePoolId":      types.StringType,
+			"DriverNodeTypeId":          types.StringType,
+			"EnableElasticDisk":         types.BoolType,
+			"EnableLocalDiskEncryption": types.BoolType,
+			"GcpAttributes":             GcpAttributes{}.ToAttrType(ctx),
+			"InitScripts": basetypes.ListType{
+				ElemType: InitScriptInfo{}.ToAttrType(ctx),
+			},
+			"InstancePoolId": types.StringType,
+			"NodeTypeId":     types.StringType,
+			"NumWorkers":     types.Int64Type,
+			"PolicyId":       types.StringType,
+			"RuntimeEngine":  types.StringType,
+			"SingleUserName": types.StringType,
+			"SparkConf": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkEnvVars": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkVersion": types.StringType,
+			"SshPublicKeys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"WorkloadType": WorkloadType{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -2282,6 +3124,12 @@ func (newState *EditClusterResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a EditClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a EditClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type EditInstancePool struct {
@@ -2326,7 +3174,23 @@ func (newState *EditInstancePool) SyncEffectiveFieldsDuringRead(existingState Ed
 
 func (a EditInstancePool) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"CustomTags": reflect.TypeOf(""),
+		"CustomTags": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a EditInstancePool) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"IdleInstanceAutoterminationMinutes": types.Int64Type,
+			"InstancePoolId":                     types.StringType,
+			"InstancePoolName":                   types.StringType,
+			"MaxCapacity":                        types.Int64Type,
+			"MinIdleInstances":                   types.Int64Type,
+			"NodeTypeId":                         types.StringType,
+		},
 	}
 }
 
@@ -2341,6 +3205,12 @@ func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringRead(existing
 
 func (a EditInstancePoolResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a EditInstancePoolResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type EditPolicy struct {
@@ -2393,6 +3263,23 @@ func (a EditPolicy) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a EditPolicy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Definition":  types.StringType,
+			"Description": types.StringType,
+			"Libraries": basetypes.ListType{
+				ElemType: Library{}.ToAttrType(ctx),
+			},
+			"MaxClustersPerUser":              types.Int64Type,
+			"Name":                            types.StringType,
+			"PolicyFamilyDefinitionOverrides": types.StringType,
+			"PolicyFamilyId":                  types.StringType,
+			"PolicyId":                        types.StringType,
+		},
+	}
+}
+
 type EditPolicyResponse struct {
 }
 
@@ -2406,6 +3293,12 @@ func (a EditPolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a EditPolicyResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type EditResponse struct {
 }
 
@@ -2417,6 +3310,12 @@ func (newState *EditResponse) SyncEffectiveFieldsDuringRead(existingState EditRe
 
 func (a EditResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a EditResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type EnforceClusterComplianceRequest struct {
@@ -2437,6 +3336,15 @@ func (a EnforceClusterComplianceRequest) GetComplexFieldTypes() map[string]refle
 	return map[string]reflect.Type{}
 }
 
+func (a EnforceClusterComplianceRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId":    types.StringType,
+			"ValidateOnly": types.BoolType,
+		},
+	}
+}
+
 type EnforceClusterComplianceResponse struct {
 	// A list of changes that have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
@@ -2455,6 +3363,17 @@ func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringRead(
 func (a EnforceClusterComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Changes": reflect.TypeOf(ClusterSettingsChange{}),
+	}
+}
+
+func (a EnforceClusterComplianceResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Changes": basetypes.ListType{
+				ElemType: ClusterSettingsChange{}.ToAttrType(ctx),
+			},
+			"HasChanges": types.BoolType,
+		},
 	}
 }
 
@@ -2484,18 +3403,29 @@ func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environ
 
 func (a Environment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Dependencies": reflect.TypeOf(""),
+		"Dependencies": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a Environment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Client": types.StringType,
+			"Dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
 type EventDetails struct {
 	// * For created clusters, the attributes of the cluster. * For edited
 	// clusters, the new attributes of the cluster.
-	Attributes types.Object `tfsdk:"attributes" tf:"optional,object"`
+	Attributes types.List `tfsdk:"attributes" tf:"optional,object"`
 	// The cause of a change in target size.
 	Cause types.String `tfsdk:"cause" tf:"optional"`
 	// The actual cluster size that was set in the cluster creation or edit.
-	ClusterSize types.Object `tfsdk:"cluster_size" tf:"optional,object"`
+	ClusterSize types.List `tfsdk:"cluster_size" tf:"optional,object"`
 	// The current number of vCPUs in the cluster.
 	CurrentNumVcpus types.Int64 `tfsdk:"current_num_vcpus" tf:"optional"`
 	// The current number of nodes in the cluster.
@@ -2513,7 +3443,7 @@ type EventDetails struct {
 	FreeSpace types.Int64 `tfsdk:"free_space" tf:"optional"`
 	// List of global and cluster init scripts associated with this cluster
 	// event.
-	InitScripts types.Object `tfsdk:"init_scripts" tf:"optional,object"`
+	InitScripts types.List `tfsdk:"init_scripts" tf:"optional,object"`
 	// Instance Id where the event originated from
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 	// Unique identifier of the specific job run associated with this cluster
@@ -2521,15 +3451,15 @@ type EventDetails struct {
 	// cluster name
 	JobRunName types.String `tfsdk:"job_run_name" tf:"optional"`
 	// The cluster attributes before a cluster was edited.
-	PreviousAttributes types.Object `tfsdk:"previous_attributes" tf:"optional,object"`
+	PreviousAttributes types.List `tfsdk:"previous_attributes" tf:"optional,object"`
 	// The size of the cluster before an edit or resize.
-	PreviousClusterSize types.Object `tfsdk:"previous_cluster_size" tf:"optional,object"`
+	PreviousClusterSize types.List `tfsdk:"previous_cluster_size" tf:"optional,object"`
 	// Previous disk size in bytes
 	PreviousDiskSize types.Int64 `tfsdk:"previous_disk_size" tf:"optional"`
 	// A termination reason: * On a TERMINATED event, this is the reason of the
 	// termination. * On a RESIZE_COMPLETE event, this indicates the reason that
 	// we failed to acquire some nodes.
-	Reason types.Object `tfsdk:"reason" tf:"optional,object"`
+	Reason types.List `tfsdk:"reason" tf:"optional,object"`
 	// The targeted number of vCPUs in the cluster.
 	TargetNumVcpus types.Int64 `tfsdk:"target_num_vcpus" tf:"optional"`
 	// The targeted number of nodes in the cluster.
@@ -2553,6 +3483,33 @@ func (a EventDetails) GetComplexFieldTypes() map[string]reflect.Type {
 		"PreviousAttributes":  reflect.TypeOf(ClusterAttributes{}),
 		"PreviousClusterSize": reflect.TypeOf(ClusterSize{}),
 		"Reason":              reflect.TypeOf(TerminationReason{}),
+	}
+}
+
+func (a EventDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Attributes":                          ClusterAttributes{}.ToAttrType(ctx),
+			"Cause":                               types.StringType,
+			"ClusterSize":                         ClusterSize{}.ToAttrType(ctx),
+			"CurrentNumVcpus":                     types.Int64Type,
+			"CurrentNumWorkers":                   types.Int64Type,
+			"DidNotExpandReason":                  types.StringType,
+			"DiskSize":                            types.Int64Type,
+			"DriverStateMessage":                  types.StringType,
+			"EnableTerminationForNodeBlocklisted": types.BoolType,
+			"FreeSpace":                           types.Int64Type,
+			"InitScripts":                         InitScriptEventDetails{}.ToAttrType(ctx),
+			"InstanceId":                          types.StringType,
+			"JobRunName":                          types.StringType,
+			"PreviousAttributes":                  ClusterAttributes{}.ToAttrType(ctx),
+			"PreviousClusterSize":                 ClusterSize{}.ToAttrType(ctx),
+			"PreviousDiskSize":                    types.Int64Type,
+			"Reason":                              TerminationReason{}.ToAttrType(ctx),
+			"TargetNumVcpus":                      types.Int64Type,
+			"TargetNumWorkers":                    types.Int64Type,
+			"User":                                types.StringType,
+		},
 	}
 }
 
@@ -2600,6 +3557,19 @@ func (a GcpAttributes) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GcpAttributes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Availability":            types.StringType,
+			"BootDiskSize":            types.Int64Type,
+			"GoogleServiceAccount":    types.StringType,
+			"LocalSsdCount":           types.Int64Type,
+			"UsePreemptibleExecutors": types.BoolType,
+			"ZoneId":                  types.StringType,
+		},
+	}
+}
+
 type GcsStorageInfo struct {
 	// GCS destination/URI, e.g. `gs://my-bucket/some-prefix`
 	Destination types.String `tfsdk:"destination" tf:""`
@@ -2613,6 +3583,14 @@ func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringRead(existingState GcsS
 
 func (a GcsStorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GcsStorageInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Destination": types.StringType,
+		},
+	}
 }
 
 // Get cluster policy compliance
@@ -2629,6 +3607,14 @@ func (newState *GetClusterComplianceRequest) SyncEffectiveFieldsDuringRead(exist
 
 func (a GetClusterComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetClusterComplianceRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
 }
 
 type GetClusterComplianceResponse struct {
@@ -2651,7 +3637,18 @@ func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringRead(exis
 
 func (a GetClusterComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Violations": reflect.TypeOf(""),
+		"Violations": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a GetClusterComplianceResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IsCompliant": types.BoolType,
+			"Violations": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -2671,6 +3668,14 @@ func (a GetClusterPermissionLevelsRequest) GetComplexFieldTypes() map[string]ref
 	return map[string]reflect.Type{}
 }
 
+func (a GetClusterPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
+}
+
 type GetClusterPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
@@ -2685,6 +3690,16 @@ func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringRea
 func (a GetClusterPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PermissionLevels": reflect.TypeOf(ClusterPermissionsDescription{}),
+	}
+}
+
+func (a GetClusterPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: ClusterPermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -2704,6 +3719,14 @@ func (a GetClusterPermissionsRequest) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a GetClusterPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
+}
+
 // Get cluster policy permission levels
 type GetClusterPolicyPermissionLevelsRequest struct {
 	// The cluster policy for which to get or manage permissions.
@@ -2718,6 +3741,14 @@ func (newState *GetClusterPolicyPermissionLevelsRequest) SyncEffectiveFieldsDuri
 
 func (a GetClusterPolicyPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetClusterPolicyPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterPolicyId": types.StringType,
+		},
+	}
 }
 
 type GetClusterPolicyPermissionLevelsResponse struct {
@@ -2737,6 +3768,16 @@ func (a GetClusterPolicyPermissionLevelsResponse) GetComplexFieldTypes() map[str
 	}
 }
 
+func (a GetClusterPolicyPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: ClusterPolicyPermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // Get cluster policy permissions
 type GetClusterPolicyPermissionsRequest struct {
 	// The cluster policy for which to get or manage permissions.
@@ -2751,6 +3792,14 @@ func (newState *GetClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRea
 
 func (a GetClusterPolicyPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetClusterPolicyPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterPolicyId": types.StringType,
+		},
+	}
 }
 
 // Get a cluster policy
@@ -2769,6 +3818,14 @@ func (a GetClusterPolicyRequest) GetComplexFieldTypes() map[string]reflect.Type 
 	return map[string]reflect.Type{}
 }
 
+func (a GetClusterPolicyRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PolicyId": types.StringType,
+		},
+	}
+}
+
 // Get cluster info
 type GetClusterRequest struct {
 	// The cluster about which to retrieve information.
@@ -2783,6 +3840,14 @@ func (newState *GetClusterRequest) SyncEffectiveFieldsDuringRead(existingState G
 
 func (a GetClusterRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetClusterRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
 }
 
 type GetEvents struct {
@@ -2816,7 +3881,23 @@ func (newState *GetEvents) SyncEffectiveFieldsDuringRead(existingState GetEvents
 
 func (a GetEvents) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EventTypes": reflect.TypeOf(""),
+		"EventTypes": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a GetEvents) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"EndTime":   types.Int64Type,
+			"EventTypes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Limit":     types.Int64Type,
+			"Offset":    types.Int64Type,
+			"Order":     types.StringType,
+			"StartTime": types.Int64Type,
+		},
 	}
 }
 
@@ -2825,7 +3906,7 @@ type GetEventsResponse struct {
 	Events types.List `tfsdk:"events" tf:"optional"`
 	// The parameters required to retrieve the next page of events. Omitted if
 	// there are no more events to read.
-	NextPage types.Object `tfsdk:"next_page" tf:"optional,object"`
+	NextPage types.List `tfsdk:"next_page" tf:"optional,object"`
 	// The total number of events filtered by the start_time, end_time, and
 	// event_types.
 	TotalCount types.Int64 `tfsdk:"total_count" tf:"optional"`
@@ -2841,6 +3922,18 @@ func (a GetEventsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Events":   reflect.TypeOf(ClusterEvent{}),
 		"NextPage": reflect.TypeOf(GetEvents{}),
+	}
+}
+
+func (a GetEventsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Events": basetypes.ListType{
+				ElemType: ClusterEvent{}.ToAttrType(ctx),
+			},
+			"NextPage":   GetEvents{}.ToAttrType(ctx),
+			"TotalCount": types.Int64Type,
+		},
 	}
 }
 
@@ -2860,13 +3953,21 @@ func (a GetGlobalInitScriptRequest) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a GetGlobalInitScriptRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ScriptId": types.StringType,
+		},
+	}
+}
+
 type GetInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -2886,7 +3987,7 @@ type GetInstancePool struct {
 	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec types.Object `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.List `tfsdk:"disk_spec" tf:"optional,object"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -2895,7 +3996,7 @@ type GetInstancePool struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -2931,9 +4032,9 @@ type GetInstancePool struct {
 	// Current state of the instance pool.
 	State types.String `tfsdk:"state" tf:"optional"`
 	// Usage statistics about the instance pool.
-	Stats types.Object `tfsdk:"stats" tf:"optional,object"`
+	Stats types.List `tfsdk:"stats" tf:"optional,object"`
 	// Status of failed pending instances in the pool.
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.List `tfsdk:"status" tf:"optional,object"`
 }
 
 func (newState *GetInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePool) {
@@ -2946,14 +4047,47 @@ func (a GetInstancePool) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AwsAttributes":          reflect.TypeOf(InstancePoolAwsAttributes{}),
 		"AzureAttributes":        reflect.TypeOf(InstancePoolAzureAttributes{}),
-		"CustomTags":             reflect.TypeOf(""),
-		"DefaultTags":            reflect.TypeOf(""),
+		"CustomTags":             reflect.TypeOf(types.StringType),
+		"DefaultTags":            reflect.TypeOf(types.StringType),
 		"DiskSpec":               reflect.TypeOf(DiskSpec{}),
 		"GcpAttributes":          reflect.TypeOf(InstancePoolGcpAttributes{}),
 		"PreloadedDockerImages":  reflect.TypeOf(DockerImage{}),
-		"PreloadedSparkVersions": reflect.TypeOf(""),
+		"PreloadedSparkVersions": reflect.TypeOf(types.StringType),
 		"Stats":                  reflect.TypeOf(InstancePoolStats{}),
 		"Status":                 reflect.TypeOf(InstancePoolStatus{}),
+	}
+}
+
+func (a GetInstancePool) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsAttributes":   InstancePoolAwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes": InstancePoolAzureAttributes{}.ToAttrType(ctx),
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DefaultTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DiskSpec":                           DiskSpec{}.ToAttrType(ctx),
+			"EnableElasticDisk":                  types.BoolType,
+			"GcpAttributes":                      InstancePoolGcpAttributes{}.ToAttrType(ctx),
+			"IdleInstanceAutoterminationMinutes": types.Int64Type,
+			"InstancePoolId":                     types.StringType,
+			"InstancePoolName":                   types.StringType,
+			"MaxCapacity":                        types.Int64Type,
+			"MinIdleInstances":                   types.Int64Type,
+			"NodeTypeId":                         types.StringType,
+			"PreloadedDockerImages": basetypes.ListType{
+				ElemType: DockerImage{}.ToAttrType(ctx),
+			},
+			"PreloadedSparkVersions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"State":  types.StringType,
+			"Stats":  InstancePoolStats{}.ToAttrType(ctx),
+			"Status": InstancePoolStatus{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -2973,6 +4107,14 @@ func (a GetInstancePoolPermissionLevelsRequest) GetComplexFieldTypes() map[strin
 	return map[string]reflect.Type{}
 }
 
+func (a GetInstancePoolPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstancePoolId": types.StringType,
+		},
+	}
+}
+
 type GetInstancePoolPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
@@ -2987,6 +4129,16 @@ func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuri
 func (a GetInstancePoolPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PermissionLevels": reflect.TypeOf(InstancePoolPermissionsDescription{}),
+	}
+}
+
+func (a GetInstancePoolPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: InstancePoolPermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3006,6 +4158,14 @@ func (a GetInstancePoolPermissionsRequest) GetComplexFieldTypes() map[string]ref
 	return map[string]reflect.Type{}
 }
 
+func (a GetInstancePoolPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstancePoolId": types.StringType,
+		},
+	}
+}
+
 // Get instance pool information
 type GetInstancePoolRequest struct {
 	// The canonical unique identifier for the instance pool.
@@ -3020,6 +4180,14 @@ func (newState *GetInstancePoolRequest) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a GetInstancePoolRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetInstancePoolRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstancePoolId": types.StringType,
+		},
+	}
 }
 
 // Get policy family information
@@ -3041,6 +4209,15 @@ func (a GetPolicyFamilyRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetPolicyFamilyRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PolicyFamilyId": types.StringType,
+			"Version":        types.Int64Type,
+		},
+	}
+}
+
 type GetSparkVersionsResponse struct {
 	// All the available Spark versions.
 	Versions types.List `tfsdk:"versions" tf:"optional"`
@@ -3055,6 +4232,16 @@ func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringRead(existing
 func (a GetSparkVersionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Versions": reflect.TypeOf(SparkVersion{}),
+	}
+}
+
+func (a GetSparkVersionsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Versions": basetypes.ListType{
+				ElemType: SparkVersion{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3089,6 +4276,17 @@ func (a GlobalInitScriptCreateRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a GlobalInitScriptCreateRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Enabled":  types.BoolType,
+			"Name":     types.StringType,
+			"Position": types.Int64Type,
+			"Script":   types.StringType,
+		},
+	}
+}
+
 type GlobalInitScriptDetails struct {
 	// Time when the script was created, represented as a Unix timestamp in
 	// milliseconds.
@@ -3119,6 +4317,21 @@ func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringRead(existingS
 
 func (a GlobalInitScriptDetails) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GlobalInitScriptDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreatedAt": types.Int64Type,
+			"CreatedBy": types.StringType,
+			"Enabled":   types.BoolType,
+			"Name":      types.StringType,
+			"Position":  types.Int64Type,
+			"ScriptId":  types.StringType,
+			"UpdatedAt": types.Int64Type,
+			"UpdatedBy": types.StringType,
+		},
+	}
 }
 
 type GlobalInitScriptDetailsWithContent struct {
@@ -3155,6 +4368,22 @@ func (a GlobalInitScriptDetailsWithContent) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a GlobalInitScriptDetailsWithContent) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreatedAt": types.Int64Type,
+			"CreatedBy": types.StringType,
+			"Enabled":   types.BoolType,
+			"Name":      types.StringType,
+			"Position":  types.Int64Type,
+			"Script":    types.StringType,
+			"ScriptId":  types.StringType,
+			"UpdatedAt": types.Int64Type,
+			"UpdatedBy": types.StringType,
+		},
+	}
+}
+
 type GlobalInitScriptUpdateRequest struct {
 	// Specifies whether the script is enabled. The script runs only if enabled.
 	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
@@ -3189,6 +4418,18 @@ func (a GlobalInitScriptUpdateRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a GlobalInitScriptUpdateRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Enabled":  types.BoolType,
+			"Name":     types.StringType,
+			"Position": types.Int64Type,
+			"Script":   types.StringType,
+			"ScriptId": types.StringType,
+		},
+	}
+}
+
 type InitScriptEventDetails struct {
 	// The cluster scoped init scripts associated with this cluster event
 	Cluster types.List `tfsdk:"cluster" tf:"optional"`
@@ -3211,6 +4452,20 @@ func (a InitScriptEventDetails) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a InitScriptEventDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cluster": basetypes.ListType{
+				ElemType: InitScriptInfoAndExecutionDetails{}.ToAttrType(ctx),
+			},
+			"Global": basetypes.ListType{
+				ElemType: InitScriptInfoAndExecutionDetails{}.ToAttrType(ctx),
+			},
+			"ReportedForNode": types.StringType,
+		},
+	}
+}
+
 type InitScriptExecutionDetails struct {
 	// Addition details regarding errors.
 	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
@@ -3230,32 +4485,42 @@ func (a InitScriptExecutionDetails) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a InitScriptExecutionDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ErrorMessage":             types.StringType,
+			"ExecutionDurationSeconds": types.Int64Type,
+			"Status":                   types.StringType,
+		},
+	}
+}
+
 type InitScriptInfo struct {
 	// destination needs to be provided. e.g. `{ "abfss" : { "destination" :
 	// "abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>"
 	// } }
-	Abfss types.Object `tfsdk:"abfss" tf:"optional,object"`
+	Abfss types.List `tfsdk:"abfss" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
-	Dbfs types.Object `tfsdk:"dbfs" tf:"optional,object"`
+	Dbfs types.List `tfsdk:"dbfs" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "file" : { "destination" :
 	// "file:/my/local/file.sh" } }`
-	File types.Object `tfsdk:"file" tf:"optional,object"`
+	File types.List `tfsdk:"file" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "gcs": { "destination":
 	// "gs://my-bucket/file.sh" } }`
-	Gcs types.Object `tfsdk:"gcs" tf:"optional,object"`
+	Gcs types.List `tfsdk:"gcs" tf:"optional,object"`
 	// destination and either the region or endpoint need to be provided. e.g.
 	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
 	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
-	S3 types.Object `tfsdk:"s3" tf:"optional,object"`
+	S3 types.List `tfsdk:"s3" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "volumes" : { "destination" :
 	// "/Volumes/my-init.sh" } }`
-	Volumes types.Object `tfsdk:"volumes" tf:"optional,object"`
+	Volumes types.List `tfsdk:"volumes" tf:"optional,object"`
 	// destination needs to be provided. e.g. `{ "workspace" : { "destination" :
 	// "/Users/user1@databricks.com/my-init.sh" } }`
-	Workspace types.Object `tfsdk:"workspace" tf:"optional,object"`
+	Workspace types.List `tfsdk:"workspace" tf:"optional,object"`
 }
 
 func (newState *InitScriptInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfo) {
@@ -3276,11 +4541,25 @@ func (a InitScriptInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a InitScriptInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Abfss":     Adlsgen2Info{}.ToAttrType(ctx),
+			"Dbfs":      DbfsStorageInfo{}.ToAttrType(ctx),
+			"File":      LocalFileInfo{}.ToAttrType(ctx),
+			"Gcs":       GcsStorageInfo{}.ToAttrType(ctx),
+			"S3":        S3StorageInfo{}.ToAttrType(ctx),
+			"Volumes":   VolumesStorageInfo{}.ToAttrType(ctx),
+			"Workspace": WorkspaceStorageInfo{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type InitScriptInfoAndExecutionDetails struct {
 	// Details about the script
-	ExecutionDetails types.Object `tfsdk:"execution_details" tf:"optional,object"`
+	ExecutionDetails types.List `tfsdk:"execution_details" tf:"optional,object"`
 	// The script
-	Script types.Object `tfsdk:"script" tf:"optional,object"`
+	Script types.List `tfsdk:"script" tf:"optional,object"`
 }
 
 func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfoAndExecutionDetails) {
@@ -3293,6 +4572,15 @@ func (a InitScriptInfoAndExecutionDetails) GetComplexFieldTypes() map[string]ref
 	return map[string]reflect.Type{
 		"ExecutionDetails": reflect.TypeOf(InitScriptExecutionDetails{}),
 		"Script":           reflect.TypeOf(InitScriptInfo{}),
+	}
+}
+
+func (a InitScriptInfoAndExecutionDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ExecutionDetails": InitScriptExecutionDetails{}.ToAttrType(ctx),
+			"Script":           InitScriptInfo{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -3315,6 +4603,17 @@ func (a InstallLibraries) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a InstallLibraries) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"Libraries": basetypes.ListType{
+				ElemType: Library{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type InstallLibrariesResponse struct {
 }
 
@@ -3326,6 +4625,12 @@ func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existing
 
 func (a InstallLibrariesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a InstallLibrariesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type InstancePoolAccessControlRequest struct {
@@ -3347,6 +4652,17 @@ func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringRead(
 
 func (a InstancePoolAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a InstancePoolAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type InstancePoolAccessControlResponse struct {
@@ -3374,13 +4690,27 @@ func (a InstancePoolAccessControlResponse) GetComplexFieldTypes() map[string]ref
 	}
 }
 
+func (a InstancePoolAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: InstancePoolPermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type InstancePoolAndStats struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -3400,7 +4730,7 @@ type InstancePoolAndStats struct {
 	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec types.Object `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.List `tfsdk:"disk_spec" tf:"optional,object"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
@@ -3409,7 +4739,7 @@ type InstancePoolAndStats struct {
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -3445,9 +4775,9 @@ type InstancePoolAndStats struct {
 	// Current state of the instance pool.
 	State types.String `tfsdk:"state" tf:"optional"`
 	// Usage statistics about the instance pool.
-	Stats types.Object `tfsdk:"stats" tf:"optional,object"`
+	Stats types.List `tfsdk:"stats" tf:"optional,object"`
 	// Status of failed pending instances in the pool.
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.List `tfsdk:"status" tf:"optional,object"`
 }
 
 func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAndStats) {
@@ -3460,14 +4790,47 @@ func (a InstancePoolAndStats) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AwsAttributes":          reflect.TypeOf(InstancePoolAwsAttributes{}),
 		"AzureAttributes":        reflect.TypeOf(InstancePoolAzureAttributes{}),
-		"CustomTags":             reflect.TypeOf(""),
-		"DefaultTags":            reflect.TypeOf(""),
+		"CustomTags":             reflect.TypeOf(types.StringType),
+		"DefaultTags":            reflect.TypeOf(types.StringType),
 		"DiskSpec":               reflect.TypeOf(DiskSpec{}),
 		"GcpAttributes":          reflect.TypeOf(InstancePoolGcpAttributes{}),
 		"PreloadedDockerImages":  reflect.TypeOf(DockerImage{}),
-		"PreloadedSparkVersions": reflect.TypeOf(""),
+		"PreloadedSparkVersions": reflect.TypeOf(types.StringType),
 		"Stats":                  reflect.TypeOf(InstancePoolStats{}),
 		"Status":                 reflect.TypeOf(InstancePoolStatus{}),
+	}
+}
+
+func (a InstancePoolAndStats) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsAttributes":   InstancePoolAwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes": InstancePoolAzureAttributes{}.ToAttrType(ctx),
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DefaultTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DiskSpec":                           DiskSpec{}.ToAttrType(ctx),
+			"EnableElasticDisk":                  types.BoolType,
+			"GcpAttributes":                      InstancePoolGcpAttributes{}.ToAttrType(ctx),
+			"IdleInstanceAutoterminationMinutes": types.Int64Type,
+			"InstancePoolId":                     types.StringType,
+			"InstancePoolName":                   types.StringType,
+			"MaxCapacity":                        types.Int64Type,
+			"MinIdleInstances":                   types.Int64Type,
+			"NodeTypeId":                         types.StringType,
+			"PreloadedDockerImages": basetypes.ListType{
+				ElemType: DockerImage{}.ToAttrType(ctx),
+			},
+			"PreloadedSparkVersions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"State":  types.StringType,
+			"Stats":  InstancePoolStats{}.ToAttrType(ctx),
+			"Status": InstancePoolStatus{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -3513,6 +4876,16 @@ func (a InstancePoolAwsAttributes) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a InstancePoolAwsAttributes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Availability":        types.StringType,
+			"SpotBidPricePercent": types.Int64Type,
+			"ZoneId":              types.StringType,
+		},
+	}
+}
+
 type InstancePoolAzureAttributes struct {
 	// Shows the Availability type used for the spot nodes.
 	//
@@ -3532,6 +4905,15 @@ func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringRead(exist
 
 func (a InstancePoolAzureAttributes) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a InstancePoolAzureAttributes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Availability":    types.StringType,
+			"SpotBidMaxPrice": types.Float64Type,
+		},
+	}
 }
 
 type InstancePoolGcpAttributes struct {
@@ -3575,6 +4957,16 @@ func (a InstancePoolGcpAttributes) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a InstancePoolGcpAttributes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GcpAvailability": types.StringType,
+			"LocalSsdCount":   types.Int64Type,
+			"ZoneId":          types.StringType,
+		},
+	}
+}
+
 type InstancePoolPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -3591,7 +4983,19 @@ func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a InstancePoolPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a InstancePoolPermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -3615,6 +5019,18 @@ func (a InstancePoolPermissions) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a InstancePoolPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: InstancePoolAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type InstancePoolPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -3629,6 +5045,15 @@ func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringRea
 
 func (a InstancePoolPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a InstancePoolPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type InstancePoolPermissionsRequest struct {
@@ -3646,6 +5071,17 @@ func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringRead(ex
 func (a InstancePoolPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AccessControlList": reflect.TypeOf(InstancePoolAccessControlRequest{}),
+	}
+}
+
+func (a InstancePoolPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: InstancePoolAccessControlRequest{}.ToAttrType(ctx),
+			},
+			"InstancePoolId": types.StringType,
+		},
 	}
 }
 
@@ -3670,6 +5106,17 @@ func (a InstancePoolStats) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a InstancePoolStats) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IdleCount":        types.Int64Type,
+			"PendingIdleCount": types.Int64Type,
+			"PendingUsedCount": types.Int64Type,
+			"UsedCount":        types.Int64Type,
+		},
+	}
+}
+
 type InstancePoolStatus struct {
 	// List of error messages for the failed pending instances. The
 	// pending_instance_errors follows FIFO with maximum length of the min_idle
@@ -3687,6 +5134,16 @@ func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringRead(existingState 
 func (a InstancePoolStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PendingInstanceErrors": reflect.TypeOf(PendingInstanceError{}),
+	}
+}
+
+func (a InstancePoolStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PendingInstanceErrors": basetypes.ListType{
+				ElemType: PendingInstanceError{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3721,9 +5178,19 @@ func (a InstanceProfile) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a InstanceProfile) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IamRoleArn":            types.StringType,
+			"InstanceProfileArn":    types.StringType,
+			"IsMetaInstanceProfile": types.BoolType,
+		},
+	}
+}
+
 type Library struct {
 	// Specification of a CRAN library to be installed as part of the library
-	Cran types.Object `tfsdk:"cran" tf:"optional,object"`
+	Cran types.List `tfsdk:"cran" tf:"optional,object"`
 	// Deprecated. URI of the egg library to install. Installing Python egg
 	// files is deprecated and is not supported in Databricks Runtime 14.0 and
 	// above.
@@ -3738,10 +5205,10 @@ type Library struct {
 	Jar types.String `tfsdk:"jar" tf:"optional"`
 	// Specification of a maven library to be installed. For example: `{
 	// "coordinates": "org.jsoup:jsoup:1.7.2" }`
-	Maven types.Object `tfsdk:"maven" tf:"optional,object"`
+	Maven types.List `tfsdk:"maven" tf:"optional,object"`
 	// Specification of a PyPi library to be installed. For example: `{
 	// "package": "simplejson" }`
-	Pypi types.Object `tfsdk:"pypi" tf:"optional,object"`
+	Pypi types.List `tfsdk:"pypi" tf:"optional,object"`
 	// URI of the requirements.txt file to install. Only Workspace paths and
 	// Unity Catalog Volumes paths are supported. For example: `{
 	// "requirements": "/Workspace/path/to/requirements.txt" }` or `{
@@ -3771,13 +5238,27 @@ func (a Library) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a Library) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cran":         RCranLibrary{}.ToAttrType(ctx),
+			"Egg":          types.StringType,
+			"Jar":          types.StringType,
+			"Maven":        MavenLibrary{}.ToAttrType(ctx),
+			"Pypi":         PythonPyPiLibrary{}.ToAttrType(ctx),
+			"Requirements": types.StringType,
+			"Whl":          types.StringType,
+		},
+	}
+}
+
 // The status of the library on a specific cluster.
 type LibraryFullStatus struct {
 	// Whether the library was set to be installed on all clusters via the
 	// libraries UI.
 	IsLibraryForAllClusters types.Bool `tfsdk:"is_library_for_all_clusters" tf:"optional"`
 	// Unique identifier for the library.
-	Library types.Object `tfsdk:"library" tf:"optional,object"`
+	Library types.List `tfsdk:"library" tf:"optional,object"`
 	// All the info and warning messages that have occurred so far for this
 	// library.
 	Messages types.List `tfsdk:"messages" tf:"optional"`
@@ -3794,7 +5275,20 @@ func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringRead(existingState L
 func (a LibraryFullStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Library":  reflect.TypeOf(Library{}),
-		"Messages": reflect.TypeOf(""),
+		"Messages": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a LibraryFullStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IsLibraryForAllClusters": types.BoolType,
+			"Library":                 Library{}.ToAttrType(ctx),
+			"Messages": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Status": types.StringType,
+		},
 	}
 }
 
@@ -3815,6 +5309,16 @@ func (a ListAllClusterLibraryStatusesResponse) GetComplexFieldTypes() map[string
 	}
 }
 
+func (a ListAllClusterLibraryStatusesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Statuses": basetypes.ListType{
+				ElemType: ClusterLibraryStatuses{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ListAvailableZonesResponse struct {
 	// The availability zone if no `zone_id` is provided in the cluster creation
 	// request.
@@ -3831,7 +5335,18 @@ func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringRead(existi
 
 func (a ListAvailableZonesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Zones": reflect.TypeOf(""),
+		"Zones": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ListAvailableZonesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DefaultZone": types.StringType,
+			"Zones": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -3858,6 +5373,16 @@ func (a ListClusterCompliancesRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a ListClusterCompliancesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PageSize":  types.Int64Type,
+			"PageToken": types.StringType,
+			"PolicyId":  types.StringType,
+		},
+	}
+}
+
 type ListClusterCompliancesResponse struct {
 	// A list of clusters and their policy compliance statuses.
 	Clusters types.List `tfsdk:"clusters" tf:"optional"`
@@ -3882,6 +5407,18 @@ func (a ListClusterCompliancesResponse) GetComplexFieldTypes() map[string]reflec
 	}
 }
 
+func (a ListClusterCompliancesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Clusters": basetypes.ListType{
+				ElemType: ClusterCompliance{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+			"PrevPageToken": types.StringType,
+		},
+	}
+}
+
 // List cluster policies
 type ListClusterPoliciesRequest struct {
 	// The cluster policy attribute to sort by. * `POLICY_CREATION_TIME` - Sort
@@ -3903,6 +5440,15 @@ func (a ListClusterPoliciesRequest) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a ListClusterPoliciesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"SortColumn": types.StringType,
+			"SortOrder":  types.StringType,
+		},
+	}
+}
+
 type ListClustersFilterBy struct {
 	// The source of cluster creation.
 	ClusterSources types.List `tfsdk:"cluster_sources" tf:"optional"`
@@ -3922,15 +5468,30 @@ func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a ListClustersFilterBy) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ClusterSources": reflect.TypeOf(""),
-		"ClusterStates":  reflect.TypeOf(""),
+		"ClusterSources": reflect.TypeOf(types.StringType),
+		"ClusterStates":  reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ListClustersFilterBy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterSources": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"ClusterStates": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"IsPinned": types.BoolType,
+			"PolicyId": types.StringType,
+		},
 	}
 }
 
 // List clusters
 type ListClustersRequest struct {
 	// Filters to apply to the list of clusters.
-	FilterBy types.Object `tfsdk:"-"`
+	FilterBy types.List `tfsdk:"-"`
 	// Use this field to specify the maximum number of results to be returned by
 	// the server. The server may further constrain the maximum number of
 	// results returned in a single page.
@@ -3939,7 +5500,7 @@ type ListClustersRequest struct {
 	// to list the next or previous page of clusters respectively.
 	PageToken types.String `tfsdk:"-"`
 	// Sort the list of clusters by a specific criteria.
-	SortBy types.Object `tfsdk:"-"`
+	SortBy types.List `tfsdk:"-"`
 }
 
 func (newState *ListClustersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersRequest) {
@@ -3952,6 +5513,17 @@ func (a ListClustersRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"FilterBy": reflect.TypeOf(ListClustersFilterBy{}),
 		"SortBy":   reflect.TypeOf(ListClustersSortBy{}),
+	}
+}
+
+func (a ListClustersRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FilterBy":  ListClustersFilterBy{}.ToAttrType(ctx),
+			"PageSize":  types.Int64Type,
+			"PageToken": types.StringType,
+			"SortBy":    ListClustersSortBy{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -3979,6 +5551,18 @@ func (a ListClustersResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListClustersResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Clusters": basetypes.ListType{
+				ElemType: ClusterDetails{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+			"PrevPageToken": types.StringType,
+		},
+	}
+}
+
 type ListClustersSortBy struct {
 	// The direction to sort by.
 	Direction types.String `tfsdk:"direction" tf:"optional"`
@@ -3998,6 +5582,15 @@ func (a ListClustersSortBy) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListClustersSortBy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Direction": types.StringType,
+			"Field":     types.StringType,
+		},
+	}
+}
+
 type ListGlobalInitScriptsResponse struct {
 	Scripts types.List `tfsdk:"scripts" tf:"optional"`
 }
@@ -4014,6 +5607,16 @@ func (a ListGlobalInitScriptsResponse) GetComplexFieldTypes() map[string]reflect
 	}
 }
 
+func (a ListGlobalInitScriptsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Scripts": basetypes.ListType{
+				ElemType: GlobalInitScriptDetails{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ListInstancePools struct {
 	InstancePools types.List `tfsdk:"instance_pools" tf:"optional"`
 }
@@ -4027,6 +5630,16 @@ func (newState *ListInstancePools) SyncEffectiveFieldsDuringRead(existingState L
 func (a ListInstancePools) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"InstancePools": reflect.TypeOf(InstancePoolAndStats{}),
+	}
+}
+
+func (a ListInstancePools) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstancePools": basetypes.ListType{
+				ElemType: InstancePoolAndStats{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -4047,6 +5660,16 @@ func (a ListInstanceProfilesResponse) GetComplexFieldTypes() map[string]reflect.
 	}
 }
 
+func (a ListInstanceProfilesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstanceProfiles": basetypes.ListType{
+				ElemType: InstanceProfile{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ListNodeTypesResponse struct {
 	// The list of available Spark node types.
 	NodeTypes types.List `tfsdk:"node_types" tf:"optional"`
@@ -4061,6 +5684,16 @@ func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringRead(existingSta
 func (a ListNodeTypesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"NodeTypes": reflect.TypeOf(NodeType{}),
+	}
+}
+
+func (a ListNodeTypesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NodeTypes": basetypes.ListType{
+				ElemType: NodeType{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -4081,6 +5714,16 @@ func (a ListPoliciesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListPoliciesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Policies": basetypes.ListType{
+				ElemType: Policy{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // List policy families
 type ListPolicyFamiliesRequest struct {
 	// Maximum number of policy families to return.
@@ -4097,6 +5740,15 @@ func (newState *ListPolicyFamiliesRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a ListPolicyFamiliesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListPolicyFamiliesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxResults": types.Int64Type,
+			"PageToken":  types.StringType,
+		},
+	}
 }
 
 type ListPolicyFamiliesResponse struct {
@@ -4119,6 +5771,17 @@ func (a ListPolicyFamiliesResponse) GetComplexFieldTypes() map[string]reflect.Ty
 	}
 }
 
+func (a ListPolicyFamiliesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"PolicyFamilies": basetypes.ListType{
+				ElemType: PolicyFamily{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type LocalFileInfo struct {
 	// local file destination, e.g. `file:/my/local/file.sh`
 	Destination types.String `tfsdk:"destination" tf:""`
@@ -4132,6 +5795,14 @@ func (newState *LocalFileInfo) SyncEffectiveFieldsDuringRead(existingState Local
 
 func (a LocalFileInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a LocalFileInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Destination": types.StringType,
+		},
+	}
 }
 
 type LogAnalyticsInfo struct {
@@ -4151,6 +5822,15 @@ func (a LogAnalyticsInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a LogAnalyticsInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LogAnalyticsPrimaryKey":  types.StringType,
+			"LogAnalyticsWorkspaceId": types.StringType,
+		},
+	}
+}
+
 type LogSyncStatus struct {
 	// The timestamp of last attempt. If the last attempt fails,
 	// `last_exception` will contain the exception in the last attempt.
@@ -4168,6 +5848,15 @@ func (newState *LogSyncStatus) SyncEffectiveFieldsDuringRead(existingState LogSy
 
 func (a LogSyncStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a LogSyncStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LastAttempted": types.Int64Type,
+			"LastException": types.StringType,
+		},
+	}
 }
 
 type MavenLibrary struct {
@@ -4192,7 +5881,19 @@ func (newState *MavenLibrary) SyncEffectiveFieldsDuringRead(existingState MavenL
 
 func (a MavenLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Exclusions": reflect.TypeOf(""),
+		"Exclusions": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a MavenLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Coordinates": types.StringType,
+			"Exclusions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Repo": types.StringType,
+		},
 	}
 }
 
@@ -4216,6 +5917,18 @@ func (newState *NodeInstanceType) SyncEffectiveFieldsDuringRead(existingState No
 
 func (a NodeInstanceType) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a NodeInstanceType) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstanceTypeId":      types.StringType,
+			"LocalDiskSizeGb":     types.Int64Type,
+			"LocalDisks":          types.Int64Type,
+			"LocalNvmeDiskSizeGb": types.Int64Type,
+			"LocalNvmeDisks":      types.Int64Type,
+		},
+	}
 }
 
 type NodeType struct {
@@ -4242,9 +5955,9 @@ type NodeType struct {
 	// Memory (in MB) available for this node type.
 	MemoryMb types.Int64 `tfsdk:"memory_mb" tf:""`
 
-	NodeInfo types.Object `tfsdk:"node_info" tf:"optional,object"`
+	NodeInfo types.List `tfsdk:"node_info" tf:"optional,object"`
 
-	NodeInstanceType types.Object `tfsdk:"node_instance_type" tf:"optional,object"`
+	NodeInstanceType types.List `tfsdk:"node_instance_type" tf:"optional,object"`
 	// Unique identifier for this node type.
 	NodeTypeId types.String `tfsdk:"node_type_id" tf:""`
 	// Number of CPU cores available for this node type. Note that this can be
@@ -4281,6 +5994,34 @@ func (a NodeType) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a NodeType) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Category":              types.StringType,
+			"Description":           types.StringType,
+			"DisplayOrder":          types.Int64Type,
+			"InstanceTypeId":        types.StringType,
+			"IsDeprecated":          types.BoolType,
+			"IsEncryptedInTransit":  types.BoolType,
+			"IsGraviton":            types.BoolType,
+			"IsHidden":              types.BoolType,
+			"IsIoCacheEnabled":      types.BoolType,
+			"MemoryMb":              types.Int64Type,
+			"NodeInfo":              CloudProviderNodeInfo{}.ToAttrType(ctx),
+			"NodeInstanceType":      NodeInstanceType{}.ToAttrType(ctx),
+			"NodeTypeId":            types.StringType,
+			"NumCores":              types.Float64Type,
+			"NumGpus":               types.Int64Type,
+			"PhotonDriverCapable":   types.BoolType,
+			"PhotonWorkerCapable":   types.BoolType,
+			"SupportClusterTags":    types.BoolType,
+			"SupportEbsVolumes":     types.BoolType,
+			"SupportPortForwarding": types.BoolType,
+			"SupportsElasticDisk":   types.BoolType,
+		},
+	}
+}
+
 type PendingInstanceError struct {
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 
@@ -4295,6 +6036,15 @@ func (newState *PendingInstanceError) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a PendingInstanceError) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PendingInstanceError) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstanceId": types.StringType,
+			"Message":    types.StringType,
+		},
+	}
 }
 
 type PermanentDeleteCluster struct {
@@ -4312,6 +6062,14 @@ func (a PermanentDeleteCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PermanentDeleteCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
+}
+
 type PermanentDeleteClusterResponse struct {
 }
 
@@ -4323,6 +6081,12 @@ func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringRead(ex
 
 func (a PermanentDeleteClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PermanentDeleteClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type PinCluster struct {
@@ -4340,6 +6104,14 @@ func (a PinCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PinCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
+}
+
 type PinClusterResponse struct {
 }
 
@@ -4351,6 +6123,12 @@ func (newState *PinClusterResponse) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a PinClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PinClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Describes a Cluster Policy entity.
@@ -4414,6 +6192,26 @@ func (a Policy) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a Policy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreatedAtTimestamp": types.Int64Type,
+			"CreatorUserName":    types.StringType,
+			"Definition":         types.StringType,
+			"Description":        types.StringType,
+			"IsDefault":          types.BoolType,
+			"Libraries": basetypes.ListType{
+				ElemType: Library{}.ToAttrType(ctx),
+			},
+			"MaxClustersPerUser":              types.Int64Type,
+			"Name":                            types.StringType,
+			"PolicyFamilyDefinitionOverrides": types.StringType,
+			"PolicyFamilyId":                  types.StringType,
+			"PolicyId":                        types.StringType,
+		},
+	}
+}
+
 type PolicyFamily struct {
 	// Policy definition document expressed in [Databricks Cluster Policy
 	// Definition Language].
@@ -4438,6 +6236,17 @@ func (a PolicyFamily) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PolicyFamily) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Definition":     types.StringType,
+			"Description":    types.StringType,
+			"Name":           types.StringType,
+			"PolicyFamilyId": types.StringType,
+		},
+	}
+}
+
 type PythonPyPiLibrary struct {
 	// The name of the pypi package to install. An optional exact version
 	// specification is also supported. Examples: "simplejson" and
@@ -4458,6 +6267,15 @@ func (a PythonPyPiLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PythonPyPiLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Package": types.StringType,
+			"Repo":    types.StringType,
+		},
+	}
+}
+
 type RCranLibrary struct {
 	// The name of the CRAN package to install.
 	Package types.String `tfsdk:"package" tf:""`
@@ -4476,6 +6294,15 @@ func (a RCranLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a RCranLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Package": types.StringType,
+			"Repo":    types.StringType,
+		},
+	}
+}
+
 type RemoveInstanceProfile struct {
 	// The ARN of the instance profile to remove. This field is required.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:""`
@@ -4491,6 +6318,14 @@ func (a RemoveInstanceProfile) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a RemoveInstanceProfile) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InstanceProfileArn": types.StringType,
+		},
+	}
+}
+
 type RemoveResponse struct {
 }
 
@@ -4504,11 +6339,17 @@ func (a RemoveResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a RemoveResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type ResizeCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
 	// The cluster to be resized.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// Number of worker nodes that this cluster should have. A cluster has one
@@ -4536,6 +6377,16 @@ func (a ResizeCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ResizeCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Autoscale":  AutoScale{}.ToAttrType(ctx),
+			"ClusterId":  types.StringType,
+			"NumWorkers": types.Int64Type,
+		},
+	}
+}
+
 type ResizeClusterResponse struct {
 }
 
@@ -4547,6 +6398,12 @@ func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a ResizeClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ResizeClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type RestartCluster struct {
@@ -4566,6 +6423,15 @@ func (a RestartCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a RestartCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId":   types.StringType,
+			"RestartUser": types.StringType,
+		},
+	}
+}
+
 type RestartClusterResponse struct {
 }
 
@@ -4577,6 +6443,12 @@ func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a RestartClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a RestartClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type Results struct {
@@ -4611,8 +6483,31 @@ func (newState *Results) SyncEffectiveFieldsDuringRead(existingState Results) {
 
 func (a Results) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FileNames": reflect.TypeOf(""),
+		"FileNames": reflect.TypeOf(types.StringType),
 		"Schema":    reflect.TypeOf(struct{}{}),
+	}
+}
+
+func (a Results) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cause":    types.StringType,
+			"Data":     types.ObjectType{},
+			"FileName": types.StringType,
+			"FileNames": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"IsJsonSchema": types.BoolType,
+			"Pos":          types.Int64Type,
+			"ResultType":   types.StringType,
+			"Schema": basetypes.ListType{
+				ElemType: basetypes.MapType{
+					ElemType: types.ObjectType{},
+				},
+			},
+			"Summary":   types.StringType,
+			"Truncated": types.BoolType,
+		},
 	}
 }
 
@@ -4659,13 +6554,27 @@ func (a S3StorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a S3StorageInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CannedAcl":        types.StringType,
+			"Destination":      types.StringType,
+			"EnableEncryption": types.BoolType,
+			"EncryptionType":   types.StringType,
+			"Endpoint":         types.StringType,
+			"KmsKey":           types.StringType,
+			"Region":           types.StringType,
+		},
+	}
+}
+
 type SparkNode struct {
 	// The private IP address of the host instance.
 	HostPrivateIp types.String `tfsdk:"host_private_ip" tf:"optional"`
 	// Globally unique identifier for the host instance from the cloud provider.
 	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
 	// Attributes specific to AWS for a Spark node.
-	NodeAwsAttributes types.Object `tfsdk:"node_aws_attributes" tf:"optional,object"`
+	NodeAwsAttributes types.List `tfsdk:"node_aws_attributes" tf:"optional,object"`
 	// Globally unique identifier for this node.
 	NodeId types.String `tfsdk:"node_id" tf:"optional"`
 	// Private IP address (typically a 10.x.x.x address) of the Spark node. Note
@@ -4699,6 +6608,20 @@ func (a SparkNode) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a SparkNode) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"HostPrivateIp":     types.StringType,
+			"InstanceId":        types.StringType,
+			"NodeAwsAttributes": SparkNodeAwsAttributes{}.ToAttrType(ctx),
+			"NodeId":            types.StringType,
+			"PrivateIp":         types.StringType,
+			"PublicDns":         types.StringType,
+			"StartTimestamp":    types.Int64Type,
+		},
+	}
+}
+
 type SparkNodeAwsAttributes struct {
 	// Whether this node is on an Amazon spot instance.
 	IsSpot types.Bool `tfsdk:"is_spot" tf:"optional"`
@@ -4712,6 +6635,14 @@ func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a SparkNodeAwsAttributes) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a SparkNodeAwsAttributes) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IsSpot": types.BoolType,
+		},
+	}
 }
 
 type SparkVersion struct {
@@ -4735,6 +6666,15 @@ func (a SparkVersion) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a SparkVersion) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Key":  types.StringType,
+			"Name": types.StringType,
+		},
+	}
+}
+
 type StartCluster struct {
 	// The cluster to be started.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -4750,6 +6690,14 @@ func (a StartCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a StartCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
+}
+
 type StartClusterResponse struct {
 }
 
@@ -4761,6 +6709,12 @@ func (newState *StartClusterResponse) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a StartClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a StartClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type TerminationReason struct {
@@ -4781,7 +6735,19 @@ func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState T
 
 func (a TerminationReason) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(""),
+		"Parameters": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a TerminationReason) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Code": types.StringType,
+			"Parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Type": types.StringType,
+		},
 	}
 }
 
@@ -4804,6 +6770,17 @@ func (a UninstallLibraries) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a UninstallLibraries) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+			"Libraries": basetypes.ListType{
+				ElemType: Library{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type UninstallLibrariesResponse struct {
 }
 
@@ -4815,6 +6792,12 @@ func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existi
 
 func (a UninstallLibrariesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UninstallLibrariesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type UnpinCluster struct {
@@ -4832,6 +6815,14 @@ func (a UnpinCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a UnpinCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId": types.StringType,
+		},
+	}
+}
+
 type UnpinClusterResponse struct {
 }
 
@@ -4845,9 +6836,15 @@ func (a UnpinClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a UnpinClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type UpdateCluster struct {
 	// The cluster to be updated.
-	Cluster types.Object `tfsdk:"cluster" tf:"optional,object"`
+	Cluster types.List `tfsdk:"cluster" tf:"optional,object"`
 	// ID of the cluster.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
 	// Specifies which fields of the cluster will be updated. This is required
@@ -4870,11 +6867,21 @@ func (a UpdateCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a UpdateCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cluster":    UpdateClusterResource{}.ToAttrType(ctx),
+			"ClusterId":  types.StringType,
+			"UpdateMask": types.StringType,
+		},
+	}
+}
+
 type UpdateClusterResource struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
@@ -4883,17 +6890,17 @@ type UpdateClusterResource struct {
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.Object `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.Object `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.Object `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
@@ -4930,7 +6937,7 @@ type UpdateClusterResource struct {
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
 
-	DockerImage types.Object `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
@@ -4948,7 +6955,7 @@ type UpdateClusterResource struct {
 	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.Object `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
@@ -5015,7 +7022,7 @@ type UpdateClusterResource struct {
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
 
-	WorkloadType types.Object `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
 
 func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateClusterResource) {
@@ -5030,14 +7037,57 @@ func (a UpdateClusterResource) GetComplexFieldTypes() map[string]reflect.Type {
 		"AwsAttributes":   reflect.TypeOf(AwsAttributes{}),
 		"AzureAttributes": reflect.TypeOf(AzureAttributes{}),
 		"ClusterLogConf":  reflect.TypeOf(ClusterLogConf{}),
-		"CustomTags":      reflect.TypeOf(""),
+		"CustomTags":      reflect.TypeOf(types.StringType),
 		"DockerImage":     reflect.TypeOf(DockerImage{}),
 		"GcpAttributes":   reflect.TypeOf(GcpAttributes{}),
 		"InitScripts":     reflect.TypeOf(InitScriptInfo{}),
-		"SparkConf":       reflect.TypeOf(""),
-		"SparkEnvVars":    reflect.TypeOf(""),
-		"SshPublicKeys":   reflect.TypeOf(""),
+		"SparkConf":       reflect.TypeOf(types.StringType),
+		"SparkEnvVars":    reflect.TypeOf(types.StringType),
+		"SshPublicKeys":   reflect.TypeOf(types.StringType),
 		"WorkloadType":    reflect.TypeOf(WorkloadType{}),
+	}
+}
+
+func (a UpdateClusterResource) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Autoscale":              AutoScale{}.ToAttrType(ctx),
+			"AutoterminationMinutes": types.Int64Type,
+			"AwsAttributes":          AwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes":        AzureAttributes{}.ToAttrType(ctx),
+			"ClusterLogConf":         ClusterLogConf{}.ToAttrType(ctx),
+			"ClusterName":            types.StringType,
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DataSecurityMode":          types.StringType,
+			"DockerImage":               DockerImage{}.ToAttrType(ctx),
+			"DriverInstancePoolId":      types.StringType,
+			"DriverNodeTypeId":          types.StringType,
+			"EnableElasticDisk":         types.BoolType,
+			"EnableLocalDiskEncryption": types.BoolType,
+			"GcpAttributes":             GcpAttributes{}.ToAttrType(ctx),
+			"InitScripts": basetypes.ListType{
+				ElemType: InitScriptInfo{}.ToAttrType(ctx),
+			},
+			"InstancePoolId": types.StringType,
+			"NodeTypeId":     types.StringType,
+			"NumWorkers":     types.Int64Type,
+			"PolicyId":       types.StringType,
+			"RuntimeEngine":  types.StringType,
+			"SingleUserName": types.StringType,
+			"SparkConf": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkEnvVars": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkVersion": types.StringType,
+			"SshPublicKeys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"WorkloadType": WorkloadType{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -5054,6 +7104,12 @@ func (a UpdateClusterResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateClusterResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type UpdateResponse struct {
 }
 
@@ -5065,6 +7121,12 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState Upda
 
 func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type VolumesStorageInfo struct {
@@ -5082,9 +7144,17 @@ func (a VolumesStorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a VolumesStorageInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Destination": types.StringType,
+		},
+	}
+}
+
 type WorkloadType struct {
 	// defined what type of clients can use the cluster. E.g. Notebooks, Jobs
-	Clients types.Object `tfsdk:"clients" tf:"object"`
+	Clients types.List `tfsdk:"clients" tf:"object"`
 }
 
 func (newState *WorkloadType) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkloadType) {
@@ -5096,6 +7166,14 @@ func (newState *WorkloadType) SyncEffectiveFieldsDuringRead(existingState Worklo
 func (a WorkloadType) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Clients": reflect.TypeOf(ClientsTypes{}),
+	}
+}
+
+func (a WorkloadType) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Clients": ClientsTypes{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -5113,4 +7191,12 @@ func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a WorkspaceStorageInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a WorkspaceStorageInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Destination": types.StringType,
+		},
+	}
 }

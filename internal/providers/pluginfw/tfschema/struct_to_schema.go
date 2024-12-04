@@ -6,8 +6,10 @@ import (
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -18,10 +20,6 @@ type structTag struct {
 	optional     bool
 	computed     bool
 	singleObject bool
-}
-
-type complexFieldTypeProvider interface {
-	GetComplexFieldTypes() map[string]reflect.Type
 }
 
 func typeToSchema(v reflect.Value) NestedBlockObject {
@@ -39,7 +37,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 
 	// Get metadata about complex fields
 	var complexFieldTypes map[string]reflect.Type
-	if provider, ok := v.Interface().(complexFieldTypeProvider); ok {
+	if provider, ok := v.Interface().(tfcommon.ComplexFieldTypeProvider); ok {
 		complexFieldTypes = provider.GetComplexFieldTypes()
 	}
 
@@ -185,7 +183,35 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 					Required: !structTag.optional,
 					Computed: structTag.computed,
 				}
-			case types.Object, types.List:
+			case types.List:
+				// Look up nested struct type
+				if complexFieldTypes == nil {
+					panic(fmt.Errorf("complex field types not provided for type: %T. %s", v.Interface(), common.TerraformBugErrorMessage))
+				}
+				fieldType, ok := complexFieldTypes[fieldName]
+				if !ok {
+					panic(fmt.Errorf("complex field type not found for field %s on type %T. %s", typeField.Name, v.Interface(), common.TerraformBugErrorMessage))
+				}
+				// If the field type is a "primitive", use ListAttributeBuilder
+				// otherwise use ListNestedBlockBuilder
+				switch fieldType {
+				case reflect.TypeOf(types.BoolType), reflect.TypeOf(types.Int64Type), reflect.TypeOf(types.Float64Type), reflect.TypeOf(types.StringType):
+					scmAttr[fieldName] = ListAttributeBuilder{
+						ElementType: reflect.New(fieldType).Elem().Interface().(attr.Type),
+						Optional:    structTag.optional,
+						Required:    !structTag.optional,
+						Computed:    structTag.computed,
+					}
+				default:
+					fieldValue := reflect.New(fieldType).Elem()
+
+					// Generate the nested block schema
+					// Note: Objects are treated as lists for backward compatibility with the Terraform v5 protocol (i.e. SDKv2 resources).
+					scmBlock[fieldName] = ListNestedBlockBuilder{
+						NestedObject: typeToSchema(fieldValue),
+					}
+				}
+			case types.Object:
 				// Look up nested struct type
 				if complexFieldTypes == nil {
 					panic(fmt.Errorf("complex field types not provided for type: %T. %s", v.Interface(), common.TerraformBugErrorMessage))
@@ -197,8 +223,7 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 				fieldValue := reflect.New(fieldType).Elem()
 
 				// Generate the nested block schema
-				// Note: Objects are treated as lists for backward compatibility with the Terraform v5 protocol (i.e. SDKv2 resources).
-				scmBlock[fieldName] = ListNestedBlockBuilder{
+				scmBlock[fieldName] = SingleNestedBlockBuilder{
 					NestedObject: typeToSchema(fieldValue),
 				}
 			case types.Set, types.Tuple, types.Map:

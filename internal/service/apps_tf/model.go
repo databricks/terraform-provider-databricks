@@ -11,19 +11,22 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package apps_tf
 
 import (
+	"context"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type App struct {
 	// The active deployment of the app. A deployment is considered active when
 	// it has been deployed to the app compute.
-	ActiveDeployment types.Object `tfsdk:"active_deployment" tf:"optional,object"`
+	ActiveDeployment types.List `tfsdk:"active_deployment" tf:"optional,object"`
 
-	AppStatus types.Object `tfsdk:"app_status" tf:"optional,object"`
+	AppStatus types.List `tfsdk:"app_status" tf:"optional,object"`
 
-	ComputeStatus types.Object `tfsdk:"compute_status" tf:"optional,object"`
+	ComputeStatus types.List `tfsdk:"compute_status" tf:"optional,object"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
 	// The email of the user that created the app.
@@ -39,7 +42,7 @@ type App struct {
 	Name types.String `tfsdk:"name" tf:""`
 	// The pending deployment of the app. A deployment is considered pending
 	// when it is being prepared for deployment to the app compute.
-	PendingDeployment types.Object `tfsdk:"pending_deployment" tf:"optional,object"`
+	PendingDeployment types.List `tfsdk:"pending_deployment" tf:"optional,object"`
 	// Resources for the app.
 	Resources types.List `tfsdk:"resources" tf:"optional"`
 
@@ -78,6 +81,31 @@ func (a App) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a App) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ActiveDeployment":      AppDeployment{}.ToAttrType(ctx),
+			"AppStatus":             ApplicationStatus{}.ToAttrType(ctx),
+			"ComputeStatus":         ComputeStatus{}.ToAttrType(ctx),
+			"CreateTime":            types.StringType,
+			"Creator":               types.StringType,
+			"DefaultSourceCodePath": types.StringType,
+			"Description":           types.StringType,
+			"Name":                  types.StringType,
+			"PendingDeployment":     AppDeployment{}.ToAttrType(ctx),
+			"Resources": basetypes.ListType{
+				ElemType: AppResource{}.ToAttrType(ctx),
+			},
+			"ServicePrincipalClientId": types.StringType,
+			"ServicePrincipalId":       types.Int64Type,
+			"ServicePrincipalName":     types.StringType,
+			"UpdateTime":               types.StringType,
+			"Updater":                  types.StringType,
+			"Url":                      types.StringType,
+		},
+	}
+}
+
 type AppAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -97,6 +125,17 @@ func (newState *AppAccessControlRequest) SyncEffectiveFieldsDuringRead(existingS
 
 func (a AppAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AppAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type AppAccessControlResponse struct {
@@ -124,13 +163,27 @@ func (a AppAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type
 	}
 }
 
+func (a AppAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: AppPermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type AppDeployment struct {
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
 	// The email of the user creates the deployment.
 	Creator types.String `tfsdk:"creator" tf:"computed,optional"`
 	// The deployment artifacts for an app.
-	DeploymentArtifacts types.Object `tfsdk:"deployment_artifacts" tf:"optional,object"`
+	DeploymentArtifacts types.List `tfsdk:"deployment_artifacts" tf:"optional,object"`
 	// The unique id of the deployment.
 	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
 	// The mode of which the deployment will manage the source code.
@@ -144,7 +197,7 @@ type AppDeployment struct {
 	// the deployment.
 	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
 	// Status and status message of the deployment
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.List `tfsdk:"status" tf:"optional,object"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
 	UpdateTime types.String `tfsdk:"update_time" tf:"computed,optional"`
 }
@@ -159,6 +212,21 @@ func (a AppDeployment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"DeploymentArtifacts": reflect.TypeOf(AppDeploymentArtifacts{}),
 		"Status":              reflect.TypeOf(AppDeploymentStatus{}),
+	}
+}
+
+func (a AppDeployment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreateTime":          types.StringType,
+			"Creator":             types.StringType,
+			"DeploymentArtifacts": AppDeploymentArtifacts{}.ToAttrType(ctx),
+			"DeploymentId":        types.StringType,
+			"Mode":                types.StringType,
+			"SourceCodePath":      types.StringType,
+			"Status":              AppDeploymentStatus{}.ToAttrType(ctx),
+			"UpdateTime":          types.StringType,
+		},
 	}
 }
 
@@ -178,6 +246,14 @@ func (a AppDeploymentArtifacts) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AppDeploymentArtifacts) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"SourceCodePath": types.StringType,
+		},
+	}
+}
+
 type AppDeploymentStatus struct {
 	// Message corresponding with the deployment state.
 	Message types.String `tfsdk:"message" tf:"computed,optional"`
@@ -193,6 +269,15 @@ func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringRead(existingState
 
 func (a AppDeploymentStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AppDeploymentStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Message": types.StringType,
+			"State":   types.StringType,
+		},
+	}
 }
 
 type AppPermission struct {
@@ -211,7 +296,19 @@ func (newState *AppPermission) SyncEffectiveFieldsDuringRead(existingState AppPe
 
 func (a AppPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a AppPermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -235,6 +332,18 @@ func (a AppPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a AppPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: AppAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type AppPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -249,6 +358,15 @@ func (newState *AppPermissionsDescription) SyncEffectiveFieldsDuringRead(existin
 
 func (a AppPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AppPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type AppPermissionsRequest struct {
@@ -269,19 +387,30 @@ func (a AppPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a AppPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: AppAccessControlRequest{}.ToAttrType(ctx),
+			},
+			"AppName": types.StringType,
+		},
+	}
+}
+
 type AppResource struct {
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description" tf:"optional"`
 
-	Job types.Object `tfsdk:"job" tf:"optional,object"`
+	Job types.List `tfsdk:"job" tf:"optional,object"`
 	// Name of the App Resource.
 	Name types.String `tfsdk:"name" tf:""`
 
-	Secret types.Object `tfsdk:"secret" tf:"optional,object"`
+	Secret types.List `tfsdk:"secret" tf:"optional,object"`
 
-	ServingEndpoint types.Object `tfsdk:"serving_endpoint" tf:"optional,object"`
+	ServingEndpoint types.List `tfsdk:"serving_endpoint" tf:"optional,object"`
 
-	SqlWarehouse types.Object `tfsdk:"sql_warehouse" tf:"optional,object"`
+	SqlWarehouse types.List `tfsdk:"sql_warehouse" tf:"optional,object"`
 }
 
 func (newState *AppResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResource) {
@@ -296,6 +425,19 @@ func (a AppResource) GetComplexFieldTypes() map[string]reflect.Type {
 		"Secret":          reflect.TypeOf(AppResourceSecret{}),
 		"ServingEndpoint": reflect.TypeOf(AppResourceServingEndpoint{}),
 		"SqlWarehouse":    reflect.TypeOf(AppResourceSqlWarehouse{}),
+	}
+}
+
+func (a AppResource) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"Job":             AppResourceJob{}.ToAttrType(ctx),
+			"Name":            types.StringType,
+			"Secret":          AppResourceSecret{}.ToAttrType(ctx),
+			"ServingEndpoint": AppResourceServingEndpoint{}.ToAttrType(ctx),
+			"SqlWarehouse":    AppResourceSqlWarehouse{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -315,6 +457,15 @@ func (newState *AppResourceJob) SyncEffectiveFieldsDuringRead(existingState AppR
 
 func (a AppResourceJob) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AppResourceJob) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id":         types.StringType,
+			"Permission": types.StringType,
+		},
+	}
 }
 
 type AppResourceSecret struct {
@@ -337,6 +488,16 @@ func (a AppResourceSecret) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AppResourceSecret) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Key":        types.StringType,
+			"Permission": types.StringType,
+			"Scope":      types.StringType,
+		},
+	}
+}
+
 type AppResourceServingEndpoint struct {
 	// Name of the serving endpoint to grant permission on.
 	Name types.String `tfsdk:"name" tf:""`
@@ -353,6 +514,15 @@ func (newState *AppResourceServingEndpoint) SyncEffectiveFieldsDuringRead(existi
 
 func (a AppResourceServingEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AppResourceServingEndpoint) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name":       types.StringType,
+			"Permission": types.StringType,
+		},
+	}
 }
 
 type AppResourceSqlWarehouse struct {
@@ -373,6 +543,15 @@ func (a AppResourceSqlWarehouse) GetComplexFieldTypes() map[string]reflect.Type 
 	return map[string]reflect.Type{}
 }
 
+func (a AppResourceSqlWarehouse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id":         types.StringType,
+			"Permission": types.StringType,
+		},
+	}
+}
+
 type ApplicationStatus struct {
 	// Application status message
 	Message types.String `tfsdk:"message" tf:"computed,optional"`
@@ -388,6 +567,15 @@ func (newState *ApplicationStatus) SyncEffectiveFieldsDuringRead(existingState A
 
 func (a ApplicationStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ApplicationStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Message": types.StringType,
+			"State":   types.StringType,
+		},
+	}
 }
 
 type ComputeStatus struct {
@@ -407,9 +595,18 @@ func (a ComputeStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ComputeStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Message": types.StringType,
+			"State":   types.StringType,
+		},
+	}
+}
+
 // Create an app deployment
 type CreateAppDeploymentRequest struct {
-	AppDeployment types.Object `tfsdk:"app_deployment" tf:"optional,object"`
+	AppDeployment types.List `tfsdk:"app_deployment" tf:"optional,object"`
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
 }
@@ -426,9 +623,18 @@ func (a CreateAppDeploymentRequest) GetComplexFieldTypes() map[string]reflect.Ty
 	}
 }
 
+func (a CreateAppDeploymentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppDeployment": AppDeployment{}.ToAttrType(ctx),
+			"AppName":       types.StringType,
+		},
+	}
+}
+
 // Create an app
 type CreateAppRequest struct {
-	App types.Object `tfsdk:"app" tf:"optional,object"`
+	App types.List `tfsdk:"app" tf:"optional,object"`
 }
 
 func (newState *CreateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppRequest) {
@@ -440,6 +646,14 @@ func (newState *CreateAppRequest) SyncEffectiveFieldsDuringRead(existingState Cr
 func (a CreateAppRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"App": reflect.TypeOf(App{}),
+	}
+}
+
+func (a CreateAppRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"App": App{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -457,6 +671,14 @@ func (newState *DeleteAppRequest) SyncEffectiveFieldsDuringRead(existingState De
 
 func (a DeleteAppRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteAppRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
 }
 
 // Get an app deployment
@@ -477,6 +699,15 @@ func (a GetAppDeploymentRequest) GetComplexFieldTypes() map[string]reflect.Type 
 	return map[string]reflect.Type{}
 }
 
+func (a GetAppDeploymentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppName":      types.StringType,
+			"DeploymentId": types.StringType,
+		},
+	}
+}
+
 // Get app permission levels
 type GetAppPermissionLevelsRequest struct {
 	// The app for which to get or manage permissions.
@@ -491,6 +722,14 @@ func (newState *GetAppPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(exi
 
 func (a GetAppPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetAppPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppName": types.StringType,
+		},
+	}
 }
 
 type GetAppPermissionLevelsResponse struct {
@@ -510,6 +749,16 @@ func (a GetAppPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflec
 	}
 }
 
+func (a GetAppPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: AppPermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // Get app permissions
 type GetAppPermissionsRequest struct {
 	// The app for which to get or manage permissions.
@@ -526,6 +775,14 @@ func (a GetAppPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
+func (a GetAppPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppName": types.StringType,
+		},
+	}
+}
+
 // Get an app
 type GetAppRequest struct {
 	// The name of the app.
@@ -540,6 +797,14 @@ func (newState *GetAppRequest) SyncEffectiveFieldsDuringRead(existingState GetAp
 
 func (a GetAppRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetAppRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
 }
 
 // List app deployments
@@ -563,6 +828,16 @@ func (a ListAppDeploymentsRequest) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a ListAppDeploymentsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppName":   types.StringType,
+			"PageSize":  types.Int64Type,
+			"PageToken": types.StringType,
+		},
+	}
+}
+
 type ListAppDeploymentsResponse struct {
 	// Deployment history of the app.
 	AppDeployments types.List `tfsdk:"app_deployments" tf:"optional"`
@@ -579,6 +854,17 @@ func (newState *ListAppDeploymentsResponse) SyncEffectiveFieldsDuringRead(existi
 func (a ListAppDeploymentsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AppDeployments": reflect.TypeOf(AppDeployment{}),
+	}
+}
+
+func (a ListAppDeploymentsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppDeployments": basetypes.ListType{
+				ElemType: AppDeployment{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
 	}
 }
 
@@ -601,6 +887,15 @@ func (a ListAppsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListAppsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PageSize":  types.Int64Type,
+			"PageToken": types.StringType,
+		},
+	}
+}
+
 type ListAppsResponse struct {
 	Apps types.List `tfsdk:"apps" tf:"optional"`
 	// Pagination token to request the next page of apps.
@@ -619,6 +914,17 @@ func (a ListAppsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListAppsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Apps": basetypes.ListType{
+				ElemType: App{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
+	}
+}
+
 type StartAppRequest struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
@@ -632,6 +938,14 @@ func (newState *StartAppRequest) SyncEffectiveFieldsDuringRead(existingState Sta
 
 func (a StartAppRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a StartAppRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
 }
 
 type StopAppRequest struct {
@@ -649,9 +963,17 @@ func (a StopAppRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a StopAppRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
+}
+
 // Update an app
 type UpdateAppRequest struct {
-	App types.Object `tfsdk:"app" tf:"optional,object"`
+	App types.List `tfsdk:"app" tf:"optional,object"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"-"`
@@ -666,5 +988,14 @@ func (newState *UpdateAppRequest) SyncEffectiveFieldsDuringRead(existingState Up
 func (a UpdateAppRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"App": reflect.TypeOf(App{}),
+	}
+}
+
+func (a UpdateAppRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"App":  App{}.ToAttrType(ctx),
+			"Name": types.StringType,
+		},
 	}
 }

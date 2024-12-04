@@ -11,9 +11,12 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package oauth2_tf
 
 import (
+	"context"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type CreateCustomAppIntegration struct {
@@ -28,7 +31,7 @@ type CreateCustomAppIntegration struct {
 	// offline_access, openid, profile, email.
 	Scopes types.List `tfsdk:"scopes" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.List `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegration) {
@@ -39,9 +42,25 @@ func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existi
 
 func (a CreateCustomAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RedirectUrls":      reflect.TypeOf(""),
-		"Scopes":            reflect.TypeOf(""),
+		"RedirectUrls":      reflect.TypeOf(types.StringType),
+		"Scopes":            reflect.TypeOf(types.StringType),
 		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
+}
+
+func (a CreateCustomAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Confidential": types.BoolType,
+			"Name":         types.StringType,
+			"RedirectUrls": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -65,12 +84,22 @@ func (a CreateCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]refl
 	return map[string]reflect.Type{}
 }
 
+func (a CreateCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClientId":      types.StringType,
+			"ClientSecret":  types.StringType,
+			"IntegrationId": types.StringType,
+		},
+	}
+}
+
 type CreatePublishedAppIntegration struct {
 	// App id of the OAuth published app integration. For example power-bi,
 	// tableau-deskop
 	AppId types.String `tfsdk:"app_id" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.List `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePublishedAppIntegration) {
@@ -82,6 +111,15 @@ func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(exi
 func (a CreatePublishedAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
+}
+
+func (a CreatePublishedAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppId":             types.StringType,
+			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -100,6 +138,14 @@ func (a CreatePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]r
 	return map[string]reflect.Type{}
 }
 
+func (a CreatePublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IntegrationId": types.StringType,
+		},
+	}
+}
+
 // Create service principal secret
 type CreateServicePrincipalSecretRequest struct {
 	// The service principal ID.
@@ -114,6 +160,14 @@ func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRe
 
 func (a CreateServicePrincipalSecretRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CreateServicePrincipalSecretRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ServicePrincipalId": types.Int64Type,
+		},
+	}
 }
 
 type CreateServicePrincipalSecretResponse struct {
@@ -141,6 +195,19 @@ func (a CreateServicePrincipalSecretResponse) GetComplexFieldTypes() map[string]
 	return map[string]reflect.Type{}
 }
 
+func (a CreateServicePrincipalSecretResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreateTime": types.StringType,
+			"Id":         types.StringType,
+			"Secret":     types.StringType,
+			"SecretHash": types.StringType,
+			"Status":     types.StringType,
+			"UpdateTime": types.StringType,
+		},
+	}
+}
+
 type DataPlaneInfo struct {
 	// Authorization details as a string.
 	AuthorizationDetails types.String `tfsdk:"authorization_details" tf:"optional"`
@@ -158,6 +225,15 @@ func (a DataPlaneInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DataPlaneInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AuthorizationDetails": types.StringType,
+			"EndpointUrl":          types.StringType,
+		},
+	}
+}
+
 type DeleteCustomAppIntegrationOutput struct {
 }
 
@@ -169,6 +245,12 @@ func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(
 
 func (a DeleteCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete Custom OAuth App Integration
@@ -186,6 +268,14 @@ func (a DeleteCustomAppIntegrationRequest) GetComplexFieldTypes() map[string]ref
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteCustomAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IntegrationId": types.StringType,
+		},
+	}
+}
+
 type DeletePublishedAppIntegrationOutput struct {
 }
 
@@ -197,6 +287,12 @@ func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRe
 
 func (a DeletePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeletePublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete Published OAuth App Integration
@@ -214,6 +310,14 @@ func (a DeletePublishedAppIntegrationRequest) GetComplexFieldTypes() map[string]
 	return map[string]reflect.Type{}
 }
 
+func (a DeletePublishedAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IntegrationId": types.StringType,
+		},
+	}
+}
+
 type DeleteResponse struct {
 }
 
@@ -225,6 +329,12 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState Dele
 
 func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete service principal secret
@@ -243,6 +353,15 @@ func (newState *DeleteServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRe
 
 func (a DeleteServicePrincipalSecretRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteServicePrincipalSecretRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"SecretId":           types.StringType,
+			"ServicePrincipalId": types.Int64Type,
+		},
+	}
 }
 
 type GetCustomAppIntegrationOutput struct {
@@ -266,7 +385,7 @@ type GetCustomAppIntegrationOutput struct {
 
 	Scopes types.List `tfsdk:"scopes" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.List `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput) {
@@ -277,9 +396,30 @@ func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(exi
 
 func (a GetCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RedirectUrls":      reflect.TypeOf(""),
-		"Scopes":            reflect.TypeOf(""),
+		"RedirectUrls":      reflect.TypeOf(types.StringType),
+		"Scopes":            reflect.TypeOf(types.StringType),
 		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
+}
+
+func (a GetCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClientId":        types.StringType,
+			"Confidential":    types.BoolType,
+			"CreateTime":      types.StringType,
+			"CreatedBy":       types.Int64Type,
+			"CreatorUsername": types.StringType,
+			"IntegrationId":   types.StringType,
+			"Name":            types.StringType,
+			"RedirectUrls": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -297,6 +437,14 @@ func (newState *GetCustomAppIntegrationRequest) SyncEffectiveFieldsDuringRead(ex
 
 func (a GetCustomAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetCustomAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IntegrationId": types.StringType,
+		},
+	}
 }
 
 type GetCustomAppIntegrationsOutput struct {
@@ -318,6 +466,17 @@ func (a GetCustomAppIntegrationsOutput) GetComplexFieldTypes() map[string]reflec
 	}
 }
 
+func (a GetCustomAppIntegrationsOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Apps": basetypes.ListType{
+				ElemType: GetCustomAppIntegrationOutput{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
+	}
+}
+
 type GetPublishedAppIntegrationOutput struct {
 	// App-id of the published app integration
 	AppId types.String `tfsdk:"app_id" tf:"optional"`
@@ -330,7 +489,7 @@ type GetPublishedAppIntegrationOutput struct {
 	// Display name of the published OAuth app
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Token access policy
-	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.List `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedAppIntegrationOutput) {
@@ -342,6 +501,19 @@ func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(
 func (a GetPublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
+}
+
+func (a GetPublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppId":             types.StringType,
+			"CreateTime":        types.StringType,
+			"CreatedBy":         types.Int64Type,
+			"IntegrationId":     types.StringType,
+			"Name":              types.StringType,
+			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -360,6 +532,14 @@ func (a GetPublishedAppIntegrationRequest) GetComplexFieldTypes() map[string]ref
 	return map[string]reflect.Type{}
 }
 
+func (a GetPublishedAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IntegrationId": types.StringType,
+		},
+	}
+}
+
 type GetPublishedAppIntegrationsOutput struct {
 	// List of Published OAuth App Integrations defined for the account.
 	Apps types.List `tfsdk:"apps" tf:"optional"`
@@ -376,6 +556,17 @@ func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringRead
 func (a GetPublishedAppIntegrationsOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Apps": reflect.TypeOf(GetPublishedAppIntegrationOutput{}),
+	}
+}
+
+func (a GetPublishedAppIntegrationsOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Apps": basetypes.ListType{
+				ElemType: GetPublishedAppIntegrationOutput{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
 	}
 }
 
@@ -399,6 +590,17 @@ func (a GetPublishedAppsOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a GetPublishedAppsOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Apps": basetypes.ListType{
+				ElemType: PublishedAppOutput{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
+	}
+}
+
 // Get custom oauth app integrations
 type ListCustomAppIntegrationsRequest struct {
 	IncludeCreatorUsername types.Bool `tfsdk:"-"`
@@ -416,6 +618,16 @@ func (newState *ListCustomAppIntegrationsRequest) SyncEffectiveFieldsDuringRead(
 
 func (a ListCustomAppIntegrationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListCustomAppIntegrationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IncludeCreatorUsername": types.BoolType,
+			"PageSize":               types.Int64Type,
+			"PageToken":              types.StringType,
+		},
+	}
 }
 
 // Get all the published OAuth apps
@@ -436,6 +648,15 @@ func (a ListOAuthPublishedAppsRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a ListOAuthPublishedAppsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PageSize":  types.Int64Type,
+			"PageToken": types.StringType,
+		},
+	}
+}
+
 // Get published oauth app integrations
 type ListPublishedAppIntegrationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
@@ -451,6 +672,15 @@ func (newState *ListPublishedAppIntegrationsRequest) SyncEffectiveFieldsDuringRe
 
 func (a ListPublishedAppIntegrationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListPublishedAppIntegrationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PageSize":  types.Int64Type,
+			"PageToken": types.StringType,
+		},
+	}
 }
 
 // List service principal secrets
@@ -479,6 +709,15 @@ func (a ListServicePrincipalSecretsRequest) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a ListServicePrincipalSecretsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PageToken":          types.StringType,
+			"ServicePrincipalId": types.Int64Type,
+		},
+	}
+}
+
 type ListServicePrincipalSecretsResponse struct {
 	// A token, which can be sent as `page_token` to retrieve the next page.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -495,6 +734,17 @@ func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringRe
 func (a ListServicePrincipalSecretsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Secrets": reflect.TypeOf(SecretInfo{}),
+	}
+}
+
+func (a ListServicePrincipalSecretsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Secrets": basetypes.ListType{
+				ElemType: SecretInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -525,8 +775,26 @@ func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a PublishedAppOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RedirectUrls": reflect.TypeOf(""),
-		"Scopes":       reflect.TypeOf(""),
+		"RedirectUrls": reflect.TypeOf(types.StringType),
+		"Scopes":       reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a PublishedAppOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AppId":                types.StringType,
+			"ClientId":             types.StringType,
+			"Description":          types.StringType,
+			"IsConfidentialClient": types.BoolType,
+			"Name":                 types.StringType,
+			"RedirectUrls": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -553,6 +821,18 @@ func (a SecretInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a SecretInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreateTime": types.StringType,
+			"Id":         types.StringType,
+			"SecretHash": types.StringType,
+			"Status":     types.StringType,
+			"UpdateTime": types.StringType,
+		},
+	}
+}
+
 type TokenAccessPolicy struct {
 	// access token time to live in minutes
 	AccessTokenTtlInMinutes types.Int64 `tfsdk:"access_token_ttl_in_minutes" tf:"optional"`
@@ -570,13 +850,22 @@ func (a TokenAccessPolicy) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a TokenAccessPolicy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessTokenTtlInMinutes":  types.Int64Type,
+			"RefreshTokenTtlInMinutes": types.Int64Type,
+		},
+	}
+}
+
 type UpdateCustomAppIntegration struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// List of OAuth redirect urls to be updated in the custom OAuth app
 	// integration
 	RedirectUrls types.List `tfsdk:"redirect_urls" tf:"optional"`
 	// Token access policy to be updated in the custom OAuth app integration
-	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.List `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegration) {
@@ -587,8 +876,20 @@ func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existi
 
 func (a UpdateCustomAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RedirectUrls":      reflect.TypeOf(""),
+		"RedirectUrls":      reflect.TypeOf(types.StringType),
 		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+	}
+}
+
+func (a UpdateCustomAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IntegrationId": types.StringType,
+			"RedirectUrls": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -605,10 +906,16 @@ func (a UpdateCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]refl
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type UpdatePublishedAppIntegration struct {
 	IntegrationId types.String `tfsdk:"-"`
 	// Token access policy to be updated in the published OAuth app integration
-	TokenAccessPolicy types.Object `tfsdk:"token_access_policy" tf:"optional,object"`
+	TokenAccessPolicy types.List `tfsdk:"token_access_policy" tf:"optional,object"`
 }
 
 func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePublishedAppIntegration) {
@@ -623,6 +930,15 @@ func (a UpdatePublishedAppIntegration) GetComplexFieldTypes() map[string]reflect
 	}
 }
 
+func (a UpdatePublishedAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IntegrationId":     types.StringType,
+			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type UpdatePublishedAppIntegrationOutput struct {
 }
 
@@ -634,4 +950,10 @@ func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRe
 
 func (a UpdatePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UpdatePublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }

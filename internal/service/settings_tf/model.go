@@ -11,9 +11,12 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package settings_tf
 
 import (
+	"context"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type AibiDashboardEmbeddingAccessPolicy struct {
@@ -30,8 +33,16 @@ func (a AibiDashboardEmbeddingAccessPolicy) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a AibiDashboardEmbeddingAccessPolicy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessPolicyType": types.StringType,
+		},
+	}
+}
+
 type AibiDashboardEmbeddingAccessPolicySetting struct {
-	AibiDashboardEmbeddingAccessPolicy types.Object `tfsdk:"aibi_dashboard_embedding_access_policy" tf:"object"`
+	AibiDashboardEmbeddingAccessPolicy types.List `tfsdk:"aibi_dashboard_embedding_access_policy" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -60,6 +71,16 @@ func (a AibiDashboardEmbeddingAccessPolicySetting) GetComplexFieldTypes() map[st
 	}
 }
 
+func (a AibiDashboardEmbeddingAccessPolicySetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AibiDashboardEmbeddingAccessPolicy": AibiDashboardEmbeddingAccessPolicy{}.ToAttrType(ctx),
+			"Etag":                               types.StringType,
+			"SettingName":                        types.StringType,
+		},
+	}
+}
+
 type AibiDashboardEmbeddingApprovedDomains struct {
 	ApprovedDomains types.List `tfsdk:"approved_domains" tf:"optional"`
 }
@@ -72,12 +93,22 @@ func (newState *AibiDashboardEmbeddingApprovedDomains) SyncEffectiveFieldsDuring
 
 func (a AibiDashboardEmbeddingApprovedDomains) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ApprovedDomains": reflect.TypeOf(""),
+		"ApprovedDomains": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a AibiDashboardEmbeddingApprovedDomains) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ApprovedDomains": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
 type AibiDashboardEmbeddingApprovedDomainsSetting struct {
-	AibiDashboardEmbeddingApprovedDomains types.Object `tfsdk:"aibi_dashboard_embedding_approved_domains" tf:"object"`
+	AibiDashboardEmbeddingApprovedDomains types.List `tfsdk:"aibi_dashboard_embedding_approved_domains" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -106,8 +137,18 @@ func (a AibiDashboardEmbeddingApprovedDomainsSetting) GetComplexFieldTypes() map
 	}
 }
 
+func (a AibiDashboardEmbeddingApprovedDomainsSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AibiDashboardEmbeddingApprovedDomains": AibiDashboardEmbeddingApprovedDomains{}.ToAttrType(ctx),
+			"Etag":                                  types.StringType,
+			"SettingName":                           types.StringType,
+		},
+	}
+}
+
 type AutomaticClusterUpdateSetting struct {
-	AutomaticClusterUpdateWorkspace types.Object `tfsdk:"automatic_cluster_update_workspace" tf:"object"`
+	AutomaticClusterUpdateWorkspace types.List `tfsdk:"automatic_cluster_update_workspace" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -136,6 +177,16 @@ func (a AutomaticClusterUpdateSetting) GetComplexFieldTypes() map[string]reflect
 	}
 }
 
+func (a AutomaticClusterUpdateSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AutomaticClusterUpdateWorkspace": ClusterAutoRestartMessage{}.ToAttrType(ctx),
+			"Etag":                            types.StringType,
+			"SettingName":                     types.StringType,
+		},
+	}
+}
+
 type BooleanMessage struct {
 	Value types.Bool `tfsdk:"value" tf:"optional"`
 }
@@ -150,6 +201,14 @@ func (a BooleanMessage) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a BooleanMessage) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Value": types.BoolType,
+		},
+	}
+}
+
 type ClusterAutoRestartMessage struct {
 	CanToggle types.Bool `tfsdk:"can_toggle" tf:"optional"`
 
@@ -160,9 +219,9 @@ type ClusterAutoRestartMessage struct {
 	// intended to use only for purposes like showing an error message to the
 	// customer with the additional details. For example, using these details we
 	// can check why exactly the feature is disabled for this customer.
-	EnablementDetails types.Object `tfsdk:"enablement_details" tf:"optional,object"`
+	EnablementDetails types.List `tfsdk:"enablement_details" tf:"optional,object"`
 
-	MaintenanceWindow types.Object `tfsdk:"maintenance_window" tf:"optional,object"`
+	MaintenanceWindow types.List `tfsdk:"maintenance_window" tf:"optional,object"`
 
 	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available" tf:"optional"`
 }
@@ -177,6 +236,18 @@ func (a ClusterAutoRestartMessage) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{
 		"EnablementDetails": reflect.TypeOf(ClusterAutoRestartMessageEnablementDetails{}),
 		"MaintenanceWindow": reflect.TypeOf(ClusterAutoRestartMessageMaintenanceWindow{}),
+	}
+}
+
+func (a ClusterAutoRestartMessage) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CanToggle":                       types.BoolType,
+			"Enabled":                         types.BoolType,
+			"EnablementDetails":               ClusterAutoRestartMessageEnablementDetails{}.ToAttrType(ctx),
+			"MaintenanceWindow":               ClusterAutoRestartMessageMaintenanceWindow{}.ToAttrType(ctx),
+			"RestartEvenIfNoUpdatesAvailable": types.BoolType,
+		},
 	}
 }
 
@@ -206,8 +277,18 @@ func (a ClusterAutoRestartMessageEnablementDetails) GetComplexFieldTypes() map[s
 	return map[string]reflect.Type{}
 }
 
+func (a ClusterAutoRestartMessageEnablementDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ForcedForComplianceMode":           types.BoolType,
+			"UnavailableForDisabledEntitlement": types.BoolType,
+			"UnavailableForNonEnterpriseTier":   types.BoolType,
+		},
+	}
+}
+
 type ClusterAutoRestartMessageMaintenanceWindow struct {
-	WeekDayBasedSchedule types.Object `tfsdk:"week_day_based_schedule" tf:"optional,object"`
+	WeekDayBasedSchedule types.List `tfsdk:"week_day_based_schedule" tf:"optional,object"`
 }
 
 func (newState *ClusterAutoRestartMessageMaintenanceWindow) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindow) {
@@ -222,12 +303,20 @@ func (a ClusterAutoRestartMessageMaintenanceWindow) GetComplexFieldTypes() map[s
 	}
 }
 
+func (a ClusterAutoRestartMessageMaintenanceWindow) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"WeekDayBasedSchedule": ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule struct {
 	DayOfWeek types.String `tfsdk:"day_of_week" tf:"optional"`
 
 	Frequency types.String `tfsdk:"frequency" tf:"optional"`
 
-	WindowStartTime types.Object `tfsdk:"window_start_time" tf:"optional,object"`
+	WindowStartTime types.List `tfsdk:"window_start_time" tf:"optional,object"`
 }
 
 func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
@@ -239,6 +328,16 @@ func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) 
 func (a ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"WindowStartTime": reflect.TypeOf(ClusterAutoRestartMessageMaintenanceWindowWindowStartTime{}),
+	}
+}
+
+func (a ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DayOfWeek":       types.StringType,
+			"Frequency":       types.StringType,
+			"WindowStartTime": ClusterAutoRestartMessageMaintenanceWindowWindowStartTime{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -258,6 +357,15 @@ func (a ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) GetComplexFie
 	return map[string]reflect.Type{}
 }
 
+func (a ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Hours":   types.Int64Type,
+			"Minutes": types.Int64Type,
+		},
+	}
+}
+
 // SHIELD feature: CSP
 type ComplianceSecurityProfile struct {
 	// Set by customers when they request Compliance Security Profile (CSP)
@@ -274,13 +382,24 @@ func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existin
 
 func (a ComplianceSecurityProfile) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ComplianceStandards": reflect.TypeOf(""),
+		"ComplianceStandards": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ComplianceSecurityProfile) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ComplianceStandards": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"IsEnabled": types.BoolType,
+		},
 	}
 }
 
 type ComplianceSecurityProfileSetting struct {
 	// SHIELD feature: CSP
-	ComplianceSecurityProfileWorkspace types.Object `tfsdk:"compliance_security_profile_workspace" tf:"object"`
+	ComplianceSecurityProfileWorkspace types.List `tfsdk:"compliance_security_profile_workspace" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -309,16 +428,26 @@ func (a ComplianceSecurityProfileSetting) GetComplexFieldTypes() map[string]refl
 	}
 }
 
+func (a ComplianceSecurityProfileSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ComplianceSecurityProfileWorkspace": ComplianceSecurityProfile{}.ToAttrType(ctx),
+			"Etag":                               types.StringType,
+			"SettingName":                        types.StringType,
+		},
+	}
+}
+
 type Config struct {
-	Email types.Object `tfsdk:"email" tf:"optional,object"`
+	Email types.List `tfsdk:"email" tf:"optional,object"`
 
-	GenericWebhook types.Object `tfsdk:"generic_webhook" tf:"optional,object"`
+	GenericWebhook types.List `tfsdk:"generic_webhook" tf:"optional,object"`
 
-	MicrosoftTeams types.Object `tfsdk:"microsoft_teams" tf:"optional,object"`
+	MicrosoftTeams types.List `tfsdk:"microsoft_teams" tf:"optional,object"`
 
-	Pagerduty types.Object `tfsdk:"pagerduty" tf:"optional,object"`
+	Pagerduty types.List `tfsdk:"pagerduty" tf:"optional,object"`
 
-	Slack types.Object `tfsdk:"slack" tf:"optional,object"`
+	Slack types.List `tfsdk:"slack" tf:"optional,object"`
 }
 
 func (newState *Config) SyncEffectiveFieldsDuringCreateOrUpdate(plan Config) {
@@ -334,6 +463,18 @@ func (a Config) GetComplexFieldTypes() map[string]reflect.Type {
 		"MicrosoftTeams": reflect.TypeOf(MicrosoftTeamsConfig{}),
 		"Pagerduty":      reflect.TypeOf(PagerdutyConfig{}),
 		"Slack":          reflect.TypeOf(SlackConfig{}),
+	}
+}
+
+func (a Config) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Email":          EmailConfig{}.ToAttrType(ctx),
+			"GenericWebhook": GenericWebhookConfig{}.ToAttrType(ctx),
+			"MicrosoftTeams": MicrosoftTeamsConfig{}.ToAttrType(ctx),
+			"Pagerduty":      PagerdutyConfig{}.ToAttrType(ctx),
+			"Slack":          SlackConfig{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -359,14 +500,26 @@ func (newState *CreateIpAccessList) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a CreateIpAccessList) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"IpAddresses": reflect.TypeOf(""),
+		"IpAddresses": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a CreateIpAccessList) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAddresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Label":    types.StringType,
+			"ListType": types.StringType,
+		},
 	}
 }
 
 // An IP access list was successfully created.
 type CreateIpAccessListResponse struct {
 	// Definition of an IP Access list
-	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
 }
 
 func (newState *CreateIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateIpAccessListResponse) {
@@ -378,6 +531,14 @@ func (newState *CreateIpAccessListResponse) SyncEffectiveFieldsDuringRead(existi
 func (a CreateIpAccessListResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"IpAccessList": reflect.TypeOf(IpAccessListInfo{}),
+	}
+}
+
+func (a CreateIpAccessListResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessList": IpAccessListInfo{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -403,10 +564,19 @@ func (a CreateNetworkConnectivityConfigRequest) GetComplexFieldTypes() map[strin
 	return map[string]reflect.Type{}
 }
 
+func (a CreateNetworkConnectivityConfigRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name":   types.StringType,
+			"Region": types.StringType,
+		},
+	}
+}
+
 type CreateNotificationDestinationRequest struct {
 	// The configuration for the notification destination. Must wrap EXACTLY one
 	// of the nested configs.
-	Config types.Object `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config" tf:"optional,object"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 }
@@ -420,6 +590,15 @@ func (newState *CreateNotificationDestinationRequest) SyncEffectiveFieldsDuringR
 func (a CreateNotificationDestinationRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Config": reflect.TypeOf(Config{}),
+	}
+}
+
+func (a CreateNotificationDestinationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Config":      Config{}.ToAttrType(ctx),
+			"DisplayName": types.StringType,
+		},
 	}
 }
 
@@ -443,9 +622,19 @@ func (a CreateOboTokenRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CreateOboTokenRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ApplicationId":   types.StringType,
+			"Comment":         types.StringType,
+			"LifetimeSeconds": types.Int64Type,
+		},
+	}
+}
+
 // An on-behalf token was successfully created for the service principal.
 type CreateOboTokenResponse struct {
-	TokenInfo types.Object `tfsdk:"token_info" tf:"optional,object"`
+	TokenInfo types.List `tfsdk:"token_info" tf:"optional,object"`
 	// Value of the token.
 	TokenValue types.String `tfsdk:"token_value" tf:"optional"`
 }
@@ -459,6 +648,15 @@ func (newState *CreateOboTokenResponse) SyncEffectiveFieldsDuringRead(existingSt
 func (a CreateOboTokenResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TokenInfo": reflect.TypeOf(TokenInfo{}),
+	}
+}
+
+func (a CreateOboTokenResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TokenInfo":  TokenInfo{}.ToAttrType(ctx),
+			"TokenValue": types.StringType,
+		},
 	}
 }
 
@@ -483,6 +681,16 @@ func (a CreatePrivateEndpointRuleRequest) GetComplexFieldTypes() map[string]refl
 	return map[string]reflect.Type{}
 }
 
+func (a CreatePrivateEndpointRuleRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupId":                     types.StringType,
+			"NetworkConnectivityConfigId": types.StringType,
+			"ResourceId":                  types.StringType,
+		},
+	}
+}
+
 type CreateTokenRequest struct {
 	// Optional description to attach to the token.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -502,9 +710,18 @@ func (a CreateTokenRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CreateTokenRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":         types.StringType,
+			"LifetimeSeconds": types.Int64Type,
+		},
+	}
+}
+
 type CreateTokenResponse struct {
 	// The information for the new token.
-	TokenInfo types.Object `tfsdk:"token_info" tf:"optional,object"`
+	TokenInfo types.List `tfsdk:"token_info" tf:"optional,object"`
 	// The value of the new token.
 	TokenValue types.String `tfsdk:"token_value" tf:"optional"`
 }
@@ -518,6 +735,15 @@ func (newState *CreateTokenResponse) SyncEffectiveFieldsDuringRead(existingState
 func (a CreateTokenResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TokenInfo": reflect.TypeOf(PublicTokenInfo{}),
+	}
+}
+
+func (a CreateTokenResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TokenInfo":  PublicTokenInfo{}.ToAttrType(ctx),
+			"TokenValue": types.StringType,
+		},
 	}
 }
 
@@ -538,13 +764,24 @@ func (newState *CspEnablementAccount) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a CspEnablementAccount) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ComplianceStandards": reflect.TypeOf(""),
+		"ComplianceStandards": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a CspEnablementAccount) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ComplianceStandards": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"IsEnforced": types.BoolType,
+		},
 	}
 }
 
 type CspEnablementAccountSetting struct {
 	// Account level policy for CSP
-	CspEnablementAccount types.Object `tfsdk:"csp_enablement_account" tf:"object"`
+	CspEnablementAccount types.List `tfsdk:"csp_enablement_account" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -573,6 +810,16 @@ func (a CspEnablementAccountSetting) GetComplexFieldTypes() map[string]reflect.T
 	}
 }
 
+func (a CspEnablementAccountSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CspEnablementAccount": CspEnablementAccount{}.ToAttrType(ctx),
+			"Etag":                 types.StringType,
+			"SettingName":          types.StringType,
+		},
+	}
+}
+
 // This represents the setting configuration for the default namespace in the
 // Databricks workspace. Setting the default catalog for the workspace
 // determines the catalog that is used when queries do not reference a fully
@@ -592,7 +839,7 @@ type DefaultNamespaceSetting struct {
 	// PATCH request to identify the setting version you are updating.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 
-	Namespace types.Object `tfsdk:"namespace" tf:"object"`
+	Namespace types.List `tfsdk:"namespace" tf:"object"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
@@ -613,6 +860,16 @@ func (a DefaultNamespaceSetting) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a DefaultNamespaceSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag":        types.StringType,
+			"Namespace":   StringMessage{}.ToAttrType(ctx),
+			"SettingName": types.StringType,
+		},
+	}
+}
+
 // Delete access list
 type DeleteAccountIpAccessListRequest struct {
 	// The ID for the corresponding IP access list
@@ -627,6 +884,14 @@ func (newState *DeleteAccountIpAccessListRequest) SyncEffectiveFieldsDuringRead(
 
 func (a DeleteAccountIpAccessListRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteAccountIpAccessListRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessListId": types.StringType,
+		},
+	}
 }
 
 // Delete the default namespace setting
@@ -651,6 +916,14 @@ func (a DeleteDefaultNamespaceSettingRequest) GetComplexFieldTypes() map[string]
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteDefaultNamespaceSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // The etag is returned.
 type DeleteDefaultNamespaceSettingResponse struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -671,6 +944,14 @@ func (newState *DeleteDefaultNamespaceSettingResponse) SyncEffectiveFieldsDuring
 
 func (a DeleteDefaultNamespaceSettingResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteDefaultNamespaceSettingResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
 }
 
 // Delete Legacy Access Disablement Status
@@ -695,6 +976,14 @@ func (a DeleteDisableLegacyAccessRequest) GetComplexFieldTypes() map[string]refl
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteDisableLegacyAccessRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // The etag is returned.
 type DeleteDisableLegacyAccessResponse struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -715,6 +1004,14 @@ func (newState *DeleteDisableLegacyAccessResponse) SyncEffectiveFieldsDuringRead
 
 func (a DeleteDisableLegacyAccessResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteDisableLegacyAccessResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
 }
 
 // Delete the disable legacy DBFS setting
@@ -739,6 +1036,14 @@ func (a DeleteDisableLegacyDbfsRequest) GetComplexFieldTypes() map[string]reflec
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteDisableLegacyDbfsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // The etag is returned.
 type DeleteDisableLegacyDbfsResponse struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -759,6 +1064,14 @@ func (newState *DeleteDisableLegacyDbfsResponse) SyncEffectiveFieldsDuringRead(e
 
 func (a DeleteDisableLegacyDbfsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteDisableLegacyDbfsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
 }
 
 // Delete the disable legacy features setting
@@ -783,6 +1096,14 @@ func (a DeleteDisableLegacyFeaturesRequest) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteDisableLegacyFeaturesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // The etag is returned.
 type DeleteDisableLegacyFeaturesResponse struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -805,6 +1126,14 @@ func (a DeleteDisableLegacyFeaturesResponse) GetComplexFieldTypes() map[string]r
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteDisableLegacyFeaturesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Delete access list
 type DeleteIpAccessListRequest struct {
 	// The ID for the corresponding IP access list
@@ -819,6 +1148,14 @@ func (newState *DeleteIpAccessListRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a DeleteIpAccessListRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteIpAccessListRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessListId": types.StringType,
+		},
+	}
 }
 
 // Delete a network connectivity configuration
@@ -837,6 +1174,14 @@ func (a DeleteNetworkConnectivityConfigurationRequest) GetComplexFieldTypes() ma
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteNetworkConnectivityConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NetworkConnectivityConfigId": types.StringType,
+		},
+	}
+}
+
 type DeleteNetworkConnectivityConfigurationResponse struct {
 }
 
@@ -848,6 +1193,12 @@ func (newState *DeleteNetworkConnectivityConfigurationResponse) SyncEffectiveFie
 
 func (a DeleteNetworkConnectivityConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteNetworkConnectivityConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete a notification destination
@@ -863,6 +1214,14 @@ func (newState *DeleteNotificationDestinationRequest) SyncEffectiveFieldsDuringR
 
 func (a DeleteNotificationDestinationRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteNotificationDestinationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 // Delete Personal Compute setting
@@ -887,6 +1246,14 @@ func (a DeletePersonalComputeSettingRequest) GetComplexFieldTypes() map[string]r
 	return map[string]reflect.Type{}
 }
 
+func (a DeletePersonalComputeSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // The etag is returned.
 type DeletePersonalComputeSettingResponse struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -909,6 +1276,14 @@ func (a DeletePersonalComputeSettingResponse) GetComplexFieldTypes() map[string]
 	return map[string]reflect.Type{}
 }
 
+func (a DeletePersonalComputeSettingResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Delete a private endpoint rule
 type DeletePrivateEndpointRuleRequest struct {
 	// Your Network Connectvity Configuration ID.
@@ -927,6 +1302,15 @@ func (a DeletePrivateEndpointRuleRequest) GetComplexFieldTypes() map[string]refl
 	return map[string]reflect.Type{}
 }
 
+func (a DeletePrivateEndpointRuleRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NetworkConnectivityConfigId": types.StringType,
+			"PrivateEndpointRuleId":       types.StringType,
+		},
+	}
+}
+
 type DeleteResponse struct {
 }
 
@@ -938,6 +1322,12 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState Dele
 
 func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete the restrict workspace admins setting
@@ -962,6 +1352,14 @@ func (a DeleteRestrictWorkspaceAdminsSettingRequest) GetComplexFieldTypes() map[
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteRestrictWorkspaceAdminsSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // The etag is returned.
 type DeleteRestrictWorkspaceAdminsSettingResponse struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -984,6 +1382,14 @@ func (a DeleteRestrictWorkspaceAdminsSettingResponse) GetComplexFieldTypes() map
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteRestrictWorkspaceAdminsSettingResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Delete a token
 type DeleteTokenManagementRequest struct {
 	// The ID of the token to revoke.
@@ -1000,8 +1406,16 @@ func (a DeleteTokenManagementRequest) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteTokenManagementRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TokenId": types.StringType,
+		},
+	}
+}
+
 type DisableLegacyAccess struct {
-	DisableLegacyAccess types.Object `tfsdk:"disable_legacy_access" tf:"object"`
+	DisableLegacyAccess types.List `tfsdk:"disable_legacy_access" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -1030,8 +1444,18 @@ func (a DisableLegacyAccess) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a DisableLegacyAccess) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DisableLegacyAccess": BooleanMessage{}.ToAttrType(ctx),
+			"Etag":                types.StringType,
+			"SettingName":         types.StringType,
+		},
+	}
+}
+
 type DisableLegacyDbfs struct {
-	DisableLegacyDbfs types.Object `tfsdk:"disable_legacy_dbfs" tf:"object"`
+	DisableLegacyDbfs types.List `tfsdk:"disable_legacy_dbfs" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -1060,8 +1484,18 @@ func (a DisableLegacyDbfs) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a DisableLegacyDbfs) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DisableLegacyDbfs": BooleanMessage{}.ToAttrType(ctx),
+			"Etag":              types.StringType,
+			"SettingName":       types.StringType,
+		},
+	}
+}
+
 type DisableLegacyFeatures struct {
-	DisableLegacyFeatures types.Object `tfsdk:"disable_legacy_features" tf:"object"`
+	DisableLegacyFeatures types.List `tfsdk:"disable_legacy_features" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -1090,6 +1524,16 @@ func (a DisableLegacyFeatures) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a DisableLegacyFeatures) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DisableLegacyFeatures": BooleanMessage{}.ToAttrType(ctx),
+			"Etag":                  types.StringType,
+			"SettingName":           types.StringType,
+		},
+	}
+}
+
 type EmailConfig struct {
 	// Email addresses to notify.
 	Addresses types.List `tfsdk:"addresses" tf:"optional"`
@@ -1103,7 +1547,17 @@ func (newState *EmailConfig) SyncEffectiveFieldsDuringRead(existingState EmailCo
 
 func (a EmailConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Addresses": reflect.TypeOf(""),
+		"Addresses": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a EmailConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1118,6 +1572,12 @@ func (newState *Empty) SyncEffectiveFieldsDuringRead(existingState Empty) {
 
 func (a Empty) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a Empty) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // SHIELD feature: ESM
@@ -1135,9 +1595,17 @@ func (a EnhancedSecurityMonitoring) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a EnhancedSecurityMonitoring) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IsEnabled": types.BoolType,
+		},
+	}
+}
+
 type EnhancedSecurityMonitoringSetting struct {
 	// SHIELD feature: ESM
-	EnhancedSecurityMonitoringWorkspace types.Object `tfsdk:"enhanced_security_monitoring_workspace" tf:"object"`
+	EnhancedSecurityMonitoringWorkspace types.List `tfsdk:"enhanced_security_monitoring_workspace" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -1166,6 +1634,16 @@ func (a EnhancedSecurityMonitoringSetting) GetComplexFieldTypes() map[string]ref
 	}
 }
 
+func (a EnhancedSecurityMonitoringSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"EnhancedSecurityMonitoringWorkspace": EnhancedSecurityMonitoring{}.ToAttrType(ctx),
+			"Etag":                                types.StringType,
+			"SettingName":                         types.StringType,
+		},
+	}
+}
+
 // Account level policy for ESM
 type EsmEnablementAccount struct {
 	IsEnforced types.Bool `tfsdk:"is_enforced" tf:"optional"`
@@ -1181,9 +1659,17 @@ func (a EsmEnablementAccount) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a EsmEnablementAccount) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IsEnforced": types.BoolType,
+		},
+	}
+}
+
 type EsmEnablementAccountSetting struct {
 	// Account level policy for ESM
-	EsmEnablementAccount types.Object `tfsdk:"esm_enablement_account" tf:"object"`
+	EsmEnablementAccount types.List `tfsdk:"esm_enablement_account" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -1212,6 +1698,16 @@ func (a EsmEnablementAccountSetting) GetComplexFieldTypes() map[string]reflect.T
 	}
 }
 
+func (a EsmEnablementAccountSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"EsmEnablementAccount": EsmEnablementAccount{}.ToAttrType(ctx),
+			"Etag":                 types.StringType,
+			"SettingName":          types.StringType,
+		},
+	}
+}
+
 // The exchange token is the result of the token exchange with the IdP
 type ExchangeToken struct {
 	// The requested token.
@@ -1235,14 +1731,28 @@ func (newState *ExchangeToken) SyncEffectiveFieldsDuringRead(existingState Excha
 
 func (a ExchangeToken) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Scopes": reflect.TypeOf(""),
+		"Scopes": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ExchangeToken) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Credential":        types.StringType,
+			"CredentialEolTime": types.Int64Type,
+			"OwnerId":           types.Int64Type,
+			"Scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"TokenType": types.StringType,
+		},
 	}
 }
 
 // Exchange a token with the IdP
 type ExchangeTokenRequest struct {
 	// The partition of Credentials store
-	PartitionId types.Object `tfsdk:"partitionId" tf:"object"`
+	PartitionId types.List `tfsdk:"partitionId" tf:"object"`
 	// Array of scopes for the token request.
 	Scopes types.List `tfsdk:"scopes" tf:""`
 	// A list of token types being requested
@@ -1258,8 +1768,22 @@ func (newState *ExchangeTokenRequest) SyncEffectiveFieldsDuringRead(existingStat
 func (a ExchangeTokenRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PartitionId": reflect.TypeOf(PartitionId{}),
-		"Scopes":      reflect.TypeOf(""),
-		"TokenType":   reflect.TypeOf(""),
+		"Scopes":      reflect.TypeOf(types.StringType),
+		"TokenType":   reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ExchangeTokenRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PartitionId": PartitionId{}.ToAttrType(ctx),
+			"Scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"TokenType": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1280,10 +1804,20 @@ func (a ExchangeTokenResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ExchangeTokenResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Values": basetypes.ListType{
+				ElemType: ExchangeToken{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // An IP access list was successfully returned.
 type FetchIpAccessListResponse struct {
 	// Definition of an IP Access list
-	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
 }
 
 func (newState *FetchIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan FetchIpAccessListResponse) {
@@ -1295,6 +1829,14 @@ func (newState *FetchIpAccessListResponse) SyncEffectiveFieldsDuringRead(existin
 func (a FetchIpAccessListResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"IpAccessList": reflect.TypeOf(IpAccessListInfo{}),
+	}
+}
+
+func (a FetchIpAccessListResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessList": IpAccessListInfo{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1323,6 +1865,19 @@ func (a GenericWebhookConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GenericWebhookConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Password":    types.StringType,
+			"PasswordSet": types.BoolType,
+			"Url":         types.StringType,
+			"UrlSet":      types.BoolType,
+			"Username":    types.StringType,
+			"UsernameSet": types.BoolType,
+		},
+	}
+}
+
 // Get IP access list
 type GetAccountIpAccessListRequest struct {
 	// The ID for the corresponding IP access list
@@ -1337,6 +1892,14 @@ func (newState *GetAccountIpAccessListRequest) SyncEffectiveFieldsDuringRead(exi
 
 func (a GetAccountIpAccessListRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetAccountIpAccessListRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessListId": types.StringType,
+		},
+	}
 }
 
 // Retrieve the AI/BI dashboard embedding access policy
@@ -1361,6 +1924,14 @@ func (a GetAibiDashboardEmbeddingAccessPolicySettingRequest) GetComplexFieldType
 	return map[string]reflect.Type{}
 }
 
+func (a GetAibiDashboardEmbeddingAccessPolicySettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Retrieve the list of domains approved to host embedded AI/BI dashboards
 type GetAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -1381,6 +1952,14 @@ func (newState *GetAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffe
 
 func (a GetAibiDashboardEmbeddingApprovedDomainsSettingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetAibiDashboardEmbeddingApprovedDomainsSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
 }
 
 // Get the automatic cluster update setting
@@ -1405,6 +1984,14 @@ func (a GetAutomaticClusterUpdateSettingRequest) GetComplexFieldTypes() map[stri
 	return map[string]reflect.Type{}
 }
 
+func (a GetAutomaticClusterUpdateSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Get the compliance security profile setting
 type GetComplianceSecurityProfileSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -1425,6 +2012,14 @@ func (newState *GetComplianceSecurityProfileSettingRequest) SyncEffectiveFieldsD
 
 func (a GetComplianceSecurityProfileSettingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetComplianceSecurityProfileSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
 }
 
 // Get the compliance security profile setting for new workspaces
@@ -1449,6 +2044,14 @@ func (a GetCspEnablementAccountSettingRequest) GetComplexFieldTypes() map[string
 	return map[string]reflect.Type{}
 }
 
+func (a GetCspEnablementAccountSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Get the default namespace setting
 type GetDefaultNamespaceSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -1469,6 +2072,14 @@ func (newState *GetDefaultNamespaceSettingRequest) SyncEffectiveFieldsDuringRead
 
 func (a GetDefaultNamespaceSettingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetDefaultNamespaceSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
 }
 
 // Retrieve Legacy Access Disablement Status
@@ -1493,6 +2104,14 @@ func (a GetDisableLegacyAccessRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a GetDisableLegacyAccessRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Get the disable legacy DBFS setting
 type GetDisableLegacyDbfsRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -1513,6 +2132,14 @@ func (newState *GetDisableLegacyDbfsRequest) SyncEffectiveFieldsDuringRead(exist
 
 func (a GetDisableLegacyDbfsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetDisableLegacyDbfsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
 }
 
 // Get the disable legacy features setting
@@ -1537,6 +2164,14 @@ func (a GetDisableLegacyFeaturesRequest) GetComplexFieldTypes() map[string]refle
 	return map[string]reflect.Type{}
 }
 
+func (a GetDisableLegacyFeaturesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Get the enhanced security monitoring setting
 type GetEnhancedSecurityMonitoringSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -1557,6 +2192,14 @@ func (newState *GetEnhancedSecurityMonitoringSettingRequest) SyncEffectiveFields
 
 func (a GetEnhancedSecurityMonitoringSettingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetEnhancedSecurityMonitoringSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
 }
 
 // Get the enhanced security monitoring setting for new workspaces
@@ -1581,6 +2224,14 @@ func (a GetEsmEnablementAccountSettingRequest) GetComplexFieldTypes() map[string
 	return map[string]reflect.Type{}
 }
 
+func (a GetEsmEnablementAccountSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Get access list
 type GetIpAccessListRequest struct {
 	// The ID for the corresponding IP access list
@@ -1597,9 +2248,17 @@ func (a GetIpAccessListRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetIpAccessListRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessListId": types.StringType,
+		},
+	}
+}
+
 type GetIpAccessListResponse struct {
 	// Definition of an IP Access list
-	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
 }
 
 func (newState *GetIpAccessListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIpAccessListResponse) {
@@ -1611,6 +2270,14 @@ func (newState *GetIpAccessListResponse) SyncEffectiveFieldsDuringRead(existingS
 func (a GetIpAccessListResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"IpAccessList": reflect.TypeOf(IpAccessListInfo{}),
+	}
+}
+
+func (a GetIpAccessListResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessList": IpAccessListInfo{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1631,6 +2298,16 @@ func (a GetIpAccessListsResponse) GetComplexFieldTypes() map[string]reflect.Type
 	}
 }
 
+func (a GetIpAccessListsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessLists": basetypes.ListType{
+				ElemType: IpAccessListInfo{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // Get a network connectivity configuration
 type GetNetworkConnectivityConfigurationRequest struct {
 	// Your Network Connectvity Configuration ID.
@@ -1647,6 +2324,14 @@ func (a GetNetworkConnectivityConfigurationRequest) GetComplexFieldTypes() map[s
 	return map[string]reflect.Type{}
 }
 
+func (a GetNetworkConnectivityConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NetworkConnectivityConfigId": types.StringType,
+		},
+	}
+}
+
 // Get a notification destination
 type GetNotificationDestinationRequest struct {
 	Id types.String `tfsdk:"-"`
@@ -1660,6 +2345,14 @@ func (newState *GetNotificationDestinationRequest) SyncEffectiveFieldsDuringRead
 
 func (a GetNotificationDestinationRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetNotificationDestinationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 // Get Personal Compute setting
@@ -1684,6 +2377,14 @@ func (a GetPersonalComputeSettingRequest) GetComplexFieldTypes() map[string]refl
 	return map[string]reflect.Type{}
 }
 
+func (a GetPersonalComputeSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Get a private endpoint rule
 type GetPrivateEndpointRuleRequest struct {
 	// Your Network Connectvity Configuration ID.
@@ -1700,6 +2401,15 @@ func (newState *GetPrivateEndpointRuleRequest) SyncEffectiveFieldsDuringRead(exi
 
 func (a GetPrivateEndpointRuleRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetPrivateEndpointRuleRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NetworkConnectivityConfigId": types.StringType,
+			"PrivateEndpointRuleId":       types.StringType,
+		},
+	}
 }
 
 // Get the restrict workspace admins setting
@@ -1724,6 +2434,14 @@ func (a GetRestrictWorkspaceAdminsSettingRequest) GetComplexFieldTypes() map[str
 	return map[string]reflect.Type{}
 }
 
+func (a GetRestrictWorkspaceAdminsSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag": types.StringType,
+		},
+	}
+}
+
 // Check configuration status
 type GetStatusRequest struct {
 	Keys types.String `tfsdk:"-"`
@@ -1737,6 +2455,14 @@ func (newState *GetStatusRequest) SyncEffectiveFieldsDuringRead(existingState Ge
 
 func (a GetStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Keys": types.StringType,
+		},
+	}
 }
 
 // Get token info
@@ -1753,6 +2479,14 @@ func (newState *GetTokenManagementRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a GetTokenManagementRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetTokenManagementRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TokenId": types.StringType,
+		},
+	}
 }
 
 type GetTokenPermissionLevelsResponse struct {
@@ -1772,9 +2506,19 @@ func (a GetTokenPermissionLevelsResponse) GetComplexFieldTypes() map[string]refl
 	}
 }
 
+func (a GetTokenPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: TokenPermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // Token with specified Token ID was successfully returned.
 type GetTokenResponse struct {
-	TokenInfo types.Object `tfsdk:"token_info" tf:"optional,object"`
+	TokenInfo types.List `tfsdk:"token_info" tf:"optional,object"`
 }
 
 func (newState *GetTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetTokenResponse) {
@@ -1786,6 +2530,14 @@ func (newState *GetTokenResponse) SyncEffectiveFieldsDuringRead(existingState Ge
 func (a GetTokenResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TokenInfo": reflect.TypeOf(TokenInfo{}),
+	}
+}
+
+func (a GetTokenResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TokenInfo": TokenInfo{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1826,7 +2578,26 @@ func (newState *IpAccessListInfo) SyncEffectiveFieldsDuringRead(existingState Ip
 
 func (a IpAccessListInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"IpAddresses": reflect.TypeOf(""),
+		"IpAddresses": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a IpAccessListInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AddressCount": types.Int64Type,
+			"CreatedAt":    types.Int64Type,
+			"CreatedBy":    types.Int64Type,
+			"Enabled":      types.BoolType,
+			"IpAddresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Label":     types.StringType,
+			"ListId":    types.StringType,
+			"ListType":  types.StringType,
+			"UpdatedAt": types.Int64Type,
+			"UpdatedBy": types.Int64Type,
+		},
 	}
 }
 
@@ -1844,6 +2615,16 @@ func (newState *ListIpAccessListResponse) SyncEffectiveFieldsDuringRead(existing
 func (a ListIpAccessListResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"IpAccessLists": reflect.TypeOf(IpAccessListInfo{}),
+	}
+}
+
+func (a ListIpAccessListResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IpAccessLists": basetypes.ListType{
+				ElemType: IpAccessListInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -1866,6 +2647,17 @@ func (a ListNccAzurePrivateEndpointRulesResponse) GetComplexFieldTypes() map[str
 	}
 }
 
+func (a ListNccAzurePrivateEndpointRulesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Items": basetypes.ListType{
+				ElemType: NccAzurePrivateEndpointRule{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
+	}
+}
+
 // List network connectivity configurations
 type ListNetworkConnectivityConfigurationsRequest struct {
 	// Pagination token to go to next page based on previous query.
@@ -1880,6 +2672,14 @@ func (newState *ListNetworkConnectivityConfigurationsRequest) SyncEffectiveField
 
 func (a ListNetworkConnectivityConfigurationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListNetworkConnectivityConfigurationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PageToken": types.StringType,
+		},
+	}
 }
 
 type ListNetworkConnectivityConfigurationsResponse struct {
@@ -1901,6 +2701,17 @@ func (a ListNetworkConnectivityConfigurationsResponse) GetComplexFieldTypes() ma
 	}
 }
 
+func (a ListNetworkConnectivityConfigurationsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Items": basetypes.ListType{
+				ElemType: NetworkConnectivityConfiguration{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
+	}
+}
+
 // List notification destinations
 type ListNotificationDestinationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
@@ -1916,6 +2727,15 @@ func (newState *ListNotificationDestinationsRequest) SyncEffectiveFieldsDuringRe
 
 func (a ListNotificationDestinationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListNotificationDestinationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PageSize":  types.Int64Type,
+			"PageToken": types.StringType,
+		},
+	}
 }
 
 type ListNotificationDestinationsResponse struct {
@@ -1934,6 +2754,17 @@ func (newState *ListNotificationDestinationsResponse) SyncEffectiveFieldsDuringR
 func (a ListNotificationDestinationsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Results": reflect.TypeOf(ListNotificationDestinationsResult{}),
+	}
+}
+
+func (a ListNotificationDestinationsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Results": basetypes.ListType{
+				ElemType: ListNotificationDestinationsResult{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -1957,6 +2788,16 @@ func (a ListNotificationDestinationsResult) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a ListNotificationDestinationsResult) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DestinationType": types.StringType,
+			"DisplayName":     types.StringType,
+			"Id":              types.StringType,
+		},
+	}
+}
+
 // List private endpoint rules
 type ListPrivateEndpointRulesRequest struct {
 	// Your Network Connectvity Configuration ID.
@@ -1975,6 +2816,15 @@ func (a ListPrivateEndpointRulesRequest) GetComplexFieldTypes() map[string]refle
 	return map[string]reflect.Type{}
 }
 
+func (a ListPrivateEndpointRulesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NetworkConnectivityConfigId": types.StringType,
+			"PageToken":                   types.StringType,
+		},
+	}
+}
+
 type ListPublicTokensResponse struct {
 	// The information for each token.
 	TokenInfos types.List `tfsdk:"token_infos" tf:"optional"`
@@ -1989,6 +2839,16 @@ func (newState *ListPublicTokensResponse) SyncEffectiveFieldsDuringRead(existing
 func (a ListPublicTokensResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TokenInfos": reflect.TypeOf(PublicTokenInfo{}),
+	}
+}
+
+func (a ListPublicTokensResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TokenInfos": basetypes.ListType{
+				ElemType: PublicTokenInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -2010,6 +2870,15 @@ func (a ListTokenManagementRequest) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a ListTokenManagementRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreatedById":       types.Int64Type,
+			"CreatedByUsername": types.StringType,
+		},
+	}
+}
+
 // Tokens were successfully returned.
 type ListTokensResponse struct {
 	// Token metadata of each user-created token in the workspace
@@ -2025,6 +2894,16 @@ func (newState *ListTokensResponse) SyncEffectiveFieldsDuringRead(existingState 
 func (a ListTokensResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TokenInfos": reflect.TypeOf(TokenInfo{}),
+	}
+}
+
+func (a ListTokensResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TokenInfos": basetypes.ListType{
+				ElemType: TokenInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -2045,6 +2924,15 @@ func (a MicrosoftTeamsConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a MicrosoftTeamsConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Url":    types.StringType,
+			"UrlSet": types.BoolType,
+		},
+	}
+}
+
 // The stable AWS IP CIDR blocks. You can use these to configure the firewall of
 // your resources to allow traffic from your Databricks workspace.
 type NccAwsStableIpRule struct {
@@ -2061,7 +2949,17 @@ func (newState *NccAwsStableIpRule) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a NccAwsStableIpRule) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"CidrBlocks": reflect.TypeOf(""),
+		"CidrBlocks": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a NccAwsStableIpRule) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CidrBlocks": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -2113,6 +3011,23 @@ func (a NccAzurePrivateEndpointRule) GetComplexFieldTypes() map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
+func (a NccAzurePrivateEndpointRule) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ConnectionState":             types.StringType,
+			"CreationTime":                types.Int64Type,
+			"Deactivated":                 types.BoolType,
+			"DeactivatedAt":               types.Int64Type,
+			"EndpointName":                types.StringType,
+			"GroupId":                     types.StringType,
+			"NetworkConnectivityConfigId": types.StringType,
+			"ResourceId":                  types.StringType,
+			"RuleId":                      types.StringType,
+			"UpdatedTime":                 types.Int64Type,
+		},
+	}
+}
+
 // The stable Azure service endpoints. You can configure the firewall of your
 // Azure resources to allow traffic from your Databricks serverless compute
 // resources.
@@ -2134,8 +3049,22 @@ func (newState *NccAzureServiceEndpointRule) SyncEffectiveFieldsDuringRead(exist
 
 func (a NccAzureServiceEndpointRule) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Subnets":        reflect.TypeOf(""),
-		"TargetServices": reflect.TypeOf(""),
+		"Subnets":        reflect.TypeOf(types.StringType),
+		"TargetServices": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a NccAzureServiceEndpointRule) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Subnets": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"TargetRegion": types.StringType,
+			"TargetServices": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -2145,10 +3074,10 @@ type NccEgressConfig struct {
 	// The network connectivity rules that are applied by default without
 	// resource specific configurations. You can find the stable network
 	// information of your serverless compute resources here.
-	DefaultRules types.Object `tfsdk:"default_rules" tf:"computed,optional"`
+	DefaultRules types.List `tfsdk:"default_rules" tf:"computed,optional"`
 	// The network connectivity rules that configured for each destinations.
 	// These rules override default rules.
-	TargetRules types.Object `tfsdk:"target_rules" tf:"optional,object"`
+	TargetRules types.List `tfsdk:"target_rules" tf:"optional,object"`
 }
 
 func (newState *NccEgressConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressConfig) {
@@ -2164,6 +3093,15 @@ func (a NccEgressConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a NccEgressConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DefaultRules": NccEgressDefaultRules{}.ToAttrType(ctx),
+			"TargetRules":  NccEgressTargetRules{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // The network connectivity rules that are applied by default without resource
 // specific configurations. You can find the stable network information of your
 // serverless compute resources here.
@@ -2171,11 +3109,11 @@ type NccEgressDefaultRules struct {
 	// The stable AWS IP CIDR blocks. You can use these to configure the
 	// firewall of your resources to allow traffic from your Databricks
 	// workspace.
-	AwsStableIpRule types.Object `tfsdk:"aws_stable_ip_rule" tf:"optional,object"`
+	AwsStableIpRule types.List `tfsdk:"aws_stable_ip_rule" tf:"optional,object"`
 	// The stable Azure service endpoints. You can configure the firewall of
 	// your Azure resources to allow traffic from your Databricks serverless
 	// compute resources.
-	AzureServiceEndpointRule types.Object `tfsdk:"azure_service_endpoint_rule" tf:"optional,object"`
+	AzureServiceEndpointRule types.List `tfsdk:"azure_service_endpoint_rule" tf:"optional,object"`
 }
 
 func (newState *NccEgressDefaultRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressDefaultRules) {
@@ -2188,6 +3126,15 @@ func (a NccEgressDefaultRules) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AwsStableIpRule":          reflect.TypeOf(NccAwsStableIpRule{}),
 		"AzureServiceEndpointRule": reflect.TypeOf(NccAzureServiceEndpointRule{}),
+	}
+}
+
+func (a NccEgressDefaultRules) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsStableIpRule":          NccAwsStableIpRule{}.ToAttrType(ctx),
+			"AzureServiceEndpointRule": NccAzureServiceEndpointRule{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -2209,6 +3156,16 @@ func (a NccEgressTargetRules) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a NccEgressTargetRules) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AzurePrivateEndpointRules": basetypes.ListType{
+				ElemType: NccAzurePrivateEndpointRule{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type NetworkConnectivityConfiguration struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
@@ -2216,7 +3173,7 @@ type NetworkConnectivityConfiguration struct {
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// The network connectivity rules that apply to network traffic from your
 	// serverless compute resources.
-	EgressConfig types.Object `tfsdk:"egress_config" tf:"optional,object"`
+	EgressConfig types.List `tfsdk:"egress_config" tf:"optional,object"`
 	// The name of the network connectivity configuration. The name can contain
 	// alphanumeric characters, hyphens, and underscores. The length must be
 	// between 3 and 30 characters. The name must match the regular expression
@@ -2244,11 +3201,25 @@ func (a NetworkConnectivityConfiguration) GetComplexFieldTypes() map[string]refl
 	}
 }
 
+func (a NetworkConnectivityConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccountId":                   types.StringType,
+			"CreationTime":                types.Int64Type,
+			"EgressConfig":                NccEgressConfig{}.ToAttrType(ctx),
+			"Name":                        types.StringType,
+			"NetworkConnectivityConfigId": types.StringType,
+			"Region":                      types.StringType,
+			"UpdatedTime":                 types.Int64Type,
+		},
+	}
+}
+
 type NotificationDestination struct {
 	// The configuration for the notification destination. Will be exactly one
 	// of the nested configs. Only returns for users with workspace admin
 	// permissions.
-	Config types.Object `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config" tf:"optional,object"`
 	// [Output-only] The type of the notification destination. The type can not
 	// be changed once set.
 	DestinationType types.String `tfsdk:"destination_type" tf:"optional"`
@@ -2270,6 +3241,17 @@ func (a NotificationDestination) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a NotificationDestination) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Config":          Config{}.ToAttrType(ctx),
+			"DestinationType": types.StringType,
+			"DisplayName":     types.StringType,
+			"Id":              types.StringType,
+		},
+	}
+}
+
 type PagerdutyConfig struct {
 	// [Input-Only] Integration key for PagerDuty.
 	IntegrationKey types.String `tfsdk:"integration_key" tf:"optional"`
@@ -2287,6 +3269,15 @@ func (a PagerdutyConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PagerdutyConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IntegrationKey":    types.StringType,
+			"IntegrationKeySet": types.BoolType,
+		},
+	}
+}
+
 // Partition by workspace or account
 type PartitionId struct {
 	// The ID of the workspace.
@@ -2301,6 +3292,14 @@ func (newState *PartitionId) SyncEffectiveFieldsDuringRead(existingState Partiti
 
 func (a PartitionId) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PartitionId) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"WorkspaceId": types.Int64Type,
+		},
+	}
 }
 
 type PersonalComputeMessage struct {
@@ -2324,6 +3323,14 @@ func (a PersonalComputeMessage) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PersonalComputeMessage) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Value": types.StringType,
+		},
+	}
+}
+
 type PersonalComputeSetting struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -2334,7 +3341,7 @@ type PersonalComputeSetting struct {
 	// PATCH request to identify the setting version you are updating.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 
-	PersonalCompute types.Object `tfsdk:"personal_compute" tf:"object"`
+	PersonalCompute types.List `tfsdk:"personal_compute" tf:"object"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
@@ -2352,6 +3359,16 @@ func (newState *PersonalComputeSetting) SyncEffectiveFieldsDuringRead(existingSt
 func (a PersonalComputeSetting) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PersonalCompute": reflect.TypeOf(PersonalComputeMessage{}),
+	}
+}
+
+func (a PersonalComputeSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag":            types.StringType,
+			"PersonalCompute": PersonalComputeMessage{}.ToAttrType(ctx),
+			"SettingName":     types.StringType,
+		},
 	}
 }
 
@@ -2375,6 +3392,17 @@ func (newState *PublicTokenInfo) SyncEffectiveFieldsDuringRead(existingState Pub
 
 func (a PublicTokenInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PublicTokenInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":      types.StringType,
+			"CreationTime": types.Int64Type,
+			"ExpiryTime":   types.Int64Type,
+			"TokenId":      types.StringType,
+		},
+	}
 }
 
 // Details required to replace an IP access list.
@@ -2404,7 +3432,21 @@ func (newState *ReplaceIpAccessList) SyncEffectiveFieldsDuringRead(existingState
 
 func (a ReplaceIpAccessList) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"IpAddresses": reflect.TypeOf(""),
+		"IpAddresses": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ReplaceIpAccessList) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Enabled":        types.BoolType,
+			"IpAccessListId": types.StringType,
+			"IpAddresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Label":    types.StringType,
+			"ListType": types.StringType,
+		},
 	}
 }
 
@@ -2421,6 +3463,12 @@ func (a ReplaceResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ReplaceResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type RestrictWorkspaceAdminsMessage struct {
 	Status types.String `tfsdk:"status" tf:""`
 }
@@ -2435,6 +3483,14 @@ func (a RestrictWorkspaceAdminsMessage) GetComplexFieldTypes() map[string]reflec
 	return map[string]reflect.Type{}
 }
 
+func (a RestrictWorkspaceAdminsMessage) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Status": types.StringType,
+		},
+	}
+}
+
 type RestrictWorkspaceAdminsSetting struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
@@ -2445,7 +3501,7 @@ type RestrictWorkspaceAdminsSetting struct {
 	// PATCH request to identify the setting version you are updating.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 
-	RestrictWorkspaceAdmins types.Object `tfsdk:"restrict_workspace_admins" tf:"object"`
+	RestrictWorkspaceAdmins types.List `tfsdk:"restrict_workspace_admins" tf:"object"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
@@ -2466,6 +3522,16 @@ func (a RestrictWorkspaceAdminsSetting) GetComplexFieldTypes() map[string]reflec
 	}
 }
 
+func (a RestrictWorkspaceAdminsSetting) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Etag":                    types.StringType,
+			"RestrictWorkspaceAdmins": RestrictWorkspaceAdminsMessage{}.ToAttrType(ctx),
+			"SettingName":             types.StringType,
+		},
+	}
+}
+
 type RevokeTokenRequest struct {
 	// The ID of the token to be revoked.
 	TokenId types.String `tfsdk:"token_id" tf:""`
@@ -2481,6 +3547,14 @@ func (a RevokeTokenRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a RevokeTokenRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TokenId": types.StringType,
+		},
+	}
+}
+
 type RevokeTokenResponse struct {
 }
 
@@ -2494,6 +3568,12 @@ func (a RevokeTokenResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a RevokeTokenResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type SetStatusResponse struct {
 }
 
@@ -2505,6 +3585,12 @@ func (newState *SetStatusResponse) SyncEffectiveFieldsDuringRead(existingState S
 
 func (a SetStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a SetStatusResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type SlackConfig struct {
@@ -2524,6 +3610,15 @@ func (a SlackConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a SlackConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Url":    types.StringType,
+			"UrlSet": types.BoolType,
+		},
+	}
+}
+
 type StringMessage struct {
 	// Represents a generic string value.
 	Value types.String `tfsdk:"value" tf:"optional"`
@@ -2537,6 +3632,14 @@ func (newState *StringMessage) SyncEffectiveFieldsDuringRead(existingState Strin
 
 func (a StringMessage) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a StringMessage) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Value": types.StringType,
+		},
+	}
 }
 
 type TokenAccessControlRequest struct {
@@ -2558,6 +3661,17 @@ func (newState *TokenAccessControlRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a TokenAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a TokenAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type TokenAccessControlResponse struct {
@@ -2582,6 +3696,20 @@ func (newState *TokenAccessControlResponse) SyncEffectiveFieldsDuringRead(existi
 func (a TokenAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AllPermissions": reflect.TypeOf(TokenPermission{}),
+	}
+}
+
+func (a TokenAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: TokenPermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
 	}
 }
 
@@ -2618,6 +3746,22 @@ func (a TokenInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a TokenInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":           types.StringType,
+			"CreatedById":       types.Int64Type,
+			"CreatedByUsername": types.StringType,
+			"CreationTime":      types.Int64Type,
+			"ExpiryTime":        types.Int64Type,
+			"LastUsedDay":       types.Int64Type,
+			"OwnerId":           types.Int64Type,
+			"TokenId":           types.StringType,
+			"WorkspaceId":       types.Int64Type,
+		},
+	}
+}
+
 type TokenPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -2634,7 +3778,19 @@ func (newState *TokenPermission) SyncEffectiveFieldsDuringRead(existingState Tok
 
 func (a TokenPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a TokenPermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -2658,6 +3814,18 @@ func (a TokenPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a TokenPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: TokenAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type TokenPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -2672,6 +3840,15 @@ func (newState *TokenPermissionsDescription) SyncEffectiveFieldsDuringRead(exist
 
 func (a TokenPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a TokenPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type TokenPermissionsRequest struct {
@@ -2690,6 +3867,16 @@ func (a TokenPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a TokenPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: TokenAccessControlRequest{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateAibiDashboardEmbeddingAccessPolicySettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2701,7 +3888,7 @@ type UpdateAibiDashboardEmbeddingAccessPolicySettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) {
@@ -2716,6 +3903,16 @@ func (a UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) GetComplexFieldT
 	}
 }
 
+func (a UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      AibiDashboardEmbeddingAccessPolicySetting{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2727,7 +3924,7 @@ type UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
@@ -2742,6 +3939,16 @@ func (a UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) GetComplexFie
 	}
 }
 
+func (a UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      AibiDashboardEmbeddingApprovedDomainsSetting{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateAutomaticClusterUpdateSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2753,7 +3960,7 @@ type UpdateAutomaticClusterUpdateSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateAutomaticClusterUpdateSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAutomaticClusterUpdateSettingRequest) {
@@ -2768,6 +3975,16 @@ func (a UpdateAutomaticClusterUpdateSettingRequest) GetComplexFieldTypes() map[s
 	}
 }
 
+func (a UpdateAutomaticClusterUpdateSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      AutomaticClusterUpdateSetting{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateComplianceSecurityProfileSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2779,7 +3996,7 @@ type UpdateComplianceSecurityProfileSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateComplianceSecurityProfileSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateComplianceSecurityProfileSettingRequest) {
@@ -2794,6 +4011,16 @@ func (a UpdateComplianceSecurityProfileSettingRequest) GetComplexFieldTypes() ma
 	}
 }
 
+func (a UpdateComplianceSecurityProfileSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      ComplianceSecurityProfileSetting{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateCspEnablementAccountSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2805,7 +4032,7 @@ type UpdateCspEnablementAccountSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateCspEnablementAccountSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCspEnablementAccountSettingRequest) {
@@ -2817,6 +4044,16 @@ func (newState *UpdateCspEnablementAccountSettingRequest) SyncEffectiveFieldsDur
 func (a UpdateCspEnablementAccountSettingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Setting": reflect.TypeOf(CspEnablementAccountSetting{}),
+	}
+}
+
+func (a UpdateCspEnablementAccountSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      CspEnablementAccountSetting{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -2839,7 +4076,7 @@ type UpdateDefaultNamespaceSettingRequest struct {
 	// assumed). This setting requires a restart of clusters and SQL warehouses
 	// to take effect. Additionally, the default namespace only applies when
 	// using Unity Catalog-enabled compute.
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateDefaultNamespaceSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDefaultNamespaceSettingRequest) {
@@ -2854,6 +4091,16 @@ func (a UpdateDefaultNamespaceSettingRequest) GetComplexFieldTypes() map[string]
 	}
 }
 
+func (a UpdateDefaultNamespaceSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      DefaultNamespaceSetting{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateDisableLegacyAccessRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2865,7 +4112,7 @@ type UpdateDisableLegacyAccessRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateDisableLegacyAccessRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyAccessRequest) {
@@ -2880,6 +4127,16 @@ func (a UpdateDisableLegacyAccessRequest) GetComplexFieldTypes() map[string]refl
 	}
 }
 
+func (a UpdateDisableLegacyAccessRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      DisableLegacyAccess{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateDisableLegacyDbfsRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2891,7 +4148,7 @@ type UpdateDisableLegacyDbfsRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateDisableLegacyDbfsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyDbfsRequest) {
@@ -2906,6 +4163,16 @@ func (a UpdateDisableLegacyDbfsRequest) GetComplexFieldTypes() map[string]reflec
 	}
 }
 
+func (a UpdateDisableLegacyDbfsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      DisableLegacyDbfs{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateDisableLegacyFeaturesRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2917,7 +4184,7 @@ type UpdateDisableLegacyFeaturesRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateDisableLegacyFeaturesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyFeaturesRequest) {
@@ -2932,6 +4199,16 @@ func (a UpdateDisableLegacyFeaturesRequest) GetComplexFieldTypes() map[string]re
 	}
 }
 
+func (a UpdateDisableLegacyFeaturesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      DisableLegacyFeatures{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateEnhancedSecurityMonitoringSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2943,7 +4220,7 @@ type UpdateEnhancedSecurityMonitoringSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateEnhancedSecurityMonitoringSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnhancedSecurityMonitoringSettingRequest) {
@@ -2958,6 +4235,16 @@ func (a UpdateEnhancedSecurityMonitoringSettingRequest) GetComplexFieldTypes() m
 	}
 }
 
+func (a UpdateEnhancedSecurityMonitoringSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      EnhancedSecurityMonitoringSetting{}.ToAttrType(ctx),
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdateEsmEnablementAccountSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -2969,7 +4256,7 @@ type UpdateEsmEnablementAccountSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateEsmEnablementAccountSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEsmEnablementAccountSettingRequest) {
@@ -2981,6 +4268,16 @@ func (newState *UpdateEsmEnablementAccountSettingRequest) SyncEffectiveFieldsDur
 func (a UpdateEsmEnablementAccountSettingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Setting": reflect.TypeOf(EsmEnablementAccountSetting{}),
+	}
+}
+
+func (a UpdateEsmEnablementAccountSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      EsmEnablementAccountSetting{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -3011,14 +4308,28 @@ func (newState *UpdateIpAccessList) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a UpdateIpAccessList) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"IpAddresses": reflect.TypeOf(""),
+		"IpAddresses": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a UpdateIpAccessList) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Enabled":        types.BoolType,
+			"IpAccessListId": types.StringType,
+			"IpAddresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Label":    types.StringType,
+			"ListType": types.StringType,
+		},
 	}
 }
 
 type UpdateNotificationDestinationRequest struct {
 	// The configuration for the notification destination. Must wrap EXACTLY one
 	// of the nested configs.
-	Config types.Object `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config" tf:"optional,object"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// UUID identifying notification destination.
@@ -3037,6 +4348,16 @@ func (a UpdateNotificationDestinationRequest) GetComplexFieldTypes() map[string]
 	}
 }
 
+func (a UpdateNotificationDestinationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Config":      Config{}.ToAttrType(ctx),
+			"DisplayName": types.StringType,
+			"Id":          types.StringType,
+		},
+	}
+}
+
 // Details required to update a setting.
 type UpdatePersonalComputeSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -3048,7 +4369,7 @@ type UpdatePersonalComputeSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdatePersonalComputeSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalComputeSettingRequest) {
@@ -3060,6 +4381,16 @@ func (newState *UpdatePersonalComputeSettingRequest) SyncEffectiveFieldsDuringRe
 func (a UpdatePersonalComputeSettingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Setting": reflect.TypeOf(PersonalComputeSetting{}),
+	}
+}
+
+func (a UpdatePersonalComputeSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      PersonalComputeSetting{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -3076,6 +4407,12 @@ func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Details required to update a setting.
 type UpdateRestrictWorkspaceAdminsSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -3087,7 +4424,7 @@ type UpdateRestrictWorkspaceAdminsSettingRequest struct {
 	// the field mask, use comma as the separator (no space).
 	FieldMask types.String `tfsdk:"field_mask" tf:""`
 
-	Setting types.Object `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting" tf:"object"`
 }
 
 func (newState *UpdateRestrictWorkspaceAdminsSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRestrictWorkspaceAdminsSettingRequest) {
@@ -3099,5 +4436,15 @@ func (newState *UpdateRestrictWorkspaceAdminsSettingRequest) SyncEffectiveFields
 func (a UpdateRestrictWorkspaceAdminsSettingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Setting": reflect.TypeOf(RestrictWorkspaceAdminsSetting{}),
+	}
+}
+
+func (a UpdateRestrictWorkspaceAdminsSettingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowMissing": types.BoolType,
+			"FieldMask":    types.StringType,
+			"Setting":      RestrictWorkspaceAdminsSetting{}.ToAttrType(ctx),
+		},
 	}
 }

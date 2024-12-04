@@ -65,19 +65,50 @@ func (a {{.PascalName}}) GetComplexFieldTypes() map[string]reflect.Type {
   }
 }
 
-{{end}}
-{{end}}
+func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
+  return types.ObjectType{
+    AttrTypes: map[string]attr.Type{
+      {{ range .Fields -}}
+      "{{.PascalName}}": {{ template "attr-type" .Entity }},
+      {{ end}}
+    },
+  }
+}
 
-{{define "complex-field-value" -}}
+{{end}}
+{{end}}
+{{/* TODO: Handle recursive Jobs structure */}}
+{{- define "attr-type" -}}
+  {{- if .ArrayValue }}basetypes.ListType{
+    ElemType: {{ template "attr-type" .ArrayValue }},
+  }
+  {{- else if .MapValue }}basetypes.MapType{
+    ElemType: {{ template "attr-type" .MapValue }},
+  }
+  {{- else -}}
+    {{- if .IsExternal -}}{{.Package.Name}}_tf.{{- end -}}
+    {{- if or .IsString .Enum -}}types.StringType
+    {{- else if .IsBool -}}types.BoolType
+    {{- else if .IsInt64 -}}types.Int64Type
+    {{- else if .IsFloat64 -}}types.Float64Type
+    {{- else if .IsInt -}}types.Int64Type
+    {{- else if .IsAny -}}types.ObjectType{}
+    {{- else if .IsByteStream}}types.ObjectType{}
+    {{- else if .IsObject -}}{{.PascalName}}{}.ToAttrType(ctx)
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- define "complex-field-value" -}}
   {{- if .ArrayValue }}{{ template "complex-field-value" .ArrayValue }}
   {{- else if .MapValue }}{{ template "complex-field-value" .MapValue }}
   {{- else -}}
     {{- if .IsExternal -}}{{.Package.Name}}.{{- end -}}
-    {{- if or .IsString .Enum -}}""
-    {{- else if .IsBool -}}false
-    {{- else if .IsInt64 -}}0
-    {{- else if .IsFloat64 -}}0.0
-    {{- else if .IsInt -}}0
+    {{- if or .IsString .Enum -}}types.StringType
+    {{- else if .IsBool -}}types.BoolType
+    {{- else if .IsInt64 -}}types.Int64Type
+    {{- else if .IsFloat64 -}}types.Float64Type
+    {{- else if .IsInt -}}types.Int64Type
     {{- else if .IsAny -}}struct{}{}
     {{- else if .IsObject -}}{{.PascalName}}{}
     {{- end -}}
@@ -118,8 +149,8 @@ func (a {{.PascalName}}) GetComplexFieldTypes() map[string]reflect.Type {
     {{- else if .IsInt}}types.Int64
     {{- else if .IsByteStream}}io.ReadCloser
     {{- else if .ArrayValue }}types.List
-    {{- else if .MapValue }}types.Map
-    {{- else if .IsObject }}types.Object
+    {{- else if .MapValue }}types.Map{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}
+    {{- else if .IsObject }}types.List
     {{- else if .Enum }}types.String
     {{- else}}any /* MISSING TYPE */
     {{- end -}}

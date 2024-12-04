@@ -11,13 +11,16 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package catalog_tf
 
 import (
+	"context"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type AccountsCreateMetastore struct {
-	MetastoreInfo types.Object `tfsdk:"metastore_info" tf:"optional,object"`
+	MetastoreInfo types.List `tfsdk:"metastore_info" tf:"optional,object"`
 }
 
 func (newState *AccountsCreateMetastore) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsCreateMetastore) {
@@ -32,8 +35,16 @@ func (a AccountsCreateMetastore) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a AccountsCreateMetastore) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreInfo": CreateMetastore{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type AccountsCreateMetastoreAssignment struct {
-	MetastoreAssignment types.Object `tfsdk:"metastore_assignment" tf:"optional,object"`
+	MetastoreAssignment types.List `tfsdk:"metastore_assignment" tf:"optional,object"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 	// Workspace ID.
@@ -52,8 +63,18 @@ func (a AccountsCreateMetastoreAssignment) GetComplexFieldTypes() map[string]ref
 	}
 }
 
+func (a AccountsCreateMetastoreAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreAssignment": CreateMetastoreAssignment{}.ToAttrType(ctx),
+			"MetastoreId":         types.StringType,
+			"WorkspaceId":         types.Int64Type,
+		},
+	}
+}
+
 type AccountsCreateStorageCredential struct {
-	CredentialInfo types.Object `tfsdk:"credential_info" tf:"optional,object"`
+	CredentialInfo types.List `tfsdk:"credential_info" tf:"optional,object"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 }
@@ -70,8 +91,17 @@ func (a AccountsCreateStorageCredential) GetComplexFieldTypes() map[string]refle
 	}
 }
 
+func (a AccountsCreateStorageCredential) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialInfo": CreateStorageCredential{}.ToAttrType(ctx),
+			"MetastoreId":    types.StringType,
+		},
+	}
+}
+
 type AccountsMetastoreAssignment struct {
-	MetastoreAssignment types.Object `tfsdk:"metastore_assignment" tf:"optional,object"`
+	MetastoreAssignment types.List `tfsdk:"metastore_assignment" tf:"optional,object"`
 }
 
 func (newState *AccountsMetastoreAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsMetastoreAssignment) {
@@ -86,8 +116,16 @@ func (a AccountsMetastoreAssignment) GetComplexFieldTypes() map[string]reflect.T
 	}
 }
 
+func (a AccountsMetastoreAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreAssignment": MetastoreAssignment{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type AccountsMetastoreInfo struct {
-	MetastoreInfo types.Object `tfsdk:"metastore_info" tf:"optional,object"`
+	MetastoreInfo types.List `tfsdk:"metastore_info" tf:"optional,object"`
 }
 
 func (newState *AccountsMetastoreInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsMetastoreInfo) {
@@ -102,8 +140,16 @@ func (a AccountsMetastoreInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a AccountsMetastoreInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreInfo": MetastoreInfo{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type AccountsStorageCredentialInfo struct {
-	CredentialInfo types.Object `tfsdk:"credential_info" tf:"optional,object"`
+	CredentialInfo types.List `tfsdk:"credential_info" tf:"optional,object"`
 }
 
 func (newState *AccountsStorageCredentialInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsStorageCredentialInfo) {
@@ -118,11 +164,19 @@ func (a AccountsStorageCredentialInfo) GetComplexFieldTypes() map[string]reflect
 	}
 }
 
+func (a AccountsStorageCredentialInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialInfo": StorageCredentialInfo{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type AccountsUpdateMetastore struct {
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 
-	MetastoreInfo types.Object `tfsdk:"metastore_info" tf:"optional,object"`
+	MetastoreInfo types.List `tfsdk:"metastore_info" tf:"optional,object"`
 }
 
 func (newState *AccountsUpdateMetastore) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccountsUpdateMetastore) {
@@ -137,8 +191,17 @@ func (a AccountsUpdateMetastore) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a AccountsUpdateMetastore) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId":   types.StringType,
+			"MetastoreInfo": UpdateMetastore{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type AccountsUpdateMetastoreAssignment struct {
-	MetastoreAssignment types.Object `tfsdk:"metastore_assignment" tf:"optional,object"`
+	MetastoreAssignment types.List `tfsdk:"metastore_assignment" tf:"optional,object"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 	// Workspace ID.
@@ -157,8 +220,18 @@ func (a AccountsUpdateMetastoreAssignment) GetComplexFieldTypes() map[string]ref
 	}
 }
 
+func (a AccountsUpdateMetastoreAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreAssignment": UpdateMetastoreAssignment{}.ToAttrType(ctx),
+			"MetastoreId":         types.StringType,
+			"WorkspaceId":         types.Int64Type,
+		},
+	}
+}
+
 type AccountsUpdateStorageCredential struct {
-	CredentialInfo types.Object `tfsdk:"credential_info" tf:"optional,object"`
+	CredentialInfo types.List `tfsdk:"credential_info" tf:"optional,object"`
 	// Unity Catalog metastore ID
 	MetastoreId types.String `tfsdk:"-"`
 	// Name of the storage credential.
@@ -174,6 +247,16 @@ func (newState *AccountsUpdateStorageCredential) SyncEffectiveFieldsDuringRead(e
 func (a AccountsUpdateStorageCredential) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"CredentialInfo": reflect.TypeOf(UpdateStorageCredential{}),
+	}
+}
+
+func (a AccountsUpdateStorageCredential) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialInfo":        UpdateStorageCredential{}.ToAttrType(ctx),
+			"MetastoreId":           types.StringType,
+			"StorageCredentialName": types.StringType,
+		},
 	}
 }
 
@@ -200,6 +283,19 @@ func (a ArtifactAllowlistInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ArtifactAllowlistInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ArtifactMatchers": basetypes.ListType{
+				ElemType: ArtifactMatcher{}.ToAttrType(ctx),
+			},
+			"CreatedAt":   types.Int64Type,
+			"CreatedBy":   types.StringType,
+			"MetastoreId": types.StringType,
+		},
+	}
+}
+
 type ArtifactMatcher struct {
 	// The artifact path or maven coordinate
 	Artifact types.String `tfsdk:"artifact" tf:""`
@@ -217,6 +313,15 @@ func (a ArtifactMatcher) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ArtifactMatcher) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Artifact":  types.StringType,
+			"MatchType": types.StringType,
+		},
+	}
+}
+
 type AssignResponse struct {
 }
 
@@ -228,6 +333,12 @@ func (newState *AssignResponse) SyncEffectiveFieldsDuringRead(existingState Assi
 
 func (a AssignResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AssignResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // AWS temporary credentials for API authentication. Read more at
@@ -255,6 +366,17 @@ func (a AwsCredentials) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AwsCredentials) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessKeyId":     types.StringType,
+			"AccessPoint":     types.StringType,
+			"SecretAccessKey": types.StringType,
+			"SessionToken":    types.StringType,
+		},
+	}
+}
+
 // The AWS IAM role configuration
 type AwsIamRole struct {
 	// The external ID used in role assumption to prevent the confused deputy
@@ -278,6 +400,16 @@ func (a AwsIamRole) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AwsIamRole) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ExternalId":         types.StringType,
+			"RoleArn":            types.StringType,
+			"UnityCatalogIamArn": types.StringType,
+		},
+	}
+}
+
 type AwsIamRoleRequest struct {
 	// The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access.
 	RoleArn types.String `tfsdk:"role_arn" tf:""`
@@ -291,6 +423,14 @@ func (newState *AwsIamRoleRequest) SyncEffectiveFieldsDuringRead(existingState A
 
 func (a AwsIamRoleRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AwsIamRoleRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RoleArn": types.StringType,
+		},
+	}
 }
 
 type AwsIamRoleResponse struct {
@@ -314,6 +454,16 @@ func (a AwsIamRoleResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AwsIamRoleResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ExternalId":         types.StringType,
+			"RoleArn":            types.StringType,
+			"UnityCatalogIamArn": types.StringType,
+		},
+	}
+}
+
 // Azure Active Directory token, essentially the Oauth token for Azure Service
 // Principal or Managed Identity. Read more at
 // https://learn.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/aad/service-prin-aad-token
@@ -331,6 +481,14 @@ func (newState *AzureActiveDirectoryToken) SyncEffectiveFieldsDuringRead(existin
 
 func (a AzureActiveDirectoryToken) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AzureActiveDirectoryToken) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AadToken": types.StringType,
+		},
+	}
 }
 
 // The Azure managed identity configuration.
@@ -363,6 +521,16 @@ func (a AzureManagedIdentity) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AzureManagedIdentity) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessConnectorId": types.StringType,
+			"CredentialId":      types.StringType,
+			"ManagedIdentityId": types.StringType,
+		},
+	}
+}
+
 type AzureManagedIdentityRequest struct {
 	// The Azure resource ID of the Azure Databricks Access Connector. Use the
 	// format
@@ -385,6 +553,15 @@ func (newState *AzureManagedIdentityRequest) SyncEffectiveFieldsDuringRead(exist
 
 func (a AzureManagedIdentityRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AzureManagedIdentityRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessConnectorId": types.StringType,
+			"ManagedIdentityId": types.StringType,
+		},
+	}
 }
 
 type AzureManagedIdentityResponse struct {
@@ -413,6 +590,16 @@ func (a AzureManagedIdentityResponse) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a AzureManagedIdentityResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessConnectorId": types.StringType,
+			"CredentialId":      types.StringType,
+			"ManagedIdentityId": types.StringType,
+		},
+	}
+}
+
 // The Azure service principal configuration.
 type AzureServicePrincipal struct {
 	// The application ID of the application registration within the referenced
@@ -435,6 +622,16 @@ func (a AzureServicePrincipal) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AzureServicePrincipal) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ApplicationId": types.StringType,
+			"ClientSecret":  types.StringType,
+			"DirectoryId":   types.StringType,
+		},
+	}
+}
+
 // Azure temporary credentials for API authentication. Read more at
 // https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
 type AzureUserDelegationSas struct {
@@ -450,6 +647,14 @@ func (newState *AzureUserDelegationSas) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a AzureUserDelegationSas) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AzureUserDelegationSas) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"SasToken": types.StringType,
+		},
+	}
 }
 
 // Cancel refresh
@@ -470,6 +675,15 @@ func (a CancelRefreshRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CancelRefreshRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RefreshId": types.StringType,
+			"TableName": types.StringType,
+		},
+	}
+}
+
 type CancelRefreshResponse struct {
 }
 
@@ -481,6 +695,12 @@ func (newState *CancelRefreshResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a CancelRefreshResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CancelRefreshResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type CatalogInfo struct {
@@ -499,7 +719,7 @@ type CatalogInfo struct {
 	// Username of catalog creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 
-	EffectivePredictiveOptimizationFlag types.Object `tfsdk:"effective_predictive_optimization_flag" tf:"optional,object"`
+	EffectivePredictiveOptimizationFlag types.List `tfsdk:"effective_predictive_optimization_flag" tf:"optional,object"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
@@ -524,7 +744,7 @@ type CatalogInfo struct {
 	// remote sharing server.
 	ProviderName types.String `tfsdk:"provider_name" tf:"optional"`
 	// Status of an asynchronously provisioned resource.
-	ProvisioningInfo types.Object `tfsdk:"provisioning_info" tf:"optional,object"`
+	ProvisioningInfo types.List `tfsdk:"provisioning_info" tf:"optional,object"`
 	// Kind of catalog securable.
 	SecurableKind types.String `tfsdk:"securable_kind" tf:"optional"`
 
@@ -550,9 +770,44 @@ func (newState *CatalogInfo) SyncEffectiveFieldsDuringRead(existingState Catalog
 func (a CatalogInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"EffectivePredictiveOptimizationFlag": reflect.TypeOf(EffectivePredictiveOptimizationFlag{}),
-		"Options":                             reflect.TypeOf(""),
-		"Properties":                          reflect.TypeOf(""),
+		"Options":                             reflect.TypeOf(types.StringType),
+		"Properties":                          reflect.TypeOf(types.StringType),
 		"ProvisioningInfo":                    reflect.TypeOf(ProvisioningInfo{}),
+	}
+}
+
+func (a CatalogInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BrowseOnly":                          types.BoolType,
+			"CatalogType":                         types.StringType,
+			"Comment":                             types.StringType,
+			"ConnectionName":                      types.StringType,
+			"CreatedAt":                           types.Int64Type,
+			"CreatedBy":                           types.StringType,
+			"EffectivePredictiveOptimizationFlag": EffectivePredictiveOptimizationFlag{}.ToAttrType(ctx),
+			"EnablePredictiveOptimization":        types.StringType,
+			"FullName":                            types.StringType,
+			"IsolationMode":                       types.StringType,
+			"MetastoreId":                         types.StringType,
+			"Name":                                types.StringType,
+			"Options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Owner": types.StringType,
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"ProviderName":     types.StringType,
+			"ProvisioningInfo": ProvisioningInfo{}.ToAttrType(ctx),
+			"SecurableKind":    types.StringType,
+			"SecurableType":    types.StringType,
+			"ShareName":        types.StringType,
+			"StorageLocation":  types.StringType,
+			"StorageRoot":      types.StringType,
+			"UpdatedAt":        types.Int64Type,
+			"UpdatedBy":        types.StringType,
+		},
 	}
 }
 
@@ -575,11 +830,21 @@ func (a CloudflareApiToken) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CloudflareApiToken) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessKeyId":     types.StringType,
+			"AccountId":       types.StringType,
+			"SecretAccessKey": types.StringType,
+		},
+	}
+}
+
 type ColumnInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
-	Mask types.Object `tfsdk:"mask" tf:"optional,object"`
+	Mask types.List `tfsdk:"mask" tf:"optional,object"`
 	// Name of Column.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Whether field may be Null (default: true).
@@ -614,6 +879,25 @@ func (a ColumnInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ColumnInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":          types.StringType,
+			"Mask":             ColumnMask{}.ToAttrType(ctx),
+			"Name":             types.StringType,
+			"Nullable":         types.BoolType,
+			"PartitionIndex":   types.Int64Type,
+			"Position":         types.Int64Type,
+			"TypeIntervalType": types.StringType,
+			"TypeJson":         types.StringType,
+			"TypeName":         types.StringType,
+			"TypePrecision":    types.Int64Type,
+			"TypeScale":        types.Int64Type,
+			"TypeText":         types.StringType,
+		},
+	}
+}
+
 type ColumnMask struct {
 	// The full name of the column mask SQL UDF.
 	FunctionName types.String `tfsdk:"function_name" tf:"optional"`
@@ -632,7 +916,18 @@ func (newState *ColumnMask) SyncEffectiveFieldsDuringRead(existingState ColumnMa
 
 func (a ColumnMask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"UsingColumnNames": reflect.TypeOf(""),
+		"UsingColumnNames": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ColumnMask) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FunctionName": types.StringType,
+			"UsingColumnNames": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -663,7 +958,7 @@ type ConnectionInfo struct {
 	// connection.
 	Properties types.Map `tfsdk:"properties" tf:"optional"`
 	// Status of an asynchronously provisioned resource.
-	ProvisioningInfo types.Object `tfsdk:"provisioning_info" tf:"optional,object"`
+	ProvisioningInfo types.List `tfsdk:"provisioning_info" tf:"optional,object"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only" tf:"optional"`
 	// Kind of connection securable.
@@ -686,9 +981,39 @@ func (newState *ConnectionInfo) SyncEffectiveFieldsDuringRead(existingState Conn
 
 func (a ConnectionInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Options":          reflect.TypeOf(""),
-		"Properties":       reflect.TypeOf(""),
+		"Options":          reflect.TypeOf(types.StringType),
+		"Properties":       reflect.TypeOf(types.StringType),
 		"ProvisioningInfo": reflect.TypeOf(ProvisioningInfo{}),
+	}
+}
+
+func (a ConnectionInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":        types.StringType,
+			"ConnectionId":   types.StringType,
+			"ConnectionType": types.StringType,
+			"CreatedAt":      types.Int64Type,
+			"CreatedBy":      types.StringType,
+			"CredentialType": types.StringType,
+			"FullName":       types.StringType,
+			"MetastoreId":    types.StringType,
+			"Name":           types.StringType,
+			"Options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Owner": types.StringType,
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"ProvisioningInfo": ProvisioningInfo{}.ToAttrType(ctx),
+			"ReadOnly":         types.BoolType,
+			"SecurableKind":    types.StringType,
+			"SecurableType":    types.StringType,
+			"UpdatedAt":        types.Int64Type,
+			"UpdatedBy":        types.StringType,
+			"Url":              types.StringType,
+		},
 	}
 }
 
@@ -696,7 +1021,7 @@ func (a ConnectionInfo) GetComplexFieldTypes() map[string]reflect.Type {
 // ONLINE_CONTINUOUS_UPDATE or the ONLINE_UPDATING_PIPELINE_RESOURCES state.
 type ContinuousUpdateStatus struct {
 	// Progress of the initial data synchronization.
-	InitialPipelineSyncProgress types.Object `tfsdk:"initial_pipeline_sync_progress" tf:"optional,object"`
+	InitialPipelineSyncProgress types.List `tfsdk:"initial_pipeline_sync_progress" tf:"optional,object"`
 	// The last source table Delta version that was synced to the online table.
 	// Note that this Delta version may not be completely synced to the online
 	// table yet.
@@ -715,6 +1040,16 @@ func (newState *ContinuousUpdateStatus) SyncEffectiveFieldsDuringRead(existingSt
 func (a ContinuousUpdateStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"InitialPipelineSyncProgress": reflect.TypeOf(PipelineProgress{}),
+	}
+}
+
+func (a ContinuousUpdateStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InitialPipelineSyncProgress": PipelineProgress{}.ToAttrType(ctx),
+			"LastProcessedCommitVersion":  types.Int64Type,
+			"Timestamp":                   types.StringType,
+		},
 	}
 }
 
@@ -748,8 +1083,27 @@ func (newState *CreateCatalog) SyncEffectiveFieldsDuringRead(existingState Creat
 
 func (a CreateCatalog) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Options":    reflect.TypeOf(""),
-		"Properties": reflect.TypeOf(""),
+		"Options":    reflect.TypeOf(types.StringType),
+		"Properties": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a CreateCatalog) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":        types.StringType,
+			"ConnectionName": types.StringType,
+			"Name":           types.StringType,
+			"Options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"ProviderName": types.StringType,
+			"ShareName":    types.StringType,
+			"StorageRoot":  types.StringType,
+		},
 	}
 }
 
@@ -777,23 +1131,40 @@ func (newState *CreateConnection) SyncEffectiveFieldsDuringRead(existingState Cr
 
 func (a CreateConnection) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Options":    reflect.TypeOf(""),
-		"Properties": reflect.TypeOf(""),
+		"Options":    reflect.TypeOf(types.StringType),
+		"Properties": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a CreateConnection) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":        types.StringType,
+			"ConnectionType": types.StringType,
+			"Name":           types.StringType,
+			"Options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"ReadOnly": types.BoolType,
+		},
 	}
 }
 
 type CreateCredentialRequest struct {
 	// The AWS IAM role configuration
-	AwsIamRole types.Object `tfsdk:"aws_iam_role" tf:"optional,object"`
+	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal" tf:"optional,object"`
+	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// TODO(UC-978): Document GCP service account key usage for service
 	// credentials.
-	GcpServiceAccountKey types.Object `tfsdk:"gcp_service_account_key" tf:"optional,object"`
+	GcpServiceAccountKey types.List `tfsdk:"gcp_service_account_key" tf:"optional,object"`
 	// The credential name. The name must be unique among storage and service
 	// credentials within the metastore.
 	Name types.String `tfsdk:"name" tf:""`
@@ -822,6 +1193,22 @@ func (a CreateCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a CreateCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsIamRole":            AwsIamRole{}.ToAttrType(ctx),
+			"AzureManagedIdentity":  AzureManagedIdentity{}.ToAttrType(ctx),
+			"AzureServicePrincipal": AzureServicePrincipal{}.ToAttrType(ctx),
+			"Comment":               types.StringType,
+			"GcpServiceAccountKey":  GcpServiceAccountKey{}.ToAttrType(ctx),
+			"Name":                  types.StringType,
+			"Purpose":               types.StringType,
+			"ReadOnly":              types.BoolType,
+			"SkipValidation":        types.BoolType,
+		},
+	}
+}
+
 type CreateExternalLocation struct {
 	// The AWS access point to use when accesing s3 for this external location.
 	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
@@ -830,7 +1217,7 @@ type CreateExternalLocation struct {
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name" tf:""`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails types.Object `tfsdk:"encryption_details" tf:"optional,object"`
+	EncryptionDetails types.List `tfsdk:"encryption_details" tf:"optional,object"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
@@ -858,6 +1245,22 @@ func (a CreateExternalLocation) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a CreateExternalLocation) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessPoint":       types.StringType,
+			"Comment":           types.StringType,
+			"CredentialName":    types.StringType,
+			"EncryptionDetails": EncryptionDetails{}.ToAttrType(ctx),
+			"Fallback":          types.BoolType,
+			"Name":              types.StringType,
+			"ReadOnly":          types.BoolType,
+			"SkipValidation":    types.BoolType,
+			"Url":               types.StringType,
+		},
+	}
+}
+
 type CreateFunction struct {
 	// Name of parent catalog.
 	CatalogName types.String `tfsdk:"catalog_name" tf:""`
@@ -872,7 +1275,7 @@ type CreateFunction struct {
 	// Pretty printed function data type.
 	FullDataType types.String `tfsdk:"full_data_type" tf:""`
 
-	InputParams types.Object `tfsdk:"input_params" tf:"object"`
+	InputParams types.List `tfsdk:"input_params" tf:"object"`
 	// Whether the function is deterministic.
 	IsDeterministic types.Bool `tfsdk:"is_deterministic" tf:""`
 	// Function null call.
@@ -884,7 +1287,7 @@ type CreateFunction struct {
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties" tf:"optional"`
 	// Table function return parameters.
-	ReturnParams types.Object `tfsdk:"return_params" tf:"optional,object"`
+	ReturnParams types.List `tfsdk:"return_params" tf:"optional,object"`
 	// Function language. When **EXTERNAL** is used, the language of the routine
 	// function should be specified in the __external_language__ field, and the
 	// __return_params__ of the function cannot be used (as **TABLE** return
@@ -894,7 +1297,7 @@ type CreateFunction struct {
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition" tf:""`
 	// Function dependencies.
-	RoutineDependencies types.Object `tfsdk:"routine_dependencies" tf:"optional,object"`
+	RoutineDependencies types.List `tfsdk:"routine_dependencies" tf:"optional,object"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:""`
 	// Function security type.
@@ -921,9 +1324,37 @@ func (a CreateFunction) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a CreateFunction) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":         types.StringType,
+			"Comment":             types.StringType,
+			"DataType":            types.StringType,
+			"ExternalLanguage":    types.StringType,
+			"ExternalName":        types.StringType,
+			"FullDataType":        types.StringType,
+			"InputParams":         FunctionParameterInfos{}.ToAttrType(ctx),
+			"IsDeterministic":     types.BoolType,
+			"IsNullCall":          types.BoolType,
+			"Name":                types.StringType,
+			"ParameterStyle":      types.StringType,
+			"Properties":          types.StringType,
+			"ReturnParams":        FunctionParameterInfos{}.ToAttrType(ctx),
+			"RoutineBody":         types.StringType,
+			"RoutineDefinition":   types.StringType,
+			"RoutineDependencies": DependencyList{}.ToAttrType(ctx),
+			"SchemaName":          types.StringType,
+			"SecurityType":        types.StringType,
+			"SpecificName":        types.StringType,
+			"SqlDataAccess":       types.StringType,
+			"SqlPath":             types.StringType,
+		},
+	}
+}
+
 type CreateFunctionRequest struct {
 	// Partial __FunctionInfo__ specifying the function to be created.
-	FunctionInfo types.Object `tfsdk:"function_info" tf:"object"`
+	FunctionInfo types.List `tfsdk:"function_info" tf:"object"`
 }
 
 func (newState *CreateFunctionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFunctionRequest) {
@@ -935,6 +1366,14 @@ func (newState *CreateFunctionRequest) SyncEffectiveFieldsDuringRead(existingSta
 func (a CreateFunctionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"FunctionInfo": reflect.TypeOf(CreateFunction{}),
+	}
+}
+
+func (a CreateFunctionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FunctionInfo": CreateFunction{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -960,6 +1399,16 @@ func (a CreateMetastore) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CreateMetastore) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name":        types.StringType,
+			"Region":      types.StringType,
+			"StorageRoot": types.StringType,
+		},
+	}
+}
+
 type CreateMetastoreAssignment struct {
 	// The name of the default catalog in the metastore. This field is
 	// depracted. Please use "Default Namespace API" to configure the default
@@ -981,6 +1430,16 @@ func (a CreateMetastoreAssignment) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a CreateMetastoreAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DefaultCatalogName": types.StringType,
+			"MetastoreId":        types.StringType,
+			"WorkspaceId":        types.Int64Type,
+		},
+	}
+}
+
 type CreateMonitor struct {
 	// The directory to store monitoring assets (e.g. dashboard, metric tables).
 	AssetsDir types.String `tfsdk:"assets_dir" tf:""`
@@ -993,15 +1452,15 @@ type CreateMonitor struct {
 	// drift metrics (comparing metrics across time windows).
 	CustomMetrics types.List `tfsdk:"custom_metrics" tf:"optional"`
 	// The data classification config for the monitor.
-	DataClassificationConfig types.Object `tfsdk:"data_classification_config" tf:"optional,object"`
+	DataClassificationConfig types.List `tfsdk:"data_classification_config" tf:"optional,object"`
 	// Configuration for monitoring inference logs.
-	InferenceLog types.Object `tfsdk:"inference_log" tf:"optional,object"`
+	InferenceLog types.List `tfsdk:"inference_log" tf:"optional,object"`
 	// The notification settings for the monitor.
-	Notifications types.Object `tfsdk:"notifications" tf:"optional,object"`
+	Notifications types.List `tfsdk:"notifications" tf:"optional,object"`
 	// Schema where output metric tables are created.
 	OutputSchemaName types.String `tfsdk:"output_schema_name" tf:""`
 	// The schedule for automatically updating and refreshing metric tables.
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.List `tfsdk:"schedule" tf:"optional,object"`
 	// Whether to skip creating a default dashboard summarizing data quality
 	// metrics.
 	SkipBuiltinDashboard types.Bool `tfsdk:"skip_builtin_dashboard" tf:"optional"`
@@ -1016,7 +1475,7 @@ type CreateMonitor struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
 	// Configuration for monitoring time series tables.
-	TimeSeries types.Object `tfsdk:"time_series" tf:"optional,object"`
+	TimeSeries types.List `tfsdk:"time_series" tf:"optional,object"`
 	// Optional argument to specify the warehouse for dashboard creation. If not
 	// specified, the first running warehouse will be used.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -1035,16 +1494,41 @@ func (a CreateMonitor) GetComplexFieldTypes() map[string]reflect.Type {
 		"InferenceLog":             reflect.TypeOf(MonitorInferenceLog{}),
 		"Notifications":            reflect.TypeOf(MonitorNotifications{}),
 		"Schedule":                 reflect.TypeOf(MonitorCronSchedule{}),
-		"SlicingExprs":             reflect.TypeOf(""),
+		"SlicingExprs":             reflect.TypeOf(types.StringType),
 		"Snapshot":                 reflect.TypeOf(MonitorSnapshot{}),
 		"TimeSeries":               reflect.TypeOf(MonitorTimeSeries{}),
+	}
+}
+
+func (a CreateMonitor) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AssetsDir":         types.StringType,
+			"BaselineTableName": types.StringType,
+			"CustomMetrics": basetypes.ListType{
+				ElemType: MonitorMetric{}.ToAttrType(ctx),
+			},
+			"DataClassificationConfig": MonitorDataClassificationConfig{}.ToAttrType(ctx),
+			"InferenceLog":             MonitorInferenceLog{}.ToAttrType(ctx),
+			"Notifications":            MonitorNotifications{}.ToAttrType(ctx),
+			"OutputSchemaName":         types.StringType,
+			"Schedule":                 MonitorCronSchedule{}.ToAttrType(ctx),
+			"SkipBuiltinDashboard":     types.BoolType,
+			"SlicingExprs": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Snapshot":    MonitorSnapshot{}.ToAttrType(ctx),
+			"TableName":   types.StringType,
+			"TimeSeries":  MonitorTimeSeries{}.ToAttrType(ctx),
+			"WarehouseId": types.StringType,
+		},
 	}
 }
 
 // Create an Online Table
 type CreateOnlineTableRequest struct {
 	// Online Table information.
-	Table types.Object `tfsdk:"table" tf:"optional,object"`
+	Table types.List `tfsdk:"table" tf:"optional,object"`
 }
 
 func (newState *CreateOnlineTableRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOnlineTableRequest) {
@@ -1056,6 +1540,14 @@ func (newState *CreateOnlineTableRequest) SyncEffectiveFieldsDuringRead(existing
 func (a CreateOnlineTableRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Table": reflect.TypeOf(OnlineTable{}),
+	}
+}
+
+func (a CreateOnlineTableRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Table": OnlineTable{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1083,6 +1575,18 @@ func (a CreateRegisteredModelRequest) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a CreateRegisteredModelRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":     types.StringType,
+			"Comment":         types.StringType,
+			"Name":            types.StringType,
+			"SchemaName":      types.StringType,
+			"StorageLocation": types.StringType,
+		},
+	}
+}
+
 type CreateResponse struct {
 }
 
@@ -1094,6 +1598,12 @@ func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState Crea
 
 func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CreateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type CreateSchema struct {
@@ -1117,19 +1627,33 @@ func (newState *CreateSchema) SyncEffectiveFieldsDuringRead(existingState Create
 
 func (a CreateSchema) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Properties": reflect.TypeOf(""),
+		"Properties": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a CreateSchema) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName": types.StringType,
+			"Comment":     types.StringType,
+			"Name":        types.StringType,
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"StorageRoot": types.StringType,
+		},
 	}
 }
 
 type CreateStorageCredential struct {
 	// The AWS IAM role configuration.
-	AwsIamRole types.Object `tfsdk:"aws_iam_role" tf:"optional,object"`
+	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal" tf:"optional,object"`
+	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// The Cloudflare API token configuration.
-	CloudflareApiToken types.Object `tfsdk:"cloudflare_api_token" tf:"optional,object"`
+	CloudflareApiToken types.List `tfsdk:"cloudflare_api_token" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The Databricks managed GCP service account configuration.
@@ -1159,11 +1683,27 @@ func (a CreateStorageCredential) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a CreateStorageCredential) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsIamRole":                  AwsIamRoleRequest{}.ToAttrType(ctx),
+			"AzureManagedIdentity":        AzureManagedIdentityRequest{}.ToAttrType(ctx),
+			"AzureServicePrincipal":       AzureServicePrincipal{}.ToAttrType(ctx),
+			"CloudflareApiToken":          CloudflareApiToken{}.ToAttrType(ctx),
+			"Comment":                     types.StringType,
+			"DatabricksGcpServiceAccount": DatabricksGcpServiceAccountRequest{}.ToAttrType(ctx),
+			"Name":                        types.StringType,
+			"ReadOnly":                    types.BoolType,
+			"SkipValidation":              types.BoolType,
+		},
+	}
+}
+
 type CreateTableConstraint struct {
 	// A table constraint, as defined by *one* of the following fields being
 	// set: __primary_key_constraint__, __foreign_key_constraint__,
 	// __named_table_constraint__.
-	Constraint types.Object `tfsdk:"constraint" tf:"object"`
+	Constraint types.List `tfsdk:"constraint" tf:"object"`
 	// The full name of the table referenced by the constraint.
 	FullNameArg types.String `tfsdk:"full_name_arg" tf:""`
 }
@@ -1177,6 +1717,15 @@ func (newState *CreateTableConstraint) SyncEffectiveFieldsDuringRead(existingSta
 func (a CreateTableConstraint) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Constraint": reflect.TypeOf(TableConstraint{}),
+	}
+}
+
+func (a CreateTableConstraint) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Constraint":  TableConstraint{}.ToAttrType(ctx),
+			"FullNameArg": types.StringType,
+		},
 	}
 }
 
@@ -1205,13 +1754,26 @@ func (a CreateVolumeRequestContent) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a CreateVolumeRequestContent) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":     types.StringType,
+			"Comment":         types.StringType,
+			"Name":            types.StringType,
+			"SchemaName":      types.StringType,
+			"StorageLocation": types.StringType,
+			"VolumeType":      types.StringType,
+		},
+	}
+}
+
 type CredentialInfo struct {
 	// The AWS IAM role configuration
-	AwsIamRole types.Object `tfsdk:"aws_iam_role" tf:"optional,object"`
+	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal" tf:"optional,object"`
+	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Time at which this credential was created, in epoch milliseconds.
@@ -1260,6 +1822,30 @@ func (a CredentialInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a CredentialInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsIamRole":            AwsIamRole{}.ToAttrType(ctx),
+			"AzureManagedIdentity":  AzureManagedIdentity{}.ToAttrType(ctx),
+			"AzureServicePrincipal": AzureServicePrincipal{}.ToAttrType(ctx),
+			"Comment":               types.StringType,
+			"CreatedAt":             types.Int64Type,
+			"CreatedBy":             types.StringType,
+			"FullName":              types.StringType,
+			"Id":                    types.StringType,
+			"IsolationMode":         types.StringType,
+			"MetastoreId":           types.StringType,
+			"Name":                  types.StringType,
+			"Owner":                 types.StringType,
+			"Purpose":               types.StringType,
+			"ReadOnly":              types.BoolType,
+			"UpdatedAt":             types.Int64Type,
+			"UpdatedBy":             types.StringType,
+			"UsedForManagedStorage": types.BoolType,
+		},
+	}
+}
+
 type CredentialValidationResult struct {
 	// Error message would exist when the result does not equal to **PASS**.
 	Message types.String `tfsdk:"message" tf:"optional"`
@@ -1277,6 +1863,15 @@ func (a CredentialValidationResult) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a CredentialValidationResult) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Message": types.StringType,
+			"Result":  types.StringType,
+		},
+	}
+}
+
 // Currently assigned workspaces
 type CurrentWorkspaceBindings struct {
 	// A list of workspace IDs.
@@ -1291,7 +1886,17 @@ func (newState *CurrentWorkspaceBindings) SyncEffectiveFieldsDuringRead(existing
 
 func (a CurrentWorkspaceBindings) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Workspaces": reflect.TypeOf(0),
+		"Workspaces": reflect.TypeOf(types.Int64Type),
+	}
+}
+
+func (a CurrentWorkspaceBindings) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Workspaces": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+		},
 	}
 }
 
@@ -1306,6 +1911,12 @@ func (newState *DatabricksGcpServiceAccountRequest) SyncEffectiveFieldsDuringRea
 
 func (a DatabricksGcpServiceAccountRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DatabricksGcpServiceAccountRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type DatabricksGcpServiceAccountResponse struct {
@@ -1326,6 +1937,15 @@ func (a DatabricksGcpServiceAccountResponse) GetComplexFieldTypes() map[string]r
 	return map[string]reflect.Type{}
 }
 
+func (a DatabricksGcpServiceAccountResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialId": types.StringType,
+			"Email":        types.StringType,
+		},
+	}
+}
+
 // Delete a metastore assignment
 type DeleteAccountMetastoreAssignmentRequest struct {
 	// Unity Catalog metastore ID
@@ -1344,6 +1964,15 @@ func (a DeleteAccountMetastoreAssignmentRequest) GetComplexFieldTypes() map[stri
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteAccountMetastoreAssignmentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId": types.StringType,
+			"WorkspaceId": types.Int64Type,
+		},
+	}
+}
+
 // Delete a metastore
 type DeleteAccountMetastoreRequest struct {
 	// Force deletion even if the metastore is not empty. Default is false.
@@ -1360,6 +1989,15 @@ func (newState *DeleteAccountMetastoreRequest) SyncEffectiveFieldsDuringRead(exi
 
 func (a DeleteAccountMetastoreRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteAccountMetastoreRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force":       types.BoolType,
+			"MetastoreId": types.StringType,
+		},
+	}
 }
 
 // Delete a storage credential
@@ -1383,6 +2021,16 @@ func (a DeleteAccountStorageCredentialRequest) GetComplexFieldTypes() map[string
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteAccountStorageCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force":                 types.BoolType,
+			"MetastoreId":           types.StringType,
+			"StorageCredentialName": types.StringType,
+		},
+	}
+}
+
 // Delete a Registered Model Alias
 type DeleteAliasRequest struct {
 	// The name of the alias
@@ -1401,6 +2049,15 @@ func (a DeleteAliasRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteAliasRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Alias":    types.StringType,
+			"FullName": types.StringType,
+		},
+	}
+}
+
 type DeleteAliasResponse struct {
 }
 
@@ -1412,6 +2069,12 @@ func (newState *DeleteAliasResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a DeleteAliasResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteAliasResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete a catalog
@@ -1432,6 +2095,15 @@ func (a DeleteCatalogRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteCatalogRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force": types.BoolType,
+			"Name":  types.StringType,
+		},
+	}
+}
+
 // Delete a connection
 type DeleteConnectionRequest struct {
 	// The name of the connection to be deleted.
@@ -1446,6 +2118,14 @@ func (newState *DeleteConnectionRequest) SyncEffectiveFieldsDuringRead(existingS
 
 func (a DeleteConnectionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteConnectionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
 }
 
 // Delete a credential
@@ -1468,6 +2148,15 @@ func (a DeleteCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type 
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force":   types.BoolType,
+			"NameArg": types.StringType,
+		},
+	}
+}
+
 type DeleteCredentialResponse struct {
 }
 
@@ -1479,6 +2168,12 @@ func (newState *DeleteCredentialResponse) SyncEffectiveFieldsDuringRead(existing
 
 func (a DeleteCredentialResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteCredentialResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete an external location
@@ -1497,6 +2192,15 @@ func (newState *DeleteExternalLocationRequest) SyncEffectiveFieldsDuringRead(exi
 
 func (a DeleteExternalLocationRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteExternalLocationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force": types.BoolType,
+			"Name":  types.StringType,
+		},
+	}
 }
 
 // Delete a function
@@ -1518,6 +2222,15 @@ func (a DeleteFunctionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteFunctionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force": types.BoolType,
+			"Name":  types.StringType,
+		},
+	}
+}
+
 // Delete a metastore
 type DeleteMetastoreRequest struct {
 	// Force deletion even if the metastore is not empty. Default is false.
@@ -1534,6 +2247,15 @@ func (newState *DeleteMetastoreRequest) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a DeleteMetastoreRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteMetastoreRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force": types.BoolType,
+			"Id":    types.StringType,
+		},
+	}
 }
 
 // Delete a Model Version
@@ -1554,6 +2276,15 @@ func (a DeleteModelVersionRequest) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteModelVersionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName": types.StringType,
+			"Version":  types.Int64Type,
+		},
+	}
+}
+
 // Delete an Online Table
 type DeleteOnlineTableRequest struct {
 	// Full three-part (catalog, schema, table) name of the table.
@@ -1568,6 +2299,14 @@ func (newState *DeleteOnlineTableRequest) SyncEffectiveFieldsDuringRead(existing
 
 func (a DeleteOnlineTableRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteOnlineTableRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
 }
 
 // Delete a table monitor
@@ -1586,6 +2325,14 @@ func (a DeleteQualityMonitorRequest) GetComplexFieldTypes() map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteQualityMonitorRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TableName": types.StringType,
+		},
+	}
+}
+
 // Delete a Registered Model
 type DeleteRegisteredModelRequest struct {
 	// The three-level (fully qualified) name of the registered model
@@ -1602,6 +2349,14 @@ func (a DeleteRegisteredModelRequest) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteRegisteredModelRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName": types.StringType,
+		},
+	}
+}
+
 type DeleteResponse struct {
 }
 
@@ -1613,6 +2368,12 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState Dele
 
 func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete a schema
@@ -1633,6 +2394,15 @@ func (a DeleteSchemaRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteSchemaRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force":    types.BoolType,
+			"FullName": types.StringType,
+		},
+	}
+}
+
 // Delete a credential
 type DeleteStorageCredentialRequest struct {
 	// Force deletion even if there are dependent external locations or external
@@ -1650,6 +2420,15 @@ func (newState *DeleteStorageCredentialRequest) SyncEffectiveFieldsDuringRead(ex
 
 func (a DeleteStorageCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteStorageCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Force": types.BoolType,
+			"Name":  types.StringType,
+		},
+	}
 }
 
 // Delete a table constraint
@@ -1674,6 +2453,16 @@ func (a DeleteTableConstraintRequest) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteTableConstraintRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cascade":        types.BoolType,
+			"ConstraintName": types.StringType,
+			"FullName":       types.StringType,
+		},
+	}
+}
+
 // Delete a table
 type DeleteTableRequest struct {
 	// Full name of the table.
@@ -1688,6 +2477,14 @@ func (newState *DeleteTableRequest) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a DeleteTableRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteTableRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName": types.StringType,
+		},
+	}
 }
 
 // Delete a Volume
@@ -1706,6 +2503,14 @@ func (a DeleteVolumeRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteVolumeRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
+}
+
 // Properties pertaining to the current state of the delta table as given by the
 // commit server. This does not contain **delta.*** (input) properties in
 // __TableInfo.properties__.
@@ -1722,7 +2527,17 @@ func (newState *DeltaRuntimePropertiesKvPairs) SyncEffectiveFieldsDuringRead(exi
 
 func (a DeltaRuntimePropertiesKvPairs) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DeltaRuntimeProperties": reflect.TypeOf(""),
+		"DeltaRuntimeProperties": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a DeltaRuntimePropertiesKvPairs) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DeltaRuntimeProperties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1730,9 +2545,9 @@ func (a DeltaRuntimePropertiesKvPairs) GetComplexFieldTypes() map[string]reflect
 // field must be defined.
 type Dependency struct {
 	// A function that is dependent on a SQL object.
-	Function types.Object `tfsdk:"function" tf:"optional,object"`
+	Function types.List `tfsdk:"function" tf:"optional,object"`
 	// A table that is dependent on a SQL object.
-	Table types.Object `tfsdk:"table" tf:"optional,object"`
+	Table types.List `tfsdk:"table" tf:"optional,object"`
 }
 
 func (newState *Dependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dependency) {
@@ -1745,6 +2560,15 @@ func (a Dependency) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Function": reflect.TypeOf(FunctionDependency{}),
 		"Table":    reflect.TypeOf(TableDependency{}),
+	}
+}
+
+func (a Dependency) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Function": FunctionDependency{}.ToAttrType(ctx),
+			"Table":    TableDependency{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1766,6 +2590,16 @@ func (a DependencyList) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a DependencyList) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Dependencies": basetypes.ListType{
+				ElemType: Dependency{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // Disable a system schema
 type DisableRequest struct {
 	// The metastore ID under which the system schema lives.
@@ -1784,6 +2618,15 @@ func (a DisableRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DisableRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId": types.StringType,
+			"SchemaName":  types.StringType,
+		},
+	}
+}
+
 type DisableResponse struct {
 }
 
@@ -1795,6 +2638,12 @@ func (newState *DisableResponse) SyncEffectiveFieldsDuringRead(existingState Dis
 
 func (a DisableResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DisableResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type EffectivePermissionsList struct {
@@ -1812,6 +2661,16 @@ func (newState *EffectivePermissionsList) SyncEffectiveFieldsDuringRead(existing
 func (a EffectivePermissionsList) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PrivilegeAssignments": reflect.TypeOf(EffectivePrivilegeAssignment{}),
+	}
+}
+
+func (a EffectivePermissionsList) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PrivilegeAssignments": basetypes.ListType{
+				ElemType: EffectivePrivilegeAssignment{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -1837,6 +2696,16 @@ func (a EffectivePredictiveOptimizationFlag) GetComplexFieldTypes() map[string]r
 	return map[string]reflect.Type{}
 }
 
+func (a EffectivePredictiveOptimizationFlag) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InheritedFromName": types.StringType,
+			"InheritedFromType": types.StringType,
+			"Value":             types.StringType,
+		},
+	}
+}
+
 type EffectivePrivilege struct {
 	// The full name of the object that conveys this privilege via inheritance.
 	// This field is omitted when privilege is not inherited (it's assigned to
@@ -1860,6 +2729,16 @@ func (a EffectivePrivilege) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a EffectivePrivilege) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InheritedFromName": types.StringType,
+			"InheritedFromType": types.StringType,
+			"Privilege":         types.StringType,
+		},
+	}
+}
+
 type EffectivePrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal" tf:"optional"`
@@ -1877,6 +2756,17 @@ func (newState *EffectivePrivilegeAssignment) SyncEffectiveFieldsDuringRead(exis
 func (a EffectivePrivilegeAssignment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Privileges": reflect.TypeOf(EffectivePrivilege{}),
+	}
+}
+
+func (a EffectivePrivilegeAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Principal": types.StringType,
+			"Privileges": basetypes.ListType{
+				ElemType: EffectivePrivilege{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -1898,6 +2788,15 @@ func (a EnableRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a EnableRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId": types.StringType,
+			"SchemaName":  types.StringType,
+		},
+	}
+}
+
 type EnableResponse struct {
 }
 
@@ -1911,10 +2810,16 @@ func (a EnableResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a EnableResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Encryption options that apply to clients connecting to cloud storage.
 type EncryptionDetails struct {
 	// Server-Side Encryption properties for clients communicating with AWS s3.
-	SseEncryptionDetails types.Object `tfsdk:"sse_encryption_details" tf:"optional,object"`
+	SseEncryptionDetails types.List `tfsdk:"sse_encryption_details" tf:"optional,object"`
 }
 
 func (newState *EncryptionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan EncryptionDetails) {
@@ -1926,6 +2831,14 @@ func (newState *EncryptionDetails) SyncEffectiveFieldsDuringRead(existingState E
 func (a EncryptionDetails) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"SseEncryptionDetails": reflect.TypeOf(SseEncryptionDetails{}),
+	}
+}
+
+func (a EncryptionDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"SseEncryptionDetails": SseEncryptionDetails{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1943,6 +2856,14 @@ func (newState *ExistsRequest) SyncEffectiveFieldsDuringRead(existingState Exist
 
 func (a ExistsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ExistsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName": types.StringType,
+		},
+	}
 }
 
 type ExternalLocationInfo struct {
@@ -1963,7 +2884,7 @@ type ExternalLocationInfo struct {
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails types.Object `tfsdk:"encryption_details" tf:"optional,object"`
+	EncryptionDetails types.List `tfsdk:"encryption_details" tf:"optional,object"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
@@ -1999,6 +2920,30 @@ func (a ExternalLocationInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ExternalLocationInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessPoint":       types.StringType,
+			"BrowseOnly":        types.BoolType,
+			"Comment":           types.StringType,
+			"CreatedAt":         types.Int64Type,
+			"CreatedBy":         types.StringType,
+			"CredentialId":      types.StringType,
+			"CredentialName":    types.StringType,
+			"EncryptionDetails": EncryptionDetails{}.ToAttrType(ctx),
+			"Fallback":          types.BoolType,
+			"IsolationMode":     types.StringType,
+			"MetastoreId":       types.StringType,
+			"Name":              types.StringType,
+			"Owner":             types.StringType,
+			"ReadOnly":          types.BoolType,
+			"UpdatedAt":         types.Int64Type,
+			"UpdatedBy":         types.StringType,
+			"Url":               types.StringType,
+		},
+	}
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // OFFLINE_FAILED or the ONLINE_PIPELINE_FAILED state.
 type FailedStatus struct {
@@ -2023,6 +2968,15 @@ func (a FailedStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a FailedStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LastProcessedCommitVersion": types.Int64Type,
+			"Timestamp":                  types.StringType,
+		},
+	}
+}
+
 type ForeignKeyConstraint struct {
 	// Column names for this constraint.
 	ChildColumns types.List `tfsdk:"child_columns" tf:""`
@@ -2042,8 +2996,23 @@ func (newState *ForeignKeyConstraint) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a ForeignKeyConstraint) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ChildColumns":  reflect.TypeOf(""),
-		"ParentColumns": reflect.TypeOf(""),
+		"ChildColumns":  reflect.TypeOf(types.StringType),
+		"ParentColumns": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ForeignKeyConstraint) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ChildColumns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Name": types.StringType,
+			"ParentColumns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"ParentTable": types.StringType,
+		},
 	}
 }
 
@@ -2062,6 +3031,14 @@ func (newState *FunctionDependency) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a FunctionDependency) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a FunctionDependency) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FunctionFullName": types.StringType,
+		},
+	}
 }
 
 type FunctionInfo struct {
@@ -2091,7 +3068,7 @@ type FunctionInfo struct {
 	// Id of Function, relative to parent schema.
 	FunctionId types.String `tfsdk:"function_id" tf:"optional"`
 
-	InputParams types.Object `tfsdk:"input_params" tf:"optional,object"`
+	InputParams types.List `tfsdk:"input_params" tf:"optional,object"`
 	// Whether the function is deterministic.
 	IsDeterministic types.Bool `tfsdk:"is_deterministic" tf:"optional"`
 	// Function null call.
@@ -2107,7 +3084,7 @@ type FunctionInfo struct {
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties" tf:"optional"`
 	// Table function return parameters.
-	ReturnParams types.Object `tfsdk:"return_params" tf:"optional,object"`
+	ReturnParams types.List `tfsdk:"return_params" tf:"optional,object"`
 	// Function language. When **EXTERNAL** is used, the language of the routine
 	// function should be specified in the __external_language__ field, and the
 	// __return_params__ of the function cannot be used (as **TABLE** return
@@ -2117,7 +3094,7 @@ type FunctionInfo struct {
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition" tf:"optional"`
 	// Function dependencies.
-	RoutineDependencies types.Object `tfsdk:"routine_dependencies" tf:"optional,object"`
+	RoutineDependencies types.List `tfsdk:"routine_dependencies" tf:"optional,object"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
 	// Function security type.
@@ -2145,6 +3122,43 @@ func (a FunctionInfo) GetComplexFieldTypes() map[string]reflect.Type {
 		"InputParams":         reflect.TypeOf(FunctionParameterInfos{}),
 		"ReturnParams":        reflect.TypeOf(FunctionParameterInfos{}),
 		"RoutineDependencies": reflect.TypeOf(DependencyList{}),
+	}
+}
+
+func (a FunctionInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BrowseOnly":          types.BoolType,
+			"CatalogName":         types.StringType,
+			"Comment":             types.StringType,
+			"CreatedAt":           types.Int64Type,
+			"CreatedBy":           types.StringType,
+			"DataType":            types.StringType,
+			"ExternalLanguage":    types.StringType,
+			"ExternalName":        types.StringType,
+			"FullDataType":        types.StringType,
+			"FullName":            types.StringType,
+			"FunctionId":          types.StringType,
+			"InputParams":         FunctionParameterInfos{}.ToAttrType(ctx),
+			"IsDeterministic":     types.BoolType,
+			"IsNullCall":          types.BoolType,
+			"MetastoreId":         types.StringType,
+			"Name":                types.StringType,
+			"Owner":               types.StringType,
+			"ParameterStyle":      types.StringType,
+			"Properties":          types.StringType,
+			"ReturnParams":        FunctionParameterInfos{}.ToAttrType(ctx),
+			"RoutineBody":         types.StringType,
+			"RoutineDefinition":   types.StringType,
+			"RoutineDependencies": DependencyList{}.ToAttrType(ctx),
+			"SchemaName":          types.StringType,
+			"SecurityType":        types.StringType,
+			"SpecificName":        types.StringType,
+			"SqlDataAccess":       types.StringType,
+			"SqlPath":             types.StringType,
+			"UpdatedAt":           types.Int64Type,
+			"UpdatedBy":           types.StringType,
+		},
 	}
 }
 
@@ -2185,6 +3199,25 @@ func (a FunctionParameterInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a FunctionParameterInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":          types.StringType,
+			"Name":             types.StringType,
+			"ParameterDefault": types.StringType,
+			"ParameterMode":    types.StringType,
+			"ParameterType":    types.StringType,
+			"Position":         types.Int64Type,
+			"TypeIntervalType": types.StringType,
+			"TypeJson":         types.StringType,
+			"TypeName":         types.StringType,
+			"TypePrecision":    types.Int64Type,
+			"TypeScale":        types.Int64Type,
+			"TypeText":         types.StringType,
+		},
+	}
+}
+
 type FunctionParameterInfos struct {
 	// The array of __FunctionParameterInfo__ definitions of the function's
 	// parameters.
@@ -2203,6 +3236,16 @@ func (a FunctionParameterInfos) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a FunctionParameterInfos) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Parameters": basetypes.ListType{
+				ElemType: FunctionParameterInfo{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // GCP temporary credentials for API authentication. Read more at
 // https://developers.google.com/identity/protocols/oauth2/service-account
 type GcpOauthToken struct {
@@ -2217,6 +3260,14 @@ func (newState *GcpOauthToken) SyncEffectiveFieldsDuringRead(existingState GcpOa
 
 func (a GcpOauthToken) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GcpOauthToken) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"OauthToken": types.StringType,
+		},
+	}
 }
 
 // GCP long-lived credential. GCP Service Account.
@@ -2239,6 +3290,16 @@ func (a GcpServiceAccountKey) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GcpServiceAccountKey) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Email":        types.StringType,
+			"PrivateKey":   types.StringType,
+			"PrivateKeyId": types.StringType,
+		},
+	}
+}
+
 // Options to customize the requested temporary credential
 type GenerateTemporaryServiceCredentialAzureOptions struct {
 	// The resources to which the temporary Azure credential should apply. These
@@ -2255,13 +3316,23 @@ func (newState *GenerateTemporaryServiceCredentialAzureOptions) SyncEffectiveFie
 
 func (a GenerateTemporaryServiceCredentialAzureOptions) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Resources": reflect.TypeOf(""),
+		"Resources": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a GenerateTemporaryServiceCredentialAzureOptions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Resources": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
 type GenerateTemporaryServiceCredentialRequest struct {
 	// Options to customize the requested temporary credential
-	AzureOptions types.Object `tfsdk:"azure_options" tf:"optional,object"`
+	AzureOptions types.List `tfsdk:"azure_options" tf:"optional,object"`
 	// The name of the service credential used to generate a temporary
 	// credential
 	CredentialName types.String `tfsdk:"credential_name" tf:""`
@@ -2276,6 +3347,15 @@ func (newState *GenerateTemporaryServiceCredentialRequest) SyncEffectiveFieldsDu
 func (a GenerateTemporaryServiceCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AzureOptions": reflect.TypeOf(GenerateTemporaryServiceCredentialAzureOptions{}),
+	}
+}
+
+func (a GenerateTemporaryServiceCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AzureOptions":   GenerateTemporaryServiceCredentialAzureOptions{}.ToAttrType(ctx),
+			"CredentialName": types.StringType,
+		},
 	}
 }
 
@@ -2298,26 +3378,35 @@ func (a GenerateTemporaryTableCredentialRequest) GetComplexFieldTypes() map[stri
 	return map[string]reflect.Type{}
 }
 
+func (a GenerateTemporaryTableCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Operation": types.StringType,
+			"TableId":   types.StringType,
+		},
+	}
+}
+
 type GenerateTemporaryTableCredentialResponse struct {
 	// AWS temporary credentials for API authentication. Read more at
 	// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
-	AwsTempCredentials types.Object `tfsdk:"aws_temp_credentials" tf:"optional,object"`
+	AwsTempCredentials types.List `tfsdk:"aws_temp_credentials" tf:"optional,object"`
 	// Azure Active Directory token, essentially the Oauth token for Azure
 	// Service Principal or Managed Identity. Read more at
 	// https://learn.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/aad/service-prin-aad-token
-	AzureAad types.Object `tfsdk:"azure_aad" tf:"optional,object"`
+	AzureAad types.List `tfsdk:"azure_aad" tf:"optional,object"`
 	// Azure temporary credentials for API authentication. Read more at
 	// https://docs.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
-	AzureUserDelegationSas types.Object `tfsdk:"azure_user_delegation_sas" tf:"optional,object"`
+	AzureUserDelegationSas types.List `tfsdk:"azure_user_delegation_sas" tf:"optional,object"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// GCP temporary credentials for API authentication. Read more at
 	// https://developers.google.com/identity/protocols/oauth2/service-account
-	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token" tf:"optional,object"`
+	GcpOauthToken types.List `tfsdk:"gcp_oauth_token" tf:"optional,object"`
 	// R2 temporary credentials for API authentication. Read more at
 	// https://developers.cloudflare.com/r2/api/s3/tokens/.
-	R2TempCredentials types.Object `tfsdk:"r2_temp_credentials" tf:"optional,object"`
+	R2TempCredentials types.List `tfsdk:"r2_temp_credentials" tf:"optional,object"`
 	// The URL of the storage path accessible by the temporary credential.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -2338,6 +3427,20 @@ func (a GenerateTemporaryTableCredentialResponse) GetComplexFieldTypes() map[str
 	}
 }
 
+func (a GenerateTemporaryTableCredentialResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsTempCredentials":     AwsCredentials{}.ToAttrType(ctx),
+			"AzureAad":               AzureActiveDirectoryToken{}.ToAttrType(ctx),
+			"AzureUserDelegationSas": AzureUserDelegationSas{}.ToAttrType(ctx),
+			"ExpirationTime":         types.Int64Type,
+			"GcpOauthToken":          GcpOauthToken{}.ToAttrType(ctx),
+			"R2TempCredentials":      R2Credentials{}.ToAttrType(ctx),
+			"Url":                    types.StringType,
+		},
+	}
+}
+
 // Gets the metastore assignment for a workspace
 type GetAccountMetastoreAssignmentRequest struct {
 	// Workspace ID.
@@ -2354,6 +3457,14 @@ func (a GetAccountMetastoreAssignmentRequest) GetComplexFieldTypes() map[string]
 	return map[string]reflect.Type{}
 }
 
+func (a GetAccountMetastoreAssignmentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"WorkspaceId": types.Int64Type,
+		},
+	}
+}
+
 // Get a metastore
 type GetAccountMetastoreRequest struct {
 	// Unity Catalog metastore ID
@@ -2368,6 +3479,14 @@ func (newState *GetAccountMetastoreRequest) SyncEffectiveFieldsDuringRead(existi
 
 func (a GetAccountMetastoreRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetAccountMetastoreRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId": types.StringType,
+		},
+	}
 }
 
 // Gets the named storage credential
@@ -2388,6 +3507,15 @@ func (a GetAccountStorageCredentialRequest) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a GetAccountStorageCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId":           types.StringType,
+			"StorageCredentialName": types.StringType,
+		},
+	}
+}
+
 // Get an artifact allowlist
 type GetArtifactAllowlistRequest struct {
 	// The artifact type of the allowlist.
@@ -2402,6 +3530,14 @@ func (newState *GetArtifactAllowlistRequest) SyncEffectiveFieldsDuringRead(exist
 
 func (a GetArtifactAllowlistRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetArtifactAllowlistRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ArtifactType": types.StringType,
+		},
+	}
 }
 
 // Get securable workspace bindings
@@ -2431,6 +3567,17 @@ func (a GetBindingsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetBindingsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+			"SecurableName": types.StringType,
+			"SecurableType": types.StringType,
+		},
+	}
+}
+
 // Get Model Version By Alias
 type GetByAliasRequest struct {
 	// The name of the alias
@@ -2452,6 +3599,16 @@ func (a GetByAliasRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetByAliasRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Alias":          types.StringType,
+			"FullName":       types.StringType,
+			"IncludeAliases": types.BoolType,
+		},
+	}
+}
+
 // Get a catalog
 type GetCatalogRequest struct {
 	// Whether to include catalogs in the response for which the principal can
@@ -2471,6 +3628,15 @@ func (a GetCatalogRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetCatalogRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IncludeBrowse": types.BoolType,
+			"Name":          types.StringType,
+		},
+	}
+}
+
 // Get a connection
 type GetConnectionRequest struct {
 	// Name of the connection.
@@ -2487,6 +3653,14 @@ func (a GetConnectionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetConnectionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
+}
+
 // Get a credential
 type GetCredentialRequest struct {
 	// Name of the credential.
@@ -2501,6 +3675,14 @@ func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a GetCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NameArg": types.StringType,
+		},
+	}
 }
 
 // Get effective permissions
@@ -2524,6 +3706,16 @@ func (a GetEffectiveRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetEffectiveRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName":      types.StringType,
+			"Principal":     types.StringType,
+			"SecurableType": types.StringType,
+		},
+	}
+}
+
 // Get an external location
 type GetExternalLocationRequest struct {
 	// Whether to include external locations in the response for which the
@@ -2541,6 +3733,15 @@ func (newState *GetExternalLocationRequest) SyncEffectiveFieldsDuringRead(existi
 
 func (a GetExternalLocationRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetExternalLocationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IncludeBrowse": types.BoolType,
+			"Name":          types.StringType,
+		},
+	}
 }
 
 // Get a function
@@ -2561,6 +3762,15 @@ func (newState *GetFunctionRequest) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a GetFunctionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetFunctionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IncludeBrowse": types.BoolType,
+			"Name":          types.StringType,
+		},
+	}
 }
 
 // Get permissions
@@ -2584,6 +3794,16 @@ func (a GetGrantRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetGrantRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName":      types.StringType,
+			"Principal":     types.StringType,
+			"SecurableType": types.StringType,
+		},
+	}
+}
+
 // Get a metastore
 type GetMetastoreRequest struct {
 	// Unique ID of the metastore.
@@ -2598,6 +3818,14 @@ func (newState *GetMetastoreRequest) SyncEffectiveFieldsDuringRead(existingState
 
 func (a GetMetastoreRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetMetastoreRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Id": types.StringType,
+		},
+	}
 }
 
 type GetMetastoreSummaryResponse struct {
@@ -2655,6 +3883,32 @@ func (a GetMetastoreSummaryResponse) GetComplexFieldTypes() map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
+func (a GetMetastoreSummaryResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cloud":                        types.StringType,
+			"CreatedAt":                    types.Int64Type,
+			"CreatedBy":                    types.StringType,
+			"DefaultDataAccessConfigId":    types.StringType,
+			"DeltaSharingOrganizationName": types.StringType,
+			"DeltaSharingRecipientTokenLifetimeInSeconds": types.Int64Type,
+			"DeltaSharingScope":                           types.StringType,
+			"ExternalAccessEnabled":                       types.BoolType,
+			"GlobalMetastoreId":                           types.StringType,
+			"MetastoreId":                                 types.StringType,
+			"Name":                                        types.StringType,
+			"Owner":                                       types.StringType,
+			"PrivilegeModelVersion":                       types.StringType,
+			"Region":                                      types.StringType,
+			"StorageRoot":                                 types.StringType,
+			"StorageRootCredentialId":                     types.StringType,
+			"StorageRootCredentialName":                   types.StringType,
+			"UpdatedAt":                                   types.Int64Type,
+			"UpdatedBy":                                   types.StringType,
+		},
+	}
+}
+
 // Get a Model Version
 type GetModelVersionRequest struct {
 	// The three-level (fully qualified) name of the model version
@@ -2679,6 +3933,17 @@ func (a GetModelVersionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetModelVersionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName":       types.StringType,
+			"IncludeAliases": types.BoolType,
+			"IncludeBrowse":  types.BoolType,
+			"Version":        types.Int64Type,
+		},
+	}
+}
+
 // Get an Online Table
 type GetOnlineTableRequest struct {
 	// Full three-part (catalog, schema, table) name of the table.
@@ -2695,6 +3960,14 @@ func (a GetOnlineTableRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetOnlineTableRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
+}
+
 // Get a table monitor
 type GetQualityMonitorRequest struct {
 	// Full name of the table.
@@ -2709,6 +3982,14 @@ func (newState *GetQualityMonitorRequest) SyncEffectiveFieldsDuringRead(existing
 
 func (a GetQualityMonitorRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetQualityMonitorRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TableName": types.StringType,
+		},
+	}
 }
 
 // Get information for a single resource quota.
@@ -2733,9 +4014,19 @@ func (a GetQuotaRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetQuotaRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ParentFullName":      types.StringType,
+			"ParentSecurableType": types.StringType,
+			"QuotaName":           types.StringType,
+		},
+	}
+}
+
 type GetQuotaResponse struct {
 	// The returned QuotaInfo.
-	QuotaInfo types.Object `tfsdk:"quota_info" tf:"optional,object"`
+	QuotaInfo types.List `tfsdk:"quota_info" tf:"optional,object"`
 }
 
 func (newState *GetQuotaResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetQuotaResponse) {
@@ -2747,6 +4038,14 @@ func (newState *GetQuotaResponse) SyncEffectiveFieldsDuringRead(existingState Ge
 func (a GetQuotaResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"QuotaInfo": reflect.TypeOf(QuotaInfo{}),
+	}
+}
+
+func (a GetQuotaResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"QuotaInfo": QuotaInfo{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -2766,6 +4065,15 @@ func (newState *GetRefreshRequest) SyncEffectiveFieldsDuringRead(existingState G
 
 func (a GetRefreshRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetRefreshRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RefreshId": types.StringType,
+			"TableName": types.StringType,
+		},
+	}
 }
 
 // Get a Registered Model
@@ -2789,6 +4097,16 @@ func (a GetRegisteredModelRequest) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a GetRegisteredModelRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName":       types.StringType,
+			"IncludeAliases": types.BoolType,
+			"IncludeBrowse":  types.BoolType,
+		},
+	}
+}
+
 // Get a schema
 type GetSchemaRequest struct {
 	// Full name of the schema.
@@ -2808,6 +4126,15 @@ func (a GetSchemaRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetSchemaRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName":      types.StringType,
+			"IncludeBrowse": types.BoolType,
+		},
+	}
+}
+
 // Get a credential
 type GetStorageCredentialRequest struct {
 	// Name of the storage credential.
@@ -2822,6 +4149,14 @@ func (newState *GetStorageCredentialRequest) SyncEffectiveFieldsDuringRead(exist
 
 func (a GetStorageCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetStorageCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
 }
 
 // Get a table
@@ -2847,6 +4182,17 @@ func (a GetTableRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetTableRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName":                    types.StringType,
+			"IncludeBrowse":               types.BoolType,
+			"IncludeDeltaMetadata":        types.BoolType,
+			"IncludeManifestCapabilities": types.BoolType,
+		},
+	}
+}
+
 // Get catalog workspace bindings
 type GetWorkspaceBindingRequest struct {
 	// The name of the catalog.
@@ -2861,6 +4207,14 @@ func (newState *GetWorkspaceBindingRequest) SyncEffectiveFieldsDuringRead(existi
 
 func (a GetWorkspaceBindingRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetWorkspaceBindingRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
 }
 
 // Get all workspaces assigned to a metastore
@@ -2879,6 +4233,14 @@ func (a ListAccountMetastoreAssignmentsRequest) GetComplexFieldTypes() map[strin
 	return map[string]reflect.Type{}
 }
 
+func (a ListAccountMetastoreAssignmentsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId": types.StringType,
+		},
+	}
+}
+
 // The list of workspaces to which the given metastore is assigned.
 type ListAccountMetastoreAssignmentsResponse struct {
 	WorkspaceIds types.List `tfsdk:"workspace_ids" tf:"optional"`
@@ -2892,7 +4254,17 @@ func (newState *ListAccountMetastoreAssignmentsResponse) SyncEffectiveFieldsDuri
 
 func (a ListAccountMetastoreAssignmentsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"WorkspaceIds": reflect.TypeOf(0),
+		"WorkspaceIds": reflect.TypeOf(types.Int64Type),
+	}
+}
+
+func (a ListAccountMetastoreAssignmentsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"WorkspaceIds": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+		},
 	}
 }
 
@@ -2912,6 +4284,14 @@ func (a ListAccountStorageCredentialsRequest) GetComplexFieldTypes() map[string]
 	return map[string]reflect.Type{}
 }
 
+func (a ListAccountStorageCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId": types.StringType,
+		},
+	}
+}
+
 type ListAccountStorageCredentialsResponse struct {
 	// An array of metastore storage credentials.
 	StorageCredentials types.List `tfsdk:"storage_credentials" tf:"optional"`
@@ -2926,6 +4306,16 @@ func (newState *ListAccountStorageCredentialsResponse) SyncEffectiveFieldsDuring
 func (a ListAccountStorageCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"StorageCredentials": reflect.TypeOf(StorageCredentialInfo{}),
+	}
+}
+
+func (a ListAccountStorageCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"StorageCredentials": basetypes.ListType{
+				ElemType: StorageCredentialInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -2958,6 +4348,16 @@ func (a ListCatalogsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListCatalogsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IncludeBrowse": types.BoolType,
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+		},
+	}
+}
+
 type ListCatalogsResponse struct {
 	// An array of catalog information objects.
 	Catalogs types.List `tfsdk:"catalogs" tf:"optional"`
@@ -2976,6 +4376,17 @@ func (newState *ListCatalogsResponse) SyncEffectiveFieldsDuringRead(existingStat
 func (a ListCatalogsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Catalogs": reflect.TypeOf(CatalogInfo{}),
+	}
+}
+
+func (a ListCatalogsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Catalogs": basetypes.ListType{
+				ElemType: CatalogInfo{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
 	}
 }
 
@@ -3002,6 +4413,15 @@ func (a ListConnectionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListConnectionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxResults": types.Int64Type,
+			"PageToken":  types.StringType,
+		},
+	}
+}
+
 type ListConnectionsResponse struct {
 	// An array of connection information objects.
 	Connections types.List `tfsdk:"connections" tf:"optional"`
@@ -3020,6 +4440,17 @@ func (newState *ListConnectionsResponse) SyncEffectiveFieldsDuringRead(existingS
 func (a ListConnectionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Connections": reflect.TypeOf(ConnectionInfo{}),
+	}
+}
+
+func (a ListConnectionsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Connections": basetypes.ListType{
+				ElemType: ConnectionInfo{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
 	}
 }
 
@@ -3047,6 +4478,16 @@ func (a ListCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxResults": types.Int64Type,
+			"PageToken":  types.StringType,
+			"Purpose":    types.StringType,
+		},
+	}
+}
+
 type ListCredentialsResponse struct {
 	Credentials types.List `tfsdk:"credentials" tf:"optional"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
@@ -3064,6 +4505,17 @@ func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringRead(existingS
 func (a ListCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Credentials": reflect.TypeOf(CredentialInfo{}),
+	}
+}
+
+func (a ListCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Credentials": basetypes.ListType{
+				ElemType: CredentialInfo{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
 	}
 }
 
@@ -3093,6 +4545,16 @@ func (a ListExternalLocationsRequest) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a ListExternalLocationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IncludeBrowse": types.BoolType,
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+		},
+	}
+}
+
 type ListExternalLocationsResponse struct {
 	// An array of external locations.
 	ExternalLocations types.List `tfsdk:"external_locations" tf:"optional"`
@@ -3111,6 +4573,17 @@ func (newState *ListExternalLocationsResponse) SyncEffectiveFieldsDuringRead(exi
 func (a ListExternalLocationsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"ExternalLocations": reflect.TypeOf(ExternalLocationInfo{}),
+	}
+}
+
+func (a ListExternalLocationsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ExternalLocations": basetypes.ListType{
+				ElemType: ExternalLocationInfo{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
 	}
 }
 
@@ -3144,6 +4617,18 @@ func (a ListFunctionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListFunctionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":   types.StringType,
+			"IncludeBrowse": types.BoolType,
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+			"SchemaName":    types.StringType,
+		},
+	}
+}
+
 type ListFunctionsResponse struct {
 	// An array of function information objects.
 	Functions types.List `tfsdk:"functions" tf:"optional"`
@@ -3165,6 +4650,17 @@ func (a ListFunctionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListFunctionsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Functions": basetypes.ListType{
+				ElemType: FunctionInfo{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
+	}
+}
+
 type ListMetastoresResponse struct {
 	// An array of metastore information objects.
 	Metastores types.List `tfsdk:"metastores" tf:"optional"`
@@ -3179,6 +4675,16 @@ func (newState *ListMetastoresResponse) SyncEffectiveFieldsDuringRead(existingSt
 func (a ListMetastoresResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Metastores": reflect.TypeOf(MetastoreInfo{}),
+	}
+}
+
+func (a ListMetastoresResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Metastores": basetypes.ListType{
+				ElemType: MetastoreInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3212,6 +4718,17 @@ func (a ListModelVersionsRequest) GetComplexFieldTypes() map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
+func (a ListModelVersionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName":      types.StringType,
+			"IncludeBrowse": types.BoolType,
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+		},
+	}
+}
+
 type ListModelVersionsResponse struct {
 	ModelVersions types.List `tfsdk:"model_versions" tf:"optional"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
@@ -3232,6 +4749,17 @@ func (a ListModelVersionsResponse) GetComplexFieldTypes() map[string]reflect.Typ
 	}
 }
 
+func (a ListModelVersionsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ModelVersions": basetypes.ListType{
+				ElemType: ModelVersionInfo{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
+	}
+}
+
 // List all resource quotas under a metastore.
 type ListQuotasRequest struct {
 	// The number of quotas to return.
@@ -3248,6 +4776,15 @@ func (newState *ListQuotasRequest) SyncEffectiveFieldsDuringRead(existingState L
 
 func (a ListQuotasRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListQuotasRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxResults": types.Int64Type,
+			"PageToken":  types.StringType,
+		},
+	}
 }
 
 type ListQuotasResponse struct {
@@ -3271,6 +4808,17 @@ func (a ListQuotasResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListQuotasResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Quotas": basetypes.ListType{
+				ElemType: QuotaInfo{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // List refreshes
 type ListRefreshesRequest struct {
 	// Full name of the table.
@@ -3285,6 +4833,14 @@ func (newState *ListRefreshesRequest) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a ListRefreshesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListRefreshesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TableName": types.StringType,
+		},
+	}
 }
 
 // List Registered Models
@@ -3330,6 +4886,18 @@ func (a ListRegisteredModelsRequest) GetComplexFieldTypes() map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
+func (a ListRegisteredModelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":   types.StringType,
+			"IncludeBrowse": types.BoolType,
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+			"SchemaName":    types.StringType,
+		},
+	}
+}
+
 type ListRegisteredModelsResponse struct {
 	// Opaque token for pagination. Omitted if there are no more results.
 	// page_token should be set to this value for fetching the next page.
@@ -3347,6 +4915,17 @@ func (newState *ListRegisteredModelsResponse) SyncEffectiveFieldsDuringRead(exis
 func (a ListRegisteredModelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"RegisteredModels": reflect.TypeOf(RegisteredModelInfo{}),
+	}
+}
+
+func (a ListRegisteredModelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"RegisteredModels": basetypes.ListType{
+				ElemType: RegisteredModelInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3378,6 +4957,17 @@ func (a ListSchemasRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListSchemasRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":   types.StringType,
+			"IncludeBrowse": types.BoolType,
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+		},
+	}
+}
+
 type ListSchemasResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -3396,6 +4986,17 @@ func (newState *ListSchemasResponse) SyncEffectiveFieldsDuringRead(existingState
 func (a ListSchemasResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Schemas": reflect.TypeOf(SchemaInfo{}),
+	}
+}
+
+func (a ListSchemasResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Schemas": basetypes.ListType{
+				ElemType: SchemaInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3422,6 +5023,15 @@ func (a ListStorageCredentialsRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a ListStorageCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxResults": types.Int64Type,
+			"PageToken":  types.StringType,
+		},
+	}
+}
+
 type ListStorageCredentialsResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -3440,6 +5050,17 @@ func (newState *ListStorageCredentialsResponse) SyncEffectiveFieldsDuringRead(ex
 func (a ListStorageCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"StorageCredentials": reflect.TypeOf(StorageCredentialInfo{}),
+	}
+}
+
+func (a ListStorageCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"StorageCredentials": basetypes.ListType{
+				ElemType: StorageCredentialInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3477,6 +5098,19 @@ func (a ListSummariesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListSummariesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":                 types.StringType,
+			"IncludeManifestCapabilities": types.BoolType,
+			"MaxResults":                  types.Int64Type,
+			"PageToken":                   types.StringType,
+			"SchemaNamePattern":           types.StringType,
+			"TableNamePattern":            types.StringType,
+		},
+	}
+}
+
 // List system schemas
 type ListSystemSchemasRequest struct {
 	// Maximum number of schemas to return. - When set to 0, the page length is
@@ -3502,6 +5136,16 @@ func (a ListSystemSchemasRequest) GetComplexFieldTypes() map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
+func (a ListSystemSchemasRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxResults":  types.Int64Type,
+			"MetastoreId": types.StringType,
+			"PageToken":   types.StringType,
+		},
+	}
+}
+
 type ListSystemSchemasResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -3523,6 +5167,17 @@ func (a ListSystemSchemasResponse) GetComplexFieldTypes() map[string]reflect.Typ
 	}
 }
 
+func (a ListSystemSchemasResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Schemas": basetypes.ListType{
+				ElemType: SystemSchemaInfo{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ListTableSummariesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -3541,6 +5196,17 @@ func (newState *ListTableSummariesResponse) SyncEffectiveFieldsDuringRead(existi
 func (a ListTableSummariesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Tables": reflect.TypeOf(TableSummary{}),
+	}
+}
+
+func (a ListTableSummariesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Tables": basetypes.ListType{
+				ElemType: TableSummary{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3585,6 +5251,23 @@ func (a ListTablesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListTablesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":                 types.StringType,
+			"IncludeBrowse":               types.BoolType,
+			"IncludeDeltaMetadata":        types.BoolType,
+			"IncludeManifestCapabilities": types.BoolType,
+			"MaxResults":                  types.Int64Type,
+			"OmitColumns":                 types.BoolType,
+			"OmitProperties":              types.BoolType,
+			"OmitUsername":                types.BoolType,
+			"PageToken":                   types.StringType,
+			"SchemaName":                  types.StringType,
+		},
+	}
+}
+
 type ListTablesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -3603,6 +5286,17 @@ func (newState *ListTablesResponse) SyncEffectiveFieldsDuringRead(existingState 
 func (a ListTablesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Tables": reflect.TypeOf(TableInfo{}),
+	}
+}
+
+func (a ListTablesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Tables": basetypes.ListType{
+				ElemType: TableInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -3643,6 +5337,18 @@ func (a ListVolumesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListVolumesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CatalogName":   types.StringType,
+			"IncludeBrowse": types.BoolType,
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+			"SchemaName":    types.StringType,
+		},
+	}
+}
+
 type ListVolumesResponseContent struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -3664,6 +5370,17 @@ func (a ListVolumesResponseContent) GetComplexFieldTypes() map[string]reflect.Ty
 	}
 }
 
+func (a ListVolumesResponseContent) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Volumes": basetypes.ListType{
+				ElemType: VolumeInfo{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type MetastoreAssignment struct {
 	// The name of the default catalog in the metastore.
 	DefaultCatalogName types.String `tfsdk:"default_catalog_name" tf:"optional"`
@@ -3681,6 +5398,16 @@ func (newState *MetastoreAssignment) SyncEffectiveFieldsDuringRead(existingState
 
 func (a MetastoreAssignment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a MetastoreAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DefaultCatalogName": types.StringType,
+			"MetastoreId":        types.StringType,
+			"WorkspaceId":        types.Int64Type,
+		},
+	}
 }
 
 type MetastoreInfo struct {
@@ -3738,6 +5465,32 @@ func (a MetastoreInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a MetastoreInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cloud":                        types.StringType,
+			"CreatedAt":                    types.Int64Type,
+			"CreatedBy":                    types.StringType,
+			"DefaultDataAccessConfigId":    types.StringType,
+			"DeltaSharingOrganizationName": types.StringType,
+			"DeltaSharingRecipientTokenLifetimeInSeconds": types.Int64Type,
+			"DeltaSharingScope":                           types.StringType,
+			"ExternalAccessEnabled":                       types.BoolType,
+			"GlobalMetastoreId":                           types.StringType,
+			"MetastoreId":                                 types.StringType,
+			"Name":                                        types.StringType,
+			"Owner":                                       types.StringType,
+			"PrivilegeModelVersion":                       types.StringType,
+			"Region":                                      types.StringType,
+			"StorageRoot":                                 types.StringType,
+			"StorageRootCredentialId":                     types.StringType,
+			"StorageRootCredentialName":                   types.StringType,
+			"UpdatedAt":                                   types.Int64Type,
+			"UpdatedBy":                                   types.StringType,
+		},
+	}
+}
+
 type ModelVersionInfo struct {
 	// List of aliases associated with the model version
 	Aliases types.List `tfsdk:"aliases" tf:"optional"`
@@ -3761,7 +5514,7 @@ type ModelVersionInfo struct {
 	// parent schema
 	ModelName types.String `tfsdk:"model_name" tf:"optional"`
 	// Model version dependencies, for feature-store packaged models
-	ModelVersionDependencies types.Object `tfsdk:"model_version_dependencies" tf:"optional,object"`
+	ModelVersionDependencies types.List `tfsdk:"model_version_dependencies" tf:"optional,object"`
 	// MLflow run ID used when creating the model version, if ``source`` was
 	// generated by an experiment run stored in an MLflow tracking server
 	RunId types.String `tfsdk:"run_id" tf:"optional"`
@@ -3804,6 +5557,34 @@ func (a ModelVersionInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ModelVersionInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Aliases": basetypes.ListType{
+				ElemType: RegisteredModelAlias{}.ToAttrType(ctx),
+			},
+			"BrowseOnly":               types.BoolType,
+			"CatalogName":              types.StringType,
+			"Comment":                  types.StringType,
+			"CreatedAt":                types.Int64Type,
+			"CreatedBy":                types.StringType,
+			"Id":                       types.StringType,
+			"MetastoreId":              types.StringType,
+			"ModelName":                types.StringType,
+			"ModelVersionDependencies": DependencyList{}.ToAttrType(ctx),
+			"RunId":                    types.StringType,
+			"RunWorkspaceId":           types.Int64Type,
+			"SchemaName":               types.StringType,
+			"Source":                   types.StringType,
+			"Status":                   types.StringType,
+			"StorageLocation":          types.StringType,
+			"UpdatedAt":                types.Int64Type,
+			"UpdatedBy":                types.StringType,
+			"Version":                  types.Int64Type,
+		},
+	}
+}
+
 type MonitorCronSchedule struct {
 	// Read only field that indicates whether a schedule is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
@@ -3826,6 +5607,16 @@ func (a MonitorCronSchedule) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a MonitorCronSchedule) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PauseStatus":          types.StringType,
+			"QuartzCronExpression": types.StringType,
+			"TimezoneId":           types.StringType,
+		},
+	}
+}
+
 type MonitorDataClassificationConfig struct {
 	// Whether data classification is enabled.
 	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
@@ -3839,6 +5630,14 @@ func (newState *MonitorDataClassificationConfig) SyncEffectiveFieldsDuringRead(e
 
 func (a MonitorDataClassificationConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a MonitorDataClassificationConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Enabled": types.BoolType,
+		},
+	}
 }
 
 type MonitorDestination struct {
@@ -3855,7 +5654,17 @@ func (newState *MonitorDestination) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a MonitorDestination) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EmailAddresses": reflect.TypeOf(""),
+		"EmailAddresses": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a MonitorDestination) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"EmailAddresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -3898,7 +5707,23 @@ func (newState *MonitorInferenceLog) SyncEffectiveFieldsDuringRead(existingState
 
 func (a MonitorInferenceLog) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Granularities": reflect.TypeOf(""),
+		"Granularities": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a MonitorInferenceLog) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Granularities": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"LabelCol":           types.StringType,
+			"ModelIdCol":         types.StringType,
+			"PredictionCol":      types.StringType,
+			"PredictionProbaCol": types.StringType,
+			"ProblemType":        types.StringType,
+			"TimestampCol":       types.StringType,
+		},
 	}
 }
 
@@ -3917,26 +5742,26 @@ type MonitorInfo struct {
 	// if the monitor is in PENDING state.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
 	// The data classification config for the monitor.
-	DataClassificationConfig types.Object `tfsdk:"data_classification_config" tf:"optional,object"`
+	DataClassificationConfig types.List `tfsdk:"data_classification_config" tf:"optional,object"`
 	// The full name of the drift metrics table. Format:
 	// __catalog_name__.__schema_name__.__table_name__.
 	DriftMetricsTableName types.String `tfsdk:"drift_metrics_table_name" tf:""`
 	// Configuration for monitoring inference logs.
-	InferenceLog types.Object `tfsdk:"inference_log" tf:"optional,object"`
+	InferenceLog types.List `tfsdk:"inference_log" tf:"optional,object"`
 	// The latest failure message of the monitor (if any).
 	LatestMonitorFailureMsg types.String `tfsdk:"latest_monitor_failure_msg" tf:"optional"`
 	// The version of the monitor config (e.g. 1,2,3). If negative, the monitor
 	// may be corrupted.
 	MonitorVersion types.String `tfsdk:"monitor_version" tf:""`
 	// The notification settings for the monitor.
-	Notifications types.Object `tfsdk:"notifications" tf:"optional,object"`
+	Notifications types.List `tfsdk:"notifications" tf:"optional,object"`
 	// Schema where output metric tables are created.
 	OutputSchemaName types.String `tfsdk:"output_schema_name" tf:"optional"`
 	// The full name of the profile metrics table. Format:
 	// __catalog_name__.__schema_name__.__table_name__.
 	ProfileMetricsTableName types.String `tfsdk:"profile_metrics_table_name" tf:""`
 	// The schedule for automatically updating and refreshing metric tables.
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.List `tfsdk:"schedule" tf:"optional,object"`
 	// List of column expressions to slice data with for targeted analysis. The
 	// data is grouped by each expression independently, resulting in a separate
 	// slice for each predicate and its complements. For high-cardinality
@@ -3951,7 +5776,7 @@ type MonitorInfo struct {
 	// __catalog_name__.__schema_name__.__table_name__.
 	TableName types.String `tfsdk:"table_name" tf:""`
 	// Configuration for monitoring time series tables.
-	TimeSeries types.Object `tfsdk:"time_series" tf:"optional,object"`
+	TimeSeries types.List `tfsdk:"time_series" tf:"optional,object"`
 }
 
 func (newState *MonitorInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorInfo) {
@@ -3967,9 +5792,38 @@ func (a MonitorInfo) GetComplexFieldTypes() map[string]reflect.Type {
 		"InferenceLog":             reflect.TypeOf(MonitorInferenceLog{}),
 		"Notifications":            reflect.TypeOf(MonitorNotifications{}),
 		"Schedule":                 reflect.TypeOf(MonitorCronSchedule{}),
-		"SlicingExprs":             reflect.TypeOf(""),
+		"SlicingExprs":             reflect.TypeOf(types.StringType),
 		"Snapshot":                 reflect.TypeOf(MonitorSnapshot{}),
 		"TimeSeries":               reflect.TypeOf(MonitorTimeSeries{}),
+	}
+}
+
+func (a MonitorInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AssetsDir":         types.StringType,
+			"BaselineTableName": types.StringType,
+			"CustomMetrics": basetypes.ListType{
+				ElemType: MonitorMetric{}.ToAttrType(ctx),
+			},
+			"DashboardId":              types.StringType,
+			"DataClassificationConfig": MonitorDataClassificationConfig{}.ToAttrType(ctx),
+			"DriftMetricsTableName":    types.StringType,
+			"InferenceLog":             MonitorInferenceLog{}.ToAttrType(ctx),
+			"LatestMonitorFailureMsg":  types.StringType,
+			"MonitorVersion":           types.StringType,
+			"Notifications":            MonitorNotifications{}.ToAttrType(ctx),
+			"OutputSchemaName":         types.StringType,
+			"ProfileMetricsTableName":  types.StringType,
+			"Schedule":                 MonitorCronSchedule{}.ToAttrType(ctx),
+			"SlicingExprs": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Snapshot":   MonitorSnapshot{}.ToAttrType(ctx),
+			"Status":     types.StringType,
+			"TableName":  types.StringType,
+			"TimeSeries": MonitorTimeSeries{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -4008,16 +5862,30 @@ func (newState *MonitorMetric) SyncEffectiveFieldsDuringRead(existingState Monit
 
 func (a MonitorMetric) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InputColumns": reflect.TypeOf(""),
+		"InputColumns": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a MonitorMetric) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Definition": types.StringType,
+			"InputColumns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Name":           types.StringType,
+			"OutputDataType": types.StringType,
+			"Type":           types.StringType,
+		},
 	}
 }
 
 type MonitorNotifications struct {
 	// Who to send notifications to on monitor failure.
-	OnFailure types.Object `tfsdk:"on_failure" tf:"optional,object"`
+	OnFailure types.List `tfsdk:"on_failure" tf:"optional,object"`
 	// Who to send notifications to when new data classification tags are
 	// detected.
-	OnNewClassificationTagDetected types.Object `tfsdk:"on_new_classification_tag_detected" tf:"optional,object"`
+	OnNewClassificationTagDetected types.List `tfsdk:"on_new_classification_tag_detected" tf:"optional,object"`
 }
 
 func (newState *MonitorNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan MonitorNotifications) {
@@ -4030,6 +5898,15 @@ func (a MonitorNotifications) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"OnFailure":                      reflect.TypeOf(MonitorDestination{}),
 		"OnNewClassificationTagDetected": reflect.TypeOf(MonitorDestination{}),
+	}
+}
+
+func (a MonitorNotifications) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"OnFailure":                      MonitorDestination{}.ToAttrType(ctx),
+			"OnNewClassificationTagDetected": MonitorDestination{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -4061,6 +5938,19 @@ func (a MonitorRefreshInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a MonitorRefreshInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"EndTimeMs":   types.Int64Type,
+			"Message":     types.StringType,
+			"RefreshId":   types.Int64Type,
+			"StartTimeMs": types.Int64Type,
+			"State":       types.StringType,
+			"Trigger":     types.StringType,
+		},
+	}
+}
+
 type MonitorRefreshListResponse struct {
 	// List of refreshes.
 	Refreshes types.List `tfsdk:"refreshes" tf:"optional"`
@@ -4078,6 +5968,16 @@ func (a MonitorRefreshListResponse) GetComplexFieldTypes() map[string]reflect.Ty
 	}
 }
 
+func (a MonitorRefreshListResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Refreshes": basetypes.ListType{
+				ElemType: MonitorRefreshInfo{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type MonitorSnapshot struct {
 }
 
@@ -4089,6 +5989,12 @@ func (newState *MonitorSnapshot) SyncEffectiveFieldsDuringRead(existingState Mon
 
 func (a MonitorSnapshot) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a MonitorSnapshot) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type MonitorTimeSeries struct {
@@ -4114,7 +6020,18 @@ func (newState *MonitorTimeSeries) SyncEffectiveFieldsDuringRead(existingState M
 
 func (a MonitorTimeSeries) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Granularities": reflect.TypeOf(""),
+		"Granularities": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a MonitorTimeSeries) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Granularities": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"TimestampCol": types.StringType,
+		},
 	}
 }
 
@@ -4133,14 +6050,22 @@ func (a NamedTableConstraint) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a NamedTableConstraint) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name": types.StringType,
+		},
+	}
+}
+
 // Online Table information.
 type OnlineTable struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Specification of the online table.
-	Spec types.Object `tfsdk:"spec" tf:"optional,object"`
+	Spec types.List `tfsdk:"spec" tf:"optional,object"`
 	// Online Table data synchronization status
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.List `tfsdk:"status" tf:"optional,object"`
 	// Data serving REST API URL for this table
 	TableServingUrl types.String `tfsdk:"table_serving_url" tf:"computed,optional"`
 	// The provisioning state of the online table entity in Unity Catalog. This
@@ -4160,6 +6085,18 @@ func (a OnlineTable) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Spec":   reflect.TypeOf(OnlineTableSpec{}),
 		"Status": reflect.TypeOf(OnlineTableStatus{}),
+	}
+}
+
+func (a OnlineTable) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name":                          types.StringType,
+			"Spec":                          OnlineTableSpec{}.ToAttrType(ctx),
+			"Status":                        OnlineTableStatus{}.ToAttrType(ctx),
+			"TableServingUrl":               types.StringType,
+			"UnityCatalogProvisioningState": types.StringType,
+		},
 	}
 }
 
@@ -4198,9 +6135,25 @@ func (newState *OnlineTableSpec) SyncEffectiveFieldsDuringRead(existingState Onl
 
 func (a OnlineTableSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PrimaryKeyColumns": reflect.TypeOf(""),
+		"PrimaryKeyColumns": reflect.TypeOf(types.StringType),
 		"RunContinuously":   reflect.TypeOf(OnlineTableSpecContinuousSchedulingPolicy{}),
 		"RunTriggered":      reflect.TypeOf(OnlineTableSpecTriggeredSchedulingPolicy{}),
+	}
+}
+
+func (a OnlineTableSpec) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PerformFullCopy": types.BoolType,
+			"PipelineId":      types.StringType,
+			"PrimaryKeyColumns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"RunContinuously":     OnlineTableSpecContinuousSchedulingPolicy{}.ToAttrType(ctx),
+			"RunTriggered":        OnlineTableSpecTriggeredSchedulingPolicy{}.ToAttrType(ctx),
+			"SourceTableFullName": types.StringType,
+			"TimeseriesKey":       types.StringType,
+		},
 	}
 }
 
@@ -4217,6 +6170,12 @@ func (a OnlineTableSpecContinuousSchedulingPolicy) GetComplexFieldTypes() map[st
 	return map[string]reflect.Type{}
 }
 
+func (a OnlineTableSpecContinuousSchedulingPolicy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type OnlineTableSpecTriggeredSchedulingPolicy struct {
 }
 
@@ -4230,25 +6189,31 @@ func (a OnlineTableSpecTriggeredSchedulingPolicy) GetComplexFieldTypes() map[str
 	return map[string]reflect.Type{}
 }
 
+func (a OnlineTableSpecTriggeredSchedulingPolicy) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Status of an online table.
 type OnlineTableStatus struct {
 	// Detailed status of an online table. Shown if the online table is in the
 	// ONLINE_CONTINUOUS_UPDATE or the ONLINE_UPDATING_PIPELINE_RESOURCES state.
-	ContinuousUpdateStatus types.Object `tfsdk:"continuous_update_status" tf:"optional,object"`
+	ContinuousUpdateStatus types.List `tfsdk:"continuous_update_status" tf:"optional,object"`
 	// The state of the online table.
 	DetailedState types.String `tfsdk:"detailed_state" tf:"optional"`
 	// Detailed status of an online table. Shown if the online table is in the
 	// OFFLINE_FAILED or the ONLINE_PIPELINE_FAILED state.
-	FailedStatus types.Object `tfsdk:"failed_status" tf:"optional,object"`
+	FailedStatus types.List `tfsdk:"failed_status" tf:"optional,object"`
 	// A text description of the current state of the online table.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Detailed status of an online table. Shown if the online table is in the
 	// PROVISIONING_PIPELINE_RESOURCES or the PROVISIONING_INITIAL_SNAPSHOT
 	// state.
-	ProvisioningStatus types.Object `tfsdk:"provisioning_status" tf:"optional,object"`
+	ProvisioningStatus types.List `tfsdk:"provisioning_status" tf:"optional,object"`
 	// Detailed status of an online table. Shown if the online table is in the
 	// ONLINE_TRIGGERED_UPDATE or the ONLINE_NO_PENDING_UPDATE state.
-	TriggeredUpdateStatus types.Object `tfsdk:"triggered_update_status" tf:"optional,object"`
+	TriggeredUpdateStatus types.List `tfsdk:"triggered_update_status" tf:"optional,object"`
 }
 
 func (newState *OnlineTableStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan OnlineTableStatus) {
@@ -4263,6 +6228,19 @@ func (a OnlineTableStatus) GetComplexFieldTypes() map[string]reflect.Type {
 		"FailedStatus":           reflect.TypeOf(FailedStatus{}),
 		"ProvisioningStatus":     reflect.TypeOf(ProvisioningStatus{}),
 		"TriggeredUpdateStatus":  reflect.TypeOf(TriggeredUpdateStatus{}),
+	}
+}
+
+func (a OnlineTableStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ContinuousUpdateStatus": ContinuousUpdateStatus{}.ToAttrType(ctx),
+			"DetailedState":          types.StringType,
+			"FailedStatus":           FailedStatus{}.ToAttrType(ctx),
+			"Message":                types.StringType,
+			"ProvisioningStatus":     ProvisioningStatus{}.ToAttrType(ctx),
+			"TriggeredUpdateStatus":  TriggeredUpdateStatus{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -4283,8 +6261,22 @@ func (newState *PermissionsChange) SyncEffectiveFieldsDuringRead(existingState P
 
 func (a PermissionsChange) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Add":    reflect.TypeOf(""),
-		"Remove": reflect.TypeOf(""),
+		"Add":    reflect.TypeOf(types.StringType),
+		"Remove": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a PermissionsChange) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Add": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Principal": types.StringType,
+			"Remove": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -4302,6 +6294,16 @@ func (newState *PermissionsList) SyncEffectiveFieldsDuringRead(existingState Per
 func (a PermissionsList) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PrivilegeAssignments": reflect.TypeOf(PrivilegeAssignment{}),
+	}
+}
+
+func (a PermissionsList) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PrivilegeAssignments": basetypes.ListType{
+				ElemType: PrivilegeAssignment{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -4331,6 +6333,18 @@ func (a PipelineProgress) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PipelineProgress) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"EstimatedCompletionTimeSeconds":   types.Float64Type,
+			"LatestVersionCurrentlyProcessing": types.Int64Type,
+			"SyncProgressCompletion":           types.Float64Type,
+			"SyncedRowCount":                   types.Int64Type,
+			"TotalRowCount":                    types.Int64Type,
+		},
+	}
+}
+
 type PrimaryKeyConstraint struct {
 	// Column names for this constraint.
 	ChildColumns types.List `tfsdk:"child_columns" tf:""`
@@ -4346,7 +6360,18 @@ func (newState *PrimaryKeyConstraint) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a PrimaryKeyConstraint) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ChildColumns": reflect.TypeOf(""),
+		"ChildColumns": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a PrimaryKeyConstraint) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ChildColumns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Name": types.StringType,
+		},
 	}
 }
 
@@ -4365,7 +6390,18 @@ func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState
 
 func (a PrivilegeAssignment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Privileges": reflect.TypeOf(""),
+		"Privileges": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a PrivilegeAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Principal": types.StringType,
+			"Privileges": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -4384,12 +6420,20 @@ func (a ProvisioningInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ProvisioningInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"State": types.StringType,
+		},
+	}
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // PROVISIONING_PIPELINE_RESOURCES or the PROVISIONING_INITIAL_SNAPSHOT state.
 type ProvisioningStatus struct {
 	// Details about initial data synchronization. Only populated when in the
 	// PROVISIONING_INITIAL_SNAPSHOT state.
-	InitialPipelineSyncProgress types.Object `tfsdk:"initial_pipeline_sync_progress" tf:"optional,object"`
+	InitialPipelineSyncProgress types.List `tfsdk:"initial_pipeline_sync_progress" tf:"optional,object"`
 }
 
 func (newState *ProvisioningStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProvisioningStatus) {
@@ -4401,6 +6445,14 @@ func (newState *ProvisioningStatus) SyncEffectiveFieldsDuringRead(existingState 
 func (a ProvisioningStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"InitialPipelineSyncProgress": reflect.TypeOf(PipelineProgress{}),
+	}
+}
+
+func (a ProvisioningStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"InitialPipelineSyncProgress": PipelineProgress{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -4430,6 +6482,19 @@ func (a QuotaInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a QuotaInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LastRefreshedAt":     types.Int64Type,
+			"ParentFullName":      types.StringType,
+			"ParentSecurableType": types.StringType,
+			"QuotaCount":          types.Int64Type,
+			"QuotaLimit":          types.Int64Type,
+			"QuotaName":           types.StringType,
+		},
+	}
+}
+
 // R2 temporary credentials for API authentication. Read more at
 // https://developers.cloudflare.com/r2/api/s3/tokens/.
 type R2Credentials struct {
@@ -4451,6 +6516,16 @@ func (a R2Credentials) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a R2Credentials) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessKeyId":     types.StringType,
+			"SecretAccessKey": types.StringType,
+			"SessionToken":    types.StringType,
+		},
+	}
+}
+
 // Get a Volume
 type ReadVolumeRequest struct {
 	// Whether to include volumes in the response for which the principal can
@@ -4468,6 +6543,15 @@ func (newState *ReadVolumeRequest) SyncEffectiveFieldsDuringRead(existingState R
 
 func (a ReadVolumeRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ReadVolumeRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IncludeBrowse": types.BoolType,
+			"Name":          types.StringType,
+		},
+	}
 }
 
 type RegenerateDashboardRequest struct {
@@ -4488,6 +6572,15 @@ func (a RegenerateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a RegenerateDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TableName":   types.StringType,
+			"WarehouseId": types.StringType,
+		},
+	}
+}
+
 type RegenerateDashboardResponse struct {
 	// Id of the regenerated monitoring dashboard.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
@@ -4503,6 +6596,15 @@ func (newState *RegenerateDashboardResponse) SyncEffectiveFieldsDuringRead(exist
 
 func (a RegenerateDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a RegenerateDashboardResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DashboardId":  types.StringType,
+			"ParentFolder": types.StringType,
+		},
+	}
 }
 
 // Registered model alias.
@@ -4521,6 +6623,15 @@ func (newState *RegisteredModelAlias) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a RegisteredModelAlias) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a RegisteredModelAlias) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AliasName":  types.StringType,
+			"VersionNum": types.Int64Type,
+		},
+	}
 }
 
 type RegisteredModelInfo struct {
@@ -4571,6 +6682,29 @@ func (a RegisteredModelInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a RegisteredModelInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Aliases": basetypes.ListType{
+				ElemType: RegisteredModelAlias{}.ToAttrType(ctx),
+			},
+			"BrowseOnly":      types.BoolType,
+			"CatalogName":     types.StringType,
+			"Comment":         types.StringType,
+			"CreatedAt":       types.Int64Type,
+			"CreatedBy":       types.StringType,
+			"FullName":        types.StringType,
+			"MetastoreId":     types.StringType,
+			"Name":            types.StringType,
+			"Owner":           types.StringType,
+			"SchemaName":      types.StringType,
+			"StorageLocation": types.StringType,
+			"UpdatedAt":       types.Int64Type,
+			"UpdatedBy":       types.StringType,
+		},
+	}
+}
+
 // Queue a metric refresh for a monitor
 type RunRefreshRequest struct {
 	// Full name of the table.
@@ -4585,6 +6719,14 @@ func (newState *RunRefreshRequest) SyncEffectiveFieldsDuringRead(existingState R
 
 func (a RunRefreshRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a RunRefreshRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TableName": types.StringType,
+		},
+	}
 }
 
 type SchemaInfo struct {
@@ -4603,7 +6745,7 @@ type SchemaInfo struct {
 	// Username of schema creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 
-	EffectivePredictiveOptimizationFlag types.Object `tfsdk:"effective_predictive_optimization_flag" tf:"optional,object"`
+	EffectivePredictiveOptimizationFlag types.List `tfsdk:"effective_predictive_optimization_flag" tf:"optional,object"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
@@ -4638,7 +6780,34 @@ func (newState *SchemaInfo) SyncEffectiveFieldsDuringRead(existingState SchemaIn
 func (a SchemaInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"EffectivePredictiveOptimizationFlag": reflect.TypeOf(EffectivePredictiveOptimizationFlag{}),
-		"Properties":                          reflect.TypeOf(""),
+		"Properties":                          reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a SchemaInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BrowseOnly":                          types.BoolType,
+			"CatalogName":                         types.StringType,
+			"CatalogType":                         types.StringType,
+			"Comment":                             types.StringType,
+			"CreatedAt":                           types.Int64Type,
+			"CreatedBy":                           types.StringType,
+			"EffectivePredictiveOptimizationFlag": EffectivePredictiveOptimizationFlag{}.ToAttrType(ctx),
+			"EnablePredictiveOptimization":        types.StringType,
+			"FullName":                            types.StringType,
+			"MetastoreId":                         types.StringType,
+			"Name":                                types.StringType,
+			"Owner":                               types.StringType,
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SchemaId":        types.StringType,
+			"StorageLocation": types.StringType,
+			"StorageRoot":     types.StringType,
+			"UpdatedAt":       types.Int64Type,
+			"UpdatedBy":       types.StringType,
+		},
 	}
 }
 
@@ -4661,6 +6830,17 @@ func (a SetArtifactAllowlist) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a SetArtifactAllowlist) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ArtifactMatchers": basetypes.ListType{
+				ElemType: ArtifactMatcher{}.ToAttrType(ctx),
+			},
+			"ArtifactType": types.StringType,
+		},
+	}
+}
+
 type SetRegisteredModelAliasRequest struct {
 	// The name of the alias
 	Alias types.String `tfsdk:"alias" tf:""`
@@ -4678,6 +6858,16 @@ func (newState *SetRegisteredModelAliasRequest) SyncEffectiveFieldsDuringRead(ex
 
 func (a SetRegisteredModelAliasRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a SetRegisteredModelAliasRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Alias":      types.StringType,
+			"FullName":   types.StringType,
+			"VersionNum": types.Int64Type,
+		},
+	}
 }
 
 // Server-Side Encryption properties for clients communicating with AWS s3.
@@ -4699,15 +6889,24 @@ func (a SseEncryptionDetails) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a SseEncryptionDetails) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Algorithm":    types.StringType,
+			"AwsKmsKeyArn": types.StringType,
+		},
+	}
+}
+
 type StorageCredentialInfo struct {
 	// The AWS IAM role configuration.
-	AwsIamRole types.Object `tfsdk:"aws_iam_role" tf:"optional,object"`
+	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal" tf:"optional,object"`
+	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// The Cloudflare API token configuration.
-	CloudflareApiToken types.Object `tfsdk:"cloudflare_api_token" tf:"optional,object"`
+	CloudflareApiToken types.List `tfsdk:"cloudflare_api_token" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Time at which this Credential was created, in epoch milliseconds.
@@ -4715,7 +6914,7 @@ type StorageCredentialInfo struct {
 	// Username of credential creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 	// The Databricks managed GCP service account configuration.
-	DatabricksGcpServiceAccount types.Object `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
+	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
 	// The full name of the credential.
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// The unique identifier of the credential.
@@ -4755,6 +6954,31 @@ func (a StorageCredentialInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a StorageCredentialInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsIamRole":                  AwsIamRoleResponse{}.ToAttrType(ctx),
+			"AzureManagedIdentity":        AzureManagedIdentityResponse{}.ToAttrType(ctx),
+			"AzureServicePrincipal":       AzureServicePrincipal{}.ToAttrType(ctx),
+			"CloudflareApiToken":          CloudflareApiToken{}.ToAttrType(ctx),
+			"Comment":                     types.StringType,
+			"CreatedAt":                   types.Int64Type,
+			"CreatedBy":                   types.StringType,
+			"DatabricksGcpServiceAccount": DatabricksGcpServiceAccountResponse{}.ToAttrType(ctx),
+			"FullName":                    types.StringType,
+			"Id":                          types.StringType,
+			"IsolationMode":               types.StringType,
+			"MetastoreId":                 types.StringType,
+			"Name":                        types.StringType,
+			"Owner":                       types.StringType,
+			"ReadOnly":                    types.BoolType,
+			"UpdatedAt":                   types.Int64Type,
+			"UpdatedBy":                   types.StringType,
+			"UsedForManagedStorage":       types.BoolType,
+		},
+	}
+}
+
 type SystemSchemaInfo struct {
 	// Name of the system schema.
 	Schema types.String `tfsdk:"schema" tf:"optional"`
@@ -4773,15 +6997,24 @@ func (a SystemSchemaInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a SystemSchemaInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Schema": types.StringType,
+			"State":  types.StringType,
+		},
+	}
+}
+
 // A table constraint, as defined by *one* of the following fields being set:
 // __primary_key_constraint__, __foreign_key_constraint__,
 // __named_table_constraint__.
 type TableConstraint struct {
-	ForeignKeyConstraint types.Object `tfsdk:"foreign_key_constraint" tf:"optional,object"`
+	ForeignKeyConstraint types.List `tfsdk:"foreign_key_constraint" tf:"optional,object"`
 
-	NamedTableConstraint types.Object `tfsdk:"named_table_constraint" tf:"optional,object"`
+	NamedTableConstraint types.List `tfsdk:"named_table_constraint" tf:"optional,object"`
 
-	PrimaryKeyConstraint types.Object `tfsdk:"primary_key_constraint" tf:"optional,object"`
+	PrimaryKeyConstraint types.List `tfsdk:"primary_key_constraint" tf:"optional,object"`
 }
 
 func (newState *TableConstraint) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableConstraint) {
@@ -4795,6 +7028,16 @@ func (a TableConstraint) GetComplexFieldTypes() map[string]reflect.Type {
 		"ForeignKeyConstraint": reflect.TypeOf(ForeignKeyConstraint{}),
 		"NamedTableConstraint": reflect.TypeOf(NamedTableConstraint{}),
 		"PrimaryKeyConstraint": reflect.TypeOf(PrimaryKeyConstraint{}),
+	}
+}
+
+func (a TableConstraint) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ForeignKeyConstraint": ForeignKeyConstraint{}.ToAttrType(ctx),
+			"NamedTableConstraint": NamedTableConstraint{}.ToAttrType(ctx),
+			"PrimaryKeyConstraint": PrimaryKeyConstraint{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -4815,6 +7058,14 @@ func (a TableDependency) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a TableDependency) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TableFullName": types.StringType,
+		},
+	}
+}
+
 type TableExistsResponse struct {
 	// Whether the table exists or not.
 	TableExists types.Bool `tfsdk:"table_exists" tf:"optional"`
@@ -4828,6 +7079,14 @@ func (newState *TableExistsResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a TableExistsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a TableExistsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"TableExists": types.BoolType,
+		},
+	}
 }
 
 type TableInfo struct {
@@ -4855,14 +7114,14 @@ type TableInfo struct {
 	// omitted if table is not deleted.
 	DeletedAt types.Int64 `tfsdk:"deleted_at" tf:"optional"`
 	// Information pertaining to current state of the delta table.
-	DeltaRuntimePropertiesKvpairs types.Object `tfsdk:"delta_runtime_properties_kvpairs" tf:"optional,object"`
+	DeltaRuntimePropertiesKvpairs types.List `tfsdk:"delta_runtime_properties_kvpairs" tf:"optional,object"`
 
-	EffectivePredictiveOptimizationFlag types.Object `tfsdk:"effective_predictive_optimization_flag" tf:"optional,object"`
+	EffectivePredictiveOptimizationFlag types.List `tfsdk:"effective_predictive_optimization_flag" tf:"optional,object"`
 	// Whether predictive optimization should be enabled for this object and
 	// objects under it.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails types.Object `tfsdk:"encryption_details" tf:"optional,object"`
+	EncryptionDetails types.List `tfsdk:"encryption_details" tf:"optional,object"`
 	// Full name of table, in form of
 	// __catalog_name__.__schema_name__.__table_name__
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
@@ -4878,7 +7137,7 @@ type TableInfo struct {
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties" tf:"optional"`
 
-	RowFilter types.Object `tfsdk:"row_filter" tf:"optional,object"`
+	RowFilter types.List `tfsdk:"row_filter" tf:"optional,object"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
 	// List of schemes whose objects can be referenced without qualification.
@@ -4907,7 +7166,7 @@ type TableInfo struct {
 	// provided; - when DependencyList is an empty list, the dependency is
 	// provided but is empty; - when DependencyList is not an empty list,
 	// dependencies are provided and recorded.
-	ViewDependencies types.Object `tfsdk:"view_dependencies" tf:"optional,object"`
+	ViewDependencies types.List `tfsdk:"view_dependencies" tf:"optional,object"`
 }
 
 func (newState *TableInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableInfo) {
@@ -4922,10 +7181,55 @@ func (a TableInfo) GetComplexFieldTypes() map[string]reflect.Type {
 		"DeltaRuntimePropertiesKvpairs":       reflect.TypeOf(DeltaRuntimePropertiesKvPairs{}),
 		"EffectivePredictiveOptimizationFlag": reflect.TypeOf(EffectivePredictiveOptimizationFlag{}),
 		"EncryptionDetails":                   reflect.TypeOf(EncryptionDetails{}),
-		"Properties":                          reflect.TypeOf(""),
+		"Properties":                          reflect.TypeOf(types.StringType),
 		"RowFilter":                           reflect.TypeOf(TableRowFilter{}),
 		"TableConstraints":                    reflect.TypeOf(TableConstraint{}),
 		"ViewDependencies":                    reflect.TypeOf(DependencyList{}),
+	}
+}
+
+func (a TableInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessPoint": types.StringType,
+			"BrowseOnly":  types.BoolType,
+			"CatalogName": types.StringType,
+			"Columns": basetypes.ListType{
+				ElemType: ColumnInfo{}.ToAttrType(ctx),
+			},
+			"Comment":                             types.StringType,
+			"CreatedAt":                           types.Int64Type,
+			"CreatedBy":                           types.StringType,
+			"DataAccessConfigurationId":           types.StringType,
+			"DataSourceFormat":                    types.StringType,
+			"DeletedAt":                           types.Int64Type,
+			"DeltaRuntimePropertiesKvpairs":       DeltaRuntimePropertiesKvPairs{}.ToAttrType(ctx),
+			"EffectivePredictiveOptimizationFlag": EffectivePredictiveOptimizationFlag{}.ToAttrType(ctx),
+			"EnablePredictiveOptimization":        types.StringType,
+			"EncryptionDetails":                   EncryptionDetails{}.ToAttrType(ctx),
+			"FullName":                            types.StringType,
+			"MetastoreId":                         types.StringType,
+			"Name":                                types.StringType,
+			"Owner":                               types.StringType,
+			"PipelineId":                          types.StringType,
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"RowFilter":             TableRowFilter{}.ToAttrType(ctx),
+			"SchemaName":            types.StringType,
+			"SqlPath":               types.StringType,
+			"StorageCredentialName": types.StringType,
+			"StorageLocation":       types.StringType,
+			"TableConstraints": basetypes.ListType{
+				ElemType: TableConstraint{}.ToAttrType(ctx),
+			},
+			"TableId":          types.StringType,
+			"TableType":        types.StringType,
+			"UpdatedAt":        types.Int64Type,
+			"UpdatedBy":        types.StringType,
+			"ViewDefinition":   types.StringType,
+			"ViewDependencies": DependencyList{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -4946,7 +7250,18 @@ func (newState *TableRowFilter) SyncEffectiveFieldsDuringRead(existingState Tabl
 
 func (a TableRowFilter) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InputColumnNames": reflect.TypeOf(""),
+		"InputColumnNames": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a TableRowFilter) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FunctionName": types.StringType,
+			"InputColumnNames": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -4967,14 +7282,23 @@ func (a TableSummary) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a TableSummary) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName":  types.StringType,
+			"TableType": types.StringType,
+		},
+	}
+}
+
 type TemporaryCredentials struct {
 	// AWS temporary credentials for API authentication. Read more at
 	// https://docs.aws.amazon.com/STS/latest/APIReference/API_Credentials.html.
-	AwsTempCredentials types.Object `tfsdk:"aws_temp_credentials" tf:"optional,object"`
+	AwsTempCredentials types.List `tfsdk:"aws_temp_credentials" tf:"optional,object"`
 	// Azure Active Directory token, essentially the Oauth token for Azure
 	// Service Principal or Managed Identity. Read more at
 	// https://learn.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/aad/service-prin-aad-token
-	AzureAad types.Object `tfsdk:"azure_aad" tf:"optional,object"`
+	AzureAad types.List `tfsdk:"azure_aad" tf:"optional,object"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
@@ -4993,6 +7317,16 @@ func (a TemporaryCredentials) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a TemporaryCredentials) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsTempCredentials": AwsCredentials{}.ToAttrType(ctx),
+			"AzureAad":           AzureActiveDirectoryToken{}.ToAttrType(ctx),
+			"ExpirationTime":     types.Int64Type,
+		},
+	}
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // ONLINE_TRIGGERED_UPDATE or the ONLINE_NO_PENDING_UPDATE state.
 type TriggeredUpdateStatus struct {
@@ -5004,7 +7338,7 @@ type TriggeredUpdateStatus struct {
 	// table to the online table.
 	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
 	// Progress of the active data synchronization pipeline.
-	TriggeredUpdateProgress types.Object `tfsdk:"triggered_update_progress" tf:"optional,object"`
+	TriggeredUpdateProgress types.List `tfsdk:"triggered_update_progress" tf:"optional,object"`
 }
 
 func (newState *TriggeredUpdateStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggeredUpdateStatus) {
@@ -5016,6 +7350,16 @@ func (newState *TriggeredUpdateStatus) SyncEffectiveFieldsDuringRead(existingSta
 func (a TriggeredUpdateStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TriggeredUpdateProgress": reflect.TypeOf(PipelineProgress{}),
+	}
+}
+
+func (a TriggeredUpdateStatus) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"LastProcessedCommitVersion": types.Int64Type,
+			"Timestamp":                  types.StringType,
+			"TriggeredUpdateProgress":    PipelineProgress{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -5037,6 +7381,15 @@ func (a UnassignRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a UnassignRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MetastoreId": types.StringType,
+			"WorkspaceId": types.Int64Type,
+		},
+	}
+}
+
 type UnassignResponse struct {
 }
 
@@ -5050,6 +7403,12 @@ func (a UnassignResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a UnassignResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type UpdateAssignmentResponse struct {
 }
 
@@ -5061,6 +7420,12 @@ func (newState *UpdateAssignmentResponse) SyncEffectiveFieldsDuringRead(existing
 
 func (a UpdateAssignmentResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UpdateAssignmentResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type UpdateCatalog struct {
@@ -5090,7 +7455,23 @@ func (newState *UpdateCatalog) SyncEffectiveFieldsDuringRead(existingState Updat
 
 func (a UpdateCatalog) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Properties": reflect.TypeOf(""),
+		"Properties": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a UpdateCatalog) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":                      types.StringType,
+			"EnablePredictiveOptimization": types.StringType,
+			"IsolationMode":                types.StringType,
+			"Name":                         types.StringType,
+			"NewName":                      types.StringType,
+			"Owner":                        types.StringType,
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -5113,17 +7494,30 @@ func (newState *UpdateConnection) SyncEffectiveFieldsDuringRead(existingState Up
 
 func (a UpdateConnection) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Options": reflect.TypeOf(""),
+		"Options": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a UpdateConnection) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name":    types.StringType,
+			"NewName": types.StringType,
+			"Options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Owner": types.StringType,
+		},
 	}
 }
 
 type UpdateCredentialRequest struct {
 	// The AWS IAM role configuration
-	AwsIamRole types.Object `tfsdk:"aws_iam_role" tf:"optional,object"`
+	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal" tf:"optional,object"`
+	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Force an update even if there are dependent services (when purpose is
@@ -5161,6 +7555,24 @@ func (a UpdateCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a UpdateCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsIamRole":            AwsIamRole{}.ToAttrType(ctx),
+			"AzureManagedIdentity":  AzureManagedIdentity{}.ToAttrType(ctx),
+			"AzureServicePrincipal": AzureServicePrincipal{}.ToAttrType(ctx),
+			"Comment":               types.StringType,
+			"Force":                 types.BoolType,
+			"IsolationMode":         types.StringType,
+			"NameArg":               types.StringType,
+			"NewName":               types.StringType,
+			"Owner":                 types.StringType,
+			"ReadOnly":              types.BoolType,
+			"SkipValidation":        types.BoolType,
+		},
+	}
+}
+
 type UpdateExternalLocation struct {
 	// The AWS access point to use when accesing s3 for this external location.
 	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
@@ -5169,7 +7581,7 @@ type UpdateExternalLocation struct {
 	// Name of the storage credential used with this location.
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails types.Object `tfsdk:"encryption_details" tf:"optional,object"`
+	EncryptionDetails types.List `tfsdk:"encryption_details" tf:"optional,object"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
@@ -5206,6 +7618,26 @@ func (a UpdateExternalLocation) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a UpdateExternalLocation) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessPoint":       types.StringType,
+			"Comment":           types.StringType,
+			"CredentialName":    types.StringType,
+			"EncryptionDetails": EncryptionDetails{}.ToAttrType(ctx),
+			"Fallback":          types.BoolType,
+			"Force":             types.BoolType,
+			"IsolationMode":     types.StringType,
+			"Name":              types.StringType,
+			"NewName":           types.StringType,
+			"Owner":             types.StringType,
+			"ReadOnly":          types.BoolType,
+			"SkipValidation":    types.BoolType,
+			"Url":               types.StringType,
+		},
+	}
+}
+
 type UpdateFunction struct {
 	// The fully-qualified name of the function (of the form
 	// __catalog_name__.__schema_name__.__function__name__).
@@ -5222,6 +7654,15 @@ func (newState *UpdateFunction) SyncEffectiveFieldsDuringRead(existingState Upda
 
 func (a UpdateFunction) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UpdateFunction) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Name":  types.StringType,
+			"Owner": types.StringType,
+		},
+	}
 }
 
 type UpdateMetastore struct {
@@ -5255,6 +7696,21 @@ func (a UpdateMetastore) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateMetastore) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DeltaSharingOrganizationName":                types.StringType,
+			"DeltaSharingRecipientTokenLifetimeInSeconds": types.Int64Type,
+			"DeltaSharingScope":                           types.StringType,
+			"Id":                                          types.StringType,
+			"NewName":                                     types.StringType,
+			"Owner":                                       types.StringType,
+			"PrivilegeModelVersion":                       types.StringType,
+			"StorageRootCredentialId":                     types.StringType,
+		},
+	}
+}
+
 type UpdateMetastoreAssignment struct {
 	// The name of the default catalog in the metastore. This field is
 	// depracted. Please use "Default Namespace API" to configure the default
@@ -5276,6 +7732,16 @@ func (a UpdateMetastoreAssignment) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateMetastoreAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DefaultCatalogName": types.StringType,
+			"MetastoreId":        types.StringType,
+			"WorkspaceId":        types.Int64Type,
+		},
+	}
+}
+
 type UpdateModelVersionRequest struct {
 	// The comment attached to the model version
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -5295,6 +7761,16 @@ func (a UpdateModelVersionRequest) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateModelVersionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":  types.StringType,
+			"FullName": types.StringType,
+			"Version":  types.Int64Type,
+		},
+	}
+}
+
 type UpdateMonitor struct {
 	// Name of the baseline table from which drift metrics are computed from.
 	// Columns in the monitored table should also be present in the baseline
@@ -5308,15 +7784,15 @@ type UpdateMonitor struct {
 	// if the monitor is in PENDING state.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"optional"`
 	// The data classification config for the monitor.
-	DataClassificationConfig types.Object `tfsdk:"data_classification_config" tf:"optional,object"`
+	DataClassificationConfig types.List `tfsdk:"data_classification_config" tf:"optional,object"`
 	// Configuration for monitoring inference logs.
-	InferenceLog types.Object `tfsdk:"inference_log" tf:"optional,object"`
+	InferenceLog types.List `tfsdk:"inference_log" tf:"optional,object"`
 	// The notification settings for the monitor.
-	Notifications types.Object `tfsdk:"notifications" tf:"optional,object"`
+	Notifications types.List `tfsdk:"notifications" tf:"optional,object"`
 	// Schema where output metric tables are created.
 	OutputSchemaName types.String `tfsdk:"output_schema_name" tf:""`
 	// The schedule for automatically updating and refreshing metric tables.
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.List `tfsdk:"schedule" tf:"optional,object"`
 	// List of column expressions to slice data with for targeted analysis. The
 	// data is grouped by each expression independently, resulting in a separate
 	// slice for each predicate and its complements. For high-cardinality
@@ -5328,7 +7804,7 @@ type UpdateMonitor struct {
 	// Full name of the table.
 	TableName types.String `tfsdk:"-"`
 	// Configuration for monitoring time series tables.
-	TimeSeries types.Object `tfsdk:"time_series" tf:"optional,object"`
+	TimeSeries types.List `tfsdk:"time_series" tf:"optional,object"`
 }
 
 func (newState *UpdateMonitor) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateMonitor) {
@@ -5344,9 +7820,32 @@ func (a UpdateMonitor) GetComplexFieldTypes() map[string]reflect.Type {
 		"InferenceLog":             reflect.TypeOf(MonitorInferenceLog{}),
 		"Notifications":            reflect.TypeOf(MonitorNotifications{}),
 		"Schedule":                 reflect.TypeOf(MonitorCronSchedule{}),
-		"SlicingExprs":             reflect.TypeOf(""),
+		"SlicingExprs":             reflect.TypeOf(types.StringType),
 		"Snapshot":                 reflect.TypeOf(MonitorSnapshot{}),
 		"TimeSeries":               reflect.TypeOf(MonitorTimeSeries{}),
+	}
+}
+
+func (a UpdateMonitor) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BaselineTableName": types.StringType,
+			"CustomMetrics": basetypes.ListType{
+				ElemType: MonitorMetric{}.ToAttrType(ctx),
+			},
+			"DashboardId":              types.StringType,
+			"DataClassificationConfig": MonitorDataClassificationConfig{}.ToAttrType(ctx),
+			"InferenceLog":             MonitorInferenceLog{}.ToAttrType(ctx),
+			"Notifications":            MonitorNotifications{}.ToAttrType(ctx),
+			"OutputSchemaName":         types.StringType,
+			"Schedule":                 MonitorCronSchedule{}.ToAttrType(ctx),
+			"SlicingExprs": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Snapshot":   MonitorSnapshot{}.ToAttrType(ctx),
+			"TableName":  types.StringType,
+			"TimeSeries": MonitorTimeSeries{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -5371,6 +7870,18 @@ func (a UpdatePermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a UpdatePermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Changes": basetypes.ListType{
+				ElemType: PermissionsChange{}.ToAttrType(ctx),
+			},
+			"FullName":      types.StringType,
+			"SecurableType": types.StringType,
+		},
+	}
+}
+
 type UpdateRegisteredModelRequest struct {
 	// The comment attached to the registered model
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -5392,6 +7903,17 @@ func (a UpdateRegisteredModelRequest) GetComplexFieldTypes() map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateRegisteredModelRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":  types.StringType,
+			"FullName": types.StringType,
+			"NewName":  types.StringType,
+			"Owner":    types.StringType,
+		},
+	}
+}
+
 type UpdateResponse struct {
 }
 
@@ -5403,6 +7925,12 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState Upda
 
 func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type UpdateSchema struct {
@@ -5429,19 +7957,34 @@ func (newState *UpdateSchema) SyncEffectiveFieldsDuringRead(existingState Update
 
 func (a UpdateSchema) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Properties": reflect.TypeOf(""),
+		"Properties": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a UpdateSchema) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment":                      types.StringType,
+			"EnablePredictiveOptimization": types.StringType,
+			"FullName":                     types.StringType,
+			"NewName":                      types.StringType,
+			"Owner":                        types.StringType,
+			"Properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
 type UpdateStorageCredential struct {
 	// The AWS IAM role configuration.
-	AwsIamRole types.Object `tfsdk:"aws_iam_role" tf:"optional,object"`
+	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal" tf:"optional,object"`
+	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// The Cloudflare API token configuration.
-	CloudflareApiToken types.Object `tfsdk:"cloudflare_api_token" tf:"optional,object"`
+	CloudflareApiToken types.List `tfsdk:"cloudflare_api_token" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The Databricks managed GCP service account configuration.
@@ -5480,6 +8023,26 @@ func (a UpdateStorageCredential) GetComplexFieldTypes() map[string]reflect.Type 
 	}
 }
 
+func (a UpdateStorageCredential) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsIamRole":                  AwsIamRoleRequest{}.ToAttrType(ctx),
+			"AzureManagedIdentity":        AzureManagedIdentityResponse{}.ToAttrType(ctx),
+			"AzureServicePrincipal":       AzureServicePrincipal{}.ToAttrType(ctx),
+			"CloudflareApiToken":          CloudflareApiToken{}.ToAttrType(ctx),
+			"Comment":                     types.StringType,
+			"DatabricksGcpServiceAccount": DatabricksGcpServiceAccountRequest{}.ToAttrType(ctx),
+			"Force":                       types.BoolType,
+			"IsolationMode":               types.StringType,
+			"Name":                        types.StringType,
+			"NewName":                     types.StringType,
+			"Owner":                       types.StringType,
+			"ReadOnly":                    types.BoolType,
+			"SkipValidation":              types.BoolType,
+		},
+	}
+}
+
 // Update a table owner.
 type UpdateTableRequest struct {
 	// Full name of the table.
@@ -5496,6 +8059,15 @@ func (newState *UpdateTableRequest) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a UpdateTableRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UpdateTableRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"FullName": types.StringType,
+			"Owner":    types.StringType,
+		},
+	}
 }
 
 type UpdateVolumeRequestContent struct {
@@ -5519,6 +8091,17 @@ func (a UpdateVolumeRequestContent) GetComplexFieldTypes() map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateVolumeRequestContent) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Comment": types.StringType,
+			"Name":    types.StringType,
+			"NewName": types.StringType,
+			"Owner":   types.StringType,
+		},
+	}
+}
+
 type UpdateWorkspaceBindings struct {
 	// A list of workspace IDs.
 	AssignWorkspaces types.List `tfsdk:"assign_workspaces" tf:"optional"`
@@ -5536,8 +8119,22 @@ func (newState *UpdateWorkspaceBindings) SyncEffectiveFieldsDuringRead(existingS
 
 func (a UpdateWorkspaceBindings) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AssignWorkspaces":   reflect.TypeOf(0),
-		"UnassignWorkspaces": reflect.TypeOf(0),
+		"AssignWorkspaces":   reflect.TypeOf(types.Int64Type),
+		"UnassignWorkspaces": reflect.TypeOf(types.Int64Type),
+	}
+}
+
+func (a UpdateWorkspaceBindings) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AssignWorkspaces": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+			"Name": types.StringType,
+			"UnassignWorkspaces": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+		},
 	}
 }
 
@@ -5565,11 +8162,26 @@ func (a UpdateWorkspaceBindingsParameters) GetComplexFieldTypes() map[string]ref
 	}
 }
 
+func (a UpdateWorkspaceBindingsParameters) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Add": basetypes.ListType{
+				ElemType: WorkspaceBinding{}.ToAttrType(ctx),
+			},
+			"Remove": basetypes.ListType{
+				ElemType: WorkspaceBinding{}.ToAttrType(ctx),
+			},
+			"SecurableName": types.StringType,
+			"SecurableType": types.StringType,
+		},
+	}
+}
+
 type ValidateCredentialRequest struct {
 	// The AWS IAM role configuration
-	AwsIamRole types.Object `tfsdk:"aws_iam_role" tf:"optional,object"`
+	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
 	// Required. The name of an existing credential or long-lived cloud
 	// credential to validate.
 	CredentialName types.String `tfsdk:"credential_name" tf:"optional"`
@@ -5600,6 +8212,20 @@ func (a ValidateCredentialRequest) GetComplexFieldTypes() map[string]reflect.Typ
 	}
 }
 
+func (a ValidateCredentialRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsIamRole":           AwsIamRole{}.ToAttrType(ctx),
+			"AzureManagedIdentity": AzureManagedIdentity{}.ToAttrType(ctx),
+			"CredentialName":       types.StringType,
+			"ExternalLocationName": types.StringType,
+			"Purpose":              types.StringType,
+			"ReadOnly":             types.BoolType,
+			"Url":                  types.StringType,
+		},
+	}
+}
+
 type ValidateCredentialResponse struct {
 	// Whether the tested location is a directory in cloud storage. Only
 	// applicable for when purpose is **STORAGE**.
@@ -5620,15 +8246,26 @@ func (a ValidateCredentialResponse) GetComplexFieldTypes() map[string]reflect.Ty
 	}
 }
 
+func (a ValidateCredentialResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IsDir": types.BoolType,
+			"Results": basetypes.ListType{
+				ElemType: CredentialValidationResult{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ValidateStorageCredential struct {
 	// The AWS IAM role configuration.
-	AwsIamRole types.Object `tfsdk:"aws_iam_role" tf:"optional,object"`
+	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
-	AzureManagedIdentity types.Object `tfsdk:"azure_managed_identity" tf:"optional,object"`
+	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
 	// The Azure service principal configuration.
-	AzureServicePrincipal types.Object `tfsdk:"azure_service_principal" tf:"optional,object"`
+	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// The Cloudflare API token configuration.
-	CloudflareApiToken types.Object `tfsdk:"cloudflare_api_token" tf:"optional,object"`
+	CloudflareApiToken types.List `tfsdk:"cloudflare_api_token" tf:"optional,object"`
 	// The Databricks created GCP service account configuration.
 	DatabricksGcpServiceAccount []DatabricksGcpServiceAccountRequest `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
 	// The name of an existing external location to validate.
@@ -5657,6 +8294,22 @@ func (a ValidateStorageCredential) GetComplexFieldTypes() map[string]reflect.Typ
 	}
 }
 
+func (a ValidateStorageCredential) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AwsIamRole":                  AwsIamRoleRequest{}.ToAttrType(ctx),
+			"AzureManagedIdentity":        AzureManagedIdentityRequest{}.ToAttrType(ctx),
+			"AzureServicePrincipal":       AzureServicePrincipal{}.ToAttrType(ctx),
+			"CloudflareApiToken":          CloudflareApiToken{}.ToAttrType(ctx),
+			"DatabricksGcpServiceAccount": DatabricksGcpServiceAccountRequest{}.ToAttrType(ctx),
+			"ExternalLocationName":        types.StringType,
+			"ReadOnly":                    types.BoolType,
+			"StorageCredentialName":       types.StringType,
+			"Url":                         types.StringType,
+		},
+	}
+}
+
 type ValidateStorageCredentialResponse struct {
 	// Whether the tested location is a directory in cloud storage.
 	IsDir types.Bool `tfsdk:"isDir" tf:"optional"`
@@ -5673,6 +8326,17 @@ func (newState *ValidateStorageCredentialResponse) SyncEffectiveFieldsDuringRead
 func (a ValidateStorageCredentialResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Results": reflect.TypeOf(ValidationResult{}),
+	}
+}
+
+func (a ValidateStorageCredentialResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"IsDir": types.BoolType,
+			"Results": basetypes.ListType{
+				ElemType: ValidationResult{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -5695,6 +8359,16 @@ func (a ValidationResult) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ValidationResult) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Message":   types.StringType,
+			"Operation": types.StringType,
+			"Result":    types.StringType,
+		},
+	}
+}
+
 type VolumeInfo struct {
 	// The AWS access point to use when accesing s3 for this external location.
 	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
@@ -5711,7 +8385,7 @@ type VolumeInfo struct {
 	// The identifier of the user who created the volume
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 	// Encryption options that apply to clients connecting to cloud storage.
-	EncryptionDetails types.Object `tfsdk:"encryption_details" tf:"optional,object"`
+	EncryptionDetails types.List `tfsdk:"encryption_details" tf:"optional,object"`
 	// The three-level (fully qualified) name of the volume
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// The unique identifier of the metastore
@@ -5746,6 +8420,30 @@ func (a VolumeInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a VolumeInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessPoint":       types.StringType,
+			"BrowseOnly":        types.BoolType,
+			"CatalogName":       types.StringType,
+			"Comment":           types.StringType,
+			"CreatedAt":         types.Int64Type,
+			"CreatedBy":         types.StringType,
+			"EncryptionDetails": EncryptionDetails{}.ToAttrType(ctx),
+			"FullName":          types.StringType,
+			"MetastoreId":       types.StringType,
+			"Name":              types.StringType,
+			"Owner":             types.StringType,
+			"SchemaName":        types.StringType,
+			"StorageLocation":   types.StringType,
+			"UpdatedAt":         types.Int64Type,
+			"UpdatedBy":         types.StringType,
+			"VolumeId":          types.StringType,
+			"VolumeType":        types.StringType,
+		},
+	}
+}
+
 type WorkspaceBinding struct {
 	BindingType types.String `tfsdk:"binding_type" tf:"optional"`
 
@@ -5760,6 +8458,15 @@ func (newState *WorkspaceBinding) SyncEffectiveFieldsDuringRead(existingState Wo
 
 func (a WorkspaceBinding) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a WorkspaceBinding) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BindingType": types.StringType,
+			"WorkspaceId": types.Int64Type,
+		},
+	}
 }
 
 // Currently assigned workspace bindings
@@ -5781,5 +8488,16 @@ func (newState *WorkspaceBindingsResponse) SyncEffectiveFieldsDuringRead(existin
 func (a WorkspaceBindingsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Bindings": reflect.TypeOf(WorkspaceBinding{}),
+	}
+}
+
+func (a WorkspaceBindingsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Bindings": basetypes.ListType{
+				ElemType: WorkspaceBinding{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+		},
 	}
 }

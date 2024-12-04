@@ -11,10 +11,14 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package pipelines_tf
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type CreatePipeline struct {
@@ -38,7 +42,7 @@ type CreatePipeline struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment types.Object `tfsdk:"deployment" tf:"optional,object"`
+	Deployment types.List `tfsdk:"deployment" tf:"optional,object"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 
@@ -46,14 +50,14 @@ type CreatePipeline struct {
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters types.Object `tfsdk:"filters" tf:"optional,object"`
+	Filters types.List `tfsdk:"filters" tf:"optional,object"`
 	// The definition of a gateway pipeline to support change data capture.
-	GatewayDefinition types.Object `tfsdk:"gateway_definition" tf:"optional,object"`
+	GatewayDefinition types.List `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition types.Object `tfsdk:"ingestion_definition" tf:"optional,object"`
+	IngestionDefinition types.List `tfsdk:"ingestion_definition" tf:"optional,object"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -63,7 +67,7 @@ type CreatePipeline struct {
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Restart window of this pipeline.
-	RestartWindow types.Object `tfsdk:"restart_window" tf:"optional,object"`
+	RestartWindow types.List `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -77,7 +81,7 @@ type CreatePipeline struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger types.Object `tfsdk:"trigger" tf:"optional,object"`
+	Trigger types.List `tfsdk:"trigger" tf:"optional,object"`
 }
 
 func (newState *CreatePipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipeline) {
@@ -89,7 +93,7 @@ func (newState *CreatePipeline) SyncEffectiveFieldsDuringRead(existingState Crea
 func (a CreatePipeline) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Clusters":            reflect.TypeOf(PipelineCluster{}),
-		"Configuration":       reflect.TypeOf(""),
+		"Configuration":       reflect.TypeOf(types.StringType),
 		"Deployment":          reflect.TypeOf(PipelineDeployment{}),
 		"Filters":             reflect.TypeOf(Filters{}),
 		"GatewayDefinition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
@@ -101,9 +105,49 @@ func (a CreatePipeline) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a CreatePipeline) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowDuplicateNames": types.BoolType,
+			"BudgetPolicyId":      types.StringType,
+			"Catalog":             types.StringType,
+			"Channel":             types.StringType,
+			"Clusters": basetypes.ListType{
+				ElemType: PipelineCluster{}.ToAttrType(ctx),
+			},
+			"Configuration": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Continuous":          types.BoolType,
+			"Deployment":          PipelineDeployment{}.ToAttrType(ctx),
+			"Development":         types.BoolType,
+			"DryRun":              types.BoolType,
+			"Edition":             types.StringType,
+			"Filters":             Filters{}.ToAttrType(ctx),
+			"GatewayDefinition":   IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+			"Id":                  types.StringType,
+			"IngestionDefinition": IngestionPipelineDefinition{}.ToAttrType(ctx),
+			"Libraries": basetypes.ListType{
+				ElemType: PipelineLibrary{}.ToAttrType(ctx),
+			},
+			"Name": types.StringType,
+			"Notifications": basetypes.ListType{
+				ElemType: Notifications{}.ToAttrType(ctx),
+			},
+			"Photon":        types.BoolType,
+			"RestartWindow": RestartWindow{}.ToAttrType(ctx),
+			"Schema":        types.StringType,
+			"Serverless":    types.BoolType,
+			"Storage":       types.StringType,
+			"Target":        types.StringType,
+			"Trigger":       PipelineTrigger{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type CreatePipelineResponse struct {
 	// Only returned when dry_run is true.
-	EffectiveSettings types.Object `tfsdk:"effective_settings" tf:"optional,object"`
+	EffectiveSettings types.List `tfsdk:"effective_settings" tf:"optional,object"`
 	// The unique identifier for the newly created pipeline. Only returned when
 	// dry_run is false.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
@@ -118,6 +162,15 @@ func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringRead(existingSt
 func (a CreatePipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"EffectiveSettings": reflect.TypeOf(PipelineSpec{}),
+	}
+}
+
+func (a CreatePipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"EffectiveSettings": PipelineSpec{}.ToAttrType(ctx),
+			"PipelineId":        types.StringType,
+		},
 	}
 }
 
@@ -137,6 +190,15 @@ func (a CronTrigger) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CronTrigger) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"QuartzCronSchedule": types.StringType,
+			"TimezoneId":         types.StringType,
+		},
+	}
+}
+
 type DataPlaneId struct {
 	// The instance name of the data plane emitting an event.
 	Instance types.String `tfsdk:"instance" tf:"optional"`
@@ -154,6 +216,15 @@ func (a DataPlaneId) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DataPlaneId) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Instance": types.StringType,
+			"SeqNo":    types.Int64Type,
+		},
+	}
+}
+
 // Delete a pipeline
 type DeletePipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
@@ -169,6 +240,14 @@ func (a DeletePipelineRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeletePipelineRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PipelineId": types.StringType,
+		},
+	}
+}
+
 type DeletePipelineResponse struct {
 }
 
@@ -180,6 +259,12 @@ func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a DeletePipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeletePipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type EditPipeline struct {
@@ -203,7 +288,7 @@ type EditPipeline struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment types.Object `tfsdk:"deployment" tf:"optional,object"`
+	Deployment types.List `tfsdk:"deployment" tf:"optional,object"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 	// Pipeline product edition.
@@ -213,14 +298,14 @@ type EditPipeline struct {
 	// will fail with a conflict.
 	ExpectedLastModified types.Int64 `tfsdk:"expected_last_modified" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters types.Object `tfsdk:"filters" tf:"optional,object"`
+	Filters types.List `tfsdk:"filters" tf:"optional,object"`
 	// The definition of a gateway pipeline to support change data capture.
-	GatewayDefinition types.Object `tfsdk:"gateway_definition" tf:"optional,object"`
+	GatewayDefinition types.List `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition types.Object `tfsdk:"ingestion_definition" tf:"optional,object"`
+	IngestionDefinition types.List `tfsdk:"ingestion_definition" tf:"optional,object"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -232,7 +317,7 @@ type EditPipeline struct {
 	// Unique identifier for this pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
 	// Restart window of this pipeline.
-	RestartWindow types.Object `tfsdk:"restart_window" tf:"optional,object"`
+	RestartWindow types.List `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -246,7 +331,7 @@ type EditPipeline struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger types.Object `tfsdk:"trigger" tf:"optional,object"`
+	Trigger types.List `tfsdk:"trigger" tf:"optional,object"`
 }
 
 func (newState *EditPipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipeline) {
@@ -258,7 +343,7 @@ func (newState *EditPipeline) SyncEffectiveFieldsDuringRead(existingState EditPi
 func (a EditPipeline) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Clusters":            reflect.TypeOf(PipelineCluster{}),
-		"Configuration":       reflect.TypeOf(""),
+		"Configuration":       reflect.TypeOf(types.StringType),
 		"Deployment":          reflect.TypeOf(PipelineDeployment{}),
 		"Filters":             reflect.TypeOf(Filters{}),
 		"GatewayDefinition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
@@ -267,6 +352,47 @@ func (a EditPipeline) GetComplexFieldTypes() map[string]reflect.Type {
 		"Notifications":       reflect.TypeOf(Notifications{}),
 		"RestartWindow":       reflect.TypeOf(RestartWindow{}),
 		"Trigger":             reflect.TypeOf(PipelineTrigger{}),
+	}
+}
+
+func (a EditPipeline) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllowDuplicateNames": types.BoolType,
+			"BudgetPolicyId":      types.StringType,
+			"Catalog":             types.StringType,
+			"Channel":             types.StringType,
+			"Clusters": basetypes.ListType{
+				ElemType: PipelineCluster{}.ToAttrType(ctx),
+			},
+			"Configuration": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Continuous":           types.BoolType,
+			"Deployment":           PipelineDeployment{}.ToAttrType(ctx),
+			"Development":          types.BoolType,
+			"Edition":              types.StringType,
+			"ExpectedLastModified": types.Int64Type,
+			"Filters":              Filters{}.ToAttrType(ctx),
+			"GatewayDefinition":    IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+			"Id":                   types.StringType,
+			"IngestionDefinition":  IngestionPipelineDefinition{}.ToAttrType(ctx),
+			"Libraries": basetypes.ListType{
+				ElemType: PipelineLibrary{}.ToAttrType(ctx),
+			},
+			"Name": types.StringType,
+			"Notifications": basetypes.ListType{
+				ElemType: Notifications{}.ToAttrType(ctx),
+			},
+			"Photon":        types.BoolType,
+			"PipelineId":    types.StringType,
+			"RestartWindow": RestartWindow{}.ToAttrType(ctx),
+			"Schema":        types.StringType,
+			"Serverless":    types.BoolType,
+			"Storage":       types.StringType,
+			"Target":        types.StringType,
+			"Trigger":       PipelineTrigger{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -281,6 +407,12 @@ func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a EditPipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a EditPipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type ErrorDetail struct {
@@ -302,6 +434,17 @@ func (a ErrorDetail) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ErrorDetail) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Exceptions": basetypes.ListType{
+				ElemType: SerializedException{}.ToAttrType(ctx),
+			},
+			"Fatal": types.BoolType,
+		},
+	}
+}
+
 type FileLibrary struct {
 	// The absolute path of the file.
 	Path types.String `tfsdk:"path" tf:"optional"`
@@ -315,6 +458,14 @@ func (newState *FileLibrary) SyncEffectiveFieldsDuringRead(existingState FileLib
 
 func (a FileLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a FileLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Path": types.StringType,
+		},
+	}
 }
 
 type Filters struct {
@@ -332,8 +483,21 @@ func (newState *Filters) SyncEffectiveFieldsDuringRead(existingState Filters) {
 
 func (a Filters) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Exclude": reflect.TypeOf(""),
-		"Include": reflect.TypeOf(""),
+		"Exclude": reflect.TypeOf(types.StringType),
+		"Include": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a Filters) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Exclude": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"Include": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -353,6 +517,14 @@ func (a GetPipelinePermissionLevelsRequest) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a GetPipelinePermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PipelineId": types.StringType,
+		},
+	}
+}
+
 type GetPipelinePermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
@@ -367,6 +539,16 @@ func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringRe
 func (a GetPipelinePermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PermissionLevels": reflect.TypeOf(PipelinePermissionsDescription{}),
+	}
+}
+
+func (a GetPipelinePermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: PipelinePermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -386,6 +568,14 @@ func (a GetPipelinePermissionsRequest) GetComplexFieldTypes() map[string]reflect
 	return map[string]reflect.Type{}
 }
 
+func (a GetPipelinePermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PipelineId": types.StringType,
+		},
+	}
+}
+
 // Get a pipeline
 type GetPipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
@@ -399,6 +589,14 @@ func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a GetPipelineRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetPipelineRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PipelineId": types.StringType,
+		},
+	}
 }
 
 type GetPipelineResponse struct {
@@ -425,7 +623,7 @@ type GetPipelineResponse struct {
 	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
 	// The pipeline specification. This field is not returned when called by
 	// `ListPipelines`.
-	Spec types.Object `tfsdk:"spec" tf:"optional,object"`
+	Spec types.List `tfsdk:"spec" tf:"optional,object"`
 	// The pipeline state.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
@@ -440,6 +638,27 @@ func (a GetPipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"LatestUpdates": reflect.TypeOf(UpdateStateInfo{}),
 		"Spec":          reflect.TypeOf(PipelineSpec{}),
+	}
+}
+
+func (a GetPipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cause":                   types.StringType,
+			"ClusterId":               types.StringType,
+			"CreatorUserName":         types.StringType,
+			"EffectiveBudgetPolicyId": types.StringType,
+			"Health":                  types.StringType,
+			"LastModified":            types.Int64Type,
+			"LatestUpdates": basetypes.ListType{
+				ElemType: UpdateStateInfo{}.ToAttrType(ctx),
+			},
+			"Name":          types.StringType,
+			"PipelineId":    types.StringType,
+			"RunAsUserName": types.StringType,
+			"Spec":          PipelineSpec{}.ToAttrType(ctx),
+			"State":         types.StringType,
+		},
 	}
 }
 
@@ -461,9 +680,18 @@ func (a GetUpdateRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetUpdateRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PipelineId": types.StringType,
+			"UpdateId":   types.StringType,
+		},
+	}
+}
+
 type GetUpdateResponse struct {
 	// The current update info.
-	Update types.Object `tfsdk:"update" tf:"optional,object"`
+	Update types.List `tfsdk:"update" tf:"optional,object"`
 }
 
 func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateResponse) {
@@ -478,13 +706,21 @@ func (a GetUpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a GetUpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Update": UpdateInfo{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type IngestionConfig struct {
 	// Select a specific source report.
-	Report types.Object `tfsdk:"report" tf:"optional,object"`
+	Report types.List `tfsdk:"report" tf:"optional,object"`
 	// Select all tables from a specific source schema.
-	Schema types.Object `tfsdk:"schema" tf:"optional,object"`
+	Schema types.List `tfsdk:"schema" tf:"optional,object"`
 	// Select a specific source table.
-	Table types.Object `tfsdk:"table" tf:"optional,object"`
+	Table types.List `tfsdk:"table" tf:"optional,object"`
 }
 
 func (newState *IngestionConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionConfig) {
@@ -498,6 +734,16 @@ func (a IngestionConfig) GetComplexFieldTypes() map[string]reflect.Type {
 		"Report": reflect.TypeOf(ReportSpec{}),
 		"Schema": reflect.TypeOf(SchemaSpec{}),
 		"Table":  reflect.TypeOf(TableSpec{}),
+	}
+}
+
+func (a IngestionConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Report": ReportSpec{}.ToAttrType(ctx),
+			"Schema": SchemaSpec{}.ToAttrType(ctx),
+			"Table":  TableSpec{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -532,6 +778,18 @@ func (a IngestionGatewayPipelineDefinition) GetComplexFieldTypes() map[string]re
 	return map[string]reflect.Type{}
 }
 
+func (a IngestionGatewayPipelineDefinition) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ConnectionId":          types.StringType,
+			"ConnectionName":        types.StringType,
+			"GatewayStorageCatalog": types.StringType,
+			"GatewayStorageName":    types.StringType,
+			"GatewayStorageSchema":  types.StringType,
+		},
+	}
+}
+
 type IngestionPipelineDefinition struct {
 	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
 	// to communicate with the source. This is used with connectors for
@@ -546,7 +804,7 @@ type IngestionPipelineDefinition struct {
 	Objects types.List `tfsdk:"objects" tf:"optional"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
-	TableConfiguration types.Object `tfsdk:"table_configuration" tf:"optional,object"`
+	TableConfiguration types.List `tfsdk:"table_configuration" tf:"optional,object"`
 }
 
 func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinition) {
@@ -559,6 +817,19 @@ func (a IngestionPipelineDefinition) GetComplexFieldTypes() map[string]reflect.T
 	return map[string]reflect.Type{
 		"Objects":            reflect.TypeOf(IngestionConfig{}),
 		"TableConfiguration": reflect.TypeOf(TableSpecificConfig{}),
+	}
+}
+
+func (a IngestionPipelineDefinition) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ConnectionName":     types.StringType,
+			"IngestionGatewayId": types.StringType,
+			"Objects": basetypes.ListType{
+				ElemType: IngestionConfig{}.ToAttrType(ctx),
+			},
+			"TableConfiguration": TableSpecificConfig{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -597,7 +868,21 @@ func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a ListPipelineEventsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OrderBy": reflect.TypeOf(""),
+		"OrderBy": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ListPipelineEventsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Filter":     types.StringType,
+			"MaxResults": types.Int64Type,
+			"OrderBy": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PageToken":  types.StringType,
+			"PipelineId": types.StringType,
+		},
 	}
 }
 
@@ -619,6 +904,18 @@ func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringRead(existi
 func (a ListPipelineEventsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Events": reflect.TypeOf(PipelineEvent{}),
+	}
+}
+
+func (a ListPipelineEventsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Events": basetypes.ListType{
+				ElemType: PipelineEvent{}.ToAttrType(ctx),
+			},
+			"NextPageToken": types.StringType,
+			"PrevPageToken": types.StringType,
+		},
 	}
 }
 
@@ -655,7 +952,20 @@ func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a ListPipelinesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OrderBy": reflect.TypeOf(""),
+		"OrderBy": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a ListPipelinesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Filter":     types.StringType,
+			"MaxResults": types.Int64Type,
+			"OrderBy": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PageToken": types.StringType,
+		},
 	}
 }
 
@@ -675,6 +985,17 @@ func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringRead(existingSta
 func (a ListPipelinesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Statuses": reflect.TypeOf(PipelineStateInfo{}),
+	}
+}
+
+func (a ListPipelinesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Statuses": basetypes.ListType{
+				ElemType: PipelineStateInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -700,6 +1021,17 @@ func (a ListUpdatesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListUpdatesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxResults":    types.Int64Type,
+			"PageToken":     types.StringType,
+			"PipelineId":    types.StringType,
+			"UntilUpdateId": types.StringType,
+		},
+	}
+}
+
 type ListUpdatesResponse struct {
 	// If present, then there are more results, and this a token to be used in a
 	// subsequent request to fetch the next page.
@@ -723,6 +1055,18 @@ func (a ListUpdatesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListUpdatesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"PrevPageToken": types.StringType,
+			"Updates": basetypes.ListType{
+				ElemType: UpdateInfo{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ManualTrigger struct {
 }
 
@@ -734,6 +1078,12 @@ func (newState *ManualTrigger) SyncEffectiveFieldsDuringRead(existingState Manua
 
 func (a ManualTrigger) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ManualTrigger) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type NotebookLibrary struct {
@@ -749,6 +1099,14 @@ func (newState *NotebookLibrary) SyncEffectiveFieldsDuringRead(existingState Not
 
 func (a NotebookLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a NotebookLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Path": types.StringType,
+		},
+	}
 }
 
 type Notifications struct {
@@ -772,8 +1130,21 @@ func (newState *Notifications) SyncEffectiveFieldsDuringRead(existingState Notif
 
 func (a Notifications) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Alerts":          reflect.TypeOf(""),
-		"EmailRecipients": reflect.TypeOf(""),
+		"Alerts":          reflect.TypeOf(types.StringType),
+		"EmailRecipients": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a Notifications) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Alerts": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"EmailRecipients": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -825,6 +1196,30 @@ func (a Origin) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a Origin) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BatchId":             types.Int64Type,
+			"Cloud":               types.StringType,
+			"ClusterId":           types.StringType,
+			"DatasetName":         types.StringType,
+			"FlowId":              types.StringType,
+			"FlowName":            types.StringType,
+			"Host":                types.StringType,
+			"MaintenanceId":       types.StringType,
+			"MaterializationName": types.StringType,
+			"OrgId":               types.Int64Type,
+			"PipelineId":          types.StringType,
+			"PipelineName":        types.StringType,
+			"Region":              types.StringType,
+			"RequestId":           types.StringType,
+			"TableId":             types.StringType,
+			"UcResourceId":        types.StringType,
+			"UpdateId":            types.StringType,
+		},
+	}
+}
+
 type PipelineAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -844,6 +1239,17 @@ func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringRead(exis
 
 func (a PipelineAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PipelineAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type PipelineAccessControlResponse struct {
@@ -871,6 +1277,20 @@ func (a PipelineAccessControlResponse) GetComplexFieldTypes() map[string]reflect
 	}
 }
 
+func (a PipelineAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: PipelinePermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type PipelineCluster struct {
 	// Note: This field won't be persisted. Only API users will check this
 	// field.
@@ -878,7 +1298,7 @@ type PipelineCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.Object `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
 	AwsAttributes compute.AwsAttributes `tfsdk:"aws_attributes" tf:"optional,object"`
@@ -980,12 +1400,48 @@ func (a PipelineCluster) GetComplexFieldTypes() map[string]reflect.Type {
 		"AwsAttributes":   reflect.TypeOf(compute.AwsAttributes{}),
 		"AzureAttributes": reflect.TypeOf(compute.AzureAttributes{}),
 		"ClusterLogConf":  reflect.TypeOf(compute.ClusterLogConf{}),
-		"CustomTags":      reflect.TypeOf(""),
+		"CustomTags":      reflect.TypeOf(types.StringType),
 		"GcpAttributes":   reflect.TypeOf(compute.GcpAttributes{}),
 		"InitScripts":     reflect.TypeOf(compute.InitScriptInfo{}),
-		"SparkConf":       reflect.TypeOf(""),
-		"SparkEnvVars":    reflect.TypeOf(""),
-		"SshPublicKeys":   reflect.TypeOf(""),
+		"SparkConf":       reflect.TypeOf(types.StringType),
+		"SparkEnvVars":    reflect.TypeOf(types.StringType),
+		"SshPublicKeys":   reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a PipelineCluster) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ApplyPolicyDefaultValues": types.BoolType,
+			"Autoscale":                PipelineClusterAutoscale{}.ToAttrType(ctx),
+			"AwsAttributes":            compute_tf.AwsAttributes{}.ToAttrType(ctx),
+			"AzureAttributes":          compute_tf.AzureAttributes{}.ToAttrType(ctx),
+			"ClusterLogConf":           compute_tf.ClusterLogConf{}.ToAttrType(ctx),
+			"CustomTags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"DriverInstancePoolId":      types.StringType,
+			"DriverNodeTypeId":          types.StringType,
+			"EnableLocalDiskEncryption": types.BoolType,
+			"GcpAttributes":             compute_tf.GcpAttributes{}.ToAttrType(ctx),
+			"InitScripts": basetypes.ListType{
+				ElemType: compute_tf.InitScriptInfo{}.ToAttrType(ctx),
+			},
+			"InstancePoolId": types.StringType,
+			"Label":          types.StringType,
+			"NodeTypeId":     types.StringType,
+			"NumWorkers":     types.Int64Type,
+			"PolicyId":       types.StringType,
+			"SparkConf": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SparkEnvVars": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"SshPublicKeys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1015,6 +1471,16 @@ func (a PipelineClusterAutoscale) GetComplexFieldTypes() map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
+func (a PipelineClusterAutoscale) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"MaxWorkers": types.Int64Type,
+			"MinWorkers": types.Int64Type,
+			"Mode":       types.StringType,
+		},
+	}
+}
+
 type PipelineDeployment struct {
 	// The deployment method that manages the pipeline.
 	Kind types.String `tfsdk:"kind" tf:"optional"`
@@ -1032,9 +1498,18 @@ func (a PipelineDeployment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PipelineDeployment) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Kind":             types.StringType,
+			"MetadataFilePath": types.StringType,
+		},
+	}
+}
+
 type PipelineEvent struct {
 	// Information about an error captured by the event.
-	Error types.Object `tfsdk:"error" tf:"optional,object"`
+	Error types.List `tfsdk:"error" tf:"optional,object"`
 	// The event type. Should always correspond to the details
 	EventType types.String `tfsdk:"event_type" tf:"optional"`
 	// A time-based, globally unique id.
@@ -1046,9 +1521,9 @@ type PipelineEvent struct {
 	// The display message associated with the event.
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Describes where the event originates from.
-	Origin types.Object `tfsdk:"origin" tf:"optional,object"`
+	Origin types.List `tfsdk:"origin" tf:"optional,object"`
 	// A sequencing object to identify and order events.
-	Sequence types.Object `tfsdk:"sequence" tf:"optional,object"`
+	Sequence types.List `tfsdk:"sequence" tf:"optional,object"`
 	// The time of the event.
 	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
 }
@@ -1067,17 +1542,33 @@ func (a PipelineEvent) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a PipelineEvent) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Error":         ErrorDetail{}.ToAttrType(ctx),
+			"EventType":     types.StringType,
+			"Id":            types.StringType,
+			"Level":         types.StringType,
+			"MaturityLevel": types.StringType,
+			"Message":       types.StringType,
+			"Origin":        Origin{}.ToAttrType(ctx),
+			"Sequence":      Sequencing{}.ToAttrType(ctx),
+			"Timestamp":     types.StringType,
+		},
+	}
+}
+
 type PipelineLibrary struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
-	File types.Object `tfsdk:"file" tf:"optional,object"`
+	File types.List `tfsdk:"file" tf:"optional,object"`
 	// URI of the jar to be installed. Currently only DBFS is supported.
 	Jar types.String `tfsdk:"jar" tf:"optional"`
 	// Specification of a maven library to be installed.
 	Maven compute.MavenLibrary `tfsdk:"maven" tf:"optional,object"`
 	// The path to a notebook that defines a pipeline and is stored in the
 	// Databricks workspace.
-	Notebook types.Object `tfsdk:"notebook" tf:"optional,object"`
+	Notebook types.List `tfsdk:"notebook" tf:"optional,object"`
 	// URI of the whl to be installed.
 	Whl types.String `tfsdk:"whl" tf:"optional"`
 }
@@ -1093,6 +1584,18 @@ func (a PipelineLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 		"File":     reflect.TypeOf(FileLibrary{}),
 		"Maven":    reflect.TypeOf(compute.MavenLibrary{}),
 		"Notebook": reflect.TypeOf(NotebookLibrary{}),
+	}
+}
+
+func (a PipelineLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"File":     FileLibrary{}.ToAttrType(ctx),
+			"Jar":      types.StringType,
+			"Maven":    compute_tf.MavenLibrary{}.ToAttrType(ctx),
+			"Notebook": NotebookLibrary{}.ToAttrType(ctx),
+			"Whl":      types.StringType,
+		},
 	}
 }
 
@@ -1112,7 +1615,19 @@ func (newState *PipelinePermission) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a PipelinePermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a PipelinePermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -1136,6 +1651,18 @@ func (a PipelinePermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a PipelinePermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: PipelineAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type PipelinePermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -1150,6 +1677,15 @@ func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringRead(ex
 
 func (a PipelinePermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PipelinePermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type PipelinePermissionsRequest struct {
@@ -1167,6 +1703,17 @@ func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existi
 func (a PipelinePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AccessControlList": reflect.TypeOf(PipelineAccessControlRequest{}),
+	}
+}
+
+func (a PipelinePermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: PipelineAccessControlRequest{}.ToAttrType(ctx),
+			},
+			"PipelineId": types.StringType,
+		},
 	}
 }
 
@@ -1188,20 +1735,20 @@ type PipelineSpec struct {
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
 	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
 	// Deployment type of this pipeline.
-	Deployment types.Object `tfsdk:"deployment" tf:"optional,object"`
+	Deployment types.List `tfsdk:"deployment" tf:"optional,object"`
 	// Whether the pipeline is in Development mode. Defaults to false.
 	Development types.Bool `tfsdk:"development" tf:"optional"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition" tf:"optional"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters types.Object `tfsdk:"filters" tf:"optional,object"`
+	Filters types.List `tfsdk:"filters" tf:"optional,object"`
 	// The definition of a gateway pipeline to support change data capture.
-	GatewayDefinition types.Object `tfsdk:"gateway_definition" tf:"optional,object"`
+	GatewayDefinition types.List `tfsdk:"gateway_definition" tf:"optional,object"`
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition types.Object `tfsdk:"ingestion_definition" tf:"optional,object"`
+	IngestionDefinition types.List `tfsdk:"ingestion_definition" tf:"optional,object"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries" tf:"optional"`
 	// Friendly identifier for this pipeline.
@@ -1211,7 +1758,7 @@ type PipelineSpec struct {
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Restart window of this pipeline.
-	RestartWindow types.Object `tfsdk:"restart_window" tf:"optional,object"`
+	RestartWindow types.List `tfsdk:"restart_window" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -1225,7 +1772,7 @@ type PipelineSpec struct {
 	// To publish to Unity Catalog, also specify `catalog`.
 	Target types.String `tfsdk:"target" tf:"optional"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger types.Object `tfsdk:"trigger" tf:"optional,object"`
+	Trigger types.List `tfsdk:"trigger" tf:"optional,object"`
 }
 
 func (newState *PipelineSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineSpec) {
@@ -1237,7 +1784,7 @@ func (newState *PipelineSpec) SyncEffectiveFieldsDuringRead(existingState Pipeli
 func (a PipelineSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Clusters":            reflect.TypeOf(PipelineCluster{}),
-		"Configuration":       reflect.TypeOf(""),
+		"Configuration":       reflect.TypeOf(types.StringType),
 		"Deployment":          reflect.TypeOf(PipelineDeployment{}),
 		"Filters":             reflect.TypeOf(Filters{}),
 		"GatewayDefinition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
@@ -1246,6 +1793,44 @@ func (a PipelineSpec) GetComplexFieldTypes() map[string]reflect.Type {
 		"Notifications":       reflect.TypeOf(Notifications{}),
 		"RestartWindow":       reflect.TypeOf(RestartWindow{}),
 		"Trigger":             reflect.TypeOf(PipelineTrigger{}),
+	}
+}
+
+func (a PipelineSpec) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BudgetPolicyId": types.StringType,
+			"Catalog":        types.StringType,
+			"Channel":        types.StringType,
+			"Clusters": basetypes.ListType{
+				ElemType: PipelineCluster{}.ToAttrType(ctx),
+			},
+			"Configuration": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"Continuous":          types.BoolType,
+			"Deployment":          PipelineDeployment{}.ToAttrType(ctx),
+			"Development":         types.BoolType,
+			"Edition":             types.StringType,
+			"Filters":             Filters{}.ToAttrType(ctx),
+			"GatewayDefinition":   IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+			"Id":                  types.StringType,
+			"IngestionDefinition": IngestionPipelineDefinition{}.ToAttrType(ctx),
+			"Libraries": basetypes.ListType{
+				ElemType: PipelineLibrary{}.ToAttrType(ctx),
+			},
+			"Name": types.StringType,
+			"Notifications": basetypes.ListType{
+				ElemType: Notifications{}.ToAttrType(ctx),
+			},
+			"Photon":        types.BoolType,
+			"RestartWindow": RestartWindow{}.ToAttrType(ctx),
+			"Schema":        types.StringType,
+			"Serverless":    types.BoolType,
+			"Storage":       types.StringType,
+			"Target":        types.StringType,
+			"Trigger":       PipelineTrigger{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1282,8 +1867,25 @@ func (a PipelineStateInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a PipelineStateInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClusterId":       types.StringType,
+			"CreatorUserName": types.StringType,
+			"Health":          types.StringType,
+			"LatestUpdates": basetypes.ListType{
+				ElemType: UpdateStateInfo{}.ToAttrType(ctx),
+			},
+			"Name":          types.StringType,
+			"PipelineId":    types.StringType,
+			"RunAsUserName": types.StringType,
+			"State":         types.StringType,
+		},
+	}
+}
+
 type PipelineTrigger struct {
-	Cron types.Object `tfsdk:"cron" tf:"optional,object"`
+	Cron types.List `tfsdk:"cron" tf:"optional,object"`
 
 	Manual []ManualTrigger `tfsdk:"manual" tf:"optional,object"`
 }
@@ -1301,6 +1903,15 @@ func (a PipelineTrigger) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a PipelineTrigger) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cron":   CronTrigger{}.ToAttrType(ctx),
+			"Manual": ManualTrigger{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type ReportSpec struct {
 	// Required. Destination catalog to store table.
 	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
@@ -1314,7 +1925,7 @@ type ReportSpec struct {
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the
 	// IngestionPipelineDefinition object.
-	TableConfiguration types.Object `tfsdk:"table_configuration" tf:"optional,object"`
+	TableConfiguration types.List `tfsdk:"table_configuration" tf:"optional,object"`
 }
 
 func (newState *ReportSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportSpec) {
@@ -1326,6 +1937,18 @@ func (newState *ReportSpec) SyncEffectiveFieldsDuringRead(existingState ReportSp
 func (a ReportSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TableConfiguration": reflect.TypeOf(TableSpecificConfig{}),
+	}
+}
+
+func (a ReportSpec) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DestinationCatalog": types.StringType,
+			"DestinationSchema":  types.StringType,
+			"DestinationTable":   types.StringType,
+			"SourceUrl":          types.StringType,
+			"TableConfiguration": TableSpecificConfig{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1354,6 +1977,16 @@ func (a RestartWindow) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a RestartWindow) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DaysOfWeek": types.StringType,
+			"StartHour":  types.Int64Type,
+			"TimeZoneId": types.StringType,
+		},
+	}
+}
+
 type SchemaSpec struct {
 	// Required. Destination catalog to store tables.
 	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
@@ -1369,7 +2002,7 @@ type SchemaSpec struct {
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in this schema and override the
 	// table_configuration defined in the IngestionPipelineDefinition object.
-	TableConfiguration types.Object `tfsdk:"table_configuration" tf:"optional,object"`
+	TableConfiguration types.List `tfsdk:"table_configuration" tf:"optional,object"`
 }
 
 func (newState *SchemaSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaSpec) {
@@ -1384,11 +2017,23 @@ func (a SchemaSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a SchemaSpec) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DestinationCatalog": types.StringType,
+			"DestinationSchema":  types.StringType,
+			"SourceCatalog":      types.StringType,
+			"SourceSchema":       types.StringType,
+			"TableConfiguration": TableSpecificConfig{}.ToAttrType(ctx),
+		},
+	}
+}
+
 type Sequencing struct {
 	// A sequence number, unique and increasing within the control plane.
 	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no" tf:"optional"`
 	// the ID assigned by the data plane.
-	DataPlaneId types.Object `tfsdk:"data_plane_id" tf:"optional,object"`
+	DataPlaneId types.List `tfsdk:"data_plane_id" tf:"optional,object"`
 }
 
 func (newState *Sequencing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sequencing) {
@@ -1400,6 +2045,15 @@ func (newState *Sequencing) SyncEffectiveFieldsDuringRead(existingState Sequenci
 func (a Sequencing) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"DataPlaneId": reflect.TypeOf(DataPlaneId{}),
+	}
+}
+
+func (a Sequencing) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ControlPlaneSeqNo": types.Int64Type,
+			"DataPlaneId":       DataPlaneId{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1424,6 +2078,18 @@ func (a SerializedException) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a SerializedException) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ClassName": types.StringType,
+			"Message":   types.StringType,
+			"Stack": basetypes.ListType{
+				ElemType: StackFrame{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type StackFrame struct {
 	// Class from which the method call originated
 	DeclaringClass types.String `tfsdk:"declaring_class" tf:"optional"`
@@ -1443,6 +2109,17 @@ func (newState *StackFrame) SyncEffectiveFieldsDuringRead(existingState StackFra
 
 func (a StackFrame) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a StackFrame) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DeclaringClass": types.StringType,
+			"FileName":       types.StringType,
+			"LineNumber":     types.Int64Type,
+			"MethodName":     types.StringType,
+		},
+	}
 }
 
 type StartUpdate struct {
@@ -1474,8 +2151,25 @@ func (newState *StartUpdate) SyncEffectiveFieldsDuringRead(existingState StartUp
 
 func (a StartUpdate) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FullRefreshSelection": reflect.TypeOf(""),
-		"RefreshSelection":     reflect.TypeOf(""),
+		"FullRefreshSelection": reflect.TypeOf(types.StringType),
+		"RefreshSelection":     reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a StartUpdate) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cause":       types.StringType,
+			"FullRefresh": types.BoolType,
+			"FullRefreshSelection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PipelineId": types.StringType,
+			"RefreshSelection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"ValidateOnly": types.BoolType,
+		},
 	}
 }
 
@@ -1493,6 +2187,14 @@ func (a StartUpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a StartUpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"UpdateId": types.StringType,
+		},
+	}
+}
+
 type StopPipelineResponse struct {
 }
 
@@ -1504,6 +2206,12 @@ func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a StopPipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a StopPipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Stop a pipeline
@@ -1519,6 +2227,14 @@ func (newState *StopRequest) SyncEffectiveFieldsDuringRead(existingState StopReq
 
 func (a StopRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a StopRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PipelineId": types.StringType,
+		},
+	}
 }
 
 type TableSpec struct {
@@ -1539,7 +2255,7 @@ type TableSpec struct {
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the
 	// IngestionPipelineDefinition object and the SchemaSpec.
-	TableConfiguration types.Object `tfsdk:"table_configuration" tf:"optional,object"`
+	TableConfiguration types.List `tfsdk:"table_configuration" tf:"optional,object"`
 }
 
 func (newState *TableSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpec) {
@@ -1551,6 +2267,20 @@ func (newState *TableSpec) SyncEffectiveFieldsDuringRead(existingState TableSpec
 func (a TableSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"TableConfiguration": reflect.TypeOf(TableSpecificConfig{}),
+	}
+}
+
+func (a TableSpec) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DestinationCatalog": types.StringType,
+			"DestinationSchema":  types.StringType,
+			"DestinationTable":   types.StringType,
+			"SourceCatalog":      types.StringType,
+			"SourceSchema":       types.StringType,
+			"SourceTable":        types.StringType,
+			"TableConfiguration": TableSpecificConfig{}.ToAttrType(ctx),
+		},
 	}
 }
 
@@ -1576,8 +2306,23 @@ func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringRead(existingState
 
 func (a TableSpecificConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PrimaryKeys": reflect.TypeOf(""),
-		"SequenceBy":  reflect.TypeOf(""),
+		"PrimaryKeys": reflect.TypeOf(types.StringType),
+		"SequenceBy":  reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a TableSpecificConfig) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PrimaryKeys": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"SalesforceIncludeFormulaFields": types.BoolType,
+			"ScdType":                        types.StringType,
+			"SequenceBy": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1588,7 +2333,7 @@ type UpdateInfo struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 	// The pipeline configuration with system defaults applied where unspecified
 	// by the user. Not returned by ListUpdates.
-	Config types.Object `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config" tf:"optional,object"`
 	// The time when this update was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
 	// If true, this update will reset all tables before running.
@@ -1623,8 +2368,30 @@ func (newState *UpdateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateIn
 func (a UpdateInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Config":               reflect.TypeOf(PipelineSpec{}),
-		"FullRefreshSelection": reflect.TypeOf(""),
-		"RefreshSelection":     reflect.TypeOf(""),
+		"FullRefreshSelection": reflect.TypeOf(types.StringType),
+		"RefreshSelection":     reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a UpdateInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Cause":        types.StringType,
+			"ClusterId":    types.StringType,
+			"Config":       PipelineSpec{}.ToAttrType(ctx),
+			"CreationTime": types.Int64Type,
+			"FullRefresh":  types.BoolType,
+			"FullRefreshSelection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PipelineId": types.StringType,
+			"RefreshSelection": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"State":        types.StringType,
+			"UpdateId":     types.StringType,
+			"ValidateOnly": types.BoolType,
+		},
 	}
 }
 
@@ -1644,4 +2411,14 @@ func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringRead(existingState Upd
 
 func (a UpdateStateInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UpdateStateInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreationTime": types.StringType,
+			"State":        types.StringType,
+			"UpdateId":     types.StringType,
+		},
+	}
 }

@@ -11,9 +11,12 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package workspace_tf
 
 import (
+	"context"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type AclItem struct {
@@ -33,6 +36,15 @@ func (a AclItem) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a AclItem) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Permission": types.StringType,
+			"Principal":  types.StringType,
+		},
+	}
+}
+
 type AzureKeyVaultSecretScopeMetadata struct {
 	// The DNS of the KeyVault
 	DnsName types.String `tfsdk:"dns_name" tf:""`
@@ -49,6 +61,15 @@ func (newState *AzureKeyVaultSecretScopeMetadata) SyncEffectiveFieldsDuringRead(
 
 func (a AzureKeyVaultSecretScopeMetadata) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a AzureKeyVaultSecretScopeMetadata) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"DnsName":    types.StringType,
+			"ResourceId": types.StringType,
+		},
+	}
 }
 
 type CreateCredentialsRequest struct {
@@ -83,6 +104,16 @@ func (a CreateCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
+func (a CreateCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GitProvider":         types.StringType,
+			"GitUsername":         types.StringType,
+			"PersonalAccessToken": types.StringType,
+		},
+	}
+}
+
 type CreateCredentialsResponse struct {
 	// ID of the credential object in the workspace.
 	CredentialId types.Int64 `tfsdk:"credential_id" tf:""`
@@ -103,6 +134,16 @@ func (a CreateCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a CreateCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialId": types.Int64Type,
+			"GitProvider":  types.StringType,
+			"GitUsername":  types.StringType,
+		},
+	}
+}
+
 type CreateRepoRequest struct {
 	// Desired path for the repo in the workspace. Almost any path in the
 	// workspace can be chosen. If repo is created in `/Repos`, path must be in
@@ -115,7 +156,7 @@ type CreateRepoRequest struct {
 	Provider types.String `tfsdk:"provider" tf:""`
 	// If specified, the repo will be created with sparse checkout enabled. You
 	// cannot enable/disable sparse checkout after the repo is created.
-	SparseCheckout types.Object `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the Git repository to be linked.
 	Url types.String `tfsdk:"url" tf:""`
 }
@@ -132,6 +173,17 @@ func (a CreateRepoRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a CreateRepoRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Path":           types.StringType,
+			"Provider":       types.StringType,
+			"SparseCheckout": SparseCheckout{}.ToAttrType(ctx),
+			"Url":            types.StringType,
+		},
+	}
+}
+
 type CreateRepoResponse struct {
 	// Branch that the Git folder (repo) is checked out to.
 	Branch types.String `tfsdk:"branch" tf:"optional"`
@@ -145,7 +197,7 @@ type CreateRepoResponse struct {
 	// Git provider of the linked Git repository.
 	Provider types.String `tfsdk:"provider" tf:"optional"`
 	// Sparse checkout settings for the Git folder (repo).
-	SparseCheckout types.Object `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the linked Git repository.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -162,9 +214,23 @@ func (a CreateRepoResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a CreateRepoResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Branch":         types.StringType,
+			"HeadCommitId":   types.StringType,
+			"Id":             types.Int64Type,
+			"Path":           types.StringType,
+			"Provider":       types.StringType,
+			"SparseCheckout": SparseCheckout{}.ToAttrType(ctx),
+			"Url":            types.StringType,
+		},
+	}
+}
+
 type CreateScope struct {
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
-	BackendAzureKeyvault types.Object `tfsdk:"backend_azure_keyvault" tf:"optional,object"`
+	BackendAzureKeyvault types.List `tfsdk:"backend_azure_keyvault" tf:"optional,object"`
 	// The principal that is initially granted `MANAGE` permission to the
 	// created scope.
 	InitialManagePrincipal types.String `tfsdk:"initial_manage_principal" tf:"optional"`
@@ -187,6 +253,17 @@ func (a CreateScope) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a CreateScope) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BackendAzureKeyvault":   AzureKeyVaultSecretScopeMetadata{}.ToAttrType(ctx),
+			"InitialManagePrincipal": types.StringType,
+			"Scope":                  types.StringType,
+			"ScopeBackendType":       types.StringType,
+		},
+	}
+}
+
 type CreateScopeResponse struct {
 }
 
@@ -198,6 +275,12 @@ func (newState *CreateScopeResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a CreateScopeResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a CreateScopeResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type CredentialInfo struct {
@@ -220,6 +303,16 @@ func (a CredentialInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a CredentialInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialId": types.Int64Type,
+			"GitProvider":  types.StringType,
+			"GitUsername":  types.StringType,
+		},
+	}
+}
+
 type Delete struct {
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"path" tf:""`
@@ -240,6 +333,15 @@ func (a Delete) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a Delete) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Path":      types.StringType,
+			"Recursive": types.BoolType,
+		},
+	}
+}
+
 type DeleteAcl struct {
 	// The principal to remove an existing ACL from.
 	Principal types.String `tfsdk:"principal" tf:""`
@@ -257,6 +359,15 @@ func (a DeleteAcl) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteAcl) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Principal": types.StringType,
+			"Scope":     types.StringType,
+		},
+	}
+}
+
 type DeleteAclResponse struct {
 }
 
@@ -268,6 +379,12 @@ func (newState *DeleteAclResponse) SyncEffectiveFieldsDuringRead(existingState D
 
 func (a DeleteAclResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteAclResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete a credential
@@ -286,6 +403,14 @@ func (a DeleteCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialId": types.Int64Type,
+		},
+	}
+}
+
 type DeleteCredentialsResponse struct {
 }
 
@@ -297,6 +422,12 @@ func (newState *DeleteCredentialsResponse) SyncEffectiveFieldsDuringRead(existin
 
 func (a DeleteCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Delete a repo
@@ -315,6 +446,14 @@ func (a DeleteRepoRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteRepoRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RepoId": types.Int64Type,
+		},
+	}
+}
+
 type DeleteRepoResponse struct {
 }
 
@@ -328,6 +467,12 @@ func (a DeleteRepoResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteRepoResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type DeleteResponse struct {
 }
 
@@ -339,6 +484,12 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState Dele
 
 func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type DeleteScope struct {
@@ -356,6 +507,14 @@ func (a DeleteScope) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteScope) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Scope": types.StringType,
+		},
+	}
+}
+
 type DeleteScopeResponse struct {
 }
 
@@ -367,6 +526,12 @@ func (newState *DeleteScopeResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a DeleteScopeResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteScopeResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type DeleteSecret struct {
@@ -386,6 +551,15 @@ func (a DeleteSecret) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a DeleteSecret) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Key":   types.StringType,
+			"Scope": types.StringType,
+		},
+	}
+}
+
 type DeleteSecretResponse struct {
 }
 
@@ -397,6 +571,12 @@ func (newState *DeleteSecretResponse) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a DeleteSecretResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a DeleteSecretResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Export a workspace object
@@ -431,6 +611,15 @@ func (a ExportRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ExportRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Format": types.StringType,
+			"Path":   types.StringType,
+		},
+	}
+}
+
 type ExportResponse struct {
 	// The base64-encoded content. If the limit (10MB) is exceeded, exception
 	// with error code **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown.
@@ -447,6 +636,15 @@ func (newState *ExportResponse) SyncEffectiveFieldsDuringRead(existingState Expo
 
 func (a ExportResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ExportResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Content":  types.StringType,
+			"FileType": types.StringType,
+		},
+	}
 }
 
 // Get secret ACL details
@@ -467,6 +665,15 @@ func (a GetAclRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetAclRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Principal": types.StringType,
+			"Scope":     types.StringType,
+		},
+	}
+}
+
 // Get a credential entry
 type GetCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
@@ -481,6 +688,14 @@ func (newState *GetCredentialsRequest) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a GetCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialId": types.Int64Type,
+		},
+	}
 }
 
 type GetCredentialsResponse struct {
@@ -503,6 +718,16 @@ func (a GetCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialId": types.Int64Type,
+			"GitProvider":  types.StringType,
+			"GitUsername":  types.StringType,
+		},
+	}
+}
+
 // Get repo permission levels
 type GetRepoPermissionLevelsRequest struct {
 	// The repo for which to get or manage permissions.
@@ -517,6 +742,14 @@ func (newState *GetRepoPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(ex
 
 func (a GetRepoPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetRepoPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RepoId": types.StringType,
+		},
+	}
 }
 
 type GetRepoPermissionLevelsResponse struct {
@@ -536,6 +769,16 @@ func (a GetRepoPermissionLevelsResponse) GetComplexFieldTypes() map[string]refle
 	}
 }
 
+func (a GetRepoPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: RepoPermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // Get repo permissions
 type GetRepoPermissionsRequest struct {
 	// The repo for which to get or manage permissions.
@@ -550,6 +793,14 @@ func (newState *GetRepoPermissionsRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a GetRepoPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetRepoPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RepoId": types.StringType,
+		},
+	}
 }
 
 // Get a repo
@@ -568,6 +819,14 @@ func (a GetRepoRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetRepoRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"RepoId": types.Int64Type,
+		},
+	}
+}
+
 type GetRepoResponse struct {
 	// Branch that the local version of the repo is checked out to.
 	Branch types.String `tfsdk:"branch" tf:"optional"`
@@ -580,7 +839,7 @@ type GetRepoResponse struct {
 	// Git provider of the linked Git repository.
 	Provider types.String `tfsdk:"provider" tf:"optional"`
 	// Sparse checkout settings for the Git folder (repo).
-	SparseCheckout types.Object `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the linked Git repository.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -594,6 +853,20 @@ func (newState *GetRepoResponse) SyncEffectiveFieldsDuringRead(existingState Get
 func (a GetRepoResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"SparseCheckout": reflect.TypeOf(SparseCheckout{}),
+	}
+}
+
+func (a GetRepoResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Branch":         types.StringType,
+			"HeadCommitId":   types.StringType,
+			"Id":             types.Int64Type,
+			"Path":           types.StringType,
+			"Provider":       types.StringType,
+			"SparseCheckout": SparseCheckout{}.ToAttrType(ctx),
+			"Url":            types.StringType,
+		},
 	}
 }
 
@@ -615,6 +888,15 @@ func (a GetSecretRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetSecretRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Key":   types.StringType,
+			"Scope": types.StringType,
+		},
+	}
+}
+
 type GetSecretResponse struct {
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key" tf:"optional"`
@@ -632,6 +914,15 @@ func (a GetSecretResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a GetSecretResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Key":   types.StringType,
+			"Value": types.StringType,
+		},
+	}
+}
+
 // Get status
 type GetStatusRequest struct {
 	// The absolute path of the notebook or directory.
@@ -646,6 +937,14 @@ func (newState *GetStatusRequest) SyncEffectiveFieldsDuringRead(existingState Ge
 
 func (a GetStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Path": types.StringType,
+		},
+	}
 }
 
 // Get workspace object permission levels
@@ -666,6 +965,15 @@ func (a GetWorkspaceObjectPermissionLevelsRequest) GetComplexFieldTypes() map[st
 	return map[string]reflect.Type{}
 }
 
+func (a GetWorkspaceObjectPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"WorkspaceObjectId":   types.StringType,
+			"WorkspaceObjectType": types.StringType,
+		},
+	}
+}
+
 type GetWorkspaceObjectPermissionLevelsResponse struct {
 	// Specific permission levels
 	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
@@ -680,6 +988,16 @@ func (newState *GetWorkspaceObjectPermissionLevelsResponse) SyncEffectiveFieldsD
 func (a GetWorkspaceObjectPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"PermissionLevels": reflect.TypeOf(WorkspaceObjectPermissionsDescription{}),
+	}
+}
+
+func (a GetWorkspaceObjectPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"PermissionLevels": basetypes.ListType{
+				ElemType: WorkspaceObjectPermissionsDescription{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -699,6 +1017,15 @@ func (newState *GetWorkspaceObjectPermissionsRequest) SyncEffectiveFieldsDuringR
 
 func (a GetWorkspaceObjectPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a GetWorkspaceObjectPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"WorkspaceObjectId":   types.StringType,
+			"WorkspaceObjectType": types.StringType,
+		},
+	}
 }
 
 type Import struct {
@@ -744,6 +1071,18 @@ func (a Import) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a Import) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Content":   types.StringType,
+			"Format":    types.StringType,
+			"Language":  types.StringType,
+			"Overwrite": types.BoolType,
+			"Path":      types.StringType,
+		},
+	}
+}
+
 type ImportResponse struct {
 }
 
@@ -755,6 +1094,12 @@ func (newState *ImportResponse) SyncEffectiveFieldsDuringRead(existingState Impo
 
 func (a ImportResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ImportResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Lists ACLs
@@ -771,6 +1116,14 @@ func (newState *ListAclsRequest) SyncEffectiveFieldsDuringRead(existingState Lis
 
 func (a ListAclsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a ListAclsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Scope": types.StringType,
+		},
+	}
 }
 
 type ListAclsResponse struct {
@@ -790,6 +1143,16 @@ func (a ListAclsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListAclsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Items": basetypes.ListType{
+				ElemType: AclItem{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ListCredentialsResponse struct {
 	// List of credentials.
 	Credentials types.List `tfsdk:"credentials" tf:"optional"`
@@ -804,6 +1167,16 @@ func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringRead(existingS
 func (a ListCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Credentials": reflect.TypeOf(CredentialInfo{}),
+	}
+}
+
+func (a ListCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Credentials": basetypes.ListType{
+				ElemType: CredentialInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -829,6 +1202,15 @@ func (a ListReposRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListReposRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"PathPrefix":    types.StringType,
+		},
+	}
+}
+
 type ListReposResponse struct {
 	// Token that can be specified as a query parameter to the `GET /repos`
 	// endpoint to retrieve the next page of results.
@@ -849,6 +1231,17 @@ func (a ListReposResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListReposResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NextPageToken": types.StringType,
+			"Repos": basetypes.ListType{
+				ElemType: RepoInfo{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 type ListResponse struct {
 	// List of objects.
 	Objects types.List `tfsdk:"objects" tf:"optional"`
@@ -863,6 +1256,16 @@ func (newState *ListResponse) SyncEffectiveFieldsDuringRead(existingState ListRe
 func (a ListResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Objects": reflect.TypeOf(ObjectInfo{}),
+	}
+}
+
+func (a ListResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Objects": basetypes.ListType{
+				ElemType: ObjectInfo{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -883,6 +1286,16 @@ func (a ListScopesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a ListScopesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Scopes": basetypes.ListType{
+				ElemType: SecretScope{}.ToAttrType(ctx),
+			},
+		},
+	}
+}
+
 // List secret keys
 type ListSecretsRequest struct {
 	// The name of the scope to list secrets within.
@@ -899,6 +1312,14 @@ func (a ListSecretsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListSecretsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Scope": types.StringType,
+		},
+	}
+}
+
 type ListSecretsResponse struct {
 	// Metadata information of all secrets contained within the given scope.
 	Secrets types.List `tfsdk:"secrets" tf:"optional"`
@@ -913,6 +1334,16 @@ func (newState *ListSecretsResponse) SyncEffectiveFieldsDuringRead(existingState
 func (a ListSecretsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Secrets": reflect.TypeOf(SecretMetadata{}),
+	}
+}
+
+func (a ListSecretsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Secrets": basetypes.ListType{
+				ElemType: SecretMetadata{}.ToAttrType(ctx),
+			},
+		},
 	}
 }
 
@@ -934,6 +1365,15 @@ func (a ListWorkspaceRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ListWorkspaceRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"NotebooksModifiedAfter": types.Int64Type,
+			"Path":                   types.StringType,
+		},
+	}
+}
+
 type Mkdirs struct {
 	// The absolute path of the directory. If the parent directories do not
 	// exist, it will also create them. If the directory already exists, this
@@ -951,6 +1391,14 @@ func (a Mkdirs) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a Mkdirs) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Path": types.StringType,
+		},
+	}
+}
+
 type MkdirsResponse struct {
 }
 
@@ -962,6 +1410,12 @@ func (newState *MkdirsResponse) SyncEffectiveFieldsDuringRead(existingState Mkdi
 
 func (a MkdirsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a MkdirsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type ObjectInfo struct {
@@ -999,6 +1453,21 @@ func (a ObjectInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a ObjectInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CreatedAt":  types.Int64Type,
+			"Language":   types.StringType,
+			"ModifiedAt": types.Int64Type,
+			"ObjectId":   types.Int64Type,
+			"ObjectType": types.StringType,
+			"Path":       types.StringType,
+			"ResourceId": types.StringType,
+			"Size":       types.Int64Type,
+		},
+	}
+}
+
 type PutAcl struct {
 	// The permission level applied to the principal.
 	Permission types.String `tfsdk:"permission" tf:""`
@@ -1018,6 +1487,16 @@ func (a PutAcl) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PutAcl) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Permission": types.StringType,
+			"Principal":  types.StringType,
+			"Scope":      types.StringType,
+		},
+	}
+}
+
 type PutAclResponse struct {
 }
 
@@ -1029,6 +1508,12 @@ func (newState *PutAclResponse) SyncEffectiveFieldsDuringRead(existingState PutA
 
 func (a PutAclResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PutAclResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type PutSecret struct {
@@ -1052,6 +1537,17 @@ func (a PutSecret) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a PutSecret) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BytesValue":  types.StringType,
+			"Key":         types.StringType,
+			"Scope":       types.StringType,
+			"StringValue": types.StringType,
+		},
+	}
+}
+
 type PutSecretResponse struct {
 }
 
@@ -1063,6 +1559,12 @@ func (newState *PutSecretResponse) SyncEffectiveFieldsDuringRead(existingState P
 
 func (a PutSecretResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a PutSecretResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type RepoAccessControlRequest struct {
@@ -1084,6 +1586,17 @@ func (newState *RepoAccessControlRequest) SyncEffectiveFieldsDuringRead(existing
 
 func (a RepoAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a RepoAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type RepoAccessControlResponse struct {
@@ -1111,6 +1624,20 @@ func (a RepoAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Typ
 	}
 }
 
+func (a RepoAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: RepoPermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 // Git folder (repo) information.
 type RepoInfo struct {
 	// Name of the current git branch of the git folder (repo).
@@ -1124,7 +1651,7 @@ type RepoInfo struct {
 	// Git provider of the remote git repository, e.g. `gitHub`.
 	Provider types.String `tfsdk:"provider" tf:"optional"`
 	// Sparse checkout config for the git folder (repo).
-	SparseCheckout types.Object `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// URL of the remote git repository.
 	Url types.String `tfsdk:"url" tf:"optional"`
 }
@@ -1138,6 +1665,20 @@ func (newState *RepoInfo) SyncEffectiveFieldsDuringRead(existingState RepoInfo) 
 func (a RepoInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"SparseCheckout": reflect.TypeOf(SparseCheckout{}),
+	}
+}
+
+func (a RepoInfo) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Branch":         types.StringType,
+			"HeadCommitId":   types.StringType,
+			"Id":             types.Int64Type,
+			"Path":           types.StringType,
+			"Provider":       types.StringType,
+			"SparseCheckout": SparseCheckout{}.ToAttrType(ctx),
+			"Url":            types.StringType,
+		},
 	}
 }
 
@@ -1157,7 +1698,19 @@ func (newState *RepoPermission) SyncEffectiveFieldsDuringRead(existingState Repo
 
 func (a RepoPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a RepoPermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -1181,6 +1734,18 @@ func (a RepoPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a RepoPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: RepoAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type RepoPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -1195,6 +1760,15 @@ func (newState *RepoPermissionsDescription) SyncEffectiveFieldsDuringRead(existi
 
 func (a RepoPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a RepoPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type RepoPermissionsRequest struct {
@@ -1215,6 +1789,17 @@ func (a RepoPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a RepoPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: RepoAccessControlRequest{}.ToAttrType(ctx),
+			},
+			"RepoId": types.StringType,
+		},
+	}
+}
+
 type SecretMetadata struct {
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key" tf:"optional"`
@@ -1232,11 +1817,20 @@ func (a SecretMetadata) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+func (a SecretMetadata) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Key":                  types.StringType,
+			"LastUpdatedTimestamp": types.Int64Type,
+		},
+	}
+}
+
 type SecretScope struct {
 	// The type of secret scope backend.
 	BackendType types.String `tfsdk:"backend_type" tf:"optional"`
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
-	KeyvaultMetadata types.Object `tfsdk:"keyvault_metadata" tf:"optional,object"`
+	KeyvaultMetadata types.List `tfsdk:"keyvault_metadata" tf:"optional,object"`
 	// A unique name to identify the secret scope.
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
@@ -1250,6 +1844,16 @@ func (newState *SecretScope) SyncEffectiveFieldsDuringRead(existingState SecretS
 func (a SecretScope) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"KeyvaultMetadata": reflect.TypeOf(AzureKeyVaultSecretScopeMetadata{}),
+	}
+}
+
+func (a SecretScope) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"BackendType":      types.StringType,
+			"KeyvaultMetadata": AzureKeyVaultSecretScopeMetadata{}.ToAttrType(ctx),
+			"Name":             types.StringType,
+		},
 	}
 }
 
@@ -1270,7 +1874,17 @@ func (newState *SparseCheckout) SyncEffectiveFieldsDuringRead(existingState Spar
 
 func (a SparseCheckout) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Patterns": reflect.TypeOf(""),
+		"Patterns": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a SparseCheckout) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Patterns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1291,7 +1905,17 @@ func (newState *SparseCheckoutUpdate) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a SparseCheckoutUpdate) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Patterns": reflect.TypeOf(""),
+		"Patterns": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a SparseCheckoutUpdate) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Patterns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
 	}
 }
 
@@ -1329,6 +1953,17 @@ func (a UpdateCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"CredentialId":        types.Int64Type,
+			"GitProvider":         types.StringType,
+			"GitUsername":         types.StringType,
+			"PersonalAccessToken": types.StringType,
+		},
+	}
+}
+
 type UpdateCredentialsResponse struct {
 }
 
@@ -1342,6 +1977,12 @@ func (a UpdateCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
+func (a UpdateCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type UpdateRepoRequest struct {
 	// Branch that the local version of the repo is checked out to.
 	Branch types.String `tfsdk:"branch" tf:"optional"`
@@ -1349,7 +1990,7 @@ type UpdateRepoRequest struct {
 	RepoId types.Int64 `tfsdk:"-"`
 	// If specified, update the sparse checkout settings. The update will fail
 	// if sparse checkout is not enabled for the repo.
-	SparseCheckout types.Object `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
 	// Tag that the local version of the repo is checked out to. Updating the
 	// repo to a tag puts the repo in a detached HEAD state. Before committing
 	// new changes, you must update the repo to a branch instead of the detached
@@ -1369,6 +2010,17 @@ func (a UpdateRepoRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	}
 }
 
+func (a UpdateRepoRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Branch":         types.StringType,
+			"RepoId":         types.Int64Type,
+			"SparseCheckout": SparseCheckoutUpdate{}.ToAttrType(ctx),
+			"Tag":            types.StringType,
+		},
+	}
+}
+
 type UpdateRepoResponse struct {
 }
 
@@ -1380,6 +2032,12 @@ func (newState *UpdateRepoResponse) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a UpdateRepoResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a UpdateRepoResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 type WorkspaceObjectAccessControlRequest struct {
@@ -1401,6 +2059,17 @@ func (newState *WorkspaceObjectAccessControlRequest) SyncEffectiveFieldsDuringRe
 
 func (a WorkspaceObjectAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a WorkspaceObjectAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"GroupName":            types.StringType,
+			"PermissionLevel":      types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
 }
 
 type WorkspaceObjectAccessControlResponse struct {
@@ -1428,6 +2097,20 @@ func (a WorkspaceObjectAccessControlResponse) GetComplexFieldTypes() map[string]
 	}
 }
 
+func (a WorkspaceObjectAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AllPermissions": basetypes.ListType{
+				ElemType: WorkspaceObjectPermission{}.ToAttrType(ctx),
+			},
+			"DisplayName":          types.StringType,
+			"GroupName":            types.StringType,
+			"ServicePrincipalName": types.StringType,
+			"UserName":             types.StringType,
+		},
+	}
+}
+
 type WorkspaceObjectPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -1444,7 +2127,19 @@ func (newState *WorkspaceObjectPermission) SyncEffectiveFieldsDuringRead(existin
 
 func (a WorkspaceObjectPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(""),
+		"InheritedFromObject": reflect.TypeOf(types.StringType),
+	}
+}
+
+func (a WorkspaceObjectPermission) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Inherited": types.BoolType,
+			"InheritedFromObject": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"PermissionLevel": types.StringType,
+		},
 	}
 }
 
@@ -1468,6 +2163,18 @@ func (a WorkspaceObjectPermissions) GetComplexFieldTypes() map[string]reflect.Ty
 	}
 }
 
+func (a WorkspaceObjectPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: WorkspaceObjectAccessControlResponse{}.ToAttrType(ctx),
+			},
+			"ObjectId":   types.StringType,
+			"ObjectType": types.StringType,
+		},
+	}
+}
+
 type WorkspaceObjectPermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -1482,6 +2189,15 @@ func (newState *WorkspaceObjectPermissionsDescription) SyncEffectiveFieldsDuring
 
 func (a WorkspaceObjectPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{}
+}
+
+func (a WorkspaceObjectPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"Description":     types.StringType,
+			"PermissionLevel": types.StringType,
+		},
+	}
 }
 
 type WorkspaceObjectPermissionsRequest struct {
@@ -1501,5 +2217,17 @@ func (newState *WorkspaceObjectPermissionsRequest) SyncEffectiveFieldsDuringRead
 func (a WorkspaceObjectPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"AccessControlList": reflect.TypeOf(WorkspaceObjectAccessControlRequest{}),
+	}
+}
+
+func (a WorkspaceObjectPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"AccessControlList": basetypes.ListType{
+				ElemType: WorkspaceObjectAccessControlRequest{}.ToAttrType(ctx),
+			},
+			"WorkspaceObjectId":   types.StringType,
+			"WorkspaceObjectType": types.StringType,
+		},
 	}
 }

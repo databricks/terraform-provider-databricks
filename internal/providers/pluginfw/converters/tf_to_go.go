@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/logger"
+	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -51,6 +52,11 @@ func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{
 
 	forceSendFieldsField := destVal.FieldByName("ForceSendFields")
 
+	var innerTypes map[string]reflect.Type
+	if cftp, ok := tfsdk.(tfcommon.ComplexFieldTypeProvider); ok {
+		innerTypes = cftp.GetComplexFieldTypes()
+	}
+
 	allFields := tfreflect.ListAllFields(srcVal)
 	for _, field := range allFields {
 		srcField := field.Value
@@ -62,8 +68,9 @@ func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{
 		}
 
 		destField := destVal.FieldByName(srcFieldName)
+		innerType, _ := innerTypes[srcFieldName]
 
-		err := tfSdkToGoSdkSingleField(ctx, srcField, destField, srcFieldName, &forceSendFieldsField)
+		err := tfSdkToGoSdkSingleField(ctx, srcField, destField, srcFieldName, &forceSendFieldsField, innerType)
 		if err != nil {
 			return diag.Diagnostics{diag.NewErrorDiagnostic(tfSdkToGoSdkFieldConversionFailureMessage, err.Error())}
 		}
@@ -72,7 +79,13 @@ func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{
 	return nil
 }
 
-func tfSdkToGoSdkSingleField(ctx context.Context, srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendFieldsField *reflect.Value) error {
+func tfSdkToGoSdkSingleField(
+	ctx context.Context,
+	srcField reflect.Value,
+	destField reflect.Value,
+	srcFieldName string,
+	forceSendFieldsField *reflect.Value,
+	innerType reflect.Type) error {
 
 	if !destField.IsValid() {
 		// Skip field that destination struct does not have.
@@ -105,7 +118,7 @@ func tfSdkToGoSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			return nil
 		}
 		assertStructSliceLengthIsOne(srcField)
-		tfsdkToGoSdkStructField(srcField.Index(0), destField, srcFieldName, forceSendFieldsField, ctx)
+		tfsdkToGoSdkStructField(srcField.Index(0), destField, srcFieldName, forceSendFieldsField, ctx, innerType)
 	} else if srcField.Kind() == reflect.Slice && destField.Kind() == reflect.Ptr {
 		if srcField.IsNil() {
 			// Skip nils
@@ -120,7 +133,7 @@ func tfSdkToGoSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			panic(fmt.Sprintf("%s. %s", tfSdkToGoSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
 		}
 	} else if srcField.Kind() == reflect.Struct {
-		tfsdkToGoSdkStructField(srcField, destField, srcFieldName, forceSendFieldsField, ctx)
+		tfsdkToGoSdkStructField(srcField, destField, srcFieldName, forceSendFieldsField, ctx, innerType)
 	} else if srcField.Kind() == reflect.Slice {
 		if srcField.IsNil() {
 			// Skip nils
@@ -132,7 +145,7 @@ func tfSdkToGoSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			srcElem := srcField.Index(j)
 
 			destElem := destSlice.Index(j)
-			if err := tfSdkToGoSdkSingleField(ctx, srcElem, destElem, "", nil); err != nil {
+			if err := tfSdkToGoSdkSingleField(ctx, srcElem, destElem, "", nil, innerType); err != nil {
 				return err
 			}
 		}
@@ -147,7 +160,7 @@ func tfSdkToGoSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 			srcMapValue := srcField.MapIndex(key)
 			destMapValue := reflect.New(destField.Type().Elem()).Elem()
 			destMapKey := reflect.ValueOf(key.Interface())
-			if err := tfSdkToGoSdkSingleField(ctx, srcMapValue, destMapValue, "", nil); err != nil {
+			if err := tfSdkToGoSdkSingleField(ctx, srcMapValue, destMapValue, "", nil, innerType); err != nil {
 				return err
 			}
 			destMap.SetMapIndex(destMapKey, destMapValue)
@@ -160,7 +173,35 @@ func tfSdkToGoSdkSingleField(ctx context.Context, srcField reflect.Value, destFi
 
 }
 
-func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, srcFieldName string, forceSendFieldsField *reflect.Value, ctx context.Context) {
+// Returns a reflect.Value of the enum type with the value set to the given string.
+func convertToEnumValue(v types.String, destType reflect.Type) reflect.Value {
+	// Find the Set method
+	destVal := reflect.New(destType)
+	setMethod := destVal.MethodByName("Set")
+	if !setMethod.IsValid() {
+		panic(fmt.Sprintf("set method not found on enum type: %s. %s", destType.Name(), common.TerraformBugErrorMessage))
+	}
+
+	// Prepare the argument for the Set method
+	arg := reflect.ValueOf(v.ValueString())
+
+	// Call the Set method
+	result := setMethod.Call([]reflect.Value{arg})
+	if len(result) != 0 {
+		if err, ok := result[0].Interface().(error); ok && err != nil {
+			panic(fmt.Sprintf("%s. %s", err, common.TerraformBugErrorMessage))
+		}
+	}
+	return destVal.Elem()
+}
+
+func tfsdkToGoSdkStructField(
+	srcField reflect.Value,
+	destField reflect.Value,
+	srcFieldName string,
+	forceSendFieldsField *reflect.Value,
+	ctx context.Context,
+	innerType reflect.Type) {
 	srcFieldValue := srcField.Interface()
 	switch v := srcFieldValue.(type) {
 	case types.Bool:
@@ -187,23 +228,7 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 				return
 			}
 
-			// Find the Set method
-			destVal := reflect.New(destField.Type())
-			setMethod := destVal.MethodByName("Set")
-			if !setMethod.IsValid() {
-				panic(fmt.Sprintf("set method not found on enum type: %s. %s", destField.Type().Name(), common.TerraformBugErrorMessage))
-			}
-
-			// Prepare the argument for the Set method
-			arg := reflect.ValueOf(v.ValueString())
-
-			// Call the Set method
-			result := setMethod.Call([]reflect.Value{arg})
-			if len(result) != 0 {
-				if err, ok := result[0].Interface().(error); ok && err != nil {
-					panic(fmt.Sprintf("%s. %s", err, common.TerraformBugErrorMessage))
-				}
-			}
+			destVal := convertToEnumValue(v, destField.Type())
 			// We don't need to set ForceSendFields for enums because the value is never going to be a zero value (empty string).
 			destField.Set(destVal.Elem())
 		} else {
@@ -213,9 +238,49 @@ func tfsdkToGoSdkStructField(srcField reflect.Value, destField reflect.Value, sr
 			}
 		}
 	case types.List:
-		panic(fmt.Sprintf("types.List should never be used, use go native slices instead. %s", common.TerraformBugErrorMessage))
-	case types.Map:
-		panic(fmt.Sprintf("types.Map should never be used, use go native maps instead. %s", common.TerraformBugErrorMessage))
+		if v.IsNull() || v.IsUnknown() {
+			return
+		}
+
+		var d diag.Diagnostics
+		innerValue := reflect.New(reflect.SliceOf(innerType))
+
+		// Read the nested elements into the TFSDK struct slice
+		d = v.ElementsAs(ctx, innerValue.Interface(), true)
+		if d.HasError() {
+			for _, diag := range d {
+				tflog.Error(ctx, fmt.Sprintf("[ERROR] %s: %s", diag.Summary(), diag.Detail()))
+			}
+			panic("failed to convert list")
+		}
+
+		// Recursively call TFSDK to GOSDK conversion for each element in the list
+		var destInnerType reflect.Type
+		if destField.Type().Kind() == reflect.Slice {
+			destInnerType = destField.Type().Elem()
+		} else {
+			assertStructSliceLengthIsOne(innerValue)
+			// Case of types.List <-> struct
+			destInnerType = destField.Type()
+		}
+
+		converted := make([]any, 0, innerValue.Elem().Len())
+		for i := 0; i < innerValue.Elem().Len(); i++ {
+			next := reflect.New(destInnerType)
+			err := tfSdkToGoSdkSingleField(ctx, innerValue.Elem().Index(i), next, "", forceSendFieldsField, innerType)
+			if err != nil {
+				panic(err)
+			}
+			converted = append(converted, next.Elem().Interface())
+		}
+
+		if destField.Type().Kind() == reflect.Slice {
+			destField.Set(reflect.ValueOf(converted))
+		} else {
+			destField.Set(reflect.ValueOf(converted[0]))
+		}
+	case types.Object, types.Map, types.Set, types.Tuple:
+		panic(fmt.Sprintf("%T should never be used, use go native maps instead. %s", v, common.TerraformBugErrorMessage))
 	default:
 		if srcField.IsZero() {
 			// Skip zeros

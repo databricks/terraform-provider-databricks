@@ -11,6 +11,8 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package sql_tf
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -29,9 +31,13 @@ func (newState *AccessControl) SyncEffectiveFieldsDuringCreateOrUpdate(plan Acce
 func (newState *AccessControl) SyncEffectiveFieldsDuringRead(existingState AccessControl) {
 }
 
+func (a AccessControl) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Alert struct {
 	// Trigger conditions of the alert.
-	Condition []AlertCondition `tfsdk:"condition" tf:"optional,object"`
+	Condition types.Object `tfsdk:"condition" tf:"optional,object"`
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
 	// Custom body of alert notification, if it exists. See [here] for custom
@@ -81,6 +87,12 @@ func (newState *Alert) SyncEffectiveFieldsDuringCreateOrUpdate(plan Alert) {
 func (newState *Alert) SyncEffectiveFieldsDuringRead(existingState Alert) {
 }
 
+func (a Alert) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Condition": reflect.TypeOf(AlertCondition{}),
+	}
+}
+
 type AlertCondition struct {
 	// Alert state if result is empty.
 	EmptyResultState types.String `tfsdk:"empty_result_state" tf:"optional"`
@@ -88,9 +100,9 @@ type AlertCondition struct {
 	Op types.String `tfsdk:"op" tf:"optional"`
 	// Name of the column from the query result to use for comparison in alert
 	// evaluation.
-	Operand []AlertConditionOperand `tfsdk:"operand" tf:"optional,object"`
+	Operand types.Object `tfsdk:"operand" tf:"optional,object"`
 	// Threshold value used for comparison in alert evaluation.
-	Threshold []AlertConditionThreshold `tfsdk:"threshold" tf:"optional,object"`
+	Threshold types.Object `tfsdk:"threshold" tf:"optional,object"`
 }
 
 func (newState *AlertCondition) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertCondition) {
@@ -99,8 +111,15 @@ func (newState *AlertCondition) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ale
 func (newState *AlertCondition) SyncEffectiveFieldsDuringRead(existingState AlertCondition) {
 }
 
+func (a AlertCondition) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Operand":   reflect.TypeOf(AlertConditionOperand{}),
+		"Threshold": reflect.TypeOf(AlertConditionThreshold{}),
+	}
+}
+
 type AlertConditionOperand struct {
-	Column []AlertOperandColumn `tfsdk:"column" tf:"optional,object"`
+	Column types.Object `tfsdk:"column" tf:"optional,object"`
 }
 
 func (newState *AlertConditionOperand) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConditionOperand) {
@@ -109,14 +128,26 @@ func (newState *AlertConditionOperand) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *AlertConditionOperand) SyncEffectiveFieldsDuringRead(existingState AlertConditionOperand) {
 }
 
+func (a AlertConditionOperand) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Column": reflect.TypeOf(AlertOperandColumn{}),
+	}
+}
+
 type AlertConditionThreshold struct {
-	Value []AlertOperandValue `tfsdk:"value" tf:"optional,object"`
+	Value types.Object `tfsdk:"value" tf:"optional,object"`
 }
 
 func (newState *AlertConditionThreshold) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConditionThreshold) {
 }
 
 func (newState *AlertConditionThreshold) SyncEffectiveFieldsDuringRead(existingState AlertConditionThreshold) {
+}
+
+func (a AlertConditionThreshold) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Value": reflect.TypeOf(AlertOperandValue{}),
+	}
 }
 
 type AlertOperandColumn struct {
@@ -127,6 +158,10 @@ func (newState *AlertOperandColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *AlertOperandColumn) SyncEffectiveFieldsDuringRead(existingState AlertOperandColumn) {
+}
+
+func (a AlertOperandColumn) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type AlertOperandValue struct {
@@ -141,6 +176,10 @@ func (newState *AlertOperandValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *AlertOperandValue) SyncEffectiveFieldsDuringRead(existingState AlertOperandValue) {
+}
+
+func (a AlertOperandValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Alert configuration options.
@@ -177,6 +216,10 @@ func (newState *AlertOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Alert
 func (newState *AlertOptions) SyncEffectiveFieldsDuringRead(existingState AlertOptions) {
 }
 
+func (a AlertOptions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type AlertQuery struct {
 	// The timestamp when this query was created.
 	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
@@ -208,11 +251,11 @@ type AlertQuery struct {
 	// on the query page.
 	Name types.String `tfsdk:"name" tf:"optional"`
 
-	Options []QueryOptions `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options" tf:"optional,object"`
 	// The text of the query to be run.
 	Query types.String `tfsdk:"query" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// The timestamp at which this query was last updated.
 	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
 	// The ID of the user who owns the query.
@@ -223,6 +266,13 @@ func (newState *AlertQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertQu
 }
 
 func (newState *AlertQuery) SyncEffectiveFieldsDuringRead(existingState AlertQuery) {
+}
+
+func (a AlertQuery) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Options": reflect.TypeOf(QueryOptions{}),
+		"Tags":    reflect.TypeOf(""),
+	}
 }
 
 // Describes metadata for a particular chunk, within a result set; this
@@ -246,6 +296,10 @@ func (newState *BaseChunkInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Base
 func (newState *BaseChunkInfo) SyncEffectiveFieldsDuringRead(existingState BaseChunkInfo) {
 }
 
+func (a BaseChunkInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Cancel statement execution
 type CancelExecutionRequest struct {
 	// The statement ID is returned upon successfully submitting a SQL
@@ -259,6 +313,10 @@ func (newState *CancelExecutionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CancelExecutionRequest) SyncEffectiveFieldsDuringRead(existingState CancelExecutionRequest) {
 }
 
+func (a CancelExecutionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CancelExecutionResponse struct {
 }
 
@@ -266,6 +324,10 @@ func (newState *CancelExecutionResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *CancelExecutionResponse) SyncEffectiveFieldsDuringRead(existingState CancelExecutionResponse) {
+}
+
+func (a CancelExecutionResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Configures the channel name and DBSQL version of the warehouse.
@@ -282,6 +344,10 @@ func (newState *Channel) SyncEffectiveFieldsDuringCreateOrUpdate(plan Channel) {
 func (newState *Channel) SyncEffectiveFieldsDuringRead(existingState Channel) {
 }
 
+func (a Channel) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Details about a Channel.
 type ChannelInfo struct {
 	// DB SQL Version the Channel is mapped to.
@@ -294,6 +360,10 @@ func (newState *ChannelInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Channe
 }
 
 func (newState *ChannelInfo) SyncEffectiveFieldsDuringRead(existingState ChannelInfo) {
+}
+
+func (a ChannelInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type ColumnInfo struct {
@@ -322,11 +392,15 @@ func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnI
 func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
 }
 
+func (a ColumnInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateAlert struct {
 	// Name of the alert.
 	Name types.String `tfsdk:"name" tf:""`
 	// Alert configuration options.
-	Options []AlertOptions `tfsdk:"options" tf:"object"`
+	Options types.Object `tfsdk:"options" tf:"object"`
 	// The identifier of the workspace folder containing the object.
 	Parent types.String `tfsdk:"parent" tf:"optional"`
 	// Query ID.
@@ -343,8 +417,14 @@ func (newState *CreateAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create
 func (newState *CreateAlert) SyncEffectiveFieldsDuringRead(existingState CreateAlert) {
 }
 
+func (a CreateAlert) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Options": reflect.TypeOf(AlertOptions{}),
+	}
+}
+
 type CreateAlertRequest struct {
-	Alert []CreateAlertRequestAlert `tfsdk:"alert" tf:"optional,object"`
+	Alert types.Object `tfsdk:"alert" tf:"optional,object"`
 }
 
 func (newState *CreateAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertRequest) {
@@ -353,9 +433,15 @@ func (newState *CreateAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *CreateAlertRequest) SyncEffectiveFieldsDuringRead(existingState CreateAlertRequest) {
 }
 
+func (a CreateAlertRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Alert": reflect.TypeOf(CreateAlertRequestAlert{}),
+	}
+}
+
 type CreateAlertRequestAlert struct {
 	// Trigger conditions of the alert.
-	Condition []AlertCondition `tfsdk:"condition" tf:"optional,object"`
+	Condition types.Object `tfsdk:"condition" tf:"optional,object"`
 	// Custom body of alert notification, if it exists. See [here] for custom
 	// templating instructions.
 	//
@@ -387,14 +473,26 @@ func (newState *CreateAlertRequestAlert) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateAlertRequestAlert) SyncEffectiveFieldsDuringRead(existingState CreateAlertRequestAlert) {
 }
 
+func (a CreateAlertRequestAlert) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Condition": reflect.TypeOf(AlertCondition{}),
+	}
+}
+
 type CreateQueryRequest struct {
-	Query []CreateQueryRequestQuery `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query" tf:"optional,object"`
 }
 
 func (newState *CreateQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateQueryRequest) {
 }
 
 func (newState *CreateQueryRequest) SyncEffectiveFieldsDuringRead(existingState CreateQueryRequest) {
+}
+
+func (a CreateQueryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Query": reflect.TypeOf(CreateQueryRequestQuery{}),
+	}
 }
 
 type CreateQueryRequestQuery struct {
@@ -409,7 +507,7 @@ type CreateQueryRequestQuery struct {
 	// and on the query page.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// List of query parameter definitions.
-	Parameters []QueryParameter `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters" tf:"optional"`
 	// Workspace path of the workspace folder containing the object.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
 	// Text of the query to be run.
@@ -419,7 +517,7 @@ type CreateQueryRequestQuery struct {
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// ID of the SQL warehouse attached to the query.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
@@ -428,6 +526,13 @@ func (newState *CreateQueryRequestQuery) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *CreateQueryRequestQuery) SyncEffectiveFieldsDuringRead(existingState CreateQueryRequestQuery) {
+}
+
+func (a CreateQueryRequestQuery) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Parameters": reflect.TypeOf(QueryParameter{}),
+		"Tags":       reflect.TypeOf(""),
+	}
 }
 
 // Add visualization to a query
@@ -454,14 +559,24 @@ func (newState *CreateQueryVisualizationsLegacyRequest) SyncEffectiveFieldsDurin
 func (newState *CreateQueryVisualizationsLegacyRequest) SyncEffectiveFieldsDuringRead(existingState CreateQueryVisualizationsLegacyRequest) {
 }
 
+func (a CreateQueryVisualizationsLegacyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateVisualizationRequest struct {
-	Visualization []CreateVisualizationRequestVisualization `tfsdk:"visualization" tf:"optional,object"`
+	Visualization types.Object `tfsdk:"visualization" tf:"optional,object"`
 }
 
 func (newState *CreateVisualizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVisualizationRequest) {
 }
 
 func (newState *CreateVisualizationRequest) SyncEffectiveFieldsDuringRead(existingState CreateVisualizationRequest) {
+}
+
+func (a CreateVisualizationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Visualization": reflect.TypeOf(CreateVisualizationRequestVisualization{}),
+	}
 }
 
 type CreateVisualizationRequestVisualization struct {
@@ -487,6 +602,10 @@ func (newState *CreateVisualizationRequestVisualization) SyncEffectiveFieldsDuri
 func (newState *CreateVisualizationRequestVisualization) SyncEffectiveFieldsDuringRead(existingState CreateVisualizationRequestVisualization) {
 }
 
+func (a CreateVisualizationRequestVisualization) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateWarehouseRequest struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
@@ -498,7 +617,7 @@ type CreateWarehouseRequest struct {
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
 	// Channel Details
-	Channel []Channel `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
 	// increase the number of concurrent queries, please tune max_num_clusters.
@@ -544,7 +663,7 @@ type CreateWarehouseRequest struct {
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
-	Tags []EndpointTags `tfsdk:"tags" tf:"optional,object"`
+	Tags types.Object `tfsdk:"tags" tf:"optional,object"`
 	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
 	// compute, you must set to `PRO` and also set the field
 	// `enable_serverless_compute` to `true`.
@@ -555,6 +674,13 @@ func (newState *CreateWarehouseRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *CreateWarehouseRequest) SyncEffectiveFieldsDuringRead(existingState CreateWarehouseRequest) {
+}
+
+func (a CreateWarehouseRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Channel": reflect.TypeOf(Channel{}),
+		"Tags":    reflect.TypeOf(EndpointTags{}),
+	}
 }
 
 type CreateWarehouseResponse struct {
@@ -568,13 +694,17 @@ func (newState *CreateWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState CreateWarehouseResponse) {
 }
 
+func (a CreateWarehouseResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateWidget struct {
 	// Dashboard ID returned by :method:dashboards/create.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
 	// Widget ID returned by :method:dashboardwidgets/create
 	Id types.String `tfsdk:"-"`
 
-	Options []WidgetOptions `tfsdk:"options" tf:"object"`
+	Options types.Object `tfsdk:"options" tf:"object"`
 	// If this is a textbox widget, the application displays this text. This
 	// field is ignored if the widget contains a visualization in the
 	// `visualization` field.
@@ -589,6 +719,12 @@ func (newState *CreateWidget) SyncEffectiveFieldsDuringCreateOrUpdate(plan Creat
 }
 
 func (newState *CreateWidget) SyncEffectiveFieldsDuringRead(existingState CreateWidget) {
+}
+
+func (a CreateWidget) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Options": reflect.TypeOf(WidgetOptions{}),
+	}
 }
 
 // A JSON representing a dashboard containing widgets of visualizations and text
@@ -619,7 +755,7 @@ type Dashboard struct {
 	// the dashboard page.
 	Name types.String `tfsdk:"name" tf:"optional"`
 
-	Options []DashboardOptions `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options" tf:"optional,object"`
 	// The identifier of the workspace folder containing the object.
 	Parent types.String `tfsdk:"parent" tf:"optional"`
 	// * `CAN_VIEW`: Can view the query * `CAN_RUN`: Can run the query *
@@ -629,21 +765,30 @@ type Dashboard struct {
 	// spaces. Appears in the URL for this query.
 	Slug types.String `tfsdk:"slug" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// Timestamp when this dashboard was last updated.
 	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
 
-	User []User `tfsdk:"user" tf:"optional,object"`
+	User types.Object `tfsdk:"user" tf:"optional,object"`
 	// The ID of the user who owns the dashboard.
 	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
 
-	Widgets []Widget `tfsdk:"widgets" tf:"optional"`
+	Widgets types.List `tfsdk:"widgets" tf:"optional"`
 }
 
 func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboard) {
 }
 
 func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
+}
+
+func (a Dashboard) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Options": reflect.TypeOf(DashboardOptions{}),
+		"Tags":    reflect.TypeOf(""),
+		"User":    reflect.TypeOf(User{}),
+		"Widgets": reflect.TypeOf(Widget{}),
+	}
 }
 
 type DashboardEditContent struct {
@@ -656,13 +801,19 @@ type DashboardEditContent struct {
 	// owner" behavior)
 	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *DashboardEditContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardEditContent) {
 }
 
 func (newState *DashboardEditContent) SyncEffectiveFieldsDuringRead(existingState DashboardEditContent) {
+}
+
+func (a DashboardEditContent) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(""),
+	}
 }
 
 type DashboardOptions struct {
@@ -676,6 +827,10 @@ func (newState *DashboardOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 }
 
 func (newState *DashboardOptions) SyncEffectiveFieldsDuringRead(existingState DashboardOptions) {
+}
+
+func (a DashboardOptions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DashboardPostContent struct {
@@ -694,13 +849,19 @@ type DashboardPostContent struct {
 	// owner" behavior)
 	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *DashboardPostContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardPostContent) {
 }
 
 func (newState *DashboardPostContent) SyncEffectiveFieldsDuringRead(existingState DashboardPostContent) {
+}
+
+func (a DashboardPostContent) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(""),
+	}
 }
 
 // A JSON object representing a DBSQL data source / SQL warehouse.
@@ -737,6 +898,10 @@ func (newState *DataSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataSou
 func (newState *DataSource) SyncEffectiveFieldsDuringRead(existingState DataSource) {
 }
 
+func (a DataSource) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DateRange struct {
 	End types.String `tfsdk:"end" tf:""`
 
@@ -749,9 +914,13 @@ func (newState *DateRange) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateRang
 func (newState *DateRange) SyncEffectiveFieldsDuringRead(existingState DateRange) {
 }
 
+func (a DateRange) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DateRangeValue struct {
 	// Manually specified date-time range value.
-	DateRangeValue []DateRange `tfsdk:"date_range_value" tf:"optional,object"`
+	DateRangeValue types.Object `tfsdk:"date_range_value" tf:"optional,object"`
 	// Dynamic date-time range value based on current date-time.
 	DynamicDateRangeValue types.String `tfsdk:"dynamic_date_range_value" tf:"optional"`
 	// Date-time precision to format the value into when the query is run.
@@ -765,6 +934,12 @@ func (newState *DateRangeValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dat
 }
 
 func (newState *DateRangeValue) SyncEffectiveFieldsDuringRead(existingState DateRangeValue) {
+}
+
+func (a DateRangeValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DateRangeValue": reflect.TypeOf(DateRange{}),
+	}
 }
 
 type DateValue struct {
@@ -783,6 +958,10 @@ func (newState *DateValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateValu
 func (newState *DateValue) SyncEffectiveFieldsDuringRead(existingState DateValue) {
 }
 
+func (a DateValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete an alert
 type DeleteAlertsLegacyRequest struct {
 	AlertId types.String `tfsdk:"-"`
@@ -794,6 +973,10 @@ func (newState *DeleteAlertsLegacyRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *DeleteAlertsLegacyRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAlertsLegacyRequest) {
 }
 
+func (a DeleteAlertsLegacyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Remove a dashboard
 type DeleteDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
@@ -803,6 +986,10 @@ func (newState *DeleteDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeleteDashboardRequest) SyncEffectiveFieldsDuringRead(existingState DeleteDashboardRequest) {
+}
+
+func (a DeleteDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Remove widget
@@ -817,6 +1004,10 @@ func (newState *DeleteDashboardWidgetRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteDashboardWidgetRequest) SyncEffectiveFieldsDuringRead(existingState DeleteDashboardWidgetRequest) {
 }
 
+func (a DeleteDashboardWidgetRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a query
 type DeleteQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
@@ -826,6 +1017,10 @@ func (newState *DeleteQueriesLegacyRequest) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *DeleteQueriesLegacyRequest) SyncEffectiveFieldsDuringRead(existingState DeleteQueriesLegacyRequest) {
+}
+
+func (a DeleteQueriesLegacyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Remove visualization
@@ -840,6 +1035,10 @@ func (newState *DeleteQueryVisualizationsLegacyRequest) SyncEffectiveFieldsDurin
 func (newState *DeleteQueryVisualizationsLegacyRequest) SyncEffectiveFieldsDuringRead(existingState DeleteQueryVisualizationsLegacyRequest) {
 }
 
+func (a DeleteQueryVisualizationsLegacyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteResponse struct {
 }
 
@@ -847,6 +1046,10 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 }
 
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+}
+
+func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Remove a visualization
@@ -858,6 +1061,10 @@ func (newState *DeleteVisualizationRequest) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *DeleteVisualizationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteVisualizationRequest) {
+}
+
+func (a DeleteVisualizationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a warehouse
@@ -872,6 +1079,10 @@ func (newState *DeleteWarehouseRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteWarehouseRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWarehouseRequest) {
 }
 
+func (a DeleteWarehouseRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteWarehouseResponse struct {
 }
 
@@ -881,12 +1092,16 @@ func (newState *DeleteWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *DeleteWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWarehouseResponse) {
 }
 
+func (a DeleteWarehouseResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type EditAlert struct {
 	AlertId types.String `tfsdk:"-"`
 	// Name of the alert.
 	Name types.String `tfsdk:"name" tf:""`
 	// Alert configuration options.
-	Options []AlertOptions `tfsdk:"options" tf:"object"`
+	Options types.Object `tfsdk:"options" tf:"object"`
 	// Query ID.
 	QueryId types.String `tfsdk:"query_id" tf:""`
 	// Number of seconds after being triggered before the alert rearms itself
@@ -901,6 +1116,12 @@ func (newState *EditAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditAler
 func (newState *EditAlert) SyncEffectiveFieldsDuringRead(existingState EditAlert) {
 }
 
+func (a EditAlert) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Options": reflect.TypeOf(AlertOptions{}),
+	}
+}
+
 type EditWarehouseRequest struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
@@ -910,7 +1131,7 @@ type EditWarehouseRequest struct {
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
 	// Channel Details
-	Channel []Channel `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
 	// increase the number of concurrent queries, please tune max_num_clusters.
@@ -958,7 +1179,7 @@ type EditWarehouseRequest struct {
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
-	Tags []EndpointTags `tfsdk:"tags" tf:"optional,object"`
+	Tags types.Object `tfsdk:"tags" tf:"optional,object"`
 	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
 	// compute, you must set to `PRO` and also set the field
 	// `enable_serverless_compute` to `true`.
@@ -971,6 +1192,13 @@ func (newState *EditWarehouseRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *EditWarehouseRequest) SyncEffectiveFieldsDuringRead(existingState EditWarehouseRequest) {
 }
 
+func (a EditWarehouseRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Channel": reflect.TypeOf(Channel{}),
+		"Tags":    reflect.TypeOf(EndpointTags{}),
+	}
+}
+
 type EditWarehouseResponse struct {
 }
 
@@ -978,6 +1206,10 @@ func (newState *EditWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *EditWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState EditWarehouseResponse) {
+}
+
+func (a EditWarehouseResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Represents an empty message, similar to google.protobuf.Empty, which is not
@@ -989,6 +1221,10 @@ func (newState *Empty) SyncEffectiveFieldsDuringCreateOrUpdate(plan Empty) {
 }
 
 func (newState *Empty) SyncEffectiveFieldsDuringRead(existingState Empty) {
+}
+
+func (a Empty) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type EndpointConfPair struct {
@@ -1003,12 +1239,16 @@ func (newState *EndpointConfPair) SyncEffectiveFieldsDuringCreateOrUpdate(plan E
 func (newState *EndpointConfPair) SyncEffectiveFieldsDuringRead(existingState EndpointConfPair) {
 }
 
+func (a EndpointConfPair) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type EndpointHealth struct {
 	// Details about errors that are causing current degraded/failed status.
 	Details types.String `tfsdk:"details" tf:"optional"`
 	// The reason for failure to bring up clusters for this warehouse. This is
 	// available when status is 'FAILED' and sometimes when it is DEGRADED.
-	FailureReason []TerminationReason `tfsdk:"failure_reason" tf:"optional,object"`
+	FailureReason types.Object `tfsdk:"failure_reason" tf:"optional,object"`
 	// Deprecated. split into summary and details for security
 	Message types.String `tfsdk:"message" tf:"optional"`
 	// Health status of the warehouse.
@@ -1024,6 +1264,12 @@ func (newState *EndpointHealth) SyncEffectiveFieldsDuringCreateOrUpdate(plan End
 func (newState *EndpointHealth) SyncEffectiveFieldsDuringRead(existingState EndpointHealth) {
 }
 
+func (a EndpointHealth) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FailureReason": reflect.TypeOf(TerminationReason{}),
+	}
+}
+
 type EndpointInfo struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
@@ -1033,7 +1279,7 @@ type EndpointInfo struct {
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
 	// Channel Details
-	Channel []Channel `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
 	// increase the number of concurrent queries, please tune max_num_clusters.
@@ -1051,7 +1297,7 @@ type EndpointInfo struct {
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute" tf:"optional"`
 	// Optional health status. Assume the warehouse is healthy if this field is
 	// not set.
-	Health []EndpointHealth `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health" tf:"optional,object"`
 	// unique identifier for warehouse
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
@@ -1085,7 +1331,7 @@ type EndpointInfo struct {
 	// current number of clusters running for the service
 	NumClusters types.Int64 `tfsdk:"num_clusters" tf:"optional"`
 	// ODBC parameters for the SQL warehouse
-	OdbcParams []OdbcParams `tfsdk:"odbc_params" tf:"optional,object"`
+	OdbcParams types.Object `tfsdk:"odbc_params" tf:"optional,object"`
 	// Configurations whether the warehouse should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy" tf:"optional"`
 	// State of the warehouse
@@ -1094,7 +1340,7 @@ type EndpointInfo struct {
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
-	Tags []EndpointTags `tfsdk:"tags" tf:"optional,object"`
+	Tags types.Object `tfsdk:"tags" tf:"optional,object"`
 	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
 	// compute, you must set to `PRO` and also set the field
 	// `enable_serverless_compute` to `true`.
@@ -1105,6 +1351,15 @@ func (newState *EndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Endpo
 }
 
 func (newState *EndpointInfo) SyncEffectiveFieldsDuringRead(existingState EndpointInfo) {
+}
+
+func (a EndpointInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Channel":    reflect.TypeOf(Channel{}),
+		"Health":     reflect.TypeOf(EndpointHealth{}),
+		"OdbcParams": reflect.TypeOf(OdbcParams{}),
+		"Tags":       reflect.TypeOf(EndpointTags{}),
+	}
 }
 
 type EndpointTagPair struct {
@@ -1119,8 +1374,12 @@ func (newState *EndpointTagPair) SyncEffectiveFieldsDuringCreateOrUpdate(plan En
 func (newState *EndpointTagPair) SyncEffectiveFieldsDuringRead(existingState EndpointTagPair) {
 }
 
+func (a EndpointTagPair) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type EndpointTags struct {
-	CustomTags []EndpointTagPair `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.List `tfsdk:"custom_tags" tf:"optional"`
 }
 
 func (newState *EndpointTags) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTags) {
@@ -1129,19 +1388,32 @@ func (newState *EndpointTags) SyncEffectiveFieldsDuringCreateOrUpdate(plan Endpo
 func (newState *EndpointTags) SyncEffectiveFieldsDuringRead(existingState EndpointTags) {
 }
 
+func (a EndpointTags) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"CustomTags": reflect.TypeOf(EndpointTagPair{}),
+	}
+}
+
 type EnumValue struct {
 	// List of valid query parameter values, newline delimited.
 	EnumOptions types.String `tfsdk:"enum_options" tf:"optional"`
 	// If specified, allows multiple values to be selected for this parameter.
-	MultiValuesOptions []MultiValuesOptions `tfsdk:"multi_values_options" tf:"optional,object"`
+	MultiValuesOptions types.Object `tfsdk:"multi_values_options" tf:"optional,object"`
 	// List of selected query parameter values.
-	Values []types.String `tfsdk:"values" tf:"optional"`
+	Values types.List `tfsdk:"values" tf:"optional"`
 }
 
 func (newState *EnumValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnumValue) {
 }
 
 func (newState *EnumValue) SyncEffectiveFieldsDuringRead(existingState EnumValue) {
+}
+
+func (a EnumValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"MultiValuesOptions": reflect.TypeOf(MultiValuesOptions{}),
+		"Values":             reflect.TypeOf(""),
+	}
 }
 
 type ExecuteStatementRequest struct {
@@ -1235,7 +1507,7 @@ type ExecuteStatementRequest struct {
 	//
 	// [Parameter markers]: https://docs.databricks.com/sql/language-manual/sql-ref-parameter-marker.html
 	// [`cast` function]: https://docs.databricks.com/sql/language-manual/functions/cast.html
-	Parameters []StatementParameterListItem `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters" tf:"optional"`
 	// Applies the given row limit to the statement's result set, but unlike the
 	// `LIMIT` clause in SQL, it also sets the `truncated` field in the response
 	// to indicate whether the result was trimmed due to the limit or not.
@@ -1276,6 +1548,12 @@ func (newState *ExecuteStatementRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ExecuteStatementRequest) SyncEffectiveFieldsDuringRead(existingState ExecuteStatementRequest) {
 }
 
+func (a ExecuteStatementRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Parameters": reflect.TypeOf(StatementParameterListItem{}),
+	}
+}
+
 type ExternalLink struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
@@ -1293,7 +1571,7 @@ type ExternalLink struct {
 	// typically used to pass a decryption key to the external service. The
 	// values of these headers should be considered sensitive and the client
 	// should not expose these values in a log.
-	HttpHeaders map[string]types.String `tfsdk:"http_headers" tf:"optional"`
+	HttpHeaders types.Map `tfsdk:"http_headers" tf:"optional"`
 	// When fetching, provides the `chunk_index` for the _next_ chunk. If
 	// absent, indicates there are no more chunks. The next chunk can be fetched
 	// with a :method:statementexecution/getStatementResultChunkN request.
@@ -1315,6 +1593,12 @@ func (newState *ExternalLink) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exter
 func (newState *ExternalLink) SyncEffectiveFieldsDuringRead(existingState ExternalLink) {
 }
 
+func (a ExternalLink) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"HttpHeaders": reflect.TypeOf(""),
+	}
+}
+
 // Get an alert
 type GetAlertRequest struct {
 	Id types.String `tfsdk:"-"`
@@ -1324,6 +1608,10 @@ func (newState *GetAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 }
 
 func (newState *GetAlertRequest) SyncEffectiveFieldsDuringRead(existingState GetAlertRequest) {
+}
+
+func (a GetAlertRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get an alert
@@ -1337,6 +1625,10 @@ func (newState *GetAlertsLegacyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *GetAlertsLegacyRequest) SyncEffectiveFieldsDuringRead(existingState GetAlertsLegacyRequest) {
 }
 
+func (a GetAlertsLegacyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Retrieve a definition
 type GetDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
@@ -1346,6 +1638,10 @@ func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetDashboardRequest) {
+}
+
+func (a GetDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get object ACL
@@ -1362,6 +1658,10 @@ func (newState *GetDbsqlPermissionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *GetDbsqlPermissionRequest) SyncEffectiveFieldsDuringRead(existingState GetDbsqlPermissionRequest) {
 }
 
+func (a GetDbsqlPermissionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get a query definition.
 type GetQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
@@ -1371,6 +1671,10 @@ func (newState *GetQueriesLegacyRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *GetQueriesLegacyRequest) SyncEffectiveFieldsDuringRead(existingState GetQueriesLegacyRequest) {
+}
+
+func (a GetQueriesLegacyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get a query
@@ -1384,8 +1688,12 @@ func (newState *GetQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 func (newState *GetQueryRequest) SyncEffectiveFieldsDuringRead(existingState GetQueryRequest) {
 }
 
+func (a GetQueryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetResponse struct {
-	AccessControlList []AccessControl `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// An object's type and UUID, separated by a forward slash (/) character.
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 	// A singular noun object type.
@@ -1396,6 +1704,12 @@ func (newState *GetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRes
 }
 
 func (newState *GetResponse) SyncEffectiveFieldsDuringRead(existingState GetResponse) {
+}
+
+func (a GetResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(AccessControl{}),
+	}
 }
 
 // Get status, manifest, and result first chunk
@@ -1409,6 +1723,10 @@ func (newState *GetStatementRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *GetStatementRequest) SyncEffectiveFieldsDuringRead(existingState GetStatementRequest) {
+}
+
+func (a GetStatementRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get result chunk by index
@@ -1425,6 +1743,10 @@ func (newState *GetStatementResultChunkNRequest) SyncEffectiveFieldsDuringCreate
 func (newState *GetStatementResultChunkNRequest) SyncEffectiveFieldsDuringRead(existingState GetStatementResultChunkNRequest) {
 }
 
+func (a GetStatementResultChunkNRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get SQL warehouse permission levels
 type GetWarehousePermissionLevelsRequest struct {
 	// The SQL warehouse for which to get or manage permissions.
@@ -1437,15 +1759,25 @@ func (newState *GetWarehousePermissionLevelsRequest) SyncEffectiveFieldsDuringCr
 func (newState *GetWarehousePermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetWarehousePermissionLevelsRequest) {
 }
 
+func (a GetWarehousePermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetWarehousePermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []WarehousePermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
 }
 
 func (newState *GetWarehousePermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWarehousePermissionLevelsResponse) {
 }
 
 func (newState *GetWarehousePermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetWarehousePermissionLevelsResponse) {
+}
+
+func (a GetWarehousePermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionLevels": reflect.TypeOf(WarehousePermissionsDescription{}),
+	}
 }
 
 // Get SQL warehouse permissions
@@ -1460,6 +1792,10 @@ func (newState *GetWarehousePermissionsRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *GetWarehousePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetWarehousePermissionsRequest) {
 }
 
+func (a GetWarehousePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get warehouse info
 type GetWarehouseRequest struct {
 	// Required. Id of the SQL warehouse.
@@ -1472,6 +1808,10 @@ func (newState *GetWarehouseRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetWarehouseRequest) SyncEffectiveFieldsDuringRead(existingState GetWarehouseRequest) {
 }
 
+func (a GetWarehouseRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetWarehouseResponse struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
@@ -1481,7 +1821,7 @@ type GetWarehouseResponse struct {
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
 	// Channel Details
-	Channel []Channel `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
 	// increase the number of concurrent queries, please tune max_num_clusters.
@@ -1499,7 +1839,7 @@ type GetWarehouseResponse struct {
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute" tf:"optional"`
 	// Optional health status. Assume the warehouse is healthy if this field is
 	// not set.
-	Health []EndpointHealth `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health" tf:"optional,object"`
 	// unique identifier for warehouse
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
@@ -1533,7 +1873,7 @@ type GetWarehouseResponse struct {
 	// current number of clusters running for the service
 	NumClusters types.Int64 `tfsdk:"num_clusters" tf:"optional"`
 	// ODBC parameters for the SQL warehouse
-	OdbcParams []OdbcParams `tfsdk:"odbc_params" tf:"optional,object"`
+	OdbcParams types.Object `tfsdk:"odbc_params" tf:"optional,object"`
 	// Configurations whether the warehouse should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy" tf:"optional"`
 	// State of the warehouse
@@ -1542,7 +1882,7 @@ type GetWarehouseResponse struct {
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
-	Tags []EndpointTags `tfsdk:"tags" tf:"optional,object"`
+	Tags types.Object `tfsdk:"tags" tf:"optional,object"`
 	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
 	// compute, you must set to `PRO` and also set the field
 	// `enable_serverless_compute` to `true`.
@@ -1555,23 +1895,32 @@ func (newState *GetWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *GetWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState GetWarehouseResponse) {
 }
 
+func (a GetWarehouseResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Channel":    reflect.TypeOf(Channel{}),
+		"Health":     reflect.TypeOf(EndpointHealth{}),
+		"OdbcParams": reflect.TypeOf(OdbcParams{}),
+		"Tags":       reflect.TypeOf(EndpointTags{}),
+	}
+}
+
 type GetWorkspaceWarehouseConfigResponse struct {
 	// Optional: Channel selection details
-	Channel []Channel `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
 	// Deprecated: Use sql_configuration_parameters
-	ConfigParam []RepeatedEndpointConfPairs `tfsdk:"config_param" tf:"optional,object"`
+	ConfigParam types.Object `tfsdk:"config_param" tf:"optional,object"`
 	// Spark confs for external hive metastore configuration JSON serialized
 	// size must be less than <= 512K
-	DataAccessConfig []EndpointConfPair `tfsdk:"data_access_config" tf:"optional"`
+	DataAccessConfig types.List `tfsdk:"data_access_config" tf:"optional"`
 	// List of Warehouse Types allowed in this workspace (limits allowed value
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
 	// cannot be disabled, they don't need to be specified in
 	// SetWorkspaceWarehouseConfig. Note: Disabling a type may cause existing
 	// warehouses to be converted to another type. Used by frontend to save
 	// specific type availability in the warehouse create and edit form UI.
-	EnabledWarehouseTypes []WarehouseTypePair `tfsdk:"enabled_warehouse_types" tf:"optional"`
+	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types" tf:"optional"`
 	// Deprecated: Use sql_configuration_parameters
-	GlobalParam []RepeatedEndpointConfPairs `tfsdk:"global_param" tf:"optional,object"`
+	GlobalParam types.Object `tfsdk:"global_param" tf:"optional,object"`
 	// GCP only: Google Service Account used to pass to cluster to access Google
 	// Cloud Storage
 	GoogleServiceAccount types.String `tfsdk:"google_service_account" tf:"optional"`
@@ -1580,13 +1929,24 @@ type GetWorkspaceWarehouseConfigResponse struct {
 	// Security policy for warehouses
 	SecurityPolicy types.String `tfsdk:"security_policy" tf:"optional"`
 	// SQL configuration parameters
-	SqlConfigurationParameters []RepeatedEndpointConfPairs `tfsdk:"sql_configuration_parameters" tf:"optional,object"`
+	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters" tf:"optional,object"`
 }
 
 func (newState *GetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceWarehouseConfigResponse) {
 }
 
 func (newState *GetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceWarehouseConfigResponse) {
+}
+
+func (a GetWorkspaceWarehouseConfigResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Channel":                    reflect.TypeOf(Channel{}),
+		"ConfigParam":                reflect.TypeOf(RepeatedEndpointConfPairs{}),
+		"DataAccessConfig":           reflect.TypeOf(EndpointConfPair{}),
+		"EnabledWarehouseTypes":      reflect.TypeOf(WarehouseTypePair{}),
+		"GlobalParam":                reflect.TypeOf(RepeatedEndpointConfPairs{}),
+		"SqlConfigurationParameters": reflect.TypeOf(RepeatedEndpointConfPairs{}),
+	}
 }
 
 type LegacyAlert struct {
@@ -1599,11 +1959,11 @@ type LegacyAlert struct {
 	// Name of the alert.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Alert configuration options.
-	Options []AlertOptions `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options" tf:"optional,object"`
 	// The identifier of the workspace folder containing the object.
 	Parent types.String `tfsdk:"parent" tf:"optional"`
 
-	Query []AlertQuery `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query" tf:"optional,object"`
 	// Number of seconds after being triggered before the alert rearms itself
 	// and can be triggered again. If `null`, alert will never be triggered
 	// again.
@@ -1615,13 +1975,21 @@ type LegacyAlert struct {
 	// Timestamp when the alert was last updated.
 	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
 
-	User []User `tfsdk:"user" tf:"optional,object"`
+	User types.Object `tfsdk:"user" tf:"optional,object"`
 }
 
 func (newState *LegacyAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyAlert) {
 }
 
 func (newState *LegacyAlert) SyncEffectiveFieldsDuringRead(existingState LegacyAlert) {
+}
+
+func (a LegacyAlert) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Options": reflect.TypeOf(AlertOptions{}),
+		"Query":   reflect.TypeOf(AlertQuery{}),
+		"User":    reflect.TypeOf(User{}),
+	}
 }
 
 type LegacyQuery struct {
@@ -1658,7 +2026,7 @@ type LegacyQuery struct {
 	// type parameters are handled safely.
 	IsSafe types.Bool `tfsdk:"is_safe" tf:"optional"`
 
-	LastModifiedBy []User `tfsdk:"last_modified_by" tf:"optional,object"`
+	LastModifiedBy types.Object `tfsdk:"last_modified_by" tf:"optional,object"`
 	// The ID of the user who last saved changes to this query.
 	LastModifiedById types.Int64 `tfsdk:"last_modified_by_id" tf:"optional"`
 	// If there is a cached result for this query and user, this field includes
@@ -1669,7 +2037,7 @@ type LegacyQuery struct {
 	// on the query page.
 	Name types.String `tfsdk:"name" tf:"optional"`
 
-	Options []QueryOptions `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options" tf:"optional,object"`
 	// The identifier of the workspace folder containing the object.
 	Parent types.String `tfsdk:"parent" tf:"optional"`
 	// * `CAN_VIEW`: Can view the query * `CAN_RUN`: Can run the query *
@@ -1684,21 +2052,31 @@ type LegacyQuery struct {
 	// owner" behavior)
 	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// The timestamp at which this query was last updated.
 	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
 
-	User []User `tfsdk:"user" tf:"optional,object"`
+	User types.Object `tfsdk:"user" tf:"optional,object"`
 	// The ID of the user who owns the query.
 	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
 
-	Visualizations []LegacyVisualization `tfsdk:"visualizations" tf:"optional"`
+	Visualizations types.List `tfsdk:"visualizations" tf:"optional"`
 }
 
 func (newState *LegacyQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyQuery) {
 }
 
 func (newState *LegacyQuery) SyncEffectiveFieldsDuringRead(existingState LegacyQuery) {
+}
+
+func (a LegacyQuery) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"LastModifiedBy": reflect.TypeOf(User{}),
+		"Options":        reflect.TypeOf(QueryOptions{}),
+		"Tags":           reflect.TypeOf(""),
+		"User":           reflect.TypeOf(User{}),
+		"Visualizations": reflect.TypeOf(LegacyVisualization{}),
+	}
 }
 
 // The visualization description API changes frequently and is unsupported. You
@@ -1721,7 +2099,7 @@ type LegacyVisualization struct {
 	// settings in JSON.
 	Options any `tfsdk:"options" tf:"optional"`
 
-	Query []LegacyQuery `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query" tf:"optional,object"`
 	// The type of visualization: chart, table, pivot table, and so on.
 	Type types.String `tfsdk:"type" tf:"optional"`
 
@@ -1732,6 +2110,12 @@ func (newState *LegacyVisualization) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *LegacyVisualization) SyncEffectiveFieldsDuringRead(existingState LegacyVisualization) {
+}
+
+func (a LegacyVisualization) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Query": reflect.TypeOf(LegacyQuery{}),
+	}
 }
 
 // List alerts
@@ -1747,10 +2131,14 @@ func (newState *ListAlertsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ListAlertsRequest) SyncEffectiveFieldsDuringRead(existingState ListAlertsRequest) {
 }
 
+func (a ListAlertsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListAlertsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	Results []ListAlertsResponseAlert `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results" tf:"optional"`
 }
 
 func (newState *ListAlertsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsResponse) {
@@ -1759,9 +2147,15 @@ func (newState *ListAlertsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListAlertsResponse) SyncEffectiveFieldsDuringRead(existingState ListAlertsResponse) {
 }
 
+func (a ListAlertsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Results": reflect.TypeOf(ListAlertsResponseAlert{}),
+	}
+}
+
 type ListAlertsResponseAlert struct {
 	// Trigger conditions of the alert.
-	Condition []AlertCondition `tfsdk:"condition" tf:"optional,object"`
+	Condition types.Object `tfsdk:"condition" tf:"optional,object"`
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
 	// Custom body of alert notification, if it exists. See [here] for custom
@@ -1809,6 +2203,12 @@ func (newState *ListAlertsResponseAlert) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ListAlertsResponseAlert) SyncEffectiveFieldsDuringRead(existingState ListAlertsResponseAlert) {
 }
 
+func (a ListAlertsResponseAlert) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Condition": reflect.TypeOf(AlertCondition{}),
+	}
+}
+
 // Get dashboard objects
 type ListDashboardsRequest struct {
 	// Name of dashboard attribute to order by.
@@ -1825,6 +2225,10 @@ func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringRead(existingState ListDashboardsRequest) {
+}
+
+func (a ListDashboardsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get a list of queries
@@ -1858,6 +2262,10 @@ func (newState *ListQueriesLegacyRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListQueriesLegacyRequest) SyncEffectiveFieldsDuringRead(existingState ListQueriesLegacyRequest) {
 }
 
+func (a ListQueriesLegacyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // List queries
 type ListQueriesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
@@ -1871,13 +2279,17 @@ func (newState *ListQueriesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListQueriesRequest) SyncEffectiveFieldsDuringRead(existingState ListQueriesRequest) {
 }
 
+func (a ListQueriesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListQueriesResponse struct {
 	// Whether there is another page of results.
 	HasNextPage types.Bool `tfsdk:"has_next_page" tf:"optional"`
 	// A token that can be used to get the next page of results.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	Res []QueryInfo `tfsdk:"res" tf:"optional"`
+	Res types.List `tfsdk:"res" tf:"optional"`
 }
 
 func (newState *ListQueriesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueriesResponse) {
@@ -1886,10 +2298,16 @@ func (newState *ListQueriesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ListQueriesResponse) SyncEffectiveFieldsDuringRead(existingState ListQueriesResponse) {
 }
 
+func (a ListQueriesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Res": reflect.TypeOf(QueryInfo{}),
+	}
+}
+
 // List Queries
 type ListQueryHistoryRequest struct {
 	// A filter to limit query history results. This field is optional.
-	FilterBy []QueryFilter `tfsdk:"-"`
+	FilterBy types.Object `tfsdk:"-"`
 	// Whether to include the query metrics with each query. Only use this for a
 	// small subset of queries (max_results). Defaults to false.
 	IncludeMetrics types.Bool `tfsdk:"-"`
@@ -1909,16 +2327,28 @@ func (newState *ListQueryHistoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ListQueryHistoryRequest) SyncEffectiveFieldsDuringRead(existingState ListQueryHistoryRequest) {
 }
 
+func (a ListQueryHistoryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FilterBy": reflect.TypeOf(QueryFilter{}),
+	}
+}
+
 type ListQueryObjectsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	Results []ListQueryObjectsResponseQuery `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results" tf:"optional"`
 }
 
 func (newState *ListQueryObjectsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueryObjectsResponse) {
 }
 
 func (newState *ListQueryObjectsResponse) SyncEffectiveFieldsDuringRead(existingState ListQueryObjectsResponse) {
+}
+
+func (a ListQueryObjectsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Results": reflect.TypeOf(ListQueryObjectsResponseQuery{}),
+	}
 }
 
 type ListQueryObjectsResponseQuery struct {
@@ -1943,7 +2373,7 @@ type ListQueryObjectsResponseQuery struct {
 	// Username of the user that owns the query.
 	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
 	// List of query parameter definitions.
-	Parameters []QueryParameter `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters" tf:"optional"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text" tf:"optional"`
 	// Sets the "Run as" role for the object.
@@ -1951,7 +2381,7 @@ type ListQueryObjectsResponseQuery struct {
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// Timestamp when this query was last updated.
 	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 	// ID of the SQL warehouse attached to the query.
@@ -1964,6 +2394,13 @@ func (newState *ListQueryObjectsResponseQuery) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListQueryObjectsResponseQuery) SyncEffectiveFieldsDuringRead(existingState ListQueryObjectsResponseQuery) {
 }
 
+func (a ListQueryObjectsResponseQuery) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Parameters": reflect.TypeOf(QueryParameter{}),
+		"Tags":       reflect.TypeOf(""),
+	}
+}
+
 type ListResponse struct {
 	// The total number of dashboards.
 	Count types.Int64 `tfsdk:"count" tf:"optional"`
@@ -1972,13 +2409,19 @@ type ListResponse struct {
 	// The number of dashboards per page.
 	PageSize types.Int64 `tfsdk:"page_size" tf:"optional"`
 	// List of dashboards returned.
-	Results []Dashboard `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results" tf:"optional"`
 }
 
 func (newState *ListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListResponse) {
 }
 
 func (newState *ListResponse) SyncEffectiveFieldsDuringRead(existingState ListResponse) {
+}
+
+func (a ListResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Results": reflect.TypeOf(Dashboard{}),
+	}
 }
 
 // List visualizations on a query
@@ -1996,16 +2439,26 @@ func (newState *ListVisualizationsForQueryRequest) SyncEffectiveFieldsDuringCrea
 func (newState *ListVisualizationsForQueryRequest) SyncEffectiveFieldsDuringRead(existingState ListVisualizationsForQueryRequest) {
 }
 
+func (a ListVisualizationsForQueryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListVisualizationsForQueryResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	Results []Visualization `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results" tf:"optional"`
 }
 
 func (newState *ListVisualizationsForQueryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVisualizationsForQueryResponse) {
 }
 
 func (newState *ListVisualizationsForQueryResponse) SyncEffectiveFieldsDuringRead(existingState ListVisualizationsForQueryResponse) {
+}
+
+func (a ListVisualizationsForQueryResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Results": reflect.TypeOf(Visualization{}),
+	}
 }
 
 // List warehouses
@@ -2021,15 +2474,25 @@ func (newState *ListWarehousesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListWarehousesRequest) SyncEffectiveFieldsDuringRead(existingState ListWarehousesRequest) {
 }
 
+func (a ListWarehousesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListWarehousesResponse struct {
 	// A list of warehouses and their configurations.
-	Warehouses []EndpointInfo `tfsdk:"warehouses" tf:"optional"`
+	Warehouses types.List `tfsdk:"warehouses" tf:"optional"`
 }
 
 func (newState *ListWarehousesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListWarehousesResponse) {
 }
 
 func (newState *ListWarehousesResponse) SyncEffectiveFieldsDuringRead(existingState ListWarehousesResponse) {
+}
+
+func (a ListWarehousesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Warehouses": reflect.TypeOf(EndpointInfo{}),
+	}
 }
 
 type MultiValuesOptions struct {
@@ -2048,6 +2511,10 @@ func (newState *MultiValuesOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *MultiValuesOptions) SyncEffectiveFieldsDuringRead(existingState MultiValuesOptions) {
 }
 
+func (a MultiValuesOptions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type NumericValue struct {
 	Value types.Float64 `tfsdk:"value" tf:"optional"`
 }
@@ -2056,6 +2523,10 @@ func (newState *NumericValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan Numer
 }
 
 func (newState *NumericValue) SyncEffectiveFieldsDuringRead(existingState NumericValue) {
+}
+
+func (a NumericValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type OdbcParams struct {
@@ -2074,13 +2545,17 @@ func (newState *OdbcParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan OdbcPar
 func (newState *OdbcParams) SyncEffectiveFieldsDuringRead(existingState OdbcParams) {
 }
 
+func (a OdbcParams) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Parameter struct {
 	// List of valid parameter values, newline delimited. Only applies for
 	// dropdown list parameters.
 	EnumOptions types.String `tfsdk:"enumOptions" tf:"optional"`
 	// If specified, allows multiple values to be selected for this parameter.
 	// Only applies to dropdown list and query-based dropdown list parameters.
-	MultiValuesOptions []MultiValuesOptions `tfsdk:"multiValuesOptions" tf:"optional,object"`
+	MultiValuesOptions types.Object `tfsdk:"multiValuesOptions" tf:"optional,object"`
 	// The literal parameter marker that appears between double curly braces in
 	// the query text.
 	Name types.String `tfsdk:"name" tf:"optional"`
@@ -2099,6 +2574,12 @@ func (newState *Parameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan Paramete
 }
 
 func (newState *Parameter) SyncEffectiveFieldsDuringRead(existingState Parameter) {
+}
+
+func (a Parameter) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"MultiValuesOptions": reflect.TypeOf(MultiValuesOptions{}),
+	}
 }
 
 type Query struct {
@@ -2123,7 +2604,7 @@ type Query struct {
 	// Username of the user that owns the query.
 	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
 	// List of query parameter definitions.
-	Parameters []QueryParameter `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters" tf:"optional"`
 	// Workspace path of the workspace folder containing the object.
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
 	// Text of the query to be run.
@@ -2133,7 +2614,7 @@ type Query struct {
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// Timestamp when this query was last updated.
 	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
 	// ID of the SQL warehouse attached to the query.
@@ -2146,19 +2627,33 @@ func (newState *Query) SyncEffectiveFieldsDuringCreateOrUpdate(plan Query) {
 func (newState *Query) SyncEffectiveFieldsDuringRead(existingState Query) {
 }
 
+func (a Query) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Parameters": reflect.TypeOf(QueryParameter{}),
+		"Tags":       reflect.TypeOf(""),
+	}
+}
+
 type QueryBackedValue struct {
 	// If specified, allows multiple values to be selected for this parameter.
-	MultiValuesOptions []MultiValuesOptions `tfsdk:"multi_values_options" tf:"optional,object"`
+	MultiValuesOptions types.Object `tfsdk:"multi_values_options" tf:"optional,object"`
 	// UUID of the query that provides the parameter values.
 	QueryId types.String `tfsdk:"query_id" tf:"optional"`
 	// List of selected query parameter values.
-	Values []types.String `tfsdk:"values" tf:"optional"`
+	Values types.List `tfsdk:"values" tf:"optional"`
 }
 
 func (newState *QueryBackedValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryBackedValue) {
 }
 
 func (newState *QueryBackedValue) SyncEffectiveFieldsDuringRead(existingState QueryBackedValue) {
+}
+
+func (a QueryBackedValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"MultiValuesOptions": reflect.TypeOf(MultiValuesOptions{}),
+		"Values":             reflect.TypeOf(""),
+	}
 }
 
 type QueryEditContent struct {
@@ -2186,7 +2681,7 @@ type QueryEditContent struct {
 	// owner" behavior)
 	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *QueryEditContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEditContent) {
@@ -2195,18 +2690,24 @@ func (newState *QueryEditContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan Q
 func (newState *QueryEditContent) SyncEffectiveFieldsDuringRead(existingState QueryEditContent) {
 }
 
+func (a QueryEditContent) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(""),
+	}
+}
+
 type QueryFilter struct {
 	// A range filter for query submitted time. The time range must be <= 30
 	// days.
-	QueryStartTimeRange []TimeRange `tfsdk:"query_start_time_range" tf:"optional,object"`
+	QueryStartTimeRange types.Object `tfsdk:"query_start_time_range" tf:"optional,object"`
 	// A list of statement IDs.
-	StatementIds []types.String `tfsdk:"statement_ids" tf:"optional"`
+	StatementIds types.List `tfsdk:"statement_ids" tf:"optional"`
 
-	Statuses []types.String `tfsdk:"statuses" tf:"optional"`
+	Statuses types.List `tfsdk:"statuses" tf:"optional"`
 	// A list of user IDs who ran the queries.
-	UserIds []types.Int64 `tfsdk:"user_ids" tf:"optional"`
+	UserIds types.List `tfsdk:"user_ids" tf:"optional"`
 	// A list of warehouse IDs.
-	WarehouseIds []types.String `tfsdk:"warehouse_ids" tf:"optional"`
+	WarehouseIds types.List `tfsdk:"warehouse_ids" tf:"optional"`
 }
 
 func (newState *QueryFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryFilter) {
@@ -2215,9 +2716,19 @@ func (newState *QueryFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryF
 func (newState *QueryFilter) SyncEffectiveFieldsDuringRead(existingState QueryFilter) {
 }
 
+func (a QueryFilter) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"QueryStartTimeRange": reflect.TypeOf(TimeRange{}),
+		"StatementIds":        reflect.TypeOf(""),
+		"Statuses":            reflect.TypeOf(""),
+		"UserIds":             reflect.TypeOf(0),
+		"WarehouseIds":        reflect.TypeOf(""),
+	}
+}
+
 type QueryInfo struct {
 	// SQL Warehouse channel information at the time of query execution
-	ChannelUsed []ChannelInfo `tfsdk:"channel_used" tf:"optional,object"`
+	ChannelUsed types.Object `tfsdk:"channel_used" tf:"optional,object"`
 	// Total execution time of the statement ( excluding result fetch time ).
 	Duration types.Int64 `tfsdk:"duration" tf:"optional"`
 	// Alias for `warehouse_id`.
@@ -2236,7 +2747,7 @@ type QueryInfo struct {
 	// A key that can be used to look up query details.
 	LookupKey types.String `tfsdk:"lookup_key" tf:"optional"`
 	// Metrics about query execution.
-	Metrics []QueryMetrics `tfsdk:"metrics" tf:"optional,object"`
+	Metrics types.Object `tfsdk:"metrics" tf:"optional,object"`
 	// Whether plans exist for the execution, or the reason why they are missing
 	PlansState types.String `tfsdk:"plans_state" tf:"optional"`
 	// The time the query ended.
@@ -2273,6 +2784,13 @@ func (newState *QueryInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryInf
 func (newState *QueryInfo) SyncEffectiveFieldsDuringRead(existingState QueryInfo) {
 }
 
+func (a QueryInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ChannelUsed": reflect.TypeOf(ChannelInfo{}),
+		"Metrics":     reflect.TypeOf(QueryMetrics{}),
+	}
+}
+
 type QueryList struct {
 	// The total number of queries.
 	Count types.Int64 `tfsdk:"count" tf:"optional"`
@@ -2281,13 +2799,19 @@ type QueryList struct {
 	// The number of queries per page.
 	PageSize types.Int64 `tfsdk:"page_size" tf:"optional"`
 	// List of queries returned.
-	Results []LegacyQuery `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results" tf:"optional"`
 }
 
 func (newState *QueryList) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryList) {
 }
 
 func (newState *QueryList) SyncEffectiveFieldsDuringRead(existingState QueryList) {
+}
+
+func (a QueryList) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Results": reflect.TypeOf(LegacyQuery{}),
+	}
 }
 
 // A query metric that encapsulates a set of measurements for a single query.
@@ -2357,6 +2881,10 @@ func (newState *QueryMetrics) SyncEffectiveFieldsDuringCreateOrUpdate(plan Query
 func (newState *QueryMetrics) SyncEffectiveFieldsDuringRead(existingState QueryMetrics) {
 }
 
+func (a QueryMetrics) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type QueryOptions struct {
 	// The name of the catalog to execute this query in.
 	Catalog types.String `tfsdk:"catalog" tf:"optional"`
@@ -2365,7 +2893,7 @@ type QueryOptions struct {
 	// days.
 	MovedToTrashAt types.String `tfsdk:"moved_to_trash_at" tf:"optional"`
 
-	Parameters []Parameter `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters" tf:"optional"`
 	// The name of the schema to execute this query in.
 	Schema types.String `tfsdk:"schema" tf:"optional"`
 }
@@ -2376,24 +2904,30 @@ func (newState *QueryOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Query
 func (newState *QueryOptions) SyncEffectiveFieldsDuringRead(existingState QueryOptions) {
 }
 
+func (a QueryOptions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Parameters": reflect.TypeOf(Parameter{}),
+	}
+}
+
 type QueryParameter struct {
 	// Date-range query parameter value. Can only specify one of
 	// `dynamic_date_range_value` or `date_range_value`.
-	DateRangeValue []DateRangeValue `tfsdk:"date_range_value" tf:"optional,object"`
+	DateRangeValue types.Object `tfsdk:"date_range_value" tf:"optional,object"`
 	// Date query parameter value. Can only specify one of `dynamic_date_value`
 	// or `date_value`.
-	DateValue []DateValue `tfsdk:"date_value" tf:"optional,object"`
+	DateValue types.Object `tfsdk:"date_value" tf:"optional,object"`
 	// Dropdown query parameter value.
-	EnumValue []EnumValue `tfsdk:"enum_value" tf:"optional,object"`
+	EnumValue types.Object `tfsdk:"enum_value" tf:"optional,object"`
 	// Literal parameter marker that appears between double curly braces in the
 	// query text.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Numeric query parameter value.
-	NumericValue []NumericValue `tfsdk:"numeric_value" tf:"optional,object"`
+	NumericValue types.Object `tfsdk:"numeric_value" tf:"optional,object"`
 	// Query-based dropdown query parameter value.
-	QueryBackedValue []QueryBackedValue `tfsdk:"query_backed_value" tf:"optional,object"`
+	QueryBackedValue types.Object `tfsdk:"query_backed_value" tf:"optional,object"`
 	// Text query parameter value.
-	TextValue []TextValue `tfsdk:"text_value" tf:"optional,object"`
+	TextValue types.Object `tfsdk:"text_value" tf:"optional,object"`
 	// Text displayed in the user-facing parameter widget in the UI.
 	Title types.String `tfsdk:"title" tf:"optional"`
 }
@@ -2402,6 +2936,17 @@ func (newState *QueryParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan Que
 }
 
 func (newState *QueryParameter) SyncEffectiveFieldsDuringRead(existingState QueryParameter) {
+}
+
+func (a QueryParameter) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DateRangeValue":   reflect.TypeOf(DateRangeValue{}),
+		"DateValue":        reflect.TypeOf(DateValue{}),
+		"EnumValue":        reflect.TypeOf(EnumValue{}),
+		"NumericValue":     reflect.TypeOf(NumericValue{}),
+		"QueryBackedValue": reflect.TypeOf(QueryBackedValue{}),
+		"TextValue":        reflect.TypeOf(TextValue{}),
+	}
 }
 
 type QueryPostContent struct {
@@ -2429,7 +2974,7 @@ type QueryPostContent struct {
 	// owner" behavior)
 	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *QueryPostContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryPostContent) {
@@ -2438,17 +2983,30 @@ func (newState *QueryPostContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan Q
 func (newState *QueryPostContent) SyncEffectiveFieldsDuringRead(existingState QueryPostContent) {
 }
 
+func (a QueryPostContent) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(""),
+	}
+}
+
 type RepeatedEndpointConfPairs struct {
 	// Deprecated: Use configuration_pairs
-	ConfigPair []EndpointConfPair `tfsdk:"config_pair" tf:"optional"`
+	ConfigPair types.List `tfsdk:"config_pair" tf:"optional"`
 
-	ConfigurationPairs []EndpointConfPair `tfsdk:"configuration_pairs" tf:"optional"`
+	ConfigurationPairs types.List `tfsdk:"configuration_pairs" tf:"optional"`
 }
 
 func (newState *RepeatedEndpointConfPairs) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepeatedEndpointConfPairs) {
 }
 
 func (newState *RepeatedEndpointConfPairs) SyncEffectiveFieldsDuringRead(existingState RepeatedEndpointConfPairs) {
+}
+
+func (a RepeatedEndpointConfPairs) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ConfigPair":         reflect.TypeOf(EndpointConfPair{}),
+		"ConfigurationPairs": reflect.TypeOf(EndpointConfPair{}),
+	}
 }
 
 // Restore a dashboard
@@ -2462,6 +3020,10 @@ func (newState *RestoreDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *RestoreDashboardRequest) SyncEffectiveFieldsDuringRead(existingState RestoreDashboardRequest) {
 }
 
+func (a RestoreDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Restore a query
 type RestoreQueriesLegacyRequest struct {
 	QueryId types.String `tfsdk:"-"`
@@ -2473,6 +3035,10 @@ func (newState *RestoreQueriesLegacyRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *RestoreQueriesLegacyRequest) SyncEffectiveFieldsDuringRead(existingState RestoreQueriesLegacyRequest) {
 }
 
+func (a RestoreQueriesLegacyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RestoreResponse struct {
 }
 
@@ -2480,6 +3046,10 @@ func (newState *RestoreResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Re
 }
 
 func (newState *RestoreResponse) SyncEffectiveFieldsDuringRead(existingState RestoreResponse) {
+}
+
+func (a RestoreResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type ResultData struct {
@@ -2491,9 +3061,9 @@ type ResultData struct {
 	// The `JSON_ARRAY` format is an array of arrays of values, where each
 	// non-null value is formatted as a string. Null values are encoded as JSON
 	// `null`.
-	DataArray [][]types.String `tfsdk:"data_array" tf:"optional"`
+	DataArray types.List `tfsdk:"data_array" tf:"optional"`
 
-	ExternalLinks []ExternalLink `tfsdk:"external_links" tf:"optional"`
+	ExternalLinks types.List `tfsdk:"external_links" tf:"optional"`
 	// When fetching, provides the `chunk_index` for the _next_ chunk. If
 	// absent, indicates there are no more chunks. The next chunk can be fetched
 	// with a :method:statementexecution/getStatementResultChunkN request.
@@ -2515,14 +3085,21 @@ func (newState *ResultData) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultD
 func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultData) {
 }
 
+func (a ResultData) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DataArray":     reflect.TypeOf(""),
+		"ExternalLinks": reflect.TypeOf(ExternalLink{}),
+	}
+}
+
 // The result manifest provides schema and metadata for the result set.
 type ResultManifest struct {
 	// Array of result set chunk metadata.
-	Chunks []BaseChunkInfo `tfsdk:"chunks" tf:"optional"`
+	Chunks types.List `tfsdk:"chunks" tf:"optional"`
 
 	Format types.String `tfsdk:"format" tf:"optional"`
 	// The schema is an ordered list of column descriptions.
-	Schema []ResultSchema `tfsdk:"schema" tf:"optional,object"`
+	Schema types.Object `tfsdk:"schema" tf:"optional,object"`
 	// The total number of bytes in the result set. This field is not available
 	// when using `INLINE` disposition.
 	TotalByteCount types.Int64 `tfsdk:"total_byte_count" tf:"optional"`
@@ -2541,17 +3118,30 @@ func (newState *ResultManifest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Res
 func (newState *ResultManifest) SyncEffectiveFieldsDuringRead(existingState ResultManifest) {
 }
 
+func (a ResultManifest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Chunks": reflect.TypeOf(BaseChunkInfo{}),
+		"Schema": reflect.TypeOf(ResultSchema{}),
+	}
+}
+
 // The schema is an ordered list of column descriptions.
 type ResultSchema struct {
 	ColumnCount types.Int64 `tfsdk:"column_count" tf:"optional"`
 
-	Columns []ColumnInfo `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns" tf:"optional"`
 }
 
 func (newState *ResultSchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultSchema) {
 }
 
 func (newState *ResultSchema) SyncEffectiveFieldsDuringRead(existingState ResultSchema) {
+}
+
+func (a ResultSchema) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Columns": reflect.TypeOf(ColumnInfo{}),
+	}
 }
 
 type ServiceError struct {
@@ -2566,9 +3156,13 @@ func (newState *ServiceError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Servi
 func (newState *ServiceError) SyncEffectiveFieldsDuringRead(existingState ServiceError) {
 }
 
+func (a ServiceError) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Set object ACL
 type SetRequest struct {
-	AccessControlList []AccessControl `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// Object ID. The ACL for the object with this UUID is overwritten by this
 	// request's POST content.
 	ObjectId types.String `tfsdk:"-"`
@@ -2582,8 +3176,14 @@ func (newState *SetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetRequ
 func (newState *SetRequest) SyncEffectiveFieldsDuringRead(existingState SetRequest) {
 }
 
+func (a SetRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(AccessControl{}),
+	}
+}
+
 type SetResponse struct {
-	AccessControlList []AccessControl `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// An object's type and UUID, separated by a forward slash (/) character.
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 	// A singular noun object type.
@@ -2596,23 +3196,29 @@ func (newState *SetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetRes
 func (newState *SetResponse) SyncEffectiveFieldsDuringRead(existingState SetResponse) {
 }
 
+func (a SetResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(AccessControl{}),
+	}
+}
+
 type SetWorkspaceWarehouseConfigRequest struct {
 	// Optional: Channel selection details
-	Channel []Channel `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
 	// Deprecated: Use sql_configuration_parameters
-	ConfigParam []RepeatedEndpointConfPairs `tfsdk:"config_param" tf:"optional,object"`
+	ConfigParam types.Object `tfsdk:"config_param" tf:"optional,object"`
 	// Spark confs for external hive metastore configuration JSON serialized
 	// size must be less than <= 512K
-	DataAccessConfig []EndpointConfPair `tfsdk:"data_access_config" tf:"optional"`
+	DataAccessConfig types.List `tfsdk:"data_access_config" tf:"optional"`
 	// List of Warehouse Types allowed in this workspace (limits allowed value
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
 	// cannot be disabled, they don't need to be specified in
 	// SetWorkspaceWarehouseConfig. Note: Disabling a type may cause existing
 	// warehouses to be converted to another type. Used by frontend to save
 	// specific type availability in the warehouse create and edit form UI.
-	EnabledWarehouseTypes []WarehouseTypePair `tfsdk:"enabled_warehouse_types" tf:"optional"`
+	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types" tf:"optional"`
 	// Deprecated: Use sql_configuration_parameters
-	GlobalParam []RepeatedEndpointConfPairs `tfsdk:"global_param" tf:"optional,object"`
+	GlobalParam types.Object `tfsdk:"global_param" tf:"optional,object"`
 	// GCP only: Google Service Account used to pass to cluster to access Google
 	// Cloud Storage
 	GoogleServiceAccount types.String `tfsdk:"google_service_account" tf:"optional"`
@@ -2621,13 +3227,24 @@ type SetWorkspaceWarehouseConfigRequest struct {
 	// Security policy for warehouses
 	SecurityPolicy types.String `tfsdk:"security_policy" tf:"optional"`
 	// SQL configuration parameters
-	SqlConfigurationParameters []RepeatedEndpointConfPairs `tfsdk:"sql_configuration_parameters" tf:"optional,object"`
+	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters" tf:"optional,object"`
 }
 
 func (newState *SetWorkspaceWarehouseConfigRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetWorkspaceWarehouseConfigRequest) {
 }
 
 func (newState *SetWorkspaceWarehouseConfigRequest) SyncEffectiveFieldsDuringRead(existingState SetWorkspaceWarehouseConfigRequest) {
+}
+
+func (a SetWorkspaceWarehouseConfigRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Channel":                    reflect.TypeOf(Channel{}),
+		"ConfigParam":                reflect.TypeOf(RepeatedEndpointConfPairs{}),
+		"DataAccessConfig":           reflect.TypeOf(EndpointConfPair{}),
+		"EnabledWarehouseTypes":      reflect.TypeOf(WarehouseTypePair{}),
+		"GlobalParam":                reflect.TypeOf(RepeatedEndpointConfPairs{}),
+		"SqlConfigurationParameters": reflect.TypeOf(RepeatedEndpointConfPairs{}),
+	}
 }
 
 type SetWorkspaceWarehouseConfigResponse struct {
@@ -2637,6 +3254,10 @@ func (newState *SetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringCr
 }
 
 func (newState *SetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringRead(existingState SetWorkspaceWarehouseConfigResponse) {
+}
+
+func (a SetWorkspaceWarehouseConfigResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Start a warehouse
@@ -2651,6 +3272,10 @@ func (newState *StartRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Start
 func (newState *StartRequest) SyncEffectiveFieldsDuringRead(existingState StartRequest) {
 }
 
+func (a StartRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type StartWarehouseResponse struct {
 }
 
@@ -2658,6 +3283,10 @@ func (newState *StartWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *StartWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState StartWarehouseResponse) {
+}
+
+func (a StartWarehouseResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type StatementParameterListItem struct {
@@ -2682,17 +3311,21 @@ func (newState *StatementParameterListItem) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *StatementParameterListItem) SyncEffectiveFieldsDuringRead(existingState StatementParameterListItem) {
 }
 
+func (a StatementParameterListItem) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type StatementResponse struct {
 	// The result manifest provides schema and metadata for the result set.
-	Manifest []ResultManifest `tfsdk:"manifest" tf:"optional,object"`
+	Manifest types.Object `tfsdk:"manifest" tf:"optional,object"`
 
-	Result []ResultData `tfsdk:"result" tf:"optional,object"`
+	Result types.Object `tfsdk:"result" tf:"optional,object"`
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
 	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
 	// The status response includes execution state and if relevant, error
 	// information.
-	Status []StatementStatus `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status" tf:"optional,object"`
 }
 
 func (newState *StatementResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StatementResponse) {
@@ -2701,10 +3334,18 @@ func (newState *StatementResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *StatementResponse) SyncEffectiveFieldsDuringRead(existingState StatementResponse) {
 }
 
+func (a StatementResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Manifest": reflect.TypeOf(ResultManifest{}),
+		"Result":   reflect.TypeOf(ResultData{}),
+		"Status":   reflect.TypeOf(StatementStatus{}),
+	}
+}
+
 // The status response includes execution state and if relevant, error
 // information.
 type StatementStatus struct {
-	Error []ServiceError `tfsdk:"error" tf:"optional,object"`
+	Error types.Object `tfsdk:"error" tf:"optional,object"`
 	// Statement execution state: - `PENDING`: waiting for warehouse -
 	// `RUNNING`: running - `SUCCEEDED`: execution was successful, result data
 	// available for fetch - `FAILED`: execution failed; reason for failure
@@ -2721,6 +3362,12 @@ func (newState *StatementStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan St
 func (newState *StatementStatus) SyncEffectiveFieldsDuringRead(existingState StatementStatus) {
 }
 
+func (a StatementStatus) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Error": reflect.TypeOf(ServiceError{}),
+	}
+}
+
 // Stop a warehouse
 type StopRequest struct {
 	// Required. Id of the SQL warehouse.
@@ -2733,6 +3380,10 @@ func (newState *StopRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopRe
 func (newState *StopRequest) SyncEffectiveFieldsDuringRead(existingState StopRequest) {
 }
 
+func (a StopRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type StopWarehouseResponse struct {
 }
 
@@ -2740,6 +3391,10 @@ func (newState *StopWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *StopWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState StopWarehouseResponse) {
+}
+
+func (a StopWarehouseResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Success struct {
@@ -2752,12 +3407,16 @@ func (newState *Success) SyncEffectiveFieldsDuringCreateOrUpdate(plan Success) {
 func (newState *Success) SyncEffectiveFieldsDuringRead(existingState Success) {
 }
 
+func (a Success) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type TerminationReason struct {
 	// status code indicating why the cluster was terminated
 	Code types.String `tfsdk:"code" tf:"optional"`
 	// list of parameters that provide additional information about why the
 	// cluster was terminated
-	Parameters map[string]types.String `tfsdk:"parameters" tf:"optional"`
+	Parameters types.Map `tfsdk:"parameters" tf:"optional"`
 	// type of the termination
 	Type types.String `tfsdk:"type" tf:"optional"`
 }
@@ -2768,6 +3427,12 @@ func (newState *TerminationReason) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState TerminationReason) {
 }
 
+func (a TerminationReason) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Parameters": reflect.TypeOf(""),
+	}
+}
+
 type TextValue struct {
 	Value types.String `tfsdk:"value" tf:"optional"`
 }
@@ -2776,6 +3441,10 @@ func (newState *TextValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextValu
 }
 
 func (newState *TextValue) SyncEffectiveFieldsDuringRead(existingState TextValue) {
+}
+
+func (a TextValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type TimeRange struct {
@@ -2791,6 +3460,10 @@ func (newState *TimeRange) SyncEffectiveFieldsDuringCreateOrUpdate(plan TimeRang
 func (newState *TimeRange) SyncEffectiveFieldsDuringRead(existingState TimeRange) {
 }
 
+func (a TimeRange) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type TransferOwnershipObjectId struct {
 	// Email address for the new owner, who must exist in the workspace.
 	NewOwner types.String `tfsdk:"new_owner" tf:"optional"`
@@ -2802,12 +3475,16 @@ func (newState *TransferOwnershipObjectId) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *TransferOwnershipObjectId) SyncEffectiveFieldsDuringRead(existingState TransferOwnershipObjectId) {
 }
 
+func (a TransferOwnershipObjectId) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Transfer object ownership
 type TransferOwnershipRequest struct {
 	// Email address for the new owner, who must exist in the workspace.
 	NewOwner types.String `tfsdk:"new_owner" tf:"optional"`
 	// The ID of the object on which to change ownership.
-	ObjectId []TransferOwnershipObjectId `tfsdk:"-"`
+	ObjectId types.Object `tfsdk:"-"`
 	// The type of object on which to change ownership.
 	ObjectType types.String `tfsdk:"-"`
 }
@@ -2816,6 +3493,12 @@ func (newState *TransferOwnershipRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *TransferOwnershipRequest) SyncEffectiveFieldsDuringRead(existingState TransferOwnershipRequest) {
+}
+
+func (a TransferOwnershipRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ObjectId": reflect.TypeOf(TransferOwnershipObjectId{}),
+	}
 }
 
 // Delete an alert
@@ -2829,6 +3512,10 @@ func (newState *TrashAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TrashAlertRequest) SyncEffectiveFieldsDuringRead(existingState TrashAlertRequest) {
 }
 
+func (a TrashAlertRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a query
 type TrashQueryRequest struct {
 	Id types.String `tfsdk:"-"`
@@ -2840,8 +3527,12 @@ func (newState *TrashQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TrashQueryRequest) SyncEffectiveFieldsDuringRead(existingState TrashQueryRequest) {
 }
 
+func (a TrashQueryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateAlertRequest struct {
-	Alert []UpdateAlertRequestAlert `tfsdk:"alert" tf:"optional,object"`
+	Alert types.Object `tfsdk:"alert" tf:"optional,object"`
 
 	Id types.String `tfsdk:"-"`
 	// Field mask is required to be passed into the PATCH request. Field mask
@@ -2857,9 +3548,15 @@ func (newState *UpdateAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *UpdateAlertRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAlertRequest) {
 }
 
+func (a UpdateAlertRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Alert": reflect.TypeOf(UpdateAlertRequestAlert{}),
+	}
+}
+
 type UpdateAlertRequestAlert struct {
 	// Trigger conditions of the alert.
-	Condition []AlertCondition `tfsdk:"condition" tf:"optional,object"`
+	Condition types.Object `tfsdk:"condition" tf:"optional,object"`
 	// Custom body of alert notification, if it exists. See [here] for custom
 	// templating instructions.
 	//
@@ -2892,10 +3589,16 @@ func (newState *UpdateAlertRequestAlert) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *UpdateAlertRequestAlert) SyncEffectiveFieldsDuringRead(existingState UpdateAlertRequestAlert) {
 }
 
+func (a UpdateAlertRequestAlert) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Condition": reflect.TypeOf(AlertCondition{}),
+	}
+}
+
 type UpdateQueryRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Query []UpdateQueryRequestQuery `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query" tf:"optional,object"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
@@ -2907,6 +3610,12 @@ func (newState *UpdateQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *UpdateQueryRequest) SyncEffectiveFieldsDuringRead(existingState UpdateQueryRequest) {
+}
+
+func (a UpdateQueryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Query": reflect.TypeOf(UpdateQueryRequestQuery{}),
+	}
 }
 
 type UpdateQueryRequestQuery struct {
@@ -2923,7 +3632,7 @@ type UpdateQueryRequestQuery struct {
 	// Username of the user that owns the query.
 	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
 	// List of query parameter definitions.
-	Parameters []QueryParameter `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters" tf:"optional"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text" tf:"optional"`
 	// Sets the "Run as" role for the object.
@@ -2931,7 +3640,7 @@ type UpdateQueryRequestQuery struct {
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema" tf:"optional"`
 
-	Tags []types.String `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// ID of the SQL warehouse attached to the query.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
 }
@@ -2940,6 +3649,13 @@ func (newState *UpdateQueryRequestQuery) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *UpdateQueryRequestQuery) SyncEffectiveFieldsDuringRead(existingState UpdateQueryRequestQuery) {
+}
+
+func (a UpdateQueryRequestQuery) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Parameters": reflect.TypeOf(QueryParameter{}),
+		"Tags":       reflect.TypeOf(""),
+	}
 }
 
 type UpdateResponse struct {
@@ -2951,6 +3667,10 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upd
 func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
+func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateVisualizationRequest struct {
 	Id types.String `tfsdk:"-"`
 	// Field mask is required to be passed into the PATCH request. Field mask
@@ -2959,13 +3679,19 @@ type UpdateVisualizationRequest struct {
 	// the field mask, use comma as the separator (no space).
 	UpdateMask types.String `tfsdk:"update_mask" tf:""`
 
-	Visualization []UpdateVisualizationRequestVisualization `tfsdk:"visualization" tf:"optional,object"`
+	Visualization types.Object `tfsdk:"visualization" tf:"optional,object"`
 }
 
 func (newState *UpdateVisualizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateVisualizationRequest) {
 }
 
 func (newState *UpdateVisualizationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateVisualizationRequest) {
+}
+
+func (a UpdateVisualizationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Visualization": reflect.TypeOf(UpdateVisualizationRequestVisualization{}),
+	}
 }
 
 type UpdateVisualizationRequestVisualization struct {
@@ -2989,6 +3715,10 @@ func (newState *UpdateVisualizationRequestVisualization) SyncEffectiveFieldsDuri
 func (newState *UpdateVisualizationRequestVisualization) SyncEffectiveFieldsDuringRead(existingState UpdateVisualizationRequestVisualization) {
 }
 
+func (a UpdateVisualizationRequestVisualization) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type User struct {
 	Email types.String `tfsdk:"email" tf:"optional"`
 
@@ -3001,6 +3731,10 @@ func (newState *User) SyncEffectiveFieldsDuringCreateOrUpdate(plan User) {
 }
 
 func (newState *User) SyncEffectiveFieldsDuringRead(existingState User) {
+}
+
+func (a User) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Visualization struct {
@@ -3032,6 +3766,10 @@ func (newState *Visualization) SyncEffectiveFieldsDuringCreateOrUpdate(plan Visu
 func (newState *Visualization) SyncEffectiveFieldsDuringRead(existingState Visualization) {
 }
 
+func (a Visualization) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type WarehouseAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -3049,9 +3787,13 @@ func (newState *WarehouseAccessControlRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *WarehouseAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState WarehouseAccessControlRequest) {
 }
 
+func (a WarehouseAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type WarehouseAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []WarehousePermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
@@ -3068,10 +3810,16 @@ func (newState *WarehouseAccessControlResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *WarehouseAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState WarehouseAccessControlResponse) {
 }
 
+func (a WarehouseAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllPermissions": reflect.TypeOf(WarehousePermission{}),
+	}
+}
+
 type WarehousePermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
@@ -3082,8 +3830,14 @@ func (newState *WarehousePermission) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *WarehousePermission) SyncEffectiveFieldsDuringRead(existingState WarehousePermission) {
 }
 
+func (a WarehousePermission) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InheritedFromObject": reflect.TypeOf(""),
+	}
+}
+
 type WarehousePermissions struct {
-	AccessControlList []WarehouseAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
@@ -3094,6 +3848,12 @@ func (newState *WarehousePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *WarehousePermissions) SyncEffectiveFieldsDuringRead(existingState WarehousePermissions) {
+}
+
+func (a WarehousePermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(WarehouseAccessControlResponse{}),
+	}
 }
 
 type WarehousePermissionsDescription struct {
@@ -3108,8 +3868,12 @@ func (newState *WarehousePermissionsDescription) SyncEffectiveFieldsDuringCreate
 func (newState *WarehousePermissionsDescription) SyncEffectiveFieldsDuringRead(existingState WarehousePermissionsDescription) {
 }
 
+func (a WarehousePermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type WarehousePermissionsRequest struct {
-	AccessControlList []WarehouseAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-"`
 }
@@ -3118,6 +3882,12 @@ func (newState *WarehousePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *WarehousePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState WarehousePermissionsRequest) {
+}
+
+func (a WarehousePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(WarehouseAccessControlRequest{}),
+	}
 }
 
 type WarehouseTypePair struct {
@@ -3134,17 +3904,21 @@ func (newState *WarehouseTypePair) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *WarehouseTypePair) SyncEffectiveFieldsDuringRead(existingState WarehouseTypePair) {
 }
 
+func (a WarehouseTypePair) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Widget struct {
 	// The unique ID for this widget.
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Options []WidgetOptions `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options" tf:"optional,object"`
 	// The visualization description API changes frequently and is unsupported.
 	// You can duplicate a visualization by copying description objects received
 	// _from the API_ and then using them to create a new one with a POST
 	// request to the same endpoint. Databricks does not recommend constructing
 	// ad-hoc visualizations entirely in JSON.
-	Visualization []LegacyVisualization `tfsdk:"visualization" tf:"optional,object"`
+	Visualization types.Object `tfsdk:"visualization" tf:"optional,object"`
 	// Unused field.
 	Width types.Int64 `tfsdk:"width" tf:"optional"`
 }
@@ -3153,6 +3927,13 @@ func (newState *Widget) SyncEffectiveFieldsDuringCreateOrUpdate(plan Widget) {
 }
 
 func (newState *Widget) SyncEffectiveFieldsDuringRead(existingState Widget) {
+}
+
+func (a Widget) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Options":       reflect.TypeOf(WidgetOptions{}),
+		"Visualization": reflect.TypeOf(LegacyVisualization{}),
+	}
 }
 
 type WidgetOptions struct {
@@ -3168,7 +3949,7 @@ type WidgetOptions struct {
 	ParameterMappings any `tfsdk:"parameterMappings" tf:"optional"`
 	// Coordinates of this widget on a dashboard. This portion of the API
 	// changes frequently and is unsupported.
-	Position []WidgetPosition `tfsdk:"position" tf:"optional,object"`
+	Position types.Object `tfsdk:"position" tf:"optional,object"`
 	// Custom title of the widget
 	Title types.String `tfsdk:"title" tf:"optional"`
 	// Timestamp of the last time this object was updated.
@@ -3179,6 +3960,12 @@ func (newState *WidgetOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Widg
 }
 
 func (newState *WidgetOptions) SyncEffectiveFieldsDuringRead(existingState WidgetOptions) {
+}
+
+func (a WidgetOptions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Position": reflect.TypeOf(WidgetPosition{}),
+	}
 }
 
 // Coordinates of this widget on a dashboard. This portion of the API changes
@@ -3200,4 +3987,8 @@ func (newState *WidgetPosition) SyncEffectiveFieldsDuringCreateOrUpdate(plan Wid
 }
 
 func (newState *WidgetPosition) SyncEffectiveFieldsDuringRead(existingState WidgetPosition) {
+}
+
+func (a WidgetPosition) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }

@@ -12,6 +12,7 @@ package files_tf
 
 import (
 	"io"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -30,6 +31,10 @@ func (newState *AddBlock) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlock)
 func (newState *AddBlock) SyncEffectiveFieldsDuringRead(existingState AddBlock) {
 }
 
+func (a AddBlock) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type AddBlockResponse struct {
 }
 
@@ -37,6 +42,10 @@ func (newState *AddBlockResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan A
 }
 
 func (newState *AddBlockResponse) SyncEffectiveFieldsDuringRead(existingState AddBlockResponse) {
+}
+
+func (a AddBlockResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Close struct {
@@ -50,6 +59,10 @@ func (newState *Close) SyncEffectiveFieldsDuringCreateOrUpdate(plan Close) {
 func (newState *Close) SyncEffectiveFieldsDuringRead(existingState Close) {
 }
 
+func (a Close) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CloseResponse struct {
 }
 
@@ -57,6 +70,10 @@ func (newState *CloseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clos
 }
 
 func (newState *CloseResponse) SyncEffectiveFieldsDuringRead(existingState CloseResponse) {
+}
+
+func (a CloseResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Create struct {
@@ -72,6 +89,10 @@ func (newState *Create) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create) {
 func (newState *Create) SyncEffectiveFieldsDuringRead(existingState Create) {
 }
 
+func (a Create) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Create a directory
 type CreateDirectoryRequest struct {
 	// The absolute path of a directory.
@@ -84,6 +105,10 @@ func (newState *CreateDirectoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreateDirectoryRequest) SyncEffectiveFieldsDuringRead(existingState CreateDirectoryRequest) {
 }
 
+func (a CreateDirectoryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateDirectoryResponse struct {
 }
 
@@ -91,6 +116,10 @@ func (newState *CreateDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *CreateDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState CreateDirectoryResponse) {
+}
+
+func (a CreateDirectoryResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type CreateResponse struct {
@@ -103,6 +132,10 @@ func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 }
 
 func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
+}
+
+func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Delete struct {
@@ -120,6 +153,10 @@ func (newState *Delete) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete) {
 func (newState *Delete) SyncEffectiveFieldsDuringRead(existingState Delete) {
 }
 
+func (a Delete) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a directory
 type DeleteDirectoryRequest struct {
 	// The absolute path of a directory.
@@ -132,6 +169,10 @@ func (newState *DeleteDirectoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteDirectoryRequest) SyncEffectiveFieldsDuringRead(existingState DeleteDirectoryRequest) {
 }
 
+func (a DeleteDirectoryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteDirectoryResponse struct {
 }
 
@@ -139,6 +180,10 @@ func (newState *DeleteDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *DeleteDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDirectoryResponse) {
+}
+
+func (a DeleteDirectoryResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a file
@@ -153,6 +198,10 @@ func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringRead(existingState DeleteFileRequest) {
 }
 
+func (a DeleteFileRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteResponse struct {
 }
 
@@ -160,6 +209,10 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 }
 
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+}
+
+func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DirectoryEntry struct {
@@ -182,6 +235,10 @@ func (newState *DirectoryEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dir
 func (newState *DirectoryEntry) SyncEffectiveFieldsDuringRead(existingState DirectoryEntry) {
 }
 
+func (a DirectoryEntry) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Download a file
 type DownloadRequest struct {
 	// The absolute path of the file.
@@ -192,6 +249,10 @@ func (newState *DownloadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Do
 }
 
 func (newState *DownloadRequest) SyncEffectiveFieldsDuringRead(existingState DownloadRequest) {
+}
+
+func (a DownloadRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DownloadResponse struct {
@@ -208,6 +269,10 @@ func (newState *DownloadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 }
 
 func (newState *DownloadResponse) SyncEffectiveFieldsDuringRead(existingState DownloadResponse) {
+}
+
+func (a DownloadResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type FileInfo struct {
@@ -227,6 +292,10 @@ func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo)
 func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
 }
 
+func (a FileInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get directory metadata
 type GetDirectoryMetadataRequest struct {
 	// The absolute path of a directory.
@@ -239,6 +308,10 @@ func (newState *GetDirectoryMetadataRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *GetDirectoryMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetDirectoryMetadataRequest) {
 }
 
+func (a GetDirectoryMetadataRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetDirectoryMetadataResponse struct {
 }
 
@@ -246,6 +319,10 @@ func (newState *GetDirectoryMetadataResponse) SyncEffectiveFieldsDuringCreateOrU
 }
 
 func (newState *GetDirectoryMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetDirectoryMetadataResponse) {
+}
+
+func (a GetDirectoryMetadataResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get file metadata
@@ -258,6 +335,10 @@ func (newState *GetMetadataRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *GetMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetMetadataRequest) {
+}
+
+func (a GetMetadataRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type GetMetadataResponse struct {
@@ -274,6 +355,10 @@ func (newState *GetMetadataResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetMetadataResponse) {
 }
 
+func (a GetMetadataResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get the information of a file or directory
 type GetStatusRequest struct {
 	// The path of the file or directory. The path should be the absolute DBFS
@@ -287,6 +372,10 @@ func (newState *GetStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan G
 func (newState *GetStatusRequest) SyncEffectiveFieldsDuringRead(existingState GetStatusRequest) {
 }
 
+func (a GetStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // List directory contents or file details
 type ListDbfsRequest struct {
 	// The path of the file or directory. The path should be the absolute DBFS
@@ -298,6 +387,10 @@ func (newState *ListDbfsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Li
 }
 
 func (newState *ListDbfsRequest) SyncEffectiveFieldsDuringRead(existingState ListDbfsRequest) {
+}
+
+func (a ListDbfsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // List directory contents
@@ -332,9 +425,13 @@ func (newState *ListDirectoryContentsRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *ListDirectoryContentsRequest) SyncEffectiveFieldsDuringRead(existingState ListDirectoryContentsRequest) {
 }
 
+func (a ListDirectoryContentsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListDirectoryResponse struct {
 	// Array of DirectoryEntry.
-	Contents []DirectoryEntry `tfsdk:"contents" tf:"optional"`
+	Contents types.List `tfsdk:"contents" tf:"optional"`
 	// A token, which can be sent as `page_token` to retrieve the next page.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -345,16 +442,28 @@ func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState ListDirectoryResponse) {
 }
 
+func (a ListDirectoryResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Contents": reflect.TypeOf(DirectoryEntry{}),
+	}
+}
+
 type ListStatusResponse struct {
 	// A list of FileInfo's that describe contents of directory or file. See
 	// example above.
-	Files []FileInfo `tfsdk:"files" tf:"optional"`
+	Files types.List `tfsdk:"files" tf:"optional"`
 }
 
 func (newState *ListStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListStatusResponse) {
 }
 
 func (newState *ListStatusResponse) SyncEffectiveFieldsDuringRead(existingState ListStatusResponse) {
+}
+
+func (a ListStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Files": reflect.TypeOf(FileInfo{}),
+	}
 }
 
 type MkDirs struct {
@@ -368,6 +477,10 @@ func (newState *MkDirs) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirs) {
 func (newState *MkDirs) SyncEffectiveFieldsDuringRead(existingState MkDirs) {
 }
 
+func (a MkDirs) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type MkDirsResponse struct {
 }
 
@@ -375,6 +488,10 @@ func (newState *MkDirsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkD
 }
 
 func (newState *MkDirsResponse) SyncEffectiveFieldsDuringRead(existingState MkDirsResponse) {
+}
+
+func (a MkDirsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Move struct {
@@ -392,6 +509,10 @@ func (newState *Move) SyncEffectiveFieldsDuringCreateOrUpdate(plan Move) {
 func (newState *Move) SyncEffectiveFieldsDuringRead(existingState Move) {
 }
 
+func (a Move) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type MoveResponse struct {
 }
 
@@ -399,6 +520,10 @@ func (newState *MoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MoveR
 }
 
 func (newState *MoveResponse) SyncEffectiveFieldsDuringRead(existingState MoveResponse) {
+}
+
+func (a MoveResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Put struct {
@@ -416,6 +541,10 @@ func (newState *Put) SyncEffectiveFieldsDuringCreateOrUpdate(plan Put) {
 func (newState *Put) SyncEffectiveFieldsDuringRead(existingState Put) {
 }
 
+func (a Put) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PutResponse struct {
 }
 
@@ -423,6 +552,10 @@ func (newState *PutResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutRes
 }
 
 func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResponse) {
+}
+
+func (a PutResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get the contents of a file
@@ -442,6 +575,10 @@ func (newState *ReadDbfsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Re
 func (newState *ReadDbfsRequest) SyncEffectiveFieldsDuringRead(existingState ReadDbfsRequest) {
 }
 
+func (a ReadDbfsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ReadResponse struct {
 	// The number of bytes read (could be less than ``length`` if we hit end of
 	// file). This refers to number of bytes read in unencoded version (response
@@ -455,6 +592,10 @@ func (newState *ReadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadR
 }
 
 func (newState *ReadResponse) SyncEffectiveFieldsDuringRead(existingState ReadResponse) {
+}
+
+func (a ReadResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Upload a file
@@ -472,6 +613,10 @@ func (newState *UploadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Uplo
 func (newState *UploadRequest) SyncEffectiveFieldsDuringRead(existingState UploadRequest) {
 }
 
+func (a UploadRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UploadResponse struct {
 }
 
@@ -479,4 +624,8 @@ func (newState *UploadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upl
 }
 
 func (newState *UploadResponse) SyncEffectiveFieldsDuringRead(existingState UploadResponse) {
+}
+
+func (a UploadResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }

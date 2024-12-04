@@ -11,13 +11,15 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package dashboards_tf
 
 import (
+	"reflect"
+
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Create dashboard
 type CreateDashboardRequest struct {
-	Dashboard []Dashboard `tfsdk:"dashboard" tf:"optional,object"`
+	Dashboard types.Object `tfsdk:"dashboard" tf:"optional,object"`
 }
 
 func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDashboardRequest) {
@@ -26,18 +28,30 @@ func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateDashboardRequest) {
 }
 
+func (a CreateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Dashboard": reflect.TypeOf(Dashboard{}),
+	}
+}
+
 // Create dashboard schedule
 type CreateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
 
-	Schedule []Schedule `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
 }
 
 func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateScheduleRequest) {
 }
 
 func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState CreateScheduleRequest) {
+}
+
+func (a CreateScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Schedule": reflect.TypeOf(Schedule{}),
+	}
 }
 
 // Create schedule subscription
@@ -47,13 +61,19 @@ type CreateSubscriptionRequest struct {
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"-"`
 
-	Subscription []Subscription `tfsdk:"subscription" tf:"optional,object"`
+	Subscription types.Object `tfsdk:"subscription" tf:"optional,object"`
 }
 
 func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateSubscriptionRequest) {
 }
 
 func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState CreateSubscriptionRequest) {
+}
+
+func (a CreateSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Subscription": reflect.TypeOf(Subscription{}),
+	}
 }
 
 type CronSchedule struct {
@@ -73,6 +93,10 @@ func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronS
 }
 
 func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
+}
+
+func (a CronSchedule) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Dashboard struct {
@@ -117,6 +141,10 @@ func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboar
 func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
 }
 
+func (a Dashboard) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete dashboard schedule
 type DeleteScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
@@ -134,6 +162,10 @@ func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleRequest) {
 }
 
+func (a DeleteScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteScheduleResponse struct {
 }
 
@@ -141,6 +173,10 @@ func (newState *DeleteScheduleResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeleteScheduleResponse) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleResponse) {
+}
+
+func (a DeleteScheduleResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete schedule subscription
@@ -162,6 +198,10 @@ func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionRequest) {
 }
 
+func (a DeleteSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteSubscriptionResponse struct {
 }
 
@@ -171,17 +211,28 @@ func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionResponse) {
 }
 
+func (a DeleteSubscriptionResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Genie AI Response
 type GenieAttachment struct {
-	Query []QueryAttachment `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query" tf:"optional,object"`
 
-	Text []TextAttachment `tfsdk:"text" tf:"optional,object"`
+	Text types.Object `tfsdk:"text" tf:"optional,object"`
 }
 
 func (newState *GenieAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieAttachment) {
 }
 
 func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState GenieAttachment) {
+}
+
+func (a GenieAttachment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Query": reflect.TypeOf(QueryAttachment{}),
+		"Text":  reflect.TypeOf(TextAttachment{}),
+	}
 }
 
 type GenieConversation struct {
@@ -205,6 +256,10 @@ func (newState *GenieConversation) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GenieConversation) SyncEffectiveFieldsDuringRead(existingState GenieConversation) {
 }
 
+func (a GenieConversation) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GenieCreateConversationMessageRequest struct {
 	// User message content.
 	Content types.String `tfsdk:"content" tf:""`
@@ -218,6 +273,10 @@ func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuring
 }
 
 func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest) {
+}
+
+func (a GenieCreateConversationMessageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Execute SQL query in a conversation message
@@ -234,6 +293,10 @@ func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringCreate
 }
 
 func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringRead(existingState GenieExecuteMessageQueryRequest) {
+}
+
+func (a GenieExecuteMessageQueryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get conversation message
@@ -254,6 +317,10 @@ func (newState *GenieGetConversationMessageRequest) SyncEffectiveFieldsDuringCre
 func (newState *GenieGetConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieGetConversationMessageRequest) {
 }
 
+func (a GenieGetConversationMessageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get conversation message SQL query result
 type GenieGetMessageQueryResultRequest struct {
 	// Conversation ID
@@ -270,6 +337,10 @@ func (newState *GenieGetMessageQueryResultRequest) SyncEffectiveFieldsDuringCrea
 func (newState *GenieGetMessageQueryResultRequest) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultRequest) {
 }
 
+func (a GenieGetMessageQueryResultRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GenieGetMessageQueryResultResponse struct {
 	// SQL Statement Execution response. See [Get status, manifest, and result
 	// first chunk](:method:statementexecution/getstatement) for more details.
@@ -282,9 +353,15 @@ func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringCre
 func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultResponse) {
 }
 
+func (a GenieGetMessageQueryResultResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"StatementResponse": reflect.TypeOf(sql.StatementResponse{}),
+	}
+}
+
 type GenieMessage struct {
 	// AI produced response to the message
-	Attachments []GenieAttachment `tfsdk:"attachments" tf:"optional"`
+	Attachments types.List `tfsdk:"attachments" tf:"optional"`
 	// User message content
 	Content types.String `tfsdk:"content" tf:""`
 	// Conversation ID
@@ -292,13 +369,13 @@ type GenieMessage struct {
 	// Timestamp when the message was created
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
 	// Error message if AI failed to respond to the message
-	Error []MessageError `tfsdk:"error" tf:"optional,object"`
+	Error types.Object `tfsdk:"error" tf:"optional,object"`
 	// Message ID
 	Id types.String `tfsdk:"id" tf:""`
 	// Timestamp when the message was last updated
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// The result of SQL query if the message has a query attachment
-	QueryResult []Result `tfsdk:"query_result" tf:"optional,object"`
+	QueryResult types.Object `tfsdk:"query_result" tf:"optional,object"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id" tf:""`
 	// MesssageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
@@ -328,6 +405,14 @@ func (newState *GenieMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan Genie
 func (newState *GenieMessage) SyncEffectiveFieldsDuringRead(existingState GenieMessage) {
 }
 
+func (a GenieMessage) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Attachments": reflect.TypeOf(GenieAttachment{}),
+		"Error":       reflect.TypeOf(MessageError{}),
+		"QueryResult": reflect.TypeOf(Result{}),
+	}
+}
+
 type GenieStartConversationMessageRequest struct {
 	// The text of the message that starts the conversation.
 	Content types.String `tfsdk:"content" tf:""`
@@ -342,12 +427,16 @@ func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringC
 func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationMessageRequest) {
 }
 
+func (a GenieStartConversationMessageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GenieStartConversationResponse struct {
-	Conversation []GenieConversation `tfsdk:"conversation" tf:"optional,object"`
+	Conversation types.Object `tfsdk:"conversation" tf:"optional,object"`
 	// Conversation ID
 	ConversationId types.String `tfsdk:"conversation_id" tf:""`
 
-	Message []GenieMessage `tfsdk:"message" tf:"optional,object"`
+	Message types.Object `tfsdk:"message" tf:"optional,object"`
 	// Message ID
 	MessageId types.String `tfsdk:"message_id" tf:""`
 }
@@ -356,6 +445,13 @@ func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationResponse) {
+}
+
+func (a GenieStartConversationResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Conversation": reflect.TypeOf(GenieConversation{}),
+		"Message":      reflect.TypeOf(GenieMessage{}),
+	}
 }
 
 // Get dashboard
@@ -370,6 +466,10 @@ func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetDashboardRequest) {
 }
 
+func (a GetDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get published dashboard
 type GetPublishedDashboardRequest struct {
 	// UUID identifying the published dashboard.
@@ -380,6 +480,10 @@ func (newState *GetPublishedDashboardRequest) SyncEffectiveFieldsDuringCreateOrU
 }
 
 func (newState *GetPublishedDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardRequest) {
+}
+
+func (a GetPublishedDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get dashboard schedule
@@ -396,6 +500,10 @@ func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringRead(existingState GetScheduleRequest) {
 }
 
+func (a GetScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get schedule subscription
 type GetSubscriptionRequest struct {
 	// UUID identifying the dashboard which the subscription belongs.
@@ -410,6 +518,10 @@ func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState GetSubscriptionRequest) {
+}
+
+func (a GetSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // List dashboards
@@ -432,8 +544,12 @@ func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringRead(existingState ListDashboardsRequest) {
 }
 
+func (a ListDashboardsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListDashboardsResponse struct {
-	Dashboards []Dashboard `tfsdk:"dashboards" tf:"optional"`
+	Dashboards types.List `tfsdk:"dashboards" tf:"optional"`
 	// A token, which can be sent as `page_token` to retrieve the next page. If
 	// this field is omitted, there are no subsequent dashboards.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed,optional"`
@@ -443,6 +559,12 @@ func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse) {
+}
+
+func (a ListDashboardsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Dashboards": reflect.TypeOf(Dashboard{}),
+	}
 }
 
 // List dashboard schedules
@@ -462,19 +584,29 @@ func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringRead(existingState ListSchedulesRequest) {
 }
 
+func (a ListSchedulesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListSchedulesResponse struct {
 	// A token that can be used as a `page_token` in subsequent requests to
 	// retrieve the next page of results. If this field is omitted, there are no
 	// subsequent schedules.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed,optional"`
 
-	Schedules []Schedule `tfsdk:"schedules" tf:"optional"`
+	Schedules types.List `tfsdk:"schedules" tf:"optional"`
 }
 
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchedulesResponse) {
 }
 
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse) {
+}
+
+func (a ListSchedulesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Schedules": reflect.TypeOf(Schedule{}),
+	}
 }
 
 // List schedule subscriptions
@@ -496,19 +628,29 @@ func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsRequest) {
 }
 
+func (a ListSubscriptionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListSubscriptionsResponse struct {
 	// A token that can be used as a `page_token` in subsequent requests to
 	// retrieve the next page of results. If this field is omitted, there are no
 	// subsequent subscriptions.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed,optional"`
 
-	Subscriptions []Subscription `tfsdk:"subscriptions" tf:"optional"`
+	Subscriptions types.List `tfsdk:"subscriptions" tf:"optional"`
 }
 
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSubscriptionsResponse) {
 }
 
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse) {
+}
+
+func (a ListSubscriptionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Subscriptions": reflect.TypeOf(Subscription{}),
+	}
 }
 
 type MessageError struct {
@@ -521,6 +663,10 @@ func (newState *MessageError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Messa
 }
 
 func (newState *MessageError) SyncEffectiveFieldsDuringRead(existingState MessageError) {
+}
+
+func (a MessageError) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type MigrateDashboardRequest struct {
@@ -537,6 +683,10 @@ func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState MigrateDashboardRequest) {
+}
+
+func (a MigrateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type PublishRequest struct {
@@ -557,6 +707,10 @@ func (newState *PublishRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pub
 func (newState *PublishRequest) SyncEffectiveFieldsDuringRead(existingState PublishRequest) {
 }
 
+func (a PublishRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PublishedDashboard struct {
 	// The display name of the published dashboard.
 	DisplayName types.String `tfsdk:"display_name" tf:"computed,optional"`
@@ -572,6 +726,10 @@ func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard) {
+}
+
+func (a PublishedDashboard) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type QueryAttachment struct {
@@ -599,6 +757,10 @@ func (newState *QueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Qu
 func (newState *QueryAttachment) SyncEffectiveFieldsDuringRead(existingState QueryAttachment) {
 }
 
+func (a QueryAttachment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Result struct {
 	// If result is truncated
 	IsTruncated types.Bool `tfsdk:"is_truncated" tf:"optional"`
@@ -616,12 +778,16 @@ func (newState *Result) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result) {
 func (newState *Result) SyncEffectiveFieldsDuringRead(existingState Result) {
 }
 
+func (a Result) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Schedule struct {
 	// A timestamp indicating when the schedule was created.
 	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
 	// The cron expression describing the frequency of the periodic refresh for
 	// this schedule.
-	CronSchedule []CronSchedule `tfsdk:"cron_schedule" tf:"object"`
+	CronSchedule types.Object `tfsdk:"cron_schedule" tf:"object"`
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"dashboard_id" tf:"computed,optional"`
 	// The display name for schedule.
@@ -646,19 +812,32 @@ func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule)
 func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) {
 }
 
+func (a Schedule) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"CronSchedule": reflect.TypeOf(CronSchedule{}),
+	}
+}
+
 type Subscriber struct {
 	// The destination to receive the subscription email. This parameter is
 	// mutually exclusive with `user_subscriber`.
-	DestinationSubscriber []SubscriptionSubscriberDestination `tfsdk:"destination_subscriber" tf:"optional,object"`
+	DestinationSubscriber types.Object `tfsdk:"destination_subscriber" tf:"optional,object"`
 	// The user to receive the subscription email. This parameter is mutually
 	// exclusive with `destination_subscriber`.
-	UserSubscriber []SubscriptionSubscriberUser `tfsdk:"user_subscriber" tf:"optional,object"`
+	UserSubscriber types.Object `tfsdk:"user_subscriber" tf:"optional,object"`
 }
 
 func (newState *Subscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscriber) {
 }
 
 func (newState *Subscriber) SyncEffectiveFieldsDuringRead(existingState Subscriber) {
+}
+
+func (a Subscriber) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DestinationSubscriber": reflect.TypeOf(SubscriptionSubscriberDestination{}),
+		"UserSubscriber":        reflect.TypeOf(SubscriptionSubscriberUser{}),
+	}
 }
 
 type Subscription struct {
@@ -677,7 +856,7 @@ type Subscription struct {
 	ScheduleId types.String `tfsdk:"schedule_id" tf:"computed,optional"`
 	// Subscriber details for users and destinations to be added as subscribers
 	// to the schedule.
-	Subscriber []Subscriber `tfsdk:"subscriber" tf:"object"`
+	Subscriber types.Object `tfsdk:"subscriber" tf:"object"`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"subscription_id" tf:"computed,optional"`
 	// A timestamp indicating when the subscription was last updated.
@@ -688,6 +867,12 @@ func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subsc
 }
 
 func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
+}
+
+func (a Subscription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Subscriber": reflect.TypeOf(Subscriber{}),
+	}
 }
 
 type SubscriptionSubscriberDestination struct {
@@ -702,6 +887,10 @@ func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCrea
 func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination) {
 }
 
+func (a SubscriptionSubscriberDestination) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SubscriptionSubscriberUser struct {
 	// UserId of the subscriber.
 	UserId types.Int64 `tfsdk:"user_id" tf:"computed,optional"`
@@ -711,6 +900,10 @@ func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser) {
+}
+
+func (a SubscriptionSubscriberUser) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type TextAttachment struct {
@@ -726,6 +919,10 @@ func (newState *TextAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tex
 func (newState *TextAttachment) SyncEffectiveFieldsDuringRead(existingState TextAttachment) {
 }
 
+func (a TextAttachment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Trash dashboard
 type TrashDashboardRequest struct {
 	// UUID identifying the dashboard.
@@ -738,6 +935,10 @@ func (newState *TrashDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *TrashDashboardRequest) SyncEffectiveFieldsDuringRead(existingState TrashDashboardRequest) {
 }
 
+func (a TrashDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type TrashDashboardResponse struct {
 }
 
@@ -745,6 +946,10 @@ func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringRead(existingState TrashDashboardResponse) {
+}
+
+func (a TrashDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Unpublish dashboard
@@ -759,6 +964,10 @@ func (newState *UnpublishDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *UnpublishDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardRequest) {
 }
 
+func (a UnpublishDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UnpublishDashboardResponse struct {
 }
 
@@ -768,9 +977,13 @@ func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
 }
 
+func (a UnpublishDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Update dashboard
 type UpdateDashboardRequest struct {
-	Dashboard []Dashboard `tfsdk:"dashboard" tf:"optional,object"`
+	Dashboard types.Object `tfsdk:"dashboard" tf:"optional,object"`
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
 }
@@ -781,12 +994,18 @@ func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardRequest) {
 }
 
+func (a UpdateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Dashboard": reflect.TypeOf(Dashboard{}),
+	}
+}
+
 // Update dashboard schedule
 type UpdateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
 
-	Schedule []Schedule `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`
 }
@@ -795,4 +1014,10 @@ func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState UpdateScheduleRequest) {
+}
+
+func (a UpdateScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Schedule": reflect.TypeOf(Schedule{}),
+	}
 }

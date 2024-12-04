@@ -11,6 +11,8 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package ml_tf
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -76,6 +78,10 @@ func (newState *Activity) SyncEffectiveFieldsDuringCreateOrUpdate(plan Activity)
 func (newState *Activity) SyncEffectiveFieldsDuringRead(existingState Activity) {
 }
 
+func (a Activity) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ApproveTransitionRequest struct {
 	// Specifies whether to archive all current model versions in the target
 	// stage.
@@ -104,9 +110,13 @@ func (newState *ApproveTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ApproveTransitionRequest) SyncEffectiveFieldsDuringRead(existingState ApproveTransitionRequest) {
 }
 
+func (a ApproveTransitionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ApproveTransitionRequestResponse struct {
 	// Activity recorded for the action.
-	Activity []Activity `tfsdk:"activity" tf:"optional,object"`
+	Activity types.Object `tfsdk:"activity" tf:"optional,object"`
 }
 
 func (newState *ApproveTransitionRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApproveTransitionRequestResponse) {
@@ -115,10 +125,16 @@ func (newState *ApproveTransitionRequestResponse) SyncEffectiveFieldsDuringCreat
 func (newState *ApproveTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState ApproveTransitionRequestResponse) {
 }
 
+func (a ApproveTransitionRequestResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Activity": reflect.TypeOf(Activity{}),
+	}
+}
+
 // Comment details.
 type CommentObject struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions []types.String `tfsdk:"available_actions" tf:"optional"`
+	AvailableActions types.List `tfsdk:"available_actions" tf:"optional"`
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
@@ -137,6 +153,12 @@ func (newState *CommentObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan Comm
 func (newState *CommentObject) SyncEffectiveFieldsDuringRead(existingState CommentObject) {
 }
 
+func (a CommentObject) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AvailableActions": reflect.TypeOf(""),
+	}
+}
+
 type CreateComment struct {
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment" tf:""`
@@ -152,15 +174,25 @@ func (newState *CreateComment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Crea
 func (newState *CreateComment) SyncEffectiveFieldsDuringRead(existingState CreateComment) {
 }
 
+func (a CreateComment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateCommentResponse struct {
 	// Comment details.
-	Comment []CommentObject `tfsdk:"comment" tf:"optional,object"`
+	Comment types.Object `tfsdk:"comment" tf:"optional,object"`
 }
 
 func (newState *CreateCommentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCommentResponse) {
 }
 
 func (newState *CreateCommentResponse) SyncEffectiveFieldsDuringRead(existingState CreateCommentResponse) {
+}
+
+func (a CreateCommentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Comment": reflect.TypeOf(CommentObject{}),
+	}
 }
 
 type CreateExperiment struct {
@@ -174,13 +206,19 @@ type CreateExperiment struct {
 	// backends are guaranteed to support tag keys up to 250 bytes in size and
 	// tag values up to 5000 bytes in size. All storage backends are also
 	// guaranteed to support up to 20 tags per request.
-	Tags []ExperimentTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *CreateExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExperiment) {
 }
 
 func (newState *CreateExperiment) SyncEffectiveFieldsDuringRead(existingState CreateExperiment) {
+}
+
+func (a CreateExperiment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(ExperimentTag{}),
+	}
 }
 
 type CreateExperimentResponse struct {
@@ -194,13 +232,17 @@ func (newState *CreateExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateExperimentResponse) SyncEffectiveFieldsDuringRead(existingState CreateExperimentResponse) {
 }
 
+func (a CreateExperimentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateModelRequest struct {
 	// Optional description for registered model.
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Register models under this name
 	Name types.String `tfsdk:"name" tf:""`
 	// Additional metadata for registered model.
-	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *CreateModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelRequest) {
@@ -209,14 +251,26 @@ func (newState *CreateModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *CreateModelRequest) SyncEffectiveFieldsDuringRead(existingState CreateModelRequest) {
 }
 
+func (a CreateModelRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(ModelTag{}),
+	}
+}
+
 type CreateModelResponse struct {
-	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional,object"`
+	RegisteredModel types.Object `tfsdk:"registered_model" tf:"optional,object"`
 }
 
 func (newState *CreateModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelResponse) {
 }
 
 func (newState *CreateModelResponse) SyncEffectiveFieldsDuringRead(existingState CreateModelResponse) {
+}
+
+func (a CreateModelResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RegisteredModel": reflect.TypeOf(Model{}),
+	}
 }
 
 type CreateModelVersionRequest struct {
@@ -233,7 +287,7 @@ type CreateModelVersionRequest struct {
 	// URI indicating the location of the model artifacts.
 	Source types.String `tfsdk:"source" tf:""`
 	// Additional metadata for model version.
-	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *CreateModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelVersionRequest) {
@@ -242,15 +296,27 @@ func (newState *CreateModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *CreateModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState CreateModelVersionRequest) {
 }
 
+func (a CreateModelVersionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(ModelVersionTag{}),
+	}
+}
+
 type CreateModelVersionResponse struct {
 	// Return new version number generated for this model in registry.
-	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional,object"`
+	ModelVersion types.Object `tfsdk:"model_version" tf:"optional,object"`
 }
 
 func (newState *CreateModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelVersionResponse) {
 }
 
 func (newState *CreateModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState CreateModelVersionResponse) {
+}
+
+func (a CreateModelVersionResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ModelVersion": reflect.TypeOf(ModelVersion{}),
+	}
 }
 
 type CreateRegistryWebhook struct {
@@ -289,11 +355,11 @@ type CreateRegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events []types.String `tfsdk:"events" tf:""`
+	Events types.List `tfsdk:"events" tf:""`
 
-	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional,object"`
+	HttpUrlSpec types.Object `tfsdk:"http_url_spec" tf:"optional,object"`
 
-	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional,object"`
+	JobSpec types.Object `tfsdk:"job_spec" tf:"optional,object"`
 	// Name of the model whose events would trigger this webhook.
 	ModelName types.String `tfsdk:"model_name" tf:"optional"`
 	// Enable or disable triggering the webhook, or put the webhook into test
@@ -313,13 +379,21 @@ func (newState *CreateRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *CreateRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState CreateRegistryWebhook) {
 }
 
+func (a CreateRegistryWebhook) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Events":      reflect.TypeOf(""),
+		"HttpUrlSpec": reflect.TypeOf(HttpUrlSpec{}),
+		"JobSpec":     reflect.TypeOf(JobSpec{}),
+	}
+}
+
 type CreateRun struct {
 	// ID of the associated experiment.
 	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
 	// Unix timestamp in milliseconds of when the run started.
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 	// Additional metadata for run.
-	Tags []RunTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// ID of the user executing the run. This field is deprecated as of MLflow
 	// 1.0, and will be removed in a future MLflow release. Use 'mlflow.user'
 	// tag instead.
@@ -332,15 +406,27 @@ func (newState *CreateRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRu
 func (newState *CreateRun) SyncEffectiveFieldsDuringRead(existingState CreateRun) {
 }
 
+func (a CreateRun) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(RunTag{}),
+	}
+}
+
 type CreateRunResponse struct {
 	// The newly created run.
-	Run []Run `tfsdk:"run" tf:"optional,object"`
+	Run types.Object `tfsdk:"run" tf:"optional,object"`
 }
 
 func (newState *CreateRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRunResponse) {
 }
 
 func (newState *CreateRunResponse) SyncEffectiveFieldsDuringRead(existingState CreateRunResponse) {
+}
+
+func (a CreateRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Run": reflect.TypeOf(Run{}),
+	}
 }
 
 type CreateTransitionRequest struct {
@@ -368,9 +454,13 @@ func (newState *CreateTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateTransitionRequest) SyncEffectiveFieldsDuringRead(existingState CreateTransitionRequest) {
 }
 
+func (a CreateTransitionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateTransitionRequestResponse struct {
 	// Transition request details.
-	Request []TransitionRequest `tfsdk:"request" tf:"optional,object"`
+	Request types.Object `tfsdk:"request" tf:"optional,object"`
 }
 
 func (newState *CreateTransitionRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTransitionRequestResponse) {
@@ -379,14 +469,26 @@ func (newState *CreateTransitionRequestResponse) SyncEffectiveFieldsDuringCreate
 func (newState *CreateTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState CreateTransitionRequestResponse) {
 }
 
+func (a CreateTransitionRequestResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Request": reflect.TypeOf(TransitionRequest{}),
+	}
+}
+
 type CreateWebhookResponse struct {
-	Webhook []RegistryWebhook `tfsdk:"webhook" tf:"optional,object"`
+	Webhook types.Object `tfsdk:"webhook" tf:"optional,object"`
 }
 
 func (newState *CreateWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWebhookResponse) {
 }
 
 func (newState *CreateWebhookResponse) SyncEffectiveFieldsDuringRead(existingState CreateWebhookResponse) {
+}
+
+func (a CreateWebhookResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Webhook": reflect.TypeOf(RegistryWebhook{}),
+	}
 }
 
 type Dataset struct {
@@ -418,18 +520,29 @@ func (newState *Dataset) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dataset) {
 func (newState *Dataset) SyncEffectiveFieldsDuringRead(existingState Dataset) {
 }
 
+func (a Dataset) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DatasetInput struct {
 	// The dataset being used as a Run input.
-	Dataset []Dataset `tfsdk:"dataset" tf:"optional,object"`
+	Dataset types.Object `tfsdk:"dataset" tf:"optional,object"`
 	// A list of tags for the dataset input, e.g. a “context” tag with value
 	// “training”
-	Tags []InputTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *DatasetInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatasetInput) {
 }
 
 func (newState *DatasetInput) SyncEffectiveFieldsDuringRead(existingState DatasetInput) {
+}
+
+func (a DatasetInput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Dataset": reflect.TypeOf(Dataset{}),
+		"Tags":    reflect.TypeOf(InputTag{}),
+	}
 }
 
 // Delete a comment
@@ -443,6 +556,10 @@ func (newState *DeleteCommentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DeleteCommentRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCommentRequest) {
 }
 
+func (a DeleteCommentRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteCommentResponse struct {
 }
 
@@ -450,6 +567,10 @@ func (newState *DeleteCommentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *DeleteCommentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCommentResponse) {
+}
+
+func (a DeleteCommentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DeleteExperiment struct {
@@ -463,6 +584,10 @@ func (newState *DeleteExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 func (newState *DeleteExperiment) SyncEffectiveFieldsDuringRead(existingState DeleteExperiment) {
 }
 
+func (a DeleteExperiment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteExperimentResponse struct {
 }
 
@@ -470,6 +595,10 @@ func (newState *DeleteExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *DeleteExperimentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteExperimentResponse) {
+}
+
+func (a DeleteExperimentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a model
@@ -484,6 +613,10 @@ func (newState *DeleteModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DeleteModelRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelRequest) {
 }
 
+func (a DeleteModelRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteModelResponse struct {
 }
 
@@ -491,6 +624,10 @@ func (newState *DeleteModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *DeleteModelResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelResponse) {
+}
+
+func (a DeleteModelResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a model tag
@@ -508,6 +645,10 @@ func (newState *DeleteModelTagRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteModelTagRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelTagRequest) {
 }
 
+func (a DeleteModelTagRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteModelTagResponse struct {
 }
 
@@ -515,6 +656,10 @@ func (newState *DeleteModelTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeleteModelTagResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelTagResponse) {
+}
+
+func (a DeleteModelTagResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a model version.
@@ -531,6 +676,10 @@ func (newState *DeleteModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *DeleteModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionRequest) {
 }
 
+func (a DeleteModelVersionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteModelVersionResponse struct {
 }
 
@@ -538,6 +687,10 @@ func (newState *DeleteModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *DeleteModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionResponse) {
+}
+
+func (a DeleteModelVersionResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a model version tag
@@ -557,6 +710,10 @@ func (newState *DeleteModelVersionTagRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteModelVersionTagRequest) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionTagRequest) {
 }
 
+func (a DeleteModelVersionTagRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteModelVersionTagResponse struct {
 }
 
@@ -564,6 +721,10 @@ func (newState *DeleteModelVersionTagResponse) SyncEffectiveFieldsDuringCreateOr
 }
 
 func (newState *DeleteModelVersionTagResponse) SyncEffectiveFieldsDuringRead(existingState DeleteModelVersionTagResponse) {
+}
+
+func (a DeleteModelVersionTagResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DeleteRun struct {
@@ -577,6 +738,10 @@ func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRu
 func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
 }
 
+func (a DeleteRun) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteRunResponse struct {
 }
 
@@ -584,6 +749,10 @@ func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunResponse) {
+}
+
+func (a DeleteRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DeleteRuns struct {
@@ -604,6 +773,10 @@ func (newState *DeleteRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteR
 func (newState *DeleteRuns) SyncEffectiveFieldsDuringRead(existingState DeleteRuns) {
 }
 
+func (a DeleteRuns) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteRunsResponse struct {
 	// The number of runs deleted.
 	RunsDeleted types.Int64 `tfsdk:"runs_deleted" tf:"optional"`
@@ -613,6 +786,10 @@ func (newState *DeleteRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *DeleteRunsResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunsResponse) {
+}
+
+func (a DeleteRunsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DeleteTag struct {
@@ -628,6 +805,10 @@ func (newState *DeleteTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTa
 func (newState *DeleteTag) SyncEffectiveFieldsDuringRead(existingState DeleteTag) {
 }
 
+func (a DeleteTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteTagResponse struct {
 }
 
@@ -635,6 +816,10 @@ func (newState *DeleteTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *DeleteTagResponse) SyncEffectiveFieldsDuringRead(existingState DeleteTagResponse) {
+}
+
+func (a DeleteTagResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a transition request
@@ -667,6 +852,10 @@ func (newState *DeleteTransitionRequestRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *DeleteTransitionRequestRequest) SyncEffectiveFieldsDuringRead(existingState DeleteTransitionRequestRequest) {
 }
 
+func (a DeleteTransitionRequestRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteTransitionRequestResponse struct {
 }
 
@@ -674,6 +863,10 @@ func (newState *DeleteTransitionRequestResponse) SyncEffectiveFieldsDuringCreate
 }
 
 func (newState *DeleteTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState DeleteTransitionRequestResponse) {
+}
+
+func (a DeleteTransitionRequestResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a webhook
@@ -688,6 +881,10 @@ func (newState *DeleteWebhookRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DeleteWebhookRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWebhookRequest) {
 }
 
+func (a DeleteWebhookRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteWebhookResponse struct {
 }
 
@@ -695,6 +892,10 @@ func (newState *DeleteWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *DeleteWebhookResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWebhookResponse) {
+}
+
+func (a DeleteWebhookResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Experiment struct {
@@ -712,13 +913,19 @@ type Experiment struct {
 	// Human readable name that identifies the experiment.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Tags: Additional metadata key-value pairs.
-	Tags []ExperimentTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *Experiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Experiment) {
 }
 
 func (newState *Experiment) SyncEffectiveFieldsDuringRead(existingState Experiment) {
+}
+
+func (a Experiment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(ExperimentTag{}),
+	}
 }
 
 type ExperimentAccessControlRequest struct {
@@ -738,9 +945,13 @@ func (newState *ExperimentAccessControlRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *ExperimentAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ExperimentAccessControlRequest) {
 }
 
+func (a ExperimentAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ExperimentAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []ExperimentPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
@@ -757,10 +968,16 @@ func (newState *ExperimentAccessControlResponse) SyncEffectiveFieldsDuringCreate
 func (newState *ExperimentAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ExperimentAccessControlResponse) {
 }
 
+func (a ExperimentAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllPermissions": reflect.TypeOf(ExperimentPermission{}),
+	}
+}
+
 type ExperimentPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
@@ -771,8 +988,14 @@ func (newState *ExperimentPermission) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ExperimentPermission) SyncEffectiveFieldsDuringRead(existingState ExperimentPermission) {
 }
 
+func (a ExperimentPermission) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InheritedFromObject": reflect.TypeOf(""),
+	}
+}
+
 type ExperimentPermissions struct {
-	AccessControlList []ExperimentAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
@@ -783,6 +1006,12 @@ func (newState *ExperimentPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *ExperimentPermissions) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissions) {
+}
+
+func (a ExperimentPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(ExperimentAccessControlResponse{}),
+	}
 }
 
 type ExperimentPermissionsDescription struct {
@@ -797,8 +1026,12 @@ func (newState *ExperimentPermissionsDescription) SyncEffectiveFieldsDuringCreat
 func (newState *ExperimentPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissionsDescription) {
 }
 
+func (a ExperimentPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ExperimentPermissionsRequest struct {
-	AccessControlList []ExperimentAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// The experiment for which to get or manage permissions.
 	ExperimentId types.String `tfsdk:"-"`
 }
@@ -807,6 +1040,12 @@ func (newState *ExperimentPermissionsRequest) SyncEffectiveFieldsDuringCreateOrU
 }
 
 func (newState *ExperimentPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissionsRequest) {
+}
+
+func (a ExperimentPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(ExperimentAccessControlRequest{}),
+	}
 }
 
 type ExperimentTag struct {
@@ -820,6 +1059,10 @@ func (newState *ExperimentTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan Expe
 }
 
 func (newState *ExperimentTag) SyncEffectiveFieldsDuringRead(existingState ExperimentTag) {
+}
+
+func (a ExperimentTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type FileInfo struct {
@@ -837,6 +1080,10 @@ func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo)
 func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
 }
 
+func (a FileInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get metadata
 type GetByNameRequest struct {
 	// Name of the associated experiment.
@@ -847,6 +1094,10 @@ func (newState *GetByNameRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan G
 }
 
 func (newState *GetByNameRequest) SyncEffectiveFieldsDuringRead(existingState GetByNameRequest) {
+}
+
+func (a GetByNameRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get experiment permission levels
@@ -861,15 +1112,25 @@ func (newState *GetExperimentPermissionLevelsRequest) SyncEffectiveFieldsDuringC
 func (newState *GetExperimentPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetExperimentPermissionLevelsRequest) {
 }
 
+func (a GetExperimentPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetExperimentPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []ExperimentPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
 }
 
 func (newState *GetExperimentPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentPermissionLevelsResponse) {
 }
 
 func (newState *GetExperimentPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetExperimentPermissionLevelsResponse) {
+}
+
+func (a GetExperimentPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionLevels": reflect.TypeOf(ExperimentPermissionsDescription{}),
+	}
 }
 
 // Get experiment permissions
@@ -884,6 +1145,10 @@ func (newState *GetExperimentPermissionsRequest) SyncEffectiveFieldsDuringCreate
 func (newState *GetExperimentPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetExperimentPermissionsRequest) {
 }
 
+func (a GetExperimentPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get an experiment
 type GetExperimentRequest struct {
 	// ID of the associated experiment.
@@ -896,15 +1161,25 @@ func (newState *GetExperimentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *GetExperimentRequest) SyncEffectiveFieldsDuringRead(existingState GetExperimentRequest) {
 }
 
+func (a GetExperimentRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetExperimentResponse struct {
 	// Experiment details.
-	Experiment []Experiment `tfsdk:"experiment" tf:"optional,object"`
+	Experiment types.Object `tfsdk:"experiment" tf:"optional,object"`
 }
 
 func (newState *GetExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentResponse) {
 }
 
 func (newState *GetExperimentResponse) SyncEffectiveFieldsDuringRead(existingState GetExperimentResponse) {
+}
+
+func (a GetExperimentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Experiment": reflect.TypeOf(Experiment{}),
+	}
 }
 
 // Get history of a given metric within a run
@@ -930,11 +1205,15 @@ func (newState *GetHistoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GetHistoryRequest) SyncEffectiveFieldsDuringRead(existingState GetHistoryRequest) {
 }
 
+func (a GetHistoryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetLatestVersionsRequest struct {
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name" tf:""`
 	// List of stages.
-	Stages []types.String `tfsdk:"stages" tf:"optional"`
+	Stages types.List `tfsdk:"stages" tf:"optional"`
 }
 
 func (newState *GetLatestVersionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionsRequest) {
@@ -943,11 +1222,17 @@ func (newState *GetLatestVersionsRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *GetLatestVersionsRequest) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionsRequest) {
 }
 
+func (a GetLatestVersionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Stages": reflect.TypeOf(""),
+	}
+}
+
 type GetLatestVersionsResponse struct {
 	// Latest version models for each requests stage. Only return models with
 	// current `READY` status. If no `stages` provided, returns the latest
 	// version for each stage, including `"None"`.
-	ModelVersions []ModelVersion `tfsdk:"model_versions" tf:"optional"`
+	ModelVersions types.List `tfsdk:"model_versions" tf:"optional"`
 }
 
 func (newState *GetLatestVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionsResponse) {
@@ -956,9 +1241,15 @@ func (newState *GetLatestVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *GetLatestVersionsResponse) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionsResponse) {
 }
 
+func (a GetLatestVersionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ModelVersions": reflect.TypeOf(ModelVersion{}),
+	}
+}
+
 type GetMetricHistoryResponse struct {
 	// All logged values for this metric.
-	Metrics []Metric `tfsdk:"metrics" tf:"optional"`
+	Metrics types.List `tfsdk:"metrics" tf:"optional"`
 	// Token that can be used to retrieve the next page of metric history
 	// results
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -968,6 +1259,12 @@ func (newState *GetMetricHistoryResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *GetMetricHistoryResponse) SyncEffectiveFieldsDuringRead(existingState GetMetricHistoryResponse) {
+}
+
+func (a GetMetricHistoryResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Metrics": reflect.TypeOf(Metric{}),
+	}
 }
 
 // Get model
@@ -982,14 +1279,24 @@ func (newState *GetModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 func (newState *GetModelRequest) SyncEffectiveFieldsDuringRead(existingState GetModelRequest) {
 }
 
+func (a GetModelRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetModelResponse struct {
-	RegisteredModelDatabricks []ModelDatabricks `tfsdk:"registered_model_databricks" tf:"optional,object"`
+	RegisteredModelDatabricks types.Object `tfsdk:"registered_model_databricks" tf:"optional,object"`
 }
 
 func (newState *GetModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelResponse) {
 }
 
 func (newState *GetModelResponse) SyncEffectiveFieldsDuringRead(existingState GetModelResponse) {
+}
+
+func (a GetModelResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RegisteredModelDatabricks": reflect.TypeOf(ModelDatabricks{}),
+	}
 }
 
 // Get a model version URI
@@ -1006,6 +1313,10 @@ func (newState *GetModelVersionDownloadUriRequest) SyncEffectiveFieldsDuringCrea
 func (newState *GetModelVersionDownloadUriRequest) SyncEffectiveFieldsDuringRead(existingState GetModelVersionDownloadUriRequest) {
 }
 
+func (a GetModelVersionDownloadUriRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetModelVersionDownloadUriResponse struct {
 	// URI corresponding to where artifacts for this model version are stored.
 	ArtifactUri types.String `tfsdk:"artifact_uri" tf:"optional"`
@@ -1015,6 +1326,10 @@ func (newState *GetModelVersionDownloadUriResponse) SyncEffectiveFieldsDuringCre
 }
 
 func (newState *GetModelVersionDownloadUriResponse) SyncEffectiveFieldsDuringRead(existingState GetModelVersionDownloadUriResponse) {
+}
+
+func (a GetModelVersionDownloadUriResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get a model version
@@ -1031,14 +1346,24 @@ func (newState *GetModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *GetModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState GetModelVersionRequest) {
 }
 
+func (a GetModelVersionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetModelVersionResponse struct {
-	ModelVersion []ModelVersion `tfsdk:"model_version" tf:"optional,object"`
+	ModelVersion types.Object `tfsdk:"model_version" tf:"optional,object"`
 }
 
 func (newState *GetModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelVersionResponse) {
 }
 
 func (newState *GetModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState GetModelVersionResponse) {
+}
+
+func (a GetModelVersionResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ModelVersion": reflect.TypeOf(ModelVersion{}),
+	}
 }
 
 // Get registered model permission levels
@@ -1053,15 +1378,25 @@ func (newState *GetRegisteredModelPermissionLevelsRequest) SyncEffectiveFieldsDu
 func (newState *GetRegisteredModelPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetRegisteredModelPermissionLevelsRequest) {
 }
 
+func (a GetRegisteredModelPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetRegisteredModelPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []RegisteredModelPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
 }
 
 func (newState *GetRegisteredModelPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRegisteredModelPermissionLevelsResponse) {
 }
 
 func (newState *GetRegisteredModelPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetRegisteredModelPermissionLevelsResponse) {
+}
+
+func (a GetRegisteredModelPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionLevels": reflect.TypeOf(RegisteredModelPermissionsDescription{}),
+	}
 }
 
 // Get registered model permissions
@@ -1074,6 +1409,10 @@ func (newState *GetRegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringC
 }
 
 func (newState *GetRegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetRegisteredModelPermissionsRequest) {
+}
+
+func (a GetRegisteredModelPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get a run
@@ -1091,16 +1430,26 @@ func (newState *GetRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetR
 func (newState *GetRunRequest) SyncEffectiveFieldsDuringRead(existingState GetRunRequest) {
 }
 
+func (a GetRunRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetRunResponse struct {
 	// Run metadata (name, start time, etc) and data (metrics, params, and
 	// tags).
-	Run []Run `tfsdk:"run" tf:"optional,object"`
+	Run types.Object `tfsdk:"run" tf:"optional,object"`
 }
 
 func (newState *GetRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunResponse) {
 }
 
 func (newState *GetRunResponse) SyncEffectiveFieldsDuringRead(existingState GetRunResponse) {
+}
+
+func (a GetRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Run": reflect.TypeOf(Run{}),
+	}
 }
 
 type HttpUrlSpec struct {
@@ -1131,6 +1480,10 @@ func (newState *HttpUrlSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan HttpUr
 func (newState *HttpUrlSpec) SyncEffectiveFieldsDuringRead(existingState HttpUrlSpec) {
 }
 
+func (a HttpUrlSpec) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type HttpUrlSpecWithoutSecret struct {
 	// Enable/disable SSL certificate validation. Default is true. For
 	// self-signed certificates, this field must be false AND the destination
@@ -1150,6 +1503,10 @@ func (newState *HttpUrlSpecWithoutSecret) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *HttpUrlSpecWithoutSecret) SyncEffectiveFieldsDuringRead(existingState HttpUrlSpecWithoutSecret) {
 }
 
+func (a HttpUrlSpecWithoutSecret) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type InputTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key" tf:"optional"`
@@ -1161,6 +1518,10 @@ func (newState *InputTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan InputTag)
 }
 
 func (newState *InputTag) SyncEffectiveFieldsDuringRead(existingState InputTag) {
+}
+
+func (a InputTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type JobSpec struct {
@@ -1180,6 +1541,10 @@ func (newState *JobSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSpec) {
 func (newState *JobSpec) SyncEffectiveFieldsDuringRead(existingState JobSpec) {
 }
 
+func (a JobSpec) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type JobSpecWithoutSecret struct {
 	// ID of the job that the webhook runs.
 	JobId types.String `tfsdk:"job_id" tf:"optional"`
@@ -1193,6 +1558,10 @@ func (newState *JobSpecWithoutSecret) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *JobSpecWithoutSecret) SyncEffectiveFieldsDuringRead(existingState JobSpecWithoutSecret) {
+}
+
+func (a JobSpecWithoutSecret) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get all artifacts
@@ -1220,9 +1589,13 @@ func (newState *ListArtifactsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListArtifactsRequest) SyncEffectiveFieldsDuringRead(existingState ListArtifactsRequest) {
 }
 
+func (a ListArtifactsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListArtifactsResponse struct {
 	// File location and metadata for artifacts.
-	Files []FileInfo `tfsdk:"files" tf:"optional"`
+	Files types.List `tfsdk:"files" tf:"optional"`
 	// Token that can be used to retrieve the next page of artifact results
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Root artifact directory for the run.
@@ -1233,6 +1606,12 @@ func (newState *ListArtifactsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *ListArtifactsResponse) SyncEffectiveFieldsDuringRead(existingState ListArtifactsResponse) {
+}
+
+func (a ListArtifactsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Files": reflect.TypeOf(FileInfo{}),
+	}
 }
 
 // List experiments
@@ -1256,10 +1635,14 @@ func (newState *ListExperimentsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ListExperimentsRequest) SyncEffectiveFieldsDuringRead(existingState ListExperimentsRequest) {
 }
 
+func (a ListExperimentsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListExperimentsResponse struct {
 	// Paginated Experiments beginning with the first item on the requested
 	// page.
-	Experiments []Experiment `tfsdk:"experiments" tf:"optional"`
+	Experiments types.List `tfsdk:"experiments" tf:"optional"`
 	// Token that can be used to retrieve the next page of experiments. Empty
 	// token means no more experiment is available for retrieval.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -1269,6 +1652,12 @@ func (newState *ListExperimentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *ListExperimentsResponse) SyncEffectiveFieldsDuringRead(existingState ListExperimentsResponse) {
+}
+
+func (a ListExperimentsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Experiments": reflect.TypeOf(Experiment{}),
+	}
 }
 
 // List models
@@ -1285,11 +1674,15 @@ func (newState *ListModelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ListModelsRequest) SyncEffectiveFieldsDuringRead(existingState ListModelsRequest) {
 }
 
+func (a ListModelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListModelsResponse struct {
 	// Pagination token to request next page of models for the same query.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	RegisteredModels []Model `tfsdk:"registered_models" tf:"optional"`
+	RegisteredModels types.List `tfsdk:"registered_models" tf:"optional"`
 }
 
 func (newState *ListModelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListModelsResponse) {
@@ -1298,17 +1691,29 @@ func (newState *ListModelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListModelsResponse) SyncEffectiveFieldsDuringRead(existingState ListModelsResponse) {
 }
 
+func (a ListModelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RegisteredModels": reflect.TypeOf(Model{}),
+	}
+}
+
 type ListRegistryWebhooks struct {
 	// Token that can be used to retrieve the next page of artifact results
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Array of registry webhooks.
-	Webhooks []RegistryWebhook `tfsdk:"webhooks" tf:"optional"`
+	Webhooks types.List `tfsdk:"webhooks" tf:"optional"`
 }
 
 func (newState *ListRegistryWebhooks) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRegistryWebhooks) {
 }
 
 func (newState *ListRegistryWebhooks) SyncEffectiveFieldsDuringRead(existingState ListRegistryWebhooks) {
+}
+
+func (a ListRegistryWebhooks) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Webhooks": reflect.TypeOf(RegistryWebhook{}),
+	}
 }
 
 // List transition requests
@@ -1325,9 +1730,13 @@ func (newState *ListTransitionRequestsRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListTransitionRequestsRequest) SyncEffectiveFieldsDuringRead(existingState ListTransitionRequestsRequest) {
 }
 
+func (a ListTransitionRequestsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListTransitionRequestsResponse struct {
 	// Array of open transition requests.
-	Requests []Activity `tfsdk:"requests" tf:"optional"`
+	Requests types.List `tfsdk:"requests" tf:"optional"`
 }
 
 func (newState *ListTransitionRequestsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTransitionRequestsResponse) {
@@ -1336,12 +1745,18 @@ func (newState *ListTransitionRequestsResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *ListTransitionRequestsResponse) SyncEffectiveFieldsDuringRead(existingState ListTransitionRequestsResponse) {
 }
 
+func (a ListTransitionRequestsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Requests": reflect.TypeOf(Activity{}),
+	}
+}
+
 // List registry webhooks
 type ListWebhooksRequest struct {
 	// If `events` is specified, any webhook with one or more of the specified
 	// trigger events is included in the output. If `events` is not specified,
 	// webhooks of all event types are included in the output.
-	Events []types.String `tfsdk:"-"`
+	Events types.List `tfsdk:"-"`
 	// If not specified, all webhooks associated with the specified events are
 	// listed, regardless of their associated model.
 	ModelName types.String `tfsdk:"-"`
@@ -1355,24 +1770,38 @@ func (newState *ListWebhooksRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ListWebhooksRequest) SyncEffectiveFieldsDuringRead(existingState ListWebhooksRequest) {
 }
 
+func (a ListWebhooksRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Events": reflect.TypeOf(""),
+	}
+}
+
 type LogBatch struct {
 	// Metrics to log. A single request can contain up to 1000 metrics, and up
 	// to 1000 metrics, params, and tags in total.
-	Metrics []Metric `tfsdk:"metrics" tf:"optional"`
+	Metrics types.List `tfsdk:"metrics" tf:"optional"`
 	// Params to log. A single request can contain up to 100 params, and up to
 	// 1000 metrics, params, and tags in total.
-	Params []Param `tfsdk:"params" tf:"optional"`
+	Params types.List `tfsdk:"params" tf:"optional"`
 	// ID of the run to log under
 	RunId types.String `tfsdk:"run_id" tf:"optional"`
 	// Tags to log. A single request can contain up to 100 tags, and up to 1000
 	// metrics, params, and tags in total.
-	Tags []RunTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *LogBatch) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogBatch) {
 }
 
 func (newState *LogBatch) SyncEffectiveFieldsDuringRead(existingState LogBatch) {
+}
+
+func (a LogBatch) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Metrics": reflect.TypeOf(Metric{}),
+		"Params":  reflect.TypeOf(Param{}),
+		"Tags":    reflect.TypeOf(RunTag{}),
+	}
 }
 
 type LogBatchResponse struct {
@@ -1384,9 +1813,13 @@ func (newState *LogBatchResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *LogBatchResponse) SyncEffectiveFieldsDuringRead(existingState LogBatchResponse) {
 }
 
+func (a LogBatchResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type LogInputs struct {
 	// Dataset inputs
-	Datasets []DatasetInput `tfsdk:"datasets" tf:"optional"`
+	Datasets types.List `tfsdk:"datasets" tf:"optional"`
 	// ID of the run to log under
 	RunId types.String `tfsdk:"run_id" tf:"optional"`
 }
@@ -1397,6 +1830,12 @@ func (newState *LogInputs) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogInput
 func (newState *LogInputs) SyncEffectiveFieldsDuringRead(existingState LogInputs) {
 }
 
+func (a LogInputs) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Datasets": reflect.TypeOf(DatasetInput{}),
+	}
+}
+
 type LogInputsResponse struct {
 }
 
@@ -1404,6 +1843,10 @@ func (newState *LogInputsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *LogInputsResponse) SyncEffectiveFieldsDuringRead(existingState LogInputsResponse) {
+}
+
+func (a LogInputsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type LogMetric struct {
@@ -1428,6 +1871,10 @@ func (newState *LogMetric) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogMetri
 func (newState *LogMetric) SyncEffectiveFieldsDuringRead(existingState LogMetric) {
 }
 
+func (a LogMetric) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type LogMetricResponse struct {
 }
 
@@ -1435,6 +1882,10 @@ func (newState *LogMetricResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *LogMetricResponse) SyncEffectiveFieldsDuringRead(existingState LogMetricResponse) {
+}
+
+func (a LogMetricResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type LogModel struct {
@@ -1450,6 +1901,10 @@ func (newState *LogModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogModel)
 func (newState *LogModel) SyncEffectiveFieldsDuringRead(existingState LogModel) {
 }
 
+func (a LogModel) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type LogModelResponse struct {
 }
 
@@ -1457,6 +1912,10 @@ func (newState *LogModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 }
 
 func (newState *LogModelResponse) SyncEffectiveFieldsDuringRead(existingState LogModelResponse) {
+}
+
+func (a LogModelResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type LogParam struct {
@@ -1477,6 +1936,10 @@ func (newState *LogParam) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogParam)
 func (newState *LogParam) SyncEffectiveFieldsDuringRead(existingState LogParam) {
 }
 
+func (a LogParam) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type LogParamResponse struct {
 }
 
@@ -1484,6 +1947,10 @@ func (newState *LogParamResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 }
 
 func (newState *LogParamResponse) SyncEffectiveFieldsDuringRead(existingState LogParamResponse) {
+}
+
+func (a LogParamResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Metric struct {
@@ -1503,6 +1970,10 @@ func (newState *Metric) SyncEffectiveFieldsDuringCreateOrUpdate(plan Metric) {
 func (newState *Metric) SyncEffectiveFieldsDuringRead(existingState Metric) {
 }
 
+func (a Metric) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Model struct {
 	// Timestamp recorded when this `registered_model` was created.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
@@ -1513,11 +1984,11 @@ type Model struct {
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// Collection of latest model versions for each stage. Only contains models
 	// with current `READY` status.
-	LatestVersions []ModelVersion `tfsdk:"latest_versions" tf:"optional"`
+	LatestVersions types.List `tfsdk:"latest_versions" tf:"optional"`
 	// Unique name for the model.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Tags: Additional metadata key-value pairs for this `registered_model`.
-	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// User that created this `registered_model`
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
@@ -1526,6 +1997,13 @@ func (newState *Model) SyncEffectiveFieldsDuringCreateOrUpdate(plan Model) {
 }
 
 func (newState *Model) SyncEffectiveFieldsDuringRead(existingState Model) {
+}
+
+func (a Model) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"LatestVersions": reflect.TypeOf(ModelVersion{}),
+		"Tags":           reflect.TypeOf(ModelTag{}),
+	}
 }
 
 type ModelDatabricks struct {
@@ -1538,14 +2016,14 @@ type ModelDatabricks struct {
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// Array of model versions, each the latest version for its stage.
-	LatestVersions []ModelVersion `tfsdk:"latest_versions" tf:"optional"`
+	LatestVersions types.List `tfsdk:"latest_versions" tf:"optional"`
 	// Name of the model.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Permission level of the requesting user on the object. For what is
 	// allowed at each level, see [MLflow Model permissions](..).
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 	// Array of tags associated with the model.
-	Tags []ModelTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// The username of the user that created the object.
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 }
@@ -1554,6 +2032,13 @@ func (newState *ModelDatabricks) SyncEffectiveFieldsDuringCreateOrUpdate(plan Mo
 }
 
 func (newState *ModelDatabricks) SyncEffectiveFieldsDuringRead(existingState ModelDatabricks) {
+}
+
+func (a ModelDatabricks) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"LatestVersions": reflect.TypeOf(ModelVersion{}),
+		"Tags":           reflect.TypeOf(ModelTag{}),
+	}
 }
 
 type ModelTag struct {
@@ -1567,6 +2052,10 @@ func (newState *ModelTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelTag)
 }
 
 func (newState *ModelTag) SyncEffectiveFieldsDuringRead(existingState ModelTag) {
+}
+
+func (a ModelTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type ModelVersion struct {
@@ -1594,7 +2083,7 @@ type ModelVersion struct {
 	// Details on current `status`, if it is pending or failed.
 	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
 	// Tags: Additional metadata key-value pairs for this `model_version`.
-	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// User that created this `model_version`.
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 	// Model's version number.
@@ -1605,6 +2094,12 @@ func (newState *ModelVersion) SyncEffectiveFieldsDuringCreateOrUpdate(plan Model
 }
 
 func (newState *ModelVersion) SyncEffectiveFieldsDuringRead(existingState ModelVersion) {
+}
+
+func (a ModelVersion) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(ModelVersionTag{}),
+	}
 }
 
 type ModelVersionDatabricks struct {
@@ -1651,7 +2146,7 @@ type ModelVersionDatabricks struct {
 	// Details on the current status, for example why registration failed.
 	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
 	// Array of tags that are associated with the model version.
-	Tags []ModelVersionTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 	// The username of the user that created the object.
 	UserId types.String `tfsdk:"user_id" tf:"optional"`
 	// Version of the model.
@@ -1662,6 +2157,12 @@ func (newState *ModelVersionDatabricks) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *ModelVersionDatabricks) SyncEffectiveFieldsDuringRead(existingState ModelVersionDatabricks) {
+}
+
+func (a ModelVersionDatabricks) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Tags": reflect.TypeOf(ModelVersionTag{}),
+	}
 }
 
 type ModelVersionTag struct {
@@ -1677,6 +2178,10 @@ func (newState *ModelVersionTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan Mo
 func (newState *ModelVersionTag) SyncEffectiveFieldsDuringRead(existingState ModelVersionTag) {
 }
 
+func (a ModelVersionTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Param struct {
 	// Key identifying this param.
 	Key types.String `tfsdk:"key" tf:"optional"`
@@ -1688,6 +2193,10 @@ func (newState *Param) SyncEffectiveFieldsDuringCreateOrUpdate(plan Param) {
 }
 
 func (newState *Param) SyncEffectiveFieldsDuringRead(existingState Param) {
+}
+
+func (a Param) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RegisteredModelAccessControlRequest struct {
@@ -1707,9 +2216,13 @@ func (newState *RegisteredModelAccessControlRequest) SyncEffectiveFieldsDuringCr
 func (newState *RegisteredModelAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState RegisteredModelAccessControlRequest) {
 }
 
+func (a RegisteredModelAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RegisteredModelAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []RegisteredModelPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
@@ -1726,10 +2239,16 @@ func (newState *RegisteredModelAccessControlResponse) SyncEffectiveFieldsDuringC
 func (newState *RegisteredModelAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState RegisteredModelAccessControlResponse) {
 }
 
+func (a RegisteredModelAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllPermissions": reflect.TypeOf(RegisteredModelPermission{}),
+	}
+}
+
 type RegisteredModelPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
@@ -1740,8 +2259,14 @@ func (newState *RegisteredModelPermission) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *RegisteredModelPermission) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermission) {
 }
 
+func (a RegisteredModelPermission) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InheritedFromObject": reflect.TypeOf(""),
+	}
+}
+
 type RegisteredModelPermissions struct {
-	AccessControlList []RegisteredModelAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
@@ -1752,6 +2277,12 @@ func (newState *RegisteredModelPermissions) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *RegisteredModelPermissions) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissions) {
+}
+
+func (a RegisteredModelPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(RegisteredModelAccessControlResponse{}),
+	}
 }
 
 type RegisteredModelPermissionsDescription struct {
@@ -1766,8 +2297,12 @@ func (newState *RegisteredModelPermissionsDescription) SyncEffectiveFieldsDuring
 func (newState *RegisteredModelPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissionsDescription) {
 }
 
+func (a RegisteredModelPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RegisteredModelPermissionsRequest struct {
-	AccessControlList []RegisteredModelAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// The registered model for which to get or manage permissions.
 	RegisteredModelId types.String `tfsdk:"-"`
 }
@@ -1776,6 +2311,12 @@ func (newState *RegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringCrea
 }
 
 func (newState *RegisteredModelPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissionsRequest) {
+}
+
+func (a RegisteredModelPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(RegisteredModelAccessControlRequest{}),
+	}
 }
 
 type RegistryWebhook struct {
@@ -1816,13 +2357,13 @@ type RegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events []types.String `tfsdk:"events" tf:"optional"`
+	Events types.List `tfsdk:"events" tf:"optional"`
 
-	HttpUrlSpec []HttpUrlSpecWithoutSecret `tfsdk:"http_url_spec" tf:"optional,object"`
+	HttpUrlSpec types.Object `tfsdk:"http_url_spec" tf:"optional,object"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	JobSpec []JobSpecWithoutSecret `tfsdk:"job_spec" tf:"optional,object"`
+	JobSpec types.Object `tfsdk:"job_spec" tf:"optional,object"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
 	// Name of the model whose events would trigger this webhook.
@@ -1842,6 +2383,14 @@ func (newState *RegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan Re
 }
 
 func (newState *RegistryWebhook) SyncEffectiveFieldsDuringRead(existingState RegistryWebhook) {
+}
+
+func (a RegistryWebhook) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Events":      reflect.TypeOf(""),
+		"HttpUrlSpec": reflect.TypeOf(HttpUrlSpecWithoutSecret{}),
+		"JobSpec":     reflect.TypeOf(JobSpecWithoutSecret{}),
+	}
 }
 
 type RejectTransitionRequest struct {
@@ -1869,15 +2418,25 @@ func (newState *RejectTransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *RejectTransitionRequest) SyncEffectiveFieldsDuringRead(existingState RejectTransitionRequest) {
 }
 
+func (a RejectTransitionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RejectTransitionRequestResponse struct {
 	// Activity recorded for the action.
-	Activity []Activity `tfsdk:"activity" tf:"optional,object"`
+	Activity types.Object `tfsdk:"activity" tf:"optional,object"`
 }
 
 func (newState *RejectTransitionRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RejectTransitionRequestResponse) {
 }
 
 func (newState *RejectTransitionRequestResponse) SyncEffectiveFieldsDuringRead(existingState RejectTransitionRequestResponse) {
+}
+
+func (a RejectTransitionRequestResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Activity": reflect.TypeOf(Activity{}),
+	}
 }
 
 type RenameModelRequest struct {
@@ -1893,14 +2452,24 @@ func (newState *RenameModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *RenameModelRequest) SyncEffectiveFieldsDuringRead(existingState RenameModelRequest) {
 }
 
+func (a RenameModelRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RenameModelResponse struct {
-	RegisteredModel []Model `tfsdk:"registered_model" tf:"optional,object"`
+	RegisteredModel types.Object `tfsdk:"registered_model" tf:"optional,object"`
 }
 
 func (newState *RenameModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RenameModelResponse) {
 }
 
 func (newState *RenameModelResponse) SyncEffectiveFieldsDuringRead(existingState RenameModelResponse) {
+}
+
+func (a RenameModelResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RegisteredModel": reflect.TypeOf(Model{}),
+	}
 }
 
 type RestoreExperiment struct {
@@ -1914,6 +2483,10 @@ func (newState *RestoreExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *RestoreExperiment) SyncEffectiveFieldsDuringRead(existingState RestoreExperiment) {
 }
 
+func (a RestoreExperiment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RestoreExperimentResponse struct {
 }
 
@@ -1921,6 +2494,10 @@ func (newState *RestoreExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *RestoreExperimentResponse) SyncEffectiveFieldsDuringRead(existingState RestoreExperimentResponse) {
+}
+
+func (a RestoreExperimentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RestoreRun struct {
@@ -1934,6 +2511,10 @@ func (newState *RestoreRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan Restore
 func (newState *RestoreRun) SyncEffectiveFieldsDuringRead(existingState RestoreRun) {
 }
 
+func (a RestoreRun) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RestoreRunResponse struct {
 }
 
@@ -1941,6 +2522,10 @@ func (newState *RestoreRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *RestoreRunResponse) SyncEffectiveFieldsDuringRead(existingState RestoreRunResponse) {
+}
+
+func (a RestoreRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RestoreRuns struct {
@@ -1961,6 +2546,10 @@ func (newState *RestoreRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan Restor
 func (newState *RestoreRuns) SyncEffectiveFieldsDuringRead(existingState RestoreRuns) {
 }
 
+func (a RestoreRuns) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RestoreRunsResponse struct {
 	// The number of runs restored.
 	RunsRestored types.Int64 `tfsdk:"runs_restored" tf:"optional"`
@@ -1972,13 +2561,17 @@ func (newState *RestoreRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *RestoreRunsResponse) SyncEffectiveFieldsDuringRead(existingState RestoreRunsResponse) {
 }
 
+func (a RestoreRunsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Run struct {
 	// Run data.
-	Data []RunData `tfsdk:"data" tf:"optional,object"`
+	Data types.Object `tfsdk:"data" tf:"optional,object"`
 	// Run metadata.
-	Info []RunInfo `tfsdk:"info" tf:"optional,object"`
+	Info types.Object `tfsdk:"info" tf:"optional,object"`
 	// Run inputs.
-	Inputs []RunInputs `tfsdk:"inputs" tf:"optional,object"`
+	Inputs types.Object `tfsdk:"inputs" tf:"optional,object"`
 }
 
 func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
@@ -1987,19 +2580,35 @@ func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
 func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
 }
 
+func (a Run) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Data":   reflect.TypeOf(RunData{}),
+		"Info":   reflect.TypeOf(RunInfo{}),
+		"Inputs": reflect.TypeOf(RunInputs{}),
+	}
+}
+
 type RunData struct {
 	// Run metrics.
-	Metrics []Metric `tfsdk:"metrics" tf:"optional"`
+	Metrics types.List `tfsdk:"metrics" tf:"optional"`
 	// Run parameters.
-	Params []Param `tfsdk:"params" tf:"optional"`
+	Params types.List `tfsdk:"params" tf:"optional"`
 	// Additional metadata key-value pairs.
-	Tags []RunTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 }
 
 func (newState *RunData) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunData) {
 }
 
 func (newState *RunData) SyncEffectiveFieldsDuringRead(existingState RunData) {
+}
+
+func (a RunData) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Metrics": reflect.TypeOf(Metric{}),
+		"Params":  reflect.TypeOf(Param{}),
+		"Tags":    reflect.TypeOf(RunTag{}),
+	}
 }
 
 type RunInfo struct {
@@ -2035,15 +2644,25 @@ func (newState *RunInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunInfo) {
 func (newState *RunInfo) SyncEffectiveFieldsDuringRead(existingState RunInfo) {
 }
 
+func (a RunInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RunInputs struct {
 	// Run metrics.
-	DatasetInputs []DatasetInput `tfsdk:"dataset_inputs" tf:"optional"`
+	DatasetInputs types.List `tfsdk:"dataset_inputs" tf:"optional"`
 }
 
 func (newState *RunInputs) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunInputs) {
 }
 
 func (newState *RunInputs) SyncEffectiveFieldsDuringRead(existingState RunInputs) {
+}
+
+func (a RunInputs) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DatasetInputs": reflect.TypeOf(DatasetInput{}),
+	}
 }
 
 type RunTag struct {
@@ -2059,6 +2678,10 @@ func (newState *RunTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTag) {
 func (newState *RunTag) SyncEffectiveFieldsDuringRead(existingState RunTag) {
 }
 
+func (a RunTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SearchExperiments struct {
 	// String representing a SQL filter condition (e.g. "name ILIKE
 	// 'my-experiment%'")
@@ -2069,7 +2692,7 @@ type SearchExperiments struct {
 	// name and last updated timestamp with an optional "DESC" or "ASC"
 	// annotation, where "ASC" is the default. Tiebreaks are done by experiment
 	// id DESC.
-	OrderBy []types.String `tfsdk:"order_by" tf:"optional"`
+	OrderBy types.List `tfsdk:"order_by" tf:"optional"`
 	// Token indicating the page of experiments to fetch
 	PageToken types.String `tfsdk:"page_token" tf:"optional"`
 	// Qualifier for type of experiments to be returned. If unspecified, return
@@ -2083,9 +2706,15 @@ func (newState *SearchExperiments) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *SearchExperiments) SyncEffectiveFieldsDuringRead(existingState SearchExperiments) {
 }
 
+func (a SearchExperiments) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"OrderBy": reflect.TypeOf(""),
+	}
+}
+
 type SearchExperimentsResponse struct {
 	// Experiments that match the search criteria
-	Experiments []Experiment `tfsdk:"experiments" tf:"optional"`
+	Experiments types.List `tfsdk:"experiments" tf:"optional"`
 	// Token that can be used to retrieve the next page of experiments. An empty
 	// token means that no more experiments are available for retrieval.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -2095,6 +2724,12 @@ func (newState *SearchExperimentsResponse) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *SearchExperimentsResponse) SyncEffectiveFieldsDuringRead(existingState SearchExperimentsResponse) {
+}
+
+func (a SearchExperimentsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Experiments": reflect.TypeOf(Experiment{}),
+	}
 }
 
 // Searches model versions
@@ -2108,7 +2743,7 @@ type SearchModelVersionsRequest struct {
 	// with an optional "DESC" or "ASC" annotation, where "ASC" is the default.
 	// Tiebreaks are done by latest stage transition timestamp, followed by name
 	// ASC, followed by version DESC.
-	OrderBy []types.String `tfsdk:"-"`
+	OrderBy types.List `tfsdk:"-"`
 	// Pagination token to go to next page based on previous search query.
 	PageToken types.String `tfsdk:"-"`
 }
@@ -2119,9 +2754,15 @@ func (newState *SearchModelVersionsRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *SearchModelVersionsRequest) SyncEffectiveFieldsDuringRead(existingState SearchModelVersionsRequest) {
 }
 
+func (a SearchModelVersionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"OrderBy": reflect.TypeOf(""),
+	}
+}
+
 type SearchModelVersionsResponse struct {
 	// Models that match the search criteria
-	ModelVersions []ModelVersion `tfsdk:"model_versions" tf:"optional"`
+	ModelVersions types.List `tfsdk:"model_versions" tf:"optional"`
 	// Pagination token to request next page of models for the same search
 	// query.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -2131,6 +2772,12 @@ func (newState *SearchModelVersionsResponse) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *SearchModelVersionsResponse) SyncEffectiveFieldsDuringRead(existingState SearchModelVersionsResponse) {
+}
+
+func (a SearchModelVersionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ModelVersions": reflect.TypeOf(ModelVersion{}),
+	}
 }
 
 // Search models
@@ -2144,7 +2791,7 @@ type SearchModelsRequest struct {
 	// List of columns for ordering search results, which can include model name
 	// and last updated timestamp with an optional "DESC" or "ASC" annotation,
 	// where "ASC" is the default. Tiebreaks are done by model name ASC.
-	OrderBy []types.String `tfsdk:"-"`
+	OrderBy types.List `tfsdk:"-"`
 	// Pagination token to go to the next page based on a previous search query.
 	PageToken types.String `tfsdk:"-"`
 }
@@ -2155,11 +2802,17 @@ func (newState *SearchModelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *SearchModelsRequest) SyncEffectiveFieldsDuringRead(existingState SearchModelsRequest) {
 }
 
+func (a SearchModelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"OrderBy": reflect.TypeOf(""),
+	}
+}
+
 type SearchModelsResponse struct {
 	// Pagination token to request the next page of models.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Registered Models that match the search criteria.
-	RegisteredModels []Model `tfsdk:"registered_models" tf:"optional"`
+	RegisteredModels types.List `tfsdk:"registered_models" tf:"optional"`
 }
 
 func (newState *SearchModelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchModelsResponse) {
@@ -2168,9 +2821,15 @@ func (newState *SearchModelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *SearchModelsResponse) SyncEffectiveFieldsDuringRead(existingState SearchModelsResponse) {
 }
 
+func (a SearchModelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RegisteredModels": reflect.TypeOf(Model{}),
+	}
+}
+
 type SearchRuns struct {
 	// List of experiment IDs to search over.
-	ExperimentIds []types.String `tfsdk:"experiment_ids" tf:"optional"`
+	ExperimentIds types.List `tfsdk:"experiment_ids" tf:"optional"`
 	// A filter expression over params, metrics, and tags, that allows returning
 	// a subset of runs. The syntax is a subset of SQL that supports ANDing
 	// together binary operations between a param, metric, or tag and a
@@ -2192,7 +2851,7 @@ type SearchRuns struct {
 	// "metrics.rmse"] Tiebreaks are done by start_time DESC followed by run_id
 	// for runs with the same start time (and this is the default ordering
 	// criterion if order_by is not provided).
-	OrderBy []types.String `tfsdk:"order_by" tf:"optional"`
+	OrderBy types.List `tfsdk:"order_by" tf:"optional"`
 	// Token for the current page of runs.
 	PageToken types.String `tfsdk:"page_token" tf:"optional"`
 	// Whether to display only active, only deleted, or all runs. Defaults to
@@ -2206,17 +2865,30 @@ func (newState *SearchRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchR
 func (newState *SearchRuns) SyncEffectiveFieldsDuringRead(existingState SearchRuns) {
 }
 
+func (a SearchRuns) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ExperimentIds": reflect.TypeOf(""),
+		"OrderBy":       reflect.TypeOf(""),
+	}
+}
+
 type SearchRunsResponse struct {
 	// Token for the next page of runs.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 	// Runs that match the search criteria.
-	Runs []Run `tfsdk:"runs" tf:"optional"`
+	Runs types.List `tfsdk:"runs" tf:"optional"`
 }
 
 func (newState *SearchRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchRunsResponse) {
 }
 
 func (newState *SearchRunsResponse) SyncEffectiveFieldsDuringRead(existingState SearchRunsResponse) {
+}
+
+func (a SearchRunsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Runs": reflect.TypeOf(Run{}),
+	}
 }
 
 type SetExperimentTag struct {
@@ -2237,6 +2909,10 @@ func (newState *SetExperimentTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *SetExperimentTag) SyncEffectiveFieldsDuringRead(existingState SetExperimentTag) {
 }
 
+func (a SetExperimentTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SetExperimentTagResponse struct {
 }
 
@@ -2244,6 +2920,10 @@ func (newState *SetExperimentTagResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *SetExperimentTagResponse) SyncEffectiveFieldsDuringRead(existingState SetExperimentTagResponse) {
+}
+
+func (a SetExperimentTagResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type SetModelTagRequest struct {
@@ -2266,6 +2946,10 @@ func (newState *SetModelTagRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *SetModelTagRequest) SyncEffectiveFieldsDuringRead(existingState SetModelTagRequest) {
 }
 
+func (a SetModelTagRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SetModelTagResponse struct {
 }
 
@@ -2273,6 +2957,10 @@ func (newState *SetModelTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *SetModelTagResponse) SyncEffectiveFieldsDuringRead(existingState SetModelTagResponse) {
+}
+
+func (a SetModelTagResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type SetModelVersionTagRequest struct {
@@ -2297,6 +2985,10 @@ func (newState *SetModelVersionTagRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *SetModelVersionTagRequest) SyncEffectiveFieldsDuringRead(existingState SetModelVersionTagRequest) {
 }
 
+func (a SetModelVersionTagRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SetModelVersionTagResponse struct {
 }
 
@@ -2304,6 +2996,10 @@ func (newState *SetModelVersionTagResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *SetModelVersionTagResponse) SyncEffectiveFieldsDuringRead(existingState SetModelVersionTagResponse) {
+}
+
+func (a SetModelVersionTagResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type SetTag struct {
@@ -2327,6 +3023,10 @@ func (newState *SetTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetTag) {
 func (newState *SetTag) SyncEffectiveFieldsDuringRead(existingState SetTag) {
 }
 
+func (a SetTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SetTagResponse struct {
 }
 
@@ -2334,6 +3034,10 @@ func (newState *SetTagResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Set
 }
 
 func (newState *SetTagResponse) SyncEffectiveFieldsDuringRead(existingState SetTagResponse) {
+}
+
+func (a SetTagResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Test webhook response object.
@@ -2348,6 +3052,10 @@ func (newState *TestRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *TestRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhook) {
+}
+
+func (a TestRegistryWebhook) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type TestRegistryWebhookRequest struct {
@@ -2365,15 +3073,25 @@ func (newState *TestRegistryWebhookRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *TestRegistryWebhookRequest) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhookRequest) {
 }
 
+func (a TestRegistryWebhookRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type TestRegistryWebhookResponse struct {
 	// Test webhook response object.
-	Webhook []TestRegistryWebhook `tfsdk:"webhook" tf:"optional,object"`
+	Webhook types.Object `tfsdk:"webhook" tf:"optional,object"`
 }
 
 func (newState *TestRegistryWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhookResponse) {
 }
 
 func (newState *TestRegistryWebhookResponse) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhookResponse) {
+}
+
+func (a TestRegistryWebhookResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Webhook": reflect.TypeOf(TestRegistryWebhook{}),
+	}
 }
 
 type TransitionModelVersionStageDatabricks struct {
@@ -2404,10 +3122,14 @@ func (newState *TransitionModelVersionStageDatabricks) SyncEffectiveFieldsDuring
 func (newState *TransitionModelVersionStageDatabricks) SyncEffectiveFieldsDuringRead(existingState TransitionModelVersionStageDatabricks) {
 }
 
+func (a TransitionModelVersionStageDatabricks) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Transition request details.
 type TransitionRequest struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions []types.String `tfsdk:"available_actions" tf:"optional"`
+	AvailableActions types.List `tfsdk:"available_actions" tf:"optional"`
 	// User-provided comment associated with the transition request.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
@@ -2433,14 +3155,26 @@ func (newState *TransitionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TransitionRequest) SyncEffectiveFieldsDuringRead(existingState TransitionRequest) {
 }
 
+func (a TransitionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AvailableActions": reflect.TypeOf(""),
+	}
+}
+
 type TransitionStageResponse struct {
-	ModelVersion []ModelVersionDatabricks `tfsdk:"model_version" tf:"optional,object"`
+	ModelVersion types.Object `tfsdk:"model_version" tf:"optional,object"`
 }
 
 func (newState *TransitionStageResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionStageResponse) {
 }
 
 func (newState *TransitionStageResponse) SyncEffectiveFieldsDuringRead(existingState TransitionStageResponse) {
+}
+
+func (a TransitionStageResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ModelVersion": reflect.TypeOf(ModelVersionDatabricks{}),
+	}
 }
 
 type UpdateComment struct {
@@ -2456,15 +3190,25 @@ func (newState *UpdateComment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upda
 func (newState *UpdateComment) SyncEffectiveFieldsDuringRead(existingState UpdateComment) {
 }
 
+func (a UpdateComment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateCommentResponse struct {
 	// Comment details.
-	Comment []CommentObject `tfsdk:"comment" tf:"optional,object"`
+	Comment types.Object `tfsdk:"comment" tf:"optional,object"`
 }
 
 func (newState *UpdateCommentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCommentResponse) {
 }
 
 func (newState *UpdateCommentResponse) SyncEffectiveFieldsDuringRead(existingState UpdateCommentResponse) {
+}
+
+func (a UpdateCommentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Comment": reflect.TypeOf(CommentObject{}),
+	}
 }
 
 type UpdateExperiment struct {
@@ -2481,6 +3225,10 @@ func (newState *UpdateExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan U
 func (newState *UpdateExperiment) SyncEffectiveFieldsDuringRead(existingState UpdateExperiment) {
 }
 
+func (a UpdateExperiment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateExperimentResponse struct {
 }
 
@@ -2488,6 +3236,10 @@ func (newState *UpdateExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *UpdateExperimentResponse) SyncEffectiveFieldsDuringRead(existingState UpdateExperimentResponse) {
+}
+
+func (a UpdateExperimentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type UpdateModelRequest struct {
@@ -2503,6 +3255,10 @@ func (newState *UpdateModelRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *UpdateModelRequest) SyncEffectiveFieldsDuringRead(existingState UpdateModelRequest) {
 }
 
+func (a UpdateModelRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateModelResponse struct {
 }
 
@@ -2510,6 +3266,10 @@ func (newState *UpdateModelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *UpdateModelResponse) SyncEffectiveFieldsDuringRead(existingState UpdateModelResponse) {
+}
+
+func (a UpdateModelResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type UpdateModelVersionRequest struct {
@@ -2527,6 +3287,10 @@ func (newState *UpdateModelVersionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *UpdateModelVersionRequest) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionRequest) {
 }
 
+func (a UpdateModelVersionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateModelVersionResponse struct {
 }
 
@@ -2534,6 +3298,10 @@ func (newState *UpdateModelVersionResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *UpdateModelVersionResponse) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionResponse) {
+}
+
+func (a UpdateModelVersionResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type UpdateRegistryWebhook struct {
@@ -2572,13 +3340,13 @@ type UpdateRegistryWebhook struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events []types.String `tfsdk:"events" tf:"optional"`
+	Events types.List `tfsdk:"events" tf:"optional"`
 
-	HttpUrlSpec []HttpUrlSpec `tfsdk:"http_url_spec" tf:"optional,object"`
+	HttpUrlSpec types.Object `tfsdk:"http_url_spec" tf:"optional,object"`
 	// Webhook ID
 	Id types.String `tfsdk:"id" tf:""`
 
-	JobSpec []JobSpec `tfsdk:"job_spec" tf:"optional,object"`
+	JobSpec types.Object `tfsdk:"job_spec" tf:"optional,object"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -2594,6 +3362,14 @@ func (newState *UpdateRegistryWebhook) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *UpdateRegistryWebhook) SyncEffectiveFieldsDuringRead(existingState UpdateRegistryWebhook) {
+}
+
+func (a UpdateRegistryWebhook) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Events":      reflect.TypeOf(""),
+		"HttpUrlSpec": reflect.TypeOf(HttpUrlSpec{}),
+		"JobSpec":     reflect.TypeOf(JobSpec{}),
+	}
 }
 
 type UpdateRun struct {
@@ -2614,15 +3390,25 @@ func (newState *UpdateRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRu
 func (newState *UpdateRun) SyncEffectiveFieldsDuringRead(existingState UpdateRun) {
 }
 
+func (a UpdateRun) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateRunResponse struct {
 	// Updated metadata of the run.
-	RunInfo []RunInfo `tfsdk:"run_info" tf:"optional,object"`
+	RunInfo types.Object `tfsdk:"run_info" tf:"optional,object"`
 }
 
 func (newState *UpdateRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRunResponse) {
 }
 
 func (newState *UpdateRunResponse) SyncEffectiveFieldsDuringRead(existingState UpdateRunResponse) {
+}
+
+func (a UpdateRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RunInfo": reflect.TypeOf(RunInfo{}),
+	}
 }
 
 type UpdateWebhookResponse struct {
@@ -2632,4 +3418,8 @@ func (newState *UpdateWebhookResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *UpdateWebhookResponse) SyncEffectiveFieldsDuringRead(existingState UpdateWebhookResponse) {
+}
+
+func (a UpdateWebhookResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }

@@ -11,6 +11,8 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package marketplace_tf
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -26,8 +28,12 @@ func (newState *AddExchangeForListingRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *AddExchangeForListingRequest) SyncEffectiveFieldsDuringRead(existingState AddExchangeForListingRequest) {
 }
 
+func (a AddExchangeForListingRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type AddExchangeForListingResponse struct {
-	ExchangeForListing []ExchangeListing `tfsdk:"exchange_for_listing" tf:"optional,object"`
+	ExchangeForListing types.Object `tfsdk:"exchange_for_listing" tf:"optional,object"`
 }
 
 func (newState *AddExchangeForListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddExchangeForListingResponse) {
@@ -36,9 +42,15 @@ func (newState *AddExchangeForListingResponse) SyncEffectiveFieldsDuringCreateOr
 func (newState *AddExchangeForListingResponse) SyncEffectiveFieldsDuringRead(existingState AddExchangeForListingResponse) {
 }
 
+func (a AddExchangeForListingResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ExchangeForListing": reflect.TypeOf(ExchangeListing{}),
+	}
+}
+
 // Get one batch of listings. One may specify up to 50 IDs per request.
 type BatchGetListingsRequest struct {
-	Ids []types.String `tfsdk:"-"`
+	Ids types.List `tfsdk:"-"`
 }
 
 func (newState *BatchGetListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetListingsRequest) {
@@ -47,8 +59,14 @@ func (newState *BatchGetListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *BatchGetListingsRequest) SyncEffectiveFieldsDuringRead(existingState BatchGetListingsRequest) {
 }
 
+func (a BatchGetListingsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Ids": reflect.TypeOf(""),
+	}
+}
+
 type BatchGetListingsResponse struct {
-	Listings []Listing `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings" tf:"optional"`
 }
 
 func (newState *BatchGetListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetListingsResponse) {
@@ -57,9 +75,15 @@ func (newState *BatchGetListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *BatchGetListingsResponse) SyncEffectiveFieldsDuringRead(existingState BatchGetListingsResponse) {
 }
 
+func (a BatchGetListingsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Listings": reflect.TypeOf(Listing{}),
+	}
+}
+
 // Get one batch of providers. One may specify up to 50 IDs per request.
 type BatchGetProvidersRequest struct {
-	Ids []types.String `tfsdk:"-"`
+	Ids types.List `tfsdk:"-"`
 }
 
 func (newState *BatchGetProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetProvidersRequest) {
@@ -68,14 +92,26 @@ func (newState *BatchGetProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *BatchGetProvidersRequest) SyncEffectiveFieldsDuringRead(existingState BatchGetProvidersRequest) {
 }
 
+func (a BatchGetProvidersRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Ids": reflect.TypeOf(""),
+	}
+}
+
 type BatchGetProvidersResponse struct {
-	Providers []ProviderInfo `tfsdk:"providers" tf:"optional"`
+	Providers types.List `tfsdk:"providers" tf:"optional"`
 }
 
 func (newState *BatchGetProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetProvidersResponse) {
 }
 
 func (newState *BatchGetProvidersResponse) SyncEffectiveFieldsDuringRead(existingState BatchGetProvidersResponse) {
+}
+
+func (a BatchGetProvidersResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Providers": reflect.TypeOf(ProviderInfo{}),
+	}
 }
 
 type ConsumerTerms struct {
@@ -86,6 +122,10 @@ func (newState *ConsumerTerms) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cons
 }
 
 func (newState *ConsumerTerms) SyncEffectiveFieldsDuringRead(existingState ConsumerTerms) {
+}
+
+func (a ConsumerTerms) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // contact info for the consumer requesting data or performing a listing
@@ -106,14 +146,24 @@ func (newState *ContactInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Contac
 func (newState *ContactInfo) SyncEffectiveFieldsDuringRead(existingState ContactInfo) {
 }
 
+func (a ContactInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateExchangeFilterRequest struct {
-	Filter []ExchangeFilter `tfsdk:"filter" tf:"object"`
+	Filter types.Object `tfsdk:"filter" tf:"object"`
 }
 
 func (newState *CreateExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeFilterRequest) {
 }
 
 func (newState *CreateExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState CreateExchangeFilterRequest) {
+}
+
+func (a CreateExchangeFilterRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Filter": reflect.TypeOf(ExchangeFilter{}),
+	}
 }
 
 type CreateExchangeFilterResponse struct {
@@ -126,14 +176,24 @@ func (newState *CreateExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *CreateExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState CreateExchangeFilterResponse) {
 }
 
+func (a CreateExchangeFilterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateExchangeRequest struct {
-	Exchange []Exchange `tfsdk:"exchange" tf:"object"`
+	Exchange types.Object `tfsdk:"exchange" tf:"object"`
 }
 
 func (newState *CreateExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeRequest) {
 }
 
 func (newState *CreateExchangeRequest) SyncEffectiveFieldsDuringRead(existingState CreateExchangeRequest) {
+}
+
+func (a CreateExchangeRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Exchange": reflect.TypeOf(Exchange{}),
+	}
 }
 
 type CreateExchangeResponse struct {
@@ -146,10 +206,14 @@ func (newState *CreateExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreateExchangeResponse) SyncEffectiveFieldsDuringRead(existingState CreateExchangeResponse) {
 }
 
+func (a CreateExchangeResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateFileRequest struct {
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 
-	FileParent []FileParent `tfsdk:"file_parent" tf:"object"`
+	FileParent types.Object `tfsdk:"file_parent" tf:"object"`
 
 	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:""`
 
@@ -162,8 +226,14 @@ func (newState *CreateFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *CreateFileRequest) SyncEffectiveFieldsDuringRead(existingState CreateFileRequest) {
 }
 
+func (a CreateFileRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FileParent": reflect.TypeOf(FileParent{}),
+	}
+}
+
 type CreateFileResponse struct {
-	FileInfo []FileInfo `tfsdk:"file_info" tf:"optional,object"`
+	FileInfo types.Object `tfsdk:"file_info" tf:"optional,object"`
 	// Pre-signed POST URL to blob storage
 	UploadUrl types.String `tfsdk:"upload_url" tf:"optional"`
 }
@@ -174,8 +244,14 @@ func (newState *CreateFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *CreateFileResponse) SyncEffectiveFieldsDuringRead(existingState CreateFileResponse) {
 }
 
+func (a CreateFileResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FileInfo": reflect.TypeOf(FileInfo{}),
+	}
+}
+
 type CreateInstallationRequest struct {
-	AcceptedConsumerTerms []ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:"optional,object"`
+	AcceptedConsumerTerms types.Object `tfsdk:"accepted_consumer_terms" tf:"optional,object"`
 
 	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
 
@@ -183,7 +259,7 @@ type CreateInstallationRequest struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 	// for git repo installations
-	RepoDetail []RepoInstallation `tfsdk:"repo_detail" tf:"optional,object"`
+	RepoDetail types.Object `tfsdk:"repo_detail" tf:"optional,object"`
 
 	ShareName types.String `tfsdk:"share_name" tf:"optional"`
 }
@@ -194,14 +270,27 @@ func (newState *CreateInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *CreateInstallationRequest) SyncEffectiveFieldsDuringRead(existingState CreateInstallationRequest) {
 }
 
+func (a CreateInstallationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AcceptedConsumerTerms": reflect.TypeOf(ConsumerTerms{}),
+		"RepoDetail":            reflect.TypeOf(RepoInstallation{}),
+	}
+}
+
 type CreateListingRequest struct {
-	Listing []Listing `tfsdk:"listing" tf:"object"`
+	Listing types.Object `tfsdk:"listing" tf:"object"`
 }
 
 func (newState *CreateListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateListingRequest) {
 }
 
 func (newState *CreateListingRequest) SyncEffectiveFieldsDuringRead(existingState CreateListingRequest) {
+}
+
+func (a CreateListingRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Listing": reflect.TypeOf(Listing{}),
+	}
 }
 
 type CreateListingResponse struct {
@@ -214,9 +303,13 @@ func (newState *CreateListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *CreateListingResponse) SyncEffectiveFieldsDuringRead(existingState CreateListingResponse) {
 }
 
+func (a CreateListingResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Data request messages also creates a lead (maybe)
 type CreatePersonalizationRequest struct {
-	AcceptedConsumerTerms []ConsumerTerms `tfsdk:"accepted_consumer_terms" tf:"object"`
+	AcceptedConsumerTerms types.Object `tfsdk:"accepted_consumer_terms" tf:"object"`
 
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
@@ -241,6 +334,12 @@ func (newState *CreatePersonalizationRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *CreatePersonalizationRequest) SyncEffectiveFieldsDuringRead(existingState CreatePersonalizationRequest) {
 }
 
+func (a CreatePersonalizationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AcceptedConsumerTerms": reflect.TypeOf(ConsumerTerms{}),
+	}
+}
+
 type CreatePersonalizationRequestResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 }
@@ -251,14 +350,24 @@ func (newState *CreatePersonalizationRequestResponse) SyncEffectiveFieldsDuringC
 func (newState *CreatePersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState CreatePersonalizationRequestResponse) {
 }
 
+func (a CreatePersonalizationRequestResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateProviderRequest struct {
-	Provider []ProviderInfo `tfsdk:"provider" tf:"object"`
+	Provider types.Object `tfsdk:"provider" tf:"object"`
 }
 
 func (newState *CreateProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProviderRequest) {
 }
 
 func (newState *CreateProviderRequest) SyncEffectiveFieldsDuringRead(existingState CreateProviderRequest) {
+}
+
+func (a CreateProviderRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Provider": reflect.TypeOf(ProviderInfo{}),
+	}
 }
 
 type CreateProviderResponse struct {
@@ -269,6 +378,10 @@ func (newState *CreateProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *CreateProviderResponse) SyncEffectiveFieldsDuringRead(existingState CreateProviderResponse) {
+}
+
+func (a CreateProviderResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type DataRefreshInfo struct {
@@ -283,6 +396,10 @@ func (newState *DataRefreshInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Da
 func (newState *DataRefreshInfo) SyncEffectiveFieldsDuringRead(existingState DataRefreshInfo) {
 }
 
+func (a DataRefreshInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete an exchange filter
 type DeleteExchangeFilterRequest struct {
 	Id types.String `tfsdk:"-"`
@@ -294,6 +411,10 @@ func (newState *DeleteExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *DeleteExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeFilterRequest) {
 }
 
+func (a DeleteExchangeFilterRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteExchangeFilterResponse struct {
 }
 
@@ -301,6 +422,10 @@ func (newState *DeleteExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrU
 }
 
 func (newState *DeleteExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeFilterResponse) {
+}
+
+func (a DeleteExchangeFilterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete an exchange
@@ -314,6 +439,10 @@ func (newState *DeleteExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteExchangeRequest) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeRequest) {
 }
 
+func (a DeleteExchangeRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteExchangeResponse struct {
 }
 
@@ -321,6 +450,10 @@ func (newState *DeleteExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeleteExchangeResponse) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeResponse) {
+}
+
+func (a DeleteExchangeResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a file
@@ -334,6 +467,10 @@ func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringRead(existingState DeleteFileRequest) {
 }
 
+func (a DeleteFileRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteFileResponse struct {
 }
 
@@ -341,6 +478,10 @@ func (newState *DeleteFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *DeleteFileResponse) SyncEffectiveFieldsDuringRead(existingState DeleteFileResponse) {
+}
+
+func (a DeleteFileResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Uninstall from a listing
@@ -356,6 +497,10 @@ func (newState *DeleteInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *DeleteInstallationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteInstallationRequest) {
 }
 
+func (a DeleteInstallationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteInstallationResponse struct {
 }
 
@@ -363,6 +508,10 @@ func (newState *DeleteInstallationResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *DeleteInstallationResponse) SyncEffectiveFieldsDuringRead(existingState DeleteInstallationResponse) {
+}
+
+func (a DeleteInstallationResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a listing
@@ -376,6 +525,10 @@ func (newState *DeleteListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DeleteListingRequest) SyncEffectiveFieldsDuringRead(existingState DeleteListingRequest) {
 }
 
+func (a DeleteListingRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteListingResponse struct {
 }
 
@@ -383,6 +536,10 @@ func (newState *DeleteListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *DeleteListingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteListingResponse) {
+}
+
+func (a DeleteListingResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete provider
@@ -396,6 +553,10 @@ func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest) {
 }
 
+func (a DeleteProviderRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteProviderResponse struct {
 }
 
@@ -405,6 +566,10 @@ func (newState *DeleteProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteProviderResponse) SyncEffectiveFieldsDuringRead(existingState DeleteProviderResponse) {
 }
 
+func (a DeleteProviderResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Exchange struct {
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
@@ -412,11 +577,11 @@ type Exchange struct {
 
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
 
-	Filters []ExchangeFilter `tfsdk:"filters" tf:"optional"`
+	Filters types.List `tfsdk:"filters" tf:"optional"`
 
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	LinkedListings []ExchangeListing `tfsdk:"linked_listings" tf:"optional"`
+	LinkedListings types.List `tfsdk:"linked_listings" tf:"optional"`
 
 	Name types.String `tfsdk:"name" tf:""`
 
@@ -429,6 +594,13 @@ func (newState *Exchange) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exchange)
 }
 
 func (newState *Exchange) SyncEffectiveFieldsDuringRead(existingState Exchange) {
+}
+
+func (a Exchange) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Filters":        reflect.TypeOf(ExchangeFilter{}),
+		"LinkedListings": reflect.TypeOf(ExchangeListing{}),
+	}
 }
 
 type ExchangeFilter struct {
@@ -457,6 +629,10 @@ func (newState *ExchangeFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exc
 func (newState *ExchangeFilter) SyncEffectiveFieldsDuringRead(existingState ExchangeFilter) {
 }
 
+func (a ExchangeFilter) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ExchangeListing struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -479,6 +655,10 @@ func (newState *ExchangeListing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ex
 func (newState *ExchangeListing) SyncEffectiveFieldsDuringRead(existingState ExchangeListing) {
 }
 
+func (a ExchangeListing) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type FileInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 	// Name displayed to users for applicable files, e.g. embedded notebooks
@@ -486,7 +666,7 @@ type FileInfo struct {
 
 	DownloadLink types.String `tfsdk:"download_link" tf:"optional"`
 
-	FileParent []FileParent `tfsdk:"file_parent" tf:"optional,object"`
+	FileParent types.Object `tfsdk:"file_parent" tf:"optional,object"`
 
 	Id types.String `tfsdk:"id" tf:"optional"`
 
@@ -508,6 +688,12 @@ func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo)
 func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
 }
 
+func (a FileInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FileParent": reflect.TypeOf(FileParent{}),
+	}
+}
+
 type FileParent struct {
 	FileParentType types.String `tfsdk:"file_parent_type" tf:"optional"`
 	// TODO make the following fields required
@@ -518,6 +704,10 @@ func (newState *FileParent) SyncEffectiveFieldsDuringCreateOrUpdate(plan FilePar
 }
 
 func (newState *FileParent) SyncEffectiveFieldsDuringRead(existingState FileParent) {
+}
+
+func (a FileParent) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get an exchange
@@ -531,14 +721,24 @@ func (newState *GetExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetExchangeRequest) SyncEffectiveFieldsDuringRead(existingState GetExchangeRequest) {
 }
 
+func (a GetExchangeRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetExchangeResponse struct {
-	Exchange []Exchange `tfsdk:"exchange" tf:"optional,object"`
+	Exchange types.Object `tfsdk:"exchange" tf:"optional,object"`
 }
 
 func (newState *GetExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExchangeResponse) {
 }
 
 func (newState *GetExchangeResponse) SyncEffectiveFieldsDuringRead(existingState GetExchangeResponse) {
+}
+
+func (a GetExchangeResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Exchange": reflect.TypeOf(Exchange{}),
+	}
 }
 
 // Get a file
@@ -552,14 +752,24 @@ func (newState *GetFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Get
 func (newState *GetFileRequest) SyncEffectiveFieldsDuringRead(existingState GetFileRequest) {
 }
 
+func (a GetFileRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetFileResponse struct {
-	FileInfo []FileInfo `tfsdk:"file_info" tf:"optional,object"`
+	FileInfo types.Object `tfsdk:"file_info" tf:"optional,object"`
 }
 
 func (newState *GetFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetFileResponse) {
 }
 
 func (newState *GetFileResponse) SyncEffectiveFieldsDuringRead(existingState GetFileResponse) {
+}
+
+func (a GetFileResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FileInfo": reflect.TypeOf(FileInfo{}),
+	}
 }
 
 type GetLatestVersionProviderAnalyticsDashboardResponse struct {
@@ -571,6 +781,10 @@ func (newState *GetLatestVersionProviderAnalyticsDashboardResponse) SyncEffectiv
 }
 
 func (newState *GetLatestVersionProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionProviderAnalyticsDashboardResponse) {
+}
+
+func (a GetLatestVersionProviderAnalyticsDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get listing content metadata
@@ -588,16 +802,26 @@ func (newState *GetListingContentMetadataRequest) SyncEffectiveFieldsDuringCreat
 func (newState *GetListingContentMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetListingContentMetadataRequest) {
 }
 
+func (a GetListingContentMetadataRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetListingContentMetadataResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	SharedDataObjects []SharedDataObject `tfsdk:"shared_data_objects" tf:"optional"`
+	SharedDataObjects types.List `tfsdk:"shared_data_objects" tf:"optional"`
 }
 
 func (newState *GetListingContentMetadataResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingContentMetadataResponse) {
 }
 
 func (newState *GetListingContentMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetListingContentMetadataResponse) {
+}
+
+func (a GetListingContentMetadataResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"SharedDataObjects": reflect.TypeOf(SharedDataObject{}),
+	}
 }
 
 // Get listing
@@ -611,14 +835,24 @@ func (newState *GetListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GetListingRequest) SyncEffectiveFieldsDuringRead(existingState GetListingRequest) {
 }
 
+func (a GetListingRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetListingResponse struct {
-	Listing []Listing `tfsdk:"listing" tf:"optional,object"`
+	Listing types.Object `tfsdk:"listing" tf:"optional,object"`
 }
 
 func (newState *GetListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingResponse) {
 }
 
 func (newState *GetListingResponse) SyncEffectiveFieldsDuringRead(existingState GetListingResponse) {
+}
+
+func (a GetListingResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Listing": reflect.TypeOf(Listing{}),
+	}
 }
 
 // List listings
@@ -634,8 +868,12 @@ func (newState *GetListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetListingsRequest) SyncEffectiveFieldsDuringRead(existingState GetListingsRequest) {
 }
 
+func (a GetListingsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetListingsResponse struct {
-	Listings []Listing `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -644,6 +882,12 @@ func (newState *GetListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *GetListingsResponse) SyncEffectiveFieldsDuringRead(existingState GetListingsResponse) {
+}
+
+func (a GetListingsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Listings": reflect.TypeOf(Listing{}),
+	}
 }
 
 // Get the personalization request for a listing
@@ -657,14 +901,24 @@ func (newState *GetPersonalizationRequestRequest) SyncEffectiveFieldsDuringCreat
 func (newState *GetPersonalizationRequestRequest) SyncEffectiveFieldsDuringRead(existingState GetPersonalizationRequestRequest) {
 }
 
+func (a GetPersonalizationRequestRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetPersonalizationRequestResponse struct {
-	PersonalizationRequests []PersonalizationRequest `tfsdk:"personalization_requests" tf:"optional"`
+	PersonalizationRequests types.List `tfsdk:"personalization_requests" tf:"optional"`
 }
 
 func (newState *GetPersonalizationRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPersonalizationRequestResponse) {
 }
 
 func (newState *GetPersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState GetPersonalizationRequestResponse) {
+}
+
+func (a GetPersonalizationRequestResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PersonalizationRequests": reflect.TypeOf(PersonalizationRequest{}),
+	}
 }
 
 // Get a provider
@@ -678,8 +932,12 @@ func (newState *GetProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetProviderRequest) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest) {
 }
 
+func (a GetProviderRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetProviderResponse struct {
-	Provider []ProviderInfo `tfsdk:"provider" tf:"optional,object"`
+	Provider types.Object `tfsdk:"provider" tf:"optional,object"`
 }
 
 func (newState *GetProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderResponse) {
@@ -688,14 +946,26 @@ func (newState *GetProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetProviderResponse) SyncEffectiveFieldsDuringRead(existingState GetProviderResponse) {
 }
 
+func (a GetProviderResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Provider": reflect.TypeOf(ProviderInfo{}),
+	}
+}
+
 type Installation struct {
-	Installation []InstallationDetail `tfsdk:"installation" tf:"optional,object"`
+	Installation types.Object `tfsdk:"installation" tf:"optional,object"`
 }
 
 func (newState *Installation) SyncEffectiveFieldsDuringCreateOrUpdate(plan Installation) {
 }
 
 func (newState *Installation) SyncEffectiveFieldsDuringRead(existingState Installation) {
+}
+
+func (a Installation) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Installation": reflect.TypeOf(InstallationDetail{}),
+	}
 }
 
 type InstallationDetail struct {
@@ -721,15 +991,22 @@ type InstallationDetail struct {
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 
-	TokenDetail []TokenDetail `tfsdk:"token_detail" tf:"optional,object"`
+	TokenDetail types.Object `tfsdk:"token_detail" tf:"optional,object"`
 
-	Tokens []TokenInfo `tfsdk:"tokens" tf:"optional"`
+	Tokens types.List `tfsdk:"tokens" tf:"optional"`
 }
 
 func (newState *InstallationDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallationDetail) {
 }
 
 func (newState *InstallationDetail) SyncEffectiveFieldsDuringRead(existingState InstallationDetail) {
+}
+
+func (a InstallationDetail) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"TokenDetail": reflect.TypeOf(TokenDetail{}),
+		"Tokens":      reflect.TypeOf(TokenInfo{}),
+	}
 }
 
 // List all installations
@@ -745,8 +1022,12 @@ func (newState *ListAllInstallationsRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ListAllInstallationsRequest) SyncEffectiveFieldsDuringRead(existingState ListAllInstallationsRequest) {
 }
 
+func (a ListAllInstallationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListAllInstallationsResponse struct {
-	Installations []InstallationDetail `tfsdk:"installations" tf:"optional"`
+	Installations types.List `tfsdk:"installations" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -755,6 +1036,12 @@ func (newState *ListAllInstallationsResponse) SyncEffectiveFieldsDuringCreateOrU
 }
 
 func (newState *ListAllInstallationsResponse) SyncEffectiveFieldsDuringRead(existingState ListAllInstallationsResponse) {
+}
+
+func (a ListAllInstallationsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Installations": reflect.TypeOf(InstallationDetail{}),
+	}
 }
 
 // List all personalization requests
@@ -770,16 +1057,26 @@ func (newState *ListAllPersonalizationRequestsRequest) SyncEffectiveFieldsDuring
 func (newState *ListAllPersonalizationRequestsRequest) SyncEffectiveFieldsDuringRead(existingState ListAllPersonalizationRequestsRequest) {
 }
 
+func (a ListAllPersonalizationRequestsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListAllPersonalizationRequestsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	PersonalizationRequests []PersonalizationRequest `tfsdk:"personalization_requests" tf:"optional"`
+	PersonalizationRequests types.List `tfsdk:"personalization_requests" tf:"optional"`
 }
 
 func (newState *ListAllPersonalizationRequestsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllPersonalizationRequestsResponse) {
 }
 
 func (newState *ListAllPersonalizationRequestsResponse) SyncEffectiveFieldsDuringRead(existingState ListAllPersonalizationRequestsResponse) {
+}
+
+func (a ListAllPersonalizationRequestsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PersonalizationRequests": reflect.TypeOf(PersonalizationRequest{}),
+	}
 }
 
 // List exchange filters
@@ -797,8 +1094,12 @@ func (newState *ListExchangeFiltersRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ListExchangeFiltersRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangeFiltersRequest) {
 }
 
+func (a ListExchangeFiltersRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListExchangeFiltersResponse struct {
-	Filters []ExchangeFilter `tfsdk:"filters" tf:"optional"`
+	Filters types.List `tfsdk:"filters" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -807,6 +1108,12 @@ func (newState *ListExchangeFiltersResponse) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *ListExchangeFiltersResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangeFiltersResponse) {
+}
+
+func (a ListExchangeFiltersResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Filters": reflect.TypeOf(ExchangeFilter{}),
+	}
 }
 
 // List exchanges for listing
@@ -824,8 +1131,12 @@ func (newState *ListExchangesForListingRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *ListExchangesForListingRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangesForListingRequest) {
 }
 
+func (a ListExchangesForListingRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListExchangesForListingResponse struct {
-	ExchangeListing []ExchangeListing `tfsdk:"exchange_listing" tf:"optional"`
+	ExchangeListing types.List `tfsdk:"exchange_listing" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -834,6 +1145,12 @@ func (newState *ListExchangesForListingResponse) SyncEffectiveFieldsDuringCreate
 }
 
 func (newState *ListExchangesForListingResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangesForListingResponse) {
+}
+
+func (a ListExchangesForListingResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ExchangeListing": reflect.TypeOf(ExchangeListing{}),
+	}
 }
 
 // List exchanges
@@ -849,8 +1166,12 @@ func (newState *ListExchangesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListExchangesRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangesRequest) {
 }
 
+func (a ListExchangesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListExchangesResponse struct {
-	Exchanges []Exchange `tfsdk:"exchanges" tf:"optional"`
+	Exchanges types.List `tfsdk:"exchanges" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -861,9 +1182,15 @@ func (newState *ListExchangesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListExchangesResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangesResponse) {
 }
 
+func (a ListExchangesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Exchanges": reflect.TypeOf(Exchange{}),
+	}
+}
+
 // List files
 type ListFilesRequest struct {
-	FileParent []FileParent `tfsdk:"-"`
+	FileParent types.Object `tfsdk:"-"`
 
 	PageSize types.Int64 `tfsdk:"-"`
 
@@ -876,8 +1203,14 @@ func (newState *ListFilesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListFilesRequest) SyncEffectiveFieldsDuringRead(existingState ListFilesRequest) {
 }
 
+func (a ListFilesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FileParent": reflect.TypeOf(FileParent{}),
+	}
+}
+
 type ListFilesResponse struct {
-	FileInfos []FileInfo `tfsdk:"file_infos" tf:"optional"`
+	FileInfos types.List `tfsdk:"file_infos" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -886,6 +1219,12 @@ func (newState *ListFilesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *ListFilesResponse) SyncEffectiveFieldsDuringRead(existingState ListFilesResponse) {
+}
+
+func (a ListFilesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"FileInfos": reflect.TypeOf(FileInfo{}),
+	}
 }
 
 // List all listing fulfillments
@@ -903,8 +1242,12 @@ func (newState *ListFulfillmentsRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ListFulfillmentsRequest) SyncEffectiveFieldsDuringRead(existingState ListFulfillmentsRequest) {
 }
 
+func (a ListFulfillmentsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListFulfillmentsResponse struct {
-	Fulfillments []ListingFulfillment `tfsdk:"fulfillments" tf:"optional"`
+	Fulfillments types.List `tfsdk:"fulfillments" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -913,6 +1256,12 @@ func (newState *ListFulfillmentsResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *ListFulfillmentsResponse) SyncEffectiveFieldsDuringRead(existingState ListFulfillmentsResponse) {
+}
+
+func (a ListFulfillmentsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Fulfillments": reflect.TypeOf(ListingFulfillment{}),
+	}
 }
 
 // List installations for a listing
@@ -930,8 +1279,12 @@ func (newState *ListInstallationsRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListInstallationsRequest) SyncEffectiveFieldsDuringRead(existingState ListInstallationsRequest) {
 }
 
+func (a ListInstallationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListInstallationsResponse struct {
-	Installations []InstallationDetail `tfsdk:"installations" tf:"optional"`
+	Installations types.List `tfsdk:"installations" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -940,6 +1293,12 @@ func (newState *ListInstallationsResponse) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *ListInstallationsResponse) SyncEffectiveFieldsDuringRead(existingState ListInstallationsResponse) {
+}
+
+func (a ListInstallationsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Installations": reflect.TypeOf(InstallationDetail{}),
+	}
 }
 
 // List listings for exchange
@@ -957,8 +1316,12 @@ func (newState *ListListingsForExchangeRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *ListListingsForExchangeRequest) SyncEffectiveFieldsDuringRead(existingState ListListingsForExchangeRequest) {
 }
 
+func (a ListListingsForExchangeRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListListingsForExchangeResponse struct {
-	ExchangeListings []ExchangeListing `tfsdk:"exchange_listings" tf:"optional"`
+	ExchangeListings types.List `tfsdk:"exchange_listings" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -969,12 +1332,18 @@ func (newState *ListListingsForExchangeResponse) SyncEffectiveFieldsDuringCreate
 func (newState *ListListingsForExchangeResponse) SyncEffectiveFieldsDuringRead(existingState ListListingsForExchangeResponse) {
 }
 
+func (a ListListingsForExchangeResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ExchangeListings": reflect.TypeOf(ExchangeListing{}),
+	}
+}
+
 // List listings
 type ListListingsRequest struct {
 	// Matches any of the following asset types
-	Assets []types.String `tfsdk:"-"`
+	Assets types.List `tfsdk:"-"`
 	// Matches any of the following categories
-	Categories []types.String `tfsdk:"-"`
+	Categories types.List `tfsdk:"-"`
 	// Filters each listing based on if it is free.
 	IsFree types.Bool `tfsdk:"-"`
 	// Filters each listing based on if it is a private exchange.
@@ -986,9 +1355,9 @@ type ListListingsRequest struct {
 
 	PageToken types.String `tfsdk:"-"`
 	// Matches any of the following provider ids
-	ProviderIds []types.String `tfsdk:"-"`
+	ProviderIds types.List `tfsdk:"-"`
 	// Matches any of the following tags
-	Tags []ListingTag `tfsdk:"-"`
+	Tags types.List `tfsdk:"-"`
 }
 
 func (newState *ListListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsRequest) {
@@ -997,8 +1366,17 @@ func (newState *ListListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ListListingsRequest) SyncEffectiveFieldsDuringRead(existingState ListListingsRequest) {
 }
 
+func (a ListListingsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Assets":      reflect.TypeOf(""),
+		"Categories":  reflect.TypeOf(""),
+		"ProviderIds": reflect.TypeOf(""),
+		"Tags":        reflect.TypeOf(ListingTag{}),
+	}
+}
+
 type ListListingsResponse struct {
-	Listings []Listing `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -1007,6 +1385,12 @@ func (newState *ListListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *ListListingsResponse) SyncEffectiveFieldsDuringRead(existingState ListListingsResponse) {
+}
+
+func (a ListListingsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Listings": reflect.TypeOf(Listing{}),
+	}
 }
 
 type ListProviderAnalyticsDashboardResponse struct {
@@ -1024,6 +1408,10 @@ func (newState *ListProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDurin
 func (newState *ListProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState ListProviderAnalyticsDashboardResponse) {
 }
 
+func (a ListProviderAnalyticsDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // List providers
 type ListProvidersRequest struct {
 	IsFeatured types.Bool `tfsdk:"-"`
@@ -1039,10 +1427,14 @@ func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest) {
 }
 
+func (a ListProvidersRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListProvidersResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
-	Providers []ProviderInfo `tfsdk:"providers" tf:"optional"`
+	Providers types.List `tfsdk:"providers" tf:"optional"`
 }
 
 func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersResponse) {
@@ -1051,12 +1443,18 @@ func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringRead(existingState ListProvidersResponse) {
 }
 
+func (a ListProvidersResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Providers": reflect.TypeOf(ProviderInfo{}),
+	}
+}
+
 type Listing struct {
-	Detail []ListingDetail `tfsdk:"detail" tf:"optional,object"`
+	Detail types.Object `tfsdk:"detail" tf:"optional,object"`
 
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Next Number: 26
-	Summary []ListingSummary `tfsdk:"summary" tf:"object"`
+	Summary types.Object `tfsdk:"summary" tf:"object"`
 }
 
 func (newState *Listing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Listing) {
@@ -1065,16 +1463,23 @@ func (newState *Listing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Listing) {
 func (newState *Listing) SyncEffectiveFieldsDuringRead(existingState Listing) {
 }
 
+func (a Listing) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Detail":  reflect.TypeOf(ListingDetail{}),
+		"Summary": reflect.TypeOf(ListingSummary{}),
+	}
+}
+
 type ListingDetail struct {
 	// Type of assets included in the listing. eg. GIT_REPO, DATA_TABLE, MODEL,
 	// NOTEBOOK
-	Assets []types.String `tfsdk:"assets" tf:"optional"`
+	Assets types.List `tfsdk:"assets" tf:"optional"`
 	// The ending date timestamp for when the data spans
 	CollectionDateEnd types.Int64 `tfsdk:"collection_date_end" tf:"optional"`
 	// The starting date timestamp for when the data spans
 	CollectionDateStart types.Int64 `tfsdk:"collection_date_start" tf:"optional"`
 	// Smallest unit of time in the dataset
-	CollectionGranularity []DataRefreshInfo `tfsdk:"collection_granularity" tf:"optional,object"`
+	CollectionGranularity types.Object `tfsdk:"collection_granularity" tf:"optional,object"`
 	// Whether the dataset is free or paid
 	Cost types.String `tfsdk:"cost" tf:"optional"`
 	// Where/how the data is sourced
@@ -1084,9 +1489,9 @@ type ListingDetail struct {
 
 	DocumentationLink types.String `tfsdk:"documentation_link" tf:"optional"`
 
-	EmbeddedNotebookFileInfos []FileInfo `tfsdk:"embedded_notebook_file_infos" tf:"optional"`
+	EmbeddedNotebookFileInfos types.List `tfsdk:"embedded_notebook_file_infos" tf:"optional"`
 
-	FileIds []types.String `tfsdk:"file_ids" tf:"optional"`
+	FileIds types.List `tfsdk:"file_ids" tf:"optional"`
 	// Which geo region the listing data is collected from
 	GeographicalCoverage types.String `tfsdk:"geographical_coverage" tf:"optional"`
 	// ID 20, 21 removed don't use License of the data asset - Required for
@@ -1109,17 +1514,28 @@ type ListingDetail struct {
 	// the field is optional and won't need to have NOT NULL integrity check 2.
 	// The value is fairly fixed, static and low cardinality (eg. enums). 3. The
 	// value won't be used in filters or joins with other tables.
-	Tags []ListingTag `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags" tf:"optional"`
 
 	TermsOfService types.String `tfsdk:"terms_of_service" tf:"optional"`
 	// How often data is updated
-	UpdateFrequency []DataRefreshInfo `tfsdk:"update_frequency" tf:"optional,object"`
+	UpdateFrequency types.Object `tfsdk:"update_frequency" tf:"optional,object"`
 }
 
 func (newState *ListingDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingDetail) {
 }
 
 func (newState *ListingDetail) SyncEffectiveFieldsDuringRead(existingState ListingDetail) {
+}
+
+func (a ListingDetail) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Assets":                    reflect.TypeOf(""),
+		"CollectionGranularity":     reflect.TypeOf(DataRefreshInfo{}),
+		"EmbeddedNotebookFileInfos": reflect.TypeOf(FileInfo{}),
+		"FileIds":                   reflect.TypeOf(""),
+		"Tags":                      reflect.TypeOf(ListingTag{}),
+		"UpdateFrequency":           reflect.TypeOf(DataRefreshInfo{}),
+	}
 }
 
 type ListingFulfillment struct {
@@ -1129,15 +1545,22 @@ type ListingFulfillment struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
-	RepoInfo []RepoInfo `tfsdk:"repo_info" tf:"optional,object"`
+	RepoInfo types.Object `tfsdk:"repo_info" tf:"optional,object"`
 
-	ShareInfo []ShareInfo `tfsdk:"share_info" tf:"optional,object"`
+	ShareInfo types.Object `tfsdk:"share_info" tf:"optional,object"`
 }
 
 func (newState *ListingFulfillment) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingFulfillment) {
 }
 
 func (newState *ListingFulfillment) SyncEffectiveFieldsDuringRead(existingState ListingFulfillment) {
+}
+
+func (a ListingFulfillment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RepoInfo":  reflect.TypeOf(RepoInfo{}),
+		"ShareInfo": reflect.TypeOf(ShareInfo{}),
+	}
 }
 
 type ListingSetting struct {
@@ -1150,9 +1573,13 @@ func (newState *ListingSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan Lis
 func (newState *ListingSetting) SyncEffectiveFieldsDuringRead(existingState ListingSetting) {
 }
 
+func (a ListingSetting) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Next Number: 26
 type ListingSummary struct {
-	Categories []types.String `tfsdk:"categories" tf:"optional"`
+	Categories types.List `tfsdk:"categories" tf:"optional"`
 
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -1160,10 +1587,10 @@ type ListingSummary struct {
 
 	CreatedById types.Int64 `tfsdk:"created_by_id" tf:"optional"`
 
-	ExchangeIds []types.String `tfsdk:"exchange_ids" tf:"optional"`
+	ExchangeIds types.List `tfsdk:"exchange_ids" tf:"optional"`
 	// if a git repo is being created, a listing will be initialized with this
 	// field as opposed to a share
-	GitRepo []RepoInfo `tfsdk:"git_repo" tf:"optional,object"`
+	GitRepo types.Object `tfsdk:"git_repo" tf:"optional,object"`
 
 	ListingType types.String `tfsdk:"listingType" tf:""`
 
@@ -1171,15 +1598,15 @@ type ListingSummary struct {
 
 	ProviderId types.String `tfsdk:"provider_id" tf:"optional"`
 
-	ProviderRegion []RegionInfo `tfsdk:"provider_region" tf:"optional,object"`
+	ProviderRegion types.Object `tfsdk:"provider_region" tf:"optional,object"`
 
 	PublishedAt types.Int64 `tfsdk:"published_at" tf:"optional"`
 
 	PublishedBy types.String `tfsdk:"published_by" tf:"optional"`
 
-	Setting []ListingSetting `tfsdk:"setting" tf:"optional,object"`
+	Setting types.Object `tfsdk:"setting" tf:"optional,object"`
 
-	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
+	Share types.Object `tfsdk:"share" tf:"optional,object"`
 	// Enums
 	Status types.String `tfsdk:"status" tf:"optional"`
 
@@ -1198,12 +1625,23 @@ func (newState *ListingSummary) SyncEffectiveFieldsDuringCreateOrUpdate(plan Lis
 func (newState *ListingSummary) SyncEffectiveFieldsDuringRead(existingState ListingSummary) {
 }
 
+func (a ListingSummary) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Categories":     reflect.TypeOf(""),
+		"ExchangeIds":    reflect.TypeOf(""),
+		"GitRepo":        reflect.TypeOf(RepoInfo{}),
+		"ProviderRegion": reflect.TypeOf(RegionInfo{}),
+		"Setting":        reflect.TypeOf(ListingSetting{}),
+		"Share":          reflect.TypeOf(ShareInfo{}),
+	}
+}
+
 type ListingTag struct {
 	// Tag name (enum)
 	TagName types.String `tfsdk:"tag_name" tf:"optional"`
 	// String representation of the tag value. Values should be string literals
 	// (no complex types)
-	TagValues []types.String `tfsdk:"tag_values" tf:"optional"`
+	TagValues types.List `tfsdk:"tag_values" tf:"optional"`
 }
 
 func (newState *ListingTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingTag) {
@@ -1212,13 +1650,19 @@ func (newState *ListingTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan Listing
 func (newState *ListingTag) SyncEffectiveFieldsDuringRead(existingState ListingTag) {
 }
 
+func (a ListingTag) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"TagValues": reflect.TypeOf(""),
+	}
+}
+
 type PersonalizationRequest struct {
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 
-	ConsumerRegion []RegionInfo `tfsdk:"consumer_region" tf:"object"`
+	ConsumerRegion types.Object `tfsdk:"consumer_region" tf:"object"`
 	// contact info for the consumer requesting data or performing a listing
 	// installation
-	ContactInfo []ContactInfo `tfsdk:"contact_info" tf:"optional,object"`
+	ContactInfo types.Object `tfsdk:"contact_info" tf:"optional,object"`
 
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -1238,7 +1682,7 @@ type PersonalizationRequest struct {
 
 	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
 
-	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
+	Share types.Object `tfsdk:"share" tf:"optional,object"`
 
 	Status types.String `tfsdk:"status" tf:"optional"`
 
@@ -1253,6 +1697,14 @@ func (newState *PersonalizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *PersonalizationRequest) SyncEffectiveFieldsDuringRead(existingState PersonalizationRequest) {
 }
 
+func (a PersonalizationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ConsumerRegion": reflect.TypeOf(RegionInfo{}),
+		"ContactInfo":    reflect.TypeOf(ContactInfo{}),
+		"Share":          reflect.TypeOf(ShareInfo{}),
+	}
+}
+
 type ProviderAnalyticsDashboard struct {
 	Id types.String `tfsdk:"id" tf:""`
 }
@@ -1261,6 +1713,10 @@ func (newState *ProviderAnalyticsDashboard) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *ProviderAnalyticsDashboard) SyncEffectiveFieldsDuringRead(existingState ProviderAnalyticsDashboard) {
+}
+
+func (a ProviderAnalyticsDashboard) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type ProviderInfo struct {
@@ -1299,6 +1755,10 @@ func (newState *ProviderInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Provi
 func (newState *ProviderInfo) SyncEffectiveFieldsDuringRead(existingState ProviderInfo) {
 }
 
+func (a ProviderInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RegionInfo struct {
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
 
@@ -1309,6 +1769,10 @@ func (newState *RegionInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegionI
 }
 
 func (newState *RegionInfo) SyncEffectiveFieldsDuringRead(existingState RegionInfo) {
+}
+
+func (a RegionInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Remove an exchange for listing
@@ -1322,6 +1786,10 @@ func (newState *RemoveExchangeForListingRequest) SyncEffectiveFieldsDuringCreate
 func (newState *RemoveExchangeForListingRequest) SyncEffectiveFieldsDuringRead(existingState RemoveExchangeForListingRequest) {
 }
 
+func (a RemoveExchangeForListingRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RemoveExchangeForListingResponse struct {
 }
 
@@ -1329,6 +1797,10 @@ func (newState *RemoveExchangeForListingResponse) SyncEffectiveFieldsDuringCreat
 }
 
 func (newState *RemoveExchangeForListingResponse) SyncEffectiveFieldsDuringRead(existingState RemoveExchangeForListingResponse) {
+}
+
+func (a RemoveExchangeForListingResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RepoInfo struct {
@@ -1340,6 +1812,10 @@ func (newState *RepoInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInfo)
 }
 
 func (newState *RepoInfo) SyncEffectiveFieldsDuringRead(existingState RepoInfo) {
+}
+
+func (a RepoInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type RepoInstallation struct {
@@ -1357,12 +1833,16 @@ func (newState *RepoInstallation) SyncEffectiveFieldsDuringCreateOrUpdate(plan R
 func (newState *RepoInstallation) SyncEffectiveFieldsDuringRead(existingState RepoInstallation) {
 }
 
+func (a RepoInstallation) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Search listings
 type SearchListingsRequest struct {
 	// Matches any of the following asset types
-	Assets []types.String `tfsdk:"-"`
+	Assets types.List `tfsdk:"-"`
 	// Matches any of the following categories
-	Categories []types.String `tfsdk:"-"`
+	Categories types.List `tfsdk:"-"`
 
 	IsFree types.Bool `tfsdk:"-"`
 
@@ -1372,7 +1852,7 @@ type SearchListingsRequest struct {
 
 	PageToken types.String `tfsdk:"-"`
 	// Matches any of the following provider ids
-	ProviderIds []types.String `tfsdk:"-"`
+	ProviderIds types.List `tfsdk:"-"`
 	// Fuzzy matches query
 	Query types.String `tfsdk:"-"`
 }
@@ -1383,8 +1863,16 @@ func (newState *SearchListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *SearchListingsRequest) SyncEffectiveFieldsDuringRead(existingState SearchListingsRequest) {
 }
 
+func (a SearchListingsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Assets":      reflect.TypeOf(""),
+		"Categories":  reflect.TypeOf(""),
+		"ProviderIds": reflect.TypeOf(""),
+	}
+}
+
 type SearchListingsResponse struct {
-	Listings []Listing `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings" tf:"optional"`
 
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
@@ -1393,6 +1881,12 @@ func (newState *SearchListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *SearchListingsResponse) SyncEffectiveFieldsDuringRead(existingState SearchListingsResponse) {
+}
+
+func (a SearchListingsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Listings": reflect.TypeOf(Listing{}),
+	}
 }
 
 type ShareInfo struct {
@@ -1407,6 +1901,10 @@ func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInf
 func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
 }
 
+func (a ShareInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type SharedDataObject struct {
 	// The type of the data object. Could be one of: TABLE, SCHEMA,
 	// NOTEBOOK_FILE, MODEL, VOLUME
@@ -1419,6 +1917,10 @@ func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 }
 
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState SharedDataObject) {
+}
+
+func (a SharedDataObject) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type TokenDetail struct {
@@ -1437,6 +1939,10 @@ func (newState *TokenDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenD
 }
 
 func (newState *TokenDetail) SyncEffectiveFieldsDuringRead(existingState TokenDetail) {
+}
+
+func (a TokenDetail) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type TokenInfo struct {
@@ -1463,8 +1969,12 @@ func (newState *TokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenInf
 func (newState *TokenInfo) SyncEffectiveFieldsDuringRead(existingState TokenInfo) {
 }
 
+func (a TokenInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateExchangeFilterRequest struct {
-	Filter []ExchangeFilter `tfsdk:"filter" tf:"object"`
+	Filter types.Object `tfsdk:"filter" tf:"object"`
 
 	Id types.String `tfsdk:"-"`
 }
@@ -1475,8 +1985,14 @@ func (newState *UpdateExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *UpdateExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeFilterRequest) {
 }
 
+func (a UpdateExchangeFilterRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Filter": reflect.TypeOf(ExchangeFilter{}),
+	}
+}
+
 type UpdateExchangeFilterResponse struct {
-	Filter []ExchangeFilter `tfsdk:"filter" tf:"optional,object"`
+	Filter types.Object `tfsdk:"filter" tf:"optional,object"`
 }
 
 func (newState *UpdateExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeFilterResponse) {
@@ -1485,8 +2001,14 @@ func (newState *UpdateExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *UpdateExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeFilterResponse) {
 }
 
+func (a UpdateExchangeFilterResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Filter": reflect.TypeOf(ExchangeFilter{}),
+	}
+}
+
 type UpdateExchangeRequest struct {
-	Exchange []Exchange `tfsdk:"exchange" tf:"object"`
+	Exchange types.Object `tfsdk:"exchange" tf:"object"`
 
 	Id types.String `tfsdk:"-"`
 }
@@ -1497,8 +2019,14 @@ func (newState *UpdateExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *UpdateExchangeRequest) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeRequest) {
 }
 
+func (a UpdateExchangeRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Exchange": reflect.TypeOf(Exchange{}),
+	}
+}
+
 type UpdateExchangeResponse struct {
-	Exchange []Exchange `tfsdk:"exchange" tf:"optional,object"`
+	Exchange types.Object `tfsdk:"exchange" tf:"optional,object"`
 }
 
 func (newState *UpdateExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeResponse) {
@@ -1507,8 +2035,14 @@ func (newState *UpdateExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *UpdateExchangeResponse) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeResponse) {
 }
 
+func (a UpdateExchangeResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Exchange": reflect.TypeOf(Exchange{}),
+	}
+}
+
 type UpdateInstallationRequest struct {
-	Installation []InstallationDetail `tfsdk:"installation" tf:"object"`
+	Installation types.Object `tfsdk:"installation" tf:"object"`
 
 	InstallationId types.String `tfsdk:"-"`
 
@@ -1523,8 +2057,14 @@ func (newState *UpdateInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *UpdateInstallationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateInstallationRequest) {
 }
 
+func (a UpdateInstallationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Installation": reflect.TypeOf(InstallationDetail{}),
+	}
+}
+
 type UpdateInstallationResponse struct {
-	Installation []InstallationDetail `tfsdk:"installation" tf:"optional,object"`
+	Installation types.Object `tfsdk:"installation" tf:"optional,object"`
 }
 
 func (newState *UpdateInstallationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInstallationResponse) {
@@ -1533,10 +2073,16 @@ func (newState *UpdateInstallationResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UpdateInstallationResponse) SyncEffectiveFieldsDuringRead(existingState UpdateInstallationResponse) {
 }
 
+func (a UpdateInstallationResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Installation": reflect.TypeOf(InstallationDetail{}),
+	}
+}
+
 type UpdateListingRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Listing []Listing `tfsdk:"listing" tf:"object"`
+	Listing types.Object `tfsdk:"listing" tf:"object"`
 }
 
 func (newState *UpdateListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateListingRequest) {
@@ -1545,14 +2091,26 @@ func (newState *UpdateListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *UpdateListingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateListingRequest) {
 }
 
+func (a UpdateListingRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Listing": reflect.TypeOf(Listing{}),
+	}
+}
+
 type UpdateListingResponse struct {
-	Listing []Listing `tfsdk:"listing" tf:"optional,object"`
+	Listing types.Object `tfsdk:"listing" tf:"optional,object"`
 }
 
 func (newState *UpdateListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateListingResponse) {
 }
 
 func (newState *UpdateListingResponse) SyncEffectiveFieldsDuringRead(existingState UpdateListingResponse) {
+}
+
+func (a UpdateListingResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Listing": reflect.TypeOf(Listing{}),
+	}
 }
 
 type UpdatePersonalizationRequestRequest struct {
@@ -1562,7 +2120,7 @@ type UpdatePersonalizationRequestRequest struct {
 
 	RequestId types.String `tfsdk:"-"`
 
-	Share []ShareInfo `tfsdk:"share" tf:"optional,object"`
+	Share types.Object `tfsdk:"share" tf:"optional,object"`
 
 	Status types.String `tfsdk:"status" tf:""`
 }
@@ -1573,14 +2131,26 @@ func (newState *UpdatePersonalizationRequestRequest) SyncEffectiveFieldsDuringCr
 func (newState *UpdatePersonalizationRequestRequest) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalizationRequestRequest) {
 }
 
+func (a UpdatePersonalizationRequestRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Share": reflect.TypeOf(ShareInfo{}),
+	}
+}
+
 type UpdatePersonalizationRequestResponse struct {
-	Request []PersonalizationRequest `tfsdk:"request" tf:"optional,object"`
+	Request types.Object `tfsdk:"request" tf:"optional,object"`
 }
 
 func (newState *UpdatePersonalizationRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalizationRequestResponse) {
 }
 
 func (newState *UpdatePersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalizationRequestResponse) {
+}
+
+func (a UpdatePersonalizationRequestResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Request": reflect.TypeOf(PersonalizationRequest{}),
+	}
 }
 
 type UpdateProviderAnalyticsDashboardRequest struct {
@@ -1598,6 +2168,10 @@ func (newState *UpdateProviderAnalyticsDashboardRequest) SyncEffectiveFieldsDuri
 func (newState *UpdateProviderAnalyticsDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateProviderAnalyticsDashboardRequest) {
 }
 
+func (a UpdateProviderAnalyticsDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateProviderAnalyticsDashboardResponse struct {
 	// this is newly created Lakeview dashboard for the user
 	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
@@ -1613,10 +2187,14 @@ func (newState *UpdateProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDur
 func (newState *UpdateProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UpdateProviderAnalyticsDashboardResponse) {
 }
 
+func (a UpdateProviderAnalyticsDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateProviderRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Provider []ProviderInfo `tfsdk:"provider" tf:"object"`
+	Provider types.Object `tfsdk:"provider" tf:"object"`
 }
 
 func (newState *UpdateProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderRequest) {
@@ -1625,12 +2203,24 @@ func (newState *UpdateProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *UpdateProviderRequest) SyncEffectiveFieldsDuringRead(existingState UpdateProviderRequest) {
 }
 
+func (a UpdateProviderRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Provider": reflect.TypeOf(ProviderInfo{}),
+	}
+}
+
 type UpdateProviderResponse struct {
-	Provider []ProviderInfo `tfsdk:"provider" tf:"optional,object"`
+	Provider types.Object `tfsdk:"provider" tf:"optional,object"`
 }
 
 func (newState *UpdateProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderResponse) {
 }
 
 func (newState *UpdateProviderResponse) SyncEffectiveFieldsDuringRead(existingState UpdateProviderResponse) {
+}
+
+func (a UpdateProviderResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Provider": reflect.TypeOf(ProviderInfo{}),
+	}
 }

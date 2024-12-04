@@ -20,6 +20,10 @@ type structTag struct {
 	singleObject bool
 }
 
+type complexFieldTypeProvider interface {
+	GetComplexFieldTypes() map[string]reflect.Type
+}
+
 func typeToSchema(v reflect.Value) NestedBlockObject {
 	scmAttr := map[string]AttributeBuilder{}
 	scmBlock := map[string]BlockBuilder{}
@@ -32,6 +36,13 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 		panic(fmt.Errorf("schema value of Struct is expected, but got %s: %#v. %s", rk.String(), v, common.TerraformBugErrorMessage))
 	}
 	fields := tfreflect.ListAllFields(v)
+
+	// Get metadata about complex fields
+	var complexFieldTypes map[string]reflect.Type
+	if provider, ok := v.Interface().(complexFieldTypeProvider); ok {
+		complexFieldTypes = provider.GetComplexFieldTypes()
+	}
+
 	for _, field := range fields {
 		typeField := field.StructField
 		fieldName := typeField.Tag.Get("tfsdk")
@@ -174,10 +185,24 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 					Required: !structTag.optional,
 					Computed: structTag.computed,
 				}
-			case types.List:
-				panic(fmt.Errorf("types.List should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage))
-			case types.Map:
-				panic(fmt.Errorf("types.Map should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage))
+			case types.Object, types.List:
+				// Look up nested struct type
+				if complexFieldTypes == nil {
+					panic(fmt.Errorf("complex field types not provided for type: %T. %s", v.Interface(), common.TerraformBugErrorMessage))
+				}
+				fieldType, ok := complexFieldTypes[fieldName]
+				if !ok {
+					panic(fmt.Errorf("complex field type not found for field %s on type %T. %s", typeField.Name, v.Interface(), common.TerraformBugErrorMessage))
+				}
+				fieldValue := reflect.New(fieldType).Elem()
+
+				// Generate the nested block schema
+				// Note: Objects are treated as lists for backward compatibility with the Terraform v5 protocol (i.e. SDKv2 resources).
+				scmBlock[fieldName] = ListNestedBlockBuilder{
+					NestedObject: typeToSchema(fieldValue),
+				}
+			case types.Set, types.Tuple, types.Map:
+				panic(fmt.Errorf("%T should never be used in tfsdk structs. %s", value.Interface(), common.TerraformBugErrorMessage))
 			default:
 				// If it is a real stuct instead of a tfsdk type, recursively resolve it.
 				elem := typeFieldType

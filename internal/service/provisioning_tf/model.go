@@ -11,17 +11,25 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package provisioning_tf
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type AwsCredentials struct {
-	StsRole []StsRole `tfsdk:"sts_role" tf:"optional,object"`
+	StsRole types.Object `tfsdk:"sts_role" tf:"optional,object"`
 }
 
 func (newState *AwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsCredentials) {
 }
 
 func (newState *AwsCredentials) SyncEffectiveFieldsDuringRead(existingState AwsCredentials) {
+}
+
+func (a AwsCredentials) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"StsRole": reflect.TypeOf(StsRole{}),
+	}
 }
 
 type AwsKeyInfo struct {
@@ -44,6 +52,10 @@ func (newState *AwsKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsKeyI
 func (newState *AwsKeyInfo) SyncEffectiveFieldsDuringRead(existingState AwsKeyInfo) {
 }
 
+func (a AwsKeyInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type AzureWorkspaceInfo struct {
 	// Azure Resource Group name
 	ResourceGroup types.String `tfsdk:"resource_group" tf:"optional"`
@@ -57,16 +69,26 @@ func (newState *AzureWorkspaceInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *AzureWorkspaceInfo) SyncEffectiveFieldsDuringRead(existingState AzureWorkspaceInfo) {
 }
 
+func (a AzureWorkspaceInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // The general workspace configurations that are specific to cloud providers.
 type CloudResourceContainer struct {
 	// The general workspace configurations that are specific to Google Cloud.
-	Gcp []CustomerFacingGcpCloudResourceContainer `tfsdk:"gcp" tf:"optional,object"`
+	Gcp types.Object `tfsdk:"gcp" tf:"optional,object"`
 }
 
 func (newState *CloudResourceContainer) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudResourceContainer) {
 }
 
 func (newState *CloudResourceContainer) SyncEffectiveFieldsDuringRead(existingState CloudResourceContainer) {
+}
+
+func (a CloudResourceContainer) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Gcp": reflect.TypeOf(CustomerFacingGcpCloudResourceContainer{}),
+	}
 }
 
 type CreateAwsKeyInfo struct {
@@ -88,8 +110,12 @@ func (newState *CreateAwsKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan C
 func (newState *CreateAwsKeyInfo) SyncEffectiveFieldsDuringRead(existingState CreateAwsKeyInfo) {
 }
 
+func (a CreateAwsKeyInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateCredentialAwsCredentials struct {
-	StsRole []CreateCredentialStsRole `tfsdk:"sts_role" tf:"optional,object"`
+	StsRole types.Object `tfsdk:"sts_role" tf:"optional,object"`
 }
 
 func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialAwsCredentials) {
@@ -98,8 +124,14 @@ func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringCreateO
 func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringRead(existingState CreateCredentialAwsCredentials) {
 }
 
+func (a CreateCredentialAwsCredentials) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"StsRole": reflect.TypeOf(CreateCredentialStsRole{}),
+	}
+}
+
 type CreateCredentialRequest struct {
-	AwsCredentials []CreateCredentialAwsCredentials `tfsdk:"aws_credentials" tf:"object"`
+	AwsCredentials types.Object `tfsdk:"aws_credentials" tf:"object"`
 	// The human-readable name of the credential configuration object.
 	CredentialsName types.String `tfsdk:"credentials_name" tf:""`
 }
@@ -108,6 +140,12 @@ func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringRead(existingState CreateCredentialRequest) {
+}
+
+func (a CreateCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AwsCredentials": reflect.TypeOf(CreateCredentialAwsCredentials{}),
+	}
 }
 
 type CreateCredentialStsRole struct {
@@ -121,18 +159,30 @@ func (newState *CreateCredentialStsRole) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateCredentialStsRole) SyncEffectiveFieldsDuringRead(existingState CreateCredentialStsRole) {
 }
 
-type CreateCustomerManagedKeyRequest struct {
-	AwsKeyInfo []CreateAwsKeyInfo `tfsdk:"aws_key_info" tf:"optional,object"`
+func (a CreateCredentialStsRole) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
 
-	GcpKeyInfo []CreateGcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional,object"`
+type CreateCustomerManagedKeyRequest struct {
+	AwsKeyInfo types.Object `tfsdk:"aws_key_info" tf:"optional,object"`
+
+	GcpKeyInfo types.Object `tfsdk:"gcp_key_info" tf:"optional,object"`
 	// The cases that the key can be used for.
-	UseCases []types.String `tfsdk:"use_cases" tf:""`
+	UseCases types.List `tfsdk:"use_cases" tf:""`
 }
 
 func (newState *CreateCustomerManagedKeyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomerManagedKeyRequest) {
 }
 
 func (newState *CreateCustomerManagedKeyRequest) SyncEffectiveFieldsDuringRead(existingState CreateCustomerManagedKeyRequest) {
+}
+
+func (a CreateCustomerManagedKeyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AwsKeyInfo": reflect.TypeOf(CreateAwsKeyInfo{}),
+		"GcpKeyInfo": reflect.TypeOf(CreateGcpKeyInfo{}),
+		"UseCases":   reflect.TypeOf(""),
+	}
 }
 
 type CreateGcpKeyInfo struct {
@@ -146,23 +196,27 @@ func (newState *CreateGcpKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan C
 func (newState *CreateGcpKeyInfo) SyncEffectiveFieldsDuringRead(existingState CreateGcpKeyInfo) {
 }
 
+func (a CreateGcpKeyInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CreateNetworkRequest struct {
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
-	GcpNetworkInfo []GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional,object"`
+	GcpNetworkInfo types.Object `tfsdk:"gcp_network_info" tf:"optional,object"`
 	// The human-readable name of the network configuration.
 	NetworkName types.String `tfsdk:"network_name" tf:""`
 	// IDs of one to five security groups associated with this network. Security
 	// group IDs **cannot** be used in multiple network configurations.
-	SecurityGroupIds []types.String `tfsdk:"security_group_ids" tf:"optional"`
+	SecurityGroupIds types.List `tfsdk:"security_group_ids" tf:"optional"`
 	// IDs of at least two subnets associated with this network. Subnet IDs
 	// **cannot** be used in multiple network configurations.
-	SubnetIds []types.String `tfsdk:"subnet_ids" tf:"optional"`
+	SubnetIds types.List `tfsdk:"subnet_ids" tf:"optional"`
 	// If specified, contains the VPC endpoints used to allow cluster
 	// communication from this VPC over [AWS PrivateLink].
 	//
 	// [AWS PrivateLink]: https://aws.amazon.com/privatelink/
-	VpcEndpoints []NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional,object"`
+	VpcEndpoints types.Object `tfsdk:"vpc_endpoints" tf:"optional,object"`
 	// The ID of the VPC associated with this network. VPC IDs can be used in
 	// multiple network configurations.
 	VpcId types.String `tfsdk:"vpc_id" tf:"optional"`
@@ -174,9 +228,18 @@ func (newState *CreateNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *CreateNetworkRequest) SyncEffectiveFieldsDuringRead(existingState CreateNetworkRequest) {
 }
 
+func (a CreateNetworkRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"GcpNetworkInfo":   reflect.TypeOf(GcpNetworkInfo{}),
+		"SecurityGroupIds": reflect.TypeOf(""),
+		"SubnetIds":        reflect.TypeOf(""),
+		"VpcEndpoints":     reflect.TypeOf(NetworkVpcEndpoints{}),
+	}
+}
+
 type CreateStorageConfigurationRequest struct {
 	// Root S3 bucket information.
-	RootBucketInfo []RootBucketInfo `tfsdk:"root_bucket_info" tf:"object"`
+	RootBucketInfo types.Object `tfsdk:"root_bucket_info" tf:"object"`
 	// The human-readable name of the storage configuration.
 	StorageConfigurationName types.String `tfsdk:"storage_configuration_name" tf:""`
 }
@@ -187,12 +250,18 @@ func (newState *CreateStorageConfigurationRequest) SyncEffectiveFieldsDuringCrea
 func (newState *CreateStorageConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState CreateStorageConfigurationRequest) {
 }
 
+func (a CreateStorageConfigurationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RootBucketInfo": reflect.TypeOf(RootBucketInfo{}),
+	}
+}
+
 type CreateVpcEndpointRequest struct {
 	// The ID of the VPC endpoint object in AWS.
 	AwsVpcEndpointId types.String `tfsdk:"aws_vpc_endpoint_id" tf:"optional"`
 	// The Google Cloud specific information for this Private Service Connect
 	// endpoint.
-	GcpVpcEndpointInfo []GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional,object"`
+	GcpVpcEndpointInfo types.Object `tfsdk:"gcp_vpc_endpoint_info" tf:"optional,object"`
 	// The AWS region in which this VPC endpoint object exists.
 	Region types.String `tfsdk:"region" tf:"optional"`
 	// The human-readable name of the storage configuration.
@@ -205,6 +274,12 @@ func (newState *CreateVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState CreateVpcEndpointRequest) {
 }
 
+func (a CreateVpcEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"GcpVpcEndpointInfo": reflect.TypeOf(GcpVpcEndpointInfo{}),
+	}
+}
+
 type CreateWorkspaceRequest struct {
 	// The AWS region of the workspace's data plane.
 	AwsRegion types.String `tfsdk:"aws_region" tf:"optional"`
@@ -213,14 +288,14 @@ type CreateWorkspaceRequest struct {
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
 	// The general workspace configurations that are specific to cloud
 	// providers.
-	CloudResourceContainer []CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional,object"`
+	CloudResourceContainer types.Object `tfsdk:"cloud_resource_container" tf:"optional,object"`
 	// ID of the workspace's credential configuration object.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The custom tags key-value pairing that is attached to this workspace. The
 	// key-value pair is a string of utf-8 characters. The value can be an empty
 	// string, with maximum length of 255 characters. The key can be of maximum
 	// length of 127 characters, and cannot be empty.
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// The deployment name defines part of the subdomain for the workspace. The
 	// workspace URL for the web application and REST APIs is
 	// `<workspace-deployment-name>.cloud.databricks.com`. For example, if the
@@ -274,9 +349,9 @@ type CreateWorkspaceRequest struct {
 	// for a new workspace].
 	//
 	// [calculate subnet sizes for a new workspace]: https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/network-sizing.html
-	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
+	GcpManagedNetworkConfig types.Object `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
 	// The configurations for the GKE cluster of a Databricks workspace.
-	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional,object"`
+	GkeConfig types.Object `tfsdk:"gke_config" tf:"optional,object"`
 	// Whether no public IP is enabled for the workspace.
 	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
@@ -324,11 +399,20 @@ func (newState *CreateWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreateWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState CreateWorkspaceRequest) {
 }
 
+func (a CreateWorkspaceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"CloudResourceContainer":  reflect.TypeOf(CloudResourceContainer{}),
+		"CustomTags":              reflect.TypeOf(""),
+		"GcpManagedNetworkConfig": reflect.TypeOf(GcpManagedNetworkConfig{}),
+		"GkeConfig":               reflect.TypeOf(GkeConfig{}),
+	}
+}
+
 type Credential struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 
-	AwsCredentials []AwsCredentials `tfsdk:"aws_credentials" tf:"optional,object"`
+	AwsCredentials types.Object `tfsdk:"aws_credentials" tf:"optional,object"`
 	// Time in epoch milliseconds when the credential was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Databricks credential configuration ID.
@@ -341,6 +425,12 @@ func (newState *Credential) SyncEffectiveFieldsDuringCreateOrUpdate(plan Credent
 }
 
 func (newState *Credential) SyncEffectiveFieldsDuringRead(existingState Credential) {
+}
+
+func (a Credential) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AwsCredentials": reflect.TypeOf(AwsCredentials{}),
+	}
 }
 
 // The general workspace configurations that are specific to Google Cloud.
@@ -356,25 +446,37 @@ func (newState *CustomerFacingGcpCloudResourceContainer) SyncEffectiveFieldsDuri
 func (newState *CustomerFacingGcpCloudResourceContainer) SyncEffectiveFieldsDuringRead(existingState CustomerFacingGcpCloudResourceContainer) {
 }
 
+func (a CustomerFacingGcpCloudResourceContainer) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type CustomerManagedKey struct {
 	// The Databricks account ID that holds the customer-managed key.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 
-	AwsKeyInfo []AwsKeyInfo `tfsdk:"aws_key_info" tf:"optional,object"`
+	AwsKeyInfo types.Object `tfsdk:"aws_key_info" tf:"optional,object"`
 	// Time in epoch milliseconds when the customer key was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// ID of the encryption key configuration object.
 	CustomerManagedKeyId types.String `tfsdk:"customer_managed_key_id" tf:"optional"`
 
-	GcpKeyInfo []GcpKeyInfo `tfsdk:"gcp_key_info" tf:"optional,object"`
+	GcpKeyInfo types.Object `tfsdk:"gcp_key_info" tf:"optional,object"`
 	// The cases that the key can be used for.
-	UseCases []types.String `tfsdk:"use_cases" tf:"optional"`
+	UseCases types.List `tfsdk:"use_cases" tf:"optional"`
 }
 
 func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomerManagedKey) {
 }
 
 func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringRead(existingState CustomerManagedKey) {
+}
+
+func (a CustomerManagedKey) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AwsKeyInfo": reflect.TypeOf(AwsKeyInfo{}),
+		"GcpKeyInfo": reflect.TypeOf(GcpKeyInfo{}),
+		"UseCases":   reflect.TypeOf(""),
+	}
 }
 
 // Delete credential configuration
@@ -389,6 +491,10 @@ func (newState *DeleteCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *DeleteCredentialRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialRequest) {
 }
 
+func (a DeleteCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete encryption key configuration
 type DeleteEncryptionKeyRequest struct {
 	// Databricks encryption key configuration ID.
@@ -399,6 +505,10 @@ func (newState *DeleteEncryptionKeyRequest) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *DeleteEncryptionKeyRequest) SyncEffectiveFieldsDuringRead(existingState DeleteEncryptionKeyRequest) {
+}
+
+func (a DeleteEncryptionKeyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a network configuration
@@ -413,6 +523,10 @@ func (newState *DeleteNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DeleteNetworkRequest) SyncEffectiveFieldsDuringRead(existingState DeleteNetworkRequest) {
 }
 
+func (a DeleteNetworkRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a private access settings object
 type DeletePrivateAccesRequest struct {
 	// Databricks Account API private access settings ID.
@@ -425,6 +539,10 @@ func (newState *DeletePrivateAccesRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *DeletePrivateAccesRequest) SyncEffectiveFieldsDuringRead(existingState DeletePrivateAccesRequest) {
 }
 
+func (a DeletePrivateAccesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteResponse struct {
 }
 
@@ -432,6 +550,10 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 }
 
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+}
+
+func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete storage configuration
@@ -446,6 +568,10 @@ func (newState *DeleteStorageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DeleteStorageRequest) SyncEffectiveFieldsDuringRead(existingState DeleteStorageRequest) {
 }
 
+func (a DeleteStorageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete VPC endpoint configuration
 type DeleteVpcEndpointRequest struct {
 	// Databricks VPC endpoint ID.
@@ -458,6 +584,10 @@ func (newState *DeleteVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *DeleteVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState DeleteVpcEndpointRequest) {
 }
 
+func (a DeleteVpcEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a workspace
 type DeleteWorkspaceRequest struct {
 	// Workspace ID.
@@ -468,6 +598,10 @@ func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspaceRequest) {
+}
+
+func (a DeleteWorkspaceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type ExternalCustomerInfo struct {
@@ -485,6 +619,10 @@ func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringRead(existingState ExternalCustomerInfo) {
 }
 
+func (a ExternalCustomerInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GcpKeyInfo struct {
 	// The GCP KMS key's resource name
 	KmsKeyId types.String `tfsdk:"kms_key_id" tf:""`
@@ -494,6 +632,10 @@ func (newState *GcpKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpKeyI
 }
 
 func (newState *GcpKeyInfo) SyncEffectiveFieldsDuringRead(existingState GcpKeyInfo) {
+}
+
+func (a GcpKeyInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // The network settings for the workspace. The configurations are only for
@@ -537,6 +679,10 @@ func (newState *GcpManagedNetworkConfig) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *GcpManagedNetworkConfig) SyncEffectiveFieldsDuringRead(existingState GcpManagedNetworkConfig) {
 }
 
+func (a GcpManagedNetworkConfig) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // The Google Cloud specific information for this network (for example, the VPC
 // ID, subnet ID, and secondary IP ranges).
 type GcpNetworkInfo struct {
@@ -566,6 +712,10 @@ func (newState *GcpNetworkInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Gcp
 func (newState *GcpNetworkInfo) SyncEffectiveFieldsDuringRead(existingState GcpNetworkInfo) {
 }
 
+func (a GcpNetworkInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // The Google Cloud specific information for this Private Service Connect
 // endpoint.
 type GcpVpcEndpointInfo struct {
@@ -588,6 +738,10 @@ func (newState *GcpVpcEndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GcpVpcEndpointInfo) SyncEffectiveFieldsDuringRead(existingState GcpVpcEndpointInfo) {
 }
 
+func (a GcpVpcEndpointInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get credential configuration
 type GetCredentialRequest struct {
 	// Databricks Account API credential configuration ID
@@ -598,6 +752,10 @@ func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GetCredentialRequest) {
+}
+
+func (a GetCredentialRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get encryption key configuration
@@ -612,6 +770,10 @@ func (newState *GetEncryptionKeyRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *GetEncryptionKeyRequest) SyncEffectiveFieldsDuringRead(existingState GetEncryptionKeyRequest) {
 }
 
+func (a GetEncryptionKeyRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get a network configuration
 type GetNetworkRequest struct {
 	// Databricks Account API network configuration ID.
@@ -622,6 +784,10 @@ func (newState *GetNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *GetNetworkRequest) SyncEffectiveFieldsDuringRead(existingState GetNetworkRequest) {
+}
+
+func (a GetNetworkRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get a private access settings object
@@ -636,6 +802,10 @@ func (newState *GetPrivateAccesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *GetPrivateAccesRequest) SyncEffectiveFieldsDuringRead(existingState GetPrivateAccesRequest) {
 }
 
+func (a GetPrivateAccesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get storage configuration
 type GetStorageRequest struct {
 	// Databricks Account API storage configuration ID.
@@ -646,6 +816,10 @@ func (newState *GetStorageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *GetStorageRequest) SyncEffectiveFieldsDuringRead(existingState GetStorageRequest) {
+}
+
+func (a GetStorageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get a VPC endpoint configuration
@@ -660,6 +834,10 @@ func (newState *GetVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *GetVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState GetVpcEndpointRequest) {
 }
 
+func (a GetVpcEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get a workspace
 type GetWorkspaceRequest struct {
 	// Workspace ID.
@@ -670,6 +848,10 @@ func (newState *GetWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *GetWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceRequest) {
+}
+
+func (a GetWorkspaceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // The configurations for the GKE cluster of a Databricks workspace.
@@ -696,29 +878,33 @@ func (newState *GkeConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GkeConfi
 func (newState *GkeConfig) SyncEffectiveFieldsDuringRead(existingState GkeConfig) {
 }
 
+func (a GkeConfig) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Network struct {
 	// The Databricks account ID associated with this network configuration.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// Time in epoch milliseconds when the network was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Array of error messages about the network configuration.
-	ErrorMessages []NetworkHealth `tfsdk:"error_messages" tf:"computed,optional"`
+	ErrorMessages types.List `tfsdk:"error_messages" tf:"computed,optional"`
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
-	GcpNetworkInfo []GcpNetworkInfo `tfsdk:"gcp_network_info" tf:"optional,object"`
+	GcpNetworkInfo types.Object `tfsdk:"gcp_network_info" tf:"optional,object"`
 	// The Databricks network configuration ID.
 	NetworkId types.String `tfsdk:"network_id" tf:"optional"`
 	// The human-readable name of the network configuration.
 	NetworkName types.String `tfsdk:"network_name" tf:"optional"`
 
-	SecurityGroupIds []types.String `tfsdk:"security_group_ids" tf:"optional"`
+	SecurityGroupIds types.List `tfsdk:"security_group_ids" tf:"optional"`
 
-	SubnetIds []types.String `tfsdk:"subnet_ids" tf:"optional"`
+	SubnetIds types.List `tfsdk:"subnet_ids" tf:"optional"`
 	// If specified, contains the VPC endpoints used to allow cluster
 	// communication from this VPC over [AWS PrivateLink].
 	//
 	// [AWS PrivateLink]: https://aws.amazon.com/privatelink/
-	VpcEndpoints []NetworkVpcEndpoints `tfsdk:"vpc_endpoints" tf:"optional,object"`
+	VpcEndpoints types.Object `tfsdk:"vpc_endpoints" tf:"optional,object"`
 	// The ID of the VPC associated with this network configuration. VPC IDs can
 	// be used in multiple networks.
 	VpcId types.String `tfsdk:"vpc_id" tf:"optional"`
@@ -727,7 +913,7 @@ type Network struct {
 	// Broken. * `WARNED`: Warned.
 	VpcStatus types.String `tfsdk:"vpc_status" tf:"computed,optional"`
 	// Array of warning messages about the network configuration.
-	WarningMessages []NetworkWarning `tfsdk:"warning_messages" tf:"computed,optional"`
+	WarningMessages types.List `tfsdk:"warning_messages" tf:"computed,optional"`
 	// Workspace ID associated with this network configuration.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
 }
@@ -736,6 +922,17 @@ func (newState *Network) SyncEffectiveFieldsDuringCreateOrUpdate(plan Network) {
 }
 
 func (newState *Network) SyncEffectiveFieldsDuringRead(existingState Network) {
+}
+
+func (a Network) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ErrorMessages":    reflect.TypeOf(NetworkHealth{}),
+		"GcpNetworkInfo":   reflect.TypeOf(GcpNetworkInfo{}),
+		"SecurityGroupIds": reflect.TypeOf(""),
+		"SubnetIds":        reflect.TypeOf(""),
+		"VpcEndpoints":     reflect.TypeOf(NetworkVpcEndpoints{}),
+		"WarningMessages":  reflect.TypeOf(NetworkWarning{}),
+	}
 }
 
 type NetworkHealth struct {
@@ -752,6 +949,10 @@ func (newState *NetworkHealth) SyncEffectiveFieldsDuringCreateOrUpdate(plan Netw
 func (newState *NetworkHealth) SyncEffectiveFieldsDuringRead(existingState NetworkHealth) {
 }
 
+func (a NetworkHealth) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // If specified, contains the VPC endpoints used to allow cluster communication
 // from this VPC over [AWS PrivateLink].
 //
@@ -759,16 +960,23 @@ func (newState *NetworkHealth) SyncEffectiveFieldsDuringRead(existingState Netwo
 type NetworkVpcEndpoints struct {
 	// The VPC endpoint ID used by this network to access the Databricks secure
 	// cluster connectivity relay.
-	DataplaneRelay []types.String `tfsdk:"dataplane_relay" tf:""`
+	DataplaneRelay types.List `tfsdk:"dataplane_relay" tf:""`
 	// The VPC endpoint ID used by this network to access the Databricks REST
 	// API.
-	RestApi []types.String `tfsdk:"rest_api" tf:""`
+	RestApi types.List `tfsdk:"rest_api" tf:""`
 }
 
 func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkVpcEndpoints) {
 }
 
 func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringRead(existingState NetworkVpcEndpoints) {
+}
+
+func (a NetworkVpcEndpoints) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"DataplaneRelay": reflect.TypeOf(""),
+		"RestApi":        reflect.TypeOf(""),
+	}
 }
 
 type NetworkWarning struct {
@@ -785,11 +993,15 @@ func (newState *NetworkWarning) SyncEffectiveFieldsDuringCreateOrUpdate(plan Net
 func (newState *NetworkWarning) SyncEffectiveFieldsDuringRead(existingState NetworkWarning) {
 }
 
+func (a NetworkWarning) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PrivateAccessSettings struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// An array of Databricks VPC endpoint IDs.
-	AllowedVpcEndpointIds []types.String `tfsdk:"allowed_vpc_endpoint_ids" tf:"optional"`
+	AllowedVpcEndpointIds types.List `tfsdk:"allowed_vpc_endpoint_ids" tf:"optional"`
 	// The private access level controls which VPC endpoints can connect to the
 	// UI or API of any workspace that attaches this private access settings
 	// object. * `ACCOUNT` level access (the default) allows only VPC endpoints
@@ -818,6 +1030,12 @@ func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringRead(existingState PrivateAccessSettings) {
 }
 
+func (a PrivateAccessSettings) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllowedVpcEndpointIds": reflect.TypeOf(""),
+	}
+}
+
 type ReplaceResponse struct {
 }
 
@@ -825,6 +1043,10 @@ func (newState *ReplaceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Re
 }
 
 func (newState *ReplaceResponse) SyncEffectiveFieldsDuringRead(existingState ReplaceResponse) {
+}
+
+func (a ReplaceResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Root S3 bucket information.
@@ -839,13 +1061,17 @@ func (newState *RootBucketInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Roo
 func (newState *RootBucketInfo) SyncEffectiveFieldsDuringRead(existingState RootBucketInfo) {
 }
 
+func (a RootBucketInfo) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type StorageConfiguration struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"computed,optional"`
 	// Time in epoch milliseconds when the storage configuration was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// Root S3 bucket information.
-	RootBucketInfo []RootBucketInfo `tfsdk:"root_bucket_info" tf:"optional,object"`
+	RootBucketInfo types.Object `tfsdk:"root_bucket_info" tf:"optional,object"`
 	// Databricks storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"storage_configuration_id" tf:"optional"`
 	// The human-readable name of the storage configuration.
@@ -856,6 +1082,12 @@ func (newState *StorageConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *StorageConfiguration) SyncEffectiveFieldsDuringRead(existingState StorageConfiguration) {
+}
+
+func (a StorageConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RootBucketInfo": reflect.TypeOf(RootBucketInfo{}),
+	}
 }
 
 type StsRole struct {
@@ -872,6 +1104,10 @@ func (newState *StsRole) SyncEffectiveFieldsDuringCreateOrUpdate(plan StsRole) {
 func (newState *StsRole) SyncEffectiveFieldsDuringRead(existingState StsRole) {
 }
 
+func (a StsRole) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateResponse struct {
 }
 
@@ -879,6 +1115,10 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upd
 }
 
 func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
+}
+
+func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type UpdateWorkspaceRequest struct {
@@ -892,7 +1132,7 @@ type UpdateWorkspaceRequest struct {
 	// key-value pair is a string of utf-8 characters. The value can be an empty
 	// string, with maximum length of 255 characters. The key can be of maximum
 	// length of 127 characters, and cannot be empty.
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// The ID of the workspace's managed services encryption key configuration
 	// object. This parameter is available only for updating failed workspaces.
 	ManagedServicesCustomerManagedKeyId types.String `tfsdk:"managed_services_customer_managed_key_id" tf:"optional"`
@@ -922,6 +1162,12 @@ func (newState *UpdateWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *UpdateWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceRequest) {
 }
 
+func (a UpdateWorkspaceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"CustomTags": reflect.TypeOf(""),
+	}
+}
+
 type UpsertPrivateAccessSettingsRequest struct {
 	// An array of Databricks VPC endpoint IDs. This is the Databricks ID that
 	// is returned when registering the VPC endpoint configuration in your
@@ -937,7 +1183,7 @@ type UpsertPrivateAccessSettingsRequest struct {
 	// public internet, see [IP access lists].
 	//
 	// [IP access lists]: https://docs.databricks.com/security/network/ip-access-list.html
-	AllowedVpcEndpointIds []types.String `tfsdk:"allowed_vpc_endpoint_ids" tf:"optional"`
+	AllowedVpcEndpointIds types.List `tfsdk:"allowed_vpc_endpoint_ids" tf:"optional"`
 	// The private access level controls which VPC endpoints can connect to the
 	// UI or API of any workspace that attaches this private access settings
 	// object. * `ACCOUNT` level access (the default) allows only VPC endpoints
@@ -966,6 +1212,12 @@ func (newState *UpsertPrivateAccessSettingsRequest) SyncEffectiveFieldsDuringCre
 func (newState *UpsertPrivateAccessSettingsRequest) SyncEffectiveFieldsDuringRead(existingState UpsertPrivateAccessSettingsRequest) {
 }
 
+func (a UpsertPrivateAccessSettingsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllowedVpcEndpointIds": reflect.TypeOf(""),
+	}
+}
+
 type VpcEndpoint struct {
 	// The Databricks account ID that hosts the VPC endpoint configuration.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
@@ -982,7 +1234,7 @@ type VpcEndpoint struct {
 	AwsVpcEndpointId types.String `tfsdk:"aws_vpc_endpoint_id" tf:"optional"`
 	// The Google Cloud specific information for this Private Service Connect
 	// endpoint.
-	GcpVpcEndpointInfo []GcpVpcEndpointInfo `tfsdk:"gcp_vpc_endpoint_info" tf:"optional,object"`
+	GcpVpcEndpointInfo types.Object `tfsdk:"gcp_vpc_endpoint_info" tf:"optional,object"`
 	// The AWS region in which this VPC endpoint object exists.
 	Region types.String `tfsdk:"region" tf:"optional"`
 	// The current state (such as `available` or `rejected`) of the VPC
@@ -1010,18 +1262,24 @@ func (newState *VpcEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan VpcEnd
 func (newState *VpcEndpoint) SyncEffectiveFieldsDuringRead(existingState VpcEndpoint) {
 }
 
+func (a VpcEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"GcpVpcEndpointInfo": reflect.TypeOf(GcpVpcEndpointInfo{}),
+	}
+}
+
 type Workspace struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// The AWS region of the workspace data plane (for example, `us-west-2`).
 	AwsRegion types.String `tfsdk:"aws_region" tf:"optional"`
 
-	AzureWorkspaceInfo []AzureWorkspaceInfo `tfsdk:"azure_workspace_info" tf:"optional,object"`
+	AzureWorkspaceInfo types.Object `tfsdk:"azure_workspace_info" tf:"optional,object"`
 	// The cloud name. This field always has the value `gcp`.
 	Cloud types.String `tfsdk:"cloud" tf:"optional"`
 	// The general workspace configurations that are specific to cloud
 	// providers.
-	CloudResourceContainer []CloudResourceContainer `tfsdk:"cloud_resource_container" tf:"optional,object"`
+	CloudResourceContainer types.Object `tfsdk:"cloud_resource_container" tf:"optional,object"`
 	// Time in epoch milliseconds when the workspace was created.
 	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
 	// ID of the workspace's credential configuration object.
@@ -1030,7 +1288,7 @@ type Workspace struct {
 	// key-value pair is a string of utf-8 characters. The value can be an empty
 	// string, with maximum length of 255 characters. The key can be of maximum
 	// length of 127 characters, and cannot be empty.
-	CustomTags map[string]types.String `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
 	// The deployment name defines part of the subdomain for the workspace. The
 	// workspace URL for web application and REST APIs is
 	// `<deployment-name>.cloud.databricks.com`.
@@ -1041,7 +1299,7 @@ type Workspace struct {
 	// If this workspace is for a external customer, then external_customer_info
 	// is populated. If this workspace is not for a external customer, then
 	// external_customer_info is empty.
-	ExternalCustomerInfo []ExternalCustomerInfo `tfsdk:"external_customer_info" tf:"optional,object"`
+	ExternalCustomerInfo types.Object `tfsdk:"external_customer_info" tf:"optional,object"`
 	// The network settings for the workspace. The configurations are only for
 	// Databricks-managed VPCs. It is ignored if you specify a customer-managed
 	// VPC in the `network_id` field.", All the IP range configurations must be
@@ -1065,9 +1323,9 @@ type Workspace struct {
 	// for a new workspace].
 	//
 	// [calculate subnet sizes for a new workspace]: https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/network-sizing.html
-	GcpManagedNetworkConfig []GcpManagedNetworkConfig `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
+	GcpManagedNetworkConfig types.Object `tfsdk:"gcp_managed_network_config" tf:"optional,object"`
 	// The configurations for the GKE cluster of a Databricks workspace.
-	GkeConfig []GkeConfig `tfsdk:"gke_config" tf:"optional,object"`
+	GkeConfig types.Object `tfsdk:"gke_config" tf:"optional,object"`
 	// Whether no public IP is enabled for the workspace.
 	IsNoPublicIpEnabled types.Bool `tfsdk:"is_no_public_ip_enabled" tf:"optional"`
 	// The Google Cloud region of the workspace data plane in your Google
@@ -1114,4 +1372,15 @@ func (newState *Workspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspac
 }
 
 func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace) {
+}
+
+func (a Workspace) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AzureWorkspaceInfo":      reflect.TypeOf(AzureWorkspaceInfo{}),
+		"CloudResourceContainer":  reflect.TypeOf(CloudResourceContainer{}),
+		"CustomTags":              reflect.TypeOf(""),
+		"ExternalCustomerInfo":    reflect.TypeOf(ExternalCustomerInfo{}),
+		"GcpManagedNetworkConfig": reflect.TypeOf(GcpManagedNetworkConfig{}),
+		"GkeConfig":               reflect.TypeOf(GkeConfig{}),
+	}
 }

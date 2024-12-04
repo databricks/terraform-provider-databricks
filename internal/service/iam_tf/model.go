@@ -11,6 +11,8 @@ We use go-native types for lists and maps intentionally for the ease for convert
 package iam_tf
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -31,9 +33,13 @@ func (newState *AccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *AccessControlRequest) SyncEffectiveFieldsDuringRead(existingState AccessControlRequest) {
 }
 
+func (a AccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type AccessControlResponse struct {
 	// All permissions.
-	AllPermissions []Permission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
@@ -48,6 +54,12 @@ func (newState *AccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *AccessControlResponse) SyncEffectiveFieldsDuringRead(existingState AccessControlResponse) {
+}
+
+func (a AccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllPermissions": reflect.TypeOf(Permission{}),
+	}
 }
 
 type ComplexValue struct {
@@ -68,6 +80,10 @@ func (newState *ComplexValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan Compl
 func (newState *ComplexValue) SyncEffectiveFieldsDuringRead(existingState ComplexValue) {
 }
 
+func (a ComplexValue) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a group
 type DeleteAccountGroupRequest struct {
 	// Unique ID for a group in the Databricks account.
@@ -78,6 +94,10 @@ func (newState *DeleteAccountGroupRequest) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *DeleteAccountGroupRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountGroupRequest) {
+}
+
+func (a DeleteAccountGroupRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a service principal
@@ -92,6 +112,10 @@ func (newState *DeleteAccountServicePrincipalRequest) SyncEffectiveFieldsDuringC
 func (newState *DeleteAccountServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountServicePrincipalRequest) {
 }
 
+func (a DeleteAccountServicePrincipalRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a user
 type DeleteAccountUserRequest struct {
 	// Unique ID for a user in the Databricks account.
@@ -102,6 +126,10 @@ func (newState *DeleteAccountUserRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *DeleteAccountUserRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountUserRequest) {
+}
+
+func (a DeleteAccountUserRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a group
@@ -116,6 +144,10 @@ func (newState *DeleteGroupRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DeleteGroupRequest) SyncEffectiveFieldsDuringRead(existingState DeleteGroupRequest) {
 }
 
+func (a DeleteGroupRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteResponse struct {
 }
 
@@ -123,6 +155,10 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 }
 
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+}
+
+func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete a service principal
@@ -137,6 +173,10 @@ func (newState *DeleteServicePrincipalRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *DeleteServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existingState DeleteServicePrincipalRequest) {
 }
 
+func (a DeleteServicePrincipalRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Delete a user
 type DeleteUserRequest struct {
 	// Unique ID for a user in the Databricks workspace.
@@ -147,6 +187,10 @@ func (newState *DeleteUserRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *DeleteUserRequest) SyncEffectiveFieldsDuringRead(existingState DeleteUserRequest) {
+}
+
+func (a DeleteUserRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Delete permissions assignment
@@ -163,6 +207,10 @@ func (newState *DeleteWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringCreat
 func (newState *DeleteWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspaceAssignmentRequest) {
 }
 
+func (a DeleteWorkspaceAssignmentRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type DeleteWorkspacePermissionAssignmentResponse struct {
 }
 
@@ -170,6 +218,10 @@ func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFields
 }
 
 func (newState *DeleteWorkspacePermissionAssignmentResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspacePermissionAssignmentResponse) {
+}
+
+func (a DeleteWorkspacePermissionAssignmentResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get group details
@@ -184,6 +236,10 @@ func (newState *GetAccountGroupRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *GetAccountGroupRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountGroupRequest) {
 }
 
+func (a GetAccountGroupRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get service principal details
 type GetAccountServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks account.
@@ -194,6 +250,10 @@ func (newState *GetAccountServicePrincipalRequest) SyncEffectiveFieldsDuringCrea
 }
 
 func (newState *GetAccountServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountServicePrincipalRequest) {
+}
+
+func (a GetAccountServicePrincipalRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get user details
@@ -229,6 +289,10 @@ func (newState *GetAccountUserRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *GetAccountUserRequest) SyncEffectiveFieldsDuringRead(existingState GetAccountUserRequest) {
 }
 
+func (a GetAccountUserRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get assignable roles for a resource
 type GetAssignableRolesForResourceRequest struct {
 	// The resource name for which assignable roles will be listed.
@@ -241,14 +305,24 @@ func (newState *GetAssignableRolesForResourceRequest) SyncEffectiveFieldsDuringC
 func (newState *GetAssignableRolesForResourceRequest) SyncEffectiveFieldsDuringRead(existingState GetAssignableRolesForResourceRequest) {
 }
 
+func (a GetAssignableRolesForResourceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetAssignableRolesForResourceResponse struct {
-	Roles []Role `tfsdk:"roles" tf:"optional"`
+	Roles types.List `tfsdk:"roles" tf:"optional"`
 }
 
 func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAssignableRolesForResourceResponse) {
 }
 
 func (newState *GetAssignableRolesForResourceResponse) SyncEffectiveFieldsDuringRead(existingState GetAssignableRolesForResourceResponse) {
+}
+
+func (a GetAssignableRolesForResourceResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Roles": reflect.TypeOf(Role{}),
+	}
 }
 
 // Get group details
@@ -263,15 +337,25 @@ func (newState *GetGroupRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 func (newState *GetGroupRequest) SyncEffectiveFieldsDuringRead(existingState GetGroupRequest) {
 }
 
+func (a GetGroupRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetPasswordPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []PasswordPermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
 }
 
 func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPasswordPermissionLevelsResponse) {
 }
 
 func (newState *GetPasswordPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPasswordPermissionLevelsResponse) {
+}
+
+func (a GetPasswordPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionLevels": reflect.TypeOf(PasswordPermissionsDescription{}),
+	}
 }
 
 // Get object permission levels
@@ -288,15 +372,25 @@ func (newState *GetPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *GetPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetPermissionLevelsRequest) {
 }
 
+func (a GetPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GetPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels []PermissionsDescription `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
 }
 
 func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPermissionLevelsResponse) {
 }
 
 func (newState *GetPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPermissionLevelsResponse) {
+}
+
+func (a GetPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionLevels": reflect.TypeOf(PermissionsDescription{}),
+	}
 }
 
 // Get object permissions
@@ -315,6 +409,10 @@ func (newState *GetPermissionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *GetPermissionRequest) SyncEffectiveFieldsDuringRead(existingState GetPermissionRequest) {
+}
+
+func (a GetPermissionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get a rule set
@@ -338,6 +436,10 @@ func (newState *GetRuleSetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GetRuleSetRequest) SyncEffectiveFieldsDuringRead(existingState GetRuleSetRequest) {
 }
 
+func (a GetRuleSetRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // Get service principal details
 type GetServicePrincipalRequest struct {
 	// Unique ID for a service principal in the Databricks workspace.
@@ -348,6 +450,10 @@ func (newState *GetServicePrincipalRequest) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *GetServicePrincipalRequest) SyncEffectiveFieldsDuringRead(existingState GetServicePrincipalRequest) {
+}
+
+func (a GetServicePrincipalRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // Get user details
@@ -383,6 +489,10 @@ func (newState *GetUserRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Get
 func (newState *GetUserRequest) SyncEffectiveFieldsDuringRead(existingState GetUserRequest) {
 }
 
+func (a GetUserRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // List workspace permissions
 type GetWorkspaceAssignmentRequest struct {
 	// The workspace ID.
@@ -395,9 +505,13 @@ func (newState *GetWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceAssignmentRequest) {
 }
 
+func (a GetWorkspaceAssignmentRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type GrantRule struct {
 	// Principals this grant rule applies to.
-	Principals []types.String `tfsdk:"principals" tf:"optional"`
+	Principals types.List `tfsdk:"principals" tf:"optional"`
 	// Role that is assigned to the list of principals.
 	Role types.String `tfsdk:"role" tf:""`
 }
@@ -408,6 +522,12 @@ func (newState *GrantRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan GrantRul
 func (newState *GrantRule) SyncEffectiveFieldsDuringRead(existingState GrantRule) {
 }
 
+func (a GrantRule) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Principals": reflect.TypeOf(""),
+	}
+}
+
 type Group struct {
 	// String that represents a human-readable group name
 	DisplayName types.String `tfsdk:"displayName" tf:"optional"`
@@ -415,27 +535,38 @@ type Group struct {
 	// full list of supported values.
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
-	Entitlements []ComplexValue `tfsdk:"entitlements" tf:"optional"`
+	Entitlements types.List `tfsdk:"entitlements" tf:"optional"`
 
 	ExternalId types.String `tfsdk:"externalId" tf:"optional"`
 
-	Groups []ComplexValue `tfsdk:"groups" tf:"optional"`
+	Groups types.List `tfsdk:"groups" tf:"optional"`
 	// Databricks group ID
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Members []ComplexValue `tfsdk:"members" tf:"optional"`
+	Members types.List `tfsdk:"members" tf:"optional"`
 	// Container for the group identifier. Workspace local versus account.
-	Meta []ResourceMeta `tfsdk:"meta" tf:"optional,object"`
+	Meta types.Object `tfsdk:"meta" tf:"optional,object"`
 	// Corresponds to AWS instance profile/arn role.
-	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
+	Roles types.List `tfsdk:"roles" tf:"optional"`
 	// The schema of the group.
-	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
+	Schemas types.List `tfsdk:"schemas" tf:"optional"`
 }
 
 func (newState *Group) SyncEffectiveFieldsDuringCreateOrUpdate(plan Group) {
 }
 
 func (newState *Group) SyncEffectiveFieldsDuringRead(existingState Group) {
+}
+
+func (a Group) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Entitlements": reflect.TypeOf(ComplexValue{}),
+		"Groups":       reflect.TypeOf(ComplexValue{}),
+		"Members":      reflect.TypeOf(ComplexValue{}),
+		"Meta":         reflect.TypeOf(ResourceMeta{}),
+		"Roles":        reflect.TypeOf(ComplexValue{}),
+		"Schemas":      reflect.TypeOf(""),
+	}
 }
 
 // List group details
@@ -468,6 +599,10 @@ func (newState *ListAccountGroupsRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListAccountGroupsRequest) SyncEffectiveFieldsDuringRead(existingState ListAccountGroupsRequest) {
 }
 
+func (a ListAccountGroupsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // List service principals
 type ListAccountServicePrincipalsRequest struct {
 	// Comma-separated list of attributes to return in response.
@@ -496,6 +631,10 @@ func (newState *ListAccountServicePrincipalsRequest) SyncEffectiveFieldsDuringCr
 }
 
 func (newState *ListAccountServicePrincipalsRequest) SyncEffectiveFieldsDuringRead(existingState ListAccountServicePrincipalsRequest) {
+}
+
+func (a ListAccountServicePrincipalsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // List users
@@ -529,6 +668,10 @@ func (newState *ListAccountUsersRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ListAccountUsersRequest) SyncEffectiveFieldsDuringRead(existingState ListAccountUsersRequest) {
 }
 
+func (a ListAccountUsersRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 // List group details
 type ListGroupsRequest struct {
 	// Comma-separated list of attributes to return in response.
@@ -559,13 +702,17 @@ func (newState *ListGroupsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ListGroupsRequest) SyncEffectiveFieldsDuringRead(existingState ListGroupsRequest) {
 }
 
+func (a ListGroupsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListGroupsResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
 	// User objects returned in the response.
-	Resources []Group `tfsdk:"Resources" tf:"optional"`
+	Resources types.List `tfsdk:"Resources" tf:"optional"`
 	// The schema of the service principal.
-	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
+	Schemas types.List `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
 	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
@@ -579,13 +726,20 @@ func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringRead(existingState ListGroupsResponse) {
 }
 
+func (a ListGroupsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Resources": reflect.TypeOf(Group{}),
+		"Schemas":   reflect.TypeOf(""),
+	}
+}
+
 type ListServicePrincipalResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
 	// User objects returned in the response.
-	Resources []ServicePrincipal `tfsdk:"Resources" tf:"optional"`
+	Resources types.List `tfsdk:"Resources" tf:"optional"`
 	// The schema of the List response.
-	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
+	Schemas types.List `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
 	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
@@ -597,6 +751,13 @@ func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringCreateOrU
 }
 
 func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalResponse) {
+}
+
+func (a ListServicePrincipalResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Resources": reflect.TypeOf(ServicePrincipal{}),
+		"Schemas":   reflect.TypeOf(""),
+	}
 }
 
 // List service principals
@@ -627,6 +788,10 @@ func (newState *ListServicePrincipalsRequest) SyncEffectiveFieldsDuringCreateOrU
 }
 
 func (newState *ListServicePrincipalsRequest) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalsRequest) {
+}
+
+func (a ListServicePrincipalsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 // List users
@@ -660,13 +825,17 @@ func (newState *ListUsersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListUsersRequest) SyncEffectiveFieldsDuringRead(existingState ListUsersRequest) {
 }
 
+func (a ListUsersRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ListUsersResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
 	// User objects returned in the response.
-	Resources []User `tfsdk:"Resources" tf:"optional"`
+	Resources types.List `tfsdk:"Resources" tf:"optional"`
 	// The schema of the List response.
-	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
+	Schemas types.List `tfsdk:"schemas" tf:"optional"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
 	StartIndex types.Int64 `tfsdk:"startIndex" tf:"optional"`
@@ -680,6 +849,13 @@ func (newState *ListUsersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ListUsersResponse) SyncEffectiveFieldsDuringRead(existingState ListUsersResponse) {
 }
 
+func (a ListUsersResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Resources": reflect.TypeOf(User{}),
+		"Schemas":   reflect.TypeOf(""),
+	}
+}
+
 // Get permission assignments
 type ListWorkspaceAssignmentRequest struct {
 	// The workspace ID for the account.
@@ -690,6 +866,10 @@ func (newState *ListWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *ListWorkspaceAssignmentRequest) SyncEffectiveFieldsDuringRead(existingState ListWorkspaceAssignmentRequest) {
+}
+
+func (a ListWorkspaceAssignmentRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type MigratePermissionsRequest struct {
@@ -710,6 +890,10 @@ func (newState *MigratePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *MigratePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsRequest) {
 }
 
+func (a MigratePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type MigratePermissionsResponse struct {
 	// Number of permissions migrated.
 	PermissionsMigrated types.Int64 `tfsdk:"permissions_migrated" tf:"optional"`
@@ -719,6 +903,10 @@ func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *MigratePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState MigratePermissionsResponse) {
+}
+
+func (a MigratePermissionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Name struct {
@@ -734,8 +922,12 @@ func (newState *Name) SyncEffectiveFieldsDuringCreateOrUpdate(plan Name) {
 func (newState *Name) SyncEffectiveFieldsDuringRead(existingState Name) {
 }
 
+func (a Name) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ObjectPermissions struct {
-	AccessControlList []AccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
@@ -748,20 +940,33 @@ func (newState *ObjectPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ObjectPermissions) SyncEffectiveFieldsDuringRead(existingState ObjectPermissions) {
 }
 
+func (a ObjectPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(AccessControlResponse{}),
+	}
+}
+
 type PartialUpdate struct {
 	// Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
 
-	Operations []Patch `tfsdk:"Operations" tf:"optional"`
+	Operations types.List `tfsdk:"Operations" tf:"optional"`
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
-	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
+	Schemas types.List `tfsdk:"schemas" tf:"optional"`
 }
 
 func (newState *PartialUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartialUpdate) {
 }
 
 func (newState *PartialUpdate) SyncEffectiveFieldsDuringRead(existingState PartialUpdate) {
+}
+
+func (a PartialUpdate) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Operations": reflect.TypeOf(Patch{}),
+		"Schemas":    reflect.TypeOf(""),
+	}
 }
 
 type PasswordAccessControlRequest struct {
@@ -781,9 +986,13 @@ func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PasswordAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PasswordAccessControlRequest) {
 }
 
+func (a PasswordAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PasswordAccessControlResponse struct {
 	// All permissions.
-	AllPermissions []PasswordPermission `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
 	// name of the group
@@ -800,10 +1009,16 @@ func (newState *PasswordAccessControlResponse) SyncEffectiveFieldsDuringCreateOr
 func (newState *PasswordAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PasswordAccessControlResponse) {
 }
 
+func (a PasswordAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AllPermissions": reflect.TypeOf(PasswordPermission{}),
+	}
+}
+
 type PasswordPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
@@ -814,8 +1029,14 @@ func (newState *PasswordPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PasswordPermission) SyncEffectiveFieldsDuringRead(existingState PasswordPermission) {
 }
 
+func (a PasswordPermission) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InheritedFromObject": reflect.TypeOf(""),
+	}
+}
+
 type PasswordPermissions struct {
-	AccessControlList []PasswordAccessControlResponse `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
 	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
 
@@ -826,6 +1047,12 @@ func (newState *PasswordPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *PasswordPermissions) SyncEffectiveFieldsDuringRead(existingState PasswordPermissions) {
+}
+
+func (a PasswordPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(PasswordAccessControlResponse{}),
+	}
 }
 
 type PasswordPermissionsDescription struct {
@@ -840,14 +1067,24 @@ func (newState *PasswordPermissionsDescription) SyncEffectiveFieldsDuringCreateO
 func (newState *PasswordPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsDescription) {
 }
 
+func (a PasswordPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PasswordPermissionsRequest struct {
-	AccessControlList []PasswordAccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 }
 
 func (newState *PasswordPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PasswordPermissionsRequest) {
 }
 
 func (newState *PasswordPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PasswordPermissionsRequest) {
+}
+
+func (a PasswordPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(PasswordAccessControlRequest{}),
+	}
 }
 
 type Patch struct {
@@ -865,6 +1102,10 @@ func (newState *Patch) SyncEffectiveFieldsDuringCreateOrUpdate(plan Patch) {
 func (newState *Patch) SyncEffectiveFieldsDuringRead(existingState Patch) {
 }
 
+func (a Patch) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PatchResponse struct {
 }
 
@@ -874,10 +1115,14 @@ func (newState *PatchResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Patc
 func (newState *PatchResponse) SyncEffectiveFieldsDuringRead(existingState PatchResponse) {
 }
 
+func (a PatchResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type Permission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
-	InheritedFromObject []types.String `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
 	// Permission level
 	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
 }
@@ -888,15 +1133,21 @@ func (newState *Permission) SyncEffectiveFieldsDuringCreateOrUpdate(plan Permiss
 func (newState *Permission) SyncEffectiveFieldsDuringRead(existingState Permission) {
 }
 
+func (a Permission) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"InheritedFromObject": reflect.TypeOf(""),
+	}
+}
+
 // The output format for existing workspace PermissionAssignment records, which
 // contains some info for user consumption.
 type PermissionAssignment struct {
 	// Error response associated with a workspace permission assignment, if any.
 	Error types.String `tfsdk:"error" tf:"optional"`
 	// The permissions level of the principal.
-	Permissions []types.String `tfsdk:"permissions" tf:"optional"`
+	Permissions types.List `tfsdk:"permissions" tf:"optional"`
 	// Information about the principal assigned to the workspace.
-	Principal []PrincipalOutput `tfsdk:"principal" tf:"optional,object"`
+	Principal types.Object `tfsdk:"principal" tf:"optional,object"`
 }
 
 func (newState *PermissionAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignment) {
@@ -905,15 +1156,28 @@ func (newState *PermissionAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *PermissionAssignment) SyncEffectiveFieldsDuringRead(existingState PermissionAssignment) {
 }
 
+func (a PermissionAssignment) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Permissions": reflect.TypeOf(""),
+		"Principal":   reflect.TypeOf(PrincipalOutput{}),
+	}
+}
+
 type PermissionAssignments struct {
 	// Array of permissions assignments defined for a workspace.
-	PermissionAssignments []PermissionAssignment `tfsdk:"permission_assignments" tf:"optional"`
+	PermissionAssignments types.List `tfsdk:"permission_assignments" tf:"optional"`
 }
 
 func (newState *PermissionAssignments) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermissionAssignments) {
 }
 
 func (newState *PermissionAssignments) SyncEffectiveFieldsDuringRead(existingState PermissionAssignments) {
+}
+
+func (a PermissionAssignments) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"PermissionAssignments": reflect.TypeOf(PermissionAssignment{}),
+	}
 }
 
 type PermissionOutput struct {
@@ -929,6 +1193,10 @@ func (newState *PermissionOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan P
 func (newState *PermissionOutput) SyncEffectiveFieldsDuringRead(existingState PermissionOutput) {
 }
 
+func (a PermissionOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PermissionsDescription struct {
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// Permission level
@@ -941,8 +1209,12 @@ func (newState *PermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *PermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PermissionsDescription) {
 }
 
+func (a PermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type PermissionsRequest struct {
-	AccessControlList []AccessControlRequest `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// The id of the request object.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
@@ -957,6 +1229,12 @@ func (newState *PermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *PermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PermissionsRequest) {
+}
+
+func (a PermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"AccessControlList": reflect.TypeOf(AccessControlRequest{}),
+	}
 }
 
 // Information about the principal assigned to the workspace.
@@ -980,6 +1258,10 @@ func (newState *PrincipalOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pr
 func (newState *PrincipalOutput) SyncEffectiveFieldsDuringRead(existingState PrincipalOutput) {
 }
 
+func (a PrincipalOutput) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type ResourceMeta struct {
 	// Identifier for group type. Can be local workspace group
 	// (`WorkspaceGroup`) or account group (`Group`).
@@ -990,6 +1272,10 @@ func (newState *ResourceMeta) SyncEffectiveFieldsDuringCreateOrUpdate(plan Resou
 }
 
 func (newState *ResourceMeta) SyncEffectiveFieldsDuringRead(existingState ResourceMeta) {
+}
+
+func (a ResourceMeta) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
 }
 
 type Role struct {
@@ -1003,11 +1289,15 @@ func (newState *Role) SyncEffectiveFieldsDuringCreateOrUpdate(plan Role) {
 func (newState *Role) SyncEffectiveFieldsDuringRead(existingState Role) {
 }
 
+func (a Role) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type RuleSetResponse struct {
 	// Identifies the version of the rule set returned.
 	Etag types.String `tfsdk:"etag" tf:"optional"`
 
-	GrantRules []GrantRule `tfsdk:"grant_rules" tf:"optional"`
+	GrantRules types.List `tfsdk:"grant_rules" tf:"optional"`
 	// Name of the rule set.
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
@@ -1018,13 +1308,19 @@ func (newState *RuleSetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ru
 func (newState *RuleSetResponse) SyncEffectiveFieldsDuringRead(existingState RuleSetResponse) {
 }
 
+func (a RuleSetResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"GrantRules": reflect.TypeOf(GrantRule{}),
+	}
+}
+
 type RuleSetUpdateRequest struct {
 	// The expected etag of the rule set to update. The update will fail if the
 	// value does not match the value that is stored in account access control
 	// service.
 	Etag types.String `tfsdk:"etag" tf:""`
 
-	GrantRules []GrantRule `tfsdk:"grant_rules" tf:"optional"`
+	GrantRules types.List `tfsdk:"grant_rules" tf:"optional"`
 	// Name of the rule set.
 	Name types.String `tfsdk:"name" tf:""`
 }
@@ -1033,6 +1329,12 @@ func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *RuleSetUpdateRequest) SyncEffectiveFieldsDuringRead(existingState RuleSetUpdateRequest) {
+}
+
+func (a RuleSetUpdateRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"GrantRules": reflect.TypeOf(GrantRule{}),
+	}
 }
 
 type ServicePrincipal struct {
@@ -1046,23 +1348,32 @@ type ServicePrincipal struct {
 	// entitlements] for a full list of supported values.
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
-	Entitlements []ComplexValue `tfsdk:"entitlements" tf:"optional"`
+	Entitlements types.List `tfsdk:"entitlements" tf:"optional"`
 
 	ExternalId types.String `tfsdk:"externalId" tf:"optional"`
 
-	Groups []ComplexValue `tfsdk:"groups" tf:"optional"`
+	Groups types.List `tfsdk:"groups" tf:"optional"`
 	// Databricks service principal ID.
 	Id types.String `tfsdk:"id" tf:"optional"`
 	// Corresponds to AWS instance profile/arn role.
-	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
+	Roles types.List `tfsdk:"roles" tf:"optional"`
 	// The schema of the List response.
-	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
+	Schemas types.List `tfsdk:"schemas" tf:"optional"`
 }
 
 func (newState *ServicePrincipal) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServicePrincipal) {
 }
 
 func (newState *ServicePrincipal) SyncEffectiveFieldsDuringRead(existingState ServicePrincipal) {
+}
+
+func (a ServicePrincipal) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Entitlements": reflect.TypeOf(ComplexValue{}),
+		"Groups":       reflect.TypeOf(ComplexValue{}),
+		"Roles":        reflect.TypeOf(ComplexValue{}),
+		"Schemas":      reflect.TypeOf(""),
+	}
 }
 
 type UpdateResponse struct {
@@ -1074,17 +1385,27 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upd
 func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
+func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
 type UpdateRuleSetRequest struct {
 	// Name of the rule set.
 	Name types.String `tfsdk:"name" tf:""`
 
-	RuleSet []RuleSetUpdateRequest `tfsdk:"rule_set" tf:"object"`
+	RuleSet types.Object `tfsdk:"rule_set" tf:"object"`
 }
 
 func (newState *UpdateRuleSetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRuleSetRequest) {
 }
 
 func (newState *UpdateRuleSetRequest) SyncEffectiveFieldsDuringRead(existingState UpdateRuleSetRequest) {
+}
+
+func (a UpdateRuleSetRequest) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"RuleSet": reflect.TypeOf(RuleSetUpdateRequest{}),
+	}
 }
 
 type UpdateWorkspaceAssignments struct {
@@ -1094,7 +1415,7 @@ type UpdateWorkspaceAssignments struct {
 	// that excluding this field, or providing unsupported values, will have the
 	// same effect as providing an empty list, which will result in the deletion
 	// of all permissions for the principal.
-	Permissions []types.String `tfsdk:"permissions" tf:"optional"`
+	Permissions types.List `tfsdk:"permissions" tf:"optional"`
 	// The ID of the user, service principal, or group.
 	PrincipalId types.Int64 `tfsdk:"-"`
 	// The workspace ID.
@@ -1105,6 +1426,12 @@ func (newState *UpdateWorkspaceAssignments) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *UpdateWorkspaceAssignments) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceAssignments) {
+}
+
+func (a UpdateWorkspaceAssignments) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Permissions": reflect.TypeOf(""),
+	}
 }
 
 type User struct {
@@ -1118,25 +1445,25 @@ type User struct {
 	// [identity federation is enabled]: https://docs.databricks.com/administration-guide/users-groups/best-practices.html#enable-identity-federation
 	DisplayName types.String `tfsdk:"displayName" tf:"optional"`
 	// All the emails associated with the Databricks user.
-	Emails []ComplexValue `tfsdk:"emails" tf:"optional"`
+	Emails types.List `tfsdk:"emails" tf:"optional"`
 	// Entitlements assigned to the user. See [assigning entitlements] for a
 	// full list of supported values.
 	//
 	// [assigning entitlements]: https://docs.databricks.com/administration-guide/users-groups/index.html#assigning-entitlements
-	Entitlements []ComplexValue `tfsdk:"entitlements" tf:"optional"`
+	Entitlements types.List `tfsdk:"entitlements" tf:"optional"`
 	// External ID is not currently supported. It is reserved for future use.
 	ExternalId types.String `tfsdk:"externalId" tf:"optional"`
 
-	Groups []ComplexValue `tfsdk:"groups" tf:"optional"`
+	Groups types.List `tfsdk:"groups" tf:"optional"`
 	// Databricks user ID. This is automatically set by Databricks. Any value
 	// provided by the client will be ignored.
 	Id types.String `tfsdk:"id" tf:"optional"`
 
-	Name []Name `tfsdk:"name" tf:"optional,object"`
+	Name types.Object `tfsdk:"name" tf:"optional,object"`
 	// Corresponds to AWS instance profile/arn role.
-	Roles []ComplexValue `tfsdk:"roles" tf:"optional"`
+	Roles types.List `tfsdk:"roles" tf:"optional"`
 	// The schema of the user.
-	Schemas []types.String `tfsdk:"schemas" tf:"optional"`
+	Schemas types.List `tfsdk:"schemas" tf:"optional"`
 	// Email address of the Databricks user.
 	UserName types.String `tfsdk:"userName" tf:"optional"`
 }
@@ -1147,13 +1474,30 @@ func (newState *User) SyncEffectiveFieldsDuringCreateOrUpdate(plan User) {
 func (newState *User) SyncEffectiveFieldsDuringRead(existingState User) {
 }
 
+func (a User) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Emails":       reflect.TypeOf(ComplexValue{}),
+		"Entitlements": reflect.TypeOf(ComplexValue{}),
+		"Groups":       reflect.TypeOf(ComplexValue{}),
+		"Name":         reflect.TypeOf(Name{}),
+		"Roles":        reflect.TypeOf(ComplexValue{}),
+		"Schemas":      reflect.TypeOf(""),
+	}
+}
+
 type WorkspacePermissions struct {
 	// Array of permissions defined for a workspace.
-	Permissions []PermissionOutput `tfsdk:"permissions" tf:"optional"`
+	Permissions types.List `tfsdk:"permissions" tf:"optional"`
 }
 
 func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspacePermissions) {
 }
 
 func (newState *WorkspacePermissions) SyncEffectiveFieldsDuringRead(existingState WorkspacePermissions) {
+}
+
+func (a WorkspacePermissions) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"Permissions": reflect.TypeOf(PermissionOutput{}),
+	}
 }

@@ -9,9 +9,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -87,8 +89,13 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 				// Note: Objects are treated as lists for backward compatibility with the Terraform v5 protocol (i.e. SDKv2 resources).
 				switch value.(type) {
 				case types.List:
+					validators := []validator.List{}
+					if structTag.singleObject {
+						validators = append(validators, listvalidator.SizeAtMost(1))
+					}
 					scmBlock[fieldName] = ListNestedBlockBuilder{
 						NestedObject: typeToSchema(ctx, fieldValue),
+						Validators:   validators,
 					}
 				case types.Map:
 					scmAttr[fieldName] = MapNestedAttributeBuilder{

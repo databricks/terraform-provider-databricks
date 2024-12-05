@@ -69,7 +69,7 @@ func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{
 		}
 
 		destField := destVal.FieldByName(srcFieldName)
-		innerType, _ := innerTypes[srcFieldName]
+		innerType := innerTypes[srcFieldTag]
 
 		err := tfSdkToGoSdkSingleField(ctx, srcField, destField, srcFieldName, &forceSendFieldsField, innerType)
 		if err != nil {
@@ -95,7 +95,7 @@ func tfSdkToGoSdkSingleField(
 	}
 
 	if !destField.CanSet() {
-		panic(fmt.Errorf("destination field can not be set: %s. %s", destField.Type().Name(), common.TerraformBugErrorMessage))
+		panic(fmt.Errorf("destination field can not be set: %T. %s", destField.Type(), common.TerraformBugErrorMessage))
 	}
 	srcFieldValue := srcField.Interface()
 
@@ -231,7 +231,7 @@ func tfsdkToGoSdkStructField(
 
 			destVal := convertToEnumValue(v, destField.Type())
 			// We don't need to set ForceSendFields for enums because the value is never going to be a zero value (empty string).
-			destField.Set(destVal.Elem())
+			destField.Set(destVal)
 		} else {
 			destField.SetString(v.ValueString())
 			if !v.IsNull() {
@@ -260,25 +260,31 @@ func tfsdkToGoSdkStructField(
 		if destField.Type().Kind() == reflect.Slice {
 			destInnerType = destField.Type().Elem()
 		} else {
-			assertStructSliceLengthIsOne(innerValue)
-			// Case of types.List <-> struct
-			destInnerType = destField.Type()
+			assertStructSliceLengthIsOne(innerValue.Elem())
+			// Case of types.List <-> struct or ptr
+			if destField.Type().Kind() == reflect.Ptr {
+				destInnerType = destField.Type().Elem()
+			} else {
+				destInnerType = destField.Type()
+			}
 		}
 
-		converted := make([]any, 0, innerValue.Elem().Len())
+		converted := reflect.MakeSlice(reflect.SliceOf(destInnerType), 0, innerValue.Elem().Len())
 		for i := 0; i < innerValue.Elem().Len(); i++ {
-			next := reflect.New(destInnerType)
-			err := tfSdkToGoSdkSingleField(ctx, innerValue.Elem().Index(i), next, "", forceSendFieldsField, innerType)
+			next := reflect.New(destInnerType).Elem()
+			err := tfSdkToGoSdkSingleField(ctx, innerValue.Elem().Index(i), next, srcFieldName, forceSendFieldsField, innerType)
 			if err != nil {
 				panic(err)
 			}
-			converted = append(converted, next.Elem().Interface())
+			converted = reflect.Append(converted, next)
 		}
 
 		if destField.Type().Kind() == reflect.Slice {
-			destField.Set(reflect.ValueOf(converted))
+			destField.Set(converted)
+		} else if destField.Type().Kind() == reflect.Ptr {
+			destField.Set(converted.Index(0).Addr())
 		} else {
-			destField.Set(reflect.ValueOf(converted[0]))
+			destField.Set(converted.Index(0))
 		}
 	case types.Object, types.Map, types.Set, types.Tuple:
 		panic(fmt.Sprintf("%T should never be used, use go native maps instead. %s", v, common.TerraformBugErrorMessage))

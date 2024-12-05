@@ -58,7 +58,7 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 	var objectType types.ObjectType
 	if cftp, ok := destVal.Interface().(tfcommon.ComplexFieldTypeProvider); ok {
 		complexFieldTypes = cftp.GetComplexFieldTypes()
-		objectType = cftp.ToAttrType()
+		objectType = cftp.ToAttrType(ctx)
 	}
 
 	var forceSendFieldVal []string
@@ -79,13 +79,21 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 			continue
 		}
 		destField := destVal.FieldByName(srcFieldName)
+		destFieldType, ok := destVal.Type().FieldByName(field.StructField.Name)
+		if !ok {
+			panic(fmt.Errorf("destination struct does not have field %s. %s", srcFieldName, common.TerraformBugErrorMessage))
+		}
+		destFieldName := destFieldType.Tag.Get("tfsdk")
+		if destFieldName == "-" {
+			continue
+		}
 
 		if !destField.IsValid() {
 			logger.Tracef(ctx, fmt.Sprintf("field skipped in gosdk to tfsdk conversion: destination struct does not have field %s", srcFieldName))
 			continue
 		}
-		innerType, _ := objectType.AttrTypes[srcFieldName]
-		complexFieldType, _ := complexFieldTypes[srcFieldName]
+		innerType := objectType.AttrTypes[destFieldName]
+		complexFieldType := complexFieldTypes[destFieldName]
 
 		err := goSdkToTfSdkSingleField(ctx, srcField, destField, fieldInForceSendFields(srcFieldName, forceSendFieldVal), innerType, complexFieldType)
 		if err != nil {
@@ -115,6 +123,12 @@ func goSdkToTfSdkSingleField(
 
 	if srcField.Kind() == reflect.Ptr {
 		if srcField.IsNil() {
+			// If the destination field is a types.List, treat the source field as an empty slice.
+			if destField.Type() == reflect.TypeOf(types.List{}) {
+				listType := innerType.(types.ListType)
+				emptyList := types.ListNull(listType.ElemType)
+				destField.Set(reflect.ValueOf(emptyList))
+			}
 			// Skip nils
 			return nil
 		}
@@ -166,6 +180,12 @@ func goSdkToTfSdkSingleField(
 		}
 	case reflect.Struct:
 		if srcField.IsZero() {
+			// If the destination field is a types.List, treat the source field as an empty slice.
+			if destField.Type() == reflect.TypeOf(types.List{}) {
+				emptyList := types.ListNull(innerType)
+				destField.Set(reflect.ValueOf(emptyList))
+				return nil
+			}
 			// Skip zeros
 			return nil
 		}
@@ -191,22 +211,22 @@ func goSdkToTfSdkSingleField(
 			panic(fmt.Sprintf("%s. %s", goSdkToTfSdkStructConversionFailureMessage, common.TerraformBugErrorMessage))
 		}
 	case reflect.Slice:
-		if srcField.IsNil() {
-			// Skip nils
-			return nil
-		}
 		// If the target is a types.List, we first convert each element of the slice to the corresponding inner type
 		// and then set the list.
 		if destField.Type() == reflect.TypeOf(types.List{}) {
+			listType, ok := innerType.(types.ListType)
+			if !ok {
+				panic(fmt.Errorf("inner type is not a list type: %s. %s", innerType, common.TerraformBugErrorMessage))
+			}
 			elements := make([]any, 0, srcField.Len())
 			for i := 0; i < srcField.Len(); i++ {
 				element := reflect.New(complexFieldType).Elem()
-				if err := goSdkToTfSdkSingleField(ctx, srcField.Index(i), element, true, innerType, complexFieldType); err != nil {
+				if err := goSdkToTfSdkSingleField(ctx, srcField.Index(i), element, true, listType.ElemType, complexFieldType); err != nil {
 					return err
 				}
 				elements = append(elements, element.Interface())
 			}
-			destVal, d := types.ListValueFrom(ctx, innerType, elements)
+			destVal, d := types.ListValueFrom(ctx, listType.ElemType, elements)
 			if d.HasError() {
 				for _, diag := range d {
 					tflog.Error(ctx, diag.Detail())
@@ -215,6 +235,10 @@ func goSdkToTfSdkSingleField(
 			}
 			destField.Set(reflect.ValueOf(destVal))
 		} else {
+			if srcField.IsNil() {
+				// Skip nils
+				return nil
+			}
 			destSlice := reflect.MakeSlice(destField.Type(), srcField.Len(), srcField.Cap())
 			for j := 0; j < srcField.Len(); j++ {
 

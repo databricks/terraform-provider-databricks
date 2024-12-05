@@ -37,7 +37,7 @@ func (a ColumnInfo) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ColumnInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -62,8 +62,8 @@ func (a CreateEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CreateEndpoint) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndpointType": types.StringType,
-			"Name":         types.StringType,
+			"endpoint_type": types.StringType,
+			"name":          types.StringType,
 		},
 	}
 }
@@ -99,20 +99,24 @@ func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringRead(existing
 
 func (a CreateVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DeltaSyncIndexSpec":    reflect.TypeOf(DeltaSyncVectorIndexSpecRequest{}),
-		"DirectAccessIndexSpec": reflect.TypeOf(DirectAccessVectorIndexSpec{}),
+		"delta_sync_index_spec":    reflect.TypeOf(DeltaSyncVectorIndexSpecRequest{}),
+		"direct_access_index_spec": reflect.TypeOf(DirectAccessVectorIndexSpec{}),
 	}
 }
 
 func (a CreateVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DeltaSyncIndexSpec":    DeltaSyncVectorIndexSpecRequest{}.ToAttrType(ctx),
-			"DirectAccessIndexSpec": DirectAccessVectorIndexSpec{}.ToAttrType(ctx),
-			"EndpointName":          types.StringType,
-			"IndexType":             types.StringType,
-			"Name":                  types.StringType,
-			"PrimaryKey":            types.StringType,
+			"delta_sync_index_spec": basetypes.ListType{
+				ElemType: DeltaSyncVectorIndexSpecRequest{}.ToAttrType(ctx),
+			},
+			"direct_access_index_spec": basetypes.ListType{
+				ElemType: DirectAccessVectorIndexSpec{}.ToAttrType(ctx),
+			},
+			"endpoint_name": types.StringType,
+			"index_type":    types.StringType,
+			"name":          types.StringType,
+			"primary_key":   types.StringType,
 		},
 	}
 }
@@ -129,14 +133,16 @@ func (newState *CreateVectorIndexResponse) SyncEffectiveFieldsDuringRead(existin
 
 func (a CreateVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"VectorIndex": reflect.TypeOf(VectorIndex{}),
+		"vector_index": reflect.TypeOf(VectorIndex{}),
 	}
 }
 
 func (a CreateVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"VectorIndex": VectorIndex{}.ToAttrType(ctx),
+			"vector_index": basetypes.ListType{
+				ElemType: VectorIndex{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -157,17 +163,17 @@ func (newState *DeleteDataResult) SyncEffectiveFieldsDuringRead(existingState De
 
 func (a DeleteDataResult) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FailedPrimaryKeys": reflect.TypeOf(types.StringType),
+		"failed_primary_keys": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a DeleteDataResult) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FailedPrimaryKeys": basetypes.ListType{
+			"failed_primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SuccessRowCount": types.Int64Type,
+			"success_row_count": types.Int64Type,
 		},
 	}
 }
@@ -189,15 +195,15 @@ func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(exis
 
 func (a DeleteDataVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PrimaryKeys": reflect.TypeOf(types.StringType),
+		"primary_keys": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a DeleteDataVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IndexName": types.StringType,
-			"PrimaryKeys": basetypes.ListType{
+			"index_name": types.StringType,
+			"primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -220,15 +226,17 @@ func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(exi
 
 func (a DeleteDataVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Result": reflect.TypeOf(DeleteDataResult{}),
+		"result": reflect.TypeOf(DeleteDataResult{}),
 	}
 }
 
 func (a DeleteDataVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Result": DeleteDataResult{}.ToAttrType(ctx),
-			"Status": types.StringType,
+			"result": basetypes.ListType{
+				ElemType: DeleteDataResult{}.ToAttrType(ctx),
+			},
+			"status": types.StringType,
 		},
 	}
 }
@@ -252,7 +260,7 @@ func (a DeleteEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteEndpointRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndpointName": types.StringType,
+			"endpoint_name": types.StringType,
 		},
 	}
 }
@@ -295,7 +303,7 @@ func (a DeleteIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IndexName": types.StringType,
+			"index_name": types.StringType,
 		},
 	}
 }
@@ -355,27 +363,27 @@ func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringRead(e
 
 func (a DeltaSyncVectorIndexSpecRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ColumnsToSync":          reflect.TypeOf(types.StringType),
-		"EmbeddingSourceColumns": reflect.TypeOf(EmbeddingSourceColumn{}),
-		"EmbeddingVectorColumns": reflect.TypeOf(EmbeddingVectorColumn{}),
+		"columns_to_sync":          reflect.TypeOf(types.StringType),
+		"embedding_source_columns": reflect.TypeOf(EmbeddingSourceColumn{}),
+		"embedding_vector_columns": reflect.TypeOf(EmbeddingVectorColumn{}),
 	}
 }
 
 func (a DeltaSyncVectorIndexSpecRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ColumnsToSync": basetypes.ListType{
+			"columns_to_sync": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"EmbeddingSourceColumns": basetypes.ListType{
+			"embedding_source_columns": basetypes.ListType{
 				ElemType: EmbeddingSourceColumn{}.ToAttrType(ctx),
 			},
-			"EmbeddingVectorColumns": basetypes.ListType{
+			"embedding_vector_columns": basetypes.ListType{
 				ElemType: EmbeddingVectorColumn{}.ToAttrType(ctx),
 			},
-			"EmbeddingWritebackTable": types.StringType,
-			"PipelineType":            types.StringType,
-			"SourceTable":             types.StringType,
+			"embedding_writeback_table": types.StringType,
+			"pipeline_type":             types.StringType,
+			"source_table":              types.StringType,
 		},
 	}
 }
@@ -411,24 +419,24 @@ func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringRead(
 
 func (a DeltaSyncVectorIndexSpecResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EmbeddingSourceColumns": reflect.TypeOf(EmbeddingSourceColumn{}),
-		"EmbeddingVectorColumns": reflect.TypeOf(EmbeddingVectorColumn{}),
+		"embedding_source_columns": reflect.TypeOf(EmbeddingSourceColumn{}),
+		"embedding_vector_columns": reflect.TypeOf(EmbeddingVectorColumn{}),
 	}
 }
 
 func (a DeltaSyncVectorIndexSpecResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EmbeddingSourceColumns": basetypes.ListType{
+			"embedding_source_columns": basetypes.ListType{
 				ElemType: EmbeddingSourceColumn{}.ToAttrType(ctx),
 			},
-			"EmbeddingVectorColumns": basetypes.ListType{
+			"embedding_vector_columns": basetypes.ListType{
 				ElemType: EmbeddingVectorColumn{}.ToAttrType(ctx),
 			},
-			"EmbeddingWritebackTable": types.StringType,
-			"PipelineId":              types.StringType,
-			"PipelineType":            types.StringType,
-			"SourceTable":             types.StringType,
+			"embedding_writeback_table": types.StringType,
+			"pipeline_id":               types.StringType,
+			"pipeline_type":             types.StringType,
+			"source_table":              types.StringType,
 		},
 	}
 }
@@ -455,21 +463,21 @@ func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringRead(exist
 
 func (a DirectAccessVectorIndexSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EmbeddingSourceColumns": reflect.TypeOf(EmbeddingSourceColumn{}),
-		"EmbeddingVectorColumns": reflect.TypeOf(EmbeddingVectorColumn{}),
+		"embedding_source_columns": reflect.TypeOf(EmbeddingSourceColumn{}),
+		"embedding_vector_columns": reflect.TypeOf(EmbeddingVectorColumn{}),
 	}
 }
 
 func (a DirectAccessVectorIndexSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EmbeddingSourceColumns": basetypes.ListType{
+			"embedding_source_columns": basetypes.ListType{
 				ElemType: EmbeddingSourceColumn{}.ToAttrType(ctx),
 			},
-			"EmbeddingVectorColumns": basetypes.ListType{
+			"embedding_vector_columns": basetypes.ListType{
 				ElemType: EmbeddingVectorColumn{}.ToAttrType(ctx),
 			},
-			"SchemaJson": types.StringType,
+			"schema_json": types.StringType,
 		},
 	}
 }
@@ -494,8 +502,8 @@ func (a EmbeddingSourceColumn) GetComplexFieldTypes() map[string]reflect.Type {
 func (a EmbeddingSourceColumn) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EmbeddingModelEndpointName": types.StringType,
-			"Name":                       types.StringType,
+			"embedding_model_endpoint_name": types.StringType,
+			"name":                          types.StringType,
 		},
 	}
 }
@@ -520,8 +528,8 @@ func (a EmbeddingVectorColumn) GetComplexFieldTypes() map[string]reflect.Type {
 func (a EmbeddingVectorColumn) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EmbeddingDimension": types.Int64Type,
-			"Name":               types.StringType,
+			"embedding_dimension": types.Int64Type,
+			"name":                types.StringType,
 		},
 	}
 }
@@ -555,22 +563,24 @@ func (newState *EndpointInfo) SyncEffectiveFieldsDuringRead(existingState Endpoi
 
 func (a EndpointInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EndpointStatus": reflect.TypeOf(EndpointStatus{}),
+		"endpoint_status": reflect.TypeOf(EndpointStatus{}),
 	}
 }
 
 func (a EndpointInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreationTimestamp":    types.Int64Type,
-			"Creator":              types.StringType,
-			"EndpointStatus":       EndpointStatus{}.ToAttrType(ctx),
-			"EndpointType":         types.StringType,
-			"Id":                   types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
-			"LastUpdatedUser":      types.StringType,
-			"Name":                 types.StringType,
-			"NumIndexes":           types.Int64Type,
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"endpoint_status": basetypes.ListType{
+				ElemType: EndpointStatus{}.ToAttrType(ctx),
+			},
+			"endpoint_type":          types.StringType,
+			"id":                     types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"last_updated_user":      types.StringType,
+			"name":                   types.StringType,
+			"num_indexes":            types.Int64Type,
 		},
 	}
 }
@@ -596,8 +606,8 @@ func (a EndpointStatus) GetComplexFieldTypes() map[string]reflect.Type {
 func (a EndpointStatus) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Message": types.StringType,
-			"State":   types.StringType,
+			"message": types.StringType,
+			"state":   types.StringType,
 		},
 	}
 }
@@ -621,7 +631,7 @@ func (a GetEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetEndpointRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndpointName": types.StringType,
+			"endpoint_name": types.StringType,
 		},
 	}
 }
@@ -645,7 +655,7 @@ func (a GetIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IndexName": types.StringType,
+			"index_name": types.StringType,
 		},
 	}
 }
@@ -666,17 +676,17 @@ func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a ListEndpointResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Endpoints": reflect.TypeOf(EndpointInfo{}),
+		"endpoints": reflect.TypeOf(EndpointInfo{}),
 	}
 }
 
 func (a ListEndpointResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Endpoints": basetypes.ListType{
+			"endpoints": basetypes.ListType{
 				ElemType: EndpointInfo{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
+			"next_page_token": types.StringType,
 		},
 	}
 }
@@ -700,7 +710,7 @@ func (a ListEndpointsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListEndpointsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PageToken": types.StringType,
+			"page_token": types.StringType,
 		},
 	}
 }
@@ -726,8 +736,8 @@ func (a ListIndexesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListIndexesRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndpointName": types.StringType,
-			"PageToken":    types.StringType,
+			"endpoint_name": types.StringType,
+			"page_token":    types.StringType,
 		},
 	}
 }
@@ -744,14 +754,14 @@ func (newState *ListValue) SyncEffectiveFieldsDuringRead(existingState ListValue
 
 func (a ListValue) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Values": reflect.TypeOf(Value{}),
+		"values": reflect.TypeOf(Value{}),
 	}
 }
 
 func (a ListValue) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Values": basetypes.ListType{
+			"values": basetypes.ListType{
 				ElemType: Value{}.ToAttrType(ctx),
 			},
 		},
@@ -774,15 +784,15 @@ func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringRead(existin
 
 func (a ListVectorIndexesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"VectorIndexes": reflect.TypeOf(MiniVectorIndex{}),
+		"vector_indexes": reflect.TypeOf(MiniVectorIndex{}),
 	}
 }
 
 func (a ListVectorIndexesResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NextPageToken": types.StringType,
-			"VectorIndexes": basetypes.ListType{
+			"next_page_token": types.StringType,
+			"vector_indexes": basetypes.ListType{
 				ElemType: MiniVectorIndex{}.ToAttrType(ctx),
 			},
 		},
@@ -805,15 +815,17 @@ func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringRead(existingState
 
 func (a MapStringValueEntry) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Value": reflect.TypeOf(Value{}),
+		"value": reflect.TypeOf(Value{}),
 	}
 }
 
 func (a MapStringValueEntry) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Key":   types.StringType,
-			"Value": Value{}.ToAttrType(ctx),
+			"key": types.StringType,
+			"value": basetypes.ListType{
+				ElemType: Value{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -850,11 +862,11 @@ func (a MiniVectorIndex) GetComplexFieldTypes() map[string]reflect.Type {
 func (a MiniVectorIndex) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Creator":      types.StringType,
-			"EndpointName": types.StringType,
-			"IndexType":    types.StringType,
-			"Name":         types.StringType,
-			"PrimaryKey":   types.StringType,
+			"creator":       types.StringType,
+			"endpoint_name": types.StringType,
+			"index_type":    types.StringType,
+			"name":          types.StringType,
+			"primary_key":   types.StringType,
 		},
 	}
 }
@@ -883,9 +895,9 @@ func (a QueryVectorIndexNextPageRequest) GetComplexFieldTypes() map[string]refle
 func (a QueryVectorIndexNextPageRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndpointName": types.StringType,
-			"IndexName":    types.StringType,
-			"PageToken":    types.StringType,
+			"endpoint_name": types.StringType,
+			"index_name":    types.StringType,
+			"page_token":    types.StringType,
 		},
 	}
 }
@@ -923,26 +935,26 @@ func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingS
 
 func (a QueryVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Columns":     reflect.TypeOf(types.StringType),
-		"QueryVector": reflect.TypeOf(types.Float64Type),
+		"columns":      reflect.TypeOf(types.StringType),
+		"query_vector": reflect.TypeOf(types.Float64Type),
 	}
 }
 
 func (a QueryVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Columns": basetypes.ListType{
+			"columns": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"FiltersJson": types.StringType,
-			"IndexName":   types.StringType,
-			"NumResults":  types.Int64Type,
-			"QueryText":   types.StringType,
-			"QueryType":   types.StringType,
-			"QueryVector": basetypes.ListType{
+			"filters_json": types.StringType,
+			"index_name":   types.StringType,
+			"num_results":  types.Int64Type,
+			"query_text":   types.StringType,
+			"query_type":   types.StringType,
+			"query_vector": basetypes.ListType{
 				ElemType: types.Float64Type,
 			},
-			"ScoreThreshold": types.Float64Type,
+			"score_threshold": types.Float64Type,
 		},
 	}
 }
@@ -966,17 +978,21 @@ func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringRead(existing
 
 func (a QueryVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Manifest": reflect.TypeOf(ResultManifest{}),
-		"Result":   reflect.TypeOf(ResultData{}),
+		"manifest": reflect.TypeOf(ResultManifest{}),
+		"result":   reflect.TypeOf(ResultData{}),
 	}
 }
 
 func (a QueryVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Manifest":      ResultManifest{}.ToAttrType(ctx),
-			"NextPageToken": types.StringType,
-			"Result":        ResultData{}.ToAttrType(ctx),
+			"manifest": basetypes.ListType{
+				ElemType: ResultManifest{}.ToAttrType(ctx),
+			},
+			"next_page_token": types.StringType,
+			"result": basetypes.ListType{
+				ElemType: ResultData{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -997,19 +1013,19 @@ func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultDa
 
 func (a ResultData) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DataArray": reflect.TypeOf(types.StringType),
+		"data_array": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ResultData) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DataArray": basetypes.ListType{
+			"data_array": basetypes.ListType{
 				ElemType: basetypes.ListType{
 					ElemType: types.StringType,
 				},
 			},
-			"RowCount": types.Int64Type,
+			"row_count": types.Int64Type,
 		},
 	}
 }
@@ -1030,15 +1046,15 @@ func (newState *ResultManifest) SyncEffectiveFieldsDuringRead(existingState Resu
 
 func (a ResultManifest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Columns": reflect.TypeOf(ColumnInfo{}),
+		"columns": reflect.TypeOf(ColumnInfo{}),
 	}
 }
 
 func (a ResultManifest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ColumnCount": types.Int64Type,
-			"Columns": basetypes.ListType{
+			"column_count": types.Int64Type,
+			"columns": basetypes.ListType{
 				ElemType: ColumnInfo{}.ToAttrType(ctx),
 			},
 		},
@@ -1068,9 +1084,9 @@ func (a ScanVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ScanVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IndexName":      types.StringType,
-			"LastPrimaryKey": types.StringType,
-			"NumResults":     types.Int64Type,
+			"index_name":       types.StringType,
+			"last_primary_key": types.StringType,
+			"num_results":      types.Int64Type,
 		},
 	}
 }
@@ -1091,17 +1107,17 @@ func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingS
 
 func (a ScanVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Data": reflect.TypeOf(Struct{}),
+		"data": reflect.TypeOf(Struct{}),
 	}
 }
 
 func (a ScanVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Data": basetypes.ListType{
+			"data": basetypes.ListType{
 				ElemType: Struct{}.ToAttrType(ctx),
 			},
-			"LastPrimaryKey": types.StringType,
+			"last_primary_key": types.StringType,
 		},
 	}
 }
@@ -1119,14 +1135,14 @@ func (newState *Struct) SyncEffectiveFieldsDuringRead(existingState Struct) {
 
 func (a Struct) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Fields": reflect.TypeOf(MapStringValueEntry{}),
+		"fields": reflect.TypeOf(MapStringValueEntry{}),
 	}
 }
 
 func (a Struct) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Fields": basetypes.ListType{
+			"fields": basetypes.ListType{
 				ElemType: MapStringValueEntry{}.ToAttrType(ctx),
 			},
 		},
@@ -1152,7 +1168,7 @@ func (a SyncIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SyncIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IndexName": types.StringType,
+			"index_name": types.StringType,
 		},
 	}
 }
@@ -1192,17 +1208,17 @@ func (newState *UpsertDataResult) SyncEffectiveFieldsDuringRead(existingState Up
 
 func (a UpsertDataResult) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FailedPrimaryKeys": reflect.TypeOf(types.StringType),
+		"failed_primary_keys": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a UpsertDataResult) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FailedPrimaryKeys": basetypes.ListType{
+			"failed_primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SuccessRowCount": types.Int64Type,
+			"success_row_count": types.Int64Type,
 		},
 	}
 }
@@ -1229,8 +1245,8 @@ func (a UpsertDataVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.
 func (a UpsertDataVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IndexName":  types.StringType,
-			"InputsJson": types.StringType,
+			"index_name":  types.StringType,
+			"inputs_json": types.StringType,
 		},
 	}
 }
@@ -1251,15 +1267,17 @@ func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(exi
 
 func (a UpsertDataVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Result": reflect.TypeOf(UpsertDataResult{}),
+		"result": reflect.TypeOf(UpsertDataResult{}),
 	}
 }
 
 func (a UpsertDataVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Result": UpsertDataResult{}.ToAttrType(ctx),
-			"Status": types.StringType,
+			"result": basetypes.ListType{
+				ElemType: UpsertDataResult{}.ToAttrType(ctx),
+			},
+			"status": types.StringType,
 		},
 	}
 }
@@ -1286,20 +1304,24 @@ func (newState *Value) SyncEffectiveFieldsDuringRead(existingState Value) {
 
 func (a Value) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ListValue":   reflect.TypeOf(ListValue{}),
-		"StructValue": reflect.TypeOf(Struct{}),
+		"list_value":   reflect.TypeOf(ListValue{}),
+		"struct_value": reflect.TypeOf(Struct{}),
 	}
 }
 
 func (a Value) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BoolValue":   types.BoolType,
-			"ListValue":   ListValue{}.ToAttrType(ctx),
-			"NullValue":   types.StringType,
-			"NumberValue": types.Float64Type,
-			"StringValue": types.StringType,
-			"StructValue": Struct{}.ToAttrType(ctx),
+			"bool_value": types.BoolType,
+			"list_value": basetypes.ListType{
+				ElemType: ListValue{}.ToAttrType(ctx),
+			},
+			"null_value":   types.StringType,
+			"number_value": types.Float64Type,
+			"string_value": types.StringType,
+			"struct_value": basetypes.ListType{
+				ElemType: Struct{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1337,23 +1359,29 @@ func (newState *VectorIndex) SyncEffectiveFieldsDuringRead(existingState VectorI
 
 func (a VectorIndex) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DeltaSyncIndexSpec":    reflect.TypeOf(DeltaSyncVectorIndexSpecResponse{}),
-		"DirectAccessIndexSpec": reflect.TypeOf(DirectAccessVectorIndexSpec{}),
-		"Status":                reflect.TypeOf(VectorIndexStatus{}),
+		"delta_sync_index_spec":    reflect.TypeOf(DeltaSyncVectorIndexSpecResponse{}),
+		"direct_access_index_spec": reflect.TypeOf(DirectAccessVectorIndexSpec{}),
+		"status":                   reflect.TypeOf(VectorIndexStatus{}),
 	}
 }
 
 func (a VectorIndex) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Creator":               types.StringType,
-			"DeltaSyncIndexSpec":    DeltaSyncVectorIndexSpecResponse{}.ToAttrType(ctx),
-			"DirectAccessIndexSpec": DirectAccessVectorIndexSpec{}.ToAttrType(ctx),
-			"EndpointName":          types.StringType,
-			"IndexType":             types.StringType,
-			"Name":                  types.StringType,
-			"PrimaryKey":            types.StringType,
-			"Status":                VectorIndexStatus{}.ToAttrType(ctx),
+			"creator": types.StringType,
+			"delta_sync_index_spec": basetypes.ListType{
+				ElemType: DeltaSyncVectorIndexSpecResponse{}.ToAttrType(ctx),
+			},
+			"direct_access_index_spec": basetypes.ListType{
+				ElemType: DirectAccessVectorIndexSpec{}.ToAttrType(ctx),
+			},
+			"endpoint_name": types.StringType,
+			"index_type":    types.StringType,
+			"name":          types.StringType,
+			"primary_key":   types.StringType,
+			"status": basetypes.ListType{
+				ElemType: VectorIndexStatus{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1382,10 +1410,10 @@ func (a VectorIndexStatus) GetComplexFieldTypes() map[string]reflect.Type {
 func (a VectorIndexStatus) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IndexUrl":        types.StringType,
-			"IndexedRowCount": types.Int64Type,
-			"Message":         types.StringType,
-			"Ready":           types.BoolType,
+			"index_url":         types.StringType,
+			"indexed_row_count": types.Int64Type,
+			"message":           types.StringType,
+			"ready":             types.BoolType,
 		},
 	}
 }

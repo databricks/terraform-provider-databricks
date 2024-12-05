@@ -34,14 +34,16 @@ func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a CreateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Dashboard": reflect.TypeOf(Dashboard{}),
+		"dashboard": reflect.TypeOf(Dashboard{}),
 	}
 }
 
 func (a CreateDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Dashboard": Dashboard{}.ToAttrType(ctx),
+			"dashboard": basetypes.ListType{
+				ElemType: Dashboard{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -62,15 +64,17 @@ func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a CreateScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Schedule": reflect.TypeOf(Schedule{}),
+		"schedule": reflect.TypeOf(Schedule{}),
 	}
 }
 
 func (a CreateScheduleRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
-			"Schedule":    Schedule{}.ToAttrType(ctx),
+			"dashboard_id": types.StringType,
+			"schedule": basetypes.ListType{
+				ElemType: Schedule{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -93,16 +97,18 @@ func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a CreateSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Subscription": reflect.TypeOf(Subscription{}),
+		"subscription": reflect.TypeOf(Subscription{}),
 	}
 }
 
 func (a CreateSubscriptionRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId":  types.StringType,
-			"ScheduleId":   types.StringType,
-			"Subscription": Subscription{}.ToAttrType(ctx),
+			"dashboard_id": types.StringType,
+			"schedule_id":  types.StringType,
+			"subscription": basetypes.ListType{
+				ElemType: Subscription{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -133,8 +139,8 @@ func (a CronSchedule) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CronSchedule) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"QuartzCronExpression": types.StringType,
-			"TimezoneId":           types.StringType,
+			"quartz_cron_expression": types.StringType,
+			"timezone_id":            types.StringType,
 		},
 	}
 }
@@ -188,16 +194,16 @@ func (a Dashboard) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Dashboard) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreateTime":          types.StringType,
-			"DashboardId":         types.StringType,
-			"DisplayName":         types.StringType,
-			"Etag":                types.StringType,
-			"LifecycleState":      types.StringType,
-			"ParentPath":          types.StringType,
-			"Path":                types.StringType,
-			"SerializedDashboard": types.StringType,
-			"UpdateTime":          types.StringType,
-			"WarehouseId":         types.StringType,
+			"create_time":          types.StringType,
+			"dashboard_id":         types.StringType,
+			"display_name":         types.StringType,
+			"etag":                 types.StringType,
+			"lifecycle_state":      types.StringType,
+			"parent_path":          types.StringType,
+			"path":                 types.StringType,
+			"serialized_dashboard": types.StringType,
+			"update_time":          types.StringType,
+			"warehouse_id":         types.StringType,
 		},
 	}
 }
@@ -226,9 +232,9 @@ func (a DeleteScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteScheduleRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
-			"Etag":        types.StringType,
-			"ScheduleId":  types.StringType,
+			"dashboard_id": types.StringType,
+			"etag":         types.StringType,
+			"schedule_id":  types.StringType,
 		},
 	}
 }
@@ -278,10 +284,10 @@ func (a DeleteSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Typ
 func (a DeleteSubscriptionRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId":    types.StringType,
-			"Etag":           types.StringType,
-			"ScheduleId":     types.StringType,
-			"SubscriptionId": types.StringType,
+			"dashboard_id":    types.StringType,
+			"etag":            types.StringType,
+			"schedule_id":     types.StringType,
+			"subscription_id": types.StringType,
 		},
 	}
 }
@@ -320,16 +326,20 @@ func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState Gen
 
 func (a GenieAttachment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Query": reflect.TypeOf(QueryAttachment{}),
-		"Text":  reflect.TypeOf(TextAttachment{}),
+		"query": reflect.TypeOf(QueryAttachment{}),
+		"text":  reflect.TypeOf(TextAttachment{}),
 	}
 }
 
 func (a GenieAttachment) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Query": QueryAttachment{}.ToAttrType(ctx),
-			"Text":  TextAttachment{}.ToAttrType(ctx),
+			"query": basetypes.ListType{
+				ElemType: QueryAttachment{}.ToAttrType(ctx),
+			},
+			"text": basetypes.ListType{
+				ElemType: TextAttachment{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -362,12 +372,12 @@ func (a GenieConversation) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GenieConversation) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreatedTimestamp":     types.Int64Type,
-			"Id":                   types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
-			"SpaceId":              types.StringType,
-			"Title":                types.StringType,
-			"UserId":               types.Int64Type,
+			"created_timestamp":      types.Int64Type,
+			"id":                     types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"space_id":               types.StringType,
+			"title":                  types.StringType,
+			"user_id":                types.Int64Type,
 		},
 	}
 }
@@ -394,9 +404,9 @@ func (a GenieCreateConversationMessageRequest) GetComplexFieldTypes() map[string
 func (a GenieCreateConversationMessageRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content":        types.StringType,
-			"ConversationId": types.StringType,
-			"SpaceId":        types.StringType,
+			"content":         types.StringType,
+			"conversation_id": types.StringType,
+			"space_id":        types.StringType,
 		},
 	}
 }
@@ -424,9 +434,9 @@ func (a GenieExecuteMessageQueryRequest) GetComplexFieldTypes() map[string]refle
 func (a GenieExecuteMessageQueryRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConversationId": types.StringType,
-			"MessageId":      types.StringType,
-			"SpaceId":        types.StringType,
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
 		},
 	}
 }
@@ -456,9 +466,9 @@ func (a GenieGetConversationMessageRequest) GetComplexFieldTypes() map[string]re
 func (a GenieGetConversationMessageRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConversationId": types.StringType,
-			"MessageId":      types.StringType,
-			"SpaceId":        types.StringType,
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
 		},
 	}
 }
@@ -486,9 +496,9 @@ func (a GenieGetMessageQueryResultRequest) GetComplexFieldTypes() map[string]ref
 func (a GenieGetMessageQueryResultRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConversationId": types.StringType,
-			"MessageId":      types.StringType,
-			"SpaceId":        types.StringType,
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
 		},
 	}
 }
@@ -507,14 +517,16 @@ func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRea
 
 func (a GenieGetMessageQueryResultResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"StatementResponse": reflect.TypeOf(sql.StatementResponse{}),
+		"statement_response": reflect.TypeOf(sql.StatementResponse{}),
 	}
 }
 
 func (a GenieGetMessageQueryResultResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"StatementResponse": sql_tf.StatementResponse{}.ToAttrType(ctx),
+			"statement_response": basetypes.ListType{
+				ElemType: sql_tf.StatementResponse{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -567,28 +579,32 @@ func (newState *GenieMessage) SyncEffectiveFieldsDuringRead(existingState GenieM
 
 func (a GenieMessage) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Attachments": reflect.TypeOf(GenieAttachment{}),
-		"Error":       reflect.TypeOf(MessageError{}),
-		"QueryResult": reflect.TypeOf(Result{}),
+		"attachments":  reflect.TypeOf(GenieAttachment{}),
+		"error":        reflect.TypeOf(MessageError{}),
+		"query_result": reflect.TypeOf(Result{}),
 	}
 }
 
 func (a GenieMessage) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Attachments": basetypes.ListType{
+			"attachments": basetypes.ListType{
 				ElemType: GenieAttachment{}.ToAttrType(ctx),
 			},
-			"Content":              types.StringType,
-			"ConversationId":       types.StringType,
-			"CreatedTimestamp":     types.Int64Type,
-			"Error":                MessageError{}.ToAttrType(ctx),
-			"Id":                   types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
-			"QueryResult":          Result{}.ToAttrType(ctx),
-			"SpaceId":              types.StringType,
-			"Status":               types.StringType,
-			"UserId":               types.Int64Type,
+			"content":           types.StringType,
+			"conversation_id":   types.StringType,
+			"created_timestamp": types.Int64Type,
+			"error": basetypes.ListType{
+				ElemType: MessageError{}.ToAttrType(ctx),
+			},
+			"id":                     types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"query_result": basetypes.ListType{
+				ElemType: Result{}.ToAttrType(ctx),
+			},
+			"space_id": types.StringType,
+			"status":   types.StringType,
+			"user_id":  types.Int64Type,
 		},
 	}
 }
@@ -614,8 +630,8 @@ func (a GenieStartConversationMessageRequest) GetComplexFieldTypes() map[string]
 func (a GenieStartConversationMessageRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content": types.StringType,
-			"SpaceId": types.StringType,
+			"content":  types.StringType,
+			"space_id": types.StringType,
 		},
 	}
 }
@@ -638,18 +654,22 @@ func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringRead(ex
 
 func (a GenieStartConversationResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Conversation": reflect.TypeOf(GenieConversation{}),
-		"Message":      reflect.TypeOf(GenieMessage{}),
+		"conversation": reflect.TypeOf(GenieConversation{}),
+		"message":      reflect.TypeOf(GenieMessage{}),
 	}
 }
 
 func (a GenieStartConversationResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Conversation":   GenieConversation{}.ToAttrType(ctx),
-			"ConversationId": types.StringType,
-			"Message":        GenieMessage{}.ToAttrType(ctx),
-			"MessageId":      types.StringType,
+			"conversation": basetypes.ListType{
+				ElemType: GenieConversation{}.ToAttrType(ctx),
+			},
+			"conversation_id": types.StringType,
+			"message": basetypes.ListType{
+				ElemType: GenieMessage{}.ToAttrType(ctx),
+			},
+			"message_id": types.StringType,
 		},
 	}
 }
@@ -673,7 +693,7 @@ func (a GetDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
+			"dashboard_id": types.StringType,
 		},
 	}
 }
@@ -697,7 +717,7 @@ func (a GetPublishedDashboardRequest) GetComplexFieldTypes() map[string]reflect.
 func (a GetPublishedDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
+			"dashboard_id": types.StringType,
 		},
 	}
 }
@@ -723,8 +743,8 @@ func (a GetScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetScheduleRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
-			"ScheduleId":  types.StringType,
+			"dashboard_id": types.StringType,
+			"schedule_id":  types.StringType,
 		},
 	}
 }
@@ -752,9 +772,9 @@ func (a GetSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetSubscriptionRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId":    types.StringType,
-			"ScheduleId":     types.StringType,
-			"SubscriptionId": types.StringType,
+			"dashboard_id":    types.StringType,
+			"schedule_id":     types.StringType,
+			"subscription_id": types.StringType,
 		},
 	}
 }
@@ -786,10 +806,10 @@ func (a ListDashboardsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListDashboardsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PageSize":    types.Int64Type,
-			"PageToken":   types.StringType,
-			"ShowTrashed": types.BoolType,
-			"View":        types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"show_trashed": types.BoolType,
+			"view":         types.StringType,
 		},
 	}
 }
@@ -809,17 +829,17 @@ func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a ListDashboardsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Dashboards": reflect.TypeOf(Dashboard{}),
+		"dashboards": reflect.TypeOf(Dashboard{}),
 	}
 }
 
 func (a ListDashboardsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Dashboards": basetypes.ListType{
+			"dashboards": basetypes.ListType{
 				ElemType: Dashboard{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
+			"next_page_token": types.StringType,
 		},
 	}
 }
@@ -848,9 +868,9 @@ func (a ListSchedulesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListSchedulesRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
-			"PageSize":    types.Int64Type,
-			"PageToken":   types.StringType,
+			"dashboard_id": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
 		},
 	}
 }
@@ -872,15 +892,15 @@ func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a ListSchedulesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Schedules": reflect.TypeOf(Schedule{}),
+		"schedules": reflect.TypeOf(Schedule{}),
 	}
 }
 
 func (a ListSchedulesResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NextPageToken": types.StringType,
-			"Schedules": basetypes.ListType{
+			"next_page_token": types.StringType,
+			"schedules": basetypes.ListType{
 				ElemType: Schedule{}.ToAttrType(ctx),
 			},
 		},
@@ -913,10 +933,10 @@ func (a ListSubscriptionsRequest) GetComplexFieldTypes() map[string]reflect.Type
 func (a ListSubscriptionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
-			"PageSize":    types.Int64Type,
-			"PageToken":   types.StringType,
-			"ScheduleId":  types.StringType,
+			"dashboard_id": types.StringType,
+			"page_size":    types.Int64Type,
+			"page_token":   types.StringType,
+			"schedule_id":  types.StringType,
 		},
 	}
 }
@@ -938,15 +958,15 @@ func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existin
 
 func (a ListSubscriptionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Subscriptions": reflect.TypeOf(Subscription{}),
+		"subscriptions": reflect.TypeOf(Subscription{}),
 	}
 }
 
 func (a ListSubscriptionsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NextPageToken": types.StringType,
-			"Subscriptions": basetypes.ListType{
+			"next_page_token": types.StringType,
+			"subscriptions": basetypes.ListType{
 				ElemType: Subscription{}.ToAttrType(ctx),
 			},
 		},
@@ -972,8 +992,8 @@ func (a MessageError) GetComplexFieldTypes() map[string]reflect.Type {
 func (a MessageError) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Error": types.StringType,
-			"Type":  types.StringType,
+			"error": types.StringType,
+			"type":  types.StringType,
 		},
 	}
 }
@@ -1001,9 +1021,9 @@ func (a MigrateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type 
 func (a MigrateDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DisplayName":       types.StringType,
-			"ParentPath":        types.StringType,
-			"SourceDashboardId": types.StringType,
+			"display_name":        types.StringType,
+			"parent_path":         types.StringType,
+			"source_dashboard_id": types.StringType,
 		},
 	}
 }
@@ -1033,9 +1053,9 @@ func (a PublishRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PublishRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId":      types.StringType,
-			"EmbedCredentials": types.BoolType,
-			"WarehouseId":      types.StringType,
+			"dashboard_id":      types.StringType,
+			"embed_credentials": types.BoolType,
+			"warehouse_id":      types.StringType,
 		},
 	}
 }
@@ -1064,10 +1084,10 @@ func (a PublishedDashboard) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PublishedDashboard) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DisplayName":        types.StringType,
-			"EmbedCredentials":   types.BoolType,
-			"RevisionCreateTime": types.StringType,
-			"WarehouseId":        types.StringType,
+			"display_name":         types.StringType,
+			"embed_credentials":    types.BoolType,
+			"revision_create_time": types.StringType,
+			"warehouse_id":         types.StringType,
 		},
 	}
 }
@@ -1104,13 +1124,13 @@ func (a QueryAttachment) GetComplexFieldTypes() map[string]reflect.Type {
 func (a QueryAttachment) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description":          types.StringType,
-			"Id":                   types.StringType,
-			"InstructionId":        types.StringType,
-			"InstructionTitle":     types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
-			"Query":                types.StringType,
-			"Title":                types.StringType,
+			"description":            types.StringType,
+			"id":                     types.StringType,
+			"instruction_id":         types.StringType,
+			"instruction_title":      types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"query":                  types.StringType,
+			"title":                  types.StringType,
 		},
 	}
 }
@@ -1139,9 +1159,9 @@ func (a Result) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Result) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IsTruncated": types.BoolType,
-			"RowCount":    types.Int64Type,
-			"StatementId": types.StringType,
+			"is_truncated": types.BoolType,
+			"row_count":    types.Int64Type,
+			"statement_id": types.StringType,
 		},
 	}
 }
@@ -1178,22 +1198,24 @@ func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) 
 
 func (a Schedule) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"CronSchedule": reflect.TypeOf(CronSchedule{}),
+		"cron_schedule": reflect.TypeOf(CronSchedule{}),
 	}
 }
 
 func (a Schedule) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreateTime":   types.StringType,
-			"CronSchedule": CronSchedule{}.ToAttrType(ctx),
-			"DashboardId":  types.StringType,
-			"DisplayName":  types.StringType,
-			"Etag":         types.StringType,
-			"PauseStatus":  types.StringType,
-			"ScheduleId":   types.StringType,
-			"UpdateTime":   types.StringType,
-			"WarehouseId":  types.StringType,
+			"create_time": types.StringType,
+			"cron_schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"dashboard_id": types.StringType,
+			"display_name": types.StringType,
+			"etag":         types.StringType,
+			"pause_status": types.StringType,
+			"schedule_id":  types.StringType,
+			"update_time":  types.StringType,
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -1215,16 +1237,20 @@ func (newState *Subscriber) SyncEffectiveFieldsDuringRead(existingState Subscrib
 
 func (a Subscriber) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DestinationSubscriber": reflect.TypeOf(SubscriptionSubscriberDestination{}),
-		"UserSubscriber":        reflect.TypeOf(SubscriptionSubscriberUser{}),
+		"destination_subscriber": reflect.TypeOf(SubscriptionSubscriberDestination{}),
+		"user_subscriber":        reflect.TypeOf(SubscriptionSubscriberUser{}),
 	}
 }
 
 func (a Subscriber) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DestinationSubscriber": SubscriptionSubscriberDestination{}.ToAttrType(ctx),
-			"UserSubscriber":        SubscriptionSubscriberUser{}.ToAttrType(ctx),
+			"destination_subscriber": basetypes.ListType{
+				ElemType: SubscriptionSubscriberDestination{}.ToAttrType(ctx),
+			},
+			"user_subscriber": basetypes.ListType{
+				ElemType: SubscriptionSubscriberUser{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1260,21 +1286,23 @@ func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscr
 
 func (a Subscription) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Subscriber": reflect.TypeOf(Subscriber{}),
+		"subscriber": reflect.TypeOf(Subscriber{}),
 	}
 }
 
 func (a Subscription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreateTime":      types.StringType,
-			"CreatedByUserId": types.Int64Type,
-			"DashboardId":     types.StringType,
-			"Etag":            types.StringType,
-			"ScheduleId":      types.StringType,
-			"Subscriber":      Subscriber{}.ToAttrType(ctx),
-			"SubscriptionId":  types.StringType,
-			"UpdateTime":      types.StringType,
+			"create_time":        types.StringType,
+			"created_by_user_id": types.Int64Type,
+			"dashboard_id":       types.StringType,
+			"etag":               types.StringType,
+			"schedule_id":        types.StringType,
+			"subscriber": basetypes.ListType{
+				ElemType: Subscriber{}.ToAttrType(ctx),
+			},
+			"subscription_id": types.StringType,
+			"update_time":     types.StringType,
 		},
 	}
 }
@@ -1298,7 +1326,7 @@ func (a SubscriptionSubscriberDestination) GetComplexFieldTypes() map[string]ref
 func (a SubscriptionSubscriberDestination) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DestinationId": types.StringType,
+			"destination_id": types.StringType,
 		},
 	}
 }
@@ -1321,7 +1349,7 @@ func (a SubscriptionSubscriberUser) GetComplexFieldTypes() map[string]reflect.Ty
 func (a SubscriptionSubscriberUser) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"UserId": types.Int64Type,
+			"user_id": types.Int64Type,
 		},
 	}
 }
@@ -1346,8 +1374,8 @@ func (a TextAttachment) GetComplexFieldTypes() map[string]reflect.Type {
 func (a TextAttachment) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content": types.StringType,
-			"Id":      types.StringType,
+			"content": types.StringType,
+			"id":      types.StringType,
 		},
 	}
 }
@@ -1371,7 +1399,7 @@ func (a TrashDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a TrashDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
+			"dashboard_id": types.StringType,
 		},
 	}
 }
@@ -1414,7 +1442,7 @@ func (a UnpublishDashboardRequest) GetComplexFieldTypes() map[string]reflect.Typ
 func (a UnpublishDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
+			"dashboard_id": types.StringType,
 		},
 	}
 }
@@ -1453,15 +1481,17 @@ func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a UpdateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Dashboard": reflect.TypeOf(Dashboard{}),
+		"dashboard": reflect.TypeOf(Dashboard{}),
 	}
 }
 
 func (a UpdateDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Dashboard":   Dashboard{}.ToAttrType(ctx),
-			"DashboardId": types.StringType,
+			"dashboard": basetypes.ListType{
+				ElemType: Dashboard{}.ToAttrType(ctx),
+			},
+			"dashboard_id": types.StringType,
 		},
 	}
 }
@@ -1484,16 +1514,18 @@ func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a UpdateScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Schedule": reflect.TypeOf(Schedule{}),
+		"schedule": reflect.TypeOf(Schedule{}),
 	}
 }
 
 func (a UpdateScheduleRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DashboardId": types.StringType,
-			"Schedule":    Schedule{}.ToAttrType(ctx),
-			"ScheduleId":  types.StringType,
+			"dashboard_id": types.StringType,
+			"schedule": basetypes.ListType{
+				ElemType: Schedule{}.ToAttrType(ctx),
+			},
+			"schedule_id": types.StringType,
 		},
 	}
 }

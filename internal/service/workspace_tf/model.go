@@ -39,8 +39,8 @@ func (a AclItem) GetComplexFieldTypes() map[string]reflect.Type {
 func (a AclItem) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Permission": types.StringType,
-			"Principal":  types.StringType,
+			"permission": types.StringType,
+			"principal":  types.StringType,
 		},
 	}
 }
@@ -66,8 +66,8 @@ func (a AzureKeyVaultSecretScopeMetadata) GetComplexFieldTypes() map[string]refl
 func (a AzureKeyVaultSecretScopeMetadata) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DnsName":    types.StringType,
-			"ResourceId": types.StringType,
+			"dns_name":    types.StringType,
+			"resource_id": types.StringType,
 		},
 	}
 }
@@ -107,9 +107,9 @@ func (a CreateCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type
 func (a CreateCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GitProvider":         types.StringType,
-			"GitUsername":         types.StringType,
-			"PersonalAccessToken": types.StringType,
+			"git_provider":          types.StringType,
+			"git_username":          types.StringType,
+			"personal_access_token": types.StringType,
 		},
 	}
 }
@@ -137,9 +137,9 @@ func (a CreateCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Typ
 func (a CreateCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CredentialId": types.Int64Type,
-			"GitProvider":  types.StringType,
-			"GitUsername":  types.StringType,
+			"credential_id": types.Int64Type,
+			"git_provider":  types.StringType,
+			"git_username":  types.StringType,
 		},
 	}
 }
@@ -169,17 +169,19 @@ func (newState *CreateRepoRequest) SyncEffectiveFieldsDuringRead(existingState C
 
 func (a CreateRepoRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SparseCheckout": reflect.TypeOf(SparseCheckout{}),
+		"sparse_checkout": reflect.TypeOf(SparseCheckout{}),
 	}
 }
 
 func (a CreateRepoRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path":           types.StringType,
-			"Provider":       types.StringType,
-			"SparseCheckout": SparseCheckout{}.ToAttrType(ctx),
-			"Url":            types.StringType,
+			"path":     types.StringType,
+			"provider": types.StringType,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckout{}.ToAttrType(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -210,20 +212,22 @@ func (newState *CreateRepoResponse) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a CreateRepoResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SparseCheckout": reflect.TypeOf(SparseCheckout{}),
+		"sparse_checkout": reflect.TypeOf(SparseCheckout{}),
 	}
 }
 
 func (a CreateRepoResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Branch":         types.StringType,
-			"HeadCommitId":   types.StringType,
-			"Id":             types.Int64Type,
-			"Path":           types.StringType,
-			"Provider":       types.StringType,
-			"SparseCheckout": SparseCheckout{}.ToAttrType(ctx),
-			"Url":            types.StringType,
+			"branch":         types.StringType,
+			"head_commit_id": types.StringType,
+			"id":             types.Int64Type,
+			"path":           types.StringType,
+			"provider":       types.StringType,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckout{}.ToAttrType(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -249,17 +253,19 @@ func (newState *CreateScope) SyncEffectiveFieldsDuringRead(existingState CreateS
 
 func (a CreateScope) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"BackendAzureKeyvault": reflect.TypeOf(AzureKeyVaultSecretScopeMetadata{}),
+		"backend_azure_keyvault": reflect.TypeOf(AzureKeyVaultSecretScopeMetadata{}),
 	}
 }
 
 func (a CreateScope) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BackendAzureKeyvault":   AzureKeyVaultSecretScopeMetadata{}.ToAttrType(ctx),
-			"InitialManagePrincipal": types.StringType,
-			"Scope":                  types.StringType,
-			"ScopeBackendType":       types.StringType,
+			"backend_azure_keyvault": basetypes.ListType{
+				ElemType: AzureKeyVaultSecretScopeMetadata{}.ToAttrType(ctx),
+			},
+			"initial_manage_principal": types.StringType,
+			"scope":                    types.StringType,
+			"scope_backend_type":       types.StringType,
 		},
 	}
 }
@@ -306,9 +312,9 @@ func (a CredentialInfo) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CredentialInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CredentialId": types.Int64Type,
-			"GitProvider":  types.StringType,
-			"GitUsername":  types.StringType,
+			"credential_id": types.Int64Type,
+			"git_provider":  types.StringType,
+			"git_username":  types.StringType,
 		},
 	}
 }
@@ -336,8 +342,8 @@ func (a Delete) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Delete) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path":      types.StringType,
-			"Recursive": types.BoolType,
+			"path":      types.StringType,
+			"recursive": types.BoolType,
 		},
 	}
 }
@@ -362,8 +368,8 @@ func (a DeleteAcl) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteAcl) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Principal": types.StringType,
-			"Scope":     types.StringType,
+			"principal": types.StringType,
+			"scope":     types.StringType,
 		},
 	}
 }
@@ -406,7 +412,7 @@ func (a DeleteCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type
 func (a DeleteCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CredentialId": types.Int64Type,
+			"credential_id": types.Int64Type,
 		},
 	}
 }
@@ -449,7 +455,7 @@ func (a DeleteRepoRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteRepoRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RepoId": types.Int64Type,
+			"repo_id": types.Int64Type,
 		},
 	}
 }
@@ -510,7 +516,7 @@ func (a DeleteScope) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteScope) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Scope": types.StringType,
+			"scope": types.StringType,
 		},
 	}
 }
@@ -554,8 +560,8 @@ func (a DeleteSecret) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteSecret) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Key":   types.StringType,
-			"Scope": types.StringType,
+			"key":   types.StringType,
+			"scope": types.StringType,
 		},
 	}
 }
@@ -614,8 +620,8 @@ func (a ExportRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ExportRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Format": types.StringType,
-			"Path":   types.StringType,
+			"format": types.StringType,
+			"path":   types.StringType,
 		},
 	}
 }
@@ -641,8 +647,8 @@ func (a ExportResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ExportResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content":  types.StringType,
-			"FileType": types.StringType,
+			"content":   types.StringType,
+			"file_type": types.StringType,
 		},
 	}
 }
@@ -668,8 +674,8 @@ func (a GetAclRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetAclRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Principal": types.StringType,
-			"Scope":     types.StringType,
+			"principal": types.StringType,
+			"scope":     types.StringType,
 		},
 	}
 }
@@ -693,7 +699,7 @@ func (a GetCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CredentialId": types.Int64Type,
+			"credential_id": types.Int64Type,
 		},
 	}
 }
@@ -721,9 +727,9 @@ func (a GetCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CredentialId": types.Int64Type,
-			"GitProvider":  types.StringType,
-			"GitUsername":  types.StringType,
+			"credential_id": types.Int64Type,
+			"git_provider":  types.StringType,
+			"git_username":  types.StringType,
 		},
 	}
 }
@@ -747,7 +753,7 @@ func (a GetRepoPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflec
 func (a GetRepoPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RepoId": types.StringType,
+			"repo_id": types.StringType,
 		},
 	}
 }
@@ -765,14 +771,14 @@ func (newState *GetRepoPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(e
 
 func (a GetRepoPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PermissionLevels": reflect.TypeOf(RepoPermissionsDescription{}),
+		"permission_levels": reflect.TypeOf(RepoPermissionsDescription{}),
 	}
 }
 
 func (a GetRepoPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PermissionLevels": basetypes.ListType{
+			"permission_levels": basetypes.ListType{
 				ElemType: RepoPermissionsDescription{}.ToAttrType(ctx),
 			},
 		},
@@ -798,7 +804,7 @@ func (a GetRepoPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Typ
 func (a GetRepoPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RepoId": types.StringType,
+			"repo_id": types.StringType,
 		},
 	}
 }
@@ -822,7 +828,7 @@ func (a GetRepoRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetRepoRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RepoId": types.Int64Type,
+			"repo_id": types.Int64Type,
 		},
 	}
 }
@@ -852,20 +858,22 @@ func (newState *GetRepoResponse) SyncEffectiveFieldsDuringRead(existingState Get
 
 func (a GetRepoResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SparseCheckout": reflect.TypeOf(SparseCheckout{}),
+		"sparse_checkout": reflect.TypeOf(SparseCheckout{}),
 	}
 }
 
 func (a GetRepoResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Branch":         types.StringType,
-			"HeadCommitId":   types.StringType,
-			"Id":             types.Int64Type,
-			"Path":           types.StringType,
-			"Provider":       types.StringType,
-			"SparseCheckout": SparseCheckout{}.ToAttrType(ctx),
-			"Url":            types.StringType,
+			"branch":         types.StringType,
+			"head_commit_id": types.StringType,
+			"id":             types.Int64Type,
+			"path":           types.StringType,
+			"provider":       types.StringType,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckout{}.ToAttrType(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -891,8 +899,8 @@ func (a GetSecretRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetSecretRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Key":   types.StringType,
-			"Scope": types.StringType,
+			"key":   types.StringType,
+			"scope": types.StringType,
 		},
 	}
 }
@@ -917,8 +925,8 @@ func (a GetSecretResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetSecretResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Key":   types.StringType,
-			"Value": types.StringType,
+			"key":   types.StringType,
+			"value": types.StringType,
 		},
 	}
 }
@@ -942,7 +950,7 @@ func (a GetStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path": types.StringType,
+			"path": types.StringType,
 		},
 	}
 }
@@ -968,8 +976,8 @@ func (a GetWorkspaceObjectPermissionLevelsRequest) GetComplexFieldTypes() map[st
 func (a GetWorkspaceObjectPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"WorkspaceObjectId":   types.StringType,
-			"WorkspaceObjectType": types.StringType,
+			"workspace_object_id":   types.StringType,
+			"workspace_object_type": types.StringType,
 		},
 	}
 }
@@ -987,14 +995,14 @@ func (newState *GetWorkspaceObjectPermissionLevelsResponse) SyncEffectiveFieldsD
 
 func (a GetWorkspaceObjectPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PermissionLevels": reflect.TypeOf(WorkspaceObjectPermissionsDescription{}),
+		"permission_levels": reflect.TypeOf(WorkspaceObjectPermissionsDescription{}),
 	}
 }
 
 func (a GetWorkspaceObjectPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PermissionLevels": basetypes.ListType{
+			"permission_levels": basetypes.ListType{
 				ElemType: WorkspaceObjectPermissionsDescription{}.ToAttrType(ctx),
 			},
 		},
@@ -1022,8 +1030,8 @@ func (a GetWorkspaceObjectPermissionsRequest) GetComplexFieldTypes() map[string]
 func (a GetWorkspaceObjectPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"WorkspaceObjectId":   types.StringType,
-			"WorkspaceObjectType": types.StringType,
+			"workspace_object_id":   types.StringType,
+			"workspace_object_type": types.StringType,
 		},
 	}
 }
@@ -1074,11 +1082,11 @@ func (a Import) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Import) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content":   types.StringType,
-			"Format":    types.StringType,
-			"Language":  types.StringType,
-			"Overwrite": types.BoolType,
-			"Path":      types.StringType,
+			"content":   types.StringType,
+			"format":    types.StringType,
+			"language":  types.StringType,
+			"overwrite": types.BoolType,
+			"path":      types.StringType,
 		},
 	}
 }
@@ -1121,7 +1129,7 @@ func (a ListAclsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListAclsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Scope": types.StringType,
+			"scope": types.StringType,
 		},
 	}
 }
@@ -1139,14 +1147,14 @@ func (newState *ListAclsResponse) SyncEffectiveFieldsDuringRead(existingState Li
 
 func (a ListAclsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Items": reflect.TypeOf(AclItem{}),
+		"items": reflect.TypeOf(AclItem{}),
 	}
 }
 
 func (a ListAclsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Items": basetypes.ListType{
+			"items": basetypes.ListType{
 				ElemType: AclItem{}.ToAttrType(ctx),
 			},
 		},
@@ -1166,14 +1174,14 @@ func (newState *ListCredentialsResponse) SyncEffectiveFieldsDuringRead(existingS
 
 func (a ListCredentialsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Credentials": reflect.TypeOf(CredentialInfo{}),
+		"credentials": reflect.TypeOf(CredentialInfo{}),
 	}
 }
 
 func (a ListCredentialsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Credentials": basetypes.ListType{
+			"credentials": basetypes.ListType{
 				ElemType: CredentialInfo{}.ToAttrType(ctx),
 			},
 		},
@@ -1205,8 +1213,8 @@ func (a ListReposRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListReposRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NextPageToken": types.StringType,
-			"PathPrefix":    types.StringType,
+			"next_page_token": types.StringType,
+			"path_prefix":     types.StringType,
 		},
 	}
 }
@@ -1227,15 +1235,15 @@ func (newState *ListReposResponse) SyncEffectiveFieldsDuringRead(existingState L
 
 func (a ListReposResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Repos": reflect.TypeOf(RepoInfo{}),
+		"repos": reflect.TypeOf(RepoInfo{}),
 	}
 }
 
 func (a ListReposResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NextPageToken": types.StringType,
-			"Repos": basetypes.ListType{
+			"next_page_token": types.StringType,
+			"repos": basetypes.ListType{
 				ElemType: RepoInfo{}.ToAttrType(ctx),
 			},
 		},
@@ -1255,14 +1263,14 @@ func (newState *ListResponse) SyncEffectiveFieldsDuringRead(existingState ListRe
 
 func (a ListResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Objects": reflect.TypeOf(ObjectInfo{}),
+		"objects": reflect.TypeOf(ObjectInfo{}),
 	}
 }
 
 func (a ListResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Objects": basetypes.ListType{
+			"objects": basetypes.ListType{
 				ElemType: ObjectInfo{}.ToAttrType(ctx),
 			},
 		},
@@ -1282,14 +1290,14 @@ func (newState *ListScopesResponse) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a ListScopesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Scopes": reflect.TypeOf(SecretScope{}),
+		"scopes": reflect.TypeOf(SecretScope{}),
 	}
 }
 
 func (a ListScopesResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Scopes": basetypes.ListType{
+			"scopes": basetypes.ListType{
 				ElemType: SecretScope{}.ToAttrType(ctx),
 			},
 		},
@@ -1315,7 +1323,7 @@ func (a ListSecretsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListSecretsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Scope": types.StringType,
+			"scope": types.StringType,
 		},
 	}
 }
@@ -1333,14 +1341,14 @@ func (newState *ListSecretsResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a ListSecretsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Secrets": reflect.TypeOf(SecretMetadata{}),
+		"secrets": reflect.TypeOf(SecretMetadata{}),
 	}
 }
 
 func (a ListSecretsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Secrets": basetypes.ListType{
+			"secrets": basetypes.ListType{
 				ElemType: SecretMetadata{}.ToAttrType(ctx),
 			},
 		},
@@ -1368,8 +1376,8 @@ func (a ListWorkspaceRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListWorkspaceRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NotebooksModifiedAfter": types.Int64Type,
-			"Path":                   types.StringType,
+			"notebooks_modified_after": types.Int64Type,
+			"path":                     types.StringType,
 		},
 	}
 }
@@ -1394,7 +1402,7 @@ func (a Mkdirs) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Mkdirs) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path": types.StringType,
+			"path": types.StringType,
 		},
 	}
 }
@@ -1456,14 +1464,14 @@ func (a ObjectInfo) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ObjectInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreatedAt":  types.Int64Type,
-			"Language":   types.StringType,
-			"ModifiedAt": types.Int64Type,
-			"ObjectId":   types.Int64Type,
-			"ObjectType": types.StringType,
-			"Path":       types.StringType,
-			"ResourceId": types.StringType,
-			"Size":       types.Int64Type,
+			"created_at":  types.Int64Type,
+			"language":    types.StringType,
+			"modified_at": types.Int64Type,
+			"object_id":   types.Int64Type,
+			"object_type": types.StringType,
+			"path":        types.StringType,
+			"resource_id": types.StringType,
+			"size":        types.Int64Type,
 		},
 	}
 }
@@ -1490,9 +1498,9 @@ func (a PutAcl) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PutAcl) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Permission": types.StringType,
-			"Principal":  types.StringType,
-			"Scope":      types.StringType,
+			"permission": types.StringType,
+			"principal":  types.StringType,
+			"scope":      types.StringType,
 		},
 	}
 }
@@ -1540,10 +1548,10 @@ func (a PutSecret) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PutSecret) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BytesValue":  types.StringType,
-			"Key":         types.StringType,
-			"Scope":       types.StringType,
-			"StringValue": types.StringType,
+			"bytes_value":  types.StringType,
+			"key":          types.StringType,
+			"scope":        types.StringType,
+			"string_value": types.StringType,
 		},
 	}
 }
@@ -1591,10 +1599,10 @@ func (a RepoAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type
 func (a RepoAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GroupName":            types.StringType,
-			"PermissionLevel":      types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -1620,20 +1628,20 @@ func (newState *RepoAccessControlResponse) SyncEffectiveFieldsDuringRead(existin
 
 func (a RepoAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AllPermissions": reflect.TypeOf(RepoPermission{}),
+		"all_permissions": reflect.TypeOf(RepoPermission{}),
 	}
 }
 
 func (a RepoAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllPermissions": basetypes.ListType{
+			"all_permissions": basetypes.ListType{
 				ElemType: RepoPermission{}.ToAttrType(ctx),
 			},
-			"DisplayName":          types.StringType,
-			"GroupName":            types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -1664,20 +1672,22 @@ func (newState *RepoInfo) SyncEffectiveFieldsDuringRead(existingState RepoInfo) 
 
 func (a RepoInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SparseCheckout": reflect.TypeOf(SparseCheckout{}),
+		"sparse_checkout": reflect.TypeOf(SparseCheckout{}),
 	}
 }
 
 func (a RepoInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Branch":         types.StringType,
-			"HeadCommitId":   types.StringType,
-			"Id":             types.Int64Type,
-			"Path":           types.StringType,
-			"Provider":       types.StringType,
-			"SparseCheckout": SparseCheckout{}.ToAttrType(ctx),
-			"Url":            types.StringType,
+			"branch":         types.StringType,
+			"head_commit_id": types.StringType,
+			"id":             types.Int64Type,
+			"path":           types.StringType,
+			"provider":       types.StringType,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckout{}.ToAttrType(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -1698,18 +1708,18 @@ func (newState *RepoPermission) SyncEffectiveFieldsDuringRead(existingState Repo
 
 func (a RepoPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a RepoPermission) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Inherited": types.BoolType,
-			"InheritedFromObject": basetypes.ListType{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PermissionLevel": types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -1730,18 +1740,18 @@ func (newState *RepoPermissions) SyncEffectiveFieldsDuringRead(existingState Rep
 
 func (a RepoPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(RepoAccessControlResponse{}),
+		"access_control_list": reflect.TypeOf(RepoAccessControlResponse{}),
 	}
 }
 
 func (a RepoPermissions) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: RepoAccessControlResponse{}.ToAttrType(ctx),
 			},
-			"ObjectId":   types.StringType,
-			"ObjectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -1765,8 +1775,8 @@ func (a RepoPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Ty
 func (a RepoPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description":     types.StringType,
-			"PermissionLevel": types.StringType,
+			"description":      types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -1785,17 +1795,17 @@ func (newState *RepoPermissionsRequest) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a RepoPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(RepoAccessControlRequest{}),
+		"access_control_list": reflect.TypeOf(RepoAccessControlRequest{}),
 	}
 }
 
 func (a RepoPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: RepoAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"RepoId": types.StringType,
+			"repo_id": types.StringType,
 		},
 	}
 }
@@ -1820,8 +1830,8 @@ func (a SecretMetadata) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SecretMetadata) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Key":                  types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
+			"key":                    types.StringType,
+			"last_updated_timestamp": types.Int64Type,
 		},
 	}
 }
@@ -1843,16 +1853,18 @@ func (newState *SecretScope) SyncEffectiveFieldsDuringRead(existingState SecretS
 
 func (a SecretScope) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"KeyvaultMetadata": reflect.TypeOf(AzureKeyVaultSecretScopeMetadata{}),
+		"keyvault_metadata": reflect.TypeOf(AzureKeyVaultSecretScopeMetadata{}),
 	}
 }
 
 func (a SecretScope) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BackendType":      types.StringType,
-			"KeyvaultMetadata": AzureKeyVaultSecretScopeMetadata{}.ToAttrType(ctx),
-			"Name":             types.StringType,
+			"backend_type": types.StringType,
+			"keyvault_metadata": basetypes.ListType{
+				ElemType: AzureKeyVaultSecretScopeMetadata{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
 		},
 	}
 }
@@ -1874,14 +1886,14 @@ func (newState *SparseCheckout) SyncEffectiveFieldsDuringRead(existingState Spar
 
 func (a SparseCheckout) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Patterns": reflect.TypeOf(types.StringType),
+		"patterns": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a SparseCheckout) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Patterns": basetypes.ListType{
+			"patterns": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1905,14 +1917,14 @@ func (newState *SparseCheckoutUpdate) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a SparseCheckoutUpdate) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Patterns": reflect.TypeOf(types.StringType),
+		"patterns": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a SparseCheckoutUpdate) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Patterns": basetypes.ListType{
+			"patterns": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1956,10 +1968,10 @@ func (a UpdateCredentialsRequest) GetComplexFieldTypes() map[string]reflect.Type
 func (a UpdateCredentialsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CredentialId":        types.Int64Type,
-			"GitProvider":         types.StringType,
-			"GitUsername":         types.StringType,
-			"PersonalAccessToken": types.StringType,
+			"credential_id":         types.Int64Type,
+			"git_provider":          types.StringType,
+			"git_username":          types.StringType,
+			"personal_access_token": types.StringType,
 		},
 	}
 }
@@ -2006,17 +2018,19 @@ func (newState *UpdateRepoRequest) SyncEffectiveFieldsDuringRead(existingState U
 
 func (a UpdateRepoRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SparseCheckout": reflect.TypeOf(SparseCheckoutUpdate{}),
+		"sparse_checkout": reflect.TypeOf(SparseCheckoutUpdate{}),
 	}
 }
 
 func (a UpdateRepoRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Branch":         types.StringType,
-			"RepoId":         types.Int64Type,
-			"SparseCheckout": SparseCheckoutUpdate{}.ToAttrType(ctx),
-			"Tag":            types.StringType,
+			"branch":  types.StringType,
+			"repo_id": types.Int64Type,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckoutUpdate{}.ToAttrType(ctx),
+			},
+			"tag": types.StringType,
 		},
 	}
 }
@@ -2064,10 +2078,10 @@ func (a WorkspaceObjectAccessControlRequest) GetComplexFieldTypes() map[string]r
 func (a WorkspaceObjectAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GroupName":            types.StringType,
-			"PermissionLevel":      types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -2093,20 +2107,20 @@ func (newState *WorkspaceObjectAccessControlResponse) SyncEffectiveFieldsDuringR
 
 func (a WorkspaceObjectAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AllPermissions": reflect.TypeOf(WorkspaceObjectPermission{}),
+		"all_permissions": reflect.TypeOf(WorkspaceObjectPermission{}),
 	}
 }
 
 func (a WorkspaceObjectAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllPermissions": basetypes.ListType{
+			"all_permissions": basetypes.ListType{
 				ElemType: WorkspaceObjectPermission{}.ToAttrType(ctx),
 			},
-			"DisplayName":          types.StringType,
-			"GroupName":            types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -2127,18 +2141,18 @@ func (newState *WorkspaceObjectPermission) SyncEffectiveFieldsDuringRead(existin
 
 func (a WorkspaceObjectPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a WorkspaceObjectPermission) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Inherited": types.BoolType,
-			"InheritedFromObject": basetypes.ListType{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PermissionLevel": types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2159,18 +2173,18 @@ func (newState *WorkspaceObjectPermissions) SyncEffectiveFieldsDuringRead(existi
 
 func (a WorkspaceObjectPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(WorkspaceObjectAccessControlResponse{}),
+		"access_control_list": reflect.TypeOf(WorkspaceObjectAccessControlResponse{}),
 	}
 }
 
 func (a WorkspaceObjectPermissions) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: WorkspaceObjectAccessControlResponse{}.ToAttrType(ctx),
 			},
-			"ObjectId":   types.StringType,
-			"ObjectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -2194,8 +2208,8 @@ func (a WorkspaceObjectPermissionsDescription) GetComplexFieldTypes() map[string
 func (a WorkspaceObjectPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description":     types.StringType,
-			"PermissionLevel": types.StringType,
+			"description":      types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2216,18 +2230,18 @@ func (newState *WorkspaceObjectPermissionsRequest) SyncEffectiveFieldsDuringRead
 
 func (a WorkspaceObjectPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(WorkspaceObjectAccessControlRequest{}),
+		"access_control_list": reflect.TypeOf(WorkspaceObjectAccessControlRequest{}),
 	}
 }
 
 func (a WorkspaceObjectPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: WorkspaceObjectAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"WorkspaceObjectId":   types.StringType,
-			"WorkspaceObjectType": types.StringType,
+			"workspace_object_id":   types.StringType,
+			"workspace_object_type": types.StringType,
 		},
 	}
 }

@@ -3,6 +3,7 @@ package qualitymonitor
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -59,6 +60,20 @@ type MonitorInfoExtended struct {
 	WarehouseId          types.String `tfsdk:"warehouse_id" tf:"optional"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard" tf:"optional"`
 	ID                   types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
+}
+
+var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
+
+func (m MonitorInfoExtended) GetComplexFieldTypes() map[string]reflect.Type {
+	return m.MonitorInfo.GetComplexFieldTypes()
+}
+
+func (m MonitorInfoExtended) ToAttrType(ctx context.Context) types.ObjectType {
+	tpe := m.MonitorInfo.ToAttrType(ctx)
+	tpe.AttrTypes["warehouse_id"] = types.StringType
+	tpe.AttrTypes["skip_builtin_dashboard"] = types.BoolType
+	tpe.AttrTypes["id"] = types.StringType
+	return tpe
 }
 
 type QualityMonitorResource struct {

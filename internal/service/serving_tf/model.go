@@ -48,8 +48,8 @@ func (a Ai21LabsConfig) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Ai21LabsConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Ai21labsApiKey":          types.StringType,
-			"Ai21labsApiKeyPlaintext": types.StringType,
+			"ai21labs_api_key":           types.StringType,
+			"ai21labs_api_key_plaintext": types.StringType,
 		},
 	}
 }
@@ -78,22 +78,28 @@ func (newState *AiGatewayConfig) SyncEffectiveFieldsDuringRead(existingState AiG
 
 func (a AiGatewayConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Guardrails":           reflect.TypeOf(AiGatewayGuardrails{}),
-		"InferenceTableConfig": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
-		"RateLimits":           reflect.TypeOf(AiGatewayRateLimit{}),
-		"UsageTrackingConfig":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
+		"guardrails":             reflect.TypeOf(AiGatewayGuardrails{}),
+		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
+		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit{}),
+		"usage_tracking_config":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
 	}
 }
 
 func (a AiGatewayConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Guardrails":           AiGatewayGuardrails{}.ToAttrType(ctx),
-			"InferenceTableConfig": AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
-			"RateLimits": basetypes.ListType{
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.ToAttrType(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
+			},
+			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.ToAttrType(ctx),
 			},
-			"UsageTrackingConfig": AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -119,21 +125,23 @@ func (newState *AiGatewayGuardrailParameters) SyncEffectiveFieldsDuringRead(exis
 
 func (a AiGatewayGuardrailParameters) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InvalidKeywords": reflect.TypeOf(types.StringType),
-		"Pii":             reflect.TypeOf(AiGatewayGuardrailPiiBehavior{}),
-		"ValidTopics":     reflect.TypeOf(types.StringType),
+		"invalid_keywords": reflect.TypeOf(types.StringType),
+		"pii":              reflect.TypeOf(AiGatewayGuardrailPiiBehavior{}),
+		"valid_topics":     reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a AiGatewayGuardrailParameters) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"InvalidKeywords": basetypes.ListType{
+			"invalid_keywords": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Pii":    AiGatewayGuardrailPiiBehavior{}.ToAttrType(ctx),
-			"Safety": types.BoolType,
-			"ValidTopics": basetypes.ListType{
+			"pii": basetypes.ListType{
+				ElemType: AiGatewayGuardrailPiiBehavior{}.ToAttrType(ctx),
+			},
+			"safety": types.BoolType,
+			"valid_topics": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -163,7 +171,7 @@ func (a AiGatewayGuardrailPiiBehavior) GetComplexFieldTypes() map[string]reflect
 func (a AiGatewayGuardrailPiiBehavior) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Behavior": types.StringType,
+			"behavior": types.StringType,
 		},
 	}
 }
@@ -183,16 +191,20 @@ func (newState *AiGatewayGuardrails) SyncEffectiveFieldsDuringRead(existingState
 
 func (a AiGatewayGuardrails) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Input":  reflect.TypeOf(AiGatewayGuardrailParameters{}),
-		"Output": reflect.TypeOf(AiGatewayGuardrailParameters{}),
+		"input":  reflect.TypeOf(AiGatewayGuardrailParameters{}),
+		"output": reflect.TypeOf(AiGatewayGuardrailParameters{}),
 	}
 }
 
 func (a AiGatewayGuardrails) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Input":  AiGatewayGuardrailParameters{}.ToAttrType(ctx),
-			"Output": AiGatewayGuardrailParameters{}.ToAttrType(ctx),
+			"input": basetypes.ListType{
+				ElemType: AiGatewayGuardrailParameters{}.ToAttrType(ctx),
+			},
+			"output": basetypes.ListType{
+				ElemType: AiGatewayGuardrailParameters{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -226,10 +238,10 @@ func (a AiGatewayInferenceTableConfig) GetComplexFieldTypes() map[string]reflect
 func (a AiGatewayInferenceTableConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CatalogName":     types.StringType,
-			"Enabled":         types.BoolType,
-			"SchemaName":      types.StringType,
-			"TableNamePrefix": types.StringType,
+			"catalog_name":      types.StringType,
+			"enabled":           types.BoolType,
+			"schema_name":       types.StringType,
+			"table_name_prefix": types.StringType,
 		},
 	}
 }
@@ -259,9 +271,9 @@ func (a AiGatewayRateLimit) GetComplexFieldTypes() map[string]reflect.Type {
 func (a AiGatewayRateLimit) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Calls":         types.Int64Type,
-			"Key":           types.StringType,
-			"RenewalPeriod": types.StringType,
+			"calls":          types.Int64Type,
+			"key":            types.StringType,
+			"renewal_period": types.StringType,
 		},
 	}
 }
@@ -284,7 +296,7 @@ func (a AiGatewayUsageTrackingConfig) GetComplexFieldTypes() map[string]reflect.
 func (a AiGatewayUsageTrackingConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Enabled": types.BoolType,
+			"enabled": types.BoolType,
 		},
 	}
 }
@@ -336,12 +348,12 @@ func (a AmazonBedrockConfig) GetComplexFieldTypes() map[string]reflect.Type {
 func (a AmazonBedrockConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AwsAccessKeyId":              types.StringType,
-			"AwsAccessKeyIdPlaintext":     types.StringType,
-			"AwsRegion":                   types.StringType,
-			"AwsSecretAccessKey":          types.StringType,
-			"AwsSecretAccessKeyPlaintext": types.StringType,
-			"BedrockProvider":             types.StringType,
+			"aws_access_key_id":               types.StringType,
+			"aws_access_key_id_plaintext":     types.StringType,
+			"aws_region":                      types.StringType,
+			"aws_secret_access_key":           types.StringType,
+			"aws_secret_access_key_plaintext": types.StringType,
+			"bedrock_provider":                types.StringType,
 		},
 	}
 }
@@ -372,8 +384,8 @@ func (a AnthropicConfig) GetComplexFieldTypes() map[string]reflect.Type {
 func (a AnthropicConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AnthropicApiKey":          types.StringType,
-			"AnthropicApiKeyPlaintext": types.StringType,
+			"anthropic_api_key":           types.StringType,
+			"anthropic_api_key_plaintext": types.StringType,
 		},
 	}
 }
@@ -405,10 +417,10 @@ func (a AutoCaptureConfigInput) GetComplexFieldTypes() map[string]reflect.Type {
 func (a AutoCaptureConfigInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CatalogName":     types.StringType,
-			"Enabled":         types.BoolType,
-			"SchemaName":      types.StringType,
-			"TableNamePrefix": types.StringType,
+			"catalog_name":      types.StringType,
+			"enabled":           types.BoolType,
+			"schema_name":       types.StringType,
+			"table_name_prefix": types.StringType,
 		},
 	}
 }
@@ -434,18 +446,20 @@ func (newState *AutoCaptureConfigOutput) SyncEffectiveFieldsDuringRead(existingS
 
 func (a AutoCaptureConfigOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"State": reflect.TypeOf(AutoCaptureState{}),
+		"state": reflect.TypeOf(AutoCaptureState{}),
 	}
 }
 
 func (a AutoCaptureConfigOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CatalogName":     types.StringType,
-			"Enabled":         types.BoolType,
-			"SchemaName":      types.StringType,
-			"State":           AutoCaptureState{}.ToAttrType(ctx),
-			"TableNamePrefix": types.StringType,
+			"catalog_name": types.StringType,
+			"enabled":      types.BoolType,
+			"schema_name":  types.StringType,
+			"state": basetypes.ListType{
+				ElemType: AutoCaptureState{}.ToAttrType(ctx),
+			},
+			"table_name_prefix": types.StringType,
 		},
 	}
 }
@@ -462,14 +476,16 @@ func (newState *AutoCaptureState) SyncEffectiveFieldsDuringRead(existingState Au
 
 func (a AutoCaptureState) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PayloadTable": reflect.TypeOf(PayloadTable{}),
+		"payload_table": reflect.TypeOf(PayloadTable{}),
 	}
 }
 
 func (a AutoCaptureState) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PayloadTable": PayloadTable{}.ToAttrType(ctx),
+			"payload_table": basetypes.ListType{
+				ElemType: PayloadTable{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -497,8 +513,8 @@ func (a BuildLogsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a BuildLogsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name":            types.StringType,
-			"ServedModelName": types.StringType,
+			"name":              types.StringType,
+			"served_model_name": types.StringType,
 		},
 	}
 }
@@ -521,7 +537,7 @@ func (a BuildLogsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a BuildLogsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Logs": types.StringType,
+			"logs": types.StringType,
 		},
 	}
 }
@@ -546,8 +562,8 @@ func (a ChatMessage) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ChatMessage) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content": types.StringType,
-			"Role":    types.StringType,
+			"content": types.StringType,
+			"role":    types.StringType,
 		},
 	}
 }
@@ -581,9 +597,9 @@ func (a CohereConfig) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CohereConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CohereApiBase":         types.StringType,
-			"CohereApiKey":          types.StringType,
-			"CohereApiKeyPlaintext": types.StringType,
+			"cohere_api_base":          types.StringType,
+			"cohere_api_key":           types.StringType,
+			"cohere_api_key_plaintext": types.StringType,
 		},
 	}
 }
@@ -616,24 +632,28 @@ func (newState *CreateServingEndpoint) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a CreateServingEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AiGateway":  reflect.TypeOf(AiGatewayConfig{}),
-		"Config":     reflect.TypeOf(EndpointCoreConfigInput{}),
-		"RateLimits": reflect.TypeOf(RateLimit{}),
-		"Tags":       reflect.TypeOf(EndpointTag{}),
+		"ai_gateway":  reflect.TypeOf(AiGatewayConfig{}),
+		"config":      reflect.TypeOf(EndpointCoreConfigInput{}),
+		"rate_limits": reflect.TypeOf(RateLimit{}),
+		"tags":        reflect.TypeOf(EndpointTag{}),
 	}
 }
 
 func (a CreateServingEndpoint) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AiGateway": AiGatewayConfig{}.ToAttrType(ctx),
-			"Config":    EndpointCoreConfigInput{}.ToAttrType(ctx),
-			"Name":      types.StringType,
-			"RateLimits": basetypes.ListType{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.ToAttrType(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigInput{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
+			"rate_limits": basetypes.ListType{
 				ElemType: RateLimit{}.ToAttrType(ctx),
 			},
-			"RouteOptimized": types.BoolType,
-			"Tags": basetypes.ListType{
+			"route_optimized": types.BoolType,
+			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.ToAttrType(ctx),
 			},
 		},
@@ -673,9 +693,9 @@ func (a DatabricksModelServingConfig) GetComplexFieldTypes() map[string]reflect.
 func (a DatabricksModelServingConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DatabricksApiToken":          types.StringType,
-			"DatabricksApiTokenPlaintext": types.StringType,
-			"DatabricksWorkspaceUrl":      types.StringType,
+			"databricks_api_token":           types.StringType,
+			"databricks_api_token_plaintext": types.StringType,
+			"databricks_workspace_url":       types.StringType,
 		},
 	}
 }
@@ -696,22 +716,22 @@ func (newState *DataframeSplitInput) SyncEffectiveFieldsDuringRead(existingState
 
 func (a DataframeSplitInput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Columns": reflect.TypeOf(struct{}{}),
-		"Data":    reflect.TypeOf(struct{}{}),
-		"Index":   reflect.TypeOf(types.Int64Type),
+		"columns": reflect.TypeOf(struct{}{}),
+		"data":    reflect.TypeOf(struct{}{}),
+		"index":   reflect.TypeOf(types.Int64Type),
 	}
 }
 
 func (a DataframeSplitInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Columns": basetypes.ListType{
+			"columns": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"Data": basetypes.ListType{
+			"data": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"Index": basetypes.ListType{
+			"index": basetypes.ListType{
 				ElemType: types.Int64Type,
 			},
 		},
@@ -756,7 +776,7 @@ func (a DeleteServingEndpointRequest) GetComplexFieldTypes() map[string]reflect.
 func (a DeleteServingEndpointRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -777,18 +797,18 @@ func (newState *EmbeddingsV1ResponseEmbeddingElement) SyncEffectiveFieldsDuringR
 
 func (a EmbeddingsV1ResponseEmbeddingElement) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Embedding": reflect.TypeOf(types.Float64Type),
+		"embedding": reflect.TypeOf(types.Float64Type),
 	}
 }
 
 func (a EmbeddingsV1ResponseEmbeddingElement) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Embedding": basetypes.ListType{
+			"embedding": basetypes.ListType{
 				ElemType: types.Float64Type,
 			},
-			"Index":  types.Int64Type,
-			"Object": types.StringType,
+			"index":  types.Int64Type,
+			"object": types.StringType,
 		},
 	}
 }
@@ -818,25 +838,29 @@ func (newState *EndpointCoreConfigInput) SyncEffectiveFieldsDuringRead(existingS
 
 func (a EndpointCoreConfigInput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AutoCaptureConfig": reflect.TypeOf(AutoCaptureConfigInput{}),
-		"ServedEntities":    reflect.TypeOf(ServedEntityInput{}),
-		"ServedModels":      reflect.TypeOf(ServedModelInput{}),
-		"TrafficConfig":     reflect.TypeOf(TrafficConfig{}),
+		"auto_capture_config": reflect.TypeOf(AutoCaptureConfigInput{}),
+		"served_entities":     reflect.TypeOf(ServedEntityInput{}),
+		"served_models":       reflect.TypeOf(ServedModelInput{}),
+		"traffic_config":      reflect.TypeOf(TrafficConfig{}),
 	}
 }
 
 func (a EndpointCoreConfigInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AutoCaptureConfig": AutoCaptureConfigInput{}.ToAttrType(ctx),
-			"Name":              types.StringType,
-			"ServedEntities": basetypes.ListType{
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigInput{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
+			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityInput{}.ToAttrType(ctx),
 			},
-			"ServedModels": basetypes.ListType{
+			"served_models": basetypes.ListType{
 				ElemType: ServedModelInput{}.ToAttrType(ctx),
 			},
-			"TrafficConfig": TrafficConfig{}.ToAttrType(ctx),
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -864,25 +888,29 @@ func (newState *EndpointCoreConfigOutput) SyncEffectiveFieldsDuringRead(existing
 
 func (a EndpointCoreConfigOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AutoCaptureConfig": reflect.TypeOf(AutoCaptureConfigOutput{}),
-		"ServedEntities":    reflect.TypeOf(ServedEntityOutput{}),
-		"ServedModels":      reflect.TypeOf(ServedModelOutput{}),
-		"TrafficConfig":     reflect.TypeOf(TrafficConfig{}),
+		"auto_capture_config": reflect.TypeOf(AutoCaptureConfigOutput{}),
+		"served_entities":     reflect.TypeOf(ServedEntityOutput{}),
+		"served_models":       reflect.TypeOf(ServedModelOutput{}),
+		"traffic_config":      reflect.TypeOf(TrafficConfig{}),
 	}
 }
 
 func (a EndpointCoreConfigOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AutoCaptureConfig": AutoCaptureConfigOutput{}.ToAttrType(ctx),
-			"ConfigVersion":     types.Int64Type,
-			"ServedEntities": basetypes.ListType{
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigOutput{}.ToAttrType(ctx),
+			},
+			"config_version": types.Int64Type,
+			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityOutput{}.ToAttrType(ctx),
 			},
-			"ServedModels": basetypes.ListType{
+			"served_models": basetypes.ListType{
 				ElemType: ServedModelOutput{}.ToAttrType(ctx),
 			},
-			"TrafficConfig": TrafficConfig{}.ToAttrType(ctx),
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -903,18 +931,18 @@ func (newState *EndpointCoreConfigSummary) SyncEffectiveFieldsDuringRead(existin
 
 func (a EndpointCoreConfigSummary) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ServedEntities": reflect.TypeOf(ServedEntitySpec{}),
-		"ServedModels":   reflect.TypeOf(ServedModelSpec{}),
+		"served_entities": reflect.TypeOf(ServedEntitySpec{}),
+		"served_models":   reflect.TypeOf(ServedModelSpec{}),
 	}
 }
 
 func (a EndpointCoreConfigSummary) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServedEntities": basetypes.ListType{
+			"served_entities": basetypes.ListType{
 				ElemType: ServedEntitySpec{}.ToAttrType(ctx),
 			},
-			"ServedModels": basetypes.ListType{
+			"served_models": basetypes.ListType{
 				ElemType: ServedModelSpec{}.ToAttrType(ctx),
 			},
 		},
@@ -948,26 +976,30 @@ func (newState *EndpointPendingConfig) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a EndpointPendingConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AutoCaptureConfig": reflect.TypeOf(AutoCaptureConfigOutput{}),
-		"ServedEntities":    reflect.TypeOf(ServedEntityOutput{}),
-		"ServedModels":      reflect.TypeOf(ServedModelOutput{}),
-		"TrafficConfig":     reflect.TypeOf(TrafficConfig{}),
+		"auto_capture_config": reflect.TypeOf(AutoCaptureConfigOutput{}),
+		"served_entities":     reflect.TypeOf(ServedEntityOutput{}),
+		"served_models":       reflect.TypeOf(ServedModelOutput{}),
+		"traffic_config":      reflect.TypeOf(TrafficConfig{}),
 	}
 }
 
 func (a EndpointPendingConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AutoCaptureConfig": AutoCaptureConfigOutput{}.ToAttrType(ctx),
-			"ConfigVersion":     types.Int64Type,
-			"ServedEntities": basetypes.ListType{
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigOutput{}.ToAttrType(ctx),
+			},
+			"config_version": types.Int64Type,
+			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityOutput{}.ToAttrType(ctx),
 			},
-			"ServedModels": basetypes.ListType{
+			"served_models": basetypes.ListType{
 				ElemType: ServedModelOutput{}.ToAttrType(ctx),
 			},
-			"StartTime":     types.Int64Type,
-			"TrafficConfig": TrafficConfig{}.ToAttrType(ctx),
+			"start_time": types.Int64Type,
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -999,8 +1031,8 @@ func (a EndpointState) GetComplexFieldTypes() map[string]reflect.Type {
 func (a EndpointState) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConfigUpdate": types.StringType,
-			"Ready":        types.StringType,
+			"config_update": types.StringType,
+			"ready":         types.StringType,
 		},
 	}
 }
@@ -1025,8 +1057,8 @@ func (a EndpointTag) GetComplexFieldTypes() map[string]reflect.Type {
 func (a EndpointTag) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Key":   types.StringType,
-			"Value": types.StringType,
+			"key":   types.StringType,
+			"value": types.StringType,
 		},
 	}
 }
@@ -1051,7 +1083,7 @@ func (a ExportMetricsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ExportMetricsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1073,7 +1105,7 @@ func (a ExportMetricsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ExportMetricsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Contents": types.ObjectType{},
+			"contents": types.ObjectType{},
 		},
 	}
 }
@@ -1116,31 +1148,47 @@ func (newState *ExternalModel) SyncEffectiveFieldsDuringRead(existingState Exter
 
 func (a ExternalModel) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Ai21labsConfig":               reflect.TypeOf(Ai21LabsConfig{}),
-		"AmazonBedrockConfig":          reflect.TypeOf(AmazonBedrockConfig{}),
-		"AnthropicConfig":              reflect.TypeOf(AnthropicConfig{}),
-		"CohereConfig":                 reflect.TypeOf(CohereConfig{}),
-		"DatabricksModelServingConfig": reflect.TypeOf(DatabricksModelServingConfig{}),
-		"GoogleCloudVertexAiConfig":    reflect.TypeOf(GoogleCloudVertexAiConfig{}),
-		"OpenaiConfig":                 reflect.TypeOf(OpenAiConfig{}),
-		"PalmConfig":                   reflect.TypeOf(PaLmConfig{}),
+		"ai21labs_config":                 reflect.TypeOf(Ai21LabsConfig{}),
+		"amazon_bedrock_config":           reflect.TypeOf(AmazonBedrockConfig{}),
+		"anthropic_config":                reflect.TypeOf(AnthropicConfig{}),
+		"cohere_config":                   reflect.TypeOf(CohereConfig{}),
+		"databricks_model_serving_config": reflect.TypeOf(DatabricksModelServingConfig{}),
+		"google_cloud_vertex_ai_config":   reflect.TypeOf(GoogleCloudVertexAiConfig{}),
+		"openai_config":                   reflect.TypeOf(OpenAiConfig{}),
+		"palm_config":                     reflect.TypeOf(PaLmConfig{}),
 	}
 }
 
 func (a ExternalModel) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Ai21labsConfig":               Ai21LabsConfig{}.ToAttrType(ctx),
-			"AmazonBedrockConfig":          AmazonBedrockConfig{}.ToAttrType(ctx),
-			"AnthropicConfig":              AnthropicConfig{}.ToAttrType(ctx),
-			"CohereConfig":                 CohereConfig{}.ToAttrType(ctx),
-			"DatabricksModelServingConfig": DatabricksModelServingConfig{}.ToAttrType(ctx),
-			"GoogleCloudVertexAiConfig":    GoogleCloudVertexAiConfig{}.ToAttrType(ctx),
-			"Name":                         types.StringType,
-			"OpenaiConfig":                 OpenAiConfig{}.ToAttrType(ctx),
-			"PalmConfig":                   PaLmConfig{}.ToAttrType(ctx),
-			"Provider":                     types.StringType,
-			"Task":                         types.StringType,
+			"ai21labs_config": basetypes.ListType{
+				ElemType: Ai21LabsConfig{}.ToAttrType(ctx),
+			},
+			"amazon_bedrock_config": basetypes.ListType{
+				ElemType: AmazonBedrockConfig{}.ToAttrType(ctx),
+			},
+			"anthropic_config": basetypes.ListType{
+				ElemType: AnthropicConfig{}.ToAttrType(ctx),
+			},
+			"cohere_config": basetypes.ListType{
+				ElemType: CohereConfig{}.ToAttrType(ctx),
+			},
+			"databricks_model_serving_config": basetypes.ListType{
+				ElemType: DatabricksModelServingConfig{}.ToAttrType(ctx),
+			},
+			"google_cloud_vertex_ai_config": basetypes.ListType{
+				ElemType: GoogleCloudVertexAiConfig{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
+			"openai_config": basetypes.ListType{
+				ElemType: OpenAiConfig{}.ToAttrType(ctx),
+			},
+			"palm_config": basetypes.ListType{
+				ElemType: PaLmConfig{}.ToAttrType(ctx),
+			},
+			"provider": types.StringType,
+			"task":     types.StringType,
 		},
 	}
 }
@@ -1167,9 +1215,9 @@ func (a ExternalModelUsageElement) GetComplexFieldTypes() map[string]reflect.Typ
 func (a ExternalModelUsageElement) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CompletionTokens": types.Int64Type,
-			"PromptTokens":     types.Int64Type,
-			"TotalTokens":      types.Int64Type,
+			"completion_tokens": types.Int64Type,
+			"prompt_tokens":     types.Int64Type,
+			"total_tokens":      types.Int64Type,
 		},
 	}
 }
@@ -1198,10 +1246,10 @@ func (a FoundationModel) GetComplexFieldTypes() map[string]reflect.Type {
 func (a FoundationModel) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description": types.StringType,
-			"DisplayName": types.StringType,
-			"Docs":        types.StringType,
-			"Name":        types.StringType,
+			"description":  types.StringType,
+			"display_name": types.StringType,
+			"docs":         types.StringType,
+			"name":         types.StringType,
 		},
 	}
 }
@@ -1226,7 +1274,7 @@ func (a GetOpenApiRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetOpenApiRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1271,7 +1319,7 @@ func (a GetServingEndpointPermissionLevelsRequest) GetComplexFieldTypes() map[st
 func (a GetServingEndpointPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServingEndpointId": types.StringType,
+			"serving_endpoint_id": types.StringType,
 		},
 	}
 }
@@ -1289,14 +1337,14 @@ func (newState *GetServingEndpointPermissionLevelsResponse) SyncEffectiveFieldsD
 
 func (a GetServingEndpointPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PermissionLevels": reflect.TypeOf(ServingEndpointPermissionsDescription{}),
+		"permission_levels": reflect.TypeOf(ServingEndpointPermissionsDescription{}),
 	}
 }
 
 func (a GetServingEndpointPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PermissionLevels": basetypes.ListType{
+			"permission_levels": basetypes.ListType{
 				ElemType: ServingEndpointPermissionsDescription{}.ToAttrType(ctx),
 			},
 		},
@@ -1322,7 +1370,7 @@ func (a GetServingEndpointPermissionsRequest) GetComplexFieldTypes() map[string]
 func (a GetServingEndpointPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServingEndpointId": types.StringType,
+			"serving_endpoint_id": types.StringType,
 		},
 	}
 }
@@ -1346,7 +1394,7 @@ func (a GetServingEndpointRequest) GetComplexFieldTypes() map[string]reflect.Typ
 func (a GetServingEndpointRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1394,10 +1442,10 @@ func (a GoogleCloudVertexAiConfig) GetComplexFieldTypes() map[string]reflect.Typ
 func (a GoogleCloudVertexAiConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PrivateKey":          types.StringType,
-			"PrivateKeyPlaintext": types.StringType,
-			"ProjectId":           types.StringType,
-			"Region":              types.StringType,
+			"private_key":           types.StringType,
+			"private_key_plaintext": types.StringType,
+			"project_id":            types.StringType,
+			"region":                types.StringType,
 		},
 	}
 }
@@ -1415,14 +1463,14 @@ func (newState *ListEndpointsResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a ListEndpointsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Endpoints": reflect.TypeOf(ServingEndpoint{}),
+		"endpoints": reflect.TypeOf(ServingEndpoint{}),
 	}
 }
 
 func (a ListEndpointsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Endpoints": basetypes.ListType{
+			"endpoints": basetypes.ListType{
 				ElemType: ServingEndpoint{}.ToAttrType(ctx),
 			},
 		},
@@ -1452,8 +1500,8 @@ func (a LogsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a LogsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name":            types.StringType,
-			"ServedModelName": types.StringType,
+			"name":              types.StringType,
+			"served_model_name": types.StringType,
 		},
 	}
 }
@@ -1471,14 +1519,16 @@ func (newState *ModelDataPlaneInfo) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a ModelDataPlaneInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"QueryInfo": reflect.TypeOf(oauth2.DataPlaneInfo{}),
+		"query_info": reflect.TypeOf(oauth2.DataPlaneInfo{}),
 	}
 }
 
 func (a ModelDataPlaneInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"QueryInfo": oauth2_tf.DataPlaneInfo{}.ToAttrType(ctx),
+			"query_info": basetypes.ListType{
+				ElemType: oauth2_tf.DataPlaneInfo{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1550,17 +1600,17 @@ func (a OpenAiConfig) GetComplexFieldTypes() map[string]reflect.Type {
 func (a OpenAiConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"MicrosoftEntraClientId":              types.StringType,
-			"MicrosoftEntraClientSecret":          types.StringType,
-			"MicrosoftEntraClientSecretPlaintext": types.StringType,
-			"MicrosoftEntraTenantId":              types.StringType,
-			"OpenaiApiBase":                       types.StringType,
-			"OpenaiApiKey":                        types.StringType,
-			"OpenaiApiKeyPlaintext":               types.StringType,
-			"OpenaiApiType":                       types.StringType,
-			"OpenaiApiVersion":                    types.StringType,
-			"OpenaiDeploymentName":                types.StringType,
-			"OpenaiOrganization":                  types.StringType,
+			"microsoft_entra_client_id":               types.StringType,
+			"microsoft_entra_client_secret":           types.StringType,
+			"microsoft_entra_client_secret_plaintext": types.StringType,
+			"microsoft_entra_tenant_id":               types.StringType,
+			"openai_api_base":                         types.StringType,
+			"openai_api_key":                          types.StringType,
+			"openai_api_key_plaintext":                types.StringType,
+			"openai_api_type":                         types.StringType,
+			"openai_api_version":                      types.StringType,
+			"openai_deployment_name":                  types.StringType,
+			"openai_organization":                     types.StringType,
 		},
 	}
 }
@@ -1591,8 +1641,8 @@ func (a PaLmConfig) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PaLmConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PalmApiKey":          types.StringType,
-			"PalmApiKeyPlaintext": types.StringType,
+			"palm_api_key":           types.StringType,
+			"palm_api_key_plaintext": types.StringType,
 		},
 	}
 }
@@ -1615,21 +1665,21 @@ func (newState *PatchServingEndpointTags) SyncEffectiveFieldsDuringRead(existing
 
 func (a PatchServingEndpointTags) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AddTags":    reflect.TypeOf(EndpointTag{}),
-		"DeleteTags": reflect.TypeOf(types.StringType),
+		"add_tags":    reflect.TypeOf(EndpointTag{}),
+		"delete_tags": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a PatchServingEndpointTags) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AddTags": basetypes.ListType{
+			"add_tags": basetypes.ListType{
 				ElemType: EndpointTag{}.ToAttrType(ctx),
 			},
-			"DeleteTags": basetypes.ListType{
+			"delete_tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1656,9 +1706,9 @@ func (a PayloadTable) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PayloadTable) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name":          types.StringType,
-			"Status":        types.StringType,
-			"StatusMessage": types.StringType,
+			"name":           types.StringType,
+			"status":         types.StringType,
+			"status_message": types.StringType,
 		},
 	}
 }
@@ -1691,23 +1741,29 @@ func (newState *PutAiGatewayRequest) SyncEffectiveFieldsDuringRead(existingState
 
 func (a PutAiGatewayRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Guardrails":           reflect.TypeOf(AiGatewayGuardrails{}),
-		"InferenceTableConfig": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
-		"RateLimits":           reflect.TypeOf(AiGatewayRateLimit{}),
-		"UsageTrackingConfig":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
+		"guardrails":             reflect.TypeOf(AiGatewayGuardrails{}),
+		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
+		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit{}),
+		"usage_tracking_config":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
 	}
 }
 
 func (a PutAiGatewayRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Guardrails":           AiGatewayGuardrails{}.ToAttrType(ctx),
-			"InferenceTableConfig": AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
-			"Name":                 types.StringType,
-			"RateLimits": basetypes.ListType{
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.ToAttrType(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
+			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.ToAttrType(ctx),
 			},
-			"UsageTrackingConfig": AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1736,22 +1792,28 @@ func (newState *PutAiGatewayResponse) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a PutAiGatewayResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Guardrails":           reflect.TypeOf(AiGatewayGuardrails{}),
-		"InferenceTableConfig": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
-		"RateLimits":           reflect.TypeOf(AiGatewayRateLimit{}),
-		"UsageTrackingConfig":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
+		"guardrails":             reflect.TypeOf(AiGatewayGuardrails{}),
+		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
+		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit{}),
+		"usage_tracking_config":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
 	}
 }
 
 func (a PutAiGatewayResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Guardrails":           AiGatewayGuardrails{}.ToAttrType(ctx),
-			"InferenceTableConfig": AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
-			"RateLimits": basetypes.ListType{
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.ToAttrType(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
+			},
+			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.ToAttrType(ctx),
 			},
-			"UsageTrackingConfig": AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1773,15 +1835,15 @@ func (newState *PutRequest) SyncEffectiveFieldsDuringRead(existingState PutReque
 
 func (a PutRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RateLimits": reflect.TypeOf(RateLimit{}),
+		"rate_limits": reflect.TypeOf(RateLimit{}),
 	}
 }
 
 func (a PutRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
-			"RateLimits": basetypes.ListType{
+			"name": types.StringType,
+			"rate_limits": basetypes.ListType{
 				ElemType: RateLimit{}.ToAttrType(ctx),
 			},
 		},
@@ -1801,14 +1863,14 @@ func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResp
 
 func (a PutResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RateLimits": reflect.TypeOf(RateLimit{}),
+		"rate_limits": reflect.TypeOf(RateLimit{}),
 	}
 }
 
 func (a PutResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RateLimits": basetypes.ListType{
+			"rate_limits": basetypes.ListType{
 				ElemType: RateLimit{}.ToAttrType(ctx),
 			},
 		},
@@ -1875,42 +1937,44 @@ func (newState *QueryEndpointInput) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a QueryEndpointInput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DataframeRecords": reflect.TypeOf(struct{}{}),
-		"DataframeSplit":   reflect.TypeOf(DataframeSplitInput{}),
-		"ExtraParams":      reflect.TypeOf(types.StringType),
-		"Instances":        reflect.TypeOf(struct{}{}),
-		"Messages":         reflect.TypeOf(ChatMessage{}),
-		"Stop":             reflect.TypeOf(types.StringType),
+		"dataframe_records": reflect.TypeOf(struct{}{}),
+		"dataframe_split":   reflect.TypeOf(DataframeSplitInput{}),
+		"extra_params":      reflect.TypeOf(types.StringType),
+		"instances":         reflect.TypeOf(struct{}{}),
+		"messages":          reflect.TypeOf(ChatMessage{}),
+		"stop":              reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a QueryEndpointInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DataframeRecords": basetypes.ListType{
+			"dataframe_records": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"DataframeSplit": DataframeSplitInput{}.ToAttrType(ctx),
-			"ExtraParams": basetypes.MapType{
+			"dataframe_split": basetypes.ListType{
+				ElemType: DataframeSplitInput{}.ToAttrType(ctx),
+			},
+			"extra_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Input":  types.ObjectType{},
-			"Inputs": types.ObjectType{},
-			"Instances": basetypes.ListType{
+			"input":  types.ObjectType{},
+			"inputs": types.ObjectType{},
+			"instances": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"MaxTokens": types.Int64Type,
-			"Messages": basetypes.ListType{
+			"max_tokens": types.Int64Type,
+			"messages": basetypes.ListType{
 				ElemType: ChatMessage{}.ToAttrType(ctx),
 			},
-			"N":      types.Int64Type,
-			"Name":   types.StringType,
-			"Prompt": types.ObjectType{},
-			"Stop": basetypes.ListType{
+			"n":      types.Int64Type,
+			"name":   types.StringType,
+			"prompt": types.ObjectType{},
+			"stop": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Stream":      types.BoolType,
-			"Temperature": types.Float64Type,
+			"stream":      types.BoolType,
+			"temperature": types.Float64Type,
 		},
 	}
 }
@@ -1954,31 +2018,33 @@ func (newState *QueryEndpointResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a QueryEndpointResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Choices":     reflect.TypeOf(V1ResponseChoiceElement{}),
-		"Data":        reflect.TypeOf(EmbeddingsV1ResponseEmbeddingElement{}),
-		"Predictions": reflect.TypeOf(struct{}{}),
-		"Usage":       reflect.TypeOf(ExternalModelUsageElement{}),
+		"choices":     reflect.TypeOf(V1ResponseChoiceElement{}),
+		"data":        reflect.TypeOf(EmbeddingsV1ResponseEmbeddingElement{}),
+		"predictions": reflect.TypeOf(struct{}{}),
+		"usage":       reflect.TypeOf(ExternalModelUsageElement{}),
 	}
 }
 
 func (a QueryEndpointResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Choices": basetypes.ListType{
+			"choices": basetypes.ListType{
 				ElemType: V1ResponseChoiceElement{}.ToAttrType(ctx),
 			},
-			"Created": types.Int64Type,
-			"Data": basetypes.ListType{
+			"created": types.Int64Type,
+			"data": basetypes.ListType{
 				ElemType: EmbeddingsV1ResponseEmbeddingElement{}.ToAttrType(ctx),
 			},
-			"Id":     types.StringType,
-			"Model":  types.StringType,
-			"Object": types.StringType,
-			"Predictions": basetypes.ListType{
+			"id":     types.StringType,
+			"model":  types.StringType,
+			"object": types.StringType,
+			"predictions": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"ServedModelName": types.StringType,
-			"Usage":           ExternalModelUsageElement{}.ToAttrType(ctx),
+			"served-model-name": types.StringType,
+			"usage": basetypes.ListType{
+				ElemType: ExternalModelUsageElement{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -2009,9 +2075,9 @@ func (a RateLimit) GetComplexFieldTypes() map[string]reflect.Type {
 func (a RateLimit) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Calls":         types.Int64Type,
-			"Key":           types.StringType,
-			"RenewalPeriod": types.StringType,
+			"calls":          types.Int64Type,
+			"key":            types.StringType,
+			"renewal_period": types.StringType,
 		},
 	}
 }
@@ -2037,8 +2103,8 @@ func (a Route) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Route) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServedModelName":   types.StringType,
-			"TrafficPercentage": types.Int64Type,
+			"served_model_name":  types.StringType,
+			"traffic_percentage": types.Int64Type,
 		},
 	}
 }
@@ -2112,27 +2178,29 @@ func (newState *ServedEntityInput) SyncEffectiveFieldsDuringRead(existingState S
 
 func (a ServedEntityInput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EnvironmentVars": reflect.TypeOf(types.StringType),
-		"ExternalModel":   reflect.TypeOf(ExternalModel{}),
+		"environment_vars": reflect.TypeOf(types.StringType),
+		"external_model":   reflect.TypeOf(ExternalModel{}),
 	}
 }
 
 func (a ServedEntityInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EntityName":    types.StringType,
-			"EntityVersion": types.StringType,
-			"EnvironmentVars": basetypes.MapType{
+			"entity_name":    types.StringType,
+			"entity_version": types.StringType,
+			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"ExternalModel":            ExternalModel{}.ToAttrType(ctx),
-			"InstanceProfileArn":       types.StringType,
-			"MaxProvisionedThroughput": types.Int64Type,
-			"MinProvisionedThroughput": types.Int64Type,
-			"Name":                     types.StringType,
-			"ScaleToZeroEnabled":       types.BoolType,
-			"WorkloadSize":             types.StringType,
-			"WorkloadType":             types.StringType,
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.ToAttrType(ctx),
+			},
+			"instance_profile_arn":       types.StringType,
+			"max_provisioned_throughput": types.Int64Type,
+			"min_provisioned_throughput": types.Int64Type,
+			"name":                       types.StringType,
+			"scale_to_zero_enabled":      types.BoolType,
+			"workload_size":              types.StringType,
+			"workload_type":              types.StringType,
 		},
 	}
 }
@@ -2208,33 +2276,39 @@ func (newState *ServedEntityOutput) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a ServedEntityOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EnvironmentVars": reflect.TypeOf(types.StringType),
-		"ExternalModel":   reflect.TypeOf(ExternalModel{}),
-		"FoundationModel": reflect.TypeOf(FoundationModel{}),
-		"State":           reflect.TypeOf(ServedModelState{}),
+		"environment_vars": reflect.TypeOf(types.StringType),
+		"external_model":   reflect.TypeOf(ExternalModel{}),
+		"foundation_model": reflect.TypeOf(FoundationModel{}),
+		"state":            reflect.TypeOf(ServedModelState{}),
 	}
 }
 
 func (a ServedEntityOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreationTimestamp": types.Int64Type,
-			"Creator":           types.StringType,
-			"EntityName":        types.StringType,
-			"EntityVersion":     types.StringType,
-			"EnvironmentVars": basetypes.MapType{
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"entity_name":        types.StringType,
+			"entity_version":     types.StringType,
+			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"ExternalModel":            ExternalModel{}.ToAttrType(ctx),
-			"FoundationModel":          FoundationModel{}.ToAttrType(ctx),
-			"InstanceProfileArn":       types.StringType,
-			"MaxProvisionedThroughput": types.Int64Type,
-			"MinProvisionedThroughput": types.Int64Type,
-			"Name":                     types.StringType,
-			"ScaleToZeroEnabled":       types.BoolType,
-			"State":                    ServedModelState{}.ToAttrType(ctx),
-			"WorkloadSize":             types.StringType,
-			"WorkloadType":             types.StringType,
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.ToAttrType(ctx),
+			},
+			"foundation_model": basetypes.ListType{
+				ElemType: FoundationModel{}.ToAttrType(ctx),
+			},
+			"instance_profile_arn":       types.StringType,
+			"max_provisioned_throughput": types.Int64Type,
+			"min_provisioned_throughput": types.Int64Type,
+			"name":                       types.StringType,
+			"scale_to_zero_enabled":      types.BoolType,
+			"state": basetypes.ListType{
+				ElemType: ServedModelState{}.ToAttrType(ctx),
+			},
+			"workload_size": types.StringType,
+			"workload_type": types.StringType,
 		},
 	}
 }
@@ -2269,19 +2343,23 @@ func (newState *ServedEntitySpec) SyncEffectiveFieldsDuringRead(existingState Se
 
 func (a ServedEntitySpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ExternalModel":   reflect.TypeOf(ExternalModel{}),
-		"FoundationModel": reflect.TypeOf(FoundationModel{}),
+		"external_model":   reflect.TypeOf(ExternalModel{}),
+		"foundation_model": reflect.TypeOf(FoundationModel{}),
 	}
 }
 
 func (a ServedEntitySpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EntityName":      types.StringType,
-			"EntityVersion":   types.StringType,
-			"ExternalModel":   ExternalModel{}.ToAttrType(ctx),
-			"FoundationModel": FoundationModel{}.ToAttrType(ctx),
-			"Name":            types.StringType,
+			"entity_name":    types.StringType,
+			"entity_version": types.StringType,
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.ToAttrType(ctx),
+			},
+			"foundation_model": basetypes.ListType{
+				ElemType: FoundationModel{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
 		},
 	}
 }
@@ -2342,25 +2420,25 @@ func (newState *ServedModelInput) SyncEffectiveFieldsDuringRead(existingState Se
 
 func (a ServedModelInput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EnvironmentVars": reflect.TypeOf(types.StringType),
+		"environment_vars": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ServedModelInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EnvironmentVars": basetypes.MapType{
+			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"InstanceProfileArn":       types.StringType,
-			"MaxProvisionedThroughput": types.Int64Type,
-			"MinProvisionedThroughput": types.Int64Type,
-			"ModelName":                types.StringType,
-			"ModelVersion":             types.StringType,
-			"Name":                     types.StringType,
-			"ScaleToZeroEnabled":       types.BoolType,
-			"WorkloadSize":             types.StringType,
-			"WorkloadType":             types.StringType,
+			"instance_profile_arn":       types.StringType,
+			"max_provisioned_throughput": types.Int64Type,
+			"min_provisioned_throughput": types.Int64Type,
+			"model_name":                 types.StringType,
+			"model_version":              types.StringType,
+			"name":                       types.StringType,
+			"scale_to_zero_enabled":      types.BoolType,
+			"workload_size":              types.StringType,
+			"workload_type":              types.StringType,
 		},
 	}
 }
@@ -2419,27 +2497,29 @@ func (newState *ServedModelOutput) SyncEffectiveFieldsDuringRead(existingState S
 
 func (a ServedModelOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EnvironmentVars": reflect.TypeOf(types.StringType),
-		"State":           reflect.TypeOf(ServedModelState{}),
+		"environment_vars": reflect.TypeOf(types.StringType),
+		"state":            reflect.TypeOf(ServedModelState{}),
 	}
 }
 
 func (a ServedModelOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreationTimestamp": types.Int64Type,
-			"Creator":           types.StringType,
-			"EnvironmentVars": basetypes.MapType{
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"InstanceProfileArn": types.StringType,
-			"ModelName":          types.StringType,
-			"ModelVersion":       types.StringType,
-			"Name":               types.StringType,
-			"ScaleToZeroEnabled": types.BoolType,
-			"State":              ServedModelState{}.ToAttrType(ctx),
-			"WorkloadSize":       types.StringType,
-			"WorkloadType":       types.StringType,
+			"instance_profile_arn":  types.StringType,
+			"model_name":            types.StringType,
+			"model_version":         types.StringType,
+			"name":                  types.StringType,
+			"scale_to_zero_enabled": types.BoolType,
+			"state": basetypes.ListType{
+				ElemType: ServedModelState{}.ToAttrType(ctx),
+			},
+			"workload_size": types.StringType,
+			"workload_type": types.StringType,
 		},
 	}
 }
@@ -2468,9 +2548,9 @@ func (a ServedModelSpec) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ServedModelSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ModelName":    types.StringType,
-			"ModelVersion": types.StringType,
-			"Name":         types.StringType,
+			"model_name":    types.StringType,
+			"model_version": types.StringType,
+			"name":          types.StringType,
 		},
 	}
 }
@@ -2506,8 +2586,8 @@ func (a ServedModelState) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ServedModelState) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Deployment":             types.StringType,
-			"DeploymentStateMessage": types.StringType,
+			"deployment":               types.StringType,
+			"deployment_state_message": types.StringType,
 		},
 	}
 }
@@ -2531,7 +2611,7 @@ func (a ServerLogsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ServerLogsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Logs": types.StringType,
+			"logs": types.StringType,
 		},
 	}
 }
@@ -2569,28 +2649,34 @@ func (newState *ServingEndpoint) SyncEffectiveFieldsDuringRead(existingState Ser
 
 func (a ServingEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AiGateway": reflect.TypeOf(AiGatewayConfig{}),
-		"Config":    reflect.TypeOf(EndpointCoreConfigSummary{}),
-		"State":     reflect.TypeOf(EndpointState{}),
-		"Tags":      reflect.TypeOf(EndpointTag{}),
+		"ai_gateway": reflect.TypeOf(AiGatewayConfig{}),
+		"config":     reflect.TypeOf(EndpointCoreConfigSummary{}),
+		"state":      reflect.TypeOf(EndpointState{}),
+		"tags":       reflect.TypeOf(EndpointTag{}),
 	}
 }
 
 func (a ServingEndpoint) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AiGateway":            AiGatewayConfig{}.ToAttrType(ctx),
-			"Config":               EndpointCoreConfigSummary{}.ToAttrType(ctx),
-			"CreationTimestamp":    types.Int64Type,
-			"Creator":              types.StringType,
-			"Id":                   types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
-			"Name":                 types.StringType,
-			"State":                EndpointState{}.ToAttrType(ctx),
-			"Tags": basetypes.ListType{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.ToAttrType(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigSummary{}.ToAttrType(ctx),
+			},
+			"creation_timestamp":     types.Int64Type,
+			"creator":                types.StringType,
+			"id":                     types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"name":                   types.StringType,
+			"state": basetypes.ListType{
+				ElemType: EndpointState{}.ToAttrType(ctx),
+			},
+			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.ToAttrType(ctx),
 			},
-			"Task": types.StringType,
+			"task": types.StringType,
 		},
 	}
 }
@@ -2619,10 +2705,10 @@ func (a ServingEndpointAccessControlRequest) GetComplexFieldTypes() map[string]r
 func (a ServingEndpointAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GroupName":            types.StringType,
-			"PermissionLevel":      types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -2648,20 +2734,20 @@ func (newState *ServingEndpointAccessControlResponse) SyncEffectiveFieldsDuringR
 
 func (a ServingEndpointAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AllPermissions": reflect.TypeOf(ServingEndpointPermission{}),
+		"all_permissions": reflect.TypeOf(ServingEndpointPermission{}),
 	}
 }
 
 func (a ServingEndpointAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllPermissions": basetypes.ListType{
+			"all_permissions": basetypes.ListType{
 				ElemType: ServingEndpointPermission{}.ToAttrType(ctx),
 			},
-			"DisplayName":          types.StringType,
-			"GroupName":            types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -2710,35 +2796,45 @@ func (newState *ServingEndpointDetailed) SyncEffectiveFieldsDuringRead(existingS
 
 func (a ServingEndpointDetailed) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AiGateway":     reflect.TypeOf(AiGatewayConfig{}),
-		"Config":        reflect.TypeOf(EndpointCoreConfigOutput{}),
-		"DataPlaneInfo": reflect.TypeOf(ModelDataPlaneInfo{}),
-		"PendingConfig": reflect.TypeOf(EndpointPendingConfig{}),
-		"State":         reflect.TypeOf(EndpointState{}),
-		"Tags":          reflect.TypeOf(EndpointTag{}),
+		"ai_gateway":      reflect.TypeOf(AiGatewayConfig{}),
+		"config":          reflect.TypeOf(EndpointCoreConfigOutput{}),
+		"data_plane_info": reflect.TypeOf(ModelDataPlaneInfo{}),
+		"pending_config":  reflect.TypeOf(EndpointPendingConfig{}),
+		"state":           reflect.TypeOf(EndpointState{}),
+		"tags":            reflect.TypeOf(EndpointTag{}),
 	}
 }
 
 func (a ServingEndpointDetailed) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AiGateway":            AiGatewayConfig{}.ToAttrType(ctx),
-			"Config":               EndpointCoreConfigOutput{}.ToAttrType(ctx),
-			"CreationTimestamp":    types.Int64Type,
-			"Creator":              types.StringType,
-			"DataPlaneInfo":        ModelDataPlaneInfo{}.ToAttrType(ctx),
-			"EndpointUrl":          types.StringType,
-			"Id":                   types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
-			"Name":                 types.StringType,
-			"PendingConfig":        EndpointPendingConfig{}.ToAttrType(ctx),
-			"PermissionLevel":      types.StringType,
-			"RouteOptimized":       types.BoolType,
-			"State":                EndpointState{}.ToAttrType(ctx),
-			"Tags": basetypes.ListType{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.ToAttrType(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigOutput{}.ToAttrType(ctx),
+			},
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"data_plane_info": basetypes.ListType{
+				ElemType: ModelDataPlaneInfo{}.ToAttrType(ctx),
+			},
+			"endpoint_url":           types.StringType,
+			"id":                     types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"name":                   types.StringType,
+			"pending_config": basetypes.ListType{
+				ElemType: EndpointPendingConfig{}.ToAttrType(ctx),
+			},
+			"permission_level": types.StringType,
+			"route_optimized":  types.BoolType,
+			"state": basetypes.ListType{
+				ElemType: EndpointState{}.ToAttrType(ctx),
+			},
+			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.ToAttrType(ctx),
 			},
-			"Task": types.StringType,
+			"task": types.StringType,
 		},
 	}
 }
@@ -2759,18 +2855,18 @@ func (newState *ServingEndpointPermission) SyncEffectiveFieldsDuringRead(existin
 
 func (a ServingEndpointPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ServingEndpointPermission) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Inherited": types.BoolType,
-			"InheritedFromObject": basetypes.ListType{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PermissionLevel": types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2791,18 +2887,18 @@ func (newState *ServingEndpointPermissions) SyncEffectiveFieldsDuringRead(existi
 
 func (a ServingEndpointPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(ServingEndpointAccessControlResponse{}),
+		"access_control_list": reflect.TypeOf(ServingEndpointAccessControlResponse{}),
 	}
 }
 
 func (a ServingEndpointPermissions) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: ServingEndpointAccessControlResponse{}.ToAttrType(ctx),
 			},
-			"ObjectId":   types.StringType,
-			"ObjectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -2826,8 +2922,8 @@ func (a ServingEndpointPermissionsDescription) GetComplexFieldTypes() map[string
 func (a ServingEndpointPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description":     types.StringType,
-			"PermissionLevel": types.StringType,
+			"description":      types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2846,17 +2942,17 @@ func (newState *ServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringRead
 
 func (a ServingEndpointPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(ServingEndpointAccessControlRequest{}),
+		"access_control_list": reflect.TypeOf(ServingEndpointAccessControlRequest{}),
 	}
 }
 
 func (a ServingEndpointPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: ServingEndpointAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"ServingEndpointId": types.StringType,
+			"serving_endpoint_id": types.StringType,
 		},
 	}
 }
@@ -2874,14 +2970,14 @@ func (newState *TrafficConfig) SyncEffectiveFieldsDuringRead(existingState Traff
 
 func (a TrafficConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Routes": reflect.TypeOf(Route{}),
+		"routes": reflect.TypeOf(Route{}),
 	}
 }
 
 func (a TrafficConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Routes": basetypes.ListType{
+			"routes": basetypes.ListType{
 				ElemType: Route{}.ToAttrType(ctx),
 			},
 		},
@@ -2909,18 +3005,20 @@ func (newState *V1ResponseChoiceElement) SyncEffectiveFieldsDuringRead(existingS
 
 func (a V1ResponseChoiceElement) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Message": reflect.TypeOf(ChatMessage{}),
+		"message": reflect.TypeOf(ChatMessage{}),
 	}
 }
 
 func (a V1ResponseChoiceElement) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FinishReason": types.StringType,
-			"Index":        types.Int64Type,
-			"Logprobs":     types.Int64Type,
-			"Message":      ChatMessage{}.ToAttrType(ctx),
-			"Text":         types.StringType,
+			"finishReason": types.StringType,
+			"index":        types.Int64Type,
+			"logprobs":     types.Int64Type,
+			"message": basetypes.ListType{
+				ElemType: ChatMessage{}.ToAttrType(ctx),
+			},
+			"text": types.StringType,
 		},
 	}
 }

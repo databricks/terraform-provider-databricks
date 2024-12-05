@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -32,6 +33,16 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo
+}
+
+var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
+
+func (s ShareInfoExtended) GetComplexFieldTypes() map[string]reflect.Type {
+	return s.ShareInfo.GetComplexFieldTypes()
+}
+
+func (s ShareInfoExtended) ToAttrType(ctx context.Context) types.ObjectType {
+	return s.ShareInfo.ToAttrType(ctx)
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {

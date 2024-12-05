@@ -92,55 +92,67 @@ func (newState *CreatePipeline) SyncEffectiveFieldsDuringRead(existingState Crea
 
 func (a CreatePipeline) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Clusters":            reflect.TypeOf(PipelineCluster{}),
-		"Configuration":       reflect.TypeOf(types.StringType),
-		"Deployment":          reflect.TypeOf(PipelineDeployment{}),
-		"Filters":             reflect.TypeOf(Filters{}),
-		"GatewayDefinition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
-		"IngestionDefinition": reflect.TypeOf(IngestionPipelineDefinition{}),
-		"Libraries":           reflect.TypeOf(PipelineLibrary{}),
-		"Notifications":       reflect.TypeOf(Notifications{}),
-		"RestartWindow":       reflect.TypeOf(RestartWindow{}),
-		"Trigger":             reflect.TypeOf(PipelineTrigger{}),
+		"clusters":             reflect.TypeOf(PipelineCluster{}),
+		"configuration":        reflect.TypeOf(types.StringType),
+		"deployment":           reflect.TypeOf(PipelineDeployment{}),
+		"filters":              reflect.TypeOf(Filters{}),
+		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
+		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition{}),
+		"libraries":            reflect.TypeOf(PipelineLibrary{}),
+		"notifications":        reflect.TypeOf(Notifications{}),
+		"restart_window":       reflect.TypeOf(RestartWindow{}),
+		"trigger":              reflect.TypeOf(PipelineTrigger{}),
 	}
 }
 
 func (a CreatePipeline) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllowDuplicateNames": types.BoolType,
-			"BudgetPolicyId":      types.StringType,
-			"Catalog":             types.StringType,
-			"Channel":             types.StringType,
-			"Clusters": basetypes.ListType{
+			"allow_duplicate_names": types.BoolType,
+			"budget_policy_id":      types.StringType,
+			"catalog":               types.StringType,
+			"channel":               types.StringType,
+			"clusters": basetypes.ListType{
 				ElemType: PipelineCluster{}.ToAttrType(ctx),
 			},
-			"Configuration": basetypes.MapType{
+			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Continuous":          types.BoolType,
-			"Deployment":          PipelineDeployment{}.ToAttrType(ctx),
-			"Development":         types.BoolType,
-			"DryRun":              types.BoolType,
-			"Edition":             types.StringType,
-			"Filters":             Filters{}.ToAttrType(ctx),
-			"GatewayDefinition":   IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
-			"Id":                  types.StringType,
-			"IngestionDefinition": IngestionPipelineDefinition{}.ToAttrType(ctx),
-			"Libraries": basetypes.ListType{
+			"continuous": types.BoolType,
+			"deployment": basetypes.ListType{
+				ElemType: PipelineDeployment{}.ToAttrType(ctx),
+			},
+			"development": types.BoolType,
+			"dry_run":     types.BoolType,
+			"edition":     types.StringType,
+			"filters": basetypes.ListType{
+				ElemType: Filters{}.ToAttrType(ctx),
+			},
+			"gateway_definition": basetypes.ListType{
+				ElemType: IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+			},
+			"id": types.StringType,
+			"ingestion_definition": basetypes.ListType{
+				ElemType: IngestionPipelineDefinition{}.ToAttrType(ctx),
+			},
+			"libraries": basetypes.ListType{
 				ElemType: PipelineLibrary{}.ToAttrType(ctx),
 			},
-			"Name": types.StringType,
-			"Notifications": basetypes.ListType{
+			"name": types.StringType,
+			"notifications": basetypes.ListType{
 				ElemType: Notifications{}.ToAttrType(ctx),
 			},
-			"Photon":        types.BoolType,
-			"RestartWindow": RestartWindow{}.ToAttrType(ctx),
-			"Schema":        types.StringType,
-			"Serverless":    types.BoolType,
-			"Storage":       types.StringType,
-			"Target":        types.StringType,
-			"Trigger":       PipelineTrigger{}.ToAttrType(ctx),
+			"photon": types.BoolType,
+			"restart_window": basetypes.ListType{
+				ElemType: RestartWindow{}.ToAttrType(ctx),
+			},
+			"schema":     types.StringType,
+			"serverless": types.BoolType,
+			"storage":    types.StringType,
+			"target":     types.StringType,
+			"trigger": basetypes.ListType{
+				ElemType: PipelineTrigger{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -161,15 +173,17 @@ func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a CreatePipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EffectiveSettings": reflect.TypeOf(PipelineSpec{}),
+		"effective_settings": reflect.TypeOf(PipelineSpec{}),
 	}
 }
 
 func (a CreatePipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EffectiveSettings": PipelineSpec{}.ToAttrType(ctx),
-			"PipelineId":        types.StringType,
+			"effective_settings": basetypes.ListType{
+				ElemType: PipelineSpec{}.ToAttrType(ctx),
+			},
+			"pipeline_id": types.StringType,
 		},
 	}
 }
@@ -193,8 +207,8 @@ func (a CronTrigger) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CronTrigger) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"QuartzCronSchedule": types.StringType,
-			"TimezoneId":         types.StringType,
+			"quartz_cron_schedule": types.StringType,
+			"timezone_id":          types.StringType,
 		},
 	}
 }
@@ -219,8 +233,8 @@ func (a DataPlaneId) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DataPlaneId) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Instance": types.StringType,
-			"SeqNo":    types.Int64Type,
+			"instance": types.StringType,
+			"seq_no":   types.Int64Type,
 		},
 	}
 }
@@ -243,7 +257,7 @@ func (a DeletePipelineRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeletePipelineRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PipelineId": types.StringType,
+			"pipeline_id": types.StringType,
 		},
 	}
 }
@@ -342,56 +356,68 @@ func (newState *EditPipeline) SyncEffectiveFieldsDuringRead(existingState EditPi
 
 func (a EditPipeline) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Clusters":            reflect.TypeOf(PipelineCluster{}),
-		"Configuration":       reflect.TypeOf(types.StringType),
-		"Deployment":          reflect.TypeOf(PipelineDeployment{}),
-		"Filters":             reflect.TypeOf(Filters{}),
-		"GatewayDefinition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
-		"IngestionDefinition": reflect.TypeOf(IngestionPipelineDefinition{}),
-		"Libraries":           reflect.TypeOf(PipelineLibrary{}),
-		"Notifications":       reflect.TypeOf(Notifications{}),
-		"RestartWindow":       reflect.TypeOf(RestartWindow{}),
-		"Trigger":             reflect.TypeOf(PipelineTrigger{}),
+		"clusters":             reflect.TypeOf(PipelineCluster{}),
+		"configuration":        reflect.TypeOf(types.StringType),
+		"deployment":           reflect.TypeOf(PipelineDeployment{}),
+		"filters":              reflect.TypeOf(Filters{}),
+		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
+		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition{}),
+		"libraries":            reflect.TypeOf(PipelineLibrary{}),
+		"notifications":        reflect.TypeOf(Notifications{}),
+		"restart_window":       reflect.TypeOf(RestartWindow{}),
+		"trigger":              reflect.TypeOf(PipelineTrigger{}),
 	}
 }
 
 func (a EditPipeline) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllowDuplicateNames": types.BoolType,
-			"BudgetPolicyId":      types.StringType,
-			"Catalog":             types.StringType,
-			"Channel":             types.StringType,
-			"Clusters": basetypes.ListType{
+			"allow_duplicate_names": types.BoolType,
+			"budget_policy_id":      types.StringType,
+			"catalog":               types.StringType,
+			"channel":               types.StringType,
+			"clusters": basetypes.ListType{
 				ElemType: PipelineCluster{}.ToAttrType(ctx),
 			},
-			"Configuration": basetypes.MapType{
+			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Continuous":           types.BoolType,
-			"Deployment":           PipelineDeployment{}.ToAttrType(ctx),
-			"Development":          types.BoolType,
-			"Edition":              types.StringType,
-			"ExpectedLastModified": types.Int64Type,
-			"Filters":              Filters{}.ToAttrType(ctx),
-			"GatewayDefinition":    IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
-			"Id":                   types.StringType,
-			"IngestionDefinition":  IngestionPipelineDefinition{}.ToAttrType(ctx),
-			"Libraries": basetypes.ListType{
+			"continuous": types.BoolType,
+			"deployment": basetypes.ListType{
+				ElemType: PipelineDeployment{}.ToAttrType(ctx),
+			},
+			"development":            types.BoolType,
+			"edition":                types.StringType,
+			"expected_last_modified": types.Int64Type,
+			"filters": basetypes.ListType{
+				ElemType: Filters{}.ToAttrType(ctx),
+			},
+			"gateway_definition": basetypes.ListType{
+				ElemType: IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+			},
+			"id": types.StringType,
+			"ingestion_definition": basetypes.ListType{
+				ElemType: IngestionPipelineDefinition{}.ToAttrType(ctx),
+			},
+			"libraries": basetypes.ListType{
 				ElemType: PipelineLibrary{}.ToAttrType(ctx),
 			},
-			"Name": types.StringType,
-			"Notifications": basetypes.ListType{
+			"name": types.StringType,
+			"notifications": basetypes.ListType{
 				ElemType: Notifications{}.ToAttrType(ctx),
 			},
-			"Photon":        types.BoolType,
-			"PipelineId":    types.StringType,
-			"RestartWindow": RestartWindow{}.ToAttrType(ctx),
-			"Schema":        types.StringType,
-			"Serverless":    types.BoolType,
-			"Storage":       types.StringType,
-			"Target":        types.StringType,
-			"Trigger":       PipelineTrigger{}.ToAttrType(ctx),
+			"photon":      types.BoolType,
+			"pipeline_id": types.StringType,
+			"restart_window": basetypes.ListType{
+				ElemType: RestartWindow{}.ToAttrType(ctx),
+			},
+			"schema":     types.StringType,
+			"serverless": types.BoolType,
+			"storage":    types.StringType,
+			"target":     types.StringType,
+			"trigger": basetypes.ListType{
+				ElemType: PipelineTrigger{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -430,17 +456,17 @@ func (newState *ErrorDetail) SyncEffectiveFieldsDuringRead(existingState ErrorDe
 
 func (a ErrorDetail) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Exceptions": reflect.TypeOf(SerializedException{}),
+		"exceptions": reflect.TypeOf(SerializedException{}),
 	}
 }
 
 func (a ErrorDetail) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Exceptions": basetypes.ListType{
+			"exceptions": basetypes.ListType{
 				ElemType: SerializedException{}.ToAttrType(ctx),
 			},
-			"Fatal": types.BoolType,
+			"fatal": types.BoolType,
 		},
 	}
 }
@@ -463,7 +489,7 @@ func (a FileLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 func (a FileLibrary) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path": types.StringType,
+			"path": types.StringType,
 		},
 	}
 }
@@ -483,18 +509,18 @@ func (newState *Filters) SyncEffectiveFieldsDuringRead(existingState Filters) {
 
 func (a Filters) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Exclude": reflect.TypeOf(types.StringType),
-		"Include": reflect.TypeOf(types.StringType),
+		"exclude": reflect.TypeOf(types.StringType),
+		"include": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a Filters) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Exclude": basetypes.ListType{
+			"exclude": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Include": basetypes.ListType{
+			"include": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -520,7 +546,7 @@ func (a GetPipelinePermissionLevelsRequest) GetComplexFieldTypes() map[string]re
 func (a GetPipelinePermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PipelineId": types.StringType,
+			"pipeline_id": types.StringType,
 		},
 	}
 }
@@ -538,14 +564,14 @@ func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringRe
 
 func (a GetPipelinePermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PermissionLevels": reflect.TypeOf(PipelinePermissionsDescription{}),
+		"permission_levels": reflect.TypeOf(PipelinePermissionsDescription{}),
 	}
 }
 
 func (a GetPipelinePermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PermissionLevels": basetypes.ListType{
+			"permission_levels": basetypes.ListType{
 				ElemType: PipelinePermissionsDescription{}.ToAttrType(ctx),
 			},
 		},
@@ -571,7 +597,7 @@ func (a GetPipelinePermissionsRequest) GetComplexFieldTypes() map[string]reflect
 func (a GetPipelinePermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PipelineId": types.StringType,
+			"pipeline_id": types.StringType,
 		},
 	}
 }
@@ -594,7 +620,7 @@ func (a GetPipelineRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetPipelineRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PipelineId": types.StringType,
+			"pipeline_id": types.StringType,
 		},
 	}
 }
@@ -636,28 +662,30 @@ func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a GetPipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"LatestUpdates": reflect.TypeOf(UpdateStateInfo{}),
-		"Spec":          reflect.TypeOf(PipelineSpec{}),
+		"latest_updates": reflect.TypeOf(UpdateStateInfo{}),
+		"spec":           reflect.TypeOf(PipelineSpec{}),
 	}
 }
 
 func (a GetPipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Cause":                   types.StringType,
-			"ClusterId":               types.StringType,
-			"CreatorUserName":         types.StringType,
-			"EffectiveBudgetPolicyId": types.StringType,
-			"Health":                  types.StringType,
-			"LastModified":            types.Int64Type,
-			"LatestUpdates": basetypes.ListType{
+			"cause":                      types.StringType,
+			"cluster_id":                 types.StringType,
+			"creator_user_name":          types.StringType,
+			"effective_budget_policy_id": types.StringType,
+			"health":                     types.StringType,
+			"last_modified":              types.Int64Type,
+			"latest_updates": basetypes.ListType{
 				ElemType: UpdateStateInfo{}.ToAttrType(ctx),
 			},
-			"Name":          types.StringType,
-			"PipelineId":    types.StringType,
-			"RunAsUserName": types.StringType,
-			"Spec":          PipelineSpec{}.ToAttrType(ctx),
-			"State":         types.StringType,
+			"name":             types.StringType,
+			"pipeline_id":      types.StringType,
+			"run_as_user_name": types.StringType,
+			"spec": basetypes.ListType{
+				ElemType: PipelineSpec{}.ToAttrType(ctx),
+			},
+			"state": types.StringType,
 		},
 	}
 }
@@ -683,8 +711,8 @@ func (a GetUpdateRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetUpdateRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PipelineId": types.StringType,
-			"UpdateId":   types.StringType,
+			"pipeline_id": types.StringType,
+			"update_id":   types.StringType,
 		},
 	}
 }
@@ -702,14 +730,16 @@ func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringRead(existingState G
 
 func (a GetUpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Update": reflect.TypeOf(UpdateInfo{}),
+		"update": reflect.TypeOf(UpdateInfo{}),
 	}
 }
 
 func (a GetUpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Update": UpdateInfo{}.ToAttrType(ctx),
+			"update": basetypes.ListType{
+				ElemType: UpdateInfo{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -731,18 +761,24 @@ func (newState *IngestionConfig) SyncEffectiveFieldsDuringRead(existingState Ing
 
 func (a IngestionConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Report": reflect.TypeOf(ReportSpec{}),
-		"Schema": reflect.TypeOf(SchemaSpec{}),
-		"Table":  reflect.TypeOf(TableSpec{}),
+		"report": reflect.TypeOf(ReportSpec{}),
+		"schema": reflect.TypeOf(SchemaSpec{}),
+		"table":  reflect.TypeOf(TableSpec{}),
 	}
 }
 
 func (a IngestionConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Report": ReportSpec{}.ToAttrType(ctx),
-			"Schema": SchemaSpec{}.ToAttrType(ctx),
-			"Table":  TableSpec{}.ToAttrType(ctx),
+			"report": basetypes.ListType{
+				ElemType: ReportSpec{}.ToAttrType(ctx),
+			},
+			"schema": basetypes.ListType{
+				ElemType: SchemaSpec{}.ToAttrType(ctx),
+			},
+			"table": basetypes.ListType{
+				ElemType: TableSpec{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -781,11 +817,11 @@ func (a IngestionGatewayPipelineDefinition) GetComplexFieldTypes() map[string]re
 func (a IngestionGatewayPipelineDefinition) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConnectionId":          types.StringType,
-			"ConnectionName":        types.StringType,
-			"GatewayStorageCatalog": types.StringType,
-			"GatewayStorageName":    types.StringType,
-			"GatewayStorageSchema":  types.StringType,
+			"connection_id":           types.StringType,
+			"connection_name":         types.StringType,
+			"gateway_storage_catalog": types.StringType,
+			"gateway_storage_name":    types.StringType,
+			"gateway_storage_schema":  types.StringType,
 		},
 	}
 }
@@ -815,20 +851,22 @@ func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringRead(exist
 
 func (a IngestionPipelineDefinition) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Objects":            reflect.TypeOf(IngestionConfig{}),
-		"TableConfiguration": reflect.TypeOf(TableSpecificConfig{}),
+		"objects":             reflect.TypeOf(IngestionConfig{}),
+		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
 	}
 }
 
 func (a IngestionPipelineDefinition) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConnectionName":     types.StringType,
-			"IngestionGatewayId": types.StringType,
-			"Objects": basetypes.ListType{
+			"connection_name":      types.StringType,
+			"ingestion_gateway_id": types.StringType,
+			"objects": basetypes.ListType{
 				ElemType: IngestionConfig{}.ToAttrType(ctx),
 			},
-			"TableConfiguration": TableSpecificConfig{}.ToAttrType(ctx),
+			"table_configuration": basetypes.ListType{
+				ElemType: TableSpecificConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -868,20 +906,20 @@ func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringRead(existin
 
 func (a ListPipelineEventsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OrderBy": reflect.TypeOf(types.StringType),
+		"order_by": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ListPipelineEventsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Filter":     types.StringType,
-			"MaxResults": types.Int64Type,
-			"OrderBy": basetypes.ListType{
+			"filter":      types.StringType,
+			"max_results": types.Int64Type,
+			"order_by": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PageToken":  types.StringType,
-			"PipelineId": types.StringType,
+			"page_token":  types.StringType,
+			"pipeline_id": types.StringType,
 		},
 	}
 }
@@ -903,18 +941,18 @@ func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringRead(existi
 
 func (a ListPipelineEventsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Events": reflect.TypeOf(PipelineEvent{}),
+		"events": reflect.TypeOf(PipelineEvent{}),
 	}
 }
 
 func (a ListPipelineEventsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Events": basetypes.ListType{
+			"events": basetypes.ListType{
 				ElemType: PipelineEvent{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
-			"PrevPageToken": types.StringType,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
 		},
 	}
 }
@@ -952,19 +990,19 @@ func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a ListPipelinesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OrderBy": reflect.TypeOf(types.StringType),
+		"order_by": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ListPipelinesRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Filter":     types.StringType,
-			"MaxResults": types.Int64Type,
-			"OrderBy": basetypes.ListType{
+			"filter":      types.StringType,
+			"max_results": types.Int64Type,
+			"order_by": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PageToken": types.StringType,
+			"page_token": types.StringType,
 		},
 	}
 }
@@ -984,15 +1022,15 @@ func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a ListPipelinesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Statuses": reflect.TypeOf(PipelineStateInfo{}),
+		"statuses": reflect.TypeOf(PipelineStateInfo{}),
 	}
 }
 
 func (a ListPipelinesResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NextPageToken": types.StringType,
-			"Statuses": basetypes.ListType{
+			"next_page_token": types.StringType,
+			"statuses": basetypes.ListType{
 				ElemType: PipelineStateInfo{}.ToAttrType(ctx),
 			},
 		},
@@ -1024,10 +1062,10 @@ func (a ListUpdatesRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListUpdatesRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"MaxResults":    types.Int64Type,
-			"PageToken":     types.StringType,
-			"PipelineId":    types.StringType,
-			"UntilUpdateId": types.StringType,
+			"max_results":     types.Int64Type,
+			"page_token":      types.StringType,
+			"pipeline_id":     types.StringType,
+			"until_update_id": types.StringType,
 		},
 	}
 }
@@ -1051,16 +1089,16 @@ func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringRead(existingState
 
 func (a ListUpdatesResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Updates": reflect.TypeOf(UpdateInfo{}),
+		"updates": reflect.TypeOf(UpdateInfo{}),
 	}
 }
 
 func (a ListUpdatesResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NextPageToken": types.StringType,
-			"PrevPageToken": types.StringType,
-			"Updates": basetypes.ListType{
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
+			"updates": basetypes.ListType{
 				ElemType: UpdateInfo{}.ToAttrType(ctx),
 			},
 		},
@@ -1104,7 +1142,7 @@ func (a NotebookLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 func (a NotebookLibrary) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path": types.StringType,
+			"path": types.StringType,
 		},
 	}
 }
@@ -1130,18 +1168,18 @@ func (newState *Notifications) SyncEffectiveFieldsDuringRead(existingState Notif
 
 func (a Notifications) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Alerts":          reflect.TypeOf(types.StringType),
-		"EmailRecipients": reflect.TypeOf(types.StringType),
+		"alerts":           reflect.TypeOf(types.StringType),
+		"email_recipients": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a Notifications) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Alerts": basetypes.ListType{
+			"alerts": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"EmailRecipients": basetypes.ListType{
+			"email_recipients": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1199,23 +1237,23 @@ func (a Origin) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Origin) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BatchId":             types.Int64Type,
-			"Cloud":               types.StringType,
-			"ClusterId":           types.StringType,
-			"DatasetName":         types.StringType,
-			"FlowId":              types.StringType,
-			"FlowName":            types.StringType,
-			"Host":                types.StringType,
-			"MaintenanceId":       types.StringType,
-			"MaterializationName": types.StringType,
-			"OrgId":               types.Int64Type,
-			"PipelineId":          types.StringType,
-			"PipelineName":        types.StringType,
-			"Region":              types.StringType,
-			"RequestId":           types.StringType,
-			"TableId":             types.StringType,
-			"UcResourceId":        types.StringType,
-			"UpdateId":            types.StringType,
+			"batch_id":             types.Int64Type,
+			"cloud":                types.StringType,
+			"cluster_id":           types.StringType,
+			"dataset_name":         types.StringType,
+			"flow_id":              types.StringType,
+			"flow_name":            types.StringType,
+			"host":                 types.StringType,
+			"maintenance_id":       types.StringType,
+			"materialization_name": types.StringType,
+			"org_id":               types.Int64Type,
+			"pipeline_id":          types.StringType,
+			"pipeline_name":        types.StringType,
+			"region":               types.StringType,
+			"request_id":           types.StringType,
+			"table_id":             types.StringType,
+			"uc_resource_id":       types.StringType,
+			"update_id":            types.StringType,
 		},
 	}
 }
@@ -1244,10 +1282,10 @@ func (a PipelineAccessControlRequest) GetComplexFieldTypes() map[string]reflect.
 func (a PipelineAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GroupName":            types.StringType,
-			"PermissionLevel":      types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -1273,20 +1311,20 @@ func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringRead(exi
 
 func (a PipelineAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AllPermissions": reflect.TypeOf(PipelinePermission{}),
+		"all_permissions": reflect.TypeOf(PipelinePermission{}),
 	}
 }
 
 func (a PipelineAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllPermissions": basetypes.ListType{
+			"all_permissions": basetypes.ListType{
 				ElemType: PipelinePermission{}.ToAttrType(ctx),
 			},
-			"DisplayName":          types.StringType,
-			"GroupName":            types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -1396,49 +1434,59 @@ func (newState *PipelineCluster) SyncEffectiveFieldsDuringRead(existingState Pip
 
 func (a PipelineCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Autoscale":       reflect.TypeOf(PipelineClusterAutoscale{}),
-		"AwsAttributes":   reflect.TypeOf(compute.AwsAttributes{}),
-		"AzureAttributes": reflect.TypeOf(compute.AzureAttributes{}),
-		"ClusterLogConf":  reflect.TypeOf(compute.ClusterLogConf{}),
-		"CustomTags":      reflect.TypeOf(types.StringType),
-		"GcpAttributes":   reflect.TypeOf(compute.GcpAttributes{}),
-		"InitScripts":     reflect.TypeOf(compute.InitScriptInfo{}),
-		"SparkConf":       reflect.TypeOf(types.StringType),
-		"SparkEnvVars":    reflect.TypeOf(types.StringType),
-		"SshPublicKeys":   reflect.TypeOf(types.StringType),
+		"autoscale":        reflect.TypeOf(PipelineClusterAutoscale{}),
+		"aws_attributes":   reflect.TypeOf(compute.AwsAttributes{}),
+		"azure_attributes": reflect.TypeOf(compute.AzureAttributes{}),
+		"cluster_log_conf": reflect.TypeOf(compute.ClusterLogConf{}),
+		"custom_tags":      reflect.TypeOf(types.StringType),
+		"gcp_attributes":   reflect.TypeOf(compute.GcpAttributes{}),
+		"init_scripts":     reflect.TypeOf(compute.InitScriptInfo{}),
+		"spark_conf":       reflect.TypeOf(types.StringType),
+		"spark_env_vars":   reflect.TypeOf(types.StringType),
+		"ssh_public_keys":  reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a PipelineCluster) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ApplyPolicyDefaultValues": types.BoolType,
-			"Autoscale":                PipelineClusterAutoscale{}.ToAttrType(ctx),
-			"AwsAttributes":            compute_tf.AwsAttributes{}.ToAttrType(ctx),
-			"AzureAttributes":          compute_tf.AzureAttributes{}.ToAttrType(ctx),
-			"ClusterLogConf":           compute_tf.ClusterLogConf{}.ToAttrType(ctx),
-			"CustomTags": basetypes.MapType{
+			"apply_policy_default_values": types.BoolType,
+			"autoscale": basetypes.ListType{
+				ElemType: PipelineClusterAutoscale{}.ToAttrType(ctx),
+			},
+			"aws_attributes": basetypes.ListType{
+				ElemType: compute_tf.AwsAttributes{}.ToAttrType(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: compute_tf.AzureAttributes{}.ToAttrType(ctx),
+			},
+			"cluster_log_conf": basetypes.ListType{
+				ElemType: compute_tf.ClusterLogConf{}.ToAttrType(ctx),
+			},
+			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"DriverInstancePoolId":      types.StringType,
-			"DriverNodeTypeId":          types.StringType,
-			"EnableLocalDiskEncryption": types.BoolType,
-			"GcpAttributes":             compute_tf.GcpAttributes{}.ToAttrType(ctx),
-			"InitScripts": basetypes.ListType{
+			"driver_instance_pool_id":      types.StringType,
+			"driver_node_type_id":          types.StringType,
+			"enable_local_disk_encryption": types.BoolType,
+			"gcp_attributes": basetypes.ListType{
+				ElemType: compute_tf.GcpAttributes{}.ToAttrType(ctx),
+			},
+			"init_scripts": basetypes.ListType{
 				ElemType: compute_tf.InitScriptInfo{}.ToAttrType(ctx),
 			},
-			"InstancePoolId": types.StringType,
-			"Label":          types.StringType,
-			"NodeTypeId":     types.StringType,
-			"NumWorkers":     types.Int64Type,
-			"PolicyId":       types.StringType,
-			"SparkConf": basetypes.MapType{
+			"instance_pool_id": types.StringType,
+			"label":            types.StringType,
+			"node_type_id":     types.StringType,
+			"num_workers":      types.Int64Type,
+			"policy_id":        types.StringType,
+			"spark_conf": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"SparkEnvVars": basetypes.MapType{
+			"spark_env_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"SshPublicKeys": basetypes.ListType{
+			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1474,9 +1522,9 @@ func (a PipelineClusterAutoscale) GetComplexFieldTypes() map[string]reflect.Type
 func (a PipelineClusterAutoscale) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"MaxWorkers": types.Int64Type,
-			"MinWorkers": types.Int64Type,
-			"Mode":       types.StringType,
+			"max_workers": types.Int64Type,
+			"min_workers": types.Int64Type,
+			"mode":        types.StringType,
 		},
 	}
 }
@@ -1501,8 +1549,8 @@ func (a PipelineDeployment) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PipelineDeployment) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Kind":             types.StringType,
-			"MetadataFilePath": types.StringType,
+			"kind":               types.StringType,
+			"metadata_file_path": types.StringType,
 		},
 	}
 }
@@ -1536,24 +1584,30 @@ func (newState *PipelineEvent) SyncEffectiveFieldsDuringRead(existingState Pipel
 
 func (a PipelineEvent) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Error":    reflect.TypeOf(ErrorDetail{}),
-		"Origin":   reflect.TypeOf(Origin{}),
-		"Sequence": reflect.TypeOf(Sequencing{}),
+		"error":    reflect.TypeOf(ErrorDetail{}),
+		"origin":   reflect.TypeOf(Origin{}),
+		"sequence": reflect.TypeOf(Sequencing{}),
 	}
 }
 
 func (a PipelineEvent) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Error":         ErrorDetail{}.ToAttrType(ctx),
-			"EventType":     types.StringType,
-			"Id":            types.StringType,
-			"Level":         types.StringType,
-			"MaturityLevel": types.StringType,
-			"Message":       types.StringType,
-			"Origin":        Origin{}.ToAttrType(ctx),
-			"Sequence":      Sequencing{}.ToAttrType(ctx),
-			"Timestamp":     types.StringType,
+			"error": basetypes.ListType{
+				ElemType: ErrorDetail{}.ToAttrType(ctx),
+			},
+			"event_type":     types.StringType,
+			"id":             types.StringType,
+			"level":          types.StringType,
+			"maturity_level": types.StringType,
+			"message":        types.StringType,
+			"origin": basetypes.ListType{
+				ElemType: Origin{}.ToAttrType(ctx),
+			},
+			"sequence": basetypes.ListType{
+				ElemType: Sequencing{}.ToAttrType(ctx),
+			},
+			"timestamp": types.StringType,
 		},
 	}
 }
@@ -1581,20 +1635,26 @@ func (newState *PipelineLibrary) SyncEffectiveFieldsDuringRead(existingState Pip
 
 func (a PipelineLibrary) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"File":     reflect.TypeOf(FileLibrary{}),
-		"Maven":    reflect.TypeOf(compute.MavenLibrary{}),
-		"Notebook": reflect.TypeOf(NotebookLibrary{}),
+		"file":     reflect.TypeOf(FileLibrary{}),
+		"maven":    reflect.TypeOf(compute.MavenLibrary{}),
+		"notebook": reflect.TypeOf(NotebookLibrary{}),
 	}
 }
 
 func (a PipelineLibrary) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"File":     FileLibrary{}.ToAttrType(ctx),
-			"Jar":      types.StringType,
-			"Maven":    compute_tf.MavenLibrary{}.ToAttrType(ctx),
-			"Notebook": NotebookLibrary{}.ToAttrType(ctx),
-			"Whl":      types.StringType,
+			"file": basetypes.ListType{
+				ElemType: FileLibrary{}.ToAttrType(ctx),
+			},
+			"jar": types.StringType,
+			"maven": basetypes.ListType{
+				ElemType: compute_tf.MavenLibrary{}.ToAttrType(ctx),
+			},
+			"notebook": basetypes.ListType{
+				ElemType: NotebookLibrary{}.ToAttrType(ctx),
+			},
+			"whl": types.StringType,
 		},
 	}
 }
@@ -1615,18 +1675,18 @@ func (newState *PipelinePermission) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a PipelinePermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a PipelinePermission) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Inherited": types.BoolType,
-			"InheritedFromObject": basetypes.ListType{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PermissionLevel": types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -1647,18 +1707,18 @@ func (newState *PipelinePermissions) SyncEffectiveFieldsDuringRead(existingState
 
 func (a PipelinePermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(PipelineAccessControlResponse{}),
+		"access_control_list": reflect.TypeOf(PipelineAccessControlResponse{}),
 	}
 }
 
 func (a PipelinePermissions) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: PipelineAccessControlResponse{}.ToAttrType(ctx),
 			},
-			"ObjectId":   types.StringType,
-			"ObjectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -1682,8 +1742,8 @@ func (a PipelinePermissionsDescription) GetComplexFieldTypes() map[string]reflec
 func (a PipelinePermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description":     types.StringType,
-			"PermissionLevel": types.StringType,
+			"description":      types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -1702,17 +1762,17 @@ func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existi
 
 func (a PipelinePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(PipelineAccessControlRequest{}),
+		"access_control_list": reflect.TypeOf(PipelineAccessControlRequest{}),
 	}
 }
 
 func (a PipelinePermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: PipelineAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"PipelineId": types.StringType,
+			"pipeline_id": types.StringType,
 		},
 	}
 }
@@ -1783,53 +1843,65 @@ func (newState *PipelineSpec) SyncEffectiveFieldsDuringRead(existingState Pipeli
 
 func (a PipelineSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Clusters":            reflect.TypeOf(PipelineCluster{}),
-		"Configuration":       reflect.TypeOf(types.StringType),
-		"Deployment":          reflect.TypeOf(PipelineDeployment{}),
-		"Filters":             reflect.TypeOf(Filters{}),
-		"GatewayDefinition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
-		"IngestionDefinition": reflect.TypeOf(IngestionPipelineDefinition{}),
-		"Libraries":           reflect.TypeOf(PipelineLibrary{}),
-		"Notifications":       reflect.TypeOf(Notifications{}),
-		"RestartWindow":       reflect.TypeOf(RestartWindow{}),
-		"Trigger":             reflect.TypeOf(PipelineTrigger{}),
+		"clusters":             reflect.TypeOf(PipelineCluster{}),
+		"configuration":        reflect.TypeOf(types.StringType),
+		"deployment":           reflect.TypeOf(PipelineDeployment{}),
+		"filters":              reflect.TypeOf(Filters{}),
+		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition{}),
+		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition{}),
+		"libraries":            reflect.TypeOf(PipelineLibrary{}),
+		"notifications":        reflect.TypeOf(Notifications{}),
+		"restart_window":       reflect.TypeOf(RestartWindow{}),
+		"trigger":              reflect.TypeOf(PipelineTrigger{}),
 	}
 }
 
 func (a PipelineSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BudgetPolicyId": types.StringType,
-			"Catalog":        types.StringType,
-			"Channel":        types.StringType,
-			"Clusters": basetypes.ListType{
+			"budget_policy_id": types.StringType,
+			"catalog":          types.StringType,
+			"channel":          types.StringType,
+			"clusters": basetypes.ListType{
 				ElemType: PipelineCluster{}.ToAttrType(ctx),
 			},
-			"Configuration": basetypes.MapType{
+			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Continuous":          types.BoolType,
-			"Deployment":          PipelineDeployment{}.ToAttrType(ctx),
-			"Development":         types.BoolType,
-			"Edition":             types.StringType,
-			"Filters":             Filters{}.ToAttrType(ctx),
-			"GatewayDefinition":   IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
-			"Id":                  types.StringType,
-			"IngestionDefinition": IngestionPipelineDefinition{}.ToAttrType(ctx),
-			"Libraries": basetypes.ListType{
+			"continuous": types.BoolType,
+			"deployment": basetypes.ListType{
+				ElemType: PipelineDeployment{}.ToAttrType(ctx),
+			},
+			"development": types.BoolType,
+			"edition":     types.StringType,
+			"filters": basetypes.ListType{
+				ElemType: Filters{}.ToAttrType(ctx),
+			},
+			"gateway_definition": basetypes.ListType{
+				ElemType: IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+			},
+			"id": types.StringType,
+			"ingestion_definition": basetypes.ListType{
+				ElemType: IngestionPipelineDefinition{}.ToAttrType(ctx),
+			},
+			"libraries": basetypes.ListType{
 				ElemType: PipelineLibrary{}.ToAttrType(ctx),
 			},
-			"Name": types.StringType,
-			"Notifications": basetypes.ListType{
+			"name": types.StringType,
+			"notifications": basetypes.ListType{
 				ElemType: Notifications{}.ToAttrType(ctx),
 			},
-			"Photon":        types.BoolType,
-			"RestartWindow": RestartWindow{}.ToAttrType(ctx),
-			"Schema":        types.StringType,
-			"Serverless":    types.BoolType,
-			"Storage":       types.StringType,
-			"Target":        types.StringType,
-			"Trigger":       PipelineTrigger{}.ToAttrType(ctx),
+			"photon": types.BoolType,
+			"restart_window": basetypes.ListType{
+				ElemType: RestartWindow{}.ToAttrType(ctx),
+			},
+			"schema":     types.StringType,
+			"serverless": types.BoolType,
+			"storage":    types.StringType,
+			"target":     types.StringType,
+			"trigger": basetypes.ListType{
+				ElemType: PipelineTrigger{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1863,23 +1935,23 @@ func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringRead(existingState P
 
 func (a PipelineStateInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"LatestUpdates": reflect.TypeOf(UpdateStateInfo{}),
+		"latest_updates": reflect.TypeOf(UpdateStateInfo{}),
 	}
 }
 
 func (a PipelineStateInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ClusterId":       types.StringType,
-			"CreatorUserName": types.StringType,
-			"Health":          types.StringType,
-			"LatestUpdates": basetypes.ListType{
+			"cluster_id":        types.StringType,
+			"creator_user_name": types.StringType,
+			"health":            types.StringType,
+			"latest_updates": basetypes.ListType{
 				ElemType: UpdateStateInfo{}.ToAttrType(ctx),
 			},
-			"Name":          types.StringType,
-			"PipelineId":    types.StringType,
-			"RunAsUserName": types.StringType,
-			"State":         types.StringType,
+			"name":             types.StringType,
+			"pipeline_id":      types.StringType,
+			"run_as_user_name": types.StringType,
+			"state":            types.StringType,
 		},
 	}
 }
@@ -1898,16 +1970,20 @@ func (newState *PipelineTrigger) SyncEffectiveFieldsDuringRead(existingState Pip
 
 func (a PipelineTrigger) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Cron":   reflect.TypeOf(CronTrigger{}),
-		"Manual": reflect.TypeOf(ManualTrigger{}),
+		"cron":   reflect.TypeOf(CronTrigger{}),
+		"manual": reflect.TypeOf(ManualTrigger{}),
 	}
 }
 
 func (a PipelineTrigger) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Cron":   CronTrigger{}.ToAttrType(ctx),
-			"Manual": ManualTrigger{}.ToAttrType(ctx),
+			"cron": basetypes.ListType{
+				ElemType: CronTrigger{}.ToAttrType(ctx),
+			},
+			"manual": basetypes.ListType{
+				ElemType: ManualTrigger{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1936,18 +2012,20 @@ func (newState *ReportSpec) SyncEffectiveFieldsDuringRead(existingState ReportSp
 
 func (a ReportSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"TableConfiguration": reflect.TypeOf(TableSpecificConfig{}),
+		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
 	}
 }
 
 func (a ReportSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DestinationCatalog": types.StringType,
-			"DestinationSchema":  types.StringType,
-			"DestinationTable":   types.StringType,
-			"SourceUrl":          types.StringType,
-			"TableConfiguration": TableSpecificConfig{}.ToAttrType(ctx),
+			"destination_catalog": types.StringType,
+			"destination_schema":  types.StringType,
+			"destination_table":   types.StringType,
+			"source_url":          types.StringType,
+			"table_configuration": basetypes.ListType{
+				ElemType: TableSpecificConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1980,9 +2058,9 @@ func (a RestartWindow) GetComplexFieldTypes() map[string]reflect.Type {
 func (a RestartWindow) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DaysOfWeek": types.StringType,
-			"StartHour":  types.Int64Type,
-			"TimeZoneId": types.StringType,
+			"days_of_week": types.StringType,
+			"start_hour":   types.Int64Type,
+			"time_zone_id": types.StringType,
 		},
 	}
 }
@@ -2013,18 +2091,20 @@ func (newState *SchemaSpec) SyncEffectiveFieldsDuringRead(existingState SchemaSp
 
 func (a SchemaSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"TableConfiguration": reflect.TypeOf(TableSpecificConfig{}),
+		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
 	}
 }
 
 func (a SchemaSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DestinationCatalog": types.StringType,
-			"DestinationSchema":  types.StringType,
-			"SourceCatalog":      types.StringType,
-			"SourceSchema":       types.StringType,
-			"TableConfiguration": TableSpecificConfig{}.ToAttrType(ctx),
+			"destination_catalog": types.StringType,
+			"destination_schema":  types.StringType,
+			"source_catalog":      types.StringType,
+			"source_schema":       types.StringType,
+			"table_configuration": basetypes.ListType{
+				ElemType: TableSpecificConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -2044,15 +2124,17 @@ func (newState *Sequencing) SyncEffectiveFieldsDuringRead(existingState Sequenci
 
 func (a Sequencing) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DataPlaneId": reflect.TypeOf(DataPlaneId{}),
+		"data_plane_id": reflect.TypeOf(DataPlaneId{}),
 	}
 }
 
 func (a Sequencing) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ControlPlaneSeqNo": types.Int64Type,
-			"DataPlaneId":       DataPlaneId{}.ToAttrType(ctx),
+			"control_plane_seq_no": types.Int64Type,
+			"data_plane_id": basetypes.ListType{
+				ElemType: DataPlaneId{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -2074,16 +2156,16 @@ func (newState *SerializedException) SyncEffectiveFieldsDuringRead(existingState
 
 func (a SerializedException) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Stack": reflect.TypeOf(StackFrame{}),
+		"stack": reflect.TypeOf(StackFrame{}),
 	}
 }
 
 func (a SerializedException) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ClassName": types.StringType,
-			"Message":   types.StringType,
-			"Stack": basetypes.ListType{
+			"class_name": types.StringType,
+			"message":    types.StringType,
+			"stack": basetypes.ListType{
 				ElemType: StackFrame{}.ToAttrType(ctx),
 			},
 		},
@@ -2114,10 +2196,10 @@ func (a StackFrame) GetComplexFieldTypes() map[string]reflect.Type {
 func (a StackFrame) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DeclaringClass": types.StringType,
-			"FileName":       types.StringType,
-			"LineNumber":     types.Int64Type,
-			"MethodName":     types.StringType,
+			"declaring_class": types.StringType,
+			"file_name":       types.StringType,
+			"line_number":     types.Int64Type,
+			"method_name":     types.StringType,
 		},
 	}
 }
@@ -2151,24 +2233,24 @@ func (newState *StartUpdate) SyncEffectiveFieldsDuringRead(existingState StartUp
 
 func (a StartUpdate) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FullRefreshSelection": reflect.TypeOf(types.StringType),
-		"RefreshSelection":     reflect.TypeOf(types.StringType),
+		"full_refresh_selection": reflect.TypeOf(types.StringType),
+		"refresh_selection":      reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a StartUpdate) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Cause":       types.StringType,
-			"FullRefresh": types.BoolType,
-			"FullRefreshSelection": basetypes.ListType{
+			"cause":        types.StringType,
+			"full_refresh": types.BoolType,
+			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PipelineId": types.StringType,
-			"RefreshSelection": basetypes.ListType{
+			"pipeline_id": types.StringType,
+			"refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"ValidateOnly": types.BoolType,
+			"validate_only": types.BoolType,
 		},
 	}
 }
@@ -2190,7 +2272,7 @@ func (a StartUpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a StartUpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"UpdateId": types.StringType,
+			"update_id": types.StringType,
 		},
 	}
 }
@@ -2232,7 +2314,7 @@ func (a StopRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a StopRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PipelineId": types.StringType,
+			"pipeline_id": types.StringType,
 		},
 	}
 }
@@ -2266,20 +2348,22 @@ func (newState *TableSpec) SyncEffectiveFieldsDuringRead(existingState TableSpec
 
 func (a TableSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"TableConfiguration": reflect.TypeOf(TableSpecificConfig{}),
+		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
 	}
 }
 
 func (a TableSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DestinationCatalog": types.StringType,
-			"DestinationSchema":  types.StringType,
-			"DestinationTable":   types.StringType,
-			"SourceCatalog":      types.StringType,
-			"SourceSchema":       types.StringType,
-			"SourceTable":        types.StringType,
-			"TableConfiguration": TableSpecificConfig{}.ToAttrType(ctx),
+			"destination_catalog": types.StringType,
+			"destination_schema":  types.StringType,
+			"destination_table":   types.StringType,
+			"source_catalog":      types.StringType,
+			"source_schema":       types.StringType,
+			"source_table":        types.StringType,
+			"table_configuration": basetypes.ListType{
+				ElemType: TableSpecificConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -2306,20 +2390,20 @@ func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringRead(existingState
 
 func (a TableSpecificConfig) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PrimaryKeys": reflect.TypeOf(types.StringType),
-		"SequenceBy":  reflect.TypeOf(types.StringType),
+		"primary_keys": reflect.TypeOf(types.StringType),
+		"sequence_by":  reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a TableSpecificConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PrimaryKeys": basetypes.ListType{
+			"primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SalesforceIncludeFormulaFields": types.BoolType,
-			"ScdType":                        types.StringType,
-			"SequenceBy": basetypes.ListType{
+			"salesforce_include_formula_fields": types.BoolType,
+			"scd_type":                          types.StringType,
+			"sequence_by": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -2367,30 +2451,32 @@ func (newState *UpdateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateIn
 
 func (a UpdateInfo) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Config":               reflect.TypeOf(PipelineSpec{}),
-		"FullRefreshSelection": reflect.TypeOf(types.StringType),
-		"RefreshSelection":     reflect.TypeOf(types.StringType),
+		"config":                 reflect.TypeOf(PipelineSpec{}),
+		"full_refresh_selection": reflect.TypeOf(types.StringType),
+		"refresh_selection":      reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a UpdateInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Cause":        types.StringType,
-			"ClusterId":    types.StringType,
-			"Config":       PipelineSpec{}.ToAttrType(ctx),
-			"CreationTime": types.Int64Type,
-			"FullRefresh":  types.BoolType,
-			"FullRefreshSelection": basetypes.ListType{
+			"cause":      types.StringType,
+			"cluster_id": types.StringType,
+			"config": basetypes.ListType{
+				ElemType: PipelineSpec{}.ToAttrType(ctx),
+			},
+			"creation_time": types.Int64Type,
+			"full_refresh":  types.BoolType,
+			"full_refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PipelineId": types.StringType,
-			"RefreshSelection": basetypes.ListType{
+			"pipeline_id": types.StringType,
+			"refresh_selection": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"State":        types.StringType,
-			"UpdateId":     types.StringType,
-			"ValidateOnly": types.BoolType,
+			"state":         types.StringType,
+			"update_id":     types.StringType,
+			"validate_only": types.BoolType,
 		},
 	}
 }
@@ -2416,9 +2502,9 @@ func (a UpdateStateInfo) GetComplexFieldTypes() map[string]reflect.Type {
 func (a UpdateStateInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreationTime": types.StringType,
-			"State":        types.StringType,
-			"UpdateId":     types.StringType,
+			"creation_time": types.StringType,
+			"state":         types.StringType,
+			"update_id":     types.StringType,
 		},
 	}
 }

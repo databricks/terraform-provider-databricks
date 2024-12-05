@@ -50,18 +50,20 @@ func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
 
 func (a BaseJob) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Settings": reflect.TypeOf(JobSettings{}),
+		"settings": reflect.TypeOf(JobSettings{}),
 	}
 }
 
 func (a BaseJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreatedTime":             types.Int64Type,
-			"CreatorUserName":         types.StringType,
-			"EffectiveBudgetPolicyId": types.StringType,
-			"JobId":                   types.Int64Type,
-			"Settings":                JobSettings{}.ToAttrType(ctx),
+			"created_time":               types.Int64Type,
+			"creator_user_name":          types.StringType,
+			"effective_budget_policy_id": types.StringType,
+			"job_id":                     types.Int64Type,
+			"settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -204,63 +206,79 @@ func (newState *BaseRun) SyncEffectiveFieldsDuringRead(existingState BaseRun) {
 
 func (a BaseRun) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ClusterInstance":      reflect.TypeOf(ClusterInstance{}),
-		"ClusterSpec":          reflect.TypeOf(ClusterSpec{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"JobClusters":          reflect.TypeOf(JobCluster{}),
-		"JobParameters":        reflect.TypeOf(JobParameter{}),
-		"OverridingParameters": reflect.TypeOf(RunParameters{}),
-		"RepairHistory":        reflect.TypeOf(RepairHistoryItem{}),
-		"Schedule":             reflect.TypeOf(CronSchedule{}),
-		"State":                reflect.TypeOf(RunState{}),
-		"Status":               reflect.TypeOf(RunStatus{}),
-		"Tasks":                reflect.TypeOf(RunTask{}),
-		"TriggerInfo":          reflect.TypeOf(TriggerInfo{}),
+		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
+		"cluster_spec":          reflect.TypeOf(ClusterSpec{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"job_clusters":          reflect.TypeOf(JobCluster{}),
+		"job_parameters":        reflect.TypeOf(JobParameter{}),
+		"overriding_parameters": reflect.TypeOf(RunParameters{}),
+		"repair_history":        reflect.TypeOf(RepairHistoryItem{}),
+		"schedule":              reflect.TypeOf(CronSchedule{}),
+		"state":                 reflect.TypeOf(RunState{}),
+		"status":                reflect.TypeOf(RunStatus{}),
+		"tasks":                 reflect.TypeOf(RunTask{}),
+		"trigger_info":          reflect.TypeOf(TriggerInfo{}),
 	}
 }
 
 func (a BaseRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AttemptNumber":     types.Int64Type,
-			"CleanupDuration":   types.Int64Type,
-			"ClusterInstance":   ClusterInstance{}.ToAttrType(ctx),
-			"ClusterSpec":       ClusterSpec{}.ToAttrType(ctx),
-			"CreatorUserName":   types.StringType,
-			"Description":       types.StringType,
-			"EndTime":           types.Int64Type,
-			"ExecutionDuration": types.Int64Type,
-			"GitSource":         GitSource{}.ToAttrType(ctx),
-			"JobClusters": basetypes.ListType{
+			"attempt_number":   types.Int64Type,
+			"cleanup_duration": types.Int64Type,
+			"cluster_instance": basetypes.ListType{
+				ElemType: ClusterInstance{}.ToAttrType(ctx),
+			},
+			"cluster_spec": basetypes.ListType{
+				ElemType: ClusterSpec{}.ToAttrType(ctx),
+			},
+			"creator_user_name":  types.StringType,
+			"description":        types.StringType,
+			"end_time":           types.Int64Type,
+			"execution_duration": types.Int64Type,
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"job_clusters": basetypes.ListType{
 				ElemType: JobCluster{}.ToAttrType(ctx),
 			},
-			"JobId": types.Int64Type,
-			"JobParameters": basetypes.ListType{
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.ListType{
 				ElemType: JobParameter{}.ToAttrType(ctx),
 			},
-			"JobRunId":             types.Int64Type,
-			"NumberInJob":          types.Int64Type,
-			"OriginalAttemptRunId": types.Int64Type,
-			"OverridingParameters": RunParameters{}.ToAttrType(ctx),
-			"QueueDuration":        types.Int64Type,
-			"RepairHistory": basetypes.ListType{
+			"job_run_id":              types.Int64Type,
+			"number_in_job":           types.Int64Type,
+			"original_attempt_run_id": types.Int64Type,
+			"overriding_parameters": basetypes.ListType{
+				ElemType: RunParameters{}.ToAttrType(ctx),
+			},
+			"queue_duration": types.Int64Type,
+			"repair_history": basetypes.ListType{
 				ElemType: RepairHistoryItem{}.ToAttrType(ctx),
 			},
-			"RunDuration":   types.Int64Type,
-			"RunId":         types.Int64Type,
-			"RunName":       types.StringType,
-			"RunPageUrl":    types.StringType,
-			"RunType":       types.StringType,
-			"Schedule":      CronSchedule{}.ToAttrType(ctx),
-			"SetupDuration": types.Int64Type,
-			"StartTime":     types.Int64Type,
-			"State":         RunState{}.ToAttrType(ctx),
-			"Status":        RunStatus{}.ToAttrType(ctx),
-			"Tasks": basetypes.ListType{
+			"run_duration": types.Int64Type,
+			"run_id":       types.Int64Type,
+			"run_name":     types.StringType,
+			"run_page_url": types.StringType,
+			"run_type":     types.StringType,
+			"schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"setup_duration": types.Int64Type,
+			"start_time":     types.Int64Type,
+			"state": basetypes.ListType{
+				ElemType: RunState{}.ToAttrType(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: RunStatus{}.ToAttrType(ctx),
+			},
+			"tasks": basetypes.ListType{
 				ElemType: RunTask{}.ToAttrType(ctx),
 			},
-			"Trigger":     types.StringType,
-			"TriggerInfo": TriggerInfo{}.ToAttrType(ctx),
+			"trigger": types.StringType,
+			"trigger_info": basetypes.ListType{
+				ElemType: TriggerInfo{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -286,8 +304,8 @@ func (a CancelAllRuns) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CancelAllRuns) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllQueuedRuns": types.BoolType,
-			"JobId":         types.Int64Type,
+			"all_queued_runs": types.BoolType,
+			"job_id":          types.Int64Type,
 		},
 	}
 }
@@ -329,7 +347,7 @@ func (a CancelRun) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CancelRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -387,8 +405,8 @@ func (a ClusterInstance) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ClusterInstance) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ClusterId":      types.StringType,
-			"SparkContextId": types.StringType,
+			"cluster_id":       types.StringType,
+			"spark_context_id": types.StringType,
 		},
 	}
 }
@@ -418,20 +436,22 @@ func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState Cluster
 
 func (a ClusterSpec) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Libraries":  reflect.TypeOf(compute.Library{}),
-		"NewCluster": reflect.TypeOf(compute.ClusterSpec{}),
+		"library":     reflect.TypeOf(compute.Library{}),
+		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
 	}
 }
 
 func (a ClusterSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ExistingClusterId": types.StringType,
-			"JobClusterKey":     types.StringType,
-			"Libraries": basetypes.ListType{
+			"existing_cluster_id": types.StringType,
+			"job_cluster_key":     types.StringType,
+			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.ToAttrType(ctx),
 			},
-			"NewCluster": compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -469,9 +489,9 @@ func (a ConditionTask) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ConditionTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Left":  types.StringType,
-			"Op":    types.StringType,
-			"Right": types.StringType,
+			"left":  types.StringType,
+			"op":    types.StringType,
+			"right": types.StringType,
 		},
 	}
 }
@@ -495,7 +515,7 @@ func (a Continuous) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Continuous) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PauseStatus": types.StringType,
+			"pause_status": types.StringType,
 		},
 	}
 }
@@ -614,65 +634,87 @@ func (newState *CreateJob) SyncEffectiveFieldsDuringRead(existingState CreateJob
 
 func (a CreateJob) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList":    reflect.TypeOf(JobAccessControlRequest{}),
-		"Continuous":           reflect.TypeOf(Continuous{}),
-		"Deployment":           reflect.TypeOf(JobDeployment{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"Environments":         reflect.TypeOf(JobEnvironment{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"JobClusters":          reflect.TypeOf(JobCluster{}),
-		"NotificationSettings": reflect.TypeOf(JobNotificationSettings{}),
-		"Parameters":           reflect.TypeOf(JobParameterDefinition{}),
-		"Queue":                reflect.TypeOf(QueueSettings{}),
-		"RunAs":                reflect.TypeOf(JobRunAs{}),
-		"Schedule":             reflect.TypeOf(CronSchedule{}),
-		"Tags":                 reflect.TypeOf(types.StringType),
-		"Tasks":                reflect.TypeOf(Task{}),
-		"Trigger":              reflect.TypeOf(TriggerSettings{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"access_control_list":   reflect.TypeOf(JobAccessControlRequest{}),
+		"continuous":            reflect.TypeOf(Continuous{}),
+		"deployment":            reflect.TypeOf(JobDeployment{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environment":           reflect.TypeOf(JobEnvironment{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"job_cluster":           reflect.TypeOf(JobCluster{}),
+		"notification_settings": reflect.TypeOf(JobNotificationSettings{}),
+		"parameter":             reflect.TypeOf(JobParameterDefinition{}),
+		"queue":                 reflect.TypeOf(QueueSettings{}),
+		"run_as":                reflect.TypeOf(JobRunAs{}),
+		"schedule":              reflect.TypeOf(CronSchedule{}),
+		"tags":                  reflect.TypeOf(types.StringType),
+		"task":                  reflect.TypeOf(Task{}),
+		"trigger":               reflect.TypeOf(TriggerSettings{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
 func (a CreateJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: JobAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"BudgetPolicyId":     types.StringType,
-			"Continuous":         Continuous{}.ToAttrType(ctx),
-			"Deployment":         JobDeployment{}.ToAttrType(ctx),
-			"Description":        types.StringType,
-			"EditMode":           types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"Environments": basetypes.ListType{
+			"budget_policy_id": types.StringType,
+			"continuous": basetypes.ListType{
+				ElemType: Continuous{}.ToAttrType(ctx),
+			},
+			"deployment": basetypes.ListType{
+				ElemType: JobDeployment{}.ToAttrType(ctx),
+			},
+			"description": types.StringType,
+			"edit_mode":   types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environment": basetypes.ListType{
 				ElemType: JobEnvironment{}.ToAttrType(ctx),
 			},
-			"Format":    types.StringType,
-			"GitSource": GitSource{}.ToAttrType(ctx),
-			"Health":    JobsHealthRules{}.ToAttrType(ctx),
-			"JobClusters": basetypes.ListType{
+			"format": types.StringType,
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"job_cluster": basetypes.ListType{
 				ElemType: JobCluster{}.ToAttrType(ctx),
 			},
-			"MaxConcurrentRuns":    types.Int64Type,
-			"Name":                 types.StringType,
-			"NotificationSettings": JobNotificationSettings{}.ToAttrType(ctx),
-			"Parameters": basetypes.ListType{
+			"max_concurrent_runs": types.Int64Type,
+			"name":                types.StringType,
+			"notification_settings": basetypes.ListType{
+				ElemType: JobNotificationSettings{}.ToAttrType(ctx),
+			},
+			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition{}.ToAttrType(ctx),
 			},
-			"Queue":    QueueSettings{}.ToAttrType(ctx),
-			"RunAs":    JobRunAs{}.ToAttrType(ctx),
-			"Schedule": CronSchedule{}.ToAttrType(ctx),
-			"Tags": basetypes.MapType{
+			"queue": basetypes.ListType{
+				ElemType: QueueSettings{}.ToAttrType(ctx),
+			},
+			"run_as": basetypes.ListType{
+				ElemType: JobRunAs{}.ToAttrType(ctx),
+			},
+			"schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Tasks": basetypes.ListType{
+			"task": basetypes.ListType{
 				ElemType: Task{}.ToAttrType(ctx),
 			},
-			"TimeoutSeconds":       types.Int64Type,
-			"Trigger":              TriggerSettings{}.ToAttrType(ctx),
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"timeout_seconds": types.Int64Type,
+			"trigger": basetypes.ListType{
+				ElemType: TriggerSettings{}.ToAttrType(ctx),
+			},
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -696,7 +738,7 @@ func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CreateResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.Int64Type,
+			"job_id": types.Int64Type,
 		},
 	}
 }
@@ -729,9 +771,9 @@ func (a CronSchedule) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CronSchedule) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PauseStatus":          types.StringType,
-			"QuartzCronExpression": types.StringType,
-			"TimezoneId":           types.StringType,
+			"pause_status":           types.StringType,
+			"quartz_cron_expression": types.StringType,
+			"timezone_id":            types.StringType,
 		},
 	}
 }
@@ -754,17 +796,17 @@ func (newState *DbtOutput) SyncEffectiveFieldsDuringRead(existingState DbtOutput
 
 func (a DbtOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ArtifactsHeaders": reflect.TypeOf(types.StringType),
+		"artifacts_headers": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a DbtOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ArtifactsHeaders": basetypes.MapType{
+			"artifacts_headers": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"ArtifactsLink": types.StringType,
+			"artifacts_link": types.StringType,
 		},
 	}
 }
@@ -814,22 +856,22 @@ func (newState *DbtTask) SyncEffectiveFieldsDuringRead(existingState DbtTask) {
 
 func (a DbtTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Commands": reflect.TypeOf(types.StringType),
+		"commands": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a DbtTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Catalog": types.StringType,
-			"Commands": basetypes.ListType{
+			"catalog": types.StringType,
+			"commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"ProfilesDirectory": types.StringType,
-			"ProjectDirectory":  types.StringType,
-			"Schema":            types.StringType,
-			"Source":            types.StringType,
-			"WarehouseId":       types.StringType,
+			"profiles_directory": types.StringType,
+			"project_directory":  types.StringType,
+			"schema":             types.StringType,
+			"source":             types.StringType,
+			"warehouse_id":       types.StringType,
 		},
 	}
 }
@@ -852,7 +894,7 @@ func (a DeleteJob) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.Int64Type,
+			"job_id": types.Int64Type,
 		},
 	}
 }
@@ -894,7 +936,7 @@ func (a DeleteRun) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -949,9 +991,9 @@ func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) GetComple
 func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Field":         types.StringType,
-			"NewValue":      types.StringType,
-			"PreviousValue": types.StringType,
+			"field":          types.StringType,
+			"new_value":      types.StringType,
+			"previous_value": types.StringType,
 		},
 	}
 }
@@ -977,8 +1019,8 @@ func (a EnforcePolicyComplianceRequest) GetComplexFieldTypes() map[string]reflec
 func (a EnforcePolicyComplianceRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId":        types.Int64Type,
-			"ValidateOnly": types.BoolType,
+			"job_id":        types.Int64Type,
+			"validate_only": types.BoolType,
 		},
 	}
 }
@@ -1008,19 +1050,21 @@ func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringRead(e
 
 func (a EnforcePolicyComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"JobClusterChanges": reflect.TypeOf(EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}),
-		"Settings":          reflect.TypeOf(JobSettings{}),
+		"job_cluster_changes": reflect.TypeOf(EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}),
+		"settings":            reflect.TypeOf(JobSettings{}),
 	}
 }
 
 func (a EnforcePolicyComplianceResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"HasChanges": types.BoolType,
-			"JobClusterChanges": basetypes.ListType{
+			"has_changes": types.BoolType,
+			"job_cluster_changes": basetypes.ListType{
 				ElemType: EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}.ToAttrType(ctx),
 			},
-			"Settings": JobSettings{}.ToAttrType(ctx),
+			"settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1043,14 +1087,14 @@ func (newState *ExportRunOutput) SyncEffectiveFieldsDuringRead(existingState Exp
 
 func (a ExportRunOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Views": reflect.TypeOf(ViewItem{}),
+		"views": reflect.TypeOf(ViewItem{}),
 	}
 }
 
 func (a ExportRunOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Views": basetypes.ListType{
+			"views": basetypes.ListType{
 				ElemType: ViewItem{}.ToAttrType(ctx),
 			},
 		},
@@ -1078,8 +1122,8 @@ func (a ExportRunRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ExportRunRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId":         types.Int64Type,
-			"ViewsToExport": types.StringType,
+			"run_id":          types.Int64Type,
+			"views_to_export": types.StringType,
 		},
 	}
 }
@@ -1112,9 +1156,9 @@ func (a FileArrivalTriggerConfiguration) GetComplexFieldTypes() map[string]refle
 func (a FileArrivalTriggerConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"MinTimeBetweenTriggersSeconds": types.Int64Type,
-			"Url":                           types.StringType,
-			"WaitAfterLastChangeSeconds":    types.Int64Type,
+			"min_time_between_triggers_seconds": types.Int64Type,
+			"url":                               types.StringType,
+			"wait_after_last_change_seconds":    types.Int64Type,
 		},
 	}
 }
@@ -1134,18 +1178,20 @@ func (newState *ForEachStats) SyncEffectiveFieldsDuringRead(existingState ForEac
 
 func (a ForEachStats) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ErrorMessageStats": reflect.TypeOf(ForEachTaskErrorMessageStats{}),
-		"TaskRunStats":      reflect.TypeOf(ForEachTaskTaskRunStats{}),
+		"error_message_stats": reflect.TypeOf(ForEachTaskErrorMessageStats{}),
+		"task_run_stats":      reflect.TypeOf(ForEachTaskTaskRunStats{}),
 	}
 }
 
 func (a ForEachStats) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ErrorMessageStats": basetypes.ListType{
+			"error_message_stats": basetypes.ListType{
 				ElemType: ForEachTaskErrorMessageStats{}.ToAttrType(ctx),
 			},
-			"TaskRunStats": ForEachTaskTaskRunStats{}.ToAttrType(ctx),
+			"task_run_stats": basetypes.ListType{
+				ElemType: ForEachTaskTaskRunStats{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1170,16 +1216,18 @@ func (newState *ForEachTask) SyncEffectiveFieldsDuringRead(existingState ForEach
 
 func (a ForEachTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Task": reflect.TypeOf(Task{}),
+		"task": reflect.TypeOf(Task{}),
 	}
 }
 
 func (a ForEachTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Concurrency": types.Int64Type,
-			"Inputs":      types.StringType,
-			"Task":        Task{}.ToAttrType(ctx),
+			"concurrency": types.Int64Type,
+			"inputs":      types.StringType,
+			"task": basetypes.ListType{
+				ElemType: Task{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1207,9 +1255,9 @@ func (a ForEachTaskErrorMessageStats) GetComplexFieldTypes() map[string]reflect.
 func (a ForEachTaskErrorMessageStats) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Count":               types.Int64Type,
-			"ErrorMessage":        types.StringType,
-			"TerminationCategory": types.StringType,
+			"count":                types.Int64Type,
+			"error_message":        types.StringType,
+			"termination_category": types.StringType,
 		},
 	}
 }
@@ -1243,12 +1291,12 @@ func (a ForEachTaskTaskRunStats) GetComplexFieldTypes() map[string]reflect.Type 
 func (a ForEachTaskTaskRunStats) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ActiveIterations":    types.Int64Type,
-			"CompletedIterations": types.Int64Type,
-			"FailedIterations":    types.Int64Type,
-			"ScheduledIterations": types.Int64Type,
-			"SucceededIterations": types.Int64Type,
-			"TotalIterations":     types.Int64Type,
+			"active_iterations":    types.Int64Type,
+			"completed_iterations": types.Int64Type,
+			"failed_iterations":    types.Int64Type,
+			"scheduled_iterations": types.Int64Type,
+			"succeeded_iterations": types.Int64Type,
+			"total_iterations":     types.Int64Type,
 		},
 	}
 }
@@ -1272,7 +1320,7 @@ func (a GetJobPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect
 func (a GetJobPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.StringType,
+			"job_id": types.StringType,
 		},
 	}
 }
@@ -1290,14 +1338,14 @@ func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(ex
 
 func (a GetJobPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PermissionLevels": reflect.TypeOf(JobPermissionsDescription{}),
+		"permission_levels": reflect.TypeOf(JobPermissionsDescription{}),
 	}
 }
 
 func (a GetJobPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PermissionLevels": basetypes.ListType{
+			"permission_levels": basetypes.ListType{
 				ElemType: JobPermissionsDescription{}.ToAttrType(ctx),
 			},
 		},
@@ -1323,7 +1371,7 @@ func (a GetJobPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type
 func (a GetJobPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.StringType,
+			"job_id": types.StringType,
 		},
 	}
 }
@@ -1348,7 +1396,7 @@ func (a GetJobRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetJobRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.Int64Type,
+			"job_id": types.Int64Type,
 		},
 	}
 }
@@ -1372,7 +1420,7 @@ func (a GetPolicyComplianceRequest) GetComplexFieldTypes() map[string]reflect.Ty
 func (a GetPolicyComplianceRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.Int64Type,
+			"job_id": types.Int64Type,
 		},
 	}
 }
@@ -1399,15 +1447,15 @@ func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringRead(exist
 
 func (a GetPolicyComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Violations": reflect.TypeOf(types.StringType),
+		"violations": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a GetPolicyComplianceResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IsCompliant": types.BoolType,
-			"Violations": basetypes.MapType{
+			"is_compliant": types.BoolType,
+			"violations": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1433,7 +1481,7 @@ func (a GetRunOutputRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetRunOutputRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -1465,10 +1513,10 @@ func (a GetRunRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetRunRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IncludeHistory":        types.BoolType,
-			"IncludeResolvedValues": types.BoolType,
-			"PageToken":             types.StringType,
-			"RunId":                 types.Int64Type,
+			"include_history":         types.BoolType,
+			"include_resolved_values": types.BoolType,
+			"page_token":              types.StringType,
+			"run_id":                  types.Int64Type,
 		},
 	}
 }
@@ -1495,7 +1543,7 @@ func (a GitSnapshot) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GitSnapshot) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"UsedCommit": types.StringType,
+			"used_commit": types.StringType,
 		},
 	}
 }
@@ -1541,21 +1589,25 @@ func (newState *GitSource) SyncEffectiveFieldsDuringRead(existingState GitSource
 
 func (a GitSource) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"GitSnapshot": reflect.TypeOf(GitSnapshot{}),
-		"JobSource":   reflect.TypeOf(JobSource{}),
+		"git_snapshot": reflect.TypeOf(GitSnapshot{}),
+		"job_source":   reflect.TypeOf(JobSource{}),
 	}
 }
 
 func (a GitSource) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GitBranch":   types.StringType,
-			"GitCommit":   types.StringType,
-			"GitProvider": types.StringType,
-			"GitSnapshot": GitSnapshot{}.ToAttrType(ctx),
-			"GitTag":      types.StringType,
-			"GitUrl":      types.StringType,
-			"JobSource":   JobSource{}.ToAttrType(ctx),
+			"branch":       types.StringType,
+			"commit":       types.StringType,
+			"git_provider": types.StringType,
+			"git_snapshot": basetypes.ListType{
+				ElemType: GitSnapshot{}.ToAttrType(ctx),
+			},
+			"tag": types.StringType,
+			"url": types.StringType,
+			"job_source": basetypes.ListType{
+				ElemType: JobSource{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1598,19 +1650,21 @@ func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
 
 func (a Job) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Settings": reflect.TypeOf(JobSettings{}),
+		"settings": reflect.TypeOf(JobSettings{}),
 	}
 }
 
 func (a Job) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreatedTime":             types.Int64Type,
-			"CreatorUserName":         types.StringType,
-			"EffectiveBudgetPolicyId": types.StringType,
-			"JobId":                   types.Int64Type,
-			"RunAsUserName":           types.StringType,
-			"Settings":                JobSettings{}.ToAttrType(ctx),
+			"created_time":               types.Int64Type,
+			"creator_user_name":          types.StringType,
+			"effective_budget_policy_id": types.StringType,
+			"job_id":                     types.Int64Type,
+			"run_as_user_name":           types.StringType,
+			"settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1639,10 +1693,10 @@ func (a JobAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type 
 func (a JobAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GroupName":            types.StringType,
-			"PermissionLevel":      types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -1668,20 +1722,20 @@ func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringRead(existing
 
 func (a JobAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AllPermissions": reflect.TypeOf(JobPermission{}),
+		"all_permissions": reflect.TypeOf(JobPermission{}),
 	}
 }
 
 func (a JobAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllPermissions": basetypes.ListType{
+			"all_permissions": basetypes.ListType{
 				ElemType: JobPermission{}.ToAttrType(ctx),
 			},
-			"DisplayName":          types.StringType,
-			"GroupName":            types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -1703,15 +1757,17 @@ func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobClust
 
 func (a JobCluster) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"NewCluster": reflect.TypeOf(compute.ClusterSpec{}),
+		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
 	}
 }
 
 func (a JobCluster) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobClusterKey": types.StringType,
-			"NewCluster":    compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			"job_cluster_key": types.StringType,
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1737,16 +1793,16 @@ func (newState *JobCompliance) SyncEffectiveFieldsDuringRead(existingState JobCo
 
 func (a JobCompliance) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Violations": reflect.TypeOf(types.StringType),
+		"violations": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a JobCompliance) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IsCompliant": types.BoolType,
-			"JobId":       types.Int64Type,
-			"Violations": basetypes.MapType{
+			"is_compliant": types.BoolType,
+			"job_id":       types.Int64Type,
+			"violations": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1775,8 +1831,8 @@ func (a JobDeployment) GetComplexFieldTypes() map[string]reflect.Type {
 func (a JobDeployment) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Kind":             types.StringType,
-			"MetadataFilePath": types.StringType,
+			"kind":               types.StringType,
+			"metadata_file_path": types.StringType,
 		},
 	}
 }
@@ -1825,31 +1881,31 @@ func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a JobEmailNotifications) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OnDurationWarningThresholdExceeded": reflect.TypeOf(types.StringType),
-		"OnFailure":                          reflect.TypeOf(types.StringType),
-		"OnStart":                            reflect.TypeOf(types.StringType),
-		"OnStreamingBacklogExceeded":         reflect.TypeOf(types.StringType),
-		"OnSuccess":                          reflect.TypeOf(types.StringType),
+		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.StringType),
+		"on_failure":                             reflect.TypeOf(types.StringType),
+		"on_start":                               reflect.TypeOf(types.StringType),
+		"on_streaming_backlog_exceeded":          reflect.TypeOf(types.StringType),
+		"on_success":                             reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a JobEmailNotifications) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NoAlertForSkippedRuns": types.BoolType,
-			"OnDurationWarningThresholdExceeded": basetypes.ListType{
+			"no_alert_for_skipped_runs": types.BoolType,
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnFailure": basetypes.ListType{
+			"on_failure": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnStart": basetypes.ListType{
+			"on_start": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnStreamingBacklogExceeded": basetypes.ListType{
+			"on_streaming_backlog_exceeded": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnSuccess": basetypes.ListType{
+			"on_success": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1873,15 +1929,17 @@ func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobE
 
 func (a JobEnvironment) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Spec": reflect.TypeOf(compute.Environment{}),
+		"spec": reflect.TypeOf(compute.Environment{}),
 	}
 }
 
 func (a JobEnvironment) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EnvironmentKey": types.StringType,
-			"Spec":           compute_tf.Environment{}.ToAttrType(ctx),
+			"environment_key": types.StringType,
+			"spec": basetypes.ListType{
+				ElemType: compute_tf.Environment{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1908,8 +1966,8 @@ func (a JobNotificationSettings) GetComplexFieldTypes() map[string]reflect.Type 
 func (a JobNotificationSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NoAlertForCanceledRuns": types.BoolType,
-			"NoAlertForSkippedRuns":  types.BoolType,
+			"no_alert_for_canceled_runs": types.BoolType,
+			"no_alert_for_skipped_runs":  types.BoolType,
 		},
 	}
 }
@@ -1936,9 +1994,9 @@ func (a JobParameter) GetComplexFieldTypes() map[string]reflect.Type {
 func (a JobParameter) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Default": types.StringType,
-			"Name":    types.StringType,
-			"Value":   types.StringType,
+			"default": types.StringType,
+			"name":    types.StringType,
+			"value":   types.StringType,
 		},
 	}
 }
@@ -1964,8 +2022,8 @@ func (a JobParameterDefinition) GetComplexFieldTypes() map[string]reflect.Type {
 func (a JobParameterDefinition) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Default": types.StringType,
-			"Name":    types.StringType,
+			"default": types.StringType,
+			"name":    types.StringType,
 		},
 	}
 }
@@ -1986,18 +2044,18 @@ func (newState *JobPermission) SyncEffectiveFieldsDuringRead(existingState JobPe
 
 func (a JobPermission) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a JobPermission) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Inherited": types.BoolType,
-			"InheritedFromObject": basetypes.ListType{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PermissionLevel": types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2018,18 +2076,18 @@ func (newState *JobPermissions) SyncEffectiveFieldsDuringRead(existingState JobP
 
 func (a JobPermissions) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(JobAccessControlResponse{}),
+		"access_control_list": reflect.TypeOf(JobAccessControlResponse{}),
 	}
 }
 
 func (a JobPermissions) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: JobAccessControlResponse{}.ToAttrType(ctx),
 			},
-			"ObjectId":   types.StringType,
-			"ObjectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -2053,8 +2111,8 @@ func (a JobPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Typ
 func (a JobPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description":     types.StringType,
-			"PermissionLevel": types.StringType,
+			"description":      types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2073,17 +2131,17 @@ func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a JobPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(JobAccessControlRequest{}),
+		"access_control_list": reflect.TypeOf(JobAccessControlRequest{}),
 	}
 }
 
 func (a JobPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: JobAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"JobId": types.StringType,
+			"job_id": types.StringType,
 		},
 	}
 }
@@ -2116,8 +2174,8 @@ func (a JobRunAs) GetComplexFieldTypes() map[string]reflect.Type {
 func (a JobRunAs) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -2234,61 +2292,83 @@ func (newState *JobSettings) SyncEffectiveFieldsDuringRead(existingState JobSett
 
 func (a JobSettings) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Continuous":           reflect.TypeOf(Continuous{}),
-		"Deployment":           reflect.TypeOf(JobDeployment{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"Environments":         reflect.TypeOf(JobEnvironment{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"JobClusters":          reflect.TypeOf(JobCluster{}),
-		"NotificationSettings": reflect.TypeOf(JobNotificationSettings{}),
-		"Parameters":           reflect.TypeOf(JobParameterDefinition{}),
-		"Queue":                reflect.TypeOf(QueueSettings{}),
-		"RunAs":                reflect.TypeOf(JobRunAs{}),
-		"Schedule":             reflect.TypeOf(CronSchedule{}),
-		"Tags":                 reflect.TypeOf(types.StringType),
-		"Tasks":                reflect.TypeOf(Task{}),
-		"Trigger":              reflect.TypeOf(TriggerSettings{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"continuous":            reflect.TypeOf(Continuous{}),
+		"deployment":            reflect.TypeOf(JobDeployment{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environment":           reflect.TypeOf(JobEnvironment{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"job_cluster":           reflect.TypeOf(JobCluster{}),
+		"notification_settings": reflect.TypeOf(JobNotificationSettings{}),
+		"parameter":             reflect.TypeOf(JobParameterDefinition{}),
+		"queue":                 reflect.TypeOf(QueueSettings{}),
+		"run_as":                reflect.TypeOf(JobRunAs{}),
+		"schedule":              reflect.TypeOf(CronSchedule{}),
+		"tags":                  reflect.TypeOf(types.StringType),
+		"task":                  reflect.TypeOf(Task{}),
+		"trigger":               reflect.TypeOf(TriggerSettings{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
 func (a JobSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BudgetPolicyId":     types.StringType,
-			"Continuous":         Continuous{}.ToAttrType(ctx),
-			"Deployment":         JobDeployment{}.ToAttrType(ctx),
-			"Description":        types.StringType,
-			"EditMode":           types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"Environments": basetypes.ListType{
+			"budget_policy_id": types.StringType,
+			"continuous": basetypes.ListType{
+				ElemType: Continuous{}.ToAttrType(ctx),
+			},
+			"deployment": basetypes.ListType{
+				ElemType: JobDeployment{}.ToAttrType(ctx),
+			},
+			"description": types.StringType,
+			"edit_mode":   types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environment": basetypes.ListType{
 				ElemType: JobEnvironment{}.ToAttrType(ctx),
 			},
-			"Format":    types.StringType,
-			"GitSource": GitSource{}.ToAttrType(ctx),
-			"Health":    JobsHealthRules{}.ToAttrType(ctx),
-			"JobClusters": basetypes.ListType{
+			"format": types.StringType,
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"job_cluster": basetypes.ListType{
 				ElemType: JobCluster{}.ToAttrType(ctx),
 			},
-			"MaxConcurrentRuns":    types.Int64Type,
-			"Name":                 types.StringType,
-			"NotificationSettings": JobNotificationSettings{}.ToAttrType(ctx),
-			"Parameters": basetypes.ListType{
+			"max_concurrent_runs": types.Int64Type,
+			"name":                types.StringType,
+			"notification_settings": basetypes.ListType{
+				ElemType: JobNotificationSettings{}.ToAttrType(ctx),
+			},
+			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition{}.ToAttrType(ctx),
 			},
-			"Queue":    QueueSettings{}.ToAttrType(ctx),
-			"RunAs":    JobRunAs{}.ToAttrType(ctx),
-			"Schedule": CronSchedule{}.ToAttrType(ctx),
-			"Tags": basetypes.MapType{
+			"queue": basetypes.ListType{
+				ElemType: QueueSettings{}.ToAttrType(ctx),
+			},
+			"run_as": basetypes.ListType{
+				ElemType: JobRunAs{}.ToAttrType(ctx),
+			},
+			"schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Tasks": basetypes.ListType{
+			"task": basetypes.ListType{
 				ElemType: Task{}.ToAttrType(ctx),
 			},
-			"TimeoutSeconds":       types.Int64Type,
-			"Trigger":              TriggerSettings{}.ToAttrType(ctx),
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"timeout_seconds": types.Int64Type,
+			"trigger": basetypes.ListType{
+				ElemType: TriggerSettings{}.ToAttrType(ctx),
+			},
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -2325,9 +2405,9 @@ func (a JobSource) GetComplexFieldTypes() map[string]reflect.Type {
 func (a JobSource) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DirtyState":          types.StringType,
-			"ImportFromGitBranch": types.StringType,
-			"JobConfigPath":       types.StringType,
+			"dirty_state":            types.StringType,
+			"import_from_git_branch": types.StringType,
+			"job_config_path":        types.StringType,
 		},
 	}
 }
@@ -2367,9 +2447,9 @@ func (a JobsHealthRule) GetComplexFieldTypes() map[string]reflect.Type {
 func (a JobsHealthRule) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Metric": types.StringType,
-			"Op":     types.StringType,
-			"Value":  types.Int64Type,
+			"metric": types.StringType,
+			"op":     types.StringType,
+			"value":  types.Int64Type,
 		},
 	}
 }
@@ -2387,14 +2467,14 @@ func (newState *JobsHealthRules) SyncEffectiveFieldsDuringRead(existingState Job
 
 func (a JobsHealthRules) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Rules": reflect.TypeOf(JobsHealthRule{}),
+		"rules": reflect.TypeOf(JobsHealthRule{}),
 	}
 }
 
 func (a JobsHealthRules) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Rules": basetypes.ListType{
+			"rules": basetypes.ListType{
 				ElemType: JobsHealthRule{}.ToAttrType(ctx),
 			},
 		},
@@ -2422,18 +2502,18 @@ func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringRea
 
 func (a ListJobComplianceForPolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Jobs": reflect.TypeOf(JobCompliance{}),
+		"jobs": reflect.TypeOf(JobCompliance{}),
 	}
 }
 
 func (a ListJobComplianceForPolicyResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Jobs": basetypes.ListType{
+			"jobs": basetypes.ListType{
 				ElemType: JobCompliance{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
-			"PrevPageToken": types.StringType,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
 		},
 	}
 }
@@ -2464,9 +2544,9 @@ func (a ListJobComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type
 func (a ListJobComplianceRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PageSize":  types.Int64Type,
-			"PageToken": types.StringType,
-			"PolicyId":  types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"policy_id":  types.StringType,
 		},
 	}
 }
@@ -2502,11 +2582,11 @@ func (a ListJobsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListJobsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ExpandTasks": types.BoolType,
-			"Limit":       types.Int64Type,
-			"Name":        types.StringType,
-			"Offset":      types.Int64Type,
-			"PageToken":   types.StringType,
+			"expand_tasks": types.BoolType,
+			"limit":        types.Int64Type,
+			"name":         types.StringType,
+			"offset":       types.Int64Type,
+			"page_token":   types.StringType,
 		},
 	}
 }
@@ -2534,19 +2614,19 @@ func (newState *ListJobsResponse) SyncEffectiveFieldsDuringRead(existingState Li
 
 func (a ListJobsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Jobs": reflect.TypeOf(BaseJob{}),
+		"jobs": reflect.TypeOf(BaseJob{}),
 	}
 }
 
 func (a ListJobsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"HasMore": types.BoolType,
-			"Jobs": basetypes.ListType{
+			"has_more": types.BoolType,
+			"jobs": basetypes.ListType{
 				ElemType: BaseJob{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
-			"PrevPageToken": types.StringType,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
 		},
 	}
 }
@@ -2604,16 +2684,16 @@ func (a ListRunsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListRunsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ActiveOnly":    types.BoolType,
-			"CompletedOnly": types.BoolType,
-			"ExpandTasks":   types.BoolType,
-			"JobId":         types.Int64Type,
-			"Limit":         types.Int64Type,
-			"Offset":        types.Int64Type,
-			"PageToken":     types.StringType,
-			"RunType":       types.StringType,
-			"StartTimeFrom": types.Int64Type,
-			"StartTimeTo":   types.Int64Type,
+			"active_only":     types.BoolType,
+			"completed_only":  types.BoolType,
+			"expand_tasks":    types.BoolType,
+			"job_id":          types.Int64Type,
+			"limit":           types.Int64Type,
+			"offset":          types.Int64Type,
+			"page_token":      types.StringType,
+			"run_type":        types.StringType,
+			"start_time_from": types.Int64Type,
+			"start_time_to":   types.Int64Type,
 		},
 	}
 }
@@ -2641,17 +2721,17 @@ func (newState *ListRunsResponse) SyncEffectiveFieldsDuringRead(existingState Li
 
 func (a ListRunsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Runs": reflect.TypeOf(BaseRun{}),
+		"runs": reflect.TypeOf(BaseRun{}),
 	}
 }
 
 func (a ListRunsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"HasMore":       types.BoolType,
-			"NextPageToken": types.StringType,
-			"PrevPageToken": types.StringType,
-			"Runs": basetypes.ListType{
+			"has_more":        types.BoolType,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
+			"runs": basetypes.ListType{
 				ElemType: BaseRun{}.ToAttrType(ctx),
 			},
 		},
@@ -2683,8 +2763,8 @@ func (a NotebookOutput) GetComplexFieldTypes() map[string]reflect.Type {
 func (a NotebookOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Result":    types.StringType,
-			"Truncated": types.BoolType,
+			"result":    types.StringType,
+			"truncated": types.BoolType,
 		},
 	}
 }
@@ -2738,19 +2818,19 @@ func (newState *NotebookTask) SyncEffectiveFieldsDuringRead(existingState Notebo
 
 func (a NotebookTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"BaseParameters": reflect.TypeOf(types.StringType),
+		"base_parameters": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a NotebookTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BaseParameters": basetypes.MapType{
+			"base_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"NotebookPath": types.StringType,
-			"Source":       types.StringType,
-			"WarehouseId":  types.StringType,
+			"notebook_path": types.StringType,
+			"source":        types.StringType,
+			"warehouse_id":  types.StringType,
 		},
 	}
 }
@@ -2775,8 +2855,8 @@ func (a PeriodicTriggerConfiguration) GetComplexFieldTypes() map[string]reflect.
 func (a PeriodicTriggerConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Interval": types.Int64Type,
-			"Unit":     types.StringType,
+			"interval": types.Int64Type,
+			"unit":     types.StringType,
 		},
 	}
 }
@@ -2799,7 +2879,7 @@ func (a PipelineParams) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PipelineParams) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FullRefresh": types.BoolType,
+			"full_refresh": types.BoolType,
 		},
 	}
 }
@@ -2824,8 +2904,8 @@ func (a PipelineTask) GetComplexFieldTypes() map[string]reflect.Type {
 func (a PipelineTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FullRefresh": types.BoolType,
-			"PipelineId":  types.StringType,
+			"full_refresh": types.BoolType,
+			"pipeline_id":  types.StringType,
 		},
 	}
 }
@@ -2854,20 +2934,20 @@ func (newState *PythonWheelTask) SyncEffectiveFieldsDuringRead(existingState Pyt
 
 func (a PythonWheelTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"NamedParameters": reflect.TypeOf(types.StringType),
-		"Parameters":      reflect.TypeOf(types.StringType),
+		"named_parameters": reflect.TypeOf(types.StringType),
+		"parameters":       reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a PythonWheelTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EntryPoint": types.StringType,
-			"NamedParameters": basetypes.MapType{
+			"entry_point": types.StringType,
+			"named_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PackageName": types.StringType,
-			"Parameters": basetypes.ListType{
+			"package_name": types.StringType,
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -2900,8 +2980,8 @@ func (a QueueDetails) GetComplexFieldTypes() map[string]reflect.Type {
 func (a QueueDetails) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Code":    types.StringType,
-			"Message": types.StringType,
+			"code":    types.StringType,
+			"message": types.StringType,
 		},
 	}
 }
@@ -2924,7 +3004,7 @@ func (a QueueSettings) GetComplexFieldTypes() map[string]reflect.Type {
 func (a QueueSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Enabled": types.BoolType,
+			"enabled": types.BoolType,
 		},
 	}
 }
@@ -2957,24 +3037,28 @@ func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringRead(existingState R
 
 func (a RepairHistoryItem) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"State":      reflect.TypeOf(RunState{}),
-		"Status":     reflect.TypeOf(RunStatus{}),
-		"TaskRunIds": reflect.TypeOf(types.Int64Type),
+		"state":        reflect.TypeOf(RunState{}),
+		"status":       reflect.TypeOf(RunStatus{}),
+		"task_run_ids": reflect.TypeOf(types.Int64Type),
 	}
 }
 
 func (a RepairHistoryItem) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndTime":   types.Int64Type,
-			"Id":        types.Int64Type,
-			"StartTime": types.Int64Type,
-			"State":     RunState{}.ToAttrType(ctx),
-			"Status":    RunStatus{}.ToAttrType(ctx),
-			"TaskRunIds": basetypes.ListType{
+			"end_time":   types.Int64Type,
+			"id":         types.Int64Type,
+			"start_time": types.Int64Type,
+			"state": basetypes.ListType{
+				ElemType: RunState{}.ToAttrType(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: RunStatus{}.ToAttrType(ctx),
+			},
+			"task_run_ids": basetypes.ListType{
 				ElemType: types.Int64Type,
 			},
-			"Type": types.StringType,
+			"type": types.StringType,
 		},
 	}
 }
@@ -3090,52 +3174,54 @@ func (newState *RepairRun) SyncEffectiveFieldsDuringRead(existingState RepairRun
 
 func (a RepairRun) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtCommands":       reflect.TypeOf(types.StringType),
-		"JarParams":         reflect.TypeOf(types.StringType),
-		"JobParameters":     reflect.TypeOf(types.StringType),
-		"NotebookParams":    reflect.TypeOf(types.StringType),
-		"PipelineParams":    reflect.TypeOf(PipelineParams{}),
-		"PythonNamedParams": reflect.TypeOf(types.StringType),
-		"PythonParams":      reflect.TypeOf(types.StringType),
-		"RerunTasks":        reflect.TypeOf(types.StringType),
-		"SparkSubmitParams": reflect.TypeOf(types.StringType),
-		"SqlParams":         reflect.TypeOf(types.StringType),
+		"dbt_commands":        reflect.TypeOf(types.StringType),
+		"jar_params":          reflect.TypeOf(types.StringType),
+		"job_parameters":      reflect.TypeOf(types.StringType),
+		"notebook_params":     reflect.TypeOf(types.StringType),
+		"pipeline_params":     reflect.TypeOf(PipelineParams{}),
+		"python_named_params": reflect.TypeOf(types.StringType),
+		"python_params":       reflect.TypeOf(types.StringType),
+		"rerun_tasks":         reflect.TypeOf(types.StringType),
+		"spark_submit_params": reflect.TypeOf(types.StringType),
+		"sql_params":          reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a RepairRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtCommands": basetypes.ListType{
+			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JarParams": basetypes.ListType{
+			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JobParameters": basetypes.MapType{
+			"job_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"LatestRepairId": types.Int64Type,
-			"NotebookParams": basetypes.MapType{
+			"latest_repair_id": types.Int64Type,
+			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PipelineParams": PipelineParams{}.ToAttrType(ctx),
-			"PythonNamedParams": basetypes.MapType{
+			"pipeline_params": basetypes.ListType{
+				ElemType: PipelineParams{}.ToAttrType(ctx),
+			},
+			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PythonParams": basetypes.ListType{
+			"python_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"RerunAllFailedTasks": types.BoolType,
-			"RerunDependentTasks": types.BoolType,
-			"RerunTasks": basetypes.ListType{
+			"rerun_all_failed_tasks": types.BoolType,
+			"rerun_dependent_tasks":  types.BoolType,
+			"rerun_tasks": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"RunId": types.Int64Type,
-			"SparkSubmitParams": basetypes.ListType{
+			"run_id": types.Int64Type,
+			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SqlParams": basetypes.MapType{
+			"sql_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3162,7 +3248,7 @@ func (a RepairRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a RepairRunResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RepairId": types.Int64Type,
+			"repair_id": types.Int64Type,
 		},
 	}
 }
@@ -3186,15 +3272,17 @@ func (newState *ResetJob) SyncEffectiveFieldsDuringRead(existingState ResetJob) 
 
 func (a ResetJob) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"NewSettings": reflect.TypeOf(JobSettings{}),
+		"new_settings": reflect.TypeOf(JobSettings{}),
 	}
 }
 
 func (a ResetJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId":       types.Int64Type,
-			"NewSettings": JobSettings{}.ToAttrType(ctx),
+			"job_id": types.Int64Type,
+			"new_settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -3237,8 +3325,8 @@ func (a ResolvedConditionTaskValues) GetComplexFieldTypes() map[string]reflect.T
 func (a ResolvedConditionTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Left":  types.StringType,
-			"Right": types.StringType,
+			"left":  types.StringType,
+			"right": types.StringType,
 		},
 	}
 }
@@ -3255,14 +3343,14 @@ func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a ResolvedDbtTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Commands": reflect.TypeOf(types.StringType),
+		"commands": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ResolvedDbtTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Commands": basetypes.ListType{
+			"commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3281,14 +3369,14 @@ func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringRead(existi
 
 func (a ResolvedNotebookTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"BaseParameters": reflect.TypeOf(types.StringType),
+		"base_parameters": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ResolvedNotebookTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BaseParameters": basetypes.MapType{
+			"base_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3307,14 +3395,14 @@ func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringRead(existingS
 
 func (a ResolvedParamPairValues) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ResolvedParamPairValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Parameters": basetypes.MapType{
+			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3335,18 +3423,18 @@ func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringRead(exi
 
 func (a ResolvedPythonWheelTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"NamedParameters": reflect.TypeOf(types.StringType),
-		"Parameters":      reflect.TypeOf(types.StringType),
+		"named_parameters": reflect.TypeOf(types.StringType),
+		"parameters":       reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ResolvedPythonWheelTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NamedParameters": basetypes.MapType{
+			"named_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Parameters": basetypes.ListType{
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3367,18 +3455,18 @@ func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringRead(existing
 
 func (a ResolvedRunJobTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"JobParameters": reflect.TypeOf(types.StringType),
-		"Parameters":    reflect.TypeOf(types.StringType),
+		"job_parameters": reflect.TypeOf(types.StringType),
+		"parameters":     reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ResolvedRunJobTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobParameters": basetypes.MapType{
+			"job_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Parameters": basetypes.MapType{
+			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3397,14 +3485,14 @@ func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringRead(existi
 
 func (a ResolvedStringParamsValues) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a ResolvedStringParamsValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Parameters": basetypes.ListType{
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3441,32 +3529,52 @@ func (newState *ResolvedValues) SyncEffectiveFieldsDuringRead(existingState Reso
 
 func (a ResolvedValues) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ConditionTask":   reflect.TypeOf(ResolvedConditionTaskValues{}),
-		"DbtTask":         reflect.TypeOf(ResolvedDbtTaskValues{}),
-		"NotebookTask":    reflect.TypeOf(ResolvedNotebookTaskValues{}),
-		"PythonWheelTask": reflect.TypeOf(ResolvedPythonWheelTaskValues{}),
-		"RunJobTask":      reflect.TypeOf(ResolvedRunJobTaskValues{}),
-		"SimulationTask":  reflect.TypeOf(ResolvedParamPairValues{}),
-		"SparkJarTask":    reflect.TypeOf(ResolvedStringParamsValues{}),
-		"SparkPythonTask": reflect.TypeOf(ResolvedStringParamsValues{}),
-		"SparkSubmitTask": reflect.TypeOf(ResolvedStringParamsValues{}),
-		"SqlTask":         reflect.TypeOf(ResolvedParamPairValues{}),
+		"condition_task":    reflect.TypeOf(ResolvedConditionTaskValues{}),
+		"dbt_task":          reflect.TypeOf(ResolvedDbtTaskValues{}),
+		"notebook_task":     reflect.TypeOf(ResolvedNotebookTaskValues{}),
+		"python_wheel_task": reflect.TypeOf(ResolvedPythonWheelTaskValues{}),
+		"run_job_task":      reflect.TypeOf(ResolvedRunJobTaskValues{}),
+		"simulation_task":   reflect.TypeOf(ResolvedParamPairValues{}),
+		"spark_jar_task":    reflect.TypeOf(ResolvedStringParamsValues{}),
+		"spark_python_task": reflect.TypeOf(ResolvedStringParamsValues{}),
+		"spark_submit_task": reflect.TypeOf(ResolvedStringParamsValues{}),
+		"sql_task":          reflect.TypeOf(ResolvedParamPairValues{}),
 	}
 }
 
 func (a ResolvedValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConditionTask":   ResolvedConditionTaskValues{}.ToAttrType(ctx),
-			"DbtTask":         ResolvedDbtTaskValues{}.ToAttrType(ctx),
-			"NotebookTask":    ResolvedNotebookTaskValues{}.ToAttrType(ctx),
-			"PythonWheelTask": ResolvedPythonWheelTaskValues{}.ToAttrType(ctx),
-			"RunJobTask":      ResolvedRunJobTaskValues{}.ToAttrType(ctx),
-			"SimulationTask":  ResolvedParamPairValues{}.ToAttrType(ctx),
-			"SparkJarTask":    ResolvedStringParamsValues{}.ToAttrType(ctx),
-			"SparkPythonTask": ResolvedStringParamsValues{}.ToAttrType(ctx),
-			"SparkSubmitTask": ResolvedStringParamsValues{}.ToAttrType(ctx),
-			"SqlTask":         ResolvedParamPairValues{}.ToAttrType(ctx),
+			"condition_task": basetypes.ListType{
+				ElemType: ResolvedConditionTaskValues{}.ToAttrType(ctx),
+			},
+			"dbt_task": basetypes.ListType{
+				ElemType: ResolvedDbtTaskValues{}.ToAttrType(ctx),
+			},
+			"notebook_task": basetypes.ListType{
+				ElemType: ResolvedNotebookTaskValues{}.ToAttrType(ctx),
+			},
+			"python_wheel_task": basetypes.ListType{
+				ElemType: ResolvedPythonWheelTaskValues{}.ToAttrType(ctx),
+			},
+			"run_job_task": basetypes.ListType{
+				ElemType: ResolvedRunJobTaskValues{}.ToAttrType(ctx),
+			},
+			"simulation_task": basetypes.ListType{
+				ElemType: ResolvedParamPairValues{}.ToAttrType(ctx),
+			},
+			"spark_jar_task": basetypes.ListType{
+				ElemType: ResolvedStringParamsValues{}.ToAttrType(ctx),
+			},
+			"spark_python_task": basetypes.ListType{
+				ElemType: ResolvedStringParamsValues{}.ToAttrType(ctx),
+			},
+			"spark_submit_task": basetypes.ListType{
+				ElemType: ResolvedStringParamsValues{}.ToAttrType(ctx),
+			},
+			"sql_task": basetypes.ListType{
+				ElemType: ResolvedParamPairValues{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -3615,68 +3723,84 @@ func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
 
 func (a Run) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ClusterInstance":      reflect.TypeOf(ClusterInstance{}),
-		"ClusterSpec":          reflect.TypeOf(ClusterSpec{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Iterations":           reflect.TypeOf(RunTask{}),
-		"JobClusters":          reflect.TypeOf(JobCluster{}),
-		"JobParameters":        reflect.TypeOf(JobParameter{}),
-		"OverridingParameters": reflect.TypeOf(RunParameters{}),
-		"RepairHistory":        reflect.TypeOf(RepairHistoryItem{}),
-		"Schedule":             reflect.TypeOf(CronSchedule{}),
-		"State":                reflect.TypeOf(RunState{}),
-		"Status":               reflect.TypeOf(RunStatus{}),
-		"Tasks":                reflect.TypeOf(RunTask{}),
-		"TriggerInfo":          reflect.TypeOf(TriggerInfo{}),
+		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
+		"cluster_spec":          reflect.TypeOf(ClusterSpec{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"iterations":            reflect.TypeOf(RunTask{}),
+		"job_clusters":          reflect.TypeOf(JobCluster{}),
+		"job_parameters":        reflect.TypeOf(JobParameter{}),
+		"overriding_parameters": reflect.TypeOf(RunParameters{}),
+		"repair_history":        reflect.TypeOf(RepairHistoryItem{}),
+		"schedule":              reflect.TypeOf(CronSchedule{}),
+		"state":                 reflect.TypeOf(RunState{}),
+		"status":                reflect.TypeOf(RunStatus{}),
+		"tasks":                 reflect.TypeOf(RunTask{}),
+		"trigger_info":          reflect.TypeOf(TriggerInfo{}),
 	}
 }
 
 func (a Run) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AttemptNumber":     types.Int64Type,
-			"CleanupDuration":   types.Int64Type,
-			"ClusterInstance":   ClusterInstance{}.ToAttrType(ctx),
-			"ClusterSpec":       ClusterSpec{}.ToAttrType(ctx),
-			"CreatorUserName":   types.StringType,
-			"Description":       types.StringType,
-			"EndTime":           types.Int64Type,
-			"ExecutionDuration": types.Int64Type,
-			"GitSource":         GitSource{}.ToAttrType(ctx),
-			"Iterations": basetypes.ListType{
+			"attempt_number":   types.Int64Type,
+			"cleanup_duration": types.Int64Type,
+			"cluster_instance": basetypes.ListType{
+				ElemType: ClusterInstance{}.ToAttrType(ctx),
+			},
+			"cluster_spec": basetypes.ListType{
+				ElemType: ClusterSpec{}.ToAttrType(ctx),
+			},
+			"creator_user_name":  types.StringType,
+			"description":        types.StringType,
+			"end_time":           types.Int64Type,
+			"execution_duration": types.Int64Type,
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"iterations": basetypes.ListType{
 				ElemType: RunTask{}.ToAttrType(ctx),
 			},
-			"JobClusters": basetypes.ListType{
+			"job_clusters": basetypes.ListType{
 				ElemType: JobCluster{}.ToAttrType(ctx),
 			},
-			"JobId": types.Int64Type,
-			"JobParameters": basetypes.ListType{
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.ListType{
 				ElemType: JobParameter{}.ToAttrType(ctx),
 			},
-			"JobRunId":             types.Int64Type,
-			"NextPageToken":        types.StringType,
-			"NumberInJob":          types.Int64Type,
-			"OriginalAttemptRunId": types.Int64Type,
-			"OverridingParameters": RunParameters{}.ToAttrType(ctx),
-			"QueueDuration":        types.Int64Type,
-			"RepairHistory": basetypes.ListType{
+			"job_run_id":              types.Int64Type,
+			"next_page_token":         types.StringType,
+			"number_in_job":           types.Int64Type,
+			"original_attempt_run_id": types.Int64Type,
+			"overriding_parameters": basetypes.ListType{
+				ElemType: RunParameters{}.ToAttrType(ctx),
+			},
+			"queue_duration": types.Int64Type,
+			"repair_history": basetypes.ListType{
 				ElemType: RepairHistoryItem{}.ToAttrType(ctx),
 			},
-			"RunDuration":   types.Int64Type,
-			"RunId":         types.Int64Type,
-			"RunName":       types.StringType,
-			"RunPageUrl":    types.StringType,
-			"RunType":       types.StringType,
-			"Schedule":      CronSchedule{}.ToAttrType(ctx),
-			"SetupDuration": types.Int64Type,
-			"StartTime":     types.Int64Type,
-			"State":         RunState{}.ToAttrType(ctx),
-			"Status":        RunStatus{}.ToAttrType(ctx),
-			"Tasks": basetypes.ListType{
+			"run_duration": types.Int64Type,
+			"run_id":       types.Int64Type,
+			"run_name":     types.StringType,
+			"run_page_url": types.StringType,
+			"run_type":     types.StringType,
+			"schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"setup_duration": types.Int64Type,
+			"start_time":     types.Int64Type,
+			"state": basetypes.ListType{
+				ElemType: RunState{}.ToAttrType(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: RunStatus{}.ToAttrType(ctx),
+			},
+			"tasks": basetypes.ListType{
 				ElemType: RunTask{}.ToAttrType(ctx),
 			},
-			"Trigger":     types.StringType,
-			"TriggerInfo": TriggerInfo{}.ToAttrType(ctx),
+			"trigger": types.StringType,
+			"trigger_info": basetypes.ListType{
+				ElemType: TriggerInfo{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -3717,10 +3841,10 @@ func (a RunConditionTask) GetComplexFieldTypes() map[string]reflect.Type {
 func (a RunConditionTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Left":    types.StringType,
-			"Op":      types.StringType,
-			"Outcome": types.StringType,
-			"Right":   types.StringType,
+			"left":    types.StringType,
+			"op":      types.StringType,
+			"outcome": types.StringType,
+			"right":   types.StringType,
 		},
 	}
 }
@@ -3748,18 +3872,22 @@ func (newState *RunForEachTask) SyncEffectiveFieldsDuringRead(existingState RunF
 
 func (a RunForEachTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Stats": reflect.TypeOf(ForEachStats{}),
-		"Task":  reflect.TypeOf(Task{}),
+		"stats": reflect.TypeOf(ForEachStats{}),
+		"task":  reflect.TypeOf(Task{}),
 	}
 }
 
 func (a RunForEachTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Concurrency": types.Int64Type,
-			"Inputs":      types.StringType,
-			"Stats":       ForEachStats{}.ToAttrType(ctx),
-			"Task":        Task{}.ToAttrType(ctx),
+			"concurrency": types.Int64Type,
+			"inputs":      types.StringType,
+			"stats": basetypes.ListType{
+				ElemType: ForEachStats{}.ToAttrType(ctx),
+			},
+			"task": basetypes.ListType{
+				ElemType: Task{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -3782,7 +3910,7 @@ func (a RunJobOutput) GetComplexFieldTypes() map[string]reflect.Type {
 func (a RunJobOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -3884,45 +4012,47 @@ func (newState *RunJobTask) SyncEffectiveFieldsDuringRead(existingState RunJobTa
 
 func (a RunJobTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtCommands":       reflect.TypeOf(types.StringType),
-		"JarParams":         reflect.TypeOf(types.StringType),
-		"JobParameters":     reflect.TypeOf(types.StringType),
-		"NotebookParams":    reflect.TypeOf(types.StringType),
-		"PipelineParams":    reflect.TypeOf(PipelineParams{}),
-		"PythonNamedParams": reflect.TypeOf(types.StringType),
-		"PythonParams":      reflect.TypeOf(types.StringType),
-		"SparkSubmitParams": reflect.TypeOf(types.StringType),
-		"SqlParams":         reflect.TypeOf(types.StringType),
+		"dbt_commands":        reflect.TypeOf(types.StringType),
+		"jar_params":          reflect.TypeOf(types.StringType),
+		"job_parameters":      reflect.TypeOf(types.StringType),
+		"notebook_params":     reflect.TypeOf(types.StringType),
+		"pipeline_params":     reflect.TypeOf(PipelineParams{}),
+		"python_named_params": reflect.TypeOf(types.StringType),
+		"python_params":       reflect.TypeOf(types.StringType),
+		"spark_submit_params": reflect.TypeOf(types.StringType),
+		"sql_params":          reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a RunJobTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtCommands": basetypes.ListType{
+			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JarParams": basetypes.ListType{
+			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JobId": types.Int64Type,
-			"JobParameters": basetypes.MapType{
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"NotebookParams": basetypes.MapType{
+			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PipelineParams": PipelineParams{}.ToAttrType(ctx),
-			"PythonNamedParams": basetypes.MapType{
+			"pipeline_params": basetypes.ListType{
+				ElemType: PipelineParams{}.ToAttrType(ctx),
+			},
+			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PythonParams": basetypes.ListType{
+			"python_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SparkSubmitParams": basetypes.ListType{
+			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SqlParams": basetypes.MapType{
+			"sql_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4047,52 +4177,56 @@ func (newState *RunNow) SyncEffectiveFieldsDuringRead(existingState RunNow) {
 
 func (a RunNow) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtCommands":       reflect.TypeOf(types.StringType),
-		"JarParams":         reflect.TypeOf(types.StringType),
-		"JobParameters":     reflect.TypeOf(types.StringType),
-		"NotebookParams":    reflect.TypeOf(types.StringType),
-		"Only":              reflect.TypeOf(types.StringType),
-		"PipelineParams":    reflect.TypeOf(PipelineParams{}),
-		"PythonNamedParams": reflect.TypeOf(types.StringType),
-		"PythonParams":      reflect.TypeOf(types.StringType),
-		"Queue":             reflect.TypeOf(QueueSettings{}),
-		"SparkSubmitParams": reflect.TypeOf(types.StringType),
-		"SqlParams":         reflect.TypeOf(types.StringType),
+		"dbt_commands":        reflect.TypeOf(types.StringType),
+		"jar_params":          reflect.TypeOf(types.StringType),
+		"job_parameters":      reflect.TypeOf(types.StringType),
+		"notebook_params":     reflect.TypeOf(types.StringType),
+		"only":                reflect.TypeOf(types.StringType),
+		"pipeline_params":     reflect.TypeOf(PipelineParams{}),
+		"python_named_params": reflect.TypeOf(types.StringType),
+		"python_params":       reflect.TypeOf(types.StringType),
+		"queue":               reflect.TypeOf(QueueSettings{}),
+		"spark_submit_params": reflect.TypeOf(types.StringType),
+		"sql_params":          reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a RunNow) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtCommands": basetypes.ListType{
+			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"IdempotencyToken": types.StringType,
-			"JarParams": basetypes.ListType{
+			"idempotency_token": types.StringType,
+			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JobId": types.Int64Type,
-			"JobParameters": basetypes.MapType{
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"NotebookParams": basetypes.MapType{
+			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Only": basetypes.ListType{
+			"only": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PipelineParams": PipelineParams{}.ToAttrType(ctx),
-			"PythonNamedParams": basetypes.MapType{
+			"pipeline_params": basetypes.ListType{
+				ElemType: PipelineParams{}.ToAttrType(ctx),
+			},
+			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PythonParams": basetypes.ListType{
+			"python_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Queue": QueueSettings{}.ToAttrType(ctx),
-			"SparkSubmitParams": basetypes.ListType{
+			"queue": basetypes.ListType{
+				ElemType: QueueSettings{}.ToAttrType(ctx),
+			},
+			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SqlParams": basetypes.MapType{
+			"sql_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4121,8 +4255,8 @@ func (a RunNowResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a RunNowResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NumberInJob": types.Int64Type,
-			"RunId":       types.Int64Type,
+			"number_in_job": types.Int64Type,
+			"run_id":        types.Int64Type,
 		},
 	}
 }
@@ -4175,27 +4309,37 @@ func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput
 
 func (a RunOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtOutput":      reflect.TypeOf(DbtOutput{}),
-		"Metadata":       reflect.TypeOf(Run{}),
-		"NotebookOutput": reflect.TypeOf(NotebookOutput{}),
-		"RunJobOutput":   reflect.TypeOf(RunJobOutput{}),
-		"SqlOutput":      reflect.TypeOf(SqlOutput{}),
+		"dbt_output":      reflect.TypeOf(DbtOutput{}),
+		"metadata":        reflect.TypeOf(Run{}),
+		"notebook_output": reflect.TypeOf(NotebookOutput{}),
+		"run_job_output":  reflect.TypeOf(RunJobOutput{}),
+		"sql_output":      reflect.TypeOf(SqlOutput{}),
 	}
 }
 
 func (a RunOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtOutput":      DbtOutput{}.ToAttrType(ctx),
-			"Error":          types.StringType,
-			"ErrorTrace":     types.StringType,
-			"Info":           types.StringType,
-			"Logs":           types.StringType,
-			"LogsTruncated":  types.BoolType,
-			"Metadata":       Run{}.ToAttrType(ctx),
-			"NotebookOutput": NotebookOutput{}.ToAttrType(ctx),
-			"RunJobOutput":   RunJobOutput{}.ToAttrType(ctx),
-			"SqlOutput":      SqlOutput{}.ToAttrType(ctx),
+			"dbt_output": basetypes.ListType{
+				ElemType: DbtOutput{}.ToAttrType(ctx),
+			},
+			"error":          types.StringType,
+			"error_trace":    types.StringType,
+			"info":           types.StringType,
+			"logs":           types.StringType,
+			"logs_truncated": types.BoolType,
+			"metadata": basetypes.ListType{
+				ElemType: Run{}.ToAttrType(ctx),
+			},
+			"notebook_output": basetypes.ListType{
+				ElemType: NotebookOutput{}.ToAttrType(ctx),
+			},
+			"run_job_output": basetypes.ListType{
+				ElemType: RunJobOutput{}.ToAttrType(ctx),
+			},
+			"sql_output": basetypes.ListType{
+				ElemType: SqlOutput{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -4293,40 +4437,42 @@ func (newState *RunParameters) SyncEffectiveFieldsDuringRead(existingState RunPa
 
 func (a RunParameters) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtCommands":       reflect.TypeOf(types.StringType),
-		"JarParams":         reflect.TypeOf(types.StringType),
-		"NotebookParams":    reflect.TypeOf(types.StringType),
-		"PipelineParams":    reflect.TypeOf(PipelineParams{}),
-		"PythonNamedParams": reflect.TypeOf(types.StringType),
-		"PythonParams":      reflect.TypeOf(types.StringType),
-		"SparkSubmitParams": reflect.TypeOf(types.StringType),
-		"SqlParams":         reflect.TypeOf(types.StringType),
+		"dbt_commands":        reflect.TypeOf(types.StringType),
+		"jar_params":          reflect.TypeOf(types.StringType),
+		"notebook_params":     reflect.TypeOf(types.StringType),
+		"pipeline_params":     reflect.TypeOf(PipelineParams{}),
+		"python_named_params": reflect.TypeOf(types.StringType),
+		"python_params":       reflect.TypeOf(types.StringType),
+		"spark_submit_params": reflect.TypeOf(types.StringType),
+		"sql_params":          reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a RunParameters) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtCommands": basetypes.ListType{
+			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JarParams": basetypes.ListType{
+			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"NotebookParams": basetypes.MapType{
+			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PipelineParams": PipelineParams{}.ToAttrType(ctx),
-			"PythonNamedParams": basetypes.MapType{
+			"pipeline_params": basetypes.ListType{
+				ElemType: PipelineParams{}.ToAttrType(ctx),
+			},
+			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PythonParams": basetypes.ListType{
+			"python_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SparkSubmitParams": basetypes.ListType{
+			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SqlParams": basetypes.MapType{
+			"sql_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4364,11 +4510,11 @@ func (a RunState) GetComplexFieldTypes() map[string]reflect.Type {
 func (a RunState) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"LifeCycleState":          types.StringType,
-			"QueueReason":             types.StringType,
-			"ResultState":             types.StringType,
-			"StateMessage":            types.StringType,
-			"UserCancelledOrTimedout": types.BoolType,
+			"life_cycle_state":           types.StringType,
+			"queue_reason":               types.StringType,
+			"result_state":               types.StringType,
+			"state_message":              types.StringType,
+			"user_cancelled_or_timedout": types.BoolType,
 		},
 	}
 }
@@ -4392,17 +4538,21 @@ func (newState *RunStatus) SyncEffectiveFieldsDuringRead(existingState RunStatus
 
 func (a RunStatus) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"QueueDetails":       reflect.TypeOf(QueueDetails{}),
-		"TerminationDetails": reflect.TypeOf(TerminationDetails{}),
+		"queue_details":       reflect.TypeOf(QueueDetails{}),
+		"termination_details": reflect.TypeOf(TerminationDetails{}),
 	}
 }
 
 func (a RunStatus) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"QueueDetails":       QueueDetails{}.ToAttrType(ctx),
-			"State":              types.StringType,
-			"TerminationDetails": TerminationDetails{}.ToAttrType(ctx),
+			"queue_details": basetypes.ListType{
+				ElemType: QueueDetails{}.ToAttrType(ctx),
+			},
+			"state": types.StringType,
+			"termination_details": basetypes.ListType{
+				ElemType: TerminationDetails{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -4583,77 +4733,117 @@ func (newState *RunTask) SyncEffectiveFieldsDuringRead(existingState RunTask) {
 
 func (a RunTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ClusterInstance":      reflect.TypeOf(ClusterInstance{}),
-		"ConditionTask":        reflect.TypeOf(RunConditionTask{}),
-		"DbtTask":              reflect.TypeOf(DbtTask{}),
-		"DependsOn":            reflect.TypeOf(TaskDependency{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"ForEachTask":          reflect.TypeOf(RunForEachTask{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Libraries":            reflect.TypeOf(compute.Library{}),
-		"NewCluster":           reflect.TypeOf(compute.ClusterSpec{}),
-		"NotebookTask":         reflect.TypeOf(NotebookTask{}),
-		"NotificationSettings": reflect.TypeOf(TaskNotificationSettings{}),
-		"PipelineTask":         reflect.TypeOf(PipelineTask{}),
-		"PythonWheelTask":      reflect.TypeOf(PythonWheelTask{}),
-		"ResolvedValues":       reflect.TypeOf(ResolvedValues{}),
-		"RunJobTask":           reflect.TypeOf(RunJobTask{}),
-		"SparkJarTask":         reflect.TypeOf(SparkJarTask{}),
-		"SparkPythonTask":      reflect.TypeOf(SparkPythonTask{}),
-		"SparkSubmitTask":      reflect.TypeOf(SparkSubmitTask{}),
-		"SqlTask":              reflect.TypeOf(SqlTask{}),
-		"State":                reflect.TypeOf(RunState{}),
-		"Status":               reflect.TypeOf(RunStatus{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
+		"condition_task":        reflect.TypeOf(RunConditionTask{}),
+		"dbt_task":              reflect.TypeOf(DbtTask{}),
+		"depends_on":            reflect.TypeOf(TaskDependency{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"for_each_task":         reflect.TypeOf(RunForEachTask{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"library":               reflect.TypeOf(compute.Library{}),
+		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"notebook_task":         reflect.TypeOf(NotebookTask{}),
+		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
+		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
+		"python_wheel_task":     reflect.TypeOf(PythonWheelTask{}),
+		"resolved_values":       reflect.TypeOf(ResolvedValues{}),
+		"run_job_task":          reflect.TypeOf(RunJobTask{}),
+		"spark_jar_task":        reflect.TypeOf(SparkJarTask{}),
+		"spark_python_task":     reflect.TypeOf(SparkPythonTask{}),
+		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask{}),
+		"sql_task":              reflect.TypeOf(SqlTask{}),
+		"state":                 reflect.TypeOf(RunState{}),
+		"status":                reflect.TypeOf(RunStatus{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
 func (a RunTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AttemptNumber":   types.Int64Type,
-			"CleanupDuration": types.Int64Type,
-			"ClusterInstance": ClusterInstance{}.ToAttrType(ctx),
-			"ConditionTask":   RunConditionTask{}.ToAttrType(ctx),
-			"DbtTask":         DbtTask{}.ToAttrType(ctx),
-			"DependsOn": basetypes.ListType{
+			"attempt_number":   types.Int64Type,
+			"cleanup_duration": types.Int64Type,
+			"cluster_instance": basetypes.ListType{
+				ElemType: ClusterInstance{}.ToAttrType(ctx),
+			},
+			"condition_task": basetypes.ListType{
+				ElemType: RunConditionTask{}.ToAttrType(ctx),
+			},
+			"dbt_task": basetypes.ListType{
+				ElemType: DbtTask{}.ToAttrType(ctx),
+			},
+			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.ToAttrType(ctx),
 			},
-			"Description":        types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"EndTime":            types.Int64Type,
-			"EnvironmentKey":     types.StringType,
-			"ExecutionDuration":  types.Int64Type,
-			"ExistingClusterId":  types.StringType,
-			"ForEachTask":        RunForEachTask{}.ToAttrType(ctx),
-			"GitSource":          GitSource{}.ToAttrType(ctx),
-			"JobClusterKey":      types.StringType,
-			"Libraries": basetypes.ListType{
+			"description": types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"end_time":            types.Int64Type,
+			"environment_key":     types.StringType,
+			"execution_duration":  types.Int64Type,
+			"existing_cluster_id": types.StringType,
+			"for_each_task": basetypes.ListType{
+				ElemType: RunForEachTask{}.ToAttrType(ctx),
+			},
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"job_cluster_key": types.StringType,
+			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.ToAttrType(ctx),
 			},
-			"NewCluster":           compute_tf.ClusterSpec{}.ToAttrType(ctx),
-			"NotebookTask":         NotebookTask{}.ToAttrType(ctx),
-			"NotificationSettings": TaskNotificationSettings{}.ToAttrType(ctx),
-			"PipelineTask":         PipelineTask{}.ToAttrType(ctx),
-			"PythonWheelTask":      PythonWheelTask{}.ToAttrType(ctx),
-			"QueueDuration":        types.Int64Type,
-			"ResolvedValues":       ResolvedValues{}.ToAttrType(ctx),
-			"RunDuration":          types.Int64Type,
-			"RunId":                types.Int64Type,
-			"RunIf":                types.StringType,
-			"RunJobTask":           RunJobTask{}.ToAttrType(ctx),
-			"RunPageUrl":           types.StringType,
-			"SetupDuration":        types.Int64Type,
-			"SparkJarTask":         SparkJarTask{}.ToAttrType(ctx),
-			"SparkPythonTask":      SparkPythonTask{}.ToAttrType(ctx),
-			"SparkSubmitTask":      SparkSubmitTask{}.ToAttrType(ctx),
-			"SqlTask":              SqlTask{}.ToAttrType(ctx),
-			"StartTime":            types.Int64Type,
-			"State":                RunState{}.ToAttrType(ctx),
-			"Status":               RunStatus{}.ToAttrType(ctx),
-			"TaskKey":              types.StringType,
-			"TimeoutSeconds":       types.Int64Type,
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
+			"notebook_task": basetypes.ListType{
+				ElemType: NotebookTask{}.ToAttrType(ctx),
+			},
+			"notification_settings": basetypes.ListType{
+				ElemType: TaskNotificationSettings{}.ToAttrType(ctx),
+			},
+			"pipeline_task": basetypes.ListType{
+				ElemType: PipelineTask{}.ToAttrType(ctx),
+			},
+			"python_wheel_task": basetypes.ListType{
+				ElemType: PythonWheelTask{}.ToAttrType(ctx),
+			},
+			"queue_duration": types.Int64Type,
+			"resolved_values": basetypes.ListType{
+				ElemType: ResolvedValues{}.ToAttrType(ctx),
+			},
+			"run_duration": types.Int64Type,
+			"run_id":       types.Int64Type,
+			"run_if":       types.StringType,
+			"run_job_task": basetypes.ListType{
+				ElemType: RunJobTask{}.ToAttrType(ctx),
+			},
+			"run_page_url":   types.StringType,
+			"setup_duration": types.Int64Type,
+			"spark_jar_task": basetypes.ListType{
+				ElemType: SparkJarTask{}.ToAttrType(ctx),
+			},
+			"spark_python_task": basetypes.ListType{
+				ElemType: SparkPythonTask{}.ToAttrType(ctx),
+			},
+			"spark_submit_task": basetypes.ListType{
+				ElemType: SparkSubmitTask{}.ToAttrType(ctx),
+			},
+			"sql_task": basetypes.ListType{
+				ElemType: SqlTask{}.ToAttrType(ctx),
+			},
+			"start_time": types.Int64Type,
+			"state": basetypes.ListType{
+				ElemType: RunState{}.ToAttrType(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: RunStatus{}.ToAttrType(ctx),
+			},
+			"task_key":        types.StringType,
+			"timeout_seconds": types.Int64Type,
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -4685,16 +4875,16 @@ func (newState *SparkJarTask) SyncEffectiveFieldsDuringRead(existingState SparkJ
 
 func (a SparkJarTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a SparkJarTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JarUri":        types.StringType,
-			"MainClassName": types.StringType,
-			"Parameters": basetypes.ListType{
+			"jar_uri":         types.StringType,
+			"main_class_name": types.StringType,
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4735,18 +4925,18 @@ func (newState *SparkPythonTask) SyncEffectiveFieldsDuringRead(existingState Spa
 
 func (a SparkPythonTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a SparkPythonTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Parameters": basetypes.ListType{
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PythonFile": types.StringType,
-			"Source":     types.StringType,
+			"python_file": types.StringType,
+			"source":      types.StringType,
 		},
 	}
 }
@@ -4769,14 +4959,14 @@ func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringRead(existingState Spa
 
 func (a SparkSubmitTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a SparkSubmitTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Parameters": basetypes.ListType{
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4809,20 +4999,20 @@ func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringRead(existingState SqlA
 
 func (a SqlAlertOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SqlStatements": reflect.TypeOf(SqlStatementOutput{}),
+		"sql_statements": reflect.TypeOf(SqlStatementOutput{}),
 	}
 }
 
 func (a SqlAlertOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AlertState": types.StringType,
-			"OutputLink": types.StringType,
-			"QueryText":  types.StringType,
-			"SqlStatements": basetypes.ListType{
+			"alert_state": types.StringType,
+			"output_link": types.StringType,
+			"query_text":  types.StringType,
+			"sql_statements": basetypes.ListType{
 				ElemType: SqlStatementOutput{}.ToAttrType(ctx),
 			},
-			"WarehouseId": types.StringType,
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -4842,15 +5032,15 @@ func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a SqlDashboardOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Widgets": reflect.TypeOf(SqlDashboardWidgetOutput{}),
+		"widgets": reflect.TypeOf(SqlDashboardWidgetOutput{}),
 	}
 }
 
 func (a SqlDashboardOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"WarehouseId": types.StringType,
-			"Widgets": basetypes.ListType{
+			"warehouse_id": types.StringType,
+			"widgets": basetypes.ListType{
 				ElemType: SqlDashboardWidgetOutput{}.ToAttrType(ctx),
 			},
 		},
@@ -4882,20 +5072,22 @@ func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringRead(existing
 
 func (a SqlDashboardWidgetOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Error": reflect.TypeOf(SqlOutputError{}),
+		"error": reflect.TypeOf(SqlOutputError{}),
 	}
 }
 
 func (a SqlDashboardWidgetOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndTime":     types.Int64Type,
-			"Error":       SqlOutputError{}.ToAttrType(ctx),
-			"OutputLink":  types.StringType,
-			"StartTime":   types.Int64Type,
-			"Status":      types.StringType,
-			"WidgetId":    types.StringType,
-			"WidgetTitle": types.StringType,
+			"end_time": types.Int64Type,
+			"error": basetypes.ListType{
+				ElemType: SqlOutputError{}.ToAttrType(ctx),
+			},
+			"output_link":  types.StringType,
+			"start_time":   types.Int64Type,
+			"status":       types.StringType,
+			"widget_id":    types.StringType,
+			"widget_title": types.StringType,
 		},
 	}
 }
@@ -4917,18 +5109,24 @@ func (newState *SqlOutput) SyncEffectiveFieldsDuringRead(existingState SqlOutput
 
 func (a SqlOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AlertOutput":     reflect.TypeOf(SqlAlertOutput{}),
-		"DashboardOutput": reflect.TypeOf(SqlDashboardOutput{}),
-		"QueryOutput":     reflect.TypeOf(SqlQueryOutput{}),
+		"alert_output":     reflect.TypeOf(SqlAlertOutput{}),
+		"dashboard_output": reflect.TypeOf(SqlDashboardOutput{}),
+		"query_output":     reflect.TypeOf(SqlQueryOutput{}),
 	}
 }
 
 func (a SqlOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AlertOutput":     SqlAlertOutput{}.ToAttrType(ctx),
-			"DashboardOutput": SqlDashboardOutput{}.ToAttrType(ctx),
-			"QueryOutput":     SqlQueryOutput{}.ToAttrType(ctx),
+			"alert_output": basetypes.ListType{
+				ElemType: SqlAlertOutput{}.ToAttrType(ctx),
+			},
+			"dashboard_output": basetypes.ListType{
+				ElemType: SqlDashboardOutput{}.ToAttrType(ctx),
+			},
+			"query_output": basetypes.ListType{
+				ElemType: SqlQueryOutput{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -4951,7 +5149,7 @@ func (a SqlOutputError) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SqlOutputError) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Message": types.StringType,
+			"message": types.StringType,
 		},
 	}
 }
@@ -4977,20 +5175,20 @@ func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringRead(existingState SqlQ
 
 func (a SqlQueryOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SqlStatements": reflect.TypeOf(SqlStatementOutput{}),
+		"sql_statements": reflect.TypeOf(SqlStatementOutput{}),
 	}
 }
 
 func (a SqlQueryOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndpointId": types.StringType,
-			"OutputLink": types.StringType,
-			"QueryText":  types.StringType,
-			"SqlStatements": basetypes.ListType{
+			"endpoint_id": types.StringType,
+			"output_link": types.StringType,
+			"query_text":  types.StringType,
+			"sql_statements": basetypes.ListType{
 				ElemType: SqlStatementOutput{}.ToAttrType(ctx),
 			},
-			"WarehouseId": types.StringType,
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -5013,7 +5211,7 @@ func (a SqlStatementOutput) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SqlStatementOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"LookupKey": types.StringType,
+			"lookup_key": types.StringType,
 		},
 	}
 }
@@ -5046,25 +5244,33 @@ func (newState *SqlTask) SyncEffectiveFieldsDuringRead(existingState SqlTask) {
 
 func (a SqlTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Alert":      reflect.TypeOf(SqlTaskAlert{}),
-		"Dashboard":  reflect.TypeOf(SqlTaskDashboard{}),
-		"File":       reflect.TypeOf(SqlTaskFile{}),
-		"Parameters": reflect.TypeOf(types.StringType),
-		"Query":      reflect.TypeOf(SqlTaskQuery{}),
+		"alert":      reflect.TypeOf(SqlTaskAlert{}),
+		"dashboard":  reflect.TypeOf(SqlTaskDashboard{}),
+		"file":       reflect.TypeOf(SqlTaskFile{}),
+		"parameters": reflect.TypeOf(types.StringType),
+		"query":      reflect.TypeOf(SqlTaskQuery{}),
 	}
 }
 
 func (a SqlTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Alert":     SqlTaskAlert{}.ToAttrType(ctx),
-			"Dashboard": SqlTaskDashboard{}.ToAttrType(ctx),
-			"File":      SqlTaskFile{}.ToAttrType(ctx),
-			"Parameters": basetypes.MapType{
+			"alert": basetypes.ListType{
+				ElemType: SqlTaskAlert{}.ToAttrType(ctx),
+			},
+			"dashboard": basetypes.ListType{
+				ElemType: SqlTaskDashboard{}.ToAttrType(ctx),
+			},
+			"file": basetypes.ListType{
+				ElemType: SqlTaskFile{}.ToAttrType(ctx),
+			},
+			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Query":       SqlTaskQuery{}.ToAttrType(ctx),
-			"WarehouseId": types.StringType,
+			"query": basetypes.ListType{
+				ElemType: SqlTaskQuery{}.ToAttrType(ctx),
+			},
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -5086,16 +5292,16 @@ func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringRead(existingState SqlTas
 
 func (a SqlTaskAlert) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
+		"subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
 	}
 }
 
 func (a SqlTaskAlert) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AlertId":            types.StringType,
-			"PauseSubscriptions": types.BoolType,
-			"Subscriptions": basetypes.ListType{
+			"alert_id":            types.StringType,
+			"pause_subscriptions": types.BoolType,
+			"subscriptions": basetypes.ListType{
 				ElemType: SqlTaskSubscription{}.ToAttrType(ctx),
 			},
 		},
@@ -5122,17 +5328,17 @@ func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringRead(existingState Sq
 
 func (a SqlTaskDashboard) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
+		"subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
 	}
 }
 
 func (a SqlTaskDashboard) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CustomSubject":      types.StringType,
-			"DashboardId":        types.StringType,
-			"PauseSubscriptions": types.BoolType,
-			"Subscriptions": basetypes.ListType{
+			"custom_subject":      types.StringType,
+			"dashboard_id":        types.StringType,
+			"pause_subscriptions": types.BoolType,
+			"subscriptions": basetypes.ListType{
 				ElemType: SqlTaskSubscription{}.ToAttrType(ctx),
 			},
 		},
@@ -5167,8 +5373,8 @@ func (a SqlTaskFile) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SqlTaskFile) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path":   types.StringType,
-			"Source": types.StringType,
+			"path":   types.StringType,
+			"source": types.StringType,
 		},
 	}
 }
@@ -5191,7 +5397,7 @@ func (a SqlTaskQuery) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SqlTaskQuery) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"QueryId": types.StringType,
+			"query_id": types.StringType,
 		},
 	}
 }
@@ -5221,8 +5427,8 @@ func (a SqlTaskSubscription) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SqlTaskSubscription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DestinationId": types.StringType,
-			"UserName":      types.StringType,
+			"destination_id": types.StringType,
+			"user_name":      types.StringType,
 		},
 	}
 }
@@ -5297,42 +5503,56 @@ func (newState *SubmitRun) SyncEffectiveFieldsDuringRead(existingState SubmitRun
 
 func (a SubmitRun) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList":    reflect.TypeOf(JobAccessControlRequest{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"Environments":         reflect.TypeOf(JobEnvironment{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"NotificationSettings": reflect.TypeOf(JobNotificationSettings{}),
-		"Queue":                reflect.TypeOf(QueueSettings{}),
-		"RunAs":                reflect.TypeOf(JobRunAs{}),
-		"Tasks":                reflect.TypeOf(SubmitTask{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"access_control_list":   reflect.TypeOf(JobAccessControlRequest{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environments":          reflect.TypeOf(JobEnvironment{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"notification_settings": reflect.TypeOf(JobNotificationSettings{}),
+		"queue":                 reflect.TypeOf(QueueSettings{}),
+		"run_as":                reflect.TypeOf(JobRunAs{}),
+		"tasks":                 reflect.TypeOf(SubmitTask{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
 func (a SubmitRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: JobAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"BudgetPolicyId":     types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"Environments": basetypes.ListType{
+			"budget_policy_id": types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environments": basetypes.ListType{
 				ElemType: JobEnvironment{}.ToAttrType(ctx),
 			},
-			"GitSource":            GitSource{}.ToAttrType(ctx),
-			"Health":               JobsHealthRules{}.ToAttrType(ctx),
-			"IdempotencyToken":     types.StringType,
-			"NotificationSettings": JobNotificationSettings{}.ToAttrType(ctx),
-			"Queue":                QueueSettings{}.ToAttrType(ctx),
-			"RunAs":                JobRunAs{}.ToAttrType(ctx),
-			"RunName":              types.StringType,
-			"Tasks": basetypes.ListType{
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"idempotency_token": types.StringType,
+			"notification_settings": basetypes.ListType{
+				ElemType: JobNotificationSettings{}.ToAttrType(ctx),
+			},
+			"queue": basetypes.ListType{
+				ElemType: QueueSettings{}.ToAttrType(ctx),
+			},
+			"run_as": basetypes.ListType{
+				ElemType: JobRunAs{}.ToAttrType(ctx),
+			},
+			"run_name": types.StringType,
+			"tasks": basetypes.ListType{
 				ElemType: SubmitTask{}.ToAttrType(ctx),
 			},
-			"TimeoutSeconds":       types.Int64Type,
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"timeout_seconds": types.Int64Type,
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -5356,7 +5576,7 @@ func (a SubmitRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SubmitRunResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -5469,58 +5689,90 @@ func (newState *SubmitTask) SyncEffectiveFieldsDuringRead(existingState SubmitTa
 
 func (a SubmitTask) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ConditionTask":        reflect.TypeOf(ConditionTask{}),
-		"DbtTask":              reflect.TypeOf(DbtTask{}),
-		"DependsOn":            reflect.TypeOf(TaskDependency{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"ForEachTask":          reflect.TypeOf(ForEachTask{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"Libraries":            reflect.TypeOf(compute.Library{}),
-		"NewCluster":           reflect.TypeOf(compute.ClusterSpec{}),
-		"NotebookTask":         reflect.TypeOf(NotebookTask{}),
-		"NotificationSettings": reflect.TypeOf(TaskNotificationSettings{}),
-		"PipelineTask":         reflect.TypeOf(PipelineTask{}),
-		"PythonWheelTask":      reflect.TypeOf(PythonWheelTask{}),
-		"RunJobTask":           reflect.TypeOf(RunJobTask{}),
-		"SparkJarTask":         reflect.TypeOf(SparkJarTask{}),
-		"SparkPythonTask":      reflect.TypeOf(SparkPythonTask{}),
-		"SparkSubmitTask":      reflect.TypeOf(SparkSubmitTask{}),
-		"SqlTask":              reflect.TypeOf(SqlTask{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"condition_task":        reflect.TypeOf(ConditionTask{}),
+		"dbt_task":              reflect.TypeOf(DbtTask{}),
+		"depends_on":            reflect.TypeOf(TaskDependency{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"for_each_task":         reflect.TypeOf(ForEachTask{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"library":               reflect.TypeOf(compute.Library{}),
+		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"notebook_task":         reflect.TypeOf(NotebookTask{}),
+		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
+		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
+		"python_wheel_task":     reflect.TypeOf(PythonWheelTask{}),
+		"run_job_task":          reflect.TypeOf(RunJobTask{}),
+		"spark_jar_task":        reflect.TypeOf(SparkJarTask{}),
+		"spark_python_task":     reflect.TypeOf(SparkPythonTask{}),
+		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask{}),
+		"sql_task":              reflect.TypeOf(SqlTask{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
 func (a SubmitTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConditionTask": ConditionTask{}.ToAttrType(ctx),
-			"DbtTask":       DbtTask{}.ToAttrType(ctx),
-			"DependsOn": basetypes.ListType{
+			"condition_task": basetypes.ListType{
+				ElemType: ConditionTask{}.ToAttrType(ctx),
+			},
+			"dbt_task": basetypes.ListType{
+				ElemType: DbtTask{}.ToAttrType(ctx),
+			},
+			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.ToAttrType(ctx),
 			},
-			"Description":        types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"EnvironmentKey":     types.StringType,
-			"ExistingClusterId":  types.StringType,
-			"ForEachTask":        ForEachTask{}.ToAttrType(ctx),
-			"Health":             JobsHealthRules{}.ToAttrType(ctx),
-			"Libraries": basetypes.ListType{
+			"description": types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environment_key":     types.StringType,
+			"existing_cluster_id": types.StringType,
+			"for_each_task": basetypes.ListType{
+				ElemType: ForEachTask{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.ToAttrType(ctx),
 			},
-			"NewCluster":           compute_tf.ClusterSpec{}.ToAttrType(ctx),
-			"NotebookTask":         NotebookTask{}.ToAttrType(ctx),
-			"NotificationSettings": TaskNotificationSettings{}.ToAttrType(ctx),
-			"PipelineTask":         PipelineTask{}.ToAttrType(ctx),
-			"PythonWheelTask":      PythonWheelTask{}.ToAttrType(ctx),
-			"RunIf":                types.StringType,
-			"RunJobTask":           RunJobTask{}.ToAttrType(ctx),
-			"SparkJarTask":         SparkJarTask{}.ToAttrType(ctx),
-			"SparkPythonTask":      SparkPythonTask{}.ToAttrType(ctx),
-			"SparkSubmitTask":      SparkSubmitTask{}.ToAttrType(ctx),
-			"SqlTask":              SqlTask{}.ToAttrType(ctx),
-			"TaskKey":              types.StringType,
-			"TimeoutSeconds":       types.Int64Type,
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
+			"notebook_task": basetypes.ListType{
+				ElemType: NotebookTask{}.ToAttrType(ctx),
+			},
+			"notification_settings": basetypes.ListType{
+				ElemType: TaskNotificationSettings{}.ToAttrType(ctx),
+			},
+			"pipeline_task": basetypes.ListType{
+				ElemType: PipelineTask{}.ToAttrType(ctx),
+			},
+			"python_wheel_task": basetypes.ListType{
+				ElemType: PythonWheelTask{}.ToAttrType(ctx),
+			},
+			"run_if": types.StringType,
+			"run_job_task": basetypes.ListType{
+				ElemType: RunJobTask{}.ToAttrType(ctx),
+			},
+			"spark_jar_task": basetypes.ListType{
+				ElemType: SparkJarTask{}.ToAttrType(ctx),
+			},
+			"spark_python_task": basetypes.ListType{
+				ElemType: SparkPythonTask{}.ToAttrType(ctx),
+			},
+			"spark_submit_task": basetypes.ListType{
+				ElemType: SparkSubmitTask{}.ToAttrType(ctx),
+			},
+			"sql_task": basetypes.ListType{
+				ElemType: SqlTask{}.ToAttrType(ctx),
+			},
+			"task_key":        types.StringType,
+			"timeout_seconds": types.Int64Type,
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -5550,19 +5802,19 @@ func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringRead(e
 
 func (a TableUpdateTriggerConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"TableNames": reflect.TypeOf(types.StringType),
+		"table_names": reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a TableUpdateTriggerConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Condition":                     types.StringType,
-			"MinTimeBetweenTriggersSeconds": types.Int64Type,
-			"TableNames": basetypes.ListType{
+			"condition":                         types.StringType,
+			"min_time_between_triggers_seconds": types.Int64Type,
+			"table_names": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"WaitAfterLastChangeSeconds": types.Int64Type,
+			"wait_after_last_change_seconds": types.Int64Type,
 		},
 	}
 }
@@ -5698,63 +5950,95 @@ func (newState *Task) SyncEffectiveFieldsDuringRead(existingState Task) {
 
 func (a Task) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ConditionTask":        reflect.TypeOf(ConditionTask{}),
-		"DbtTask":              reflect.TypeOf(DbtTask{}),
-		"DependsOn":            reflect.TypeOf(TaskDependency{}),
-		"EmailNotifications":   reflect.TypeOf(TaskEmailNotifications{}),
-		"ForEachTask":          reflect.TypeOf(ForEachTask{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"Libraries":            reflect.TypeOf(compute.Library{}),
-		"NewCluster":           reflect.TypeOf(compute.ClusterSpec{}),
-		"NotebookTask":         reflect.TypeOf(NotebookTask{}),
-		"NotificationSettings": reflect.TypeOf(TaskNotificationSettings{}),
-		"PipelineTask":         reflect.TypeOf(PipelineTask{}),
-		"PythonWheelTask":      reflect.TypeOf(PythonWheelTask{}),
-		"RunJobTask":           reflect.TypeOf(RunJobTask{}),
-		"SparkJarTask":         reflect.TypeOf(SparkJarTask{}),
-		"SparkPythonTask":      reflect.TypeOf(SparkPythonTask{}),
-		"SparkSubmitTask":      reflect.TypeOf(SparkSubmitTask{}),
-		"SqlTask":              reflect.TypeOf(SqlTask{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"condition_task":        reflect.TypeOf(ConditionTask{}),
+		"dbt_task":              reflect.TypeOf(DbtTask{}),
+		"depends_on":            reflect.TypeOf(TaskDependency{}),
+		"email_notifications":   reflect.TypeOf(TaskEmailNotifications{}),
+		"for_each_task":         reflect.TypeOf(ForEachTask{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"library":               reflect.TypeOf(compute.Library{}),
+		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"notebook_task":         reflect.TypeOf(NotebookTask{}),
+		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
+		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
+		"python_wheel_task":     reflect.TypeOf(PythonWheelTask{}),
+		"run_job_task":          reflect.TypeOf(RunJobTask{}),
+		"spark_jar_task":        reflect.TypeOf(SparkJarTask{}),
+		"spark_python_task":     reflect.TypeOf(SparkPythonTask{}),
+		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask{}),
+		"sql_task":              reflect.TypeOf(SqlTask{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
 func (a Task) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConditionTask": ConditionTask{}.ToAttrType(ctx),
-			"DbtTask":       DbtTask{}.ToAttrType(ctx),
-			"DependsOn": basetypes.ListType{
+			"condition_task": basetypes.ListType{
+				ElemType: ConditionTask{}.ToAttrType(ctx),
+			},
+			"dbt_task": basetypes.ListType{
+				ElemType: DbtTask{}.ToAttrType(ctx),
+			},
+			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.ToAttrType(ctx),
 			},
-			"Description":             types.StringType,
-			"DisableAutoOptimization": types.BoolType,
-			"EmailNotifications":      TaskEmailNotifications{}.ToAttrType(ctx),
-			"EnvironmentKey":          types.StringType,
-			"ExistingClusterId":       types.StringType,
-			"ForEachTask":             ForEachTask{}.ToAttrType(ctx),
-			"Health":                  JobsHealthRules{}.ToAttrType(ctx),
-			"JobClusterKey":           types.StringType,
-			"Libraries": basetypes.ListType{
+			"description":               types.StringType,
+			"disable_auto_optimization": types.BoolType,
+			"email_notifications": basetypes.ListType{
+				ElemType: TaskEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environment_key":     types.StringType,
+			"existing_cluster_id": types.StringType,
+			"for_each_task": basetypes.ListType{
+				ElemType: ForEachTask{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"job_cluster_key": types.StringType,
+			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.ToAttrType(ctx),
 			},
-			"MaxRetries":             types.Int64Type,
-			"MinRetryIntervalMillis": types.Int64Type,
-			"NewCluster":             compute_tf.ClusterSpec{}.ToAttrType(ctx),
-			"NotebookTask":           NotebookTask{}.ToAttrType(ctx),
-			"NotificationSettings":   TaskNotificationSettings{}.ToAttrType(ctx),
-			"PipelineTask":           PipelineTask{}.ToAttrType(ctx),
-			"PythonWheelTask":        PythonWheelTask{}.ToAttrType(ctx),
-			"RetryOnTimeout":         types.BoolType,
-			"RunIf":                  types.StringType,
-			"RunJobTask":             RunJobTask{}.ToAttrType(ctx),
-			"SparkJarTask":           SparkJarTask{}.ToAttrType(ctx),
-			"SparkPythonTask":        SparkPythonTask{}.ToAttrType(ctx),
-			"SparkSubmitTask":        SparkSubmitTask{}.ToAttrType(ctx),
-			"SqlTask":                SqlTask{}.ToAttrType(ctx),
-			"TaskKey":                types.StringType,
-			"TimeoutSeconds":         types.Int64Type,
-			"WebhookNotifications":   WebhookNotifications{}.ToAttrType(ctx),
+			"max_retries":               types.Int64Type,
+			"min_retry_interval_millis": types.Int64Type,
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
+			"notebook_task": basetypes.ListType{
+				ElemType: NotebookTask{}.ToAttrType(ctx),
+			},
+			"notification_settings": basetypes.ListType{
+				ElemType: TaskNotificationSettings{}.ToAttrType(ctx),
+			},
+			"pipeline_task": basetypes.ListType{
+				ElemType: PipelineTask{}.ToAttrType(ctx),
+			},
+			"python_wheel_task": basetypes.ListType{
+				ElemType: PythonWheelTask{}.ToAttrType(ctx),
+			},
+			"retry_on_timeout": types.BoolType,
+			"run_if":           types.StringType,
+			"run_job_task": basetypes.ListType{
+				ElemType: RunJobTask{}.ToAttrType(ctx),
+			},
+			"spark_jar_task": basetypes.ListType{
+				ElemType: SparkJarTask{}.ToAttrType(ctx),
+			},
+			"spark_python_task": basetypes.ListType{
+				ElemType: SparkPythonTask{}.ToAttrType(ctx),
+			},
+			"spark_submit_task": basetypes.ListType{
+				ElemType: SparkSubmitTask{}.ToAttrType(ctx),
+			},
+			"sql_task": basetypes.ListType{
+				ElemType: SqlTask{}.ToAttrType(ctx),
+			},
+			"task_key":        types.StringType,
+			"timeout_seconds": types.Int64Type,
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -5780,8 +6064,8 @@ func (a TaskDependency) GetComplexFieldTypes() map[string]reflect.Type {
 func (a TaskDependency) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Outcome": types.StringType,
-			"TaskKey": types.StringType,
+			"outcome":  types.StringType,
+			"task_key": types.StringType,
 		},
 	}
 }
@@ -5830,31 +6114,31 @@ func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a TaskEmailNotifications) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OnDurationWarningThresholdExceeded": reflect.TypeOf(types.StringType),
-		"OnFailure":                          reflect.TypeOf(types.StringType),
-		"OnStart":                            reflect.TypeOf(types.StringType),
-		"OnStreamingBacklogExceeded":         reflect.TypeOf(types.StringType),
-		"OnSuccess":                          reflect.TypeOf(types.StringType),
+		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.StringType),
+		"on_failure":                             reflect.TypeOf(types.StringType),
+		"on_start":                               reflect.TypeOf(types.StringType),
+		"on_streaming_backlog_exceeded":          reflect.TypeOf(types.StringType),
+		"on_success":                             reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a TaskEmailNotifications) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NoAlertForSkippedRuns": types.BoolType,
-			"OnDurationWarningThresholdExceeded": basetypes.ListType{
+			"no_alert_for_skipped_runs": types.BoolType,
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnFailure": basetypes.ListType{
+			"on_failure": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnStart": basetypes.ListType{
+			"on_start": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnStreamingBacklogExceeded": basetypes.ListType{
+			"on_streaming_backlog_exceeded": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnSuccess": basetypes.ListType{
+			"on_success": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -5887,9 +6171,9 @@ func (a TaskNotificationSettings) GetComplexFieldTypes() map[string]reflect.Type
 func (a TaskNotificationSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AlertOnLastAttempt":     types.BoolType,
-			"NoAlertForCanceledRuns": types.BoolType,
-			"NoAlertForSkippedRuns":  types.BoolType,
+			"alert_on_last_attempt":      types.BoolType,
+			"no_alert_for_canceled_runs": types.BoolType,
+			"no_alert_for_skipped_runs":  types.BoolType,
 		},
 	}
 }
@@ -5968,9 +6252,9 @@ func (a TerminationDetails) GetComplexFieldTypes() map[string]reflect.Type {
 func (a TerminationDetails) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Code":    types.StringType,
-			"Message": types.StringType,
-			"Type":    types.StringType,
+			"code":    types.StringType,
+			"message": types.StringType,
+			"type":    types.StringType,
 		},
 	}
 }
@@ -5994,7 +6278,7 @@ func (a TriggerInfo) GetComplexFieldTypes() map[string]reflect.Type {
 func (a TriggerInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -6020,21 +6304,29 @@ func (newState *TriggerSettings) SyncEffectiveFieldsDuringRead(existingState Tri
 
 func (a TriggerSettings) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FileArrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
-		"Periodic":    reflect.TypeOf(PeriodicTriggerConfiguration{}),
-		"Table":       reflect.TypeOf(TableUpdateTriggerConfiguration{}),
-		"TableUpdate": reflect.TypeOf(TableUpdateTriggerConfiguration{}),
+		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
+		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration{}),
+		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration{}),
+		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 	}
 }
 
 func (a TriggerSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FileArrival": FileArrivalTriggerConfiguration{}.ToAttrType(ctx),
-			"PauseStatus": types.StringType,
-			"Periodic":    PeriodicTriggerConfiguration{}.ToAttrType(ctx),
-			"Table":       TableUpdateTriggerConfiguration{}.ToAttrType(ctx),
-			"TableUpdate": TableUpdateTriggerConfiguration{}.ToAttrType(ctx),
+			"file_arrival": basetypes.ListType{
+				ElemType: FileArrivalTriggerConfiguration{}.ToAttrType(ctx),
+			},
+			"pause_status": types.StringType,
+			"periodic": basetypes.ListType{
+				ElemType: PeriodicTriggerConfiguration{}.ToAttrType(ctx),
+			},
+			"table": basetypes.ListType{
+				ElemType: TableUpdateTriggerConfiguration{}.ToAttrType(ctx),
+			},
+			"table_update": basetypes.ListType{
+				ElemType: TableUpdateTriggerConfiguration{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -6068,19 +6360,21 @@ func (newState *UpdateJob) SyncEffectiveFieldsDuringRead(existingState UpdateJob
 
 func (a UpdateJob) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FieldsToRemove": reflect.TypeOf(types.StringType),
-		"NewSettings":    reflect.TypeOf(JobSettings{}),
+		"fields_to_remove": reflect.TypeOf(types.StringType),
+		"new_settings":     reflect.TypeOf(JobSettings{}),
 	}
 }
 
 func (a UpdateJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FieldsToRemove": basetypes.ListType{
+			"fields_to_remove": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JobId":       types.Int64Type,
-			"NewSettings": JobSettings{}.ToAttrType(ctx),
+			"job_id": types.Int64Type,
+			"new_settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -6128,9 +6422,9 @@ func (a ViewItem) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ViewItem) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content": types.StringType,
-			"Name":    types.StringType,
-			"Type":    types.StringType,
+			"content": types.StringType,
+			"name":    types.StringType,
+			"type":    types.StringType,
 		},
 	}
 }
@@ -6152,7 +6446,7 @@ func (a Webhook) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Webhook) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Id": types.StringType,
+			"id": types.StringType,
 		},
 	}
 }
@@ -6192,30 +6486,30 @@ func (newState *WebhookNotifications) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a WebhookNotifications) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OnDurationWarningThresholdExceeded": reflect.TypeOf(Webhook{}),
-		"OnFailure":                          reflect.TypeOf(Webhook{}),
-		"OnStart":                            reflect.TypeOf(Webhook{}),
-		"OnStreamingBacklogExceeded":         reflect.TypeOf(Webhook{}),
-		"OnSuccess":                          reflect.TypeOf(Webhook{}),
+		"on_duration_warning_threshold_exceeded": reflect.TypeOf(Webhook{}),
+		"on_failure":                             reflect.TypeOf(Webhook{}),
+		"on_start":                               reflect.TypeOf(Webhook{}),
+		"on_streaming_backlog_exceeded":          reflect.TypeOf(Webhook{}),
+		"on_success":                             reflect.TypeOf(Webhook{}),
 	}
 }
 
 func (a WebhookNotifications) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"OnDurationWarningThresholdExceeded": basetypes.ListType{
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
-			"OnFailure": basetypes.ListType{
+			"on_failure": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
-			"OnStart": basetypes.ListType{
+			"on_start": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
-			"OnStreamingBacklogExceeded": basetypes.ListType{
+			"on_streaming_backlog_exceeded": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
-			"OnSuccess": basetypes.ListType{
+			"on_success": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
 		},

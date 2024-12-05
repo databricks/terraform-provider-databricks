@@ -226,7 +226,35 @@ func typeToSchema(v reflect.Value) NestedBlockObject {
 				scmBlock[fieldName] = SingleNestedBlockBuilder{
 					NestedObject: typeToSchema(fieldValue),
 				}
-			case types.Set, types.Tuple, types.Map:
+			case types.Map:
+				// Look up nested struct type
+				if complexFieldTypes == nil {
+					panic(fmt.Errorf("complex field types not provided for type: %T. %s", v.Interface(), common.TerraformBugErrorMessage))
+				}
+				fieldType, ok := complexFieldTypes[fieldName]
+				if !ok {
+					panic(fmt.Errorf("complex field type not found for field %s on type %T. %s", typeField.Name, v.Interface(), common.TerraformBugErrorMessage))
+				}
+				// If the field type is a "primitive", use MapAttributeBuilder
+				// otherwise use MapNestedAttributeBuilder
+				switch fieldType {
+				case reflect.TypeOf(types.BoolType), reflect.TypeOf(types.Int64Type), reflect.TypeOf(types.Float64Type), reflect.TypeOf(types.StringType):
+					scmAttr[fieldName] = MapAttributeBuilder{
+						ElementType: reflect.New(fieldType).Elem().Interface().(attr.Type),
+						Optional:    structTag.optional,
+						Required:    !structTag.optional,
+						Computed:    structTag.computed,
+					}
+				default:
+					fieldValue := reflect.New(fieldType).Elem()
+
+					// Generate the nested block schema
+					// Note: Objects are treated as lists for backward compatibility with the Terraform v5 protocol (i.e. SDKv2 resources).
+					scmAttr[fieldName] = MapNestedAttributeBuilder{
+						NestedObject: typeToSchema(fieldValue).ToNestedAttributeObject(),
+					}
+				}
+			case types.Set, types.Tuple:
 				panic(fmt.Errorf("%T should never be used in tfsdk structs. %s", value.Interface(), common.TerraformBugErrorMessage))
 			default:
 				// If it is a real stuct instead of a tfsdk type, recursively resolve it.

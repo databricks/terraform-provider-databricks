@@ -41,8 +41,8 @@ func (a AddBlock) GetComplexFieldTypes() map[string]reflect.Type {
 func (a AddBlock) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Data":   types.StringType,
-			"Handle": types.Int64Type,
+			"data":   types.StringType,
+			"handle": types.Int64Type,
 		},
 	}
 }
@@ -84,7 +84,7 @@ func (a Close) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Close) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Handle": types.Int64Type,
+			"handle": types.Int64Type,
 		},
 	}
 }
@@ -128,8 +128,8 @@ func (a Create) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Create) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Overwrite": types.BoolType,
-			"Path":      types.StringType,
+			"overwrite": types.BoolType,
+			"path":      types.StringType,
 		},
 	}
 }
@@ -153,7 +153,7 @@ func (a CreateDirectoryRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CreateDirectoryRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DirectoryPath": types.StringType,
+			"directory_path": types.StringType,
 		},
 	}
 }
@@ -196,7 +196,7 @@ func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a CreateResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Handle": types.Int64Type,
+			"handle": types.Int64Type,
 		},
 	}
 }
@@ -223,8 +223,8 @@ func (a Delete) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Delete) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path":      types.StringType,
-			"Recursive": types.BoolType,
+			"path":      types.StringType,
+			"recursive": types.BoolType,
 		},
 	}
 }
@@ -248,7 +248,7 @@ func (a DeleteDirectoryRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteDirectoryRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DirectoryPath": types.StringType,
+			"directory_path": types.StringType,
 		},
 	}
 }
@@ -291,7 +291,7 @@ func (a DeleteFileRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DeleteFileRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FilePath": types.StringType,
+			"file_path": types.StringType,
 		},
 	}
 }
@@ -342,11 +342,11 @@ func (a DirectoryEntry) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DirectoryEntry) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FileSize":     types.Int64Type,
-			"IsDirectory":  types.BoolType,
-			"LastModified": types.Int64Type,
-			"Name":         types.StringType,
-			"Path":         types.StringType,
+			"file_size":     types.Int64Type,
+			"is_directory":  types.BoolType,
+			"last_modified": types.Int64Type,
+			"name":          types.StringType,
+			"path":          types.StringType,
 		},
 	}
 }
@@ -370,7 +370,7 @@ func (a DownloadRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DownloadRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FilePath": types.StringType,
+			"file_path": types.StringType,
 		},
 	}
 }
@@ -398,10 +398,10 @@ func (a DownloadResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DownloadResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ContentLength": types.Int64Type,
-			"ContentType":   types.StringType,
-			"Contents":      types.ObjectType{},
-			"LastModified":  types.StringType,
+			"content-length": types.Int64Type,
+			"content-type":   types.StringType,
+			"contents":       types.ObjectType{},
+			"last-modified":  types.StringType,
 		},
 	}
 }
@@ -430,10 +430,10 @@ func (a FileInfo) GetComplexFieldTypes() map[string]reflect.Type {
 func (a FileInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FileSize":         types.Int64Type,
-			"IsDir":            types.BoolType,
-			"ModificationTime": types.Int64Type,
-			"Path":             types.StringType,
+			"file_size":         types.Int64Type,
+			"is_dir":            types.BoolType,
+			"modification_time": types.Int64Type,
+			"path":              types.StringType,
 		},
 	}
 }
@@ -457,7 +457,7 @@ func (a GetDirectoryMetadataRequest) GetComplexFieldTypes() map[string]reflect.T
 func (a GetDirectoryMetadataRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DirectoryPath": types.StringType,
+			"directory_path": types.StringType,
 		},
 	}
 }
@@ -500,7 +500,7 @@ func (a GetMetadataRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetMetadataRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FilePath": types.StringType,
+			"file_path": types.StringType,
 		},
 	}
 }
@@ -526,9 +526,9 @@ func (a GetMetadataResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetMetadataResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ContentLength": types.Int64Type,
-			"ContentType":   types.StringType,
-			"LastModified":  types.StringType,
+			"content-length": types.Int64Type,
+			"content-type":   types.StringType,
+			"last-modified":  types.StringType,
 		},
 	}
 }
@@ -553,7 +553,7 @@ func (a GetStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a GetStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path": types.StringType,
+			"path": types.StringType,
 		},
 	}
 }
@@ -578,7 +578,7 @@ func (a ListDbfsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ListDbfsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path": types.StringType,
+			"path": types.StringType,
 		},
 	}
 }
@@ -622,9 +622,9 @@ func (a ListDirectoryContentsRequest) GetComplexFieldTypes() map[string]reflect.
 func (a ListDirectoryContentsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DirectoryPath": types.StringType,
-			"PageSize":      types.Int64Type,
-			"PageToken":     types.StringType,
+			"directory_path": types.StringType,
+			"page_size":      types.Int64Type,
+			"page_token":     types.StringType,
 		},
 	}
 }
@@ -644,17 +644,17 @@ func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a ListDirectoryResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Contents": reflect.TypeOf(DirectoryEntry{}),
+		"contents": reflect.TypeOf(DirectoryEntry{}),
 	}
 }
 
 func (a ListDirectoryResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Contents": basetypes.ListType{
+			"contents": basetypes.ListType{
 				ElemType: DirectoryEntry{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
+			"next_page_token": types.StringType,
 		},
 	}
 }
@@ -673,14 +673,14 @@ func (newState *ListStatusResponse) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a ListStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Files": reflect.TypeOf(FileInfo{}),
+		"files": reflect.TypeOf(FileInfo{}),
 	}
 }
 
 func (a ListStatusResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Files": basetypes.ListType{
+			"files": basetypes.ListType{
 				ElemType: FileInfo{}.ToAttrType(ctx),
 			},
 		},
@@ -705,7 +705,7 @@ func (a MkDirs) GetComplexFieldTypes() map[string]reflect.Type {
 func (a MkDirs) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path": types.StringType,
+			"path": types.StringType,
 		},
 	}
 }
@@ -751,8 +751,8 @@ func (a Move) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Move) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DestinationPath": types.StringType,
-			"SourcePath":      types.StringType,
+			"destination_path": types.StringType,
+			"source_path":      types.StringType,
 		},
 	}
 }
@@ -798,9 +798,9 @@ func (a Put) GetComplexFieldTypes() map[string]reflect.Type {
 func (a Put) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Contents":  types.StringType,
-			"Overwrite": types.BoolType,
-			"Path":      types.StringType,
+			"contents":  types.StringType,
+			"overwrite": types.BoolType,
+			"path":      types.StringType,
 		},
 	}
 }
@@ -848,9 +848,9 @@ func (a ReadDbfsRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ReadDbfsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Length": types.Int64Type,
-			"Offset": types.Int64Type,
-			"Path":   types.StringType,
+			"length": types.Int64Type,
+			"offset": types.Int64Type,
+			"path":   types.StringType,
 		},
 	}
 }
@@ -877,8 +877,8 @@ func (a ReadResponse) GetComplexFieldTypes() map[string]reflect.Type {
 func (a ReadResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BytesRead": types.Int64Type,
-			"Data":      types.StringType,
+			"bytes_read": types.Int64Type,
+			"data":       types.StringType,
 		},
 	}
 }
@@ -905,9 +905,9 @@ func (a UploadRequest) GetComplexFieldTypes() map[string]reflect.Type {
 func (a UploadRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Contents":  types.ObjectType{},
-			"FilePath":  types.StringType,
-			"Overwrite": types.BoolType,
+			"contents":  types.ObjectType{},
+			"file_path": types.StringType,
+			"overwrite": types.BoolType,
 		},
 	}
 }

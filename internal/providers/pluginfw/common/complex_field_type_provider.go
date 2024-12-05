@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -8,5 +9,5 @@ import (
 
 type ComplexFieldTypeProvider interface {
 	GetComplexFieldTypes() map[string]reflect.Type
-	ToAttrType() types.ObjectType
+	ToAttrType(context.Context) types.ObjectType
 }

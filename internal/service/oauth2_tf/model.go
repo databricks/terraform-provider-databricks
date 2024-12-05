@@ -42,24 +42,26 @@ func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existi
 
 func (a CreateCustomAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RedirectUrls":      reflect.TypeOf(types.StringType),
-		"Scopes":            reflect.TypeOf(types.StringType),
-		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+		"redirect_urls":       reflect.TypeOf(types.StringType),
+		"scopes":              reflect.TypeOf(types.StringType),
+		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
 
 func (a CreateCustomAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Confidential": types.BoolType,
-			"Name":         types.StringType,
-			"RedirectUrls": basetypes.ListType{
+			"confidential": types.BoolType,
+			"name":         types.StringType,
+			"redirect_urls": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Scopes": basetypes.ListType{
+			"scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+			"token_access_policy": basetypes.ListType{
+				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -87,9 +89,9 @@ func (a CreateCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]refl
 func (a CreateCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ClientId":      types.StringType,
-			"ClientSecret":  types.StringType,
-			"IntegrationId": types.StringType,
+			"client_id":      types.StringType,
+			"client_secret":  types.StringType,
+			"integration_id": types.StringType,
 		},
 	}
 }
@@ -110,15 +112,17 @@ func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(exi
 
 func (a CreatePublishedAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
 
 func (a CreatePublishedAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AppId":             types.StringType,
-			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+			"app_id": types.StringType,
+			"token_access_policy": basetypes.ListType{
+				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -141,7 +145,7 @@ func (a CreatePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]r
 func (a CreatePublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IntegrationId": types.StringType,
+			"integration_id": types.StringType,
 		},
 	}
 }
@@ -165,7 +169,7 @@ func (a CreateServicePrincipalSecretRequest) GetComplexFieldTypes() map[string]r
 func (a CreateServicePrincipalSecretRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServicePrincipalId": types.Int64Type,
+			"service_principal_id": types.Int64Type,
 		},
 	}
 }
@@ -198,12 +202,12 @@ func (a CreateServicePrincipalSecretResponse) GetComplexFieldTypes() map[string]
 func (a CreateServicePrincipalSecretResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreateTime": types.StringType,
-			"Id":         types.StringType,
-			"Secret":     types.StringType,
-			"SecretHash": types.StringType,
-			"Status":     types.StringType,
-			"UpdateTime": types.StringType,
+			"create_time": types.StringType,
+			"id":          types.StringType,
+			"secret":      types.StringType,
+			"secret_hash": types.StringType,
+			"status":      types.StringType,
+			"update_time": types.StringType,
 		},
 	}
 }
@@ -228,8 +232,8 @@ func (a DataPlaneInfo) GetComplexFieldTypes() map[string]reflect.Type {
 func (a DataPlaneInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AuthorizationDetails": types.StringType,
-			"EndpointUrl":          types.StringType,
+			"authorization_details": types.StringType,
+			"endpoint_url":          types.StringType,
 		},
 	}
 }
@@ -271,7 +275,7 @@ func (a DeleteCustomAppIntegrationRequest) GetComplexFieldTypes() map[string]ref
 func (a DeleteCustomAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IntegrationId": types.StringType,
+			"integration_id": types.StringType,
 		},
 	}
 }
@@ -313,7 +317,7 @@ func (a DeletePublishedAppIntegrationRequest) GetComplexFieldTypes() map[string]
 func (a DeletePublishedAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IntegrationId": types.StringType,
+			"integration_id": types.StringType,
 		},
 	}
 }
@@ -358,8 +362,8 @@ func (a DeleteServicePrincipalSecretRequest) GetComplexFieldTypes() map[string]r
 func (a DeleteServicePrincipalSecretRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"SecretId":           types.StringType,
-			"ServicePrincipalId": types.Int64Type,
+			"secret_id":            types.StringType,
+			"service_principal_id": types.Int64Type,
 		},
 	}
 }
@@ -396,29 +400,31 @@ func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(exi
 
 func (a GetCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RedirectUrls":      reflect.TypeOf(types.StringType),
-		"Scopes":            reflect.TypeOf(types.StringType),
-		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+		"redirect_urls":       reflect.TypeOf(types.StringType),
+		"scopes":              reflect.TypeOf(types.StringType),
+		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
 
 func (a GetCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ClientId":        types.StringType,
-			"Confidential":    types.BoolType,
-			"CreateTime":      types.StringType,
-			"CreatedBy":       types.Int64Type,
-			"CreatorUsername": types.StringType,
-			"IntegrationId":   types.StringType,
-			"Name":            types.StringType,
-			"RedirectUrls": basetypes.ListType{
+			"client_id":        types.StringType,
+			"confidential":     types.BoolType,
+			"create_time":      types.StringType,
+			"created_by":       types.Int64Type,
+			"creator_username": types.StringType,
+			"integration_id":   types.StringType,
+			"name":             types.StringType,
+			"redirect_urls": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Scopes": basetypes.ListType{
+			"scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+			"token_access_policy": basetypes.ListType{
+				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -442,7 +448,7 @@ func (a GetCustomAppIntegrationRequest) GetComplexFieldTypes() map[string]reflec
 func (a GetCustomAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IntegrationId": types.StringType,
+			"integration_id": types.StringType,
 		},
 	}
 }
@@ -462,17 +468,17 @@ func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(ex
 
 func (a GetCustomAppIntegrationsOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Apps": reflect.TypeOf(GetCustomAppIntegrationOutput{}),
+		"apps": reflect.TypeOf(GetCustomAppIntegrationOutput{}),
 	}
 }
 
 func (a GetCustomAppIntegrationsOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Apps": basetypes.ListType{
+			"apps": basetypes.ListType{
 				ElemType: GetCustomAppIntegrationOutput{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
+			"next_page_token": types.StringType,
 		},
 	}
 }
@@ -500,19 +506,21 @@ func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(
 
 func (a GetPublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
 
 func (a GetPublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AppId":             types.StringType,
-			"CreateTime":        types.StringType,
-			"CreatedBy":         types.Int64Type,
-			"IntegrationId":     types.StringType,
-			"Name":              types.StringType,
-			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+			"app_id":         types.StringType,
+			"create_time":    types.StringType,
+			"created_by":     types.Int64Type,
+			"integration_id": types.StringType,
+			"name":           types.StringType,
+			"token_access_policy": basetypes.ListType{
+				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -535,7 +543,7 @@ func (a GetPublishedAppIntegrationRequest) GetComplexFieldTypes() map[string]ref
 func (a GetPublishedAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IntegrationId": types.StringType,
+			"integration_id": types.StringType,
 		},
 	}
 }
@@ -555,17 +563,17 @@ func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringRead
 
 func (a GetPublishedAppIntegrationsOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Apps": reflect.TypeOf(GetPublishedAppIntegrationOutput{}),
+		"apps": reflect.TypeOf(GetPublishedAppIntegrationOutput{}),
 	}
 }
 
 func (a GetPublishedAppIntegrationsOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Apps": basetypes.ListType{
+			"apps": basetypes.ListType{
 				ElemType: GetPublishedAppIntegrationOutput{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
+			"next_page_token": types.StringType,
 		},
 	}
 }
@@ -586,17 +594,17 @@ func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a GetPublishedAppsOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Apps": reflect.TypeOf(PublishedAppOutput{}),
+		"apps": reflect.TypeOf(PublishedAppOutput{}),
 	}
 }
 
 func (a GetPublishedAppsOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Apps": basetypes.ListType{
+			"apps": basetypes.ListType{
 				ElemType: PublishedAppOutput{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
+			"next_page_token": types.StringType,
 		},
 	}
 }
@@ -623,9 +631,9 @@ func (a ListCustomAppIntegrationsRequest) GetComplexFieldTypes() map[string]refl
 func (a ListCustomAppIntegrationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IncludeCreatorUsername": types.BoolType,
-			"PageSize":               types.Int64Type,
-			"PageToken":              types.StringType,
+			"include_creator_username": types.BoolType,
+			"page_size":                types.Int64Type,
+			"page_token":               types.StringType,
 		},
 	}
 }
@@ -651,8 +659,8 @@ func (a ListOAuthPublishedAppsRequest) GetComplexFieldTypes() map[string]reflect
 func (a ListOAuthPublishedAppsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PageSize":  types.Int64Type,
-			"PageToken": types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
 		},
 	}
 }
@@ -677,8 +685,8 @@ func (a ListPublishedAppIntegrationsRequest) GetComplexFieldTypes() map[string]r
 func (a ListPublishedAppIntegrationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PageSize":  types.Int64Type,
-			"PageToken": types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
 		},
 	}
 }
@@ -712,8 +720,8 @@ func (a ListServicePrincipalSecretsRequest) GetComplexFieldTypes() map[string]re
 func (a ListServicePrincipalSecretsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PageToken":          types.StringType,
-			"ServicePrincipalId": types.Int64Type,
+			"page_token":           types.StringType,
+			"service_principal_id": types.Int64Type,
 		},
 	}
 }
@@ -733,15 +741,15 @@ func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringRe
 
 func (a ListServicePrincipalSecretsResponse) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Secrets": reflect.TypeOf(SecretInfo{}),
+		"secrets": reflect.TypeOf(SecretInfo{}),
 	}
 }
 
 func (a ListServicePrincipalSecretsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NextPageToken": types.StringType,
-			"Secrets": basetypes.ListType{
+			"next_page_token": types.StringType,
+			"secrets": basetypes.ListType{
 				ElemType: SecretInfo{}.ToAttrType(ctx),
 			},
 		},
@@ -775,23 +783,23 @@ func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a PublishedAppOutput) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RedirectUrls": reflect.TypeOf(types.StringType),
-		"Scopes":       reflect.TypeOf(types.StringType),
+		"redirect_urls": reflect.TypeOf(types.StringType),
+		"scopes":        reflect.TypeOf(types.StringType),
 	}
 }
 
 func (a PublishedAppOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AppId":                types.StringType,
-			"ClientId":             types.StringType,
-			"Description":          types.StringType,
-			"IsConfidentialClient": types.BoolType,
-			"Name":                 types.StringType,
-			"RedirectUrls": basetypes.ListType{
+			"app_id":                 types.StringType,
+			"client_id":              types.StringType,
+			"description":            types.StringType,
+			"is_confidential_client": types.BoolType,
+			"name":                   types.StringType,
+			"redirect_urls": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Scopes": basetypes.ListType{
+			"scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -824,11 +832,11 @@ func (a SecretInfo) GetComplexFieldTypes() map[string]reflect.Type {
 func (a SecretInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreateTime": types.StringType,
-			"Id":         types.StringType,
-			"SecretHash": types.StringType,
-			"Status":     types.StringType,
-			"UpdateTime": types.StringType,
+			"create_time": types.StringType,
+			"id":          types.StringType,
+			"secret_hash": types.StringType,
+			"status":      types.StringType,
+			"update_time": types.StringType,
 		},
 	}
 }
@@ -853,8 +861,8 @@ func (a TokenAccessPolicy) GetComplexFieldTypes() map[string]reflect.Type {
 func (a TokenAccessPolicy) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessTokenTtlInMinutes":  types.Int64Type,
-			"RefreshTokenTtlInMinutes": types.Int64Type,
+			"access_token_ttl_in_minutes":  types.Int64Type,
+			"refresh_token_ttl_in_minutes": types.Int64Type,
 		},
 	}
 }
@@ -876,19 +884,21 @@ func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existi
 
 func (a UpdateCustomAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RedirectUrls":      reflect.TypeOf(types.StringType),
-		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+		"redirect_urls":       reflect.TypeOf(types.StringType),
+		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
 
 func (a UpdateCustomAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IntegrationId": types.StringType,
-			"RedirectUrls": basetypes.ListType{
+			"integration_id": types.StringType,
+			"redirect_urls": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+			"token_access_policy": basetypes.ListType{
+				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -926,15 +936,17 @@ func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(exi
 
 func (a UpdatePublishedAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"TokenAccessPolicy": reflect.TypeOf(TokenAccessPolicy{}),
+		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
 
 func (a UpdatePublishedAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IntegrationId":     types.StringType,
-			"TokenAccessPolicy": TokenAccessPolicy{}.ToAttrType(ctx),
+			"integration_id": types.StringType,
+			"token_access_policy": basetypes.ListType{
+				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+			},
 		},
 	}
 }

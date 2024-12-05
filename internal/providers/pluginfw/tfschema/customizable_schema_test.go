@@ -3,8 +3,10 @@ package tfschema
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -14,15 +16,51 @@ import (
 )
 
 type TestTfSdk struct {
-	Description       types.String            `tfsdk:"description" tf:""`
-	Nested            *NestedTfSdk            `tfsdk:"nested" tf:"optional"`
-	NestedSliceObject []NestedTfSdk           `tfsdk:"nested_slice_object" tf:"optional,object"`
-	Map               map[string]types.String `tfsdk:"map" tf:"optional"`
+	Description       types.String `tfsdk:"description" tf:""`
+	Nested            types.List   `tfsdk:"nested" tf:"optional"`
+	NestedSliceObject types.List   `tfsdk:"nested_slice_object" tf:"optional,object"`
+	Map               types.Map    `tfsdk:"map" tf:"optional"`
+}
+
+func (TestTfSdk) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"nested":              reflect.TypeOf(NestedTfSdk{}),
+		"nested_slice_object": reflect.TypeOf(NestedTfSdk{}),
+		"map":                 reflect.TypeOf(types.StringType),
+	}
+}
+
+func (TestTfSdk) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description": types.StringType,
+			"nested": types.ListType{
+				ElemType: NestedTfSdk{}.ToAttrType(ctx),
+			},
+			"nested_slice_object": types.ListType{
+				ElemType: NestedTfSdk{}.ToAttrType(ctx),
+			},
+			"map": types.StringType,
+		},
+	}
 }
 
 type NestedTfSdk struct {
 	Name    types.String `tfsdk:"name" tf:"optional"`
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
+}
+
+func (NestedTfSdk) GetComplexFieldTypes() map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+func (NestedTfSdk) ToAttrType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":    types.StringType,
+			"enabled": types.BoolType,
+		},
+	}
 }
 
 type stringLengthBetweenValidator struct {
@@ -61,7 +99,7 @@ func (v stringLengthBetweenValidator) ValidateString(ctx context.Context, req va
 }
 
 func TestCustomizeSchemaSetRequired(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetRequired("nested", "enabled")
 		return c
 	})
@@ -70,7 +108,7 @@ func TestCustomizeSchemaSetRequired(t *testing.T) {
 }
 
 func TestCustomizeSchemaSetOptional(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetOptional("description")
 		return c
 	})
@@ -79,7 +117,7 @@ func TestCustomizeSchemaSetOptional(t *testing.T) {
 }
 
 func TestCustomizeSchemaSetSensitive(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetSensitive("nested", "name")
 		return c
 	})
@@ -88,7 +126,7 @@ func TestCustomizeSchemaSetSensitive(t *testing.T) {
 }
 
 func TestCustomizeSchemaSetDeprecated(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetDeprecated("deprecated", "map")
 		return c
 	})
@@ -97,7 +135,7 @@ func TestCustomizeSchemaSetDeprecated(t *testing.T) {
 }
 
 func TestCustomizeSchemaSetReadOnly(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetReadOnly("map")
 		return c
 	})
@@ -107,7 +145,7 @@ func TestCustomizeSchemaSetReadOnly(t *testing.T) {
 }
 
 func TestCustomizeSchemaAddValidator(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.AddValidator(stringLengthBetweenValidator{}, "description")
 		return c
 	})
@@ -116,7 +154,7 @@ func TestCustomizeSchemaAddValidator(t *testing.T) {
 }
 
 func TestCustomizeSchemaAddPlanModifier(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "description")
 		return c
 	})
@@ -125,7 +163,7 @@ func TestCustomizeSchemaAddPlanModifier(t *testing.T) {
 }
 
 func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		return c
 	})
 
@@ -134,7 +172,7 @@ func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
 
 func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
-		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 			c.SetRequired("nested")
 			return c
 		})
@@ -143,7 +181,7 @@ func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
 
 func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
-		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 			c.SetOptional("nested")
 			return c
 		})
@@ -152,7 +190,7 @@ func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
 
 func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
-		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 			c.SetSensitive("nested")
 			return c
 		})
@@ -161,7 +199,7 @@ func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
 
 func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
-		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 			c.SetReadOnly("nested")
 			return c
 		})
@@ -170,7 +208,7 @@ func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
 
 func TestCustomizeSchema_SetComputed_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
-		_ = ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 			c.SetComputed("nested")
 			return c
 		})

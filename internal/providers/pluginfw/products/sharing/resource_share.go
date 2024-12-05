@@ -36,12 +36,13 @@ type ShareInfoExtended struct {
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
+var _ pluginfwcommon.ObjectTypable = ShareInfoExtended{}
 
-func (s ShareInfoExtended) GetComplexFieldTypes() map[string]reflect.Type {
-	return s.ShareInfo.GetComplexFieldTypes()
+func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return s.ShareInfo.GetComplexFieldTypes(ctx)
 }
 
-func (s ShareInfoExtended) ToAttrType(ctx context.Context) types.ObjectType {
+func (s ShareInfoExtended) ToObjectType(ctx context.Context) types.ObjectType {
 	return s.ShareInfo.ToAttrType(ctx)
 }
 
@@ -150,7 +151,7 @@ func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataReque
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetRequired("name")
 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew

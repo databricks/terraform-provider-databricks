@@ -60,7 +60,7 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
   {{- end}}
 }
 
-func (a {{.PascalName}}) GetComplexFieldTypes() map[string]reflect.Type {
+func (a {{.PascalName}}) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
   return map[string]reflect.Type{
     {{- range .Fields -}}
     {{- if or .Entity.IsObject .Entity.ArrayValue .Entity.MapValue}}

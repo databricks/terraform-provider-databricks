@@ -42,7 +42,7 @@ func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req d
 }
 
 func (d *NotificationDestinationsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(NotificationDestinationsInfo{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, NotificationDestinationsInfo{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,

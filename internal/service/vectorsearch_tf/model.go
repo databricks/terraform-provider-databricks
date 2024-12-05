@@ -30,7 +30,7 @@ func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnI
 func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
 }
 
-func (a ColumnInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ColumnInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -55,7 +55,7 @@ func (newState *CreateEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateEndpoint) SyncEffectiveFieldsDuringRead(existingState CreateEndpoint) {
 }
 
-func (a CreateEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateEndpoint) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -97,7 +97,7 @@ func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexRequest) {
 }
 
-func (a CreateVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"delta_sync_index_spec":    reflect.TypeOf(DeltaSyncVectorIndexSpecRequest{}),
 		"direct_access_index_spec": reflect.TypeOf(DirectAccessVectorIndexSpec{}),
@@ -131,7 +131,7 @@ func (newState *CreateVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *CreateVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexResponse) {
 }
 
-func (a CreateVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateVectorIndexResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"vector_index": reflect.TypeOf(VectorIndex{}),
 	}
@@ -161,7 +161,7 @@ func (newState *DeleteDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 func (newState *DeleteDataResult) SyncEffectiveFieldsDuringRead(existingState DeleteDataResult) {
 }
 
-func (a DeleteDataResult) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteDataResult) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"failed_primary_keys": reflect.TypeOf(types.StringType),
 	}
@@ -193,7 +193,7 @@ func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexRequest) {
 }
 
-func (a DeleteDataVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteDataVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"primary_keys": reflect.TypeOf(types.StringType),
 	}
@@ -224,7 +224,7 @@ func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOr
 func (newState *DeleteDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexResponse) {
 }
 
-func (a DeleteDataVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteDataVectorIndexResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"result": reflect.TypeOf(DeleteDataResult{}),
 	}
@@ -253,7 +253,7 @@ func (newState *DeleteEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteEndpointRequest) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointRequest) {
 }
 
-func (a DeleteEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteEndpointRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -274,7 +274,7 @@ func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteEndpointResponse) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointResponse) {
 }
 
-func (a DeleteEndpointResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteEndpointResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -296,7 +296,7 @@ func (newState *DeleteIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DeleteIndexRequest) SyncEffectiveFieldsDuringRead(existingState DeleteIndexRequest) {
 }
 
-func (a DeleteIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -317,7 +317,7 @@ func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *DeleteIndexResponse) SyncEffectiveFieldsDuringRead(existingState DeleteIndexResponse) {
 }
 
-func (a DeleteIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteIndexResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -361,7 +361,7 @@ func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringCreate
 func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecRequest) {
 }
 
-func (a DeltaSyncVectorIndexSpecRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeltaSyncVectorIndexSpecRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"columns_to_sync":          reflect.TypeOf(types.StringType),
 		"embedding_source_columns": reflect.TypeOf(EmbeddingSourceColumn{}),
@@ -417,7 +417,7 @@ func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringCreat
 func (newState *DeltaSyncVectorIndexSpecResponse) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecResponse) {
 }
 
-func (a DeltaSyncVectorIndexSpecResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeltaSyncVectorIndexSpecResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"embedding_source_columns": reflect.TypeOf(EmbeddingSourceColumn{}),
 		"embedding_vector_columns": reflect.TypeOf(EmbeddingVectorColumn{}),
@@ -461,7 +461,7 @@ func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *DirectAccessVectorIndexSpec) SyncEffectiveFieldsDuringRead(existingState DirectAccessVectorIndexSpec) {
 }
 
-func (a DirectAccessVectorIndexSpec) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DirectAccessVectorIndexSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"embedding_source_columns": reflect.TypeOf(EmbeddingSourceColumn{}),
 		"embedding_vector_columns": reflect.TypeOf(EmbeddingVectorColumn{}),
@@ -495,7 +495,7 @@ func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *EmbeddingSourceColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingSourceColumn) {
 }
 
-func (a EmbeddingSourceColumn) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EmbeddingSourceColumn) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -521,7 +521,7 @@ func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *EmbeddingVectorColumn) SyncEffectiveFieldsDuringRead(existingState EmbeddingVectorColumn) {
 }
 
-func (a EmbeddingVectorColumn) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EmbeddingVectorColumn) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -561,7 +561,7 @@ func (newState *EndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Endpo
 func (newState *EndpointInfo) SyncEffectiveFieldsDuringRead(existingState EndpointInfo) {
 }
 
-func (a EndpointInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EndpointInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"endpoint_status": reflect.TypeOf(EndpointStatus{}),
 	}
@@ -599,7 +599,7 @@ func (newState *EndpointStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan End
 func (newState *EndpointStatus) SyncEffectiveFieldsDuringRead(existingState EndpointStatus) {
 }
 
-func (a EndpointStatus) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EndpointStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -624,7 +624,7 @@ func (newState *GetEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetEndpointRequest) SyncEffectiveFieldsDuringRead(existingState GetEndpointRequest) {
 }
 
-func (a GetEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetEndpointRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -648,7 +648,7 @@ func (newState *GetIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 func (newState *GetIndexRequest) SyncEffectiveFieldsDuringRead(existingState GetIndexRequest) {
 }
 
-func (a GetIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -674,7 +674,7 @@ func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListEndpointResponse) SyncEffectiveFieldsDuringRead(existingState ListEndpointResponse) {
 }
 
-func (a ListEndpointResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListEndpointResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"endpoints": reflect.TypeOf(EndpointInfo{}),
 	}
@@ -703,7 +703,7 @@ func (newState *ListEndpointsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListEndpointsRequest) SyncEffectiveFieldsDuringRead(existingState ListEndpointsRequest) {
 }
 
-func (a ListEndpointsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListEndpointsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -729,7 +729,7 @@ func (newState *ListIndexesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListIndexesRequest) SyncEffectiveFieldsDuringRead(existingState ListIndexesRequest) {
 }
 
-func (a ListIndexesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListIndexesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -752,7 +752,7 @@ func (newState *ListValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListValu
 func (newState *ListValue) SyncEffectiveFieldsDuringRead(existingState ListValue) {
 }
 
-func (a ListValue) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"values": reflect.TypeOf(Value{}),
 	}
@@ -782,7 +782,7 @@ func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ListVectorIndexesResponse) SyncEffectiveFieldsDuringRead(existingState ListVectorIndexesResponse) {
 }
 
-func (a ListVectorIndexesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListVectorIndexesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"vector_indexes": reflect.TypeOf(MiniVectorIndex{}),
 	}
@@ -813,7 +813,7 @@ func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *MapStringValueEntry) SyncEffectiveFieldsDuringRead(existingState MapStringValueEntry) {
 }
 
-func (a MapStringValueEntry) GetComplexFieldTypes() map[string]reflect.Type {
+func (a MapStringValueEntry) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"value": reflect.TypeOf(Value{}),
 	}
@@ -855,7 +855,7 @@ func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan Mi
 func (newState *MiniVectorIndex) SyncEffectiveFieldsDuringRead(existingState MiniVectorIndex) {
 }
 
-func (a MiniVectorIndex) GetComplexFieldTypes() map[string]reflect.Type {
+func (a MiniVectorIndex) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -888,7 +888,7 @@ func (newState *QueryVectorIndexNextPageRequest) SyncEffectiveFieldsDuringCreate
 func (newState *QueryVectorIndexNextPageRequest) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexNextPageRequest) {
 }
 
-func (a QueryVectorIndexNextPageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a QueryVectorIndexNextPageRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -933,7 +933,7 @@ func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexRequest) {
 }
 
-func (a QueryVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a QueryVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"columns":      reflect.TypeOf(types.StringType),
 		"query_vector": reflect.TypeOf(types.Float64Type),
@@ -976,7 +976,7 @@ func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *QueryVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexResponse) {
 }
 
-func (a QueryVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a QueryVectorIndexResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"manifest": reflect.TypeOf(ResultManifest{}),
 		"result":   reflect.TypeOf(ResultData{}),
@@ -1011,7 +1011,7 @@ func (newState *ResultData) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultD
 func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultData) {
 }
 
-func (a ResultData) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResultData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"data_array": reflect.TypeOf(types.StringType),
 	}
@@ -1044,7 +1044,7 @@ func (newState *ResultManifest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Res
 func (newState *ResultManifest) SyncEffectiveFieldsDuringRead(existingState ResultManifest) {
 }
 
-func (a ResultManifest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResultManifest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"columns": reflect.TypeOf(ColumnInfo{}),
 	}
@@ -1077,7 +1077,7 @@ func (newState *ScanVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ScanVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexRequest) {
 }
 
-func (a ScanVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ScanVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1105,7 +1105,7 @@ func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ScanVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexResponse) {
 }
 
-func (a ScanVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ScanVectorIndexResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"data": reflect.TypeOf(Struct{}),
 	}
@@ -1133,7 +1133,7 @@ func (newState *Struct) SyncEffectiveFieldsDuringCreateOrUpdate(plan Struct) {
 func (newState *Struct) SyncEffectiveFieldsDuringRead(existingState Struct) {
 }
 
-func (a Struct) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Struct) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"fields": reflect.TypeOf(MapStringValueEntry{}),
 	}
@@ -1161,7 +1161,7 @@ func (newState *SyncIndexRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *SyncIndexRequest) SyncEffectiveFieldsDuringRead(existingState SyncIndexRequest) {
 }
 
-func (a SyncIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SyncIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1182,7 +1182,7 @@ func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *SyncIndexResponse) SyncEffectiveFieldsDuringRead(existingState SyncIndexResponse) {
 }
 
-func (a SyncIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SyncIndexResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1206,7 +1206,7 @@ func (newState *UpsertDataResult) SyncEffectiveFieldsDuringCreateOrUpdate(plan U
 func (newState *UpsertDataResult) SyncEffectiveFieldsDuringRead(existingState UpsertDataResult) {
 }
 
-func (a UpsertDataResult) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpsertDataResult) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"failed_primary_keys": reflect.TypeOf(types.StringType),
 	}
@@ -1238,7 +1238,7 @@ func (newState *UpsertDataVectorIndexRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *UpsertDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexRequest) {
 }
 
-func (a UpsertDataVectorIndexRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpsertDataVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1265,7 +1265,7 @@ func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringCreateOr
 func (newState *UpsertDataVectorIndexResponse) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexResponse) {
 }
 
-func (a UpsertDataVectorIndexResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpsertDataVectorIndexResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"result": reflect.TypeOf(UpsertDataResult{}),
 	}
@@ -1302,7 +1302,7 @@ func (newState *Value) SyncEffectiveFieldsDuringCreateOrUpdate(plan Value) {
 func (newState *Value) SyncEffectiveFieldsDuringRead(existingState Value) {
 }
 
-func (a Value) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Value) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"list_value":   reflect.TypeOf(ListValue{}),
 		"struct_value": reflect.TypeOf(Struct{}),
@@ -1357,7 +1357,7 @@ func (newState *VectorIndex) SyncEffectiveFieldsDuringCreateOrUpdate(plan Vector
 func (newState *VectorIndex) SyncEffectiveFieldsDuringRead(existingState VectorIndex) {
 }
 
-func (a VectorIndex) GetComplexFieldTypes() map[string]reflect.Type {
+func (a VectorIndex) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"delta_sync_index_spec":    reflect.TypeOf(DeltaSyncVectorIndexSpecResponse{}),
 		"direct_access_index_spec": reflect.TypeOf(DirectAccessVectorIndexSpec{}),
@@ -1403,7 +1403,7 @@ func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *VectorIndexStatus) SyncEffectiveFieldsDuringRead(existingState VectorIndexStatus) {
 }
 
-func (a VectorIndexStatus) GetComplexFieldTypes() map[string]reflect.Type {
+func (a VectorIndexStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 

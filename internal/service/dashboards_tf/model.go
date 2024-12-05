@@ -32,7 +32,7 @@ func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateDashboardRequest) {
 }
 
-func (a CreateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dashboard": reflect.TypeOf(Dashboard{}),
 	}
@@ -62,7 +62,7 @@ func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState CreateScheduleRequest) {
 }
 
-func (a CreateScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateScheduleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"schedule": reflect.TypeOf(Schedule{}),
 	}
@@ -95,7 +95,7 @@ func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState CreateSubscriptionRequest) {
 }
 
-func (a CreateSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateSubscriptionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscription": reflect.TypeOf(Subscription{}),
 	}
@@ -132,7 +132,7 @@ func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronS
 func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
 }
 
-func (a CronSchedule) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CronSchedule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -187,7 +187,7 @@ func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboar
 func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
 }
 
-func (a Dashboard) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Dashboard) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -225,7 +225,7 @@ func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleRequest) {
 }
 
-func (a DeleteScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteScheduleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -248,7 +248,7 @@ func (newState *DeleteScheduleResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteScheduleResponse) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleResponse) {
 }
 
-func (a DeleteScheduleResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteScheduleResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -277,7 +277,7 @@ func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionRequest) {
 }
 
-func (a DeleteSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteSubscriptionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -301,7 +301,7 @@ func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionResponse) {
 }
 
-func (a DeleteSubscriptionResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteSubscriptionResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -324,7 +324,7 @@ func (newState *GenieAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState GenieAttachment) {
 }
 
-func (a GenieAttachment) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"query": reflect.TypeOf(QueryAttachment{}),
 		"text":  reflect.TypeOf(TextAttachment{}),
@@ -365,7 +365,7 @@ func (newState *GenieConversation) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GenieConversation) SyncEffectiveFieldsDuringRead(existingState GenieConversation) {
 }
 
-func (a GenieConversation) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieConversation) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -397,7 +397,7 @@ func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuring
 func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest) {
 }
 
-func (a GenieCreateConversationMessageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieCreateConversationMessageRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -427,7 +427,7 @@ func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringCreate
 func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringRead(existingState GenieExecuteMessageQueryRequest) {
 }
 
-func (a GenieExecuteMessageQueryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieExecuteMessageQueryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -459,7 +459,7 @@ func (newState *GenieGetConversationMessageRequest) SyncEffectiveFieldsDuringCre
 func (newState *GenieGetConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieGetConversationMessageRequest) {
 }
 
-func (a GenieGetConversationMessageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieGetConversationMessageRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -489,7 +489,7 @@ func (newState *GenieGetMessageQueryResultRequest) SyncEffectiveFieldsDuringCrea
 func (newState *GenieGetMessageQueryResultRequest) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultRequest) {
 }
 
-func (a GenieGetMessageQueryResultRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieGetMessageQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -515,7 +515,7 @@ func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringCre
 func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultResponse) {
 }
 
-func (a GenieGetMessageQueryResultResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieGetMessageQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"statement_response": reflect.TypeOf(sql.StatementResponse{}),
 	}
@@ -577,7 +577,7 @@ func (newState *GenieMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan Genie
 func (newState *GenieMessage) SyncEffectiveFieldsDuringRead(existingState GenieMessage) {
 }
 
-func (a GenieMessage) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieMessage) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"attachments":  reflect.TypeOf(GenieAttachment{}),
 		"error":        reflect.TypeOf(MessageError{}),
@@ -623,7 +623,7 @@ func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringC
 func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationMessageRequest) {
 }
 
-func (a GenieStartConversationMessageRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieStartConversationMessageRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -652,7 +652,7 @@ func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationResponse) {
 }
 
-func (a GenieStartConversationResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GenieStartConversationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"conversation": reflect.TypeOf(GenieConversation{}),
 		"message":      reflect.TypeOf(GenieMessage{}),
@@ -686,7 +686,7 @@ func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetDashboardRequest) {
 }
 
-func (a GetDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -710,7 +710,7 @@ func (newState *GetPublishedDashboardRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *GetPublishedDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardRequest) {
 }
 
-func (a GetPublishedDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPublishedDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -736,7 +736,7 @@ func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringRead(existingState GetScheduleRequest) {
 }
 
-func (a GetScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetScheduleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -765,7 +765,7 @@ func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState GetSubscriptionRequest) {
 }
 
-func (a GetSubscriptionRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetSubscriptionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -799,7 +799,7 @@ func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringRead(existingState ListDashboardsRequest) {
 }
 
-func (a ListDashboardsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListDashboardsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -827,7 +827,7 @@ func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse) {
 }
 
-func (a ListDashboardsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListDashboardsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dashboards": reflect.TypeOf(Dashboard{}),
 	}
@@ -861,7 +861,7 @@ func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringRead(existingState ListSchedulesRequest) {
 }
 
-func (a ListSchedulesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListSchedulesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -890,7 +890,7 @@ func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse) {
 }
 
-func (a ListSchedulesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListSchedulesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"schedules": reflect.TypeOf(Schedule{}),
 	}
@@ -926,7 +926,7 @@ func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsRequest) {
 }
 
-func (a ListSubscriptionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListSubscriptionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -956,7 +956,7 @@ func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse) {
 }
 
-func (a ListSubscriptionsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListSubscriptionsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscriptions": reflect.TypeOf(Subscription{}),
 	}
@@ -985,7 +985,7 @@ func (newState *MessageError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Messa
 func (newState *MessageError) SyncEffectiveFieldsDuringRead(existingState MessageError) {
 }
 
-func (a MessageError) GetComplexFieldTypes() map[string]reflect.Type {
+func (a MessageError) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1014,7 +1014,7 @@ func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState MigrateDashboardRequest) {
 }
 
-func (a MigrateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a MigrateDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1046,7 +1046,7 @@ func (newState *PublishRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pub
 func (newState *PublishRequest) SyncEffectiveFieldsDuringRead(existingState PublishRequest) {
 }
 
-func (a PublishRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PublishRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1077,7 +1077,7 @@ func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard) {
 }
 
-func (a PublishedDashboard) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PublishedDashboard) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1117,7 +1117,7 @@ func (newState *QueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Qu
 func (newState *QueryAttachment) SyncEffectiveFieldsDuringRead(existingState QueryAttachment) {
 }
 
-func (a QueryAttachment) GetComplexFieldTypes() map[string]reflect.Type {
+func (a QueryAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1152,7 +1152,7 @@ func (newState *Result) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result) {
 func (newState *Result) SyncEffectiveFieldsDuringRead(existingState Result) {
 }
 
-func (a Result) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Result) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1196,7 +1196,7 @@ func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule)
 func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) {
 }
 
-func (a Schedule) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Schedule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cron_schedule": reflect.TypeOf(CronSchedule{}),
 	}
@@ -1235,7 +1235,7 @@ func (newState *Subscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscri
 func (newState *Subscriber) SyncEffectiveFieldsDuringRead(existingState Subscriber) {
 }
 
-func (a Subscriber) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Subscriber) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"destination_subscriber": reflect.TypeOf(SubscriptionSubscriberDestination{}),
 		"user_subscriber":        reflect.TypeOf(SubscriptionSubscriberUser{}),
@@ -1284,7 +1284,7 @@ func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subsc
 func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
 }
 
-func (a Subscription) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Subscription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscriber": reflect.TypeOf(Subscriber{}),
 	}
@@ -1319,7 +1319,7 @@ func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCrea
 func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination) {
 }
 
-func (a SubscriptionSubscriberDestination) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SubscriptionSubscriberDestination) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1342,7 +1342,7 @@ func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser) {
 }
 
-func (a SubscriptionSubscriberUser) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SubscriptionSubscriberUser) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1367,7 +1367,7 @@ func (newState *TextAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tex
 func (newState *TextAttachment) SyncEffectiveFieldsDuringRead(existingState TextAttachment) {
 }
 
-func (a TextAttachment) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TextAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1392,7 +1392,7 @@ func (newState *TrashDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *TrashDashboardRequest) SyncEffectiveFieldsDuringRead(existingState TrashDashboardRequest) {
 }
 
-func (a TrashDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TrashDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1413,7 +1413,7 @@ func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringRead(existingState TrashDashboardResponse) {
 }
 
-func (a TrashDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TrashDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1435,7 +1435,7 @@ func (newState *UnpublishDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *UnpublishDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardRequest) {
 }
 
-func (a UnpublishDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UnpublishDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1456,7 +1456,7 @@ func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
 }
 
-func (a UnpublishDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UnpublishDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1479,7 +1479,7 @@ func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardRequest) {
 }
 
-func (a UpdateDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dashboard": reflect.TypeOf(Dashboard{}),
 	}
@@ -1512,7 +1512,7 @@ func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState UpdateScheduleRequest) {
 }
 
-func (a UpdateScheduleRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateScheduleRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"schedule": reflect.TypeOf(Schedule{}),
 	}

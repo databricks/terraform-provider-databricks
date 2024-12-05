@@ -34,7 +34,7 @@ func (newState *AddBlock) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlock)
 func (newState *AddBlock) SyncEffectiveFieldsDuringRead(existingState AddBlock) {
 }
 
-func (a AddBlock) GetComplexFieldTypes() map[string]reflect.Type {
+func (a AddBlock) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -56,7 +56,7 @@ func (newState *AddBlockResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan A
 func (newState *AddBlockResponse) SyncEffectiveFieldsDuringRead(existingState AddBlockResponse) {
 }
 
-func (a AddBlockResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a AddBlockResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -77,7 +77,7 @@ func (newState *Close) SyncEffectiveFieldsDuringCreateOrUpdate(plan Close) {
 func (newState *Close) SyncEffectiveFieldsDuringRead(existingState Close) {
 }
 
-func (a Close) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Close) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -98,7 +98,7 @@ func (newState *CloseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clos
 func (newState *CloseResponse) SyncEffectiveFieldsDuringRead(existingState CloseResponse) {
 }
 
-func (a CloseResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CloseResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -121,7 +121,7 @@ func (newState *Create) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create) {
 func (newState *Create) SyncEffectiveFieldsDuringRead(existingState Create) {
 }
 
-func (a Create) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Create) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -146,7 +146,7 @@ func (newState *CreateDirectoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreateDirectoryRequest) SyncEffectiveFieldsDuringRead(existingState CreateDirectoryRequest) {
 }
 
-func (a CreateDirectoryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateDirectoryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -167,7 +167,7 @@ func (newState *CreateDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState CreateDirectoryResponse) {
 }
 
-func (a CreateDirectoryResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -189,7 +189,7 @@ func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
-func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -216,7 +216,7 @@ func (newState *Delete) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete) {
 func (newState *Delete) SyncEffectiveFieldsDuringRead(existingState Delete) {
 }
 
-func (a Delete) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Delete) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -241,7 +241,7 @@ func (newState *DeleteDirectoryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteDirectoryRequest) SyncEffectiveFieldsDuringRead(existingState DeleteDirectoryRequest) {
 }
 
-func (a DeleteDirectoryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteDirectoryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -262,7 +262,7 @@ func (newState *DeleteDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *DeleteDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState DeleteDirectoryResponse) {
 }
 
-func (a DeleteDirectoryResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -284,7 +284,7 @@ func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringRead(existingState DeleteFileRequest) {
 }
 
-func (a DeleteFileRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteFileRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -305,7 +305,7 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
-func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -335,7 +335,7 @@ func (newState *DirectoryEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dir
 func (newState *DirectoryEntry) SyncEffectiveFieldsDuringRead(existingState DirectoryEntry) {
 }
 
-func (a DirectoryEntry) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DirectoryEntry) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -363,7 +363,7 @@ func (newState *DownloadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Do
 func (newState *DownloadRequest) SyncEffectiveFieldsDuringRead(existingState DownloadRequest) {
 }
 
-func (a DownloadRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DownloadRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -391,7 +391,7 @@ func (newState *DownloadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 func (newState *DownloadResponse) SyncEffectiveFieldsDuringRead(existingState DownloadResponse) {
 }
 
-func (a DownloadResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DownloadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -423,7 +423,7 @@ func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo)
 func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
 }
 
-func (a FileInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a FileInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -450,7 +450,7 @@ func (newState *GetDirectoryMetadataRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *GetDirectoryMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetDirectoryMetadataRequest) {
 }
 
-func (a GetDirectoryMetadataRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetDirectoryMetadataRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -471,7 +471,7 @@ func (newState *GetDirectoryMetadataResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *GetDirectoryMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetDirectoryMetadataResponse) {
 }
 
-func (a GetDirectoryMetadataResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetDirectoryMetadataResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -493,7 +493,7 @@ func (newState *GetMetadataRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetMetadataRequest) {
 }
 
-func (a GetMetadataRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetMetadataRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -519,7 +519,7 @@ func (newState *GetMetadataResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetMetadataResponse) {
 }
 
-func (a GetMetadataResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetMetadataResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -546,7 +546,7 @@ func (newState *GetStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan G
 func (newState *GetStatusRequest) SyncEffectiveFieldsDuringRead(existingState GetStatusRequest) {
 }
 
-func (a GetStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -571,7 +571,7 @@ func (newState *ListDbfsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Li
 func (newState *ListDbfsRequest) SyncEffectiveFieldsDuringRead(existingState ListDbfsRequest) {
 }
 
-func (a ListDbfsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListDbfsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -615,7 +615,7 @@ func (newState *ListDirectoryContentsRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *ListDirectoryContentsRequest) SyncEffectiveFieldsDuringRead(existingState ListDirectoryContentsRequest) {
 }
 
-func (a ListDirectoryContentsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListDirectoryContentsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -642,7 +642,7 @@ func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState ListDirectoryResponse) {
 }
 
-func (a ListDirectoryResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"contents": reflect.TypeOf(DirectoryEntry{}),
 	}
@@ -671,7 +671,7 @@ func (newState *ListStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListStatusResponse) SyncEffectiveFieldsDuringRead(existingState ListStatusResponse) {
 }
 
-func (a ListStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListStatusResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"files": reflect.TypeOf(FileInfo{}),
 	}
@@ -698,7 +698,7 @@ func (newState *MkDirs) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirs) {
 func (newState *MkDirs) SyncEffectiveFieldsDuringRead(existingState MkDirs) {
 }
 
-func (a MkDirs) GetComplexFieldTypes() map[string]reflect.Type {
+func (a MkDirs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -719,7 +719,7 @@ func (newState *MkDirsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkD
 func (newState *MkDirsResponse) SyncEffectiveFieldsDuringRead(existingState MkDirsResponse) {
 }
 
-func (a MkDirsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a MkDirsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -744,7 +744,7 @@ func (newState *Move) SyncEffectiveFieldsDuringCreateOrUpdate(plan Move) {
 func (newState *Move) SyncEffectiveFieldsDuringRead(existingState Move) {
 }
 
-func (a Move) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Move) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -766,7 +766,7 @@ func (newState *MoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MoveR
 func (newState *MoveResponse) SyncEffectiveFieldsDuringRead(existingState MoveResponse) {
 }
 
-func (a MoveResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a MoveResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -791,7 +791,7 @@ func (newState *Put) SyncEffectiveFieldsDuringCreateOrUpdate(plan Put) {
 func (newState *Put) SyncEffectiveFieldsDuringRead(existingState Put) {
 }
 
-func (a Put) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Put) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -814,7 +814,7 @@ func (newState *PutResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutRes
 func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResponse) {
 }
 
-func (a PutResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PutResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -841,7 +841,7 @@ func (newState *ReadDbfsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Re
 func (newState *ReadDbfsRequest) SyncEffectiveFieldsDuringRead(existingState ReadDbfsRequest) {
 }
 
-func (a ReadDbfsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ReadDbfsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -870,7 +870,7 @@ func (newState *ReadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadR
 func (newState *ReadResponse) SyncEffectiveFieldsDuringRead(existingState ReadResponse) {
 }
 
-func (a ReadResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ReadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -898,7 +898,7 @@ func (newState *UploadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Uplo
 func (newState *UploadRequest) SyncEffectiveFieldsDuringRead(existingState UploadRequest) {
 }
 
-func (a UploadRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UploadRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -921,7 +921,7 @@ func (newState *UploadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upl
 func (newState *UploadResponse) SyncEffectiveFieldsDuringRead(existingState UploadResponse) {
 }
 
-func (a UploadResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UploadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 

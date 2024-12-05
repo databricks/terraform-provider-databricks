@@ -48,7 +48,7 @@ func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
 func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
 }
 
-func (a BaseJob) GetComplexFieldTypes() map[string]reflect.Type {
+func (a BaseJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"settings": reflect.TypeOf(JobSettings{}),
 	}
@@ -204,7 +204,7 @@ func (newState *BaseRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseRun) {
 func (newState *BaseRun) SyncEffectiveFieldsDuringRead(existingState BaseRun) {
 }
 
-func (a BaseRun) GetComplexFieldTypes() map[string]reflect.Type {
+func (a BaseRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
 		"cluster_spec":          reflect.TypeOf(ClusterSpec{}),
@@ -297,7 +297,7 @@ func (newState *CancelAllRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan Canc
 func (newState *CancelAllRuns) SyncEffectiveFieldsDuringRead(existingState CancelAllRuns) {
 }
 
-func (a CancelAllRuns) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CancelAllRuns) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -319,7 +319,7 @@ func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringRead(existingState CancelAllRunsResponse) {
 }
 
-func (a CancelAllRunsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CancelAllRunsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -340,7 +340,7 @@ func (newState *CancelRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRu
 func (newState *CancelRun) SyncEffectiveFieldsDuringRead(existingState CancelRun) {
 }
 
-func (a CancelRun) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CancelRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -361,7 +361,7 @@ func (newState *CancelRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *CancelRunResponse) SyncEffectiveFieldsDuringRead(existingState CancelRunResponse) {
 }
 
-func (a CancelRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CancelRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -398,7 +398,7 @@ func (newState *ClusterInstance) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cl
 func (newState *ClusterInstance) SyncEffectiveFieldsDuringRead(existingState ClusterInstance) {
 }
 
-func (a ClusterInstance) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ClusterInstance) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -434,7 +434,7 @@ func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cluste
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
 }
 
-func (a ClusterSpec) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ClusterSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"library":     reflect.TypeOf(compute.Library{}),
 		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
@@ -482,7 +482,7 @@ func (newState *ConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cond
 func (newState *ConditionTask) SyncEffectiveFieldsDuringRead(existingState ConditionTask) {
 }
 
-func (a ConditionTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ConditionTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -508,7 +508,7 @@ func (newState *Continuous) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continu
 func (newState *Continuous) SyncEffectiveFieldsDuringRead(existingState Continuous) {
 }
 
-func (a Continuous) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Continuous) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -632,7 +632,7 @@ func (newState *CreateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateJo
 func (newState *CreateJob) SyncEffectiveFieldsDuringRead(existingState CreateJob) {
 }
 
-func (a CreateJob) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list":   reflect.TypeOf(JobAccessControlRequest{}),
 		"continuous":            reflect.TypeOf(Continuous{}),
@@ -731,7 +731,7 @@ func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
-func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -764,7 +764,7 @@ func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronS
 func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
 }
 
-func (a CronSchedule) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CronSchedule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -794,7 +794,7 @@ func (newState *DbtOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtOutpu
 func (newState *DbtOutput) SyncEffectiveFieldsDuringRead(existingState DbtOutput) {
 }
 
-func (a DbtOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DbtOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"artifacts_headers": reflect.TypeOf(types.StringType),
 	}
@@ -854,7 +854,7 @@ func (newState *DbtTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtTask) {
 func (newState *DbtTask) SyncEffectiveFieldsDuringRead(existingState DbtTask) {
 }
 
-func (a DbtTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DbtTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"commands": reflect.TypeOf(types.StringType),
 	}
@@ -887,7 +887,7 @@ func (newState *DeleteJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteJo
 func (newState *DeleteJob) SyncEffectiveFieldsDuringRead(existingState DeleteJob) {
 }
 
-func (a DeleteJob) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -908,7 +908,7 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
-func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -929,7 +929,7 @@ func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRu
 func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
 }
 
-func (a DeleteRun) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -950,7 +950,7 @@ func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunResponse) {
 }
 
-func (a DeleteRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -984,7 +984,7 @@ func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) S
 func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
-func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1012,7 +1012,7 @@ func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceRequest) {
 }
 
-func (a EnforcePolicyComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EnforcePolicyComplianceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1048,7 +1048,7 @@ func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringCreate
 func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceResponse) {
 }
 
-func (a EnforcePolicyComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EnforcePolicyComplianceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"job_cluster_changes": reflect.TypeOf(EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}),
 		"settings":            reflect.TypeOf(JobSettings{}),
@@ -1085,7 +1085,7 @@ func (newState *ExportRunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ex
 func (newState *ExportRunOutput) SyncEffectiveFieldsDuringRead(existingState ExportRunOutput) {
 }
 
-func (a ExportRunOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ExportRunOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"views": reflect.TypeOf(ViewItem{}),
 	}
@@ -1115,7 +1115,7 @@ func (newState *ExportRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan E
 func (newState *ExportRunRequest) SyncEffectiveFieldsDuringRead(existingState ExportRunRequest) {
 }
 
-func (a ExportRunRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ExportRunRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1149,7 +1149,7 @@ func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringCreate
 func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState FileArrivalTriggerConfiguration) {
 }
 
-func (a FileArrivalTriggerConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a FileArrivalTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1176,7 +1176,7 @@ func (newState *ForEachStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEa
 func (newState *ForEachStats) SyncEffectiveFieldsDuringRead(existingState ForEachStats) {
 }
 
-func (a ForEachStats) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ForEachStats) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"error_message_stats": reflect.TypeOf(ForEachTaskErrorMessageStats{}),
 		"task_run_stats":      reflect.TypeOf(ForEachTaskTaskRunStats{}),
@@ -1214,7 +1214,7 @@ func (newState *ForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEac
 func (newState *ForEachTask) SyncEffectiveFieldsDuringRead(existingState ForEachTask) {
 }
 
-func (a ForEachTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ForEachTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"task": reflect.TypeOf(Task{}),
 	}
@@ -1248,7 +1248,7 @@ func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringCreateOrU
 func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskErrorMessageStats) {
 }
 
-func (a ForEachTaskErrorMessageStats) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ForEachTaskErrorMessageStats) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1284,7 +1284,7 @@ func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskTaskRunStats) {
 }
 
-func (a ForEachTaskTaskRunStats) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ForEachTaskTaskRunStats) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1313,7 +1313,7 @@ func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsRequest) {
 }
 
-func (a GetJobPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetJobPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1336,7 +1336,7 @@ func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsResponse) {
 }
 
-func (a GetJobPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetJobPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permission_levels": reflect.TypeOf(JobPermissionsDescription{}),
 	}
@@ -1364,7 +1364,7 @@ func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionsRequest) {
 }
 
-func (a GetJobPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetJobPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1389,7 +1389,7 @@ func (newState *GetJobRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJ
 func (newState *GetJobRequest) SyncEffectiveFieldsDuringRead(existingState GetJobRequest) {
 }
 
-func (a GetJobRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetJobRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1413,7 +1413,7 @@ func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceRequest) {
 }
 
-func (a GetPolicyComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPolicyComplianceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1445,7 +1445,7 @@ func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceResponse) {
 }
 
-func (a GetPolicyComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPolicyComplianceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"violations": reflect.TypeOf(types.StringType),
 	}
@@ -1474,7 +1474,7 @@ func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringRead(existingState GetRunOutputRequest) {
 }
 
-func (a GetRunOutputRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetRunOutputRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1506,7 +1506,7 @@ func (newState *GetRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetR
 func (newState *GetRunRequest) SyncEffectiveFieldsDuringRead(existingState GetRunRequest) {
 }
 
-func (a GetRunRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetRunRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1536,7 +1536,7 @@ func (newState *GitSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSna
 func (newState *GitSnapshot) SyncEffectiveFieldsDuringRead(existingState GitSnapshot) {
 }
 
-func (a GitSnapshot) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GitSnapshot) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1587,7 +1587,7 @@ func (newState *GitSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSourc
 func (newState *GitSource) SyncEffectiveFieldsDuringRead(existingState GitSource) {
 }
 
-func (a GitSource) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GitSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"git_snapshot": reflect.TypeOf(GitSnapshot{}),
 		"job_source":   reflect.TypeOf(JobSource{}),
@@ -1648,7 +1648,7 @@ func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
 func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
 }
 
-func (a Job) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Job) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"settings": reflect.TypeOf(JobSettings{}),
 	}
@@ -1686,7 +1686,7 @@ func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState JobAccessControlRequest) {
 }
 
-func (a JobAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1720,7 +1720,7 @@ func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState JobAccessControlResponse) {
 }
 
-func (a JobAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"all_permissions": reflect.TypeOf(JobPermission{}),
 	}
@@ -1755,7 +1755,7 @@ func (newState *JobCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobClus
 func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobCluster) {
 }
 
-func (a JobCluster) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
 	}
@@ -1791,7 +1791,7 @@ func (newState *JobCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobC
 func (newState *JobCompliance) SyncEffectiveFieldsDuringRead(existingState JobCompliance) {
 }
 
-func (a JobCompliance) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobCompliance) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"violations": reflect.TypeOf(types.StringType),
 	}
@@ -1824,7 +1824,7 @@ func (newState *JobDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobD
 func (newState *JobDeployment) SyncEffectiveFieldsDuringRead(existingState JobDeployment) {
 }
 
-func (a JobDeployment) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobDeployment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1879,7 +1879,7 @@ func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringRead(existingState JobEmailNotifications) {
 }
 
-func (a JobEmailNotifications) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobEmailNotifications) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.StringType),
 		"on_failure":                             reflect.TypeOf(types.StringType),
@@ -1927,7 +1927,7 @@ func (newState *JobEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobEnvironment) {
 }
 
-func (a JobEnvironment) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"spec": reflect.TypeOf(compute.Environment{}),
 	}
@@ -1959,7 +1959,7 @@ func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringRead(existingState JobNotificationSettings) {
 }
 
-func (a JobNotificationSettings) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobNotificationSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1987,7 +1987,7 @@ func (newState *JobParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPa
 func (newState *JobParameter) SyncEffectiveFieldsDuringRead(existingState JobParameter) {
 }
 
-func (a JobParameter) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobParameter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2015,7 +2015,7 @@ func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringRead(existingState JobParameterDefinition) {
 }
 
-func (a JobParameterDefinition) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobParameterDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2042,7 +2042,7 @@ func (newState *JobPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobP
 func (newState *JobPermission) SyncEffectiveFieldsDuringRead(existingState JobPermission) {
 }
 
-func (a JobPermission) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"inherited_from_object": reflect.TypeOf(types.StringType),
 	}
@@ -2074,7 +2074,7 @@ func (newState *JobPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobPermissions) SyncEffectiveFieldsDuringRead(existingState JobPermissions) {
 }
 
-func (a JobPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(JobAccessControlResponse{}),
 	}
@@ -2104,7 +2104,7 @@ func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState JobPermissionsDescription) {
 }
 
-func (a JobPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobPermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2129,7 +2129,7 @@ func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState JobPermissionsRequest) {
 }
 
-func (a JobPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(JobAccessControlRequest{}),
 	}
@@ -2167,7 +2167,7 @@ func (newState *JobRunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobRunAs)
 func (newState *JobRunAs) SyncEffectiveFieldsDuringRead(existingState JobRunAs) {
 }
 
-func (a JobRunAs) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobRunAs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2290,7 +2290,7 @@ func (newState *JobSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSet
 func (newState *JobSettings) SyncEffectiveFieldsDuringRead(existingState JobSettings) {
 }
 
-func (a JobSettings) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"continuous":            reflect.TypeOf(Continuous{}),
 		"deployment":            reflect.TypeOf(JobDeployment{}),
@@ -2398,7 +2398,7 @@ func (newState *JobSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSourc
 func (newState *JobSource) SyncEffectiveFieldsDuringRead(existingState JobSource) {
 }
 
-func (a JobSource) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2440,7 +2440,7 @@ func (newState *JobsHealthRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobsHealthRule) SyncEffectiveFieldsDuringRead(existingState JobsHealthRule) {
 }
 
-func (a JobsHealthRule) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobsHealthRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2465,7 +2465,7 @@ func (newState *JobsHealthRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan Jo
 func (newState *JobsHealthRules) SyncEffectiveFieldsDuringRead(existingState JobsHealthRules) {
 }
 
-func (a JobsHealthRules) GetComplexFieldTypes() map[string]reflect.Type {
+func (a JobsHealthRules) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"rules": reflect.TypeOf(JobsHealthRule{}),
 	}
@@ -2500,7 +2500,7 @@ func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringCre
 func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceForPolicyResponse) {
 }
 
-func (a ListJobComplianceForPolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListJobComplianceForPolicyResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"jobs": reflect.TypeOf(JobCompliance{}),
 	}
@@ -2537,7 +2537,7 @@ func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceRequest) {
 }
 
-func (a ListJobComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListJobComplianceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2575,7 +2575,7 @@ func (newState *ListJobsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Li
 func (newState *ListJobsRequest) SyncEffectiveFieldsDuringRead(existingState ListJobsRequest) {
 }
 
-func (a ListJobsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListJobsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2612,7 +2612,7 @@ func (newState *ListJobsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListJobsResponse) SyncEffectiveFieldsDuringRead(existingState ListJobsResponse) {
 }
 
-func (a ListJobsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListJobsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"jobs": reflect.TypeOf(BaseJob{}),
 	}
@@ -2677,7 +2677,7 @@ func (newState *ListRunsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Li
 func (newState *ListRunsRequest) SyncEffectiveFieldsDuringRead(existingState ListRunsRequest) {
 }
 
-func (a ListRunsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListRunsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2719,7 +2719,7 @@ func (newState *ListRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListRunsResponse) {
 }
 
-func (a ListRunsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListRunsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"runs": reflect.TypeOf(BaseRun{}),
 	}
@@ -2756,7 +2756,7 @@ func (newState *NotebookOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Not
 func (newState *NotebookOutput) SyncEffectiveFieldsDuringRead(existingState NotebookOutput) {
 }
 
-func (a NotebookOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a NotebookOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2816,7 +2816,7 @@ func (newState *NotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Noteb
 func (newState *NotebookTask) SyncEffectiveFieldsDuringRead(existingState NotebookTask) {
 }
 
-func (a NotebookTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a NotebookTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"base_parameters": reflect.TypeOf(types.StringType),
 	}
@@ -2848,7 +2848,7 @@ func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState PeriodicTriggerConfiguration) {
 }
 
-func (a PeriodicTriggerConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PeriodicTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2872,7 +2872,7 @@ func (newState *PipelineParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pip
 func (newState *PipelineParams) SyncEffectiveFieldsDuringRead(existingState PipelineParams) {
 }
 
-func (a PipelineParams) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineParams) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2897,7 +2897,7 @@ func (newState *PipelineTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pipel
 func (newState *PipelineTask) SyncEffectiveFieldsDuringRead(existingState PipelineTask) {
 }
 
-func (a PipelineTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2932,7 +2932,7 @@ func (newState *PythonWheelTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Py
 func (newState *PythonWheelTask) SyncEffectiveFieldsDuringRead(existingState PythonWheelTask) {
 }
 
-func (a PythonWheelTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PythonWheelTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"named_parameters": reflect.TypeOf(types.StringType),
 		"parameters":       reflect.TypeOf(types.StringType),
@@ -2973,7 +2973,7 @@ func (newState *QueueDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan Queue
 func (newState *QueueDetails) SyncEffectiveFieldsDuringRead(existingState QueueDetails) {
 }
 
-func (a QueueDetails) GetComplexFieldTypes() map[string]reflect.Type {
+func (a QueueDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2997,7 +2997,7 @@ func (newState *QueueSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan Queu
 func (newState *QueueSettings) SyncEffectiveFieldsDuringRead(existingState QueueSettings) {
 }
 
-func (a QueueSettings) GetComplexFieldTypes() map[string]reflect.Type {
+func (a QueueSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -3035,7 +3035,7 @@ func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringRead(existingState RepairHistoryItem) {
 }
 
-func (a RepairHistoryItem) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RepairHistoryItem) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"state":        reflect.TypeOf(RunState{}),
 		"status":       reflect.TypeOf(RunStatus{}),
@@ -3172,7 +3172,7 @@ func (newState *RepairRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRu
 func (newState *RepairRun) SyncEffectiveFieldsDuringRead(existingState RepairRun) {
 }
 
-func (a RepairRun) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RepairRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_commands":        reflect.TypeOf(types.StringType),
 		"jar_params":          reflect.TypeOf(types.StringType),
@@ -3241,7 +3241,7 @@ func (newState *RepairRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *RepairRunResponse) SyncEffectiveFieldsDuringRead(existingState RepairRunResponse) {
 }
 
-func (a RepairRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RepairRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -3270,7 +3270,7 @@ func (newState *ResetJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetJob)
 func (newState *ResetJob) SyncEffectiveFieldsDuringRead(existingState ResetJob) {
 }
 
-func (a ResetJob) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResetJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"new_settings": reflect.TypeOf(JobSettings{}),
 	}
@@ -3296,7 +3296,7 @@ func (newState *ResetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Rese
 func (newState *ResetResponse) SyncEffectiveFieldsDuringRead(existingState ResetResponse) {
 }
 
-func (a ResetResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResetResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -3318,7 +3318,7 @@ func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedConditionTaskValues) {
 }
 
-func (a ResolvedConditionTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResolvedConditionTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -3341,7 +3341,7 @@ func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedDbtTaskValues) {
 }
 
-func (a ResolvedDbtTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResolvedDbtTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"commands": reflect.TypeOf(types.StringType),
 	}
@@ -3367,7 +3367,7 @@ func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedNotebookTaskValues) {
 }
 
-func (a ResolvedNotebookTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResolvedNotebookTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"base_parameters": reflect.TypeOf(types.StringType),
 	}
@@ -3393,7 +3393,7 @@ func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringRead(existingState ResolvedParamPairValues) {
 }
 
-func (a ResolvedParamPairValues) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResolvedParamPairValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.StringType),
 	}
@@ -3421,7 +3421,7 @@ func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringCreateOr
 func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedPythonWheelTaskValues) {
 }
 
-func (a ResolvedPythonWheelTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResolvedPythonWheelTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"named_parameters": reflect.TypeOf(types.StringType),
 		"parameters":       reflect.TypeOf(types.StringType),
@@ -3453,7 +3453,7 @@ func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedRunJobTaskValues) {
 }
 
-func (a ResolvedRunJobTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResolvedRunJobTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"job_parameters": reflect.TypeOf(types.StringType),
 		"parameters":     reflect.TypeOf(types.StringType),
@@ -3483,7 +3483,7 @@ func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringRead(existingState ResolvedStringParamsValues) {
 }
 
-func (a ResolvedStringParamsValues) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResolvedStringParamsValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.StringType),
 	}
@@ -3527,7 +3527,7 @@ func (newState *ResolvedValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan Res
 func (newState *ResolvedValues) SyncEffectiveFieldsDuringRead(existingState ResolvedValues) {
 }
 
-func (a ResolvedValues) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ResolvedValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"condition_task":    reflect.TypeOf(ResolvedConditionTaskValues{}),
 		"dbt_task":          reflect.TypeOf(ResolvedDbtTaskValues{}),
@@ -3721,7 +3721,7 @@ func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
 func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
 }
 
-func (a Run) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Run) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
 		"cluster_spec":          reflect.TypeOf(ClusterSpec{}),
@@ -3834,7 +3834,7 @@ func (newState *RunConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan R
 func (newState *RunConditionTask) SyncEffectiveFieldsDuringRead(existingState RunConditionTask) {
 }
 
-func (a RunConditionTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunConditionTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -3870,7 +3870,7 @@ func (newState *RunForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run
 func (newState *RunForEachTask) SyncEffectiveFieldsDuringRead(existingState RunForEachTask) {
 }
 
-func (a RunForEachTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunForEachTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"stats": reflect.TypeOf(ForEachStats{}),
 		"task":  reflect.TypeOf(Task{}),
@@ -3903,7 +3903,7 @@ func (newState *RunJobOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJo
 func (newState *RunJobOutput) SyncEffectiveFieldsDuringRead(existingState RunJobOutput) {
 }
 
-func (a RunJobOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunJobOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -4010,7 +4010,7 @@ func (newState *RunJobTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobT
 func (newState *RunJobTask) SyncEffectiveFieldsDuringRead(existingState RunJobTask) {
 }
 
-func (a RunJobTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunJobTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_commands":        reflect.TypeOf(types.StringType),
 		"jar_params":          reflect.TypeOf(types.StringType),
@@ -4175,7 +4175,7 @@ func (newState *RunNow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNow) {
 func (newState *RunNow) SyncEffectiveFieldsDuringRead(existingState RunNow) {
 }
 
-func (a RunNow) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunNow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_commands":        reflect.TypeOf(types.StringType),
 		"jar_params":          reflect.TypeOf(types.StringType),
@@ -4248,7 +4248,7 @@ func (newState *RunNowResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run
 func (newState *RunNowResponse) SyncEffectiveFieldsDuringRead(existingState RunNowResponse) {
 }
 
-func (a RunNowResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunNowResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -4307,7 +4307,7 @@ func (newState *RunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunOutpu
 func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput) {
 }
 
-func (a RunOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_output":      reflect.TypeOf(DbtOutput{}),
 		"metadata":        reflect.TypeOf(Run{}),
@@ -4435,7 +4435,7 @@ func (newState *RunParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunP
 func (newState *RunParameters) SyncEffectiveFieldsDuringRead(existingState RunParameters) {
 }
 
-func (a RunParameters) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunParameters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dbt_commands":        reflect.TypeOf(types.StringType),
 		"jar_params":          reflect.TypeOf(types.StringType),
@@ -4503,7 +4503,7 @@ func (newState *RunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunState)
 func (newState *RunState) SyncEffectiveFieldsDuringRead(existingState RunState) {
 }
 
-func (a RunState) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -4536,7 +4536,7 @@ func (newState *RunStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunStatu
 func (newState *RunStatus) SyncEffectiveFieldsDuringRead(existingState RunStatus) {
 }
 
-func (a RunStatus) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"queue_details":       reflect.TypeOf(QueueDetails{}),
 		"termination_details": reflect.TypeOf(TerminationDetails{}),
@@ -4731,7 +4731,7 @@ func (newState *RunTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTask) {
 func (newState *RunTask) SyncEffectiveFieldsDuringRead(existingState RunTask) {
 }
 
-func (a RunTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RunTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
 		"condition_task":        reflect.TypeOf(RunConditionTask{}),
@@ -4873,7 +4873,7 @@ func (newState *SparkJarTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Spark
 func (newState *SparkJarTask) SyncEffectiveFieldsDuringRead(existingState SparkJarTask) {
 }
 
-func (a SparkJarTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SparkJarTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.StringType),
 	}
@@ -4923,7 +4923,7 @@ func (newState *SparkPythonTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sp
 func (newState *SparkPythonTask) SyncEffectiveFieldsDuringRead(existingState SparkPythonTask) {
 }
 
-func (a SparkPythonTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SparkPythonTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.StringType),
 	}
@@ -4957,7 +4957,7 @@ func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sp
 func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringRead(existingState SparkSubmitTask) {
 }
 
-func (a SparkSubmitTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SparkSubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(types.StringType),
 	}
@@ -4997,7 +4997,7 @@ func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringRead(existingState SqlAlertOutput) {
 }
 
-func (a SqlAlertOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlAlertOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"sql_statements": reflect.TypeOf(SqlStatementOutput{}),
 	}
@@ -5030,7 +5030,7 @@ func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardOutput) {
 }
 
-func (a SqlDashboardOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlDashboardOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"widgets": reflect.TypeOf(SqlDashboardWidgetOutput{}),
 	}
@@ -5070,7 +5070,7 @@ func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardWidgetOutput) {
 }
 
-func (a SqlDashboardWidgetOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlDashboardWidgetOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"error": reflect.TypeOf(SqlOutputError{}),
 	}
@@ -5107,7 +5107,7 @@ func (newState *SqlOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutpu
 func (newState *SqlOutput) SyncEffectiveFieldsDuringRead(existingState SqlOutput) {
 }
 
-func (a SqlOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert_output":     reflect.TypeOf(SqlAlertOutput{}),
 		"dashboard_output": reflect.TypeOf(SqlDashboardOutput{}),
@@ -5142,7 +5142,7 @@ func (newState *SqlOutputError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlOutputError) SyncEffectiveFieldsDuringRead(existingState SqlOutputError) {
 }
 
-func (a SqlOutputError) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlOutputError) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -5173,7 +5173,7 @@ func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringRead(existingState SqlQueryOutput) {
 }
 
-func (a SqlQueryOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlQueryOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"sql_statements": reflect.TypeOf(SqlStatementOutput{}),
 	}
@@ -5204,7 +5204,7 @@ func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringRead(existingState SqlStatementOutput) {
 }
 
-func (a SqlStatementOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlStatementOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -5242,7 +5242,7 @@ func (newState *SqlTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTask) {
 func (newState *SqlTask) SyncEffectiveFieldsDuringRead(existingState SqlTask) {
 }
 
-func (a SqlTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert":      reflect.TypeOf(SqlTaskAlert{}),
 		"dashboard":  reflect.TypeOf(SqlTaskDashboard{}),
@@ -5290,7 +5290,7 @@ func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTa
 func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringRead(existingState SqlTaskAlert) {
 }
 
-func (a SqlTaskAlert) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlTaskAlert) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
 	}
@@ -5326,7 +5326,7 @@ func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringRead(existingState SqlTaskDashboard) {
 }
 
-func (a SqlTaskDashboard) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlTaskDashboard) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
 	}
@@ -5366,7 +5366,7 @@ func (newState *SqlTaskFile) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTas
 func (newState *SqlTaskFile) SyncEffectiveFieldsDuringRead(existingState SqlTaskFile) {
 }
 
-func (a SqlTaskFile) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlTaskFile) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -5390,7 +5390,7 @@ func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTa
 func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringRead(existingState SqlTaskQuery) {
 }
 
-func (a SqlTaskQuery) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlTaskQuery) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -5420,7 +5420,7 @@ func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringRead(existingState SqlTaskSubscription) {
 }
 
-func (a SqlTaskSubscription) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SqlTaskSubscription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -5501,7 +5501,7 @@ func (newState *SubmitRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRu
 func (newState *SubmitRun) SyncEffectiveFieldsDuringRead(existingState SubmitRun) {
 }
 
-func (a SubmitRun) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SubmitRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list":   reflect.TypeOf(JobAccessControlRequest{}),
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
@@ -5569,7 +5569,7 @@ func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringRead(existingState SubmitRunResponse) {
 }
 
-func (a SubmitRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SubmitRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -5687,7 +5687,7 @@ func (newState *SubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitT
 func (newState *SubmitTask) SyncEffectiveFieldsDuringRead(existingState SubmitTask) {
 }
 
-func (a SubmitTask) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"condition_task":        reflect.TypeOf(ConditionTask{}),
 		"dbt_task":              reflect.TypeOf(DbtTask{}),
@@ -5800,7 +5800,7 @@ func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringCreate
 func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState TableUpdateTriggerConfiguration) {
 }
 
-func (a TableUpdateTriggerConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TableUpdateTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"table_names": reflect.TypeOf(types.StringType),
 	}
@@ -5948,7 +5948,7 @@ func (newState *Task) SyncEffectiveFieldsDuringCreateOrUpdate(plan Task) {
 func (newState *Task) SyncEffectiveFieldsDuringRead(existingState Task) {
 }
 
-func (a Task) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Task) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"condition_task":        reflect.TypeOf(ConditionTask{}),
 		"dbt_task":              reflect.TypeOf(DbtTask{}),
@@ -6057,7 +6057,7 @@ func (newState *TaskDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tas
 func (newState *TaskDependency) SyncEffectiveFieldsDuringRead(existingState TaskDependency) {
 }
 
-func (a TaskDependency) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TaskDependency) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -6112,7 +6112,7 @@ func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringRead(existingState TaskEmailNotifications) {
 }
 
-func (a TaskEmailNotifications) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TaskEmailNotifications) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.StringType),
 		"on_failure":                             reflect.TypeOf(types.StringType),
@@ -6164,7 +6164,7 @@ func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringRead(existingState TaskNotificationSettings) {
 }
 
-func (a TaskNotificationSettings) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TaskNotificationSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -6245,7 +6245,7 @@ func (newState *TerminationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *TerminationDetails) SyncEffectiveFieldsDuringRead(existingState TerminationDetails) {
 }
 
-func (a TerminationDetails) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TerminationDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -6271,7 +6271,7 @@ func (newState *TriggerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Trigge
 func (newState *TriggerInfo) SyncEffectiveFieldsDuringRead(existingState TriggerInfo) {
 }
 
-func (a TriggerInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TriggerInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -6302,7 +6302,7 @@ func (newState *TriggerSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tr
 func (newState *TriggerSettings) SyncEffectiveFieldsDuringRead(existingState TriggerSettings) {
 }
 
-func (a TriggerSettings) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TriggerSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
 		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration{}),
@@ -6358,7 +6358,7 @@ func (newState *UpdateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateJo
 func (newState *UpdateJob) SyncEffectiveFieldsDuringRead(existingState UpdateJob) {
 }
 
-func (a UpdateJob) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"fields_to_remove": reflect.TypeOf(types.StringType),
 		"new_settings":     reflect.TypeOf(JobSettings{}),
@@ -6388,7 +6388,7 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upd
 func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
-func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -6415,7 +6415,7 @@ func (newState *ViewItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan ViewItem)
 func (newState *ViewItem) SyncEffectiveFieldsDuringRead(existingState ViewItem) {
 }
 
-func (a ViewItem) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ViewItem) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -6439,7 +6439,7 @@ func (newState *Webhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan Webhook) {
 func (newState *Webhook) SyncEffectiveFieldsDuringRead(existingState Webhook) {
 }
 
-func (a Webhook) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Webhook) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -6484,7 +6484,7 @@ func (newState *WebhookNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *WebhookNotifications) SyncEffectiveFieldsDuringRead(existingState WebhookNotifications) {
 }
 
-func (a WebhookNotifications) GetComplexFieldTypes() map[string]reflect.Type {
+func (a WebhookNotifications) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(Webhook{}),
 		"on_failure":                             reflect.TypeOf(Webhook{}),

@@ -35,7 +35,7 @@ func (newState *ActionConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ActionConfiguration) SyncEffectiveFieldsDuringRead(existingState ActionConfiguration) {
 }
 
-func (a ActionConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ActionConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -74,7 +74,7 @@ func (newState *AlertConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *AlertConfiguration) SyncEffectiveFieldsDuringRead(existingState AlertConfiguration) {
 }
 
-func (a AlertConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a AlertConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"action_configurations": reflect.TypeOf(ActionConfiguration{}),
 	}
@@ -122,7 +122,7 @@ func (newState *BudgetConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *BudgetConfiguration) SyncEffectiveFieldsDuringRead(existingState BudgetConfiguration) {
 }
 
-func (a BudgetConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a BudgetConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert_configurations": reflect.TypeOf(AlertConfiguration{}),
 		"filter":               reflect.TypeOf(BudgetConfigurationFilter{}),
@@ -162,7 +162,7 @@ func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *BudgetConfigurationFilter) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilter) {
 }
 
-func (a BudgetConfigurationFilter) GetComplexFieldTypes() map[string]reflect.Type {
+func (a BudgetConfigurationFilter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"tags":         reflect.TypeOf(BudgetConfigurationFilterTagClause{}),
 		"workspace_id": reflect.TypeOf(BudgetConfigurationFilterWorkspaceIdClause{}),
@@ -194,7 +194,7 @@ func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringCreate
 func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterClause) {
 }
 
-func (a BudgetConfigurationFilterClause) GetComplexFieldTypes() map[string]reflect.Type {
+func (a BudgetConfigurationFilterClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"values": reflect.TypeOf(types.StringType),
 	}
@@ -223,7 +223,7 @@ func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringCre
 func (newState *BudgetConfigurationFilterTagClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterTagClause) {
 }
 
-func (a BudgetConfigurationFilterTagClause) GetComplexFieldTypes() map[string]reflect.Type {
+func (a BudgetConfigurationFilterTagClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"value": reflect.TypeOf(BudgetConfigurationFilterClause{}),
 	}
@@ -252,7 +252,7 @@ func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsD
 func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterWorkspaceIdClause) {
 }
 
-func (a BudgetConfigurationFilterWorkspaceIdClause) GetComplexFieldTypes() map[string]reflect.Type {
+func (a BudgetConfigurationFilterWorkspaceIdClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"values": reflect.TypeOf(types.Int64Type),
 	}
@@ -285,7 +285,7 @@ func (newState *CreateBillingUsageDashboardRequest) SyncEffectiveFieldsDuringCre
 func (newState *CreateBillingUsageDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardRequest) {
 }
 
-func (a CreateBillingUsageDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateBillingUsageDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -309,7 +309,7 @@ func (newState *CreateBillingUsageDashboardResponse) SyncEffectiveFieldsDuringCr
 func (newState *CreateBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardResponse) {
 }
 
-func (a CreateBillingUsageDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateBillingUsageDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -342,7 +342,7 @@ func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreate
 func (newState *CreateBudgetConfigurationBudget) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudget) {
 }
 
-func (a CreateBudgetConfigurationBudget) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert_configurations": reflect.TypeOf(CreateBudgetConfigurationBudgetAlertConfigurations{}),
 		"filter":               reflect.TypeOf(BudgetConfigurationFilter{}),
@@ -377,7 +377,7 @@ func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffecti
 func (newState *CreateBudgetConfigurationBudgetActionConfigurations) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetActionConfigurations) {
 }
 
-func (a CreateBudgetConfigurationBudgetActionConfigurations) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateBudgetConfigurationBudgetActionConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -413,7 +413,7 @@ func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncEffectiv
 func (newState *CreateBudgetConfigurationBudgetAlertConfigurations) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetAlertConfigurations) {
 }
 
-func (a CreateBudgetConfigurationBudgetAlertConfigurations) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateBudgetConfigurationBudgetAlertConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"action_configurations": reflect.TypeOf(CreateBudgetConfigurationBudgetActionConfigurations{}),
 	}
@@ -444,7 +444,7 @@ func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreat
 func (newState *CreateBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationRequest) {
 }
 
-func (a CreateBudgetConfigurationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(CreateBudgetConfigurationBudget{}),
 	}
@@ -471,7 +471,7 @@ func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCrea
 func (newState *CreateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationResponse) {
 }
 
-func (a CreateBudgetConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(BudgetConfiguration{}),
 	}
@@ -565,7 +565,7 @@ func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringC
 func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringRead(existingState CreateLogDeliveryConfigurationParams) {
 }
 
-func (a CreateLogDeliveryConfigurationParams) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateLogDeliveryConfigurationParams) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"workspace_ids_filter": reflect.TypeOf(types.Int64Type),
 	}
@@ -601,7 +601,7 @@ func (newState *DeleteBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreat
 func (newState *DeleteBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationRequest) {
 }
 
-func (a DeleteBudgetConfigurationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -622,7 +622,7 @@ func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringCrea
 func (newState *DeleteBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationResponse) {
 }
 
-func (a DeleteBudgetConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -652,7 +652,7 @@ func (newState *DownloadRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Do
 func (newState *DownloadRequest) SyncEffectiveFieldsDuringRead(existingState DownloadRequest) {
 }
 
-func (a DownloadRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DownloadRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -676,7 +676,7 @@ func (newState *DownloadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 func (newState *DownloadResponse) SyncEffectiveFieldsDuringRead(existingState DownloadResponse) {
 }
 
-func (a DownloadResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DownloadResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -705,7 +705,7 @@ func (newState *GetBillingUsageDashboardRequest) SyncEffectiveFieldsDuringCreate
 func (newState *GetBillingUsageDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardRequest) {
 }
 
-func (a GetBillingUsageDashboardRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetBillingUsageDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -731,7 +731,7 @@ func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringCreat
 func (newState *GetBillingUsageDashboardResponse) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardResponse) {
 }
 
-func (a GetBillingUsageDashboardResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetBillingUsageDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -756,7 +756,7 @@ func (newState *GetBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationRequest) {
 }
 
-func (a GetBudgetConfigurationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -778,7 +778,7 @@ func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *GetBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationResponse) {
 }
 
-func (a GetBudgetConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(BudgetConfiguration{}),
 	}
@@ -806,7 +806,7 @@ func (newState *GetLogDeliveryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *GetLogDeliveryRequest) SyncEffectiveFieldsDuringRead(existingState GetLogDeliveryRequest) {
 }
 
-func (a GetLogDeliveryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetLogDeliveryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -832,7 +832,7 @@ func (newState *ListBudgetConfigurationsRequest) SyncEffectiveFieldsDuringCreate
 func (newState *ListBudgetConfigurationsRequest) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsRequest) {
 }
 
-func (a ListBudgetConfigurationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListBudgetConfigurationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -857,7 +857,7 @@ func (newState *ListBudgetConfigurationsResponse) SyncEffectiveFieldsDuringCreat
 func (newState *ListBudgetConfigurationsResponse) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsResponse) {
 }
 
-func (a ListBudgetConfigurationsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListBudgetConfigurationsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budgets": reflect.TypeOf(BudgetConfiguration{}),
 	}
@@ -890,7 +890,7 @@ func (newState *ListLogDeliveryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ListLogDeliveryRequest) SyncEffectiveFieldsDuringRead(existingState ListLogDeliveryRequest) {
 }
 
-func (a ListLogDeliveryRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListLogDeliveryRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -994,7 +994,7 @@ func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState LogDeliveryConfiguration) {
 }
 
-func (a LogDeliveryConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a LogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_status":  reflect.TypeOf(LogDeliveryStatus{}),
 		"workspace_ids_filter": reflect.TypeOf(types.Int64Type),
@@ -1055,7 +1055,7 @@ func (newState *LogDeliveryStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *LogDeliveryStatus) SyncEffectiveFieldsDuringRead(existingState LogDeliveryStatus) {
 }
 
-func (a LogDeliveryStatus) GetComplexFieldTypes() map[string]reflect.Type {
+func (a LogDeliveryStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1079,7 +1079,7 @@ func (newState *PatchStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *PatchStatusResponse) SyncEffectiveFieldsDuringRead(existingState PatchStatusResponse) {
 }
 
-func (a PatchStatusResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PatchStatusResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1112,7 +1112,7 @@ func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringCreate
 func (newState *UpdateBudgetConfigurationBudget) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationBudget) {
 }
 
-func (a UpdateBudgetConfigurationBudget) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alert_configurations": reflect.TypeOf(AlertConfiguration{}),
 		"filter":               reflect.TypeOf(BudgetConfigurationFilter{}),
@@ -1149,7 +1149,7 @@ func (newState *UpdateBudgetConfigurationRequest) SyncEffectiveFieldsDuringCreat
 func (newState *UpdateBudgetConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationRequest) {
 }
 
-func (a UpdateBudgetConfigurationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(UpdateBudgetConfigurationBudget{}),
 	}
@@ -1177,7 +1177,7 @@ func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringCrea
 func (newState *UpdateBudgetConfigurationResponse) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationResponse) {
 }
 
-func (a UpdateBudgetConfigurationResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"budget": reflect.TypeOf(BudgetConfiguration{}),
 	}
@@ -1210,7 +1210,7 @@ func (newState *UpdateLogDeliveryConfigurationStatusRequest) SyncEffectiveFields
 func (newState *UpdateLogDeliveryConfigurationStatusRequest) SyncEffectiveFieldsDuringRead(existingState UpdateLogDeliveryConfigurationStatusRequest) {
 }
 
-func (a UpdateLogDeliveryConfigurationStatusRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateLogDeliveryConfigurationStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1233,7 +1233,7 @@ func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuring
 func (newState *WrappedCreateLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState WrappedCreateLogDeliveryConfiguration) {
 }
 
-func (a WrappedCreateLogDeliveryConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a WrappedCreateLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_configuration": reflect.TypeOf(CreateLogDeliveryConfigurationParams{}),
 	}
@@ -1259,7 +1259,7 @@ func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringCreate
 func (newState *WrappedLogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfiguration) {
 }
 
-func (a WrappedLogDeliveryConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a WrappedLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_configuration": reflect.TypeOf(LogDeliveryConfiguration{}),
 	}
@@ -1285,7 +1285,7 @@ func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringCreat
 func (newState *WrappedLogDeliveryConfigurations) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfigurations) {
 }
 
-func (a WrappedLogDeliveryConfigurations) GetComplexFieldTypes() map[string]reflect.Type {
+func (a WrappedLogDeliveryConfigurations) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_configurations": reflect.TypeOf(LogDeliveryConfiguration{}),
 	}

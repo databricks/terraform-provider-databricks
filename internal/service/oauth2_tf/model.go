@@ -40,7 +40,7 @@ func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegration) {
 }
 
-func (a CreateCustomAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"redirect_urls":       reflect.TypeOf(types.StringType),
 		"scopes":              reflect.TypeOf(types.StringType),
@@ -82,7 +82,7 @@ func (newState *CreateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreat
 func (newState *CreateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState CreateCustomAppIntegrationOutput) {
 }
 
-func (a CreateCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -110,7 +110,7 @@ func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOr
 func (newState *CreatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegration) {
 }
 
-func (a CreatePublishedAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreatePublishedAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
@@ -138,7 +138,7 @@ func (newState *CreatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCr
 func (newState *CreatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState CreatePublishedAppIntegrationOutput) {
 }
 
-func (a CreatePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreatePublishedAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -162,7 +162,7 @@ func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringCr
 func (newState *CreateServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretRequest) {
 }
 
-func (a CreateServicePrincipalSecretRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateServicePrincipalSecretRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -195,7 +195,7 @@ func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringC
 func (newState *CreateServicePrincipalSecretResponse) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretResponse) {
 }
 
-func (a CreateServicePrincipalSecretResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreateServicePrincipalSecretResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -225,7 +225,7 @@ func (newState *DataPlaneInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Data
 func (newState *DataPlaneInfo) SyncEffectiveFieldsDuringRead(existingState DataPlaneInfo) {
 }
 
-func (a DataPlaneInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DataPlaneInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -247,7 +247,7 @@ func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreat
 func (newState *DeleteCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationOutput) {
 }
 
-func (a DeleteCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -268,7 +268,7 @@ func (newState *DeleteCustomAppIntegrationRequest) SyncEffectiveFieldsDuringCrea
 func (newState *DeleteCustomAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCustomAppIntegrationRequest) {
 }
 
-func (a DeleteCustomAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteCustomAppIntegrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -289,7 +289,7 @@ func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCr
 func (newState *DeletePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationOutput) {
 }
 
-func (a DeletePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeletePublishedAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -310,7 +310,7 @@ func (newState *DeletePublishedAppIntegrationRequest) SyncEffectiveFieldsDuringC
 func (newState *DeletePublishedAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState DeletePublishedAppIntegrationRequest) {
 }
 
-func (a DeletePublishedAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeletePublishedAppIntegrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -331,7 +331,7 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
-func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -355,7 +355,7 @@ func (newState *DeleteServicePrincipalSecretRequest) SyncEffectiveFieldsDuringCr
 func (newState *DeleteServicePrincipalSecretRequest) SyncEffectiveFieldsDuringRead(existingState DeleteServicePrincipalSecretRequest) {
 }
 
-func (a DeleteServicePrincipalSecretRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeleteServicePrincipalSecretRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -398,7 +398,7 @@ func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationOutput) {
 }
 
-func (a GetCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"redirect_urls":       reflect.TypeOf(types.StringType),
 		"scopes":              reflect.TypeOf(types.StringType),
@@ -441,7 +441,7 @@ func (newState *GetCustomAppIntegrationRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *GetCustomAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationRequest) {
 }
 
-func (a GetCustomAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetCustomAppIntegrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -466,7 +466,7 @@ func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringCreateO
 func (newState *GetCustomAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(existingState GetCustomAppIntegrationsOutput) {
 }
 
-func (a GetCustomAppIntegrationsOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetCustomAppIntegrationsOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"apps": reflect.TypeOf(GetCustomAppIntegrationOutput{}),
 	}
@@ -504,7 +504,7 @@ func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCreat
 func (newState *GetPublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationOutput) {
 }
 
-func (a GetPublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPublishedAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
@@ -536,7 +536,7 @@ func (newState *GetPublishedAppIntegrationRequest) SyncEffectiveFieldsDuringCrea
 func (newState *GetPublishedAppIntegrationRequest) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationRequest) {
 }
 
-func (a GetPublishedAppIntegrationRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPublishedAppIntegrationRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -561,7 +561,7 @@ func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringCrea
 func (newState *GetPublishedAppIntegrationsOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppIntegrationsOutput) {
 }
 
-func (a GetPublishedAppIntegrationsOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPublishedAppIntegrationsOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"apps": reflect.TypeOf(GetPublishedAppIntegrationOutput{}),
 	}
@@ -592,7 +592,7 @@ func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *GetPublishedAppsOutput) SyncEffectiveFieldsDuringRead(existingState GetPublishedAppsOutput) {
 }
 
-func (a GetPublishedAppsOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPublishedAppsOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"apps": reflect.TypeOf(PublishedAppOutput{}),
 	}
@@ -624,7 +624,7 @@ func (newState *ListCustomAppIntegrationsRequest) SyncEffectiveFieldsDuringCreat
 func (newState *ListCustomAppIntegrationsRequest) SyncEffectiveFieldsDuringRead(existingState ListCustomAppIntegrationsRequest) {
 }
 
-func (a ListCustomAppIntegrationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListCustomAppIntegrationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -652,7 +652,7 @@ func (newState *ListOAuthPublishedAppsRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListOAuthPublishedAppsRequest) SyncEffectiveFieldsDuringRead(existingState ListOAuthPublishedAppsRequest) {
 }
 
-func (a ListOAuthPublishedAppsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListOAuthPublishedAppsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -678,7 +678,7 @@ func (newState *ListPublishedAppIntegrationsRequest) SyncEffectiveFieldsDuringCr
 func (newState *ListPublishedAppIntegrationsRequest) SyncEffectiveFieldsDuringRead(existingState ListPublishedAppIntegrationsRequest) {
 }
 
-func (a ListPublishedAppIntegrationsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListPublishedAppIntegrationsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -713,7 +713,7 @@ func (newState *ListServicePrincipalSecretsRequest) SyncEffectiveFieldsDuringCre
 func (newState *ListServicePrincipalSecretsRequest) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsRequest) {
 }
 
-func (a ListServicePrincipalSecretsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListServicePrincipalSecretsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -739,7 +739,7 @@ func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringCr
 func (newState *ListServicePrincipalSecretsResponse) SyncEffectiveFieldsDuringRead(existingState ListServicePrincipalSecretsResponse) {
 }
 
-func (a ListServicePrincipalSecretsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListServicePrincipalSecretsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"secrets": reflect.TypeOf(SecretInfo{}),
 	}
@@ -781,7 +781,7 @@ func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringRead(existingState PublishedAppOutput) {
 }
 
-func (a PublishedAppOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PublishedAppOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"redirect_urls": reflect.TypeOf(types.StringType),
 		"scopes":        reflect.TypeOf(types.StringType),
@@ -825,7 +825,7 @@ func (newState *SecretInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretI
 func (newState *SecretInfo) SyncEffectiveFieldsDuringRead(existingState SecretInfo) {
 }
 
-func (a SecretInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SecretInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -854,7 +854,7 @@ func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TokenAccessPolicy) SyncEffectiveFieldsDuringRead(existingState TokenAccessPolicy) {
 }
 
-func (a TokenAccessPolicy) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TokenAccessPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -882,7 +882,7 @@ func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegration) {
 }
 
-func (a UpdateCustomAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"redirect_urls":       reflect.TypeOf(types.StringType),
 		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
@@ -912,7 +912,7 @@ func (newState *UpdateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringCreat
 func (newState *UpdateCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState UpdateCustomAppIntegrationOutput) {
 }
 
-func (a UpdateCustomAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -934,7 +934,7 @@ func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringCreateOr
 func (newState *UpdatePublishedAppIntegration) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegration) {
 }
 
-func (a UpdatePublishedAppIntegration) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdatePublishedAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
@@ -960,7 +960,7 @@ func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringCr
 func (newState *UpdatePublishedAppIntegrationOutput) SyncEffectiveFieldsDuringRead(existingState UpdatePublishedAppIntegrationOutput) {
 }
 
-func (a UpdatePublishedAppIntegrationOutput) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdatePublishedAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 

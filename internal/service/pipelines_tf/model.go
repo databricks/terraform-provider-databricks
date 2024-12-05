@@ -90,7 +90,7 @@ func (newState *CreatePipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreatePipeline) SyncEffectiveFieldsDuringRead(existingState CreatePipeline) {
 }
 
-func (a CreatePipeline) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreatePipeline) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clusters":             reflect.TypeOf(PipelineCluster{}),
 		"configuration":        reflect.TypeOf(types.StringType),
@@ -171,7 +171,7 @@ func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringRead(existingState CreatePipelineResponse) {
 }
 
-func (a CreatePipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CreatePipelineResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"effective_settings": reflect.TypeOf(PipelineSpec{}),
 	}
@@ -200,7 +200,7 @@ func (newState *CronTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronTr
 func (newState *CronTrigger) SyncEffectiveFieldsDuringRead(existingState CronTrigger) {
 }
 
-func (a CronTrigger) GetComplexFieldTypes() map[string]reflect.Type {
+func (a CronTrigger) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -226,7 +226,7 @@ func (newState *DataPlaneId) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPl
 func (newState *DataPlaneId) SyncEffectiveFieldsDuringRead(existingState DataPlaneId) {
 }
 
-func (a DataPlaneId) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DataPlaneId) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -250,7 +250,7 @@ func (newState *DeletePipelineRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeletePipelineRequest) SyncEffectiveFieldsDuringRead(existingState DeletePipelineRequest) {
 }
 
-func (a DeletePipelineRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeletePipelineRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -271,7 +271,7 @@ func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringRead(existingState DeletePipelineResponse) {
 }
 
-func (a DeletePipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a DeletePipelineResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -354,7 +354,7 @@ func (newState *EditPipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditP
 func (newState *EditPipeline) SyncEffectiveFieldsDuringRead(existingState EditPipeline) {
 }
 
-func (a EditPipeline) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EditPipeline) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clusters":             reflect.TypeOf(PipelineCluster{}),
 		"configuration":        reflect.TypeOf(types.StringType),
@@ -431,7 +431,7 @@ func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringRead(existingState EditPipelineResponse) {
 }
 
-func (a EditPipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a EditPipelineResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -454,7 +454,7 @@ func (newState *ErrorDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan ErrorD
 func (newState *ErrorDetail) SyncEffectiveFieldsDuringRead(existingState ErrorDetail) {
 }
 
-func (a ErrorDetail) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ErrorDetail) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"exceptions": reflect.TypeOf(SerializedException{}),
 	}
@@ -482,7 +482,7 @@ func (newState *FileLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileLi
 func (newState *FileLibrary) SyncEffectiveFieldsDuringRead(existingState FileLibrary) {
 }
 
-func (a FileLibrary) GetComplexFieldTypes() map[string]reflect.Type {
+func (a FileLibrary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -507,7 +507,7 @@ func (newState *Filters) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filters) {
 func (newState *Filters) SyncEffectiveFieldsDuringRead(existingState Filters) {
 }
 
-func (a Filters) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Filters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"exclude": reflect.TypeOf(types.StringType),
 		"include": reflect.TypeOf(types.StringType),
@@ -539,7 +539,7 @@ func (newState *GetPipelinePermissionLevelsRequest) SyncEffectiveFieldsDuringCre
 func (newState *GetPipelinePermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsRequest) {
 }
 
-func (a GetPipelinePermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPipelinePermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -562,7 +562,7 @@ func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringCr
 func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsResponse) {
 }
 
-func (a GetPipelinePermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPipelinePermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"permission_levels": reflect.TypeOf(PipelinePermissionsDescription{}),
 	}
@@ -590,7 +590,7 @@ func (newState *GetPipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetPipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionsRequest) {
 }
 
-func (a GetPipelinePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPipelinePermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -613,7 +613,7 @@ func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelineRequest) {
 }
 
-func (a GetPipelineRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPipelineRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -660,7 +660,7 @@ func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelineResponse) {
 }
 
-func (a GetPipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetPipelineResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"latest_updates": reflect.TypeOf(UpdateStateInfo{}),
 		"spec":           reflect.TypeOf(PipelineSpec{}),
@@ -704,7 +704,7 @@ func (newState *GetUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan G
 func (newState *GetUpdateRequest) SyncEffectiveFieldsDuringRead(existingState GetUpdateRequest) {
 }
 
-func (a GetUpdateRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetUpdateRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -728,7 +728,7 @@ func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringRead(existingState GetUpdateResponse) {
 }
 
-func (a GetUpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a GetUpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"update": reflect.TypeOf(UpdateInfo{}),
 	}
@@ -759,7 +759,7 @@ func (newState *IngestionConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan In
 func (newState *IngestionConfig) SyncEffectiveFieldsDuringRead(existingState IngestionConfig) {
 }
 
-func (a IngestionConfig) GetComplexFieldTypes() map[string]reflect.Type {
+func (a IngestionConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"report": reflect.TypeOf(ReportSpec{}),
 		"schema": reflect.TypeOf(SchemaSpec{}),
@@ -810,7 +810,7 @@ func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringCre
 func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionGatewayPipelineDefinition) {
 }
 
-func (a IngestionGatewayPipelineDefinition) GetComplexFieldTypes() map[string]reflect.Type {
+func (a IngestionGatewayPipelineDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -849,7 +849,7 @@ func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionPipelineDefinition) {
 }
 
-func (a IngestionPipelineDefinition) GetComplexFieldTypes() map[string]reflect.Type {
+func (a IngestionPipelineDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"objects":             reflect.TypeOf(IngestionConfig{}),
 		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
@@ -904,7 +904,7 @@ func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsRequest) {
 }
 
-func (a ListPipelineEventsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListPipelineEventsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"order_by": reflect.TypeOf(types.StringType),
 	}
@@ -939,7 +939,7 @@ func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsResponse) {
 }
 
-func (a ListPipelineEventsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListPipelineEventsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"events": reflect.TypeOf(PipelineEvent{}),
 	}
@@ -988,7 +988,7 @@ func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringRead(existingState ListPipelinesRequest) {
 }
 
-func (a ListPipelinesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListPipelinesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"order_by": reflect.TypeOf(types.StringType),
 	}
@@ -1020,7 +1020,7 @@ func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelinesResponse) {
 }
 
-func (a ListPipelinesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListPipelinesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"statuses": reflect.TypeOf(PipelineStateInfo{}),
 	}
@@ -1055,7 +1055,7 @@ func (newState *ListUpdatesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListUpdatesRequest) SyncEffectiveFieldsDuringRead(existingState ListUpdatesRequest) {
 }
 
-func (a ListUpdatesRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListUpdatesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1087,7 +1087,7 @@ func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringRead(existingState ListUpdatesResponse) {
 }
 
-func (a ListUpdatesResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ListUpdatesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"updates": reflect.TypeOf(UpdateInfo{}),
 	}
@@ -1114,7 +1114,7 @@ func (newState *ManualTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan Manu
 func (newState *ManualTrigger) SyncEffectiveFieldsDuringRead(existingState ManualTrigger) {
 }
 
-func (a ManualTrigger) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ManualTrigger) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1135,7 +1135,7 @@ func (newState *NotebookLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan No
 func (newState *NotebookLibrary) SyncEffectiveFieldsDuringRead(existingState NotebookLibrary) {
 }
 
-func (a NotebookLibrary) GetComplexFieldTypes() map[string]reflect.Type {
+func (a NotebookLibrary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1166,7 +1166,7 @@ func (newState *Notifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan Noti
 func (newState *Notifications) SyncEffectiveFieldsDuringRead(existingState Notifications) {
 }
 
-func (a Notifications) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Notifications) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"alerts":           reflect.TypeOf(types.StringType),
 		"email_recipients": reflect.TypeOf(types.StringType),
@@ -1230,7 +1230,7 @@ func (newState *Origin) SyncEffectiveFieldsDuringCreateOrUpdate(plan Origin) {
 func (newState *Origin) SyncEffectiveFieldsDuringRead(existingState Origin) {
 }
 
-func (a Origin) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Origin) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1275,7 +1275,7 @@ func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlRequest) {
 }
 
-func (a PipelineAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1309,7 +1309,7 @@ func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringCreateOr
 func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlResponse) {
 }
 
-func (a PipelineAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"all_permissions": reflect.TypeOf(PipelinePermission{}),
 	}
@@ -1432,7 +1432,7 @@ func (newState *PipelineCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pi
 func (newState *PipelineCluster) SyncEffectiveFieldsDuringRead(existingState PipelineCluster) {
 }
 
-func (a PipelineCluster) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"autoscale":        reflect.TypeOf(PipelineClusterAutoscale{}),
 		"aws_attributes":   reflect.TypeOf(compute.AwsAttributes{}),
@@ -1515,7 +1515,7 @@ func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringRead(existingState PipelineClusterAutoscale) {
 }
 
-func (a PipelineClusterAutoscale) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineClusterAutoscale) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1542,7 +1542,7 @@ func (newState *PipelineDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PipelineDeployment) SyncEffectiveFieldsDuringRead(existingState PipelineDeployment) {
 }
 
-func (a PipelineDeployment) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineDeployment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1582,7 +1582,7 @@ func (newState *PipelineEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pipe
 func (newState *PipelineEvent) SyncEffectiveFieldsDuringRead(existingState PipelineEvent) {
 }
 
-func (a PipelineEvent) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineEvent) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"error":    reflect.TypeOf(ErrorDetail{}),
 		"origin":   reflect.TypeOf(Origin{}),
@@ -1633,7 +1633,7 @@ func (newState *PipelineLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pi
 func (newState *PipelineLibrary) SyncEffectiveFieldsDuringRead(existingState PipelineLibrary) {
 }
 
-func (a PipelineLibrary) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineLibrary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file":     reflect.TypeOf(FileLibrary{}),
 		"maven":    reflect.TypeOf(compute.MavenLibrary{}),
@@ -1673,7 +1673,7 @@ func (newState *PipelinePermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PipelinePermission) SyncEffectiveFieldsDuringRead(existingState PipelinePermission) {
 }
 
-func (a PipelinePermission) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelinePermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"inherited_from_object": reflect.TypeOf(types.StringType),
 	}
@@ -1705,7 +1705,7 @@ func (newState *PipelinePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *PipelinePermissions) SyncEffectiveFieldsDuringRead(existingState PipelinePermissions) {
 }
 
-func (a PipelinePermissions) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelinePermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(PipelineAccessControlResponse{}),
 	}
@@ -1735,7 +1735,7 @@ func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringCreateO
 func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsDescription) {
 }
 
-func (a PipelinePermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelinePermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -1760,7 +1760,7 @@ func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsRequest) {
 }
 
-func (a PipelinePermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelinePermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"access_control_list": reflect.TypeOf(PipelineAccessControlRequest{}),
 	}
@@ -1841,7 +1841,7 @@ func (newState *PipelineSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pipel
 func (newState *PipelineSpec) SyncEffectiveFieldsDuringRead(existingState PipelineSpec) {
 }
 
-func (a PipelineSpec) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clusters":             reflect.TypeOf(PipelineCluster{}),
 		"configuration":        reflect.TypeOf(types.StringType),
@@ -1933,7 +1933,7 @@ func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringRead(existingState PipelineStateInfo) {
 }
 
-func (a PipelineStateInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineStateInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"latest_updates": reflect.TypeOf(UpdateStateInfo{}),
 	}
@@ -1968,7 +1968,7 @@ func (newState *PipelineTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pi
 func (newState *PipelineTrigger) SyncEffectiveFieldsDuringRead(existingState PipelineTrigger) {
 }
 
-func (a PipelineTrigger) GetComplexFieldTypes() map[string]reflect.Type {
+func (a PipelineTrigger) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cron":   reflect.TypeOf(CronTrigger{}),
 		"manual": reflect.TypeOf(ManualTrigger{}),
@@ -2010,7 +2010,7 @@ func (newState *ReportSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportS
 func (newState *ReportSpec) SyncEffectiveFieldsDuringRead(existingState ReportSpec) {
 }
 
-func (a ReportSpec) GetComplexFieldTypes() map[string]reflect.Type {
+func (a ReportSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
 	}
@@ -2051,7 +2051,7 @@ func (newState *RestartWindow) SyncEffectiveFieldsDuringCreateOrUpdate(plan Rest
 func (newState *RestartWindow) SyncEffectiveFieldsDuringRead(existingState RestartWindow) {
 }
 
-func (a RestartWindow) GetComplexFieldTypes() map[string]reflect.Type {
+func (a RestartWindow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2089,7 +2089,7 @@ func (newState *SchemaSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaS
 func (newState *SchemaSpec) SyncEffectiveFieldsDuringRead(existingState SchemaSpec) {
 }
 
-func (a SchemaSpec) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SchemaSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
 	}
@@ -2122,7 +2122,7 @@ func (newState *Sequencing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sequenc
 func (newState *Sequencing) SyncEffectiveFieldsDuringRead(existingState Sequencing) {
 }
 
-func (a Sequencing) GetComplexFieldTypes() map[string]reflect.Type {
+func (a Sequencing) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"data_plane_id": reflect.TypeOf(DataPlaneId{}),
 	}
@@ -2154,7 +2154,7 @@ func (newState *SerializedException) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *SerializedException) SyncEffectiveFieldsDuringRead(existingState SerializedException) {
 }
 
-func (a SerializedException) GetComplexFieldTypes() map[string]reflect.Type {
+func (a SerializedException) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"stack": reflect.TypeOf(StackFrame{}),
 	}
@@ -2189,7 +2189,7 @@ func (newState *StackFrame) SyncEffectiveFieldsDuringCreateOrUpdate(plan StackFr
 func (newState *StackFrame) SyncEffectiveFieldsDuringRead(existingState StackFrame) {
 }
 
-func (a StackFrame) GetComplexFieldTypes() map[string]reflect.Type {
+func (a StackFrame) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2231,7 +2231,7 @@ func (newState *StartUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartU
 func (newState *StartUpdate) SyncEffectiveFieldsDuringRead(existingState StartUpdate) {
 }
 
-func (a StartUpdate) GetComplexFieldTypes() map[string]reflect.Type {
+func (a StartUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"full_refresh_selection": reflect.TypeOf(types.StringType),
 		"refresh_selection":      reflect.TypeOf(types.StringType),
@@ -2265,7 +2265,7 @@ func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringRead(existingState StartUpdateResponse) {
 }
 
-func (a StartUpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a StartUpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2286,7 +2286,7 @@ func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringRead(existingState StopPipelineResponse) {
 }
 
-func (a StopPipelineResponse) GetComplexFieldTypes() map[string]reflect.Type {
+func (a StopPipelineResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2307,7 +2307,7 @@ func (newState *StopRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopRe
 func (newState *StopRequest) SyncEffectiveFieldsDuringRead(existingState StopRequest) {
 }
 
-func (a StopRequest) GetComplexFieldTypes() map[string]reflect.Type {
+func (a StopRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
@@ -2346,7 +2346,7 @@ func (newState *TableSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpe
 func (newState *TableSpec) SyncEffectiveFieldsDuringRead(existingState TableSpec) {
 }
 
-func (a TableSpec) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TableSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"table_configuration": reflect.TypeOf(TableSpecificConfig{}),
 	}
@@ -2388,7 +2388,7 @@ func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringRead(existingState TableSpecificConfig) {
 }
 
-func (a TableSpecificConfig) GetComplexFieldTypes() map[string]reflect.Type {
+func (a TableSpecificConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"primary_keys": reflect.TypeOf(types.StringType),
 		"sequence_by":  reflect.TypeOf(types.StringType),
@@ -2449,7 +2449,7 @@ func (newState *UpdateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateI
 func (newState *UpdateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateInfo) {
 }
 
-func (a UpdateInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"config":                 reflect.TypeOf(PipelineSpec{}),
 		"full_refresh_selection": reflect.TypeOf(types.StringType),
@@ -2495,7 +2495,7 @@ func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Up
 func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateStateInfo) {
 }
 
-func (a UpdateStateInfo) GetComplexFieldTypes() map[string]reflect.Type {
+func (a UpdateStateInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 

@@ -63,12 +63,13 @@ type MonitorInfoExtended struct {
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
+var _ pluginfwcommon.ObjectTypable = MonitorInfoExtended{}
 
-func (m MonitorInfoExtended) GetComplexFieldTypes() map[string]reflect.Type {
-	return m.MonitorInfo.GetComplexFieldTypes()
+func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.MonitorInfo.GetComplexFieldTypes(ctx)
 }
 
-func (m MonitorInfoExtended) ToAttrType(ctx context.Context) types.ObjectType {
+func (m MonitorInfoExtended) ToObjectType(ctx context.Context) types.ObjectType {
 	tpe := m.MonitorInfo.ToAttrType(ctx)
 	tpe.AttrTypes["warehouse_id"] = types.StringType
 	tpe.AttrTypes["skip_builtin_dashboard"] = types.BoolType
@@ -85,7 +86,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetRequired("assets_dir")
 		c.SetRequired("output_schema_name")
 		c.SetReadOnly("monitor_version")

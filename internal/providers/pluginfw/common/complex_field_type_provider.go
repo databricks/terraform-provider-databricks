@@ -8,6 +8,9 @@ import (
 )
 
 type ComplexFieldTypeProvider interface {
-	GetComplexFieldTypes() map[string]reflect.Type
-	ToAttrType(context.Context) types.ObjectType
+	GetComplexFieldTypes(context.Context) map[string]reflect.Type
+}
+
+type ObjectTypable interface {
+	ToObjectType(context.Context) types.ObjectType
 }

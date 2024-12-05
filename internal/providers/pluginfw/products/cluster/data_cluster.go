@@ -42,7 +42,7 @@ func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.Metadat
 }
 
 func (d *ClusterDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ClusterInfo{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ClusterInfo{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,

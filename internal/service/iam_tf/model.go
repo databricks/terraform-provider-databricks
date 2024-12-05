@@ -47,9 +47,9 @@ func (a AccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of AccessControlRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of AccessControlRequest in the Terraform plugin framework type
 // system.
-func (a AccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a AccessControlRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"group_name":             types.StringType,
@@ -92,13 +92,13 @@ func (a AccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// ToAttrType returns the representation of AccessControlResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of AccessControlResponse in the Terraform plugin framework type
 // system.
-func (a AccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a AccessControlResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: Permission{}.ToAttrType(ctx),
+				ElemType: Permission{}.ToObjectType(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -137,9 +137,9 @@ func (a ComplexValue) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ComplexValue in the Terraform plugin framework type
+// ToObjectType returns the representation of ComplexValue in the Terraform plugin framework type
 // system.
-func (a ComplexValue) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ComplexValue) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display": types.StringType,
@@ -174,9 +174,9 @@ func (a DeleteAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteAccountGroupRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteAccountGroupRequest in the Terraform plugin framework type
 // system.
-func (a DeleteAccountGroupRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteAccountGroupRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -207,9 +207,9 @@ func (a DeleteAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.C
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteAccountServicePrincipalRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteAccountServicePrincipalRequest in the Terraform plugin framework type
 // system.
-func (a DeleteAccountServicePrincipalRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteAccountServicePrincipalRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -240,9 +240,9 @@ func (a DeleteAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteAccountUserRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteAccountUserRequest in the Terraform plugin framework type
 // system.
-func (a DeleteAccountUserRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteAccountUserRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -273,9 +273,9 @@ func (a DeleteGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteGroupRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteGroupRequest in the Terraform plugin framework type
 // system.
-func (a DeleteGroupRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteGroupRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -303,9 +303,9 @@ func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteResponse in the Terraform plugin framework type
 // system.
-func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -334,9 +334,9 @@ func (a DeleteServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context)
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteServicePrincipalRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteServicePrincipalRequest in the Terraform plugin framework type
 // system.
-func (a DeleteServicePrincipalRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteServicePrincipalRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -367,9 +367,9 @@ func (a DeleteUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteUserRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteUserRequest in the Terraform plugin framework type
 // system.
-func (a DeleteUserRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteUserRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -402,9 +402,9 @@ func (a DeleteWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteWorkspaceAssignmentRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteWorkspaceAssignmentRequest in the Terraform plugin framework type
 // system.
-func (a DeleteWorkspaceAssignmentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteWorkspaceAssignmentRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"principal_id": types.Int64Type,
@@ -433,9 +433,9 @@ func (a DeleteWorkspacePermissionAssignmentResponse) GetComplexFieldTypes(ctx co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteWorkspacePermissionAssignmentResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteWorkspacePermissionAssignmentResponse in the Terraform plugin framework type
 // system.
-func (a DeleteWorkspacePermissionAssignmentResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteWorkspacePermissionAssignmentResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -464,9 +464,9 @@ func (a GetAccountGroupRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetAccountGroupRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetAccountGroupRequest in the Terraform plugin framework type
 // system.
-func (a GetAccountGroupRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetAccountGroupRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -497,9 +497,9 @@ func (a GetAccountServicePrincipalRequest) GetComplexFieldTypes(ctx context.Cont
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetAccountServicePrincipalRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetAccountServicePrincipalRequest in the Terraform plugin framework type
 // system.
-func (a GetAccountServicePrincipalRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetAccountServicePrincipalRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -551,9 +551,9 @@ func (a GetAccountUserRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetAccountUserRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetAccountUserRequest in the Terraform plugin framework type
 // system.
-func (a GetAccountUserRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetAccountUserRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":         types.StringType,
@@ -591,9 +591,9 @@ func (a GetAssignableRolesForResourceRequest) GetComplexFieldTypes(ctx context.C
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetAssignableRolesForResourceRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetAssignableRolesForResourceRequest in the Terraform plugin framework type
 // system.
-func (a GetAssignableRolesForResourceRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetAssignableRolesForResourceRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"resource": types.StringType,
@@ -624,13 +624,13 @@ func (a GetAssignableRolesForResourceResponse) GetComplexFieldTypes(ctx context.
 	}
 }
 
-// ToAttrType returns the representation of GetAssignableRolesForResourceResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetAssignableRolesForResourceResponse in the Terraform plugin framework type
 // system.
-func (a GetAssignableRolesForResourceResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetAssignableRolesForResourceResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"roles": basetypes.ListType{
-				ElemType: Role{}.ToAttrType(ctx),
+				ElemType: Role{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -659,9 +659,9 @@ func (a GetGroupRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetGroupRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetGroupRequest in the Terraform plugin framework type
 // system.
-func (a GetGroupRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetGroupRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -693,13 +693,13 @@ func (a GetPasswordPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Co
 	}
 }
 
-// ToAttrType returns the representation of GetPasswordPermissionLevelsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPasswordPermissionLevelsResponse in the Terraform plugin framework type
 // system.
-func (a GetPasswordPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPasswordPermissionLevelsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: PasswordPermissionsDescription{}.ToAttrType(ctx),
+				ElemType: PasswordPermissionsDescription{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -730,9 +730,9 @@ func (a GetPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) ma
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetPermissionLevelsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPermissionLevelsRequest in the Terraform plugin framework type
 // system.
-func (a GetPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPermissionLevelsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"request_object_id":   types.StringType,
@@ -765,13 +765,13 @@ func (a GetPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) m
 	}
 }
 
-// ToAttrType returns the representation of GetPermissionLevelsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPermissionLevelsResponse in the Terraform plugin framework type
 // system.
-func (a GetPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPermissionLevelsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: PermissionsDescription{}.ToAttrType(ctx),
+				ElemType: PermissionsDescription{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -806,9 +806,9 @@ func (a GetPermissionRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetPermissionRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPermissionRequest in the Terraform plugin framework type
 // system.
-func (a GetPermissionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPermissionRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"request_object_id":   types.StringType,
@@ -849,9 +849,9 @@ func (a GetRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetRuleSetRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetRuleSetRequest in the Terraform plugin framework type
 // system.
-func (a GetRuleSetRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetRuleSetRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"etag": types.StringType,
@@ -883,9 +883,9 @@ func (a GetServicePrincipalRequest) GetComplexFieldTypes(ctx context.Context) ma
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetServicePrincipalRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetServicePrincipalRequest in the Terraform plugin framework type
 // system.
-func (a GetServicePrincipalRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetServicePrincipalRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
@@ -937,9 +937,9 @@ func (a GetUserRequest) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetUserRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetUserRequest in the Terraform plugin framework type
 // system.
-func (a GetUserRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetUserRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":         types.StringType,
@@ -977,9 +977,9 @@ func (a GetWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context)
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetWorkspaceAssignmentRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetWorkspaceAssignmentRequest in the Terraform plugin framework type
 // system.
-func (a GetWorkspaceAssignmentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetWorkspaceAssignmentRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.Int64Type,
@@ -1013,9 +1013,9 @@ func (a GrantRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// ToAttrType returns the representation of GrantRule in the Terraform plugin framework type
+// ToObjectType returns the representation of GrantRule in the Terraform plugin framework type
 // system.
-func (a GrantRule) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GrantRule) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"principals": basetypes.ListType{
@@ -1074,28 +1074,28 @@ func (a Group) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type
 	}
 }
 
-// ToAttrType returns the representation of Group in the Terraform plugin framework type
+// ToObjectType returns the representation of Group in the Terraform plugin framework type
 // system.
-func (a Group) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Group) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"displayName": types.StringType,
 			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"externalId": types.StringType,
 			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"id": types.StringType,
 			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"meta": basetypes.ListType{
-				ElemType: ResourceMeta{}.ToAttrType(ctx),
+				ElemType: ResourceMeta{}.ToObjectType(ctx),
 			},
 			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -1145,9 +1145,9 @@ func (a ListAccountGroupsRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListAccountGroupsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListAccountGroupsRequest in the Terraform plugin framework type
 // system.
-func (a ListAccountGroupsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListAccountGroupsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":         types.StringType,
@@ -1202,9 +1202,9 @@ func (a ListAccountServicePrincipalsRequest) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListAccountServicePrincipalsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListAccountServicePrincipalsRequest in the Terraform plugin framework type
 // system.
-func (a ListAccountServicePrincipalsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListAccountServicePrincipalsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":         types.StringType,
@@ -1260,9 +1260,9 @@ func (a ListAccountUsersRequest) GetComplexFieldTypes(ctx context.Context) map[s
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListAccountUsersRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListAccountUsersRequest in the Terraform plugin framework type
 // system.
-func (a ListAccountUsersRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListAccountUsersRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":         types.StringType,
@@ -1317,9 +1317,9 @@ func (a ListGroupsRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListGroupsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListGroupsRequest in the Terraform plugin framework type
 // system.
-func (a ListGroupsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListGroupsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":         types.StringType,
@@ -1367,14 +1367,14 @@ func (a ListGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// ToAttrType returns the representation of ListGroupsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListGroupsResponse in the Terraform plugin framework type
 // system.
-func (a ListGroupsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListGroupsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
 			"Resources": basetypes.ListType{
-				ElemType: Group{}.ToAttrType(ctx),
+				ElemType: Group{}.ToObjectType(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -1419,14 +1419,14 @@ func (a ListServicePrincipalResponse) GetComplexFieldTypes(ctx context.Context) 
 	}
 }
 
-// ToAttrType returns the representation of ListServicePrincipalResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListServicePrincipalResponse in the Terraform plugin framework type
 // system.
-func (a ListServicePrincipalResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListServicePrincipalResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
 			"Resources": basetypes.ListType{
-				ElemType: ServicePrincipal{}.ToAttrType(ctx),
+				ElemType: ServicePrincipal{}.ToObjectType(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -1478,9 +1478,9 @@ func (a ListServicePrincipalsRequest) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListServicePrincipalsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListServicePrincipalsRequest in the Terraform plugin framework type
 // system.
-func (a ListServicePrincipalsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListServicePrincipalsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":         types.StringType,
@@ -1536,9 +1536,9 @@ func (a ListUsersRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListUsersRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListUsersRequest in the Terraform plugin framework type
 // system.
-func (a ListUsersRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListUsersRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attributes":         types.StringType,
@@ -1586,14 +1586,14 @@ func (a ListUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	}
 }
 
-// ToAttrType returns the representation of ListUsersResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListUsersResponse in the Terraform plugin framework type
 // system.
-func (a ListUsersResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListUsersResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
 			"Resources": basetypes.ListType{
-				ElemType: User{}.ToAttrType(ctx),
+				ElemType: User{}.ToObjectType(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -1627,9 +1627,9 @@ func (a ListWorkspaceAssignmentRequest) GetComplexFieldTypes(ctx context.Context
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListWorkspaceAssignmentRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListWorkspaceAssignmentRequest in the Terraform plugin framework type
 // system.
-func (a ListWorkspaceAssignmentRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListWorkspaceAssignmentRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"workspace_id": types.Int64Type,
@@ -1666,9 +1666,9 @@ func (a MigratePermissionsRequest) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of MigratePermissionsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of MigratePermissionsRequest in the Terraform plugin framework type
 // system.
-func (a MigratePermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MigratePermissionsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"from_workspace_group_name": types.StringType,
@@ -1701,9 +1701,9 @@ func (a MigratePermissionsResponse) GetComplexFieldTypes(ctx context.Context) ma
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of MigratePermissionsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of MigratePermissionsResponse in the Terraform plugin framework type
 // system.
-func (a MigratePermissionsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MigratePermissionsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permissions_migrated": types.Int64Type,
@@ -1735,9 +1735,9 @@ func (a Name) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Name in the Terraform plugin framework type
+// ToObjectType returns the representation of Name in the Terraform plugin framework type
 // system.
-func (a Name) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Name) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"familyName": types.StringType,
@@ -1773,13 +1773,13 @@ func (a ObjectPermissions) GetComplexFieldTypes(ctx context.Context) map[string]
 	}
 }
 
-// ToAttrType returns the representation of ObjectPermissions in the Terraform plugin framework type
+// ToObjectType returns the representation of ObjectPermissions in the Terraform plugin framework type
 // system.
-func (a ObjectPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ObjectPermissions) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlResponse{}.ToAttrType(ctx),
+				ElemType: AccessControlResponse{}.ToObjectType(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -1817,14 +1817,14 @@ func (a PartialUpdate) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	}
 }
 
-// ToAttrType returns the representation of PartialUpdate in the Terraform plugin framework type
+// ToObjectType returns the representation of PartialUpdate in the Terraform plugin framework type
 // system.
-func (a PartialUpdate) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PartialUpdate) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
 			"Operations": basetypes.ListType{
-				ElemType: Patch{}.ToAttrType(ctx),
+				ElemType: Patch{}.ToObjectType(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -1861,9 +1861,9 @@ func (a PasswordAccessControlRequest) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PasswordAccessControlRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of PasswordAccessControlRequest in the Terraform plugin framework type
 // system.
-func (a PasswordAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PasswordAccessControlRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"group_name":             types.StringType,
@@ -1906,13 +1906,13 @@ func (a PasswordAccessControlResponse) GetComplexFieldTypes(ctx context.Context)
 	}
 }
 
-// ToAttrType returns the representation of PasswordAccessControlResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of PasswordAccessControlResponse in the Terraform plugin framework type
 // system.
-func (a PasswordAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PasswordAccessControlResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: PasswordPermission{}.ToAttrType(ctx),
+				ElemType: PasswordPermission{}.ToObjectType(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -1949,9 +1949,9 @@ func (a PasswordPermission) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// ToAttrType returns the representation of PasswordPermission in the Terraform plugin framework type
+// ToObjectType returns the representation of PasswordPermission in the Terraform plugin framework type
 // system.
-func (a PasswordPermission) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PasswordPermission) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"inherited": types.BoolType,
@@ -1990,13 +1990,13 @@ func (a PasswordPermissions) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// ToAttrType returns the representation of PasswordPermissions in the Terraform plugin framework type
+// ToObjectType returns the representation of PasswordPermissions in the Terraform plugin framework type
 // system.
-func (a PasswordPermissions) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PasswordPermissions) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: PasswordAccessControlResponse{}.ToAttrType(ctx),
+				ElemType: PasswordAccessControlResponse{}.ToObjectType(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -2027,9 +2027,9 @@ func (a PasswordPermissionsDescription) GetComplexFieldTypes(ctx context.Context
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PasswordPermissionsDescription in the Terraform plugin framework type
+// ToObjectType returns the representation of PasswordPermissionsDescription in the Terraform plugin framework type
 // system.
-func (a PasswordPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PasswordPermissionsDescription) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -2061,13 +2061,13 @@ func (a PasswordPermissionsRequest) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// ToAttrType returns the representation of PasswordPermissionsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of PasswordPermissionsRequest in the Terraform plugin framework type
 // system.
-func (a PasswordPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PasswordPermissionsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: PasswordAccessControlRequest{}.ToAttrType(ctx),
+				ElemType: PasswordAccessControlRequest{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2099,9 +2099,9 @@ func (a Patch) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Patch in the Terraform plugin framework type
+// ToObjectType returns the representation of Patch in the Terraform plugin framework type
 // system.
-func (a Patch) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Patch) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"op":    types.StringType,
@@ -2131,9 +2131,9 @@ func (a PatchResponse) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PatchResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of PatchResponse in the Terraform plugin framework type
 // system.
-func (a PatchResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PatchResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -2166,9 +2166,9 @@ func (a Permission) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// ToAttrType returns the representation of Permission in the Terraform plugin framework type
+// ToObjectType returns the representation of Permission in the Terraform plugin framework type
 // system.
-func (a Permission) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Permission) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"inherited": types.BoolType,
@@ -2211,9 +2211,9 @@ func (a PermissionAssignment) GetComplexFieldTypes(ctx context.Context) map[stri
 	}
 }
 
-// ToAttrType returns the representation of PermissionAssignment in the Terraform plugin framework type
+// ToObjectType returns the representation of PermissionAssignment in the Terraform plugin framework type
 // system.
-func (a PermissionAssignment) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PermissionAssignment) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"error": types.StringType,
@@ -2221,7 +2221,7 @@ func (a PermissionAssignment) ToAttrType(ctx context.Context) types.ObjectType {
 				ElemType: types.StringType,
 			},
 			"principal": basetypes.ListType{
-				ElemType: PrincipalOutput{}.ToAttrType(ctx),
+				ElemType: PrincipalOutput{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2251,13 +2251,13 @@ func (a PermissionAssignments) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// ToAttrType returns the representation of PermissionAssignments in the Terraform plugin framework type
+// ToObjectType returns the representation of PermissionAssignments in the Terraform plugin framework type
 // system.
-func (a PermissionAssignments) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PermissionAssignments) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_assignments": basetypes.ListType{
-				ElemType: PermissionAssignment{}.ToAttrType(ctx),
+				ElemType: PermissionAssignment{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2287,9 +2287,9 @@ func (a PermissionOutput) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PermissionOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of PermissionOutput in the Terraform plugin framework type
 // system.
-func (a PermissionOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PermissionOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -2321,9 +2321,9 @@ func (a PermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PermissionsDescription in the Terraform plugin framework type
+// ToObjectType returns the representation of PermissionsDescription in the Terraform plugin framework type
 // system.
-func (a PermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PermissionsDescription) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -2363,13 +2363,13 @@ func (a PermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// ToAttrType returns the representation of PermissionsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of PermissionsRequest in the Terraform plugin framework type
 // system.
-func (a PermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PermissionsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlRequest{}.ToAttrType(ctx),
+				ElemType: AccessControlRequest{}.ToObjectType(ctx),
 			},
 			"request_object_id":   types.StringType,
 			"request_object_type": types.StringType,
@@ -2409,9 +2409,9 @@ func (a PrincipalOutput) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PrincipalOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of PrincipalOutput in the Terraform plugin framework type
 // system.
-func (a PrincipalOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PrincipalOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name":           types.StringType,
@@ -2446,9 +2446,9 @@ func (a ResourceMeta) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ResourceMeta in the Terraform plugin framework type
+// ToObjectType returns the representation of ResourceMeta in the Terraform plugin framework type
 // system.
-func (a ResourceMeta) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ResourceMeta) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"resourceType": types.StringType,
@@ -2478,9 +2478,9 @@ func (a Role) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Role in the Terraform plugin framework type
+// ToObjectType returns the representation of Role in the Terraform plugin framework type
 // system.
-func (a Role) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Role) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -2516,14 +2516,14 @@ func (a RuleSetResponse) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// ToAttrType returns the representation of RuleSetResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of RuleSetResponse in the Terraform plugin framework type
 // system.
-func (a RuleSetResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a RuleSetResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"etag": types.StringType,
 			"grant_rules": basetypes.ListType{
-				ElemType: GrantRule{}.ToAttrType(ctx),
+				ElemType: GrantRule{}.ToObjectType(ctx),
 			},
 			"name": types.StringType,
 		},
@@ -2560,14 +2560,14 @@ func (a RuleSetUpdateRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 	}
 }
 
-// ToAttrType returns the representation of RuleSetUpdateRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of RuleSetUpdateRequest in the Terraform plugin framework type
 // system.
-func (a RuleSetUpdateRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a RuleSetUpdateRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"etag": types.StringType,
 			"grant_rules": basetypes.ListType{
-				ElemType: GrantRule{}.ToAttrType(ctx),
+				ElemType: GrantRule{}.ToObjectType(ctx),
 			},
 			"name": types.StringType,
 		},
@@ -2620,24 +2620,24 @@ func (a ServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]r
 	}
 }
 
-// ToAttrType returns the representation of ServicePrincipal in the Terraform plugin framework type
+// ToObjectType returns the representation of ServicePrincipal in the Terraform plugin framework type
 // system.
-func (a ServicePrincipal) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ServicePrincipal) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":        types.BoolType,
 			"applicationId": types.StringType,
 			"displayName":   types.StringType,
 			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"externalId": types.StringType,
 			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"id": types.StringType,
 			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -2666,9 +2666,9 @@ func (a UpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UpdateResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateResponse in the Terraform plugin framework type
 // system.
-func (a UpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -2700,14 +2700,14 @@ func (a UpdateRuleSetRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 	}
 }
 
-// ToAttrType returns the representation of UpdateRuleSetRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateRuleSetRequest in the Terraform plugin framework type
 // system.
-func (a UpdateRuleSetRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateRuleSetRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
 			"rule_set": basetypes.ListType{
-				ElemType: RuleSetUpdateRequest{}.ToAttrType(ctx),
+				ElemType: RuleSetUpdateRequest{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2746,9 +2746,9 @@ func (a UpdateWorkspaceAssignments) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// ToAttrType returns the representation of UpdateWorkspaceAssignments in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateWorkspaceAssignments in the Terraform plugin framework type
 // system.
-func (a UpdateWorkspaceAssignments) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateWorkspaceAssignments) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permissions": basetypes.ListType{
@@ -2818,29 +2818,29 @@ func (a User) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 	}
 }
 
-// ToAttrType returns the representation of User in the Terraform plugin framework type
+// ToObjectType returns the representation of User in the Terraform plugin framework type
 // system.
-func (a User) ToAttrType(ctx context.Context) types.ObjectType {
+func (a User) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active":      types.BoolType,
 			"displayName": types.StringType,
 			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"externalId": types.StringType,
 			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"id": types.StringType,
 			"name": basetypes.ListType{
-				ElemType: Name{}.ToAttrType(ctx),
+				ElemType: Name{}.ToObjectType(ctx),
 			},
 			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.ToAttrType(ctx),
+				ElemType: ComplexValue{}.ToObjectType(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -2874,13 +2874,13 @@ func (a WorkspacePermissions) GetComplexFieldTypes(ctx context.Context) map[stri
 	}
 }
 
-// ToAttrType returns the representation of WorkspacePermissions in the Terraform plugin framework type
+// ToObjectType returns the representation of WorkspacePermissions in the Terraform plugin framework type
 // system.
-func (a WorkspacePermissions) ToAttrType(ctx context.Context) types.ObjectType {
+func (a WorkspacePermissions) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permissions": basetypes.ListType{
-				ElemType: PermissionOutput{}.ToAttrType(ctx),
+				ElemType: PermissionOutput{}.ToObjectType(ctx),
 			},
 		},
 	}

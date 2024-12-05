@@ -43,7 +43,7 @@ func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]
 }
 
 func (s ShareInfoExtended) ToObjectType(ctx context.Context) types.ObjectType {
-	return s.ShareInfo.ToAttrType(ctx)
+	return s.ShareInfo.ToObjectType(ctx)
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {

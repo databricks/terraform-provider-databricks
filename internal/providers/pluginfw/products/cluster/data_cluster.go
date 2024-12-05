@@ -3,9 +3,10 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -13,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -32,9 +34,25 @@ type ClusterDataSource struct {
 }
 
 type ClusterInfo struct {
-	ClusterId   types.String                `tfsdk:"cluster_id" tf:"optional,computed"`
-	Name        types.String                `tfsdk:"cluster_name" tf:"optional,computed"`
-	ClusterInfo []compute_tf.ClusterDetails `tfsdk:"cluster_info" tf:"optional,computed"`
+	ClusterId   types.String `tfsdk:"cluster_id" tf:"optional,computed"`
+	Name        types.String `tfsdk:"cluster_name" tf:"optional,computed"`
+	ClusterInfo types.List   `tfsdk:"cluster_info" tf:"optional,computed"`
+}
+
+func (ClusterInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"cluster_info": reflect.TypeOf(compute_tf.ClusterDetails{}),
+	}
+}
+
+func (ClusterInfo) ToObjectType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"cluster_id":   types.StringType,
+			"cluster_name": types.StringType,
+			"cluster_info": types.ListType{ElemType: compute_tf.ClusterDetails{}.ToObjectType(ctx)},
+		},
+	}
 }
 
 func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -84,52 +102,43 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 	clusterName := clusterInfo.Name.ValueString()
 	clusterId := clusterInfo.ClusterId.ValueString()
-	if clusterName != "" {
-		clustersGoSDk, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
-		if err != nil {
-			resp.Diagnostics.AddError("failed to list clusters", err.Error())
-			return
-		}
-		var clustersTfSDK []compute_tf.ClusterDetails
-		for _, cluster := range clustersGoSDk {
-			var clusterDetails compute_tf.ClusterDetails
-			resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &clusterDetails)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			clustersTfSDK = append(clustersTfSDK, clusterDetails)
-		}
-		namedClusters := []compute_tf.ClusterDetails{}
-		for _, cluster := range clustersTfSDK {
-			if cluster.ClusterName == clusterInfo.Name {
-				namedClusters = append(namedClusters, cluster)
-			}
-		}
-		resp.Diagnostics.Append(validateClustersList(ctx, namedClusters, clusterName)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		clusterInfo.ClusterInfo = namedClusters[0:1]
-	} else if clusterId != "" {
-		cluster, err := w.Clusters.GetByClusterId(ctx, clusterId)
-		if err != nil {
-			if apierr.IsMissing(err) {
-				resp.State.RemoveResource(ctx)
-			}
-			resp.Diagnostics.AddError(fmt.Sprintf("failed to get cluster with cluster id: %s", clusterId), err.Error())
-			return
-		}
-		var clusterDetails compute_tf.ClusterDetails
-		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &clusterDetails)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		clusterInfo.ClusterInfo = []compute_tf.ClusterDetails{clusterDetails}
-	} else {
-		resp.Diagnostics.AddError("you need to specify either `cluster_name` or `cluster_id`", "")
+	c, diag := d.getClusterDetails(ctx, w, clusterName, clusterId)
+	resp.Diagnostics.Append(diag...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	clusterInfo.ClusterId = clusterInfo.ClusterInfo[0].ClusterId
-	clusterInfo.Name = clusterInfo.ClusterInfo[0].ClusterName
+	cc := []compute_tf.ClusterDetails{}
+	for _, cluster := range c {
+		var tfCluster compute_tf.ClusterDetails
+		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &tfCluster)...)
+		cc = append(cc, tfCluster)
+	}
+	resp.Diagnostics.Append(validateClustersList(ctx, cc, clusterName)...)
+	clusterInfo.ClusterId = cc[0].ClusterId
+	clusterInfo.Name = cc[0].ClusterName
 	resp.Diagnostics.Append(resp.State.Set(ctx, clusterInfo)...)
+}
+
+func (d *ClusterDataSource) getClusterDetails(ctx context.Context, w *databricks.WorkspaceClient, clusterName, clusterId string) (c []compute.ClusterDetails, dd diag.Diagnostics) {
+	if clusterName != "" {
+		var err error
+		c, err = w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
+		if err != nil {
+			dd.AddError("failed to list clusters", err.Error())
+			return
+		}
+		return
+	}
+	if clusterId != "" {
+		cluster, err := w.Clusters.GetByClusterId(ctx, clusterId)
+		if err != nil {
+			dd.AddError(fmt.Sprintf("failed to get cluster with cluster id: %s", clusterId), err.Error())
+			return
+		}
+		c = []compute.ClusterDetails{*cluster}
+		return
+	}
+
+	dd.AddError("you need to specify either `cluster_name` or `cluster_id`", "")
+	return
 }

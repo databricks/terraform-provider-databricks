@@ -55,9 +55,9 @@ func (a CreateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// ToAttrType returns the representation of CreateCustomAppIntegration in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateCustomAppIntegration in the Terraform plugin framework type
 // system.
-func (a CreateCustomAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateCustomAppIntegration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"confidential": types.BoolType,
@@ -69,7 +69,7 @@ func (a CreateCustomAppIntegration) ToAttrType(ctx context.Context) types.Object
 				ElemType: types.StringType,
 			},
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+				ElemType: TokenAccessPolicy{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -102,9 +102,9 @@ func (a CreateCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateCustomAppIntegrationOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateCustomAppIntegrationOutput in the Terraform plugin framework type
 // system.
-func (a CreateCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateCustomAppIntegrationOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"client_id":      types.StringType,
@@ -141,14 +141,14 @@ func (a CreatePublishedAppIntegration) GetComplexFieldTypes(ctx context.Context)
 	}
 }
 
-// ToAttrType returns the representation of CreatePublishedAppIntegration in the Terraform plugin framework type
+// ToObjectType returns the representation of CreatePublishedAppIntegration in the Terraform plugin framework type
 // system.
-func (a CreatePublishedAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreatePublishedAppIntegration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_id": types.StringType,
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+				ElemType: TokenAccessPolicy{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -176,9 +176,9 @@ func (a CreatePublishedAppIntegrationOutput) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreatePublishedAppIntegrationOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of CreatePublishedAppIntegrationOutput in the Terraform plugin framework type
 // system.
-func (a CreatePublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreatePublishedAppIntegrationOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
@@ -209,9 +209,9 @@ func (a CreateServicePrincipalSecretRequest) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateServicePrincipalSecretRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateServicePrincipalSecretRequest in the Terraform plugin framework type
 // system.
-func (a CreateServicePrincipalSecretRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateServicePrincipalSecretRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"service_principal_id": types.Int64Type,
@@ -251,9 +251,9 @@ func (a CreateServicePrincipalSecretResponse) GetComplexFieldTypes(ctx context.C
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateServicePrincipalSecretResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateServicePrincipalSecretResponse in the Terraform plugin framework type
 // system.
-func (a CreateServicePrincipalSecretResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateServicePrincipalSecretResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
@@ -290,9 +290,9 @@ func (a DataPlaneInfo) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DataPlaneInfo in the Terraform plugin framework type
+// ToObjectType returns the representation of DataPlaneInfo in the Terraform plugin framework type
 // system.
-func (a DataPlaneInfo) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DataPlaneInfo) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"authorization_details": types.StringType,
@@ -321,9 +321,9 @@ func (a DeleteCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteCustomAppIntegrationOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteCustomAppIntegrationOutput in the Terraform plugin framework type
 // system.
-func (a DeleteCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteCustomAppIntegrationOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -351,9 +351,9 @@ func (a DeleteCustomAppIntegrationRequest) GetComplexFieldTypes(ctx context.Cont
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteCustomAppIntegrationRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteCustomAppIntegrationRequest in the Terraform plugin framework type
 // system.
-func (a DeleteCustomAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteCustomAppIntegrationRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
@@ -381,9 +381,9 @@ func (a DeletePublishedAppIntegrationOutput) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeletePublishedAppIntegrationOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of DeletePublishedAppIntegrationOutput in the Terraform plugin framework type
 // system.
-func (a DeletePublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeletePublishedAppIntegrationOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -411,9 +411,9 @@ func (a DeletePublishedAppIntegrationRequest) GetComplexFieldTypes(ctx context.C
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeletePublishedAppIntegrationRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeletePublishedAppIntegrationRequest in the Terraform plugin framework type
 // system.
-func (a DeletePublishedAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeletePublishedAppIntegrationRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
@@ -441,9 +441,9 @@ func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteResponse in the Terraform plugin framework type
 // system.
-func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -474,9 +474,9 @@ func (a DeleteServicePrincipalSecretRequest) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteServicePrincipalSecretRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteServicePrincipalSecretRequest in the Terraform plugin framework type
 // system.
-func (a DeleteServicePrincipalSecretRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteServicePrincipalSecretRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"secret_id":            types.StringType,
@@ -530,9 +530,9 @@ func (a GetCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context)
 	}
 }
 
-// ToAttrType returns the representation of GetCustomAppIntegrationOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of GetCustomAppIntegrationOutput in the Terraform plugin framework type
 // system.
-func (a GetCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetCustomAppIntegrationOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"client_id":        types.StringType,
@@ -549,7 +549,7 @@ func (a GetCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.Obj
 				ElemType: types.StringType,
 			},
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+				ElemType: TokenAccessPolicy{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -578,9 +578,9 @@ func (a GetCustomAppIntegrationRequest) GetComplexFieldTypes(ctx context.Context
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetCustomAppIntegrationRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetCustomAppIntegrationRequest in the Terraform plugin framework type
 // system.
-func (a GetCustomAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetCustomAppIntegrationRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
@@ -614,13 +614,13 @@ func (a GetCustomAppIntegrationsOutput) GetComplexFieldTypes(ctx context.Context
 	}
 }
 
-// ToAttrType returns the representation of GetCustomAppIntegrationsOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of GetCustomAppIntegrationsOutput in the Terraform plugin framework type
 // system.
-func (a GetCustomAppIntegrationsOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetCustomAppIntegrationsOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apps": basetypes.ListType{
-				ElemType: GetCustomAppIntegrationOutput{}.ToAttrType(ctx),
+				ElemType: GetCustomAppIntegrationOutput{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -661,9 +661,9 @@ func (a GetPublishedAppIntegrationOutput) GetComplexFieldTypes(ctx context.Conte
 	}
 }
 
-// ToAttrType returns the representation of GetPublishedAppIntegrationOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPublishedAppIntegrationOutput in the Terraform plugin framework type
 // system.
-func (a GetPublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPublishedAppIntegrationOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_id":         types.StringType,
@@ -672,7 +672,7 @@ func (a GetPublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.
 			"integration_id": types.StringType,
 			"name":           types.StringType,
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+				ElemType: TokenAccessPolicy{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -700,9 +700,9 @@ func (a GetPublishedAppIntegrationRequest) GetComplexFieldTypes(ctx context.Cont
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetPublishedAppIntegrationRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPublishedAppIntegrationRequest in the Terraform plugin framework type
 // system.
-func (a GetPublishedAppIntegrationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPublishedAppIntegrationRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
@@ -736,13 +736,13 @@ func (a GetPublishedAppIntegrationsOutput) GetComplexFieldTypes(ctx context.Cont
 	}
 }
 
-// ToAttrType returns the representation of GetPublishedAppIntegrationsOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPublishedAppIntegrationsOutput in the Terraform plugin framework type
 // system.
-func (a GetPublishedAppIntegrationsOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPublishedAppIntegrationsOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apps": basetypes.ListType{
-				ElemType: GetPublishedAppIntegrationOutput{}.ToAttrType(ctx),
+				ElemType: GetPublishedAppIntegrationOutput{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -776,13 +776,13 @@ func (a GetPublishedAppsOutput) GetComplexFieldTypes(ctx context.Context) map[st
 	}
 }
 
-// ToAttrType returns the representation of GetPublishedAppsOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPublishedAppsOutput in the Terraform plugin framework type
 // system.
-func (a GetPublishedAppsOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPublishedAppsOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apps": basetypes.ListType{
-				ElemType: PublishedAppOutput{}.ToAttrType(ctx),
+				ElemType: PublishedAppOutput{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -815,9 +815,9 @@ func (a ListCustomAppIntegrationsRequest) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListCustomAppIntegrationsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListCustomAppIntegrationsRequest in the Terraform plugin framework type
 // system.
-func (a ListCustomAppIntegrationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListCustomAppIntegrationsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"include_creator_username": types.BoolType,
@@ -852,9 +852,9 @@ func (a ListOAuthPublishedAppsRequest) GetComplexFieldTypes(ctx context.Context)
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListOAuthPublishedAppsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListOAuthPublishedAppsRequest in the Terraform plugin framework type
 // system.
-func (a ListOAuthPublishedAppsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListOAuthPublishedAppsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
@@ -887,9 +887,9 @@ func (a ListPublishedAppIntegrationsRequest) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListPublishedAppIntegrationsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListPublishedAppIntegrationsRequest in the Terraform plugin framework type
 // system.
-func (a ListPublishedAppIntegrationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListPublishedAppIntegrationsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
@@ -931,9 +931,9 @@ func (a ListServicePrincipalSecretsRequest) GetComplexFieldTypes(ctx context.Con
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListServicePrincipalSecretsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListServicePrincipalSecretsRequest in the Terraform plugin framework type
 // system.
-func (a ListServicePrincipalSecretsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListServicePrincipalSecretsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_token":           types.StringType,
@@ -968,14 +968,14 @@ func (a ListServicePrincipalSecretsResponse) GetComplexFieldTypes(ctx context.Co
 	}
 }
 
-// ToAttrType returns the representation of ListServicePrincipalSecretsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListServicePrincipalSecretsResponse in the Terraform plugin framework type
 // system.
-func (a ListServicePrincipalSecretsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListServicePrincipalSecretsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"secrets": basetypes.ListType{
-				ElemType: SecretInfo{}.ToAttrType(ctx),
+				ElemType: SecretInfo{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1020,9 +1020,9 @@ func (a PublishedAppOutput) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// ToAttrType returns the representation of PublishedAppOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of PublishedAppOutput in the Terraform plugin framework type
 // system.
-func (a PublishedAppOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PublishedAppOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_id":                 types.StringType,
@@ -1070,9 +1070,9 @@ func (a SecretInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of SecretInfo in the Terraform plugin framework type
+// ToObjectType returns the representation of SecretInfo in the Terraform plugin framework type
 // system.
-func (a SecretInfo) ToAttrType(ctx context.Context) types.ObjectType {
+func (a SecretInfo) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
@@ -1108,9 +1108,9 @@ func (a TokenAccessPolicy) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of TokenAccessPolicy in the Terraform plugin framework type
+// ToObjectType returns the representation of TokenAccessPolicy in the Terraform plugin framework type
 // system.
-func (a TokenAccessPolicy) ToAttrType(ctx context.Context) types.ObjectType {
+func (a TokenAccessPolicy) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_token_ttl_in_minutes":  types.Int64Type,
@@ -1148,9 +1148,9 @@ func (a UpdateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// ToAttrType returns the representation of UpdateCustomAppIntegration in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateCustomAppIntegration in the Terraform plugin framework type
 // system.
-func (a UpdateCustomAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateCustomAppIntegration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
@@ -1158,7 +1158,7 @@ func (a UpdateCustomAppIntegration) ToAttrType(ctx context.Context) types.Object
 				ElemType: types.StringType,
 			},
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+				ElemType: TokenAccessPolicy{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1184,9 +1184,9 @@ func (a UpdateCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UpdateCustomAppIntegrationOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateCustomAppIntegrationOutput in the Terraform plugin framework type
 // system.
-func (a UpdateCustomAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateCustomAppIntegrationOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1217,14 +1217,14 @@ func (a UpdatePublishedAppIntegration) GetComplexFieldTypes(ctx context.Context)
 	}
 }
 
-// ToAttrType returns the representation of UpdatePublishedAppIntegration in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdatePublishedAppIntegration in the Terraform plugin framework type
 // system.
-func (a UpdatePublishedAppIntegration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdatePublishedAppIntegration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.ToAttrType(ctx),
+				ElemType: TokenAccessPolicy{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1250,9 +1250,9 @@ func (a UpdatePublishedAppIntegrationOutput) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UpdatePublishedAppIntegrationOutput in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdatePublishedAppIntegrationOutput in the Terraform plugin framework type
 // system.
-func (a UpdatePublishedAppIntegrationOutput) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdatePublishedAppIntegrationOutput) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}

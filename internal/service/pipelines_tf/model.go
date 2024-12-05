@@ -112,9 +112,9 @@ func (a CreatePipeline) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// ToAttrType returns the representation of CreatePipeline in the Terraform plugin framework type
+// ToObjectType returns the representation of CreatePipeline in the Terraform plugin framework type
 // system.
-func (a CreatePipeline) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreatePipeline) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"allow_duplicate_names": types.BoolType,
@@ -122,45 +122,45 @@ func (a CreatePipeline) ToAttrType(ctx context.Context) types.ObjectType {
 			"catalog":               types.StringType,
 			"channel":               types.StringType,
 			"clusters": basetypes.ListType{
-				ElemType: PipelineCluster{}.ToAttrType(ctx),
+				ElemType: PipelineCluster{}.ToObjectType(ctx),
 			},
 			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"continuous": types.BoolType,
 			"deployment": basetypes.ListType{
-				ElemType: PipelineDeployment{}.ToAttrType(ctx),
+				ElemType: PipelineDeployment{}.ToObjectType(ctx),
 			},
 			"development": types.BoolType,
 			"dry_run":     types.BoolType,
 			"edition":     types.StringType,
 			"filters": basetypes.ListType{
-				ElemType: Filters{}.ToAttrType(ctx),
+				ElemType: Filters{}.ToObjectType(ctx),
 			},
 			"gateway_definition": basetypes.ListType{
-				ElemType: IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+				ElemType: IngestionGatewayPipelineDefinition{}.ToObjectType(ctx),
 			},
 			"id": types.StringType,
 			"ingestion_definition": basetypes.ListType{
-				ElemType: IngestionPipelineDefinition{}.ToAttrType(ctx),
+				ElemType: IngestionPipelineDefinition{}.ToObjectType(ctx),
 			},
 			"libraries": basetypes.ListType{
-				ElemType: PipelineLibrary{}.ToAttrType(ctx),
+				ElemType: PipelineLibrary{}.ToObjectType(ctx),
 			},
 			"name": types.StringType,
 			"notifications": basetypes.ListType{
-				ElemType: Notifications{}.ToAttrType(ctx),
+				ElemType: Notifications{}.ToObjectType(ctx),
 			},
 			"photon": types.BoolType,
 			"restart_window": basetypes.ListType{
-				ElemType: RestartWindow{}.ToAttrType(ctx),
+				ElemType: RestartWindow{}.ToObjectType(ctx),
 			},
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
 			"target":     types.StringType,
 			"trigger": basetypes.ListType{
-				ElemType: PipelineTrigger{}.ToAttrType(ctx),
+				ElemType: PipelineTrigger{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -193,13 +193,13 @@ func (a CreatePipelineResponse) GetComplexFieldTypes(ctx context.Context) map[st
 	}
 }
 
-// ToAttrType returns the representation of CreatePipelineResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of CreatePipelineResponse in the Terraform plugin framework type
 // system.
-func (a CreatePipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreatePipelineResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"effective_settings": basetypes.ListType{
-				ElemType: PipelineSpec{}.ToAttrType(ctx),
+				ElemType: PipelineSpec{}.ToObjectType(ctx),
 			},
 			"pipeline_id": types.StringType,
 		},
@@ -229,9 +229,9 @@ func (a CronTrigger) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CronTrigger in the Terraform plugin framework type
+// ToObjectType returns the representation of CronTrigger in the Terraform plugin framework type
 // system.
-func (a CronTrigger) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CronTrigger) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"quartz_cron_schedule": types.StringType,
@@ -264,9 +264,9 @@ func (a DataPlaneId) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DataPlaneId in the Terraform plugin framework type
+// ToObjectType returns the representation of DataPlaneId in the Terraform plugin framework type
 // system.
-func (a DataPlaneId) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DataPlaneId) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"instance": types.StringType,
@@ -297,9 +297,9 @@ func (a DeletePipelineRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeletePipelineRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeletePipelineRequest in the Terraform plugin framework type
 // system.
-func (a DeletePipelineRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeletePipelineRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pipeline_id": types.StringType,
@@ -327,9 +327,9 @@ func (a DeletePipelineResponse) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeletePipelineResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeletePipelineResponse in the Terraform plugin framework type
 // system.
-func (a DeletePipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeletePipelineResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -430,9 +430,9 @@ func (a EditPipeline) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// ToAttrType returns the representation of EditPipeline in the Terraform plugin framework type
+// ToObjectType returns the representation of EditPipeline in the Terraform plugin framework type
 // system.
-func (a EditPipeline) ToAttrType(ctx context.Context) types.ObjectType {
+func (a EditPipeline) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"allow_duplicate_names": types.BoolType,
@@ -440,46 +440,46 @@ func (a EditPipeline) ToAttrType(ctx context.Context) types.ObjectType {
 			"catalog":               types.StringType,
 			"channel":               types.StringType,
 			"clusters": basetypes.ListType{
-				ElemType: PipelineCluster{}.ToAttrType(ctx),
+				ElemType: PipelineCluster{}.ToObjectType(ctx),
 			},
 			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"continuous": types.BoolType,
 			"deployment": basetypes.ListType{
-				ElemType: PipelineDeployment{}.ToAttrType(ctx),
+				ElemType: PipelineDeployment{}.ToObjectType(ctx),
 			},
 			"development":            types.BoolType,
 			"edition":                types.StringType,
 			"expected_last_modified": types.Int64Type,
 			"filters": basetypes.ListType{
-				ElemType: Filters{}.ToAttrType(ctx),
+				ElemType: Filters{}.ToObjectType(ctx),
 			},
 			"gateway_definition": basetypes.ListType{
-				ElemType: IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+				ElemType: IngestionGatewayPipelineDefinition{}.ToObjectType(ctx),
 			},
 			"id": types.StringType,
 			"ingestion_definition": basetypes.ListType{
-				ElemType: IngestionPipelineDefinition{}.ToAttrType(ctx),
+				ElemType: IngestionPipelineDefinition{}.ToObjectType(ctx),
 			},
 			"libraries": basetypes.ListType{
-				ElemType: PipelineLibrary{}.ToAttrType(ctx),
+				ElemType: PipelineLibrary{}.ToObjectType(ctx),
 			},
 			"name": types.StringType,
 			"notifications": basetypes.ListType{
-				ElemType: Notifications{}.ToAttrType(ctx),
+				ElemType: Notifications{}.ToObjectType(ctx),
 			},
 			"photon":      types.BoolType,
 			"pipeline_id": types.StringType,
 			"restart_window": basetypes.ListType{
-				ElemType: RestartWindow{}.ToAttrType(ctx),
+				ElemType: RestartWindow{}.ToObjectType(ctx),
 			},
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
 			"target":     types.StringType,
 			"trigger": basetypes.ListType{
-				ElemType: PipelineTrigger{}.ToAttrType(ctx),
+				ElemType: PipelineTrigger{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -505,9 +505,9 @@ func (a EditPipelineResponse) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of EditPipelineResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of EditPipelineResponse in the Terraform plugin framework type
 // system.
-func (a EditPipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a EditPipelineResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -539,13 +539,13 @@ func (a ErrorDetail) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	}
 }
 
-// ToAttrType returns the representation of ErrorDetail in the Terraform plugin framework type
+// ToObjectType returns the representation of ErrorDetail in the Terraform plugin framework type
 // system.
-func (a ErrorDetail) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ErrorDetail) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exceptions": basetypes.ListType{
-				ElemType: SerializedException{}.ToAttrType(ctx),
+				ElemType: SerializedException{}.ToObjectType(ctx),
 			},
 			"fatal": types.BoolType,
 		},
@@ -574,9 +574,9 @@ func (a FileLibrary) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of FileLibrary in the Terraform plugin framework type
+// ToObjectType returns the representation of FileLibrary in the Terraform plugin framework type
 // system.
-func (a FileLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+func (a FileLibrary) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"path": types.StringType,
@@ -611,9 +611,9 @@ func (a Filters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	}
 }
 
-// ToAttrType returns the representation of Filters in the Terraform plugin framework type
+// ToObjectType returns the representation of Filters in the Terraform plugin framework type
 // system.
-func (a Filters) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Filters) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exclude": basetypes.ListType{
@@ -649,9 +649,9 @@ func (a GetPipelinePermissionLevelsRequest) GetComplexFieldTypes(ctx context.Con
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetPipelinePermissionLevelsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPipelinePermissionLevelsRequest in the Terraform plugin framework type
 // system.
-func (a GetPipelinePermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPipelinePermissionLevelsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pipeline_id": types.StringType,
@@ -683,13 +683,13 @@ func (a GetPipelinePermissionLevelsResponse) GetComplexFieldTypes(ctx context.Co
 	}
 }
 
-// ToAttrType returns the representation of GetPipelinePermissionLevelsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPipelinePermissionLevelsResponse in the Terraform plugin framework type
 // system.
-func (a GetPipelinePermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPipelinePermissionLevelsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: PipelinePermissionsDescription{}.ToAttrType(ctx),
+				ElemType: PipelinePermissionsDescription{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -718,9 +718,9 @@ func (a GetPipelinePermissionsRequest) GetComplexFieldTypes(ctx context.Context)
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetPipelinePermissionsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPipelinePermissionsRequest in the Terraform plugin framework type
 // system.
-func (a GetPipelinePermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPipelinePermissionsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pipeline_id": types.StringType,
@@ -750,9 +750,9 @@ func (a GetPipelineRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetPipelineRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPipelineRequest in the Terraform plugin framework type
 // system.
-func (a GetPipelineRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPipelineRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pipeline_id": types.StringType,
@@ -809,9 +809,9 @@ func (a GetPipelineResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// ToAttrType returns the representation of GetPipelineResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPipelineResponse in the Terraform plugin framework type
 // system.
-func (a GetPipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPipelineResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cause":                      types.StringType,
@@ -821,13 +821,13 @@ func (a GetPipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
 			"health":                     types.StringType,
 			"last_modified":              types.Int64Type,
 			"latest_updates": basetypes.ListType{
-				ElemType: UpdateStateInfo{}.ToAttrType(ctx),
+				ElemType: UpdateStateInfo{}.ToObjectType(ctx),
 			},
 			"name":             types.StringType,
 			"pipeline_id":      types.StringType,
 			"run_as_user_name": types.StringType,
 			"spec": basetypes.ListType{
-				ElemType: PipelineSpec{}.ToAttrType(ctx),
+				ElemType: PipelineSpec{}.ToObjectType(ctx),
 			},
 			"state": types.StringType,
 		},
@@ -859,9 +859,9 @@ func (a GetUpdateRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetUpdateRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetUpdateRequest in the Terraform plugin framework type
 // system.
-func (a GetUpdateRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetUpdateRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pipeline_id": types.StringType,
@@ -894,13 +894,13 @@ func (a GetUpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	}
 }
 
-// ToAttrType returns the representation of GetUpdateResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetUpdateResponse in the Terraform plugin framework type
 // system.
-func (a GetUpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetUpdateResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"update": basetypes.ListType{
-				ElemType: UpdateInfo{}.ToAttrType(ctx),
+				ElemType: UpdateInfo{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -936,19 +936,19 @@ func (a IngestionConfig) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// ToAttrType returns the representation of IngestionConfig in the Terraform plugin framework type
+// ToObjectType returns the representation of IngestionConfig in the Terraform plugin framework type
 // system.
-func (a IngestionConfig) ToAttrType(ctx context.Context) types.ObjectType {
+func (a IngestionConfig) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"report": basetypes.ListType{
-				ElemType: ReportSpec{}.ToAttrType(ctx),
+				ElemType: ReportSpec{}.ToObjectType(ctx),
 			},
 			"schema": basetypes.ListType{
-				ElemType: SchemaSpec{}.ToAttrType(ctx),
+				ElemType: SchemaSpec{}.ToObjectType(ctx),
 			},
 			"table": basetypes.ListType{
-				ElemType: TableSpec{}.ToAttrType(ctx),
+				ElemType: TableSpec{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -992,9 +992,9 @@ func (a IngestionGatewayPipelineDefinition) GetComplexFieldTypes(ctx context.Con
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of IngestionGatewayPipelineDefinition in the Terraform plugin framework type
+// ToObjectType returns the representation of IngestionGatewayPipelineDefinition in the Terraform plugin framework type
 // system.
-func (a IngestionGatewayPipelineDefinition) ToAttrType(ctx context.Context) types.ObjectType {
+func (a IngestionGatewayPipelineDefinition) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"connection_id":           types.StringType,
@@ -1043,18 +1043,18 @@ func (a IngestionPipelineDefinition) GetComplexFieldTypes(ctx context.Context) m
 	}
 }
 
-// ToAttrType returns the representation of IngestionPipelineDefinition in the Terraform plugin framework type
+// ToObjectType returns the representation of IngestionPipelineDefinition in the Terraform plugin framework type
 // system.
-func (a IngestionPipelineDefinition) ToAttrType(ctx context.Context) types.ObjectType {
+func (a IngestionPipelineDefinition) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"connection_name":      types.StringType,
 			"ingestion_gateway_id": types.StringType,
 			"objects": basetypes.ListType{
-				ElemType: IngestionConfig{}.ToAttrType(ctx),
+				ElemType: IngestionConfig{}.ToObjectType(ctx),
 			},
 			"table_configuration": basetypes.ListType{
-				ElemType: TableSpecificConfig{}.ToAttrType(ctx),
+				ElemType: TableSpecificConfig{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1106,9 +1106,9 @@ func (a ListPipelineEventsRequest) GetComplexFieldTypes(ctx context.Context) map
 	}
 }
 
-// ToAttrType returns the representation of ListPipelineEventsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListPipelineEventsRequest in the Terraform plugin framework type
 // system.
-func (a ListPipelineEventsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListPipelineEventsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"filter":      types.StringType,
@@ -1150,13 +1150,13 @@ func (a ListPipelineEventsResponse) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// ToAttrType returns the representation of ListPipelineEventsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListPipelineEventsResponse in the Terraform plugin framework type
 // system.
-func (a ListPipelineEventsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListPipelineEventsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"events": basetypes.ListType{
-				ElemType: PipelineEvent{}.ToAttrType(ctx),
+				ElemType: PipelineEvent{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
@@ -1208,9 +1208,9 @@ func (a ListPipelinesRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 	}
 }
 
-// ToAttrType returns the representation of ListPipelinesRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListPipelinesRequest in the Terraform plugin framework type
 // system.
-func (a ListPipelinesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListPipelinesRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"filter":      types.StringType,
@@ -1249,14 +1249,14 @@ func (a ListPipelinesResponse) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// ToAttrType returns the representation of ListPipelinesResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListPipelinesResponse in the Terraform plugin framework type
 // system.
-func (a ListPipelinesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListPipelinesResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"statuses": basetypes.ListType{
-				ElemType: PipelineStateInfo{}.ToAttrType(ctx),
+				ElemType: PipelineStateInfo{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1291,9 +1291,9 @@ func (a ListUpdatesRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListUpdatesRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListUpdatesRequest in the Terraform plugin framework type
 // system.
-func (a ListUpdatesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListUpdatesRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"max_results":     types.Int64Type,
@@ -1334,15 +1334,15 @@ func (a ListUpdatesResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// ToAttrType returns the representation of ListUpdatesResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListUpdatesResponse in the Terraform plugin framework type
 // system.
-func (a ListUpdatesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListUpdatesResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
 			"updates": basetypes.ListType{
-				ElemType: UpdateInfo{}.ToAttrType(ctx),
+				ElemType: UpdateInfo{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1368,9 +1368,9 @@ func (a ManualTrigger) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ManualTrigger in the Terraform plugin framework type
+// ToObjectType returns the representation of ManualTrigger in the Terraform plugin framework type
 // system.
-func (a ManualTrigger) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ManualTrigger) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1398,9 +1398,9 @@ func (a NotebookLibrary) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of NotebookLibrary in the Terraform plugin framework type
+// ToObjectType returns the representation of NotebookLibrary in the Terraform plugin framework type
 // system.
-func (a NotebookLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+func (a NotebookLibrary) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"path": types.StringType,
@@ -1441,9 +1441,9 @@ func (a Notifications) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	}
 }
 
-// ToAttrType returns the representation of Notifications in the Terraform plugin framework type
+// ToObjectType returns the representation of Notifications in the Terraform plugin framework type
 // system.
-func (a Notifications) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Notifications) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alerts": basetypes.ListType{
@@ -1511,9 +1511,9 @@ func (a Origin) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Origin in the Terraform plugin framework type
+// ToObjectType returns the representation of Origin in the Terraform plugin framework type
 // system.
-func (a Origin) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Origin) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"batch_id":             types.Int64Type,
@@ -1565,9 +1565,9 @@ func (a PipelineAccessControlRequest) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PipelineAccessControlRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineAccessControlRequest in the Terraform plugin framework type
 // system.
-func (a PipelineAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineAccessControlRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"group_name":             types.StringType,
@@ -1610,13 +1610,13 @@ func (a PipelineAccessControlResponse) GetComplexFieldTypes(ctx context.Context)
 	}
 }
 
-// ToAttrType returns the representation of PipelineAccessControlResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineAccessControlResponse in the Terraform plugin framework type
 // system.
-func (a PipelineAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineAccessControlResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: PipelinePermission{}.ToAttrType(ctx),
+				ElemType: PipelinePermission{}.ToObjectType(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -1751,23 +1751,23 @@ func (a PipelineCluster) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// ToAttrType returns the representation of PipelineCluster in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineCluster in the Terraform plugin framework type
 // system.
-func (a PipelineCluster) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineCluster) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apply_policy_default_values": types.BoolType,
 			"autoscale": basetypes.ListType{
-				ElemType: PipelineClusterAutoscale{}.ToAttrType(ctx),
+				ElemType: PipelineClusterAutoscale{}.ToObjectType(ctx),
 			},
 			"aws_attributes": basetypes.ListType{
-				ElemType: compute_tf.AwsAttributes{}.ToAttrType(ctx),
+				ElemType: compute_tf.AwsAttributes{}.ToObjectType(ctx),
 			},
 			"azure_attributes": basetypes.ListType{
-				ElemType: compute_tf.AzureAttributes{}.ToAttrType(ctx),
+				ElemType: compute_tf.AzureAttributes{}.ToObjectType(ctx),
 			},
 			"cluster_log_conf": basetypes.ListType{
-				ElemType: compute_tf.ClusterLogConf{}.ToAttrType(ctx),
+				ElemType: compute_tf.ClusterLogConf{}.ToObjectType(ctx),
 			},
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
@@ -1776,10 +1776,10 @@ func (a PipelineCluster) ToAttrType(ctx context.Context) types.ObjectType {
 			"driver_node_type_id":          types.StringType,
 			"enable_local_disk_encryption": types.BoolType,
 			"gcp_attributes": basetypes.ListType{
-				ElemType: compute_tf.GcpAttributes{}.ToAttrType(ctx),
+				ElemType: compute_tf.GcpAttributes{}.ToObjectType(ctx),
 			},
 			"init_scripts": basetypes.ListType{
-				ElemType: compute_tf.InitScriptInfo{}.ToAttrType(ctx),
+				ElemType: compute_tf.InitScriptInfo{}.ToObjectType(ctx),
 			},
 			"instance_pool_id": types.StringType,
 			"label":            types.StringType,
@@ -1832,9 +1832,9 @@ func (a PipelineClusterAutoscale) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PipelineClusterAutoscale in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineClusterAutoscale in the Terraform plugin framework type
 // system.
-func (a PipelineClusterAutoscale) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineClusterAutoscale) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"max_workers": types.Int64Type,
@@ -1868,9 +1868,9 @@ func (a PipelineDeployment) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PipelineDeployment in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineDeployment in the Terraform plugin framework type
 // system.
-func (a PipelineDeployment) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineDeployment) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"kind":               types.StringType,
@@ -1921,13 +1921,13 @@ func (a PipelineEvent) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	}
 }
 
-// ToAttrType returns the representation of PipelineEvent in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineEvent in the Terraform plugin framework type
 // system.
-func (a PipelineEvent) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineEvent) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"error": basetypes.ListType{
-				ElemType: ErrorDetail{}.ToAttrType(ctx),
+				ElemType: ErrorDetail{}.ToObjectType(ctx),
 			},
 			"event_type":     types.StringType,
 			"id":             types.StringType,
@@ -1935,10 +1935,10 @@ func (a PipelineEvent) ToAttrType(ctx context.Context) types.ObjectType {
 			"maturity_level": types.StringType,
 			"message":        types.StringType,
 			"origin": basetypes.ListType{
-				ElemType: Origin{}.ToAttrType(ctx),
+				ElemType: Origin{}.ToObjectType(ctx),
 			},
 			"sequence": basetypes.ListType{
-				ElemType: Sequencing{}.ToAttrType(ctx),
+				ElemType: Sequencing{}.ToObjectType(ctx),
 			},
 			"timestamp": types.StringType,
 		},
@@ -1981,20 +1981,20 @@ func (a PipelineLibrary) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// ToAttrType returns the representation of PipelineLibrary in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineLibrary in the Terraform plugin framework type
 // system.
-func (a PipelineLibrary) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineLibrary) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file": basetypes.ListType{
-				ElemType: FileLibrary{}.ToAttrType(ctx),
+				ElemType: FileLibrary{}.ToObjectType(ctx),
 			},
 			"jar": types.StringType,
 			"maven": basetypes.ListType{
-				ElemType: compute_tf.MavenLibrary{}.ToAttrType(ctx),
+				ElemType: compute_tf.MavenLibrary{}.ToObjectType(ctx),
 			},
 			"notebook": basetypes.ListType{
-				ElemType: NotebookLibrary{}.ToAttrType(ctx),
+				ElemType: NotebookLibrary{}.ToObjectType(ctx),
 			},
 			"whl": types.StringType,
 		},
@@ -2028,9 +2028,9 @@ func (a PipelinePermission) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// ToAttrType returns the representation of PipelinePermission in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelinePermission in the Terraform plugin framework type
 // system.
-func (a PipelinePermission) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelinePermission) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"inherited": types.BoolType,
@@ -2069,13 +2069,13 @@ func (a PipelinePermissions) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// ToAttrType returns the representation of PipelinePermissions in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelinePermissions in the Terraform plugin framework type
 // system.
-func (a PipelinePermissions) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelinePermissions) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: PipelineAccessControlResponse{}.ToAttrType(ctx),
+				ElemType: PipelineAccessControlResponse{}.ToObjectType(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -2106,9 +2106,9 @@ func (a PipelinePermissionsDescription) GetComplexFieldTypes(ctx context.Context
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PipelinePermissionsDescription in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelinePermissionsDescription in the Terraform plugin framework type
 // system.
-func (a PipelinePermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelinePermissionsDescription) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":      types.StringType,
@@ -2142,13 +2142,13 @@ func (a PipelinePermissionsRequest) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// ToAttrType returns the representation of PipelinePermissionsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelinePermissionsRequest in the Terraform plugin framework type
 // system.
-func (a PipelinePermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelinePermissionsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: PipelineAccessControlRequest{}.ToAttrType(ctx),
+				ElemType: PipelineAccessControlRequest{}.ToObjectType(ctx),
 			},
 			"pipeline_id": types.StringType,
 		},
@@ -2241,53 +2241,53 @@ func (a PipelineSpec) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// ToAttrType returns the representation of PipelineSpec in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineSpec in the Terraform plugin framework type
 // system.
-func (a PipelineSpec) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineSpec) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget_policy_id": types.StringType,
 			"catalog":          types.StringType,
 			"channel":          types.StringType,
 			"clusters": basetypes.ListType{
-				ElemType: PipelineCluster{}.ToAttrType(ctx),
+				ElemType: PipelineCluster{}.ToObjectType(ctx),
 			},
 			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"continuous": types.BoolType,
 			"deployment": basetypes.ListType{
-				ElemType: PipelineDeployment{}.ToAttrType(ctx),
+				ElemType: PipelineDeployment{}.ToObjectType(ctx),
 			},
 			"development": types.BoolType,
 			"edition":     types.StringType,
 			"filters": basetypes.ListType{
-				ElemType: Filters{}.ToAttrType(ctx),
+				ElemType: Filters{}.ToObjectType(ctx),
 			},
 			"gateway_definition": basetypes.ListType{
-				ElemType: IngestionGatewayPipelineDefinition{}.ToAttrType(ctx),
+				ElemType: IngestionGatewayPipelineDefinition{}.ToObjectType(ctx),
 			},
 			"id": types.StringType,
 			"ingestion_definition": basetypes.ListType{
-				ElemType: IngestionPipelineDefinition{}.ToAttrType(ctx),
+				ElemType: IngestionPipelineDefinition{}.ToObjectType(ctx),
 			},
 			"libraries": basetypes.ListType{
-				ElemType: PipelineLibrary{}.ToAttrType(ctx),
+				ElemType: PipelineLibrary{}.ToObjectType(ctx),
 			},
 			"name": types.StringType,
 			"notifications": basetypes.ListType{
-				ElemType: Notifications{}.ToAttrType(ctx),
+				ElemType: Notifications{}.ToObjectType(ctx),
 			},
 			"photon": types.BoolType,
 			"restart_window": basetypes.ListType{
-				ElemType: RestartWindow{}.ToAttrType(ctx),
+				ElemType: RestartWindow{}.ToObjectType(ctx),
 			},
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
 			"target":     types.StringType,
 			"trigger": basetypes.ListType{
-				ElemType: PipelineTrigger{}.ToAttrType(ctx),
+				ElemType: PipelineTrigger{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2333,16 +2333,16 @@ func (a PipelineStateInfo) GetComplexFieldTypes(ctx context.Context) map[string]
 	}
 }
 
-// ToAttrType returns the representation of PipelineStateInfo in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineStateInfo in the Terraform plugin framework type
 // system.
-func (a PipelineStateInfo) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineStateInfo) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cluster_id":        types.StringType,
 			"creator_user_name": types.StringType,
 			"health":            types.StringType,
 			"latest_updates": basetypes.ListType{
-				ElemType: UpdateStateInfo{}.ToAttrType(ctx),
+				ElemType: UpdateStateInfo{}.ToObjectType(ctx),
 			},
 			"name":             types.StringType,
 			"pipeline_id":      types.StringType,
@@ -2355,7 +2355,7 @@ func (a PipelineStateInfo) ToAttrType(ctx context.Context) types.ObjectType {
 type PipelineTrigger struct {
 	Cron types.List `tfsdk:"cron" tf:"optional,object"`
 
-	Manual []ManualTrigger `tfsdk:"manual" tf:"optional,object"`
+	Manual types.List `tfsdk:"manual" tf:"optional,object"`
 }
 
 func (newState *PipelineTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTrigger) {
@@ -2378,16 +2378,16 @@ func (a PipelineTrigger) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// ToAttrType returns the representation of PipelineTrigger in the Terraform plugin framework type
+// ToObjectType returns the representation of PipelineTrigger in the Terraform plugin framework type
 // system.
-func (a PipelineTrigger) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PipelineTrigger) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cron": basetypes.ListType{
-				ElemType: CronTrigger{}.ToAttrType(ctx),
+				ElemType: CronTrigger{}.ToObjectType(ctx),
 			},
 			"manual": basetypes.ListType{
-				ElemType: ManualTrigger{}.ToAttrType(ctx),
+				ElemType: ManualTrigger{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2428,9 +2428,9 @@ func (a ReportSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// ToAttrType returns the representation of ReportSpec in the Terraform plugin framework type
+// ToObjectType returns the representation of ReportSpec in the Terraform plugin framework type
 // system.
-func (a ReportSpec) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ReportSpec) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_catalog": types.StringType,
@@ -2438,7 +2438,7 @@ func (a ReportSpec) ToAttrType(ctx context.Context) types.ObjectType {
 			"destination_table":   types.StringType,
 			"source_url":          types.StringType,
 			"table_configuration": basetypes.ListType{
-				ElemType: TableSpecificConfig{}.ToAttrType(ctx),
+				ElemType: TableSpecificConfig{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2476,9 +2476,9 @@ func (a RestartWindow) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of RestartWindow in the Terraform plugin framework type
+// ToObjectType returns the representation of RestartWindow in the Terraform plugin framework type
 // system.
-func (a RestartWindow) ToAttrType(ctx context.Context) types.ObjectType {
+func (a RestartWindow) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"days_of_week": types.StringType,
@@ -2525,9 +2525,9 @@ func (a SchemaSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// ToAttrType returns the representation of SchemaSpec in the Terraform plugin framework type
+// ToObjectType returns the representation of SchemaSpec in the Terraform plugin framework type
 // system.
-func (a SchemaSpec) ToAttrType(ctx context.Context) types.ObjectType {
+func (a SchemaSpec) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_catalog": types.StringType,
@@ -2535,7 +2535,7 @@ func (a SchemaSpec) ToAttrType(ctx context.Context) types.ObjectType {
 			"source_catalog":      types.StringType,
 			"source_schema":       types.StringType,
 			"table_configuration": basetypes.ListType{
-				ElemType: TableSpecificConfig{}.ToAttrType(ctx),
+				ElemType: TableSpecificConfig{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2567,14 +2567,14 @@ func (a Sequencing) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// ToAttrType returns the representation of Sequencing in the Terraform plugin framework type
+// ToObjectType returns the representation of Sequencing in the Terraform plugin framework type
 // system.
-func (a Sequencing) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Sequencing) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"control_plane_seq_no": types.Int64Type,
 			"data_plane_id": basetypes.ListType{
-				ElemType: DataPlaneId{}.ToAttrType(ctx),
+				ElemType: DataPlaneId{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2608,15 +2608,15 @@ func (a SerializedException) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// ToAttrType returns the representation of SerializedException in the Terraform plugin framework type
+// ToObjectType returns the representation of SerializedException in the Terraform plugin framework type
 // system.
-func (a SerializedException) ToAttrType(ctx context.Context) types.ObjectType {
+func (a SerializedException) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"class_name": types.StringType,
 			"message":    types.StringType,
 			"stack": basetypes.ListType{
-				ElemType: StackFrame{}.ToAttrType(ctx),
+				ElemType: StackFrame{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2650,9 +2650,9 @@ func (a StackFrame) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of StackFrame in the Terraform plugin framework type
+// ToObjectType returns the representation of StackFrame in the Terraform plugin framework type
 // system.
-func (a StackFrame) ToAttrType(ctx context.Context) types.ObjectType {
+func (a StackFrame) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"declaring_class": types.StringType,
@@ -2704,9 +2704,9 @@ func (a StartUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	}
 }
 
-// ToAttrType returns the representation of StartUpdate in the Terraform plugin framework type
+// ToObjectType returns the representation of StartUpdate in the Terraform plugin framework type
 // system.
-func (a StartUpdate) ToAttrType(ctx context.Context) types.ObjectType {
+func (a StartUpdate) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cause":        types.StringType,
@@ -2744,9 +2744,9 @@ func (a StartUpdateResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of StartUpdateResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of StartUpdateResponse in the Terraform plugin framework type
 // system.
-func (a StartUpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a StartUpdateResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"update_id": types.StringType,
@@ -2774,9 +2774,9 @@ func (a StopPipelineResponse) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of StopPipelineResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of StopPipelineResponse in the Terraform plugin framework type
 // system.
-func (a StopPipelineResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a StopPipelineResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -2804,9 +2804,9 @@ func (a StopRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of StopRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of StopRequest in the Terraform plugin framework type
 // system.
-func (a StopRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a StopRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"pipeline_id": types.StringType,
@@ -2854,9 +2854,9 @@ func (a TableSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// ToAttrType returns the representation of TableSpec in the Terraform plugin framework type
+// ToObjectType returns the representation of TableSpec in the Terraform plugin framework type
 // system.
-func (a TableSpec) ToAttrType(ctx context.Context) types.ObjectType {
+func (a TableSpec) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_catalog": types.StringType,
@@ -2866,7 +2866,7 @@ func (a TableSpec) ToAttrType(ctx context.Context) types.ObjectType {
 			"source_schema":       types.StringType,
 			"source_table":        types.StringType,
 			"table_configuration": basetypes.ListType{
-				ElemType: TableSpecificConfig{}.ToAttrType(ctx),
+				ElemType: TableSpecificConfig{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -2906,9 +2906,9 @@ func (a TableSpecificConfig) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// ToAttrType returns the representation of TableSpecificConfig in the Terraform plugin framework type
+// ToObjectType returns the representation of TableSpecificConfig in the Terraform plugin framework type
 // system.
-func (a TableSpecificConfig) ToAttrType(ctx context.Context) types.ObjectType {
+func (a TableSpecificConfig) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"primary_keys": basetypes.ListType{
@@ -2977,15 +2977,15 @@ func (a UpdateInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// ToAttrType returns the representation of UpdateInfo in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateInfo in the Terraform plugin framework type
 // system.
-func (a UpdateInfo) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateInfo) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cause":      types.StringType,
 			"cluster_id": types.StringType,
 			"config": basetypes.ListType{
-				ElemType: PipelineSpec{}.ToAttrType(ctx),
+				ElemType: PipelineSpec{}.ToObjectType(ctx),
 			},
 			"creation_time": types.Int64Type,
 			"full_refresh":  types.BoolType,
@@ -3028,9 +3028,9 @@ func (a UpdateStateInfo) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UpdateStateInfo in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateStateInfo in the Terraform plugin framework type
 // system.
-func (a UpdateStateInfo) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateStateInfo) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"creation_time": types.StringType,

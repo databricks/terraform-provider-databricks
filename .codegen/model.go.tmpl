@@ -78,9 +78,9 @@ func (a {{.PascalName}}) GetComplexFieldTypes(ctx context.Context) map[string]re
   }
 }
 
-// ToAttrType returns the representation of {{.PascalName}} in the Terraform plugin framework type
+// ToObjectType returns the representation of {{.PascalName}} in the Terraform plugin framework type
 // system.
-func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
+func (a {{.PascalName}}) ToObjectType(ctx context.Context) types.ObjectType {
   return types.ObjectType{
     AttrTypes: map[string]attr.Type{
       {{ range .Fields -}}
@@ -96,7 +96,7 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
 
 {{/*
 Jobs has a recursive structure: Tasks contain ForEachTasks, which contain Tasks.
-Because of this, GetComplexFieldTypes and ToAttrType will never terminate.
+Because of this, GetComplexFieldTypes and ToObjectType will never terminate.
 TODO: capture visited types in the context to ensure these methods terminate,
 even when they are called recursively.
 */}}
@@ -120,8 +120,8 @@ even when they are called recursively.
     {{- else if .IsInt -}}types.Int64Type
     {{- else if .IsAny -}}types.ObjectType{}
     {{- else if .IsByteStream}}types.ObjectType{}
-    {{- else if .IsObject -}}{{/* Objects are treated as lists from a TFSDK type perspective. */}}basetypes.ListType{
-      ElemType: {{- if .IsExternal -}}{{.Package.Name}}_tf.{{- end -}}{{.PascalName}}{}.ToAttrType(ctx),
+    {{- else if or .IsEmpty .IsObject -}}{{/* Objects are treated as lists from a TFSDK type perspective. */}}basetypes.ListType{
+      ElemType: {{- if .IsExternal -}}{{.Package.Name}}_tf.{{- end -}}{{.PascalName}}{}.ToObjectType(ctx),
     }
     {{- end -}}
   {{- end -}}
@@ -138,7 +138,7 @@ even when they are called recursively.
     {{- else if .IsFloat64 -}}types.Float64{}
     {{- else if .IsInt -}}types.Int64{}
     {{- else if .IsAny -}}struct{}{}
-    {{- else if .IsObject -}}{{.PascalName}}{}
+    {{- else if or .IsEmpty .IsObject -}}{{.PascalName}}{}
     {{- end -}}
   {{- end -}}
 {{- end -}}
@@ -177,7 +177,7 @@ even when they are called recursively.
     {{- if not . }}any /* ERROR */
     {{- else if .IsExternal }}{{.Package.Name}}.{{.PascalName}}
     {{- else if .IsAny}}any
-    {{- else if .IsEmpty}}[]{{.PascalName}}
+    {{- else if .IsEmpty}}types.List
     {{- else if .IsString}}types.String
     {{- else if .IsBool}}types.Bool
     {{- else if .IsInt64}}types.Int64

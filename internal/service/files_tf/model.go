@@ -45,9 +45,9 @@ func (a AddBlock) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of AddBlock in the Terraform plugin framework type
+// ToObjectType returns the representation of AddBlock in the Terraform plugin framework type
 // system.
-func (a AddBlock) ToAttrType(ctx context.Context) types.ObjectType {
+func (a AddBlock) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"data":   types.StringType,
@@ -76,9 +76,9 @@ func (a AddBlockResponse) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of AddBlockResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of AddBlockResponse in the Terraform plugin framework type
 // system.
-func (a AddBlockResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a AddBlockResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -106,9 +106,9 @@ func (a Close) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Close in the Terraform plugin framework type
+// ToObjectType returns the representation of Close in the Terraform plugin framework type
 // system.
-func (a Close) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Close) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"handle": types.Int64Type,
@@ -136,9 +136,9 @@ func (a CloseResponse) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CloseResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of CloseResponse in the Terraform plugin framework type
 // system.
-func (a CloseResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CloseResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -168,9 +168,9 @@ func (a Create) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Create in the Terraform plugin framework type
+// ToObjectType returns the representation of Create in the Terraform plugin framework type
 // system.
-func (a Create) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Create) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"overwrite": types.BoolType,
@@ -202,9 +202,9 @@ func (a CreateDirectoryRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateDirectoryRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateDirectoryRequest in the Terraform plugin framework type
 // system.
-func (a CreateDirectoryRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateDirectoryRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"directory_path": types.StringType,
@@ -232,9 +232,9 @@ func (a CreateDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[s
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateDirectoryResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateDirectoryResponse in the Terraform plugin framework type
 // system.
-func (a CreateDirectoryResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateDirectoryResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -263,9 +263,9 @@ func (a CreateResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateResponse in the Terraform plugin framework type
 // system.
-func (a CreateResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"handle": types.Int64Type,
@@ -299,9 +299,9 @@ func (a Delete) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Delete in the Terraform plugin framework type
+// ToObjectType returns the representation of Delete in the Terraform plugin framework type
 // system.
-func (a Delete) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Delete) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"path":      types.StringType,
@@ -333,9 +333,9 @@ func (a DeleteDirectoryRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteDirectoryRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteDirectoryRequest in the Terraform plugin framework type
 // system.
-func (a DeleteDirectoryRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteDirectoryRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"directory_path": types.StringType,
@@ -363,9 +363,9 @@ func (a DeleteDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[s
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteDirectoryResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteDirectoryResponse in the Terraform plugin framework type
 // system.
-func (a DeleteDirectoryResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteDirectoryResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -394,9 +394,9 @@ func (a DeleteFileRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteFileRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteFileRequest in the Terraform plugin framework type
 // system.
-func (a DeleteFileRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteFileRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_path": types.StringType,
@@ -424,9 +424,9 @@ func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteResponse in the Terraform plugin framework type
 // system.
-func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -463,9 +463,9 @@ func (a DirectoryEntry) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DirectoryEntry in the Terraform plugin framework type
+// ToObjectType returns the representation of DirectoryEntry in the Terraform plugin framework type
 // system.
-func (a DirectoryEntry) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DirectoryEntry) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_size":     types.Int64Type,
@@ -500,9 +500,9 @@ func (a DownloadRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DownloadRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DownloadRequest in the Terraform plugin framework type
 // system.
-func (a DownloadRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DownloadRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_path": types.StringType,
@@ -537,9 +537,9 @@ func (a DownloadResponse) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DownloadResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DownloadResponse in the Terraform plugin framework type
 // system.
-func (a DownloadResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DownloadResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"content-length": types.Int64Type,
@@ -578,9 +578,9 @@ func (a FileInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of FileInfo in the Terraform plugin framework type
+// ToObjectType returns the representation of FileInfo in the Terraform plugin framework type
 // system.
-func (a FileInfo) ToAttrType(ctx context.Context) types.ObjectType {
+func (a FileInfo) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_size":         types.Int64Type,
@@ -614,9 +614,9 @@ func (a GetDirectoryMetadataRequest) GetComplexFieldTypes(ctx context.Context) m
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetDirectoryMetadataRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetDirectoryMetadataRequest in the Terraform plugin framework type
 // system.
-func (a GetDirectoryMetadataRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetDirectoryMetadataRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"directory_path": types.StringType,
@@ -644,9 +644,9 @@ func (a GetDirectoryMetadataResponse) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetDirectoryMetadataResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetDirectoryMetadataResponse in the Terraform plugin framework type
 // system.
-func (a GetDirectoryMetadataResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetDirectoryMetadataResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -675,9 +675,9 @@ func (a GetMetadataRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetMetadataRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetMetadataRequest in the Terraform plugin framework type
 // system.
-func (a GetMetadataRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetMetadataRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_path": types.StringType,
@@ -710,9 +710,9 @@ func (a GetMetadataResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetMetadataResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetMetadataResponse in the Terraform plugin framework type
 // system.
-func (a GetMetadataResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetMetadataResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"content-length": types.Int64Type,
@@ -746,9 +746,9 @@ func (a GetStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetStatusRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetStatusRequest in the Terraform plugin framework type
 // system.
-func (a GetStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetStatusRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"path": types.StringType,
@@ -780,9 +780,9 @@ func (a ListDbfsRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListDbfsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListDbfsRequest in the Terraform plugin framework type
 // system.
-func (a ListDbfsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListDbfsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"path": types.StringType,
@@ -833,9 +833,9 @@ func (a ListDirectoryContentsRequest) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListDirectoryContentsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListDirectoryContentsRequest in the Terraform plugin framework type
 // system.
-func (a ListDirectoryContentsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListDirectoryContentsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"directory_path": types.StringType,
@@ -871,13 +871,13 @@ func (a ListDirectoryResponse) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// ToAttrType returns the representation of ListDirectoryResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListDirectoryResponse in the Terraform plugin framework type
 // system.
-func (a ListDirectoryResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListDirectoryResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"contents": basetypes.ListType{
-				ElemType: DirectoryEntry{}.ToAttrType(ctx),
+				ElemType: DirectoryEntry{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -909,13 +909,13 @@ func (a ListStatusResponse) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// ToAttrType returns the representation of ListStatusResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListStatusResponse in the Terraform plugin framework type
 // system.
-func (a ListStatusResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListStatusResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"files": basetypes.ListType{
-				ElemType: FileInfo{}.ToAttrType(ctx),
+				ElemType: FileInfo{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -943,9 +943,9 @@ func (a MkDirs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of MkDirs in the Terraform plugin framework type
+// ToObjectType returns the representation of MkDirs in the Terraform plugin framework type
 // system.
-func (a MkDirs) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MkDirs) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"path": types.StringType,
@@ -973,9 +973,9 @@ func (a MkDirsResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of MkDirsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of MkDirsResponse in the Terraform plugin framework type
 // system.
-func (a MkDirsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MkDirsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1007,9 +1007,9 @@ func (a Move) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Move in the Terraform plugin framework type
+// ToObjectType returns the representation of Move in the Terraform plugin framework type
 // system.
-func (a Move) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Move) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_path": types.StringType,
@@ -1038,9 +1038,9 @@ func (a MoveResponse) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of MoveResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of MoveResponse in the Terraform plugin framework type
 // system.
-func (a MoveResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MoveResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1072,9 +1072,9 @@ func (a Put) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Put in the Terraform plugin framework type
+// ToObjectType returns the representation of Put in the Terraform plugin framework type
 // system.
-func (a Put) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Put) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"contents":  types.StringType,
@@ -1104,9 +1104,9 @@ func (a PutResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PutResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of PutResponse in the Terraform plugin framework type
 // system.
-func (a PutResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PutResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1140,9 +1140,9 @@ func (a ReadDbfsRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ReadDbfsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ReadDbfsRequest in the Terraform plugin framework type
 // system.
-func (a ReadDbfsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ReadDbfsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"length": types.Int64Type,
@@ -1178,9 +1178,9 @@ func (a ReadResponse) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ReadResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ReadResponse in the Terraform plugin framework type
 // system.
-func (a ReadResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ReadResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"bytes_read": types.Int64Type,
@@ -1215,9 +1215,9 @@ func (a UploadRequest) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UploadRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of UploadRequest in the Terraform plugin framework type
 // system.
-func (a UploadRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UploadRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"contents":  types.ObjectType{},
@@ -1247,9 +1247,9 @@ func (a UploadResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UploadResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of UploadResponse in the Terraform plugin framework type
 // system.
-func (a UploadResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UploadResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}

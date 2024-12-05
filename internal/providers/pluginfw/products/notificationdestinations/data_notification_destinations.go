@@ -3,6 +3,7 @@ package notificationdestinations
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -32,9 +34,27 @@ type NotificationDestinationsDataSource struct {
 }
 
 type NotificationDestinationsInfo struct {
-	DisplayNameContains      types.String                                     `tfsdk:"display_name_contains" tf:"optional"`
-	Type                     types.String                                     `tfsdk:"type" tf:"optional"`
-	NotificationDestinations []settings_tf.ListNotificationDestinationsResult `tfsdk:"notification_destinations" tf:"computed"`
+	DisplayNameContains      types.String `tfsdk:"display_name_contains" tf:"optional"`
+	Type                     types.String `tfsdk:"type" tf:"optional"`
+	NotificationDestinations types.List   `tfsdk:"notification_destinations" tf:"computed"`
+}
+
+func (NotificationDestinationsInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"notification_destinations": reflect.TypeOf(settings_tf.ListNotificationDestinationsResult{}),
+	}
+}
+
+func (NotificationDestinationsInfo) ToObjectType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"display_name_contains": types.StringType,
+			"type":                  types.StringType,
+			"notification_destinations": types.ListType{
+				ElemType: settings_tf.ListNotificationDestinationsResult{}.ToObjectType(ctx),
+			},
+		},
+	}
 }
 
 func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -114,7 +134,13 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 		notificationsTfSdk = append(notificationsTfSdk, notificationDestination)
 	}
 
-	notificationInfo.NotificationDestinations = notificationsTfSdk
+	var dd diag.Diagnostics
+	notificationInfo.NotificationDestinations, dd = types.ListValueFrom(ctx, settings_tf.ListNotificationDestinationsResult{}.ToObjectType(ctx), notificationsTfSdk)
+	resp.Diagnostics.Append(dd...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, notificationInfo)...)
 
 }

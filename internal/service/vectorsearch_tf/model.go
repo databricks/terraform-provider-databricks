@@ -41,9 +41,9 @@ func (a ColumnInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ColumnInfo in the Terraform plugin framework type
+// ToObjectType returns the representation of ColumnInfo in the Terraform plugin framework type
 // system.
-func (a ColumnInfo) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ColumnInfo) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -75,9 +75,9 @@ func (a CreateEndpoint) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateEndpoint in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateEndpoint in the Terraform plugin framework type
 // system.
-func (a CreateEndpoint) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateEndpoint) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoint_type": types.StringType,
@@ -129,16 +129,16 @@ func (a CreateVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[
 	}
 }
 
-// ToAttrType returns the representation of CreateVectorIndexRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateVectorIndexRequest in the Terraform plugin framework type
 // system.
-func (a CreateVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateVectorIndexRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"delta_sync_index_spec": basetypes.ListType{
-				ElemType: DeltaSyncVectorIndexSpecRequest{}.ToAttrType(ctx),
+				ElemType: DeltaSyncVectorIndexSpecRequest{}.ToObjectType(ctx),
 			},
 			"direct_access_index_spec": basetypes.ListType{
-				ElemType: DirectAccessVectorIndexSpec{}.ToAttrType(ctx),
+				ElemType: DirectAccessVectorIndexSpec{}.ToObjectType(ctx),
 			},
 			"endpoint_name": types.StringType,
 			"index_type":    types.StringType,
@@ -171,13 +171,13 @@ func (a CreateVectorIndexResponse) GetComplexFieldTypes(ctx context.Context) map
 	}
 }
 
-// ToAttrType returns the representation of CreateVectorIndexResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateVectorIndexResponse in the Terraform plugin framework type
 // system.
-func (a CreateVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateVectorIndexResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"vector_index": basetypes.ListType{
-				ElemType: VectorIndex{}.ToAttrType(ctx),
+				ElemType: VectorIndex{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -210,9 +210,9 @@ func (a DeleteDataResult) GetComplexFieldTypes(ctx context.Context) map[string]r
 	}
 }
 
-// ToAttrType returns the representation of DeleteDataResult in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteDataResult in the Terraform plugin framework type
 // system.
-func (a DeleteDataResult) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteDataResult) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"failed_primary_keys": basetypes.ListType{
@@ -251,9 +251,9 @@ func (a DeleteDataVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) 
 	}
 }
 
-// ToAttrType returns the representation of DeleteDataVectorIndexRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteDataVectorIndexRequest in the Terraform plugin framework type
 // system.
-func (a DeleteDataVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteDataVectorIndexRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index_name": types.StringType,
@@ -291,13 +291,13 @@ func (a DeleteDataVectorIndexResponse) GetComplexFieldTypes(ctx context.Context)
 	}
 }
 
-// ToAttrType returns the representation of DeleteDataVectorIndexResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteDataVectorIndexResponse in the Terraform plugin framework type
 // system.
-func (a DeleteDataVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteDataVectorIndexResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"result": basetypes.ListType{
-				ElemType: DeleteDataResult{}.ToAttrType(ctx),
+				ElemType: DeleteDataResult{}.ToObjectType(ctx),
 			},
 			"status": types.StringType,
 		},
@@ -327,9 +327,9 @@ func (a DeleteEndpointRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteEndpointRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteEndpointRequest in the Terraform plugin framework type
 // system.
-func (a DeleteEndpointRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteEndpointRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoint_name": types.StringType,
@@ -357,9 +357,9 @@ func (a DeleteEndpointResponse) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteEndpointResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteEndpointResponse in the Terraform plugin framework type
 // system.
-func (a DeleteEndpointResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteEndpointResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -388,9 +388,9 @@ func (a DeleteIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteIndexRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteIndexRequest in the Terraform plugin framework type
 // system.
-func (a DeleteIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteIndexRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index_name": types.StringType,
@@ -418,9 +418,9 @@ func (a DeleteIndexResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteIndexResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteIndexResponse in the Terraform plugin framework type
 // system.
-func (a DeleteIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteIndexResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -475,19 +475,19 @@ func (a DeltaSyncVectorIndexSpecRequest) GetComplexFieldTypes(ctx context.Contex
 	}
 }
 
-// ToAttrType returns the representation of DeltaSyncVectorIndexSpecRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeltaSyncVectorIndexSpecRequest in the Terraform plugin framework type
 // system.
-func (a DeltaSyncVectorIndexSpecRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeltaSyncVectorIndexSpecRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns_to_sync": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"embedding_source_columns": basetypes.ListType{
-				ElemType: EmbeddingSourceColumn{}.ToAttrType(ctx),
+				ElemType: EmbeddingSourceColumn{}.ToObjectType(ctx),
 			},
 			"embedding_vector_columns": basetypes.ListType{
-				ElemType: EmbeddingVectorColumn{}.ToAttrType(ctx),
+				ElemType: EmbeddingVectorColumn{}.ToObjectType(ctx),
 			},
 			"embedding_writeback_table": types.StringType,
 			"pipeline_type":             types.StringType,
@@ -539,16 +539,16 @@ func (a DeltaSyncVectorIndexSpecResponse) GetComplexFieldTypes(ctx context.Conte
 	}
 }
 
-// ToAttrType returns the representation of DeltaSyncVectorIndexSpecResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeltaSyncVectorIndexSpecResponse in the Terraform plugin framework type
 // system.
-func (a DeltaSyncVectorIndexSpecResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeltaSyncVectorIndexSpecResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_source_columns": basetypes.ListType{
-				ElemType: EmbeddingSourceColumn{}.ToAttrType(ctx),
+				ElemType: EmbeddingSourceColumn{}.ToObjectType(ctx),
 			},
 			"embedding_vector_columns": basetypes.ListType{
-				ElemType: EmbeddingVectorColumn{}.ToAttrType(ctx),
+				ElemType: EmbeddingVectorColumn{}.ToObjectType(ctx),
 			},
 			"embedding_writeback_table": types.StringType,
 			"pipeline_id":               types.StringType,
@@ -592,16 +592,16 @@ func (a DirectAccessVectorIndexSpec) GetComplexFieldTypes(ctx context.Context) m
 	}
 }
 
-// ToAttrType returns the representation of DirectAccessVectorIndexSpec in the Terraform plugin framework type
+// ToObjectType returns the representation of DirectAccessVectorIndexSpec in the Terraform plugin framework type
 // system.
-func (a DirectAccessVectorIndexSpec) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DirectAccessVectorIndexSpec) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_source_columns": basetypes.ListType{
-				ElemType: EmbeddingSourceColumn{}.ToAttrType(ctx),
+				ElemType: EmbeddingSourceColumn{}.ToObjectType(ctx),
 			},
 			"embedding_vector_columns": basetypes.ListType{
-				ElemType: EmbeddingVectorColumn{}.ToAttrType(ctx),
+				ElemType: EmbeddingVectorColumn{}.ToObjectType(ctx),
 			},
 			"schema_json": types.StringType,
 		},
@@ -632,9 +632,9 @@ func (a EmbeddingSourceColumn) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of EmbeddingSourceColumn in the Terraform plugin framework type
+// ToObjectType returns the representation of EmbeddingSourceColumn in the Terraform plugin framework type
 // system.
-func (a EmbeddingSourceColumn) ToAttrType(ctx context.Context) types.ObjectType {
+func (a EmbeddingSourceColumn) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_model_endpoint_name": types.StringType,
@@ -667,9 +667,9 @@ func (a EmbeddingVectorColumn) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of EmbeddingVectorColumn in the Terraform plugin framework type
+// ToObjectType returns the representation of EmbeddingVectorColumn in the Terraform plugin framework type
 // system.
-func (a EmbeddingVectorColumn) ToAttrType(ctx context.Context) types.ObjectType {
+func (a EmbeddingVectorColumn) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_dimension": types.Int64Type,
@@ -718,15 +718,15 @@ func (a EndpointInfo) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// ToAttrType returns the representation of EndpointInfo in the Terraform plugin framework type
+// ToObjectType returns the representation of EndpointInfo in the Terraform plugin framework type
 // system.
-func (a EndpointInfo) ToAttrType(ctx context.Context) types.ObjectType {
+func (a EndpointInfo) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"creation_timestamp": types.Int64Type,
 			"creator":            types.StringType,
 			"endpoint_status": basetypes.ListType{
-				ElemType: EndpointStatus{}.ToAttrType(ctx),
+				ElemType: EndpointStatus{}.ToObjectType(ctx),
 			},
 			"endpoint_type":          types.StringType,
 			"id":                     types.StringType,
@@ -763,9 +763,9 @@ func (a EndpointStatus) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of EndpointStatus in the Terraform plugin framework type
+// ToObjectType returns the representation of EndpointStatus in the Terraform plugin framework type
 // system.
-func (a EndpointStatus) ToAttrType(ctx context.Context) types.ObjectType {
+func (a EndpointStatus) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"message": types.StringType,
@@ -797,9 +797,9 @@ func (a GetEndpointRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetEndpointRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetEndpointRequest in the Terraform plugin framework type
 // system.
-func (a GetEndpointRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetEndpointRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoint_name": types.StringType,
@@ -830,9 +830,9 @@ func (a GetIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetIndexRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetIndexRequest in the Terraform plugin framework type
 // system.
-func (a GetIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetIndexRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index_name": types.StringType,
@@ -867,13 +867,13 @@ func (a ListEndpointResponse) GetComplexFieldTypes(ctx context.Context) map[stri
 	}
 }
 
-// ToAttrType returns the representation of ListEndpointResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListEndpointResponse in the Terraform plugin framework type
 // system.
-func (a ListEndpointResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListEndpointResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoints": basetypes.ListType{
-				ElemType: EndpointInfo{}.ToAttrType(ctx),
+				ElemType: EndpointInfo{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -903,9 +903,9 @@ func (a ListEndpointsRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListEndpointsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListEndpointsRequest in the Terraform plugin framework type
 // system.
-func (a ListEndpointsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListEndpointsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_token": types.StringType,
@@ -938,9 +938,9 @@ func (a ListIndexesRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListIndexesRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListIndexesRequest in the Terraform plugin framework type
 // system.
-func (a ListIndexesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListIndexesRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoint_name": types.StringType,
@@ -972,13 +972,13 @@ func (a ListValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// ToAttrType returns the representation of ListValue in the Terraform plugin framework type
+// ToObjectType returns the representation of ListValue in the Terraform plugin framework type
 // system.
-func (a ListValue) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListValue) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"values": basetypes.ListType{
-				ElemType: Value{}.ToAttrType(ctx),
+				ElemType: Value{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1011,14 +1011,14 @@ func (a ListVectorIndexesResponse) GetComplexFieldTypes(ctx context.Context) map
 	}
 }
 
-// ToAttrType returns the representation of ListVectorIndexesResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListVectorIndexesResponse in the Terraform plugin framework type
 // system.
-func (a ListVectorIndexesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListVectorIndexesResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"vector_indexes": basetypes.ListType{
-				ElemType: MiniVectorIndex{}.ToAttrType(ctx),
+				ElemType: MiniVectorIndex{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1051,14 +1051,14 @@ func (a MapStringValueEntry) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// ToAttrType returns the representation of MapStringValueEntry in the Terraform plugin framework type
+// ToObjectType returns the representation of MapStringValueEntry in the Terraform plugin framework type
 // system.
-func (a MapStringValueEntry) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MapStringValueEntry) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"key": types.StringType,
 			"value": basetypes.ListType{
-				ElemType: Value{}.ToAttrType(ctx),
+				ElemType: Value{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1100,9 +1100,9 @@ func (a MiniVectorIndex) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of MiniVectorIndex in the Terraform plugin framework type
+// ToObjectType returns the representation of MiniVectorIndex in the Terraform plugin framework type
 // system.
-func (a MiniVectorIndex) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MiniVectorIndex) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"creator":       types.StringType,
@@ -1142,9 +1142,9 @@ func (a QueryVectorIndexNextPageRequest) GetComplexFieldTypes(ctx context.Contex
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of QueryVectorIndexNextPageRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of QueryVectorIndexNextPageRequest in the Terraform plugin framework type
 // system.
-func (a QueryVectorIndexNextPageRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a QueryVectorIndexNextPageRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoint_name": types.StringType,
@@ -1199,9 +1199,9 @@ func (a QueryVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[s
 	}
 }
 
-// ToAttrType returns the representation of QueryVectorIndexRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of QueryVectorIndexRequest in the Terraform plugin framework type
 // system.
-func (a QueryVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a QueryVectorIndexRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
@@ -1251,17 +1251,17 @@ func (a QueryVectorIndexResponse) GetComplexFieldTypes(ctx context.Context) map[
 	}
 }
 
-// ToAttrType returns the representation of QueryVectorIndexResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of QueryVectorIndexResponse in the Terraform plugin framework type
 // system.
-func (a QueryVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a QueryVectorIndexResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"manifest": basetypes.ListType{
-				ElemType: ResultManifest{}.ToAttrType(ctx),
+				ElemType: ResultManifest{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 			"result": basetypes.ListType{
-				ElemType: ResultData{}.ToAttrType(ctx),
+				ElemType: ResultData{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1294,9 +1294,9 @@ func (a ResultData) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// ToAttrType returns the representation of ResultData in the Terraform plugin framework type
+// ToObjectType returns the representation of ResultData in the Terraform plugin framework type
 // system.
-func (a ResultData) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ResultData) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"data_array": basetypes.ListType{
@@ -1336,14 +1336,14 @@ func (a ResultManifest) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// ToAttrType returns the representation of ResultManifest in the Terraform plugin framework type
+// ToObjectType returns the representation of ResultManifest in the Terraform plugin framework type
 // system.
-func (a ResultManifest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ResultManifest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"column_count": types.Int64Type,
 			"columns": basetypes.ListType{
-				ElemType: ColumnInfo{}.ToAttrType(ctx),
+				ElemType: ColumnInfo{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1376,9 +1376,9 @@ func (a ScanVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ScanVectorIndexRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ScanVectorIndexRequest in the Terraform plugin framework type
 // system.
-func (a ScanVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ScanVectorIndexRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index_name":       types.StringType,
@@ -1415,13 +1415,13 @@ func (a ScanVectorIndexResponse) GetComplexFieldTypes(ctx context.Context) map[s
 	}
 }
 
-// ToAttrType returns the representation of ScanVectorIndexResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ScanVectorIndexResponse in the Terraform plugin framework type
 // system.
-func (a ScanVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ScanVectorIndexResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"data": basetypes.ListType{
-				ElemType: Struct{}.ToAttrType(ctx),
+				ElemType: Struct{}.ToObjectType(ctx),
 			},
 			"last_primary_key": types.StringType,
 		},
@@ -1452,13 +1452,13 @@ func (a Struct) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	}
 }
 
-// ToAttrType returns the representation of Struct in the Terraform plugin framework type
+// ToObjectType returns the representation of Struct in the Terraform plugin framework type
 // system.
-func (a Struct) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Struct) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"fields": basetypes.ListType{
-				ElemType: MapStringValueEntry{}.ToAttrType(ctx),
+				ElemType: MapStringValueEntry{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1487,9 +1487,9 @@ func (a SyncIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of SyncIndexRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of SyncIndexRequest in the Terraform plugin framework type
 // system.
-func (a SyncIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a SyncIndexRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index_name": types.StringType,
@@ -1517,9 +1517,9 @@ func (a SyncIndexResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of SyncIndexResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of SyncIndexResponse in the Terraform plugin framework type
 // system.
-func (a SyncIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a SyncIndexResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1552,9 +1552,9 @@ func (a UpsertDataResult) GetComplexFieldTypes(ctx context.Context) map[string]r
 	}
 }
 
-// ToAttrType returns the representation of UpsertDataResult in the Terraform plugin framework type
+// ToObjectType returns the representation of UpsertDataResult in the Terraform plugin framework type
 // system.
-func (a UpsertDataResult) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpsertDataResult) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"failed_primary_keys": basetypes.ListType{
@@ -1591,9 +1591,9 @@ func (a UpsertDataVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UpsertDataVectorIndexRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of UpsertDataVectorIndexRequest in the Terraform plugin framework type
 // system.
-func (a UpsertDataVectorIndexRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpsertDataVectorIndexRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index_name":  types.StringType,
@@ -1629,13 +1629,13 @@ func (a UpsertDataVectorIndexResponse) GetComplexFieldTypes(ctx context.Context)
 	}
 }
 
-// ToAttrType returns the representation of UpsertDataVectorIndexResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of UpsertDataVectorIndexResponse in the Terraform plugin framework type
 // system.
-func (a UpsertDataVectorIndexResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpsertDataVectorIndexResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"result": basetypes.ListType{
-				ElemType: UpsertDataResult{}.ToAttrType(ctx),
+				ElemType: UpsertDataResult{}.ToObjectType(ctx),
 			},
 			"status": types.StringType,
 		},
@@ -1676,20 +1676,20 @@ func (a Value) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type
 	}
 }
 
-// ToAttrType returns the representation of Value in the Terraform plugin framework type
+// ToObjectType returns the representation of Value in the Terraform plugin framework type
 // system.
-func (a Value) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Value) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"bool_value": types.BoolType,
 			"list_value": basetypes.ListType{
-				ElemType: ListValue{}.ToAttrType(ctx),
+				ElemType: ListValue{}.ToObjectType(ctx),
 			},
 			"null_value":   types.StringType,
 			"number_value": types.Float64Type,
 			"string_value": types.StringType,
 			"struct_value": basetypes.ListType{
-				ElemType: Struct{}.ToAttrType(ctx),
+				ElemType: Struct{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1741,24 +1741,24 @@ func (a VectorIndex) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	}
 }
 
-// ToAttrType returns the representation of VectorIndex in the Terraform plugin framework type
+// ToObjectType returns the representation of VectorIndex in the Terraform plugin framework type
 // system.
-func (a VectorIndex) ToAttrType(ctx context.Context) types.ObjectType {
+func (a VectorIndex) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"creator": types.StringType,
 			"delta_sync_index_spec": basetypes.ListType{
-				ElemType: DeltaSyncVectorIndexSpecResponse{}.ToAttrType(ctx),
+				ElemType: DeltaSyncVectorIndexSpecResponse{}.ToObjectType(ctx),
 			},
 			"direct_access_index_spec": basetypes.ListType{
-				ElemType: DirectAccessVectorIndexSpec{}.ToAttrType(ctx),
+				ElemType: DirectAccessVectorIndexSpec{}.ToObjectType(ctx),
 			},
 			"endpoint_name": types.StringType,
 			"index_type":    types.StringType,
 			"name":          types.StringType,
 			"primary_key":   types.StringType,
 			"status": basetypes.ListType{
-				ElemType: VectorIndexStatus{}.ToAttrType(ctx),
+				ElemType: VectorIndexStatus{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1792,9 +1792,9 @@ func (a VectorIndexStatus) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of VectorIndexStatus in the Terraform plugin framework type
+// ToObjectType returns the representation of VectorIndexStatus in the Terraform plugin framework type
 // system.
-func (a VectorIndexStatus) ToAttrType(ctx context.Context) types.ObjectType {
+func (a VectorIndexStatus) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"index_url":         types.StringType,

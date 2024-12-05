@@ -46,9 +46,9 @@ func (a ActionConfiguration) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ActionConfiguration in the Terraform plugin framework type
+// ToObjectType returns the representation of ActionConfiguration in the Terraform plugin framework type
 // system.
-func (a ActionConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ActionConfiguration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_configuration_id": types.StringType,
@@ -96,13 +96,13 @@ func (a AlertConfiguration) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// ToAttrType returns the representation of AlertConfiguration in the Terraform plugin framework type
+// ToObjectType returns the representation of AlertConfiguration in the Terraform plugin framework type
 // system.
-func (a AlertConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a AlertConfiguration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_configurations": basetypes.ListType{
-				ElemType: ActionConfiguration{}.ToAttrType(ctx),
+				ElemType: ActionConfiguration{}.ToObjectType(ctx),
 			},
 			"alert_configuration_id": types.StringType,
 			"quantity_threshold":     types.StringType,
@@ -154,20 +154,20 @@ func (a BudgetConfiguration) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// ToAttrType returns the representation of BudgetConfiguration in the Terraform plugin framework type
+// ToObjectType returns the representation of BudgetConfiguration in the Terraform plugin framework type
 // system.
-func (a BudgetConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a BudgetConfiguration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
-				ElemType: AlertConfiguration{}.ToAttrType(ctx),
+				ElemType: AlertConfiguration{}.ToObjectType(ctx),
 			},
 			"budget_configuration_id": types.StringType,
 			"create_time":             types.Int64Type,
 			"display_name":            types.StringType,
 			"filter": basetypes.ListType{
-				ElemType: BudgetConfigurationFilter{}.ToAttrType(ctx),
+				ElemType: BudgetConfigurationFilter{}.ToObjectType(ctx),
 			},
 			"update_time": types.Int64Type,
 		},
@@ -203,16 +203,16 @@ func (a BudgetConfigurationFilter) GetComplexFieldTypes(ctx context.Context) map
 	}
 }
 
-// ToAttrType returns the representation of BudgetConfigurationFilter in the Terraform plugin framework type
+// ToObjectType returns the representation of BudgetConfigurationFilter in the Terraform plugin framework type
 // system.
-func (a BudgetConfigurationFilter) ToAttrType(ctx context.Context) types.ObjectType {
+func (a BudgetConfigurationFilter) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"tags": basetypes.ListType{
-				ElemType: BudgetConfigurationFilterTagClause{}.ToAttrType(ctx),
+				ElemType: BudgetConfigurationFilterTagClause{}.ToObjectType(ctx),
 			},
 			"workspace_id": basetypes.ListType{
-				ElemType: BudgetConfigurationFilterWorkspaceIdClause{}.ToAttrType(ctx),
+				ElemType: BudgetConfigurationFilterWorkspaceIdClause{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -243,9 +243,9 @@ func (a BudgetConfigurationFilterClause) GetComplexFieldTypes(ctx context.Contex
 	}
 }
 
-// ToAttrType returns the representation of BudgetConfigurationFilterClause in the Terraform plugin framework type
+// ToObjectType returns the representation of BudgetConfigurationFilterClause in the Terraform plugin framework type
 // system.
-func (a BudgetConfigurationFilterClause) ToAttrType(ctx context.Context) types.ObjectType {
+func (a BudgetConfigurationFilterClause) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"operator": types.StringType,
@@ -281,14 +281,14 @@ func (a BudgetConfigurationFilterTagClause) GetComplexFieldTypes(ctx context.Con
 	}
 }
 
-// ToAttrType returns the representation of BudgetConfigurationFilterTagClause in the Terraform plugin framework type
+// ToObjectType returns the representation of BudgetConfigurationFilterTagClause in the Terraform plugin framework type
 // system.
-func (a BudgetConfigurationFilterTagClause) ToAttrType(ctx context.Context) types.ObjectType {
+func (a BudgetConfigurationFilterTagClause) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"key": types.StringType,
 			"value": basetypes.ListType{
-				ElemType: BudgetConfigurationFilterClause{}.ToAttrType(ctx),
+				ElemType: BudgetConfigurationFilterClause{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -319,9 +319,9 @@ func (a BudgetConfigurationFilterWorkspaceIdClause) GetComplexFieldTypes(ctx con
 	}
 }
 
-// ToAttrType returns the representation of BudgetConfigurationFilterWorkspaceIdClause in the Terraform plugin framework type
+// ToObjectType returns the representation of BudgetConfigurationFilterWorkspaceIdClause in the Terraform plugin framework type
 // system.
-func (a BudgetConfigurationFilterWorkspaceIdClause) ToAttrType(ctx context.Context) types.ObjectType {
+func (a BudgetConfigurationFilterWorkspaceIdClause) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"operator": types.StringType,
@@ -359,9 +359,9 @@ func (a CreateBillingUsageDashboardRequest) GetComplexFieldTypes(ctx context.Con
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateBillingUsageDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateBillingUsageDashboardRequest in the Terraform plugin framework type
 // system.
-func (a CreateBillingUsageDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateBillingUsageDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_type": types.StringType,
@@ -392,9 +392,9 @@ func (a CreateBillingUsageDashboardResponse) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateBillingUsageDashboardResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateBillingUsageDashboardResponse in the Terraform plugin framework type
 // system.
-func (a CreateBillingUsageDashboardResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateBillingUsageDashboardResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -437,18 +437,18 @@ func (a CreateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Contex
 	}
 }
 
-// ToAttrType returns the representation of CreateBudgetConfigurationBudget in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateBudgetConfigurationBudget in the Terraform plugin framework type
 // system.
-func (a CreateBudgetConfigurationBudget) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateBudgetConfigurationBudget) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
-				ElemType: CreateBudgetConfigurationBudgetAlertConfigurations{}.ToAttrType(ctx),
+				ElemType: CreateBudgetConfigurationBudgetAlertConfigurations{}.ToObjectType(ctx),
 			},
 			"display_name": types.StringType,
 			"filter": basetypes.ListType{
-				ElemType: BudgetConfigurationFilter{}.ToAttrType(ctx),
+				ElemType: BudgetConfigurationFilter{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -478,9 +478,9 @@ func (a CreateBudgetConfigurationBudgetActionConfigurations) GetComplexFieldType
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CreateBudgetConfigurationBudgetActionConfigurations in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateBudgetConfigurationBudgetActionConfigurations in the Terraform plugin framework type
 // system.
-func (a CreateBudgetConfigurationBudgetActionConfigurations) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateBudgetConfigurationBudgetActionConfigurations) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_type": types.StringType,
@@ -525,13 +525,13 @@ func (a CreateBudgetConfigurationBudgetAlertConfigurations) GetComplexFieldTypes
 	}
 }
 
-// ToAttrType returns the representation of CreateBudgetConfigurationBudgetAlertConfigurations in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateBudgetConfigurationBudgetAlertConfigurations in the Terraform plugin framework type
 // system.
-func (a CreateBudgetConfigurationBudgetAlertConfigurations) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateBudgetConfigurationBudgetAlertConfigurations) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_configurations": basetypes.ListType{
-				ElemType: CreateBudgetConfigurationBudgetActionConfigurations{}.ToAttrType(ctx),
+				ElemType: CreateBudgetConfigurationBudgetActionConfigurations{}.ToObjectType(ctx),
 			},
 			"quantity_threshold": types.StringType,
 			"quantity_type":      types.StringType,
@@ -565,13 +565,13 @@ func (a CreateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Conte
 	}
 }
 
-// ToAttrType returns the representation of CreateBudgetConfigurationRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateBudgetConfigurationRequest in the Terraform plugin framework type
 // system.
-func (a CreateBudgetConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateBudgetConfigurationRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: CreateBudgetConfigurationBudget{}.ToAttrType(ctx),
+				ElemType: CreateBudgetConfigurationBudget{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -601,13 +601,13 @@ func (a CreateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Cont
 	}
 }
 
-// ToAttrType returns the representation of CreateBudgetConfigurationResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateBudgetConfigurationResponse in the Terraform plugin framework type
 // system.
-func (a CreateBudgetConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateBudgetConfigurationResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: BudgetConfiguration{}.ToAttrType(ctx),
+				ElemType: BudgetConfiguration{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -704,9 +704,9 @@ func (a CreateLogDeliveryConfigurationParams) GetComplexFieldTypes(ctx context.C
 	}
 }
 
-// ToAttrType returns the representation of CreateLogDeliveryConfigurationParams in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateLogDeliveryConfigurationParams in the Terraform plugin framework type
 // system.
-func (a CreateLogDeliveryConfigurationParams) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateLogDeliveryConfigurationParams) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"config_name":              types.StringType,
@@ -747,9 +747,9 @@ func (a DeleteBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteBudgetConfigurationRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteBudgetConfigurationRequest in the Terraform plugin framework type
 // system.
-func (a DeleteBudgetConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteBudgetConfigurationRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget_id": types.StringType,
@@ -777,9 +777,9 @@ func (a DeleteBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Cont
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteBudgetConfigurationResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteBudgetConfigurationResponse in the Terraform plugin framework type
 // system.
-func (a DeleteBudgetConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteBudgetConfigurationResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -816,9 +816,9 @@ func (a DownloadRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DownloadRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DownloadRequest in the Terraform plugin framework type
 // system.
-func (a DownloadRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DownloadRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"end_month":     types.StringType,
@@ -849,9 +849,9 @@ func (a DownloadResponse) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DownloadResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DownloadResponse in the Terraform plugin framework type
 // system.
-func (a DownloadResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DownloadResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"contents": types.ObjectType{},
@@ -887,9 +887,9 @@ func (a GetBillingUsageDashboardRequest) GetComplexFieldTypes(ctx context.Contex
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetBillingUsageDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetBillingUsageDashboardRequest in the Terraform plugin framework type
 // system.
-func (a GetBillingUsageDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetBillingUsageDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_type": types.StringType,
@@ -922,9 +922,9 @@ func (a GetBillingUsageDashboardResponse) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetBillingUsageDashboardResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetBillingUsageDashboardResponse in the Terraform plugin framework type
 // system.
-func (a GetBillingUsageDashboardResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetBillingUsageDashboardResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id":  types.StringType,
@@ -956,9 +956,9 @@ func (a GetBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Context)
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetBudgetConfigurationRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetBudgetConfigurationRequest in the Terraform plugin framework type
 // system.
-func (a GetBudgetConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetBudgetConfigurationRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget_id": types.StringType,
@@ -989,13 +989,13 @@ func (a GetBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Context
 	}
 }
 
-// ToAttrType returns the representation of GetBudgetConfigurationResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GetBudgetConfigurationResponse in the Terraform plugin framework type
 // system.
-func (a GetBudgetConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetBudgetConfigurationResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: BudgetConfiguration{}.ToAttrType(ctx),
+				ElemType: BudgetConfiguration{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1024,9 +1024,9 @@ func (a GetLogDeliveryRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetLogDeliveryRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetLogDeliveryRequest in the Terraform plugin framework type
 // system.
-func (a GetLogDeliveryRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetLogDeliveryRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration_id": types.StringType,
@@ -1059,9 +1059,9 @@ func (a ListBudgetConfigurationsRequest) GetComplexFieldTypes(ctx context.Contex
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListBudgetConfigurationsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListBudgetConfigurationsRequest in the Terraform plugin framework type
 // system.
-func (a ListBudgetConfigurationsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListBudgetConfigurationsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_token": types.StringType,
@@ -1095,13 +1095,13 @@ func (a ListBudgetConfigurationsResponse) GetComplexFieldTypes(ctx context.Conte
 	}
 }
 
-// ToAttrType returns the representation of ListBudgetConfigurationsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListBudgetConfigurationsResponse in the Terraform plugin framework type
 // system.
-func (a ListBudgetConfigurationsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListBudgetConfigurationsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budgets": basetypes.ListType{
-				ElemType: BudgetConfiguration{}.ToAttrType(ctx),
+				ElemType: BudgetConfiguration{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -1135,9 +1135,9 @@ func (a ListLogDeliveryRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListLogDeliveryRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListLogDeliveryRequest in the Terraform plugin framework type
 // system.
-func (a ListLogDeliveryRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListLogDeliveryRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credentials_id":           types.StringType,
@@ -1251,9 +1251,9 @@ func (a LogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[
 	}
 }
 
-// ToAttrType returns the representation of LogDeliveryConfiguration in the Terraform plugin framework type
+// ToObjectType returns the representation of LogDeliveryConfiguration in the Terraform plugin framework type
 // system.
-func (a LogDeliveryConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a LogDeliveryConfiguration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id":           types.StringType,
@@ -1264,7 +1264,7 @@ func (a LogDeliveryConfiguration) ToAttrType(ctx context.Context) types.ObjectTy
 			"delivery_path_prefix": types.StringType,
 			"delivery_start_time":  types.StringType,
 			"log_delivery_status": basetypes.ListType{
-				ElemType: LogDeliveryStatus{}.ToAttrType(ctx),
+				ElemType: LogDeliveryStatus{}.ToObjectType(ctx),
 			},
 			"log_type":                 types.StringType,
 			"output_format":            types.StringType,
@@ -1318,9 +1318,9 @@ func (a LogDeliveryStatus) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of LogDeliveryStatus in the Terraform plugin framework type
+// ToObjectType returns the representation of LogDeliveryStatus in the Terraform plugin framework type
 // system.
-func (a LogDeliveryStatus) ToAttrType(ctx context.Context) types.ObjectType {
+func (a LogDeliveryStatus) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"last_attempt_time":            types.StringType,
@@ -1351,9 +1351,9 @@ func (a PatchStatusResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PatchStatusResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of PatchStatusResponse in the Terraform plugin framework type
 // system.
-func (a PatchStatusResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PatchStatusResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1396,19 +1396,19 @@ func (a UpdateBudgetConfigurationBudget) GetComplexFieldTypes(ctx context.Contex
 	}
 }
 
-// ToAttrType returns the representation of UpdateBudgetConfigurationBudget in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateBudgetConfigurationBudget in the Terraform plugin framework type
 // system.
-func (a UpdateBudgetConfigurationBudget) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateBudgetConfigurationBudget) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
-				ElemType: AlertConfiguration{}.ToAttrType(ctx),
+				ElemType: AlertConfiguration{}.ToObjectType(ctx),
 			},
 			"budget_configuration_id": types.StringType,
 			"display_name":            types.StringType,
 			"filter": basetypes.ListType{
-				ElemType: BudgetConfigurationFilter{}.ToAttrType(ctx),
+				ElemType: BudgetConfigurationFilter{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1441,13 +1441,13 @@ func (a UpdateBudgetConfigurationRequest) GetComplexFieldTypes(ctx context.Conte
 	}
 }
 
-// ToAttrType returns the representation of UpdateBudgetConfigurationRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateBudgetConfigurationRequest in the Terraform plugin framework type
 // system.
-func (a UpdateBudgetConfigurationRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateBudgetConfigurationRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: UpdateBudgetConfigurationBudget{}.ToAttrType(ctx),
+				ElemType: UpdateBudgetConfigurationBudget{}.ToObjectType(ctx),
 			},
 			"budget_id": types.StringType,
 		},
@@ -1478,13 +1478,13 @@ func (a UpdateBudgetConfigurationResponse) GetComplexFieldTypes(ctx context.Cont
 	}
 }
 
-// ToAttrType returns the representation of UpdateBudgetConfigurationResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateBudgetConfigurationResponse in the Terraform plugin framework type
 // system.
-func (a UpdateBudgetConfigurationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateBudgetConfigurationResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: BudgetConfiguration{}.ToAttrType(ctx),
+				ElemType: BudgetConfiguration{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1518,9 +1518,9 @@ func (a UpdateLogDeliveryConfigurationStatusRequest) GetComplexFieldTypes(ctx co
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UpdateLogDeliveryConfigurationStatusRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateLogDeliveryConfigurationStatusRequest in the Terraform plugin framework type
 // system.
-func (a UpdateLogDeliveryConfigurationStatusRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateLogDeliveryConfigurationStatusRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration_id": types.StringType,
@@ -1552,13 +1552,13 @@ func (a WrappedCreateLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.
 	}
 }
 
-// ToAttrType returns the representation of WrappedCreateLogDeliveryConfiguration in the Terraform plugin framework type
+// ToObjectType returns the representation of WrappedCreateLogDeliveryConfiguration in the Terraform plugin framework type
 // system.
-func (a WrappedCreateLogDeliveryConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a WrappedCreateLogDeliveryConfiguration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration": basetypes.ListType{
-				ElemType: CreateLogDeliveryConfigurationParams{}.ToAttrType(ctx),
+				ElemType: CreateLogDeliveryConfigurationParams{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1587,13 +1587,13 @@ func (a WrappedLogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Contex
 	}
 }
 
-// ToAttrType returns the representation of WrappedLogDeliveryConfiguration in the Terraform plugin framework type
+// ToObjectType returns the representation of WrappedLogDeliveryConfiguration in the Terraform plugin framework type
 // system.
-func (a WrappedLogDeliveryConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
+func (a WrappedLogDeliveryConfiguration) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration": basetypes.ListType{
-				ElemType: LogDeliveryConfiguration{}.ToAttrType(ctx),
+				ElemType: LogDeliveryConfiguration{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1622,13 +1622,13 @@ func (a WrappedLogDeliveryConfigurations) GetComplexFieldTypes(ctx context.Conte
 	}
 }
 
-// ToAttrType returns the representation of WrappedLogDeliveryConfigurations in the Terraform plugin framework type
+// ToObjectType returns the representation of WrappedLogDeliveryConfigurations in the Terraform plugin framework type
 // system.
-func (a WrappedLogDeliveryConfigurations) ToAttrType(ctx context.Context) types.ObjectType {
+func (a WrappedLogDeliveryConfigurations) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configurations": basetypes.ListType{
-				ElemType: LogDeliveryConfiguration{}.ToAttrType(ctx),
+				ElemType: LogDeliveryConfiguration{}.ToObjectType(ctx),
 			},
 		},
 	}

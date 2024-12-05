@@ -3,6 +3,7 @@ package registered_model
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -12,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -32,10 +34,27 @@ type RegisteredModelDataSource struct {
 }
 
 type RegisteredModelData struct {
-	FullName       types.String                     `tfsdk:"full_name"`
-	IncludeAliases types.Bool                       `tfsdk:"include_aliases" tf:"optional"`
-	IncludeBrowse  types.Bool                       `tfsdk:"include_browse" tf:"optional"`
-	ModelInfo      []catalog_tf.RegisteredModelInfo `tfsdk:"model_info" tf:"optional,computed"`
+	FullName       types.String `tfsdk:"full_name"`
+	IncludeAliases types.Bool   `tfsdk:"include_aliases" tf:"optional"`
+	IncludeBrowse  types.Bool   `tfsdk:"include_browse" tf:"optional"`
+	ModelInfo      types.List   `tfsdk:"model_info" tf:"optional,computed"`
+}
+
+func (RegisteredModelData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"model_info": reflect.TypeOf(catalog_tf.RegisteredModelInfo{}),
+	}
+}
+
+func (RegisteredModelData) ToObjectType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"full_name":       types.StringType,
+			"include_aliases": types.BoolType,
+			"include_browse":  types.BoolType,
+			"model_info":      types.ListType{ElemType: catalog_tf.RegisteredModelInfo{}.ToObjectType(ctx)},
+		},
+	}
 }
 
 func (d *RegisteredModelDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -93,6 +112,11 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 		modelInfo.Aliases, d = basetypes.NewListValueFrom(ctx, modelInfo.Aliases.ElementType(ctx), []catalog_tf.RegisteredModelAlias{})
 		resp.Diagnostics.Append(d...)
 	}
-	registeredModel.ModelInfo = append(registeredModel.ModelInfo, modelInfo)
+	var dd diag.Diagnostics
+	registeredModel.ModelInfo, dd = types.ListValueFrom(ctx, catalog_tf.RegisteredModelInfo{}.ToObjectType(ctx), []catalog_tf.RegisteredModelInfo{modelInfo})
+	resp.Diagnostics.Append(dd...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModel)...)
 }

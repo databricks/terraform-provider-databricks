@@ -45,13 +45,13 @@ func (a CreateDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	}
 }
 
-// ToAttrType returns the representation of CreateDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateDashboardRequest in the Terraform plugin framework type
 // system.
-func (a CreateDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard": basetypes.ListType{
-				ElemType: Dashboard{}.ToAttrType(ctx),
+				ElemType: Dashboard{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -84,14 +84,14 @@ func (a CreateScheduleRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// ToAttrType returns the representation of CreateScheduleRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateScheduleRequest in the Terraform plugin framework type
 // system.
-func (a CreateScheduleRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateScheduleRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: Schedule{}.ToAttrType(ctx),
+				ElemType: Schedule{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -126,15 +126,15 @@ func (a CreateSubscriptionRequest) GetComplexFieldTypes(ctx context.Context) map
 	}
 }
 
-// ToAttrType returns the representation of CreateSubscriptionRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of CreateSubscriptionRequest in the Terraform plugin framework type
 // system.
-func (a CreateSubscriptionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CreateSubscriptionRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
 			"schedule_id":  types.StringType,
 			"subscription": basetypes.ListType{
-				ElemType: Subscription{}.ToAttrType(ctx),
+				ElemType: Subscription{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -170,9 +170,9 @@ func (a CronSchedule) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of CronSchedule in the Terraform plugin framework type
+// ToObjectType returns the representation of CronSchedule in the Terraform plugin framework type
 // system.
-func (a CronSchedule) ToAttrType(ctx context.Context) types.ObjectType {
+func (a CronSchedule) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"quartz_cron_expression": types.StringType,
@@ -234,9 +234,9 @@ func (a Dashboard) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Dashboard in the Terraform plugin framework type
+// ToObjectType returns the representation of Dashboard in the Terraform plugin framework type
 // system.
-func (a Dashboard) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Dashboard) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time":          types.StringType,
@@ -281,9 +281,9 @@ func (a DeleteScheduleRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteScheduleRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteScheduleRequest in the Terraform plugin framework type
 // system.
-func (a DeleteScheduleRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteScheduleRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -313,9 +313,9 @@ func (a DeleteScheduleResponse) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteScheduleResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteScheduleResponse in the Terraform plugin framework type
 // system.
-func (a DeleteScheduleResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteScheduleResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -351,9 +351,9 @@ func (a DeleteSubscriptionRequest) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteSubscriptionRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteSubscriptionRequest in the Terraform plugin framework type
 // system.
-func (a DeleteSubscriptionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteSubscriptionRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id":    types.StringType,
@@ -384,9 +384,9 @@ func (a DeleteSubscriptionResponse) GetComplexFieldTypes(ctx context.Context) ma
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of DeleteSubscriptionResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of DeleteSubscriptionResponse in the Terraform plugin framework type
 // system.
-func (a DeleteSubscriptionResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a DeleteSubscriptionResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -419,16 +419,16 @@ func (a GenieAttachment) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// ToAttrType returns the representation of GenieAttachment in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieAttachment in the Terraform plugin framework type
 // system.
-func (a GenieAttachment) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieAttachment) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"query": basetypes.ListType{
-				ElemType: QueryAttachment{}.ToAttrType(ctx),
+				ElemType: QueryAttachment{}.ToObjectType(ctx),
 			},
 			"text": basetypes.ListType{
-				ElemType: TextAttachment{}.ToAttrType(ctx),
+				ElemType: TextAttachment{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -466,9 +466,9 @@ func (a GenieConversation) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GenieConversation in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieConversation in the Terraform plugin framework type
 // system.
-func (a GenieConversation) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieConversation) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"created_timestamp":      types.Int64Type,
@@ -507,9 +507,9 @@ func (a GenieCreateConversationMessageRequest) GetComplexFieldTypes(ctx context.
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GenieCreateConversationMessageRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieCreateConversationMessageRequest in the Terraform plugin framework type
 // system.
-func (a GenieCreateConversationMessageRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieCreateConversationMessageRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"content":         types.StringType,
@@ -546,9 +546,9 @@ func (a GenieExecuteMessageQueryRequest) GetComplexFieldTypes(ctx context.Contex
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GenieExecuteMessageQueryRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieExecuteMessageQueryRequest in the Terraform plugin framework type
 // system.
-func (a GenieExecuteMessageQueryRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieExecuteMessageQueryRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"conversation_id": types.StringType,
@@ -587,9 +587,9 @@ func (a GenieGetConversationMessageRequest) GetComplexFieldTypes(ctx context.Con
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GenieGetConversationMessageRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieGetConversationMessageRequest in the Terraform plugin framework type
 // system.
-func (a GenieGetConversationMessageRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieGetConversationMessageRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"conversation_id": types.StringType,
@@ -626,9 +626,9 @@ func (a GenieGetMessageQueryResultRequest) GetComplexFieldTypes(ctx context.Cont
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GenieGetMessageQueryResultRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieGetMessageQueryResultRequest in the Terraform plugin framework type
 // system.
-func (a GenieGetMessageQueryResultRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieGetMessageQueryResultRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"conversation_id": types.StringType,
@@ -663,13 +663,13 @@ func (a GenieGetMessageQueryResultResponse) GetComplexFieldTypes(ctx context.Con
 	}
 }
 
-// ToAttrType returns the representation of GenieGetMessageQueryResultResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieGetMessageQueryResultResponse in the Terraform plugin framework type
 // system.
-func (a GenieGetMessageQueryResultResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieGetMessageQueryResultResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"statement_response": basetypes.ListType{
-				ElemType: sql_tf.StatementResponse{}.ToAttrType(ctx),
+				ElemType: sql_tf.StatementResponse{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -736,24 +736,24 @@ func (a GenieMessage) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// ToAttrType returns the representation of GenieMessage in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieMessage in the Terraform plugin framework type
 // system.
-func (a GenieMessage) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieMessage) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attachments": basetypes.ListType{
-				ElemType: GenieAttachment{}.ToAttrType(ctx),
+				ElemType: GenieAttachment{}.ToObjectType(ctx),
 			},
 			"content":           types.StringType,
 			"conversation_id":   types.StringType,
 			"created_timestamp": types.Int64Type,
 			"error": basetypes.ListType{
-				ElemType: MessageError{}.ToAttrType(ctx),
+				ElemType: MessageError{}.ToObjectType(ctx),
 			},
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"query_result": basetypes.ListType{
-				ElemType: Result{}.ToAttrType(ctx),
+				ElemType: Result{}.ToObjectType(ctx),
 			},
 			"space_id": types.StringType,
 			"status":   types.StringType,
@@ -787,9 +787,9 @@ func (a GenieStartConversationMessageRequest) GetComplexFieldTypes(ctx context.C
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GenieStartConversationMessageRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieStartConversationMessageRequest in the Terraform plugin framework type
 // system.
-func (a GenieStartConversationMessageRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieStartConversationMessageRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"content":  types.StringType,
@@ -828,17 +828,17 @@ func (a GenieStartConversationResponse) GetComplexFieldTypes(ctx context.Context
 	}
 }
 
-// ToAttrType returns the representation of GenieStartConversationResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of GenieStartConversationResponse in the Terraform plugin framework type
 // system.
-func (a GenieStartConversationResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GenieStartConversationResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"conversation": basetypes.ListType{
-				ElemType: GenieConversation{}.ToAttrType(ctx),
+				ElemType: GenieConversation{}.ToObjectType(ctx),
 			},
 			"conversation_id": types.StringType,
 			"message": basetypes.ListType{
-				ElemType: GenieMessage{}.ToAttrType(ctx),
+				ElemType: GenieMessage{}.ToObjectType(ctx),
 			},
 			"message_id": types.StringType,
 		},
@@ -868,9 +868,9 @@ func (a GetDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetDashboardRequest in the Terraform plugin framework type
 // system.
-func (a GetDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -901,9 +901,9 @@ func (a GetPublishedDashboardRequest) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetPublishedDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetPublishedDashboardRequest in the Terraform plugin framework type
 // system.
-func (a GetPublishedDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetPublishedDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -936,9 +936,9 @@ func (a GetScheduleRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetScheduleRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetScheduleRequest in the Terraform plugin framework type
 // system.
-func (a GetScheduleRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetScheduleRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -974,9 +974,9 @@ func (a GetSubscriptionRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of GetSubscriptionRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of GetSubscriptionRequest in the Terraform plugin framework type
 // system.
-func (a GetSubscriptionRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a GetSubscriptionRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id":    types.StringType,
@@ -1017,9 +1017,9 @@ func (a ListDashboardsRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListDashboardsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListDashboardsRequest in the Terraform plugin framework type
 // system.
-func (a ListDashboardsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListDashboardsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":    types.Int64Type,
@@ -1056,13 +1056,13 @@ func (a ListDashboardsResponse) GetComplexFieldTypes(ctx context.Context) map[st
 	}
 }
 
-// ToAttrType returns the representation of ListDashboardsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListDashboardsResponse in the Terraform plugin framework type
 // system.
-func (a ListDashboardsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListDashboardsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboards": basetypes.ListType{
-				ElemType: Dashboard{}.ToAttrType(ctx),
+				ElemType: Dashboard{}.ToObjectType(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -1097,9 +1097,9 @@ func (a ListSchedulesRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListSchedulesRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListSchedulesRequest in the Terraform plugin framework type
 // system.
-func (a ListSchedulesRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListSchedulesRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -1137,14 +1137,14 @@ func (a ListSchedulesResponse) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// ToAttrType returns the representation of ListSchedulesResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListSchedulesResponse in the Terraform plugin framework type
 // system.
-func (a ListSchedulesResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListSchedulesResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"schedules": basetypes.ListType{
-				ElemType: Schedule{}.ToAttrType(ctx),
+				ElemType: Schedule{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1180,9 +1180,9 @@ func (a ListSubscriptionsRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of ListSubscriptionsRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of ListSubscriptionsRequest in the Terraform plugin framework type
 // system.
-func (a ListSubscriptionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListSubscriptionsRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -1221,14 +1221,14 @@ func (a ListSubscriptionsResponse) GetComplexFieldTypes(ctx context.Context) map
 	}
 }
 
-// ToAttrType returns the representation of ListSubscriptionsResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of ListSubscriptionsResponse in the Terraform plugin framework type
 // system.
-func (a ListSubscriptionsResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a ListSubscriptionsResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"subscriptions": basetypes.ListType{
-				ElemType: Subscription{}.ToAttrType(ctx),
+				ElemType: Subscription{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1257,9 +1257,9 @@ func (a MessageError) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of MessageError in the Terraform plugin framework type
+// ToObjectType returns the representation of MessageError in the Terraform plugin framework type
 // system.
-func (a MessageError) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MessageError) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"error": types.StringType,
@@ -1295,9 +1295,9 @@ func (a MigrateDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[s
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of MigrateDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of MigrateDashboardRequest in the Terraform plugin framework type
 // system.
-func (a MigrateDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a MigrateDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name":        types.StringType,
@@ -1336,9 +1336,9 @@ func (a PublishRequest) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PublishRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of PublishRequest in the Terraform plugin framework type
 // system.
-func (a PublishRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PublishRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id":      types.StringType,
@@ -1376,9 +1376,9 @@ func (a PublishedDashboard) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of PublishedDashboard in the Terraform plugin framework type
+// ToObjectType returns the representation of PublishedDashboard in the Terraform plugin framework type
 // system.
-func (a PublishedDashboard) ToAttrType(ctx context.Context) types.ObjectType {
+func (a PublishedDashboard) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"display_name":         types.StringType,
@@ -1425,9 +1425,9 @@ func (a QueryAttachment) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of QueryAttachment in the Terraform plugin framework type
+// ToObjectType returns the representation of QueryAttachment in the Terraform plugin framework type
 // system.
-func (a QueryAttachment) ToAttrType(ctx context.Context) types.ObjectType {
+func (a QueryAttachment) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"description":            types.StringType,
@@ -1469,9 +1469,9 @@ func (a Result) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of Result in the Terraform plugin framework type
+// ToObjectType returns the representation of Result in the Terraform plugin framework type
 // system.
-func (a Result) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Result) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"is_truncated": types.BoolType,
@@ -1524,14 +1524,14 @@ func (a Schedule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	}
 }
 
-// ToAttrType returns the representation of Schedule in the Terraform plugin framework type
+// ToObjectType returns the representation of Schedule in the Terraform plugin framework type
 // system.
-func (a Schedule) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Schedule) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
 			"cron_schedule": basetypes.ListType{
-				ElemType: CronSchedule{}.ToAttrType(ctx),
+				ElemType: CronSchedule{}.ToObjectType(ctx),
 			},
 			"dashboard_id": types.StringType,
 			"display_name": types.StringType,
@@ -1573,16 +1573,16 @@ func (a Subscriber) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// ToAttrType returns the representation of Subscriber in the Terraform plugin framework type
+// ToObjectType returns the representation of Subscriber in the Terraform plugin framework type
 // system.
-func (a Subscriber) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Subscriber) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_subscriber": basetypes.ListType{
-				ElemType: SubscriptionSubscriberDestination{}.ToAttrType(ctx),
+				ElemType: SubscriptionSubscriberDestination{}.ToObjectType(ctx),
 			},
 			"user_subscriber": basetypes.ListType{
-				ElemType: SubscriptionSubscriberUser{}.ToAttrType(ctx),
+				ElemType: SubscriptionSubscriberUser{}.ToObjectType(ctx),
 			},
 		},
 	}
@@ -1630,9 +1630,9 @@ func (a Subscription) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// ToAttrType returns the representation of Subscription in the Terraform plugin framework type
+// ToObjectType returns the representation of Subscription in the Terraform plugin framework type
 // system.
-func (a Subscription) ToAttrType(ctx context.Context) types.ObjectType {
+func (a Subscription) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time":        types.StringType,
@@ -1641,7 +1641,7 @@ func (a Subscription) ToAttrType(ctx context.Context) types.ObjectType {
 			"etag":               types.StringType,
 			"schedule_id":        types.StringType,
 			"subscriber": basetypes.ListType{
-				ElemType: Subscriber{}.ToAttrType(ctx),
+				ElemType: Subscriber{}.ToObjectType(ctx),
 			},
 			"subscription_id": types.StringType,
 			"update_time":     types.StringType,
@@ -1672,9 +1672,9 @@ func (a SubscriptionSubscriberDestination) GetComplexFieldTypes(ctx context.Cont
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of SubscriptionSubscriberDestination in the Terraform plugin framework type
+// ToObjectType returns the representation of SubscriptionSubscriberDestination in the Terraform plugin framework type
 // system.
-func (a SubscriptionSubscriberDestination) ToAttrType(ctx context.Context) types.ObjectType {
+func (a SubscriptionSubscriberDestination) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_id": types.StringType,
@@ -1704,9 +1704,9 @@ func (a SubscriptionSubscriberUser) GetComplexFieldTypes(ctx context.Context) ma
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of SubscriptionSubscriberUser in the Terraform plugin framework type
+// ToObjectType returns the representation of SubscriptionSubscriberUser in the Terraform plugin framework type
 // system.
-func (a SubscriptionSubscriberUser) ToAttrType(ctx context.Context) types.ObjectType {
+func (a SubscriptionSubscriberUser) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"user_id": types.Int64Type,
@@ -1738,9 +1738,9 @@ func (a TextAttachment) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of TextAttachment in the Terraform plugin framework type
+// ToObjectType returns the representation of TextAttachment in the Terraform plugin framework type
 // system.
-func (a TextAttachment) ToAttrType(ctx context.Context) types.ObjectType {
+func (a TextAttachment) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"content": types.StringType,
@@ -1772,9 +1772,9 @@ func (a TrashDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of TrashDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of TrashDashboardRequest in the Terraform plugin framework type
 // system.
-func (a TrashDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a TrashDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -1802,9 +1802,9 @@ func (a TrashDashboardResponse) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of TrashDashboardResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of TrashDashboardResponse in the Terraform plugin framework type
 // system.
-func (a TrashDashboardResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a TrashDashboardResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1833,9 +1833,9 @@ func (a UnpublishDashboardRequest) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UnpublishDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of UnpublishDashboardRequest in the Terraform plugin framework type
 // system.
-func (a UnpublishDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UnpublishDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
@@ -1863,9 +1863,9 @@ func (a UnpublishDashboardResponse) GetComplexFieldTypes(ctx context.Context) ma
 	return map[string]reflect.Type{}
 }
 
-// ToAttrType returns the representation of UnpublishDashboardResponse in the Terraform plugin framework type
+// ToObjectType returns the representation of UnpublishDashboardResponse in the Terraform plugin framework type
 // system.
-func (a UnpublishDashboardResponse) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UnpublishDashboardResponse) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
@@ -1897,13 +1897,13 @@ func (a UpdateDashboardRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	}
 }
 
-// ToAttrType returns the representation of UpdateDashboardRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateDashboardRequest in the Terraform plugin framework type
 // system.
-func (a UpdateDashboardRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateDashboardRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard": basetypes.ListType{
-				ElemType: Dashboard{}.ToAttrType(ctx),
+				ElemType: Dashboard{}.ToObjectType(ctx),
 			},
 			"dashboard_id": types.StringType,
 		},
@@ -1939,14 +1939,14 @@ func (a UpdateScheduleRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// ToAttrType returns the representation of UpdateScheduleRequest in the Terraform plugin framework type
+// ToObjectType returns the representation of UpdateScheduleRequest in the Terraform plugin framework type
 // system.
-func (a UpdateScheduleRequest) ToAttrType(ctx context.Context) types.ObjectType {
+func (a UpdateScheduleRequest) ToObjectType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: Schedule{}.ToAttrType(ctx),
+				ElemType: Schedule{}.ToObjectType(ctx),
 			},
 			"schedule_id": types.StringType,
 		},

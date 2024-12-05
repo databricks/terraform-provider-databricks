@@ -70,7 +70,7 @@ func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[strin
 }
 
 func (m MonitorInfoExtended) ToObjectType(ctx context.Context) types.ObjectType {
-	tpe := m.MonitorInfo.ToAttrType(ctx)
+	tpe := m.MonitorInfo.ToObjectType(ctx)
 	tpe.AttrTypes["warehouse_id"] = types.StringType
 	tpe.AttrTypes["skip_builtin_dashboard"] = types.BoolType
 	tpe.AttrTypes["id"] = types.StringType

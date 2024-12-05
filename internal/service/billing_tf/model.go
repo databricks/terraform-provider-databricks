@@ -196,7 +196,7 @@ func (newState *BudgetConfigurationFilterClause) SyncEffectiveFieldsDuringRead(e
 
 func (a BudgetConfigurationFilterClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"values": reflect.TypeOf(types.StringType),
+		"values": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -254,7 +254,7 @@ func (newState *BudgetConfigurationFilterWorkspaceIdClause) SyncEffectiveFieldsD
 
 func (a BudgetConfigurationFilterWorkspaceIdClause) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"values": reflect.TypeOf(types.Int64Type),
+		"values": reflect.TypeOf(types.Int64{}),
 	}
 }
 
@@ -567,7 +567,7 @@ func (newState *CreateLogDeliveryConfigurationParams) SyncEffectiveFieldsDuringR
 
 func (a CreateLogDeliveryConfigurationParams) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"workspace_ids_filter": reflect.TypeOf(types.Int64Type),
+		"workspace_ids_filter": reflect.TypeOf(types.Int64{}),
 	}
 }
 
@@ -997,7 +997,7 @@ func (newState *LogDeliveryConfiguration) SyncEffectiveFieldsDuringRead(existing
 func (a LogDeliveryConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"log_delivery_status":  reflect.TypeOf(LogDeliveryStatus{}),
-		"workspace_ids_filter": reflect.TypeOf(types.Int64Type),
+		"workspace_ids_filter": reflect.TypeOf(types.Int64{}),
 	}
 }
 

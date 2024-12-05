@@ -395,7 +395,7 @@ func (newState *IpAccessList) SyncEffectiveFieldsDuringRead(existingState IpAcce
 
 func (a IpAccessList) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"allowed_ip_addresses": reflect.TypeOf(types.StringType),
+		"allowed_ip_addresses": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -731,7 +731,7 @@ func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState
 
 func (a PrivilegeAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"privileges": reflect.TypeOf(types.StringType),
+		"privileges": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1106,7 +1106,7 @@ func (newState *SecurablePropertiesKvPairs) SyncEffectiveFieldsDuringRead(existi
 
 func (a SecurablePropertiesKvPairs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"properties": reflect.TypeOf(types.StringType),
+		"properties": reflect.TypeOf(types.String{}),
 	}
 }
 

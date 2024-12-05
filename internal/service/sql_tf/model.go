@@ -375,7 +375,7 @@ func (newState *AlertQuery) SyncEffectiveFieldsDuringRead(existingState AlertQue
 func (a AlertQuery) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"options": reflect.TypeOf(QueryOptions{}),
-		"tags":    reflect.TypeOf(types.StringType),
+		"tags":    reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -767,7 +767,7 @@ func (newState *CreateQueryRequestQuery) SyncEffectiveFieldsDuringRead(existingS
 func (a CreateQueryRequestQuery) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(QueryParameter{}),
-		"tags":       reflect.TypeOf(types.StringType),
+		"tags":       reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1124,7 +1124,7 @@ func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard
 func (a Dashboard) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"options": reflect.TypeOf(DashboardOptions{}),
-		"tags":    reflect.TypeOf(types.StringType),
+		"tags":    reflect.TypeOf(types.String{}),
 		"user":    reflect.TypeOf(User{}),
 		"widgets": reflect.TypeOf(Widget{}),
 	}
@@ -1183,7 +1183,7 @@ func (newState *DashboardEditContent) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a DashboardEditContent) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(types.StringType),
+		"tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1252,7 +1252,7 @@ func (newState *DashboardPostContent) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a DashboardPostContent) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(types.StringType),
+		"tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2063,7 +2063,7 @@ func (newState *EnumValue) SyncEffectiveFieldsDuringRead(existingState EnumValue
 func (a EnumValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"multi_values_options": reflect.TypeOf(MultiValuesOptions{}),
-		"values":               reflect.TypeOf(types.StringType),
+		"values":               reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2280,7 +2280,7 @@ func (newState *ExternalLink) SyncEffectiveFieldsDuringRead(existingState Extern
 
 func (a ExternalLink) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"http_headers": reflect.TypeOf(types.StringType),
+		"http_headers": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2975,7 +2975,7 @@ func (a LegacyQuery) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{
 		"last_modified_by": reflect.TypeOf(User{}),
 		"options":          reflect.TypeOf(QueryOptions{}),
-		"tags":             reflect.TypeOf(types.StringType),
+		"tags":             reflect.TypeOf(types.String{}),
 		"user":             reflect.TypeOf(User{}),
 		"visualizations":   reflect.TypeOf(LegacyVisualization{}),
 	}
@@ -3467,7 +3467,7 @@ func (newState *ListQueryObjectsResponseQuery) SyncEffectiveFieldsDuringRead(exi
 func (a ListQueryObjectsResponseQuery) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(QueryParameter{}),
-		"tags":       reflect.TypeOf(types.StringType),
+		"tags":       reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3824,7 +3824,7 @@ func (newState *Query) SyncEffectiveFieldsDuringRead(existingState Query) {
 func (a Query) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(QueryParameter{}),
-		"tags":       reflect.TypeOf(types.StringType),
+		"tags":       reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3874,7 +3874,7 @@ func (newState *QueryBackedValue) SyncEffectiveFieldsDuringRead(existingState Qu
 func (a QueryBackedValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"multi_values_options": reflect.TypeOf(MultiValuesOptions{}),
-		"values":               reflect.TypeOf(types.StringType),
+		"values":               reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3928,7 +3928,7 @@ func (newState *QueryEditContent) SyncEffectiveFieldsDuringRead(existingState Qu
 
 func (a QueryEditContent) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(types.StringType),
+		"tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3972,10 +3972,10 @@ func (newState *QueryFilter) SyncEffectiveFieldsDuringRead(existingState QueryFi
 func (a QueryFilter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"query_start_time_range": reflect.TypeOf(TimeRange{}),
-		"statement_ids":          reflect.TypeOf(types.StringType),
-		"statuses":               reflect.TypeOf(types.StringType),
-		"user_ids":               reflect.TypeOf(types.Int64Type),
-		"warehouse_ids":          reflect.TypeOf(types.StringType),
+		"statement_ids":          reflect.TypeOf(types.String{}),
+		"statuses":               reflect.TypeOf(types.String{}),
+		"user_ids":               reflect.TypeOf(types.Int64{}),
+		"warehouse_ids":          reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -4375,7 +4375,7 @@ func (newState *QueryPostContent) SyncEffectiveFieldsDuringRead(existingState Qu
 
 func (a QueryPostContent) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tags": reflect.TypeOf(types.StringType),
+		"tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -4529,7 +4529,7 @@ func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultDa
 
 func (a ResultData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"data_array":     reflect.TypeOf(types.StringType),
+		"data_array":     reflect.TypeOf(types.String{}),
 		"external_links": reflect.TypeOf(ExternalLink{}),
 	}
 }
@@ -5062,7 +5062,7 @@ func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState T
 
 func (a TerminationReason) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5393,7 +5393,7 @@ func (newState *UpdateQueryRequestQuery) SyncEffectiveFieldsDuringRead(existingS
 func (a UpdateQueryRequestQuery) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"parameters": reflect.TypeOf(QueryParameter{}),
-		"tags":       reflect.TypeOf(types.StringType),
+		"tags":       reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5672,7 +5672,7 @@ func (newState *WarehousePermission) SyncEffectiveFieldsDuringRead(existingState
 
 func (a WarehousePermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 

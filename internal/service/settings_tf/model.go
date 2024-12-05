@@ -95,7 +95,7 @@ func (newState *AibiDashboardEmbeddingApprovedDomains) SyncEffectiveFieldsDuring
 
 func (a AibiDashboardEmbeddingApprovedDomains) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"approved_domains": reflect.TypeOf(types.StringType),
+		"approved_domains": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -396,7 +396,7 @@ func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existin
 
 func (a ComplianceSecurityProfile) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"compliance_standards": reflect.TypeOf(types.StringType),
+		"compliance_standards": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -526,7 +526,7 @@ func (newState *CreateIpAccessList) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a CreateIpAccessList) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ip_addresses": reflect.TypeOf(types.StringType),
+		"ip_addresses": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -798,7 +798,7 @@ func (newState *CspEnablementAccount) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a CspEnablementAccount) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"compliance_standards": reflect.TypeOf(types.StringType),
+		"compliance_standards": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1591,7 +1591,7 @@ func (newState *EmailConfig) SyncEffectiveFieldsDuringRead(existingState EmailCo
 
 func (a EmailConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"addresses": reflect.TypeOf(types.StringType),
+		"addresses": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1779,7 +1779,7 @@ func (newState *ExchangeToken) SyncEffectiveFieldsDuringRead(existingState Excha
 
 func (a ExchangeToken) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"scopes": reflect.TypeOf(types.StringType),
+		"scopes": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1816,8 +1816,8 @@ func (newState *ExchangeTokenRequest) SyncEffectiveFieldsDuringRead(existingStat
 func (a ExchangeTokenRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"partitionId": reflect.TypeOf(PartitionId{}),
-		"scopes":      reflect.TypeOf(types.StringType),
-		"tokenType":   reflect.TypeOf(types.StringType),
+		"scopes":      reflect.TypeOf(types.String{}),
+		"tokenType":   reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2634,7 +2634,7 @@ func (newState *IpAccessListInfo) SyncEffectiveFieldsDuringRead(existingState Ip
 
 func (a IpAccessListInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ip_addresses": reflect.TypeOf(types.StringType),
+		"ip_addresses": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3005,7 +3005,7 @@ func (newState *NccAwsStableIpRule) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a NccAwsStableIpRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"cidr_blocks": reflect.TypeOf(types.StringType),
+		"cidr_blocks": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3105,8 +3105,8 @@ func (newState *NccAzureServiceEndpointRule) SyncEffectiveFieldsDuringRead(exist
 
 func (a NccAzureServiceEndpointRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"subnets":         reflect.TypeOf(types.StringType),
-		"target_services": reflect.TypeOf(types.StringType),
+		"subnets":         reflect.TypeOf(types.String{}),
+		"target_services": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3502,7 +3502,7 @@ func (newState *ReplaceIpAccessList) SyncEffectiveFieldsDuringRead(existingState
 
 func (a ReplaceIpAccessList) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ip_addresses": reflect.TypeOf(types.StringType),
+		"ip_addresses": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3850,7 +3850,7 @@ func (newState *TokenPermission) SyncEffectiveFieldsDuringRead(existingState Tok
 
 func (a TokenPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -4402,7 +4402,7 @@ func (newState *UpdateIpAccessList) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a UpdateIpAccessList) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ip_addresses": reflect.TypeOf(types.StringType),
+		"ip_addresses": reflect.TypeOf(types.String{}),
 	}
 }
 

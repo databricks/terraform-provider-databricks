@@ -263,7 +263,7 @@ func (a CreateCustomerManagedKeyRequest) GetComplexFieldTypes(ctx context.Contex
 	return map[string]reflect.Type{
 		"aws_key_info": reflect.TypeOf(CreateAwsKeyInfo{}),
 		"gcp_key_info": reflect.TypeOf(CreateGcpKeyInfo{}),
-		"use_cases":    reflect.TypeOf(types.StringType),
+		"use_cases":    reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -337,8 +337,8 @@ func (newState *CreateNetworkRequest) SyncEffectiveFieldsDuringRead(existingStat
 func (a CreateNetworkRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"gcp_network_info":   reflect.TypeOf(GcpNetworkInfo{}),
-		"security_group_ids": reflect.TypeOf(types.StringType),
-		"subnet_ids":         reflect.TypeOf(types.StringType),
+		"security_group_ids": reflect.TypeOf(types.String{}),
+		"subnet_ids":         reflect.TypeOf(types.String{}),
 		"vpc_endpoints":      reflect.TypeOf(NetworkVpcEndpoints{}),
 	}
 }
@@ -553,7 +553,7 @@ func (newState *CreateWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingSt
 func (a CreateWorkspaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cloud_resource_container":   reflect.TypeOf(CloudResourceContainer{}),
-		"custom_tags":                reflect.TypeOf(types.StringType),
+		"custom_tags":                reflect.TypeOf(types.String{}),
 		"gcp_managed_network_config": reflect.TypeOf(GcpManagedNetworkConfig{}),
 		"gke_config":                 reflect.TypeOf(GkeConfig{}),
 	}
@@ -680,7 +680,7 @@ func (a CustomerManagedKey) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{
 		"aws_key_info": reflect.TypeOf(AwsKeyInfo{}),
 		"gcp_key_info": reflect.TypeOf(GcpKeyInfo{}),
-		"use_cases":    reflect.TypeOf(types.StringType),
+		"use_cases":    reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1332,8 +1332,8 @@ func (a Network) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	return map[string]reflect.Type{
 		"error_messages":     reflect.TypeOf(NetworkHealth{}),
 		"gcp_network_info":   reflect.TypeOf(GcpNetworkInfo{}),
-		"security_group_ids": reflect.TypeOf(types.StringType),
-		"subnet_ids":         reflect.TypeOf(types.StringType),
+		"security_group_ids": reflect.TypeOf(types.String{}),
+		"subnet_ids":         reflect.TypeOf(types.String{}),
 		"vpc_endpoints":      reflect.TypeOf(NetworkVpcEndpoints{}),
 		"warning_messages":   reflect.TypeOf(NetworkWarning{}),
 	}
@@ -1419,8 +1419,8 @@ func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringRead(existingState
 
 func (a NetworkVpcEndpoints) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dataplane_relay": reflect.TypeOf(types.StringType),
-		"rest_api":        reflect.TypeOf(types.StringType),
+		"dataplane_relay": reflect.TypeOf(types.String{}),
+		"rest_api":        reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1499,7 +1499,7 @@ func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a PrivateAccessSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"allowed_vpc_endpoint_ids": reflect.TypeOf(types.StringType),
+		"allowed_vpc_endpoint_ids": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1690,7 +1690,7 @@ func (newState *UpdateWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a UpdateWorkspaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(types.StringType),
+		"custom_tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1759,7 +1759,7 @@ func (newState *UpsertPrivateAccessSettingsRequest) SyncEffectiveFieldsDuringRea
 
 func (a UpsertPrivateAccessSettingsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"allowed_vpc_endpoint_ids": reflect.TypeOf(types.StringType),
+		"allowed_vpc_endpoint_ids": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1957,7 +1957,7 @@ func (a Workspace) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{
 		"azure_workspace_info":       reflect.TypeOf(AzureWorkspaceInfo{}),
 		"cloud_resource_container":   reflect.TypeOf(CloudResourceContainer{}),
-		"custom_tags":                reflect.TypeOf(types.StringType),
+		"custom_tags":                reflect.TypeOf(types.String{}),
 		"external_customer_info":     reflect.TypeOf(ExternalCustomerInfo{}),
 		"gcp_managed_network_config": reflect.TypeOf(GcpManagedNetworkConfig{}),
 		"gke_config":                 reflect.TypeOf(GkeConfig{}),

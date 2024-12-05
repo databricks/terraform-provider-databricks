@@ -1708,7 +1708,7 @@ func (newState *RepoPermission) SyncEffectiveFieldsDuringRead(existingState Repo
 
 func (a RepoPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1886,7 +1886,7 @@ func (newState *SparseCheckout) SyncEffectiveFieldsDuringRead(existingState Spar
 
 func (a SparseCheckout) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"patterns": reflect.TypeOf(types.StringType),
+		"patterns": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1917,7 +1917,7 @@ func (newState *SparseCheckoutUpdate) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a SparseCheckoutUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"patterns": reflect.TypeOf(types.StringType),
+		"patterns": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2141,7 +2141,7 @@ func (newState *WorkspaceObjectPermission) SyncEffectiveFieldsDuringRead(existin
 
 func (a WorkspaceObjectPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 

@@ -83,7 +83,7 @@ func (newState *BatchGetListingsRequest) SyncEffectiveFieldsDuringRead(existingS
 
 func (a BatchGetListingsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ids": reflect.TypeOf(types.StringType),
+		"ids": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -136,7 +136,7 @@ func (newState *BatchGetProvidersRequest) SyncEffectiveFieldsDuringRead(existing
 
 func (a BatchGetProvidersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ids": reflect.TypeOf(types.StringType),
+		"ids": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2121,9 +2121,9 @@ func (newState *ListListingsRequest) SyncEffectiveFieldsDuringRead(existingState
 
 func (a ListListingsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"assets":       reflect.TypeOf(types.StringType),
-		"categories":   reflect.TypeOf(types.StringType),
-		"provider_ids": reflect.TypeOf(types.StringType),
+		"assets":       reflect.TypeOf(types.String{}),
+		"categories":   reflect.TypeOf(types.String{}),
+		"provider_ids": reflect.TypeOf(types.String{}),
 		"tags":         reflect.TypeOf(ListingTag{}),
 	}
 }
@@ -2362,10 +2362,10 @@ func (newState *ListingDetail) SyncEffectiveFieldsDuringRead(existingState Listi
 
 func (a ListingDetail) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"assets":                       reflect.TypeOf(types.StringType),
+		"assets":                       reflect.TypeOf(types.String{}),
 		"collection_granularity":       reflect.TypeOf(DataRefreshInfo{}),
 		"embedded_notebook_file_infos": reflect.TypeOf(FileInfo{}),
-		"file_ids":                     reflect.TypeOf(types.StringType),
+		"file_ids":                     reflect.TypeOf(types.String{}),
 		"tags":                         reflect.TypeOf(ListingTag{}),
 		"update_frequency":             reflect.TypeOf(DataRefreshInfo{}),
 	}
@@ -2522,8 +2522,8 @@ func (newState *ListingSummary) SyncEffectiveFieldsDuringRead(existingState List
 
 func (a ListingSummary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"categories":      reflect.TypeOf(types.StringType),
-		"exchange_ids":    reflect.TypeOf(types.StringType),
+		"categories":      reflect.TypeOf(types.String{}),
+		"exchange_ids":    reflect.TypeOf(types.String{}),
 		"git_repo":        reflect.TypeOf(RepoInfo{}),
 		"provider_region": reflect.TypeOf(RegionInfo{}),
 		"setting":         reflect.TypeOf(ListingSetting{}),
@@ -2585,7 +2585,7 @@ func (newState *ListingTag) SyncEffectiveFieldsDuringRead(existingState ListingT
 
 func (a ListingTag) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"tag_values": reflect.TypeOf(types.StringType),
+		"tag_values": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2907,9 +2907,9 @@ func (newState *SearchListingsRequest) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a SearchListingsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"assets":       reflect.TypeOf(types.StringType),
-		"categories":   reflect.TypeOf(types.StringType),
-		"provider_ids": reflect.TypeOf(types.StringType),
+		"assets":       reflect.TypeOf(types.String{}),
+		"categories":   reflect.TypeOf(types.String{}),
+		"provider_ids": reflect.TypeOf(types.String{}),
 	}
 }
 

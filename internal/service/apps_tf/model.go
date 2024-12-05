@@ -302,7 +302,7 @@ func (newState *AppPermission) SyncEffectiveFieldsDuringRead(existingState AppPe
 
 func (a AppPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 

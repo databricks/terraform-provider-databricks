@@ -459,7 +459,7 @@ func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringRead(existingSta
 
 func (a CloudProviderNodeInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"status": reflect.TypeOf(types.StringType),
+		"status": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -688,13 +688,13 @@ func (a ClusterAttributes) GetComplexFieldTypes(ctx context.Context) map[string]
 		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
 		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
 		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.StringType),
+		"custom_tags":      reflect.TypeOf(types.String{}),
 		"docker_image":     reflect.TypeOf(DockerImage{}),
 		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
 		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.StringType),
-		"spark_env_vars":   reflect.TypeOf(types.StringType),
-		"ssh_public_keys":  reflect.TypeOf(types.StringType),
+		"spark_conf":       reflect.TypeOf(types.String{}),
+		"spark_env_vars":   reflect.TypeOf(types.String{}),
+		"ssh_public_keys":  reflect.TypeOf(types.String{}),
 		"workload_type":    reflect.TypeOf(WorkloadType{}),
 	}
 }
@@ -773,7 +773,7 @@ func (newState *ClusterCompliance) SyncEffectiveFieldsDuringRead(existingState C
 
 func (a ClusterCompliance) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"violations": reflect.TypeOf(types.StringType),
+		"violations": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1018,17 +1018,17 @@ func (a ClusterDetails) GetComplexFieldTypes(ctx context.Context) map[string]ref
 		"azure_attributes":   reflect.TypeOf(AzureAttributes{}),
 		"cluster_log_conf":   reflect.TypeOf(ClusterLogConf{}),
 		"cluster_log_status": reflect.TypeOf(LogSyncStatus{}),
-		"custom_tags":        reflect.TypeOf(types.StringType),
-		"default_tags":       reflect.TypeOf(types.StringType),
+		"custom_tags":        reflect.TypeOf(types.String{}),
+		"default_tags":       reflect.TypeOf(types.String{}),
 		"docker_image":       reflect.TypeOf(DockerImage{}),
 		"driver":             reflect.TypeOf(SparkNode{}),
 		"executors":          reflect.TypeOf(SparkNode{}),
 		"gcp_attributes":     reflect.TypeOf(GcpAttributes{}),
 		"init_scripts":       reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":         reflect.TypeOf(types.StringType),
-		"spark_env_vars":     reflect.TypeOf(types.StringType),
+		"spark_conf":         reflect.TypeOf(types.String{}),
+		"spark_env_vars":     reflect.TypeOf(types.String{}),
 		"spec":               reflect.TypeOf(ClusterSpec{}),
-		"ssh_public_keys":    reflect.TypeOf(types.StringType),
+		"ssh_public_keys":    reflect.TypeOf(types.String{}),
 		"termination_reason": reflect.TypeOf(TerminationReason{}),
 		"workload_type":      reflect.TypeOf(WorkloadType{}),
 	}
@@ -1250,7 +1250,7 @@ func (newState *ClusterPermission) SyncEffectiveFieldsDuringRead(existingState C
 
 func (a ClusterPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1439,7 +1439,7 @@ func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringRead(existingS
 
 func (a ClusterPolicyPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1783,13 +1783,13 @@ func (a ClusterSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
 		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
 		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.StringType),
+		"custom_tags":      reflect.TypeOf(types.String{}),
 		"docker_image":     reflect.TypeOf(DockerImage{}),
 		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
 		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.StringType),
-		"spark_env_vars":   reflect.TypeOf(types.StringType),
-		"ssh_public_keys":  reflect.TypeOf(types.StringType),
+		"spark_conf":       reflect.TypeOf(types.String{}),
+		"spark_env_vars":   reflect.TypeOf(types.String{}),
+		"ssh_public_keys":  reflect.TypeOf(types.String{}),
 		"workload_type":    reflect.TypeOf(WorkloadType{}),
 	}
 }
@@ -2188,13 +2188,13 @@ func (a CreateCluster) GetComplexFieldTypes(ctx context.Context) map[string]refl
 		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
 		"clone_from":       reflect.TypeOf(CloneCluster{}),
 		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.StringType),
+		"custom_tags":      reflect.TypeOf(types.String{}),
 		"docker_image":     reflect.TypeOf(DockerImage{}),
 		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
 		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.StringType),
-		"spark_env_vars":   reflect.TypeOf(types.StringType),
-		"ssh_public_keys":  reflect.TypeOf(types.StringType),
+		"spark_conf":       reflect.TypeOf(types.String{}),
+		"spark_env_vars":   reflect.TypeOf(types.String{}),
+		"ssh_public_keys":  reflect.TypeOf(types.String{}),
 		"workload_type":    reflect.TypeOf(WorkloadType{}),
 	}
 }
@@ -2375,11 +2375,11 @@ func (a CreateInstancePool) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{
 		"aws_attributes":           reflect.TypeOf(InstancePoolAwsAttributes{}),
 		"azure_attributes":         reflect.TypeOf(InstancePoolAzureAttributes{}),
-		"custom_tags":              reflect.TypeOf(types.StringType),
+		"custom_tags":              reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
-		"preloaded_spark_versions": reflect.TypeOf(types.StringType),
+		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3147,13 +3147,13 @@ func (a EditCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
 		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
 		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.StringType),
+		"custom_tags":      reflect.TypeOf(types.String{}),
 		"docker_image":     reflect.TypeOf(DockerImage{}),
 		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
 		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.StringType),
-		"spark_env_vars":   reflect.TypeOf(types.StringType),
-		"ssh_public_keys":  reflect.TypeOf(types.StringType),
+		"spark_conf":       reflect.TypeOf(types.String{}),
+		"spark_env_vars":   reflect.TypeOf(types.String{}),
+		"ssh_public_keys":  reflect.TypeOf(types.String{}),
 		"workload_type":    reflect.TypeOf(WorkloadType{}),
 	}
 }
@@ -3278,7 +3278,7 @@ func (newState *EditInstancePool) SyncEffectiveFieldsDuringRead(existingState Ed
 
 func (a EditInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(types.StringType),
+		"custom_tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3507,7 +3507,7 @@ func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environ
 
 func (a Environment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dependencies": reflect.TypeOf(types.StringType),
+		"dependencies": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3753,7 +3753,7 @@ func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringRead(exis
 
 func (a GetClusterComplianceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"violations": reflect.TypeOf(types.StringType),
+		"violations": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3997,7 +3997,7 @@ func (newState *GetEvents) SyncEffectiveFieldsDuringRead(existingState GetEvents
 
 func (a GetEvents) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"event_types": reflect.TypeOf(types.StringType),
+		"event_types": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -4165,12 +4165,12 @@ func (a GetInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{
 		"aws_attributes":           reflect.TypeOf(InstancePoolAwsAttributes{}),
 		"azure_attributes":         reflect.TypeOf(InstancePoolAzureAttributes{}),
-		"custom_tags":              reflect.TypeOf(types.StringType),
-		"default_tags":             reflect.TypeOf(types.StringType),
+		"custom_tags":              reflect.TypeOf(types.String{}),
+		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
-		"preloaded_spark_versions": reflect.TypeOf(types.StringType),
+		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
 		"status":                   reflect.TypeOf(InstancePoolStatus{}),
 	}
@@ -4938,12 +4938,12 @@ func (a InstancePoolAndStats) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{
 		"aws_attributes":           reflect.TypeOf(InstancePoolAwsAttributes{}),
 		"azure_attributes":         reflect.TypeOf(InstancePoolAzureAttributes{}),
-		"custom_tags":              reflect.TypeOf(types.StringType),
-		"default_tags":             reflect.TypeOf(types.StringType),
+		"custom_tags":              reflect.TypeOf(types.String{}),
+		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
-		"preloaded_spark_versions": reflect.TypeOf(types.StringType),
+		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
 		"status":                   reflect.TypeOf(InstancePoolStatus{}),
 	}
@@ -5143,7 +5143,7 @@ func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringRead(existingSt
 
 func (a InstancePoolPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5441,7 +5441,7 @@ func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringRead(existingState L
 func (a LibraryFullStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"library":  reflect.TypeOf(Library{}),
-		"messages": reflect.TypeOf(types.StringType),
+		"messages": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5503,7 +5503,7 @@ func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringRead(existi
 
 func (a ListAvailableZonesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"zones": reflect.TypeOf(types.StringType),
+		"zones": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5636,8 +5636,8 @@ func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a ListClustersFilterBy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"cluster_sources": reflect.TypeOf(types.StringType),
-		"cluster_states":  reflect.TypeOf(types.StringType),
+		"cluster_sources": reflect.TypeOf(types.String{}),
+		"cluster_states":  reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6053,7 +6053,7 @@ func (newState *MavenLibrary) SyncEffectiveFieldsDuringRead(existingState MavenL
 
 func (a MavenLibrary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"exclusions": reflect.TypeOf(types.StringType),
+		"exclusions": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6661,7 +6661,7 @@ func (newState *Results) SyncEffectiveFieldsDuringRead(existingState Results) {
 
 func (a Results) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"fileNames": reflect.TypeOf(types.StringType),
+		"fileNames": reflect.TypeOf(types.String{}),
 		"schema":    reflect.TypeOf(struct{}{}),
 	}
 }
@@ -6915,7 +6915,7 @@ func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState T
 
 func (a TerminationReason) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -7219,13 +7219,13 @@ func (a UpdateClusterResource) GetComplexFieldTypes(ctx context.Context) map[str
 		"aws_attributes":   reflect.TypeOf(AwsAttributes{}),
 		"azure_attributes": reflect.TypeOf(AzureAttributes{}),
 		"cluster_log_conf": reflect.TypeOf(ClusterLogConf{}),
-		"custom_tags":      reflect.TypeOf(types.StringType),
+		"custom_tags":      reflect.TypeOf(types.String{}),
 		"docker_image":     reflect.TypeOf(DockerImage{}),
 		"gcp_attributes":   reflect.TypeOf(GcpAttributes{}),
 		"init_scripts":     reflect.TypeOf(InitScriptInfo{}),
-		"spark_conf":       reflect.TypeOf(types.StringType),
-		"spark_env_vars":   reflect.TypeOf(types.StringType),
-		"ssh_public_keys":  reflect.TypeOf(types.StringType),
+		"spark_conf":       reflect.TypeOf(types.String{}),
+		"spark_env_vars":   reflect.TypeOf(types.String{}),
+		"ssh_public_keys":  reflect.TypeOf(types.String{}),
 		"workload_type":    reflect.TypeOf(WorkloadType{}),
 	}
 }

@@ -22,7 +22,7 @@ type TestTfSdk struct {
 	Map               types.Map    `tfsdk:"map" tf:"optional"`
 }
 
-func (TestTfSdk) GetComplexFieldTypes() map[string]reflect.Type {
+func (TestTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"nested":              reflect.TypeOf(NestedTfSdk{}),
 		"nested_slice_object": reflect.TypeOf(NestedTfSdk{}),
@@ -50,7 +50,7 @@ type NestedTfSdk struct {
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
 }
 
-func (NestedTfSdk) GetComplexFieldTypes() map[string]reflect.Type {
+func (NestedTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 

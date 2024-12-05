@@ -163,7 +163,7 @@ func (newState *DeleteDataResult) SyncEffectiveFieldsDuringRead(existingState De
 
 func (a DeleteDataResult) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"failed_primary_keys": reflect.TypeOf(types.StringType),
+		"failed_primary_keys": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -195,7 +195,7 @@ func (newState *DeleteDataVectorIndexRequest) SyncEffectiveFieldsDuringRead(exis
 
 func (a DeleteDataVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"primary_keys": reflect.TypeOf(types.StringType),
+		"primary_keys": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -363,7 +363,7 @@ func (newState *DeltaSyncVectorIndexSpecRequest) SyncEffectiveFieldsDuringRead(e
 
 func (a DeltaSyncVectorIndexSpecRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"columns_to_sync":          reflect.TypeOf(types.StringType),
+		"columns_to_sync":          reflect.TypeOf(types.String{}),
 		"embedding_source_columns": reflect.TypeOf(EmbeddingSourceColumn{}),
 		"embedding_vector_columns": reflect.TypeOf(EmbeddingVectorColumn{}),
 	}
@@ -935,8 +935,8 @@ func (newState *QueryVectorIndexRequest) SyncEffectiveFieldsDuringRead(existingS
 
 func (a QueryVectorIndexRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"columns":      reflect.TypeOf(types.StringType),
-		"query_vector": reflect.TypeOf(types.Float64Type),
+		"columns":      reflect.TypeOf(types.String{}),
+		"query_vector": reflect.TypeOf(types.Float64{}),
 	}
 }
 
@@ -1013,7 +1013,7 @@ func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultDa
 
 func (a ResultData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"data_array": reflect.TypeOf(types.StringType),
+		"data_array": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1208,7 +1208,7 @@ func (newState *UpsertDataResult) SyncEffectiveFieldsDuringRead(existingState Up
 
 func (a UpsertDataResult) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"failed_primary_keys": reflect.TypeOf(types.StringType),
+		"failed_primary_keys": reflect.TypeOf(types.String{}),
 	}
 }
 

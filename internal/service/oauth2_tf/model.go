@@ -42,8 +42,8 @@ func (newState *CreateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existi
 
 func (a CreateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.StringType),
-		"scopes":              reflect.TypeOf(types.StringType),
+		"redirect_urls":       reflect.TypeOf(types.String{}),
+		"scopes":              reflect.TypeOf(types.String{}),
 		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
@@ -400,8 +400,8 @@ func (newState *GetCustomAppIntegrationOutput) SyncEffectiveFieldsDuringRead(exi
 
 func (a GetCustomAppIntegrationOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.StringType),
-		"scopes":              reflect.TypeOf(types.StringType),
+		"redirect_urls":       reflect.TypeOf(types.String{}),
+		"scopes":              reflect.TypeOf(types.String{}),
 		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
@@ -783,8 +783,8 @@ func (newState *PublishedAppOutput) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a PublishedAppOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls": reflect.TypeOf(types.StringType),
-		"scopes":        reflect.TypeOf(types.StringType),
+		"redirect_urls": reflect.TypeOf(types.String{}),
+		"scopes":        reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -884,7 +884,7 @@ func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existi
 
 func (a UpdateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.StringType),
+		"redirect_urls":       reflect.TypeOf(types.String{}),
 		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }

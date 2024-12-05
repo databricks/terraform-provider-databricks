@@ -788,8 +788,8 @@ func (newState *CatalogInfo) SyncEffectiveFieldsDuringRead(existingState Catalog
 func (a CatalogInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"effective_predictive_optimization_flag": reflect.TypeOf(EffectivePredictiveOptimizationFlag{}),
-		"options":                                reflect.TypeOf(types.StringType),
-		"properties":                             reflect.TypeOf(types.StringType),
+		"options":                                reflect.TypeOf(types.String{}),
+		"properties":                             reflect.TypeOf(types.String{}),
 		"provisioning_info":                      reflect.TypeOf(ProvisioningInfo{}),
 	}
 }
@@ -940,7 +940,7 @@ func (newState *ColumnMask) SyncEffectiveFieldsDuringRead(existingState ColumnMa
 
 func (a ColumnMask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"using_column_names": reflect.TypeOf(types.StringType),
+		"using_column_names": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1005,8 +1005,8 @@ func (newState *ConnectionInfo) SyncEffectiveFieldsDuringRead(existingState Conn
 
 func (a ConnectionInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":           reflect.TypeOf(types.StringType),
-		"properties":        reflect.TypeOf(types.StringType),
+		"options":           reflect.TypeOf(types.String{}),
+		"properties":        reflect.TypeOf(types.String{}),
 		"provisioning_info": reflect.TypeOf(ProvisioningInfo{}),
 	}
 }
@@ -1111,8 +1111,8 @@ func (newState *CreateCatalog) SyncEffectiveFieldsDuringRead(existingState Creat
 
 func (a CreateCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":    reflect.TypeOf(types.StringType),
-		"properties": reflect.TypeOf(types.StringType),
+		"options":    reflect.TypeOf(types.String{}),
+		"properties": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1159,8 +1159,8 @@ func (newState *CreateConnection) SyncEffectiveFieldsDuringRead(existingState Cr
 
 func (a CreateConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options":    reflect.TypeOf(types.StringType),
-		"properties": reflect.TypeOf(types.StringType),
+		"options":    reflect.TypeOf(types.String{}),
+		"properties": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1540,7 +1540,7 @@ func (a CreateMonitor) GetComplexFieldTypes(ctx context.Context) map[string]refl
 		"inference_log":              reflect.TypeOf(MonitorInferenceLog{}),
 		"notifications":              reflect.TypeOf(MonitorNotifications{}),
 		"schedule":                   reflect.TypeOf(MonitorCronSchedule{}),
-		"slicing_exprs":              reflect.TypeOf(types.StringType),
+		"slicing_exprs":              reflect.TypeOf(types.String{}),
 		"snapshot":                   reflect.TypeOf(MonitorSnapshot{}),
 		"time_series":                reflect.TypeOf(MonitorTimeSeries{}),
 	}
@@ -1687,7 +1687,7 @@ func (newState *CreateSchema) SyncEffectiveFieldsDuringRead(existingState Create
 
 func (a CreateSchema) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"properties": reflect.TypeOf(types.StringType),
+		"properties": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1964,7 +1964,7 @@ func (newState *CurrentWorkspaceBindings) SyncEffectiveFieldsDuringRead(existing
 
 func (a CurrentWorkspaceBindings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"workspaces": reflect.TypeOf(types.Int64Type),
+		"workspaces": reflect.TypeOf(types.Int64{}),
 	}
 }
 
@@ -2605,7 +2605,7 @@ func (newState *DeltaRuntimePropertiesKvPairs) SyncEffectiveFieldsDuringRead(exi
 
 func (a DeltaRuntimePropertiesKvPairs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"delta_runtime_properties": reflect.TypeOf(types.StringType),
+		"delta_runtime_properties": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3082,8 +3082,8 @@ func (newState *ForeignKeyConstraint) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a ForeignKeyConstraint) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"child_columns":  reflect.TypeOf(types.StringType),
-		"parent_columns": reflect.TypeOf(types.StringType),
+		"child_columns":  reflect.TypeOf(types.String{}),
+		"parent_columns": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -3408,7 +3408,7 @@ func (newState *GenerateTemporaryServiceCredentialAzureOptions) SyncEffectiveFie
 
 func (a GenerateTemporaryServiceCredentialAzureOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"resources": reflect.TypeOf(types.StringType),
+		"resources": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -4360,7 +4360,7 @@ func (newState *ListAccountMetastoreAssignmentsResponse) SyncEffectiveFieldsDuri
 
 func (a ListAccountMetastoreAssignmentsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"workspace_ids": reflect.TypeOf(types.Int64Type),
+		"workspace_ids": reflect.TypeOf(types.Int64{}),
 	}
 }
 
@@ -5762,7 +5762,7 @@ func (newState *MonitorDestination) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a MonitorDestination) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"email_addresses": reflect.TypeOf(types.StringType),
+		"email_addresses": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5815,7 +5815,7 @@ func (newState *MonitorInferenceLog) SyncEffectiveFieldsDuringRead(existingState
 
 func (a MonitorInferenceLog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"granularities": reflect.TypeOf(types.StringType),
+		"granularities": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5900,7 +5900,7 @@ func (a MonitorInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"inference_log":              reflect.TypeOf(MonitorInferenceLog{}),
 		"notifications":              reflect.TypeOf(MonitorNotifications{}),
 		"schedule":                   reflect.TypeOf(MonitorCronSchedule{}),
-		"slicing_exprs":              reflect.TypeOf(types.StringType),
+		"slicing_exprs":              reflect.TypeOf(types.String{}),
 		"snapshot":                   reflect.TypeOf(MonitorSnapshot{}),
 		"time_series":                reflect.TypeOf(MonitorTimeSeries{}),
 	}
@@ -5982,7 +5982,7 @@ func (newState *MonitorMetric) SyncEffectiveFieldsDuringRead(existingState Monit
 
 func (a MonitorMetric) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"input_columns": reflect.TypeOf(types.StringType),
+		"input_columns": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6144,7 +6144,7 @@ func (newState *MonitorTimeSeries) SyncEffectiveFieldsDuringRead(existingState M
 
 func (a MonitorTimeSeries) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"granularities": reflect.TypeOf(types.StringType),
+		"granularities": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6263,7 +6263,7 @@ func (newState *OnlineTableSpec) SyncEffectiveFieldsDuringRead(existingState Onl
 
 func (a OnlineTableSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"primary_key_columns": reflect.TypeOf(types.StringType),
+		"primary_key_columns": reflect.TypeOf(types.String{}),
 		"run_continuously":    reflect.TypeOf(OnlineTableSpecContinuousSchedulingPolicy{}),
 		"run_triggered":       reflect.TypeOf(OnlineTableSpecTriggeredSchedulingPolicy{}),
 	}
@@ -6401,8 +6401,8 @@ func (newState *PermissionsChange) SyncEffectiveFieldsDuringRead(existingState P
 
 func (a PermissionsChange) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"add":    reflect.TypeOf(types.StringType),
-		"remove": reflect.TypeOf(types.StringType),
+		"add":    reflect.TypeOf(types.String{}),
+		"remove": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6500,7 +6500,7 @@ func (newState *PrimaryKeyConstraint) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a PrimaryKeyConstraint) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"child_columns": reflect.TypeOf(types.StringType),
+		"child_columns": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6530,7 +6530,7 @@ func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState
 
 func (a PrivilegeAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"privileges": reflect.TypeOf(types.StringType),
+		"privileges": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6922,7 +6922,7 @@ func (newState *SchemaInfo) SyncEffectiveFieldsDuringRead(existingState SchemaIn
 func (a SchemaInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"effective_predictive_optimization_flag": reflect.TypeOf(EffectivePredictiveOptimizationFlag{}),
-		"properties":                             reflect.TypeOf(types.StringType),
+		"properties":                             reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -7341,7 +7341,7 @@ func (a TableInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 		"delta_runtime_properties_kvpairs":       reflect.TypeOf(DeltaRuntimePropertiesKvPairs{}),
 		"effective_predictive_optimization_flag": reflect.TypeOf(EffectivePredictiveOptimizationFlag{}),
 		"encryption_details":                     reflect.TypeOf(EncryptionDetails{}),
-		"properties":                             reflect.TypeOf(types.StringType),
+		"properties":                             reflect.TypeOf(types.String{}),
 		"row_filter":                             reflect.TypeOf(TableRowFilter{}),
 		"table_constraints":                      reflect.TypeOf(TableConstraint{}),
 		"view_dependencies":                      reflect.TypeOf(DependencyList{}),
@@ -7420,7 +7420,7 @@ func (newState *TableRowFilter) SyncEffectiveFieldsDuringRead(existingState Tabl
 
 func (a TableRowFilter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"input_column_names": reflect.TypeOf(types.StringType),
+		"input_column_names": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -7631,7 +7631,7 @@ func (newState *UpdateCatalog) SyncEffectiveFieldsDuringRead(existingState Updat
 
 func (a UpdateCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"properties": reflect.TypeOf(types.StringType),
+		"properties": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -7670,7 +7670,7 @@ func (newState *UpdateConnection) SyncEffectiveFieldsDuringRead(existingState Up
 
 func (a UpdateConnection) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"options": reflect.TypeOf(types.StringType),
+		"options": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -8004,7 +8004,7 @@ func (a UpdateMonitor) GetComplexFieldTypes(ctx context.Context) map[string]refl
 		"inference_log":              reflect.TypeOf(MonitorInferenceLog{}),
 		"notifications":              reflect.TypeOf(MonitorNotifications{}),
 		"schedule":                   reflect.TypeOf(MonitorCronSchedule{}),
-		"slicing_exprs":              reflect.TypeOf(types.StringType),
+		"slicing_exprs":              reflect.TypeOf(types.String{}),
 		"snapshot":                   reflect.TypeOf(MonitorSnapshot{}),
 		"time_series":                reflect.TypeOf(MonitorTimeSeries{}),
 	}
@@ -8153,7 +8153,7 @@ func (newState *UpdateSchema) SyncEffectiveFieldsDuringRead(existingState Update
 
 func (a UpdateSchema) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"properties": reflect.TypeOf(types.StringType),
+		"properties": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -8325,8 +8325,8 @@ func (newState *UpdateWorkspaceBindings) SyncEffectiveFieldsDuringRead(existingS
 
 func (a UpdateWorkspaceBindings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"assign_workspaces":   reflect.TypeOf(types.Int64Type),
-		"unassign_workspaces": reflect.TypeOf(types.Int64Type),
+		"assign_workspaces":   reflect.TypeOf(types.Int64{}),
+		"unassign_workspaces": reflect.TypeOf(types.Int64{}),
 	}
 }
 

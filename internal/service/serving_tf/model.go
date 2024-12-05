@@ -125,9 +125,9 @@ func (newState *AiGatewayGuardrailParameters) SyncEffectiveFieldsDuringRead(exis
 
 func (a AiGatewayGuardrailParameters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"invalid_keywords": reflect.TypeOf(types.StringType),
+		"invalid_keywords": reflect.TypeOf(types.String{}),
 		"pii":              reflect.TypeOf(AiGatewayGuardrailPiiBehavior{}),
-		"valid_topics":     reflect.TypeOf(types.StringType),
+		"valid_topics":     reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -718,7 +718,7 @@ func (a DataframeSplitInput) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{
 		"columns": reflect.TypeOf(struct{}{}),
 		"data":    reflect.TypeOf(struct{}{}),
-		"index":   reflect.TypeOf(types.Int64Type),
+		"index":   reflect.TypeOf(types.Int64{}),
 	}
 }
 
@@ -797,7 +797,7 @@ func (newState *EmbeddingsV1ResponseEmbeddingElement) SyncEffectiveFieldsDuringR
 
 func (a EmbeddingsV1ResponseEmbeddingElement) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"embedding": reflect.TypeOf(types.Float64Type),
+		"embedding": reflect.TypeOf(types.Float64{}),
 	}
 }
 
@@ -1666,7 +1666,7 @@ func (newState *PatchServingEndpointTags) SyncEffectiveFieldsDuringRead(existing
 func (a PatchServingEndpointTags) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"add_tags":    reflect.TypeOf(EndpointTag{}),
-		"delete_tags": reflect.TypeOf(types.StringType),
+		"delete_tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1939,10 +1939,10 @@ func (a QueryEndpointInput) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{
 		"dataframe_records": reflect.TypeOf(struct{}{}),
 		"dataframe_split":   reflect.TypeOf(DataframeSplitInput{}),
-		"extra_params":      reflect.TypeOf(types.StringType),
+		"extra_params":      reflect.TypeOf(types.String{}),
 		"instances":         reflect.TypeOf(struct{}{}),
 		"messages":          reflect.TypeOf(ChatMessage{}),
-		"stop":              reflect.TypeOf(types.StringType),
+		"stop":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2178,7 +2178,7 @@ func (newState *ServedEntityInput) SyncEffectiveFieldsDuringRead(existingState S
 
 func (a ServedEntityInput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"environment_vars": reflect.TypeOf(types.StringType),
+		"environment_vars": reflect.TypeOf(types.String{}),
 		"external_model":   reflect.TypeOf(ExternalModel{}),
 	}
 }
@@ -2276,7 +2276,7 @@ func (newState *ServedEntityOutput) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a ServedEntityOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"environment_vars": reflect.TypeOf(types.StringType),
+		"environment_vars": reflect.TypeOf(types.String{}),
 		"external_model":   reflect.TypeOf(ExternalModel{}),
 		"foundation_model": reflect.TypeOf(FoundationModel{}),
 		"state":            reflect.TypeOf(ServedModelState{}),
@@ -2420,7 +2420,7 @@ func (newState *ServedModelInput) SyncEffectiveFieldsDuringRead(existingState Se
 
 func (a ServedModelInput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"environment_vars": reflect.TypeOf(types.StringType),
+		"environment_vars": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2497,7 +2497,7 @@ func (newState *ServedModelOutput) SyncEffectiveFieldsDuringRead(existingState S
 
 func (a ServedModelOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"environment_vars": reflect.TypeOf(types.StringType),
+		"environment_vars": reflect.TypeOf(types.String{}),
 		"state":            reflect.TypeOf(ServedModelState{}),
 	}
 }
@@ -2855,7 +2855,7 @@ func (newState *ServingEndpointPermission) SyncEffectiveFieldsDuringRead(existin
 
 func (a ServingEndpointPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 

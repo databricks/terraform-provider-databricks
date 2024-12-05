@@ -768,7 +768,7 @@ func (newState *GrantRule) SyncEffectiveFieldsDuringRead(existingState GrantRule
 
 func (a GrantRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"principals": reflect.TypeOf(types.StringType),
+		"principals": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -820,7 +820,7 @@ func (a Group) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type
 		"members":      reflect.TypeOf(ComplexValue{}),
 		"meta":         reflect.TypeOf(ResourceMeta{}),
 		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.StringType),
+		"schemas":      reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1068,7 +1068,7 @@ func (newState *ListGroupsResponse) SyncEffectiveFieldsDuringRead(existingState 
 func (a ListGroupsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Resources": reflect.TypeOf(Group{}),
-		"schemas":   reflect.TypeOf(types.StringType),
+		"schemas":   reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1111,7 +1111,7 @@ func (newState *ListServicePrincipalResponse) SyncEffectiveFieldsDuringRead(exis
 func (a ListServicePrincipalResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Resources": reflect.TypeOf(ServicePrincipal{}),
-		"schemas":   reflect.TypeOf(types.StringType),
+		"schemas":   reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1251,7 +1251,7 @@ func (newState *ListUsersResponse) SyncEffectiveFieldsDuringRead(existingState L
 func (a ListUsersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Resources": reflect.TypeOf(User{}),
-		"schemas":   reflect.TypeOf(types.StringType),
+		"schemas":   reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1428,7 +1428,7 @@ func (newState *PartialUpdate) SyncEffectiveFieldsDuringRead(existingState Parti
 func (a PartialUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"Operations": reflect.TypeOf(Patch{}),
-		"schemas":    reflect.TypeOf(types.StringType),
+		"schemas":    reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1533,7 +1533,7 @@ func (newState *PasswordPermission) SyncEffectiveFieldsDuringRead(existingState 
 
 func (a PasswordPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1696,7 +1696,7 @@ func (newState *Permission) SyncEffectiveFieldsDuringRead(existingState Permissi
 
 func (a Permission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"inherited_from_object": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1731,7 +1731,7 @@ func (newState *PermissionAssignment) SyncEffectiveFieldsDuringRead(existingStat
 
 func (a PermissionAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"permissions": reflect.TypeOf(types.StringType),
+		"permissions": reflect.TypeOf(types.String{}),
 		"principal":   reflect.TypeOf(PrincipalOutput{}),
 	}
 }
@@ -2051,7 +2051,7 @@ func (a ServicePrincipal) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"entitlements": reflect.TypeOf(ComplexValue{}),
 		"groups":       reflect.TypeOf(ComplexValue{}),
 		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.StringType),
+		"schemas":      reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2150,7 +2150,7 @@ func (newState *UpdateWorkspaceAssignments) SyncEffectiveFieldsDuringRead(existi
 
 func (a UpdateWorkspaceAssignments) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"permissions": reflect.TypeOf(types.StringType),
+		"permissions": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2213,7 +2213,7 @@ func (a User) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 		"groups":       reflect.TypeOf(ComplexValue{}),
 		"name":         reflect.TypeOf(Name{}),
 		"roles":        reflect.TypeOf(ComplexValue{}),
-		"schemas":      reflect.TypeOf(types.StringType),
+		"schemas":      reflect.TypeOf(types.String{}),
 	}
 }
 

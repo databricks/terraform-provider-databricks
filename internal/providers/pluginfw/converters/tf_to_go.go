@@ -102,12 +102,188 @@ func tfSdkToGoSdkSingleField(
 		return
 	}
 
-	if srcField.Kind() == reflect.Struct {
-		d.Append(tfsdkToGoSdkStructField(srcField, destField, srcFieldName, forceSendFieldsField, ctx, innerType)...)
+	if srcField.Kind() != reflect.Struct {
+		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("unexpected type %T in tfsdk structs, expected a plugin framework type. %s", srcField.Interface(), common.TerraformBugErrorMessage))
 		return
 	}
-	d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("unexpected type %T in tfsdk structs, expected a plugin framework type. %s", srcField.Interface(), common.TerraformBugErrorMessage))
+
+	// The field being processed must be an attr.Value (a field of the TF SDK struct).
+	v, ok := srcField.Interface().(attr.Value)
+	if !ok {
+		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("unexpected type %T in tfsdk structs, expected a plugin framework type. %s", v, common.TerraformBugErrorMessage))
+		return
+	}
+
+	if v.IsUnknown() {
+		return
+	}
+	if shouldSetForceSendFields(v, destField) {
+		addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
+	}
+
+	d.Append(tfsdkToGoSdkStructField(ctx, v, destField, srcFieldName, forceSendFieldsField, innerType)...)
 	return
+}
+
+func tfsdkToGoSdkStructField(
+	ctx context.Context,
+	srcFieldValue attr.Value,
+	destField reflect.Value,
+	srcFieldName string,
+	forceSendFieldsField *reflect.Value,
+	innerType reflect.Type) (d diag.Diagnostics) {
+	switch v := srcFieldValue.(type) {
+	case types.Bool:
+		destField.SetBool(v.ValueBool())
+	case types.Int64:
+		destField.SetInt(v.ValueInt64())
+	case types.Float64:
+		destField.SetFloat(v.ValueFloat64())
+	case types.String:
+		if destField.Type().Name() != "string" {
+			// This is the case for enum.
+
+			// Skip unset value.
+			if v.ValueString() == "" {
+				return
+			}
+
+			destVal := convertToEnumValue(v, destField.Type())
+			destField.Set(destVal)
+		} else {
+			destField.SetString(v.ValueString())
+		}
+	case types.List:
+		// Empty lists correspond to nil slices or the struct zero value.
+		if v.IsNull() {
+			return
+		}
+
+		// Read the nested elements into the TFSDK struct slice
+		// This is a slice of either TFSDK structs or bools, ints, strings, and floats from the TF plugin framework types.
+		innerValue := reflect.New(reflect.SliceOf(innerType))
+		d.Append(v.ElementsAs(ctx, innerValue.Interface(), true)...)
+		if d.HasError() {
+			return
+		}
+
+		// Recursively call TFSDK to GOSDK conversion for each element in the list
+		var destInnerType reflect.Type
+		if destField.Type().Kind() == reflect.Slice {
+			destInnerType = destField.Type().Elem()
+		} else {
+			if innerValue.Elem().Len() > 1 {
+				d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("The length of a slice can not be greater than 1 if it is representing a struct, %s", common.TerraformBugErrorMessage))
+				return
+			}
+			// Case of types.List <-> struct or ptr
+			if destField.Type().Kind() == reflect.Ptr {
+				destInnerType = destField.Type().Elem()
+			} else {
+				destInnerType = destField.Type()
+			}
+		}
+
+		converted := reflect.MakeSlice(reflect.SliceOf(destInnerType), 0, innerValue.Elem().Len())
+		for i := 0; i < innerValue.Elem().Len(); i++ {
+			// Convert from the TF Value to our TFSDK struct
+			vv := innerValue.Elem().Index(i).Interface()
+			nextDest := reflect.New(destInnerType)
+			switch typedVv := vv.(type) {
+			case types.Bool, types.String, types.Int64, types.Float64:
+				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), srcFieldName, forceSendFieldsField, innerType)...)
+			default:
+				d.Append(TfSdkToGoSdkStruct(ctx, vv, nextDest.Interface())...)
+			}
+			if d.HasError() {
+				return
+			}
+			converted = reflect.Append(converted, reflect.Indirect(nextDest))
+		}
+
+		if destField.Type().Kind() == reflect.Slice {
+			destField.Set(converted)
+		} else if destField.Type().Kind() == reflect.Ptr {
+			destField.Set(converted.Index(0).Addr())
+		} else {
+			destField.Set(converted.Index(0))
+		}
+	case types.Map:
+		// Empty maps correspond to nil maps or the struct zero value.
+		if v.IsNull() {
+			return
+		}
+
+		// Read the nested elements into the TFSDK struct map
+		// This is a map from string to either TFSDK structs or bools, ints, strings, and floats from the TF plugin framework types.
+		innerValue := reflect.New(reflect.MapOf(reflect.TypeOf(""), innerType))
+		d.Append(v.ElementsAs(ctx, innerValue.Interface(), true)...)
+		if d.HasError() {
+			return
+		}
+
+		// Recursively call TFSDK to GOSDK conversion for each element in the map
+		destType := destField.Type().Elem()
+		converted := reflect.MakeMap(reflect.MapOf(reflect.TypeOf(""), destType))
+		for _, key := range innerValue.Elem().MapKeys() {
+			vv := innerValue.Elem().MapIndex(key).Interface()
+			nextDest := reflect.New(destType)
+			switch typedVv := vv.(type) {
+			case types.Bool, types.String, types.Int64, types.Float64:
+				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), srcFieldName, forceSendFieldsField, innerType)...)
+			default:
+				d.Append(TfSdkToGoSdkStruct(ctx, vv, nextDest.Interface())...)
+			}
+			if d.HasError() {
+				return
+			}
+			converted.SetMapIndex(key, nextDest.Elem())
+		}
+
+		destField.Set(converted)
+	case types.Object:
+		d.Append(v.As(ctx, destField.Addr().Interface(), basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})...)
+	case types.Set, types.Tuple:
+		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("%T is not currently supported as a source field. %s", v, common.TerraformBugErrorMessage))
+		return
+	default:
+		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("unexpected type %T in tfsdk structs, expected a plugin framework type. %s", v, common.TerraformBugErrorMessage))
+		return
+	}
+	return
+}
+
+func shouldSetForceSendFields(srcFieldValue attr.Value, destField reflect.Value) bool {
+	if srcFieldValue.IsNull() {
+		return false
+	}
+	// Don't set forceSendFields for enums
+	// We don't need to set ForceSendFields for enums because the value is never going to be a zero value (empty string).
+	if _, ok := srcFieldValue.(types.String); ok && destField.Type().Name() != "string" {
+		return false
+	}
+	// Don't set forceSendFields for lists
+	if _, ok := srcFieldValue.(types.List); ok && destField.Kind() == reflect.Slice {
+		return false
+	}
+
+	return true
+}
+
+func addToForceSendFields(ctx context.Context, fieldName string, forceSendFieldsField *reflect.Value) {
+	if forceSendFieldsField == nil || !forceSendFieldsField.IsValid() || !forceSendFieldsField.CanSet() {
+		tflog.Debug(ctx, fmt.Sprintf("[Debug] forceSendFieldsField is nil, invalid or not settable. %s", fieldName))
+		return
+	}
+	// Initialize forceSendFields if it is a zero Value
+	if forceSendFieldsField.IsZero() {
+		// Create a new slice of strings
+		newSlice := []string{}
+		forceSendFieldsField.Set(reflect.ValueOf(&newSlice).Elem())
+	}
+	forceSendFields := forceSendFieldsField.Interface().([]string)
+	forceSendFields = append(forceSendFields, fieldName)
+	forceSendFieldsField.Set(reflect.ValueOf(forceSendFields))
 }
 
 // Returns a reflect.Value of the enum type with the value set to the given string.
@@ -130,141 +306,4 @@ func convertToEnumValue(v types.String, destType reflect.Type) reflect.Value {
 		}
 	}
 	return destVal.Elem()
-}
-
-func tfsdkToGoSdkStructField(
-	srcField reflect.Value,
-	destField reflect.Value,
-	srcFieldName string,
-	forceSendFieldsField *reflect.Value,
-	ctx context.Context,
-	innerType reflect.Type) (d diag.Diagnostics) {
-	srcFieldValue := srcField.Interface().(attr.Value)
-	if srcFieldValue.IsUnknown() {
-		return
-	}
-	if !srcFieldValue.IsNull() {
-		addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
-	}
-	switch v := srcFieldValue.(type) {
-	case types.Bool:
-		destField.SetBool(v.ValueBool())
-	case types.Int64:
-		destField.SetInt(v.ValueInt64())
-	case types.Float64:
-		destField.SetFloat(v.ValueFloat64())
-	case types.String:
-		if destField.Type().Name() != "string" {
-			// This is the case for enum.
-
-			// Skip unset value.
-			if srcField.IsZero() || v.ValueString() == "" {
-				return
-			}
-
-			destVal := convertToEnumValue(v, destField.Type())
-			// We don't need to set ForceSendFields for enums because the value is never going to be a zero value (empty string).
-			destField.Set(destVal)
-		} else {
-			destField.SetString(v.ValueString())
-		}
-	case types.List:
-		// Empty lists correspond to nil slices or the struct zero value.
-		if v.IsNull() {
-			return
-		}
-
-		// Read the nested elements into the TFSDK struct slice
-		innerValue := reflect.MakeSlice(reflect.SliceOf(innerType), 0, len(v.Elements())).Interface()
-		d.Append(v.ElementsAs(ctx, &innerValue, true)...)
-		if d.HasError() {
-			return
-		}
-		innerValues := innerValue.([]interface{})
-
-		// Recursively call TFSDK to GOSDK conversion for each element in the list
-		var destInnerType reflect.Type
-		if destField.Type().Kind() == reflect.Slice {
-			destInnerType = destField.Type().Elem()
-		} else {
-			if len(innerValues) > 1 {
-				d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("The length of a slice can not be greater than 1 if it is representing a struct, %s", common.TerraformBugErrorMessage))
-				return
-			}
-			// Case of types.List <-> struct or ptr
-			if destField.Type().Kind() == reflect.Ptr {
-				destInnerType = destField.Type().Elem()
-			} else {
-				destInnerType = destField.Type()
-			}
-		}
-
-		converted := reflect.MakeSlice(reflect.SliceOf(destInnerType), 0, len(innerValues))
-		for _, vv := range innerValues {
-			next := reflect.New(destInnerType).Elem()
-			d.Append(tfSdkToGoSdkSingleField(ctx, reflect.ValueOf(vv), next, srcFieldName, forceSendFieldsField, innerType)...)
-			if d.HasError() {
-				return
-			}
-			converted = reflect.Append(converted, next)
-		}
-
-		if destField.Type().Kind() == reflect.Slice {
-			destField.Set(converted)
-		} else if destField.Type().Kind() == reflect.Ptr {
-			destField.Set(converted.Index(0).Addr())
-		} else {
-			destField.Set(converted.Index(0))
-		}
-	case types.Map:
-		// Empty maps correspond to nil maps or the struct zero value.
-		if v.IsNull() {
-			return
-		}
-
-		// Read the nested elements into the TFSDK struct map
-		innerValue := reflect.MakeMap(reflect.MapOf(reflect.TypeOf(""), innerType))
-		d.Append(v.ElementsAs(ctx, innerValue.Interface(), true)...)
-		if d.HasError() {
-			return
-		}
-
-		// Recursively call TFSDK to GOSDK conversion for each element in the map
-		converted := reflect.MakeMap(destField.Type())
-		for _, key := range innerValue.MapKeys() {
-			next := reflect.New(innerType).Elem()
-			d.Append(tfSdkToGoSdkSingleField(ctx, innerValue.MapIndex(key), next, srcFieldName, forceSendFieldsField, innerType)...)
-			if d.HasError() {
-				return
-			}
-			converted.SetMapIndex(key, next)
-		}
-
-		destField.Set(converted)
-	case types.Object:
-		d.Append(v.As(ctx, destField.Addr().Interface(), basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})...)
-	case types.Set, types.Tuple:
-		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("%T is not currently supported as a source field. %s", v, common.TerraformBugErrorMessage))
-		return
-	default:
-		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("unexpected type %T in tfsdk structs, expected a plugin framework type. %s", v, common.TerraformBugErrorMessage))
-		return
-	}
-	return
-}
-
-func addToForceSendFields(ctx context.Context, fieldName string, forceSendFieldsField *reflect.Value) {
-	if forceSendFieldsField == nil || !forceSendFieldsField.IsValid() || !forceSendFieldsField.CanSet() {
-		tflog.Debug(ctx, fmt.Sprintf("[Debug] forceSendFieldsField is nil, invalid or not settable. %s", fieldName))
-		return
-	}
-	// Initialize forceSendFields if it is a zero Value
-	if forceSendFieldsField.IsZero() {
-		// Create a new slice of strings
-		newSlice := []string{}
-		forceSendFieldsField.Set(reflect.ValueOf(&newSlice).Elem())
-	}
-	forceSendFields := forceSendFieldsField.Interface().([]string)
-	forceSendFields = append(forceSendFields, fieldName)
-	forceSendFieldsField.Set(reflect.ValueOf(forceSendFields))
 }

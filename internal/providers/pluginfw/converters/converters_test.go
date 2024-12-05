@@ -38,10 +38,10 @@ func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 		"no_pointer_nested":   reflect.TypeOf(DummyNestedTfSdk{}),
 		"nested_list":         reflect.TypeOf(DummyNestedTfSdk{}),
 		"nested_pointer_list": reflect.TypeOf(DummyNestedTfSdk{}),
-		"map":                 reflect.TypeOf(""),
+		"map":                 reflect.TypeOf(types.String{}),
 		"nested_map":          reflect.TypeOf(DummyNestedTfSdk{}),
-		"repeated":            reflect.TypeOf(int64(0)),
-		"attributes":          reflect.TypeOf(""),
+		"repeated":            reflect.TypeOf(types.Int64{}),
+		"attributes":          reflect.TypeOf(types.String{}),
 		"slice_struct":        reflect.TypeOf(DummyNestedTfSdk{}),
 		"slice_struct_ptr":    reflect.TypeOf(DummyNestedTfSdk{}),
 	}
@@ -145,6 +145,45 @@ func diagToString(d diag.Diagnostics) string {
 	return b.String()
 }
 
+func populateEmptyFields(c DummyTfSdk) DummyTfSdk {
+	complexFields := c.GetComplexFieldTypes(context.Background())
+	v := reflect.ValueOf(&c).Elem()
+	for i := 0; i < v.NumField(); i++ {
+		name := v.Type().Field(i).Name
+		tfsdkName := v.Type().Field(i).Tag.Get("tfsdk")
+		complexType, ok := complexFields[tfsdkName]
+		if !ok {
+			continue
+		}
+		field := v.FieldByName(name)
+		if !field.IsZero() {
+			continue
+		}
+		innerVal := reflect.New(complexType).Elem().Interface()
+		var typ attr.Type
+		if ot, ok := innerVal.(interface {
+			ToObjectType(context.Context) types.ObjectType
+		}); ok {
+			typ = ot.ToObjectType(context.Background())
+		} else {
+			typ = innerVal.(attr.Value).Type(context.Background())
+		}
+		switch field.Type() {
+		case reflect.TypeOf(types.List{}):
+			value := types.ListNull(typ)
+			field.Set(reflect.ValueOf(value))
+		case reflect.TypeOf(types.Map{}):
+			value := types.MapNull(typ)
+			field.Set(reflect.ValueOf(value))
+		case reflect.TypeOf(types.Object{}):
+			objectType := typ.(types.ObjectType)
+			value := types.ObjectNull(objectType.AttrTypes)
+			field.Set(reflect.ValueOf(value))
+		}
+	}
+	return v.Interface().(DummyTfSdk)
+}
+
 // Function to construct individual test case with a pair of matching tfSdkStruct and gosdkStruct.
 // Verifies that the conversion both ways are working as expected.
 func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, goSdkStruct DummyGoSdk) {
@@ -153,11 +192,14 @@ func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, 
 	if d.HasError() {
 		t.Errorf("tfsdk to gosdk conversion: %s", diagToString(d))
 	}
-	assert.True(t, reflect.DeepEqual(convertedGoSdkStruct, goSdkStruct), fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
+	assert.Equal(t, goSdkStruct, convertedGoSdkStruct, fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
 
 	convertedTfSdkStruct := DummyTfSdk{}
-	assert.True(t, !GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct).HasError())
-	assert.True(t, reflect.DeepEqual(convertedTfSdkStruct, tfSdkStruct), fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
+	d = GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct)
+	if d.HasError() {
+		t.Errorf("gosdk to tfsdk conversion: %s", diagToString(d))
+	}
+	assert.Equal(t, populateEmptyFields(tfSdkStruct), convertedTfSdkStruct, fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
 }
 
 func TestTfSdkToGoSdkStructConversionFailure(t *testing.T) {
@@ -249,7 +291,7 @@ var tests = []struct {
 			Name:            "def",
 			Enabled:         true,
 			ForceSendFields: []string{"Name", "Enabled"},
-		}},
+		}, ForceSendFields: []string{"NoPointerNested"}},
 	},
 	{
 		"list conversion",
@@ -259,7 +301,7 @@ var tests = []struct {
 	{
 		"map conversion",
 		DummyTfSdk{Attributes: types.MapValueMust(types.StringType, map[string]attr.Value{"key": types.StringValue("value")})},
-		DummyGoSdk{Attributes: map[string]string{"key": "value"}},
+		DummyGoSdk{Attributes: map[string]string{"key": "value"}, ForceSendFields: []string{"Attributes"}},
 	},
 	{
 		"nested list conversion",
@@ -311,7 +353,7 @@ var tests = []struct {
 				Enabled:         false,
 				ForceSendFields: []string{"Name", "Enabled"},
 			},
-		}},
+		}, ForceSendFields: []string{"NestedMap"}},
 	},
 	{
 		"list representation of struct pointer conversion", // we use list with one element in the tfsdk to represent struct in gosdk
@@ -327,7 +369,7 @@ var tests = []struct {
 			Name:            "def",
 			Enabled:         true,
 			ForceSendFields: []string{"Name", "Enabled"},
-		}},
+		}, ForceSendFields: []string{"SliceStructPtr"}},
 	},
 }
 

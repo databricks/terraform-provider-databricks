@@ -117,11 +117,11 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
   {{- else if .MapValue }}{{ template "complex-field-value" .MapValue }}
   {{- else -}}
     {{- if .IsExternal -}}{{.Package.Name}}.{{- end -}}
-    {{- if or .IsString .Enum -}}types.StringType
-    {{- else if .IsBool -}}types.BoolType
-    {{- else if .IsInt64 -}}types.Int64Type
-    {{- else if .IsFloat64 -}}types.Float64Type
-    {{- else if .IsInt -}}types.Int64Type
+    {{- if or .IsString .Enum -}}types.String{}
+    {{- else if .IsBool -}}types.Bool{}
+    {{- else if .IsInt64 -}}types.Int64{}
+    {{- else if .IsFloat64 -}}types.Float64{}
+    {{- else if .IsInt -}}types.Int64{}
     {{- else if .IsAny -}}struct{}{}
     {{- else if .IsObject -}}{{.PascalName}}{}
     {{- end -}}

@@ -40,19 +40,9 @@ type TestListTfSdk struct {
 	Repeated types.List `tfsdk:"repeated" tf:"optional"`
 }
 
-func (TestListTfSdk) GetComplexFieldTypes() map[string]reflect.Type {
+func (TestListTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"repeated": reflect.TypeOf(types.Int64Type),
-	}
-}
-
-func (TestListTfSdk) ToAttrType(context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"repeated": types.ListType{
-				ElemType: types.Int64Type,
-			},
-		},
+		"repeated": reflect.TypeOf(types.Int64{}),
 	}
 }
 
@@ -60,19 +50,9 @@ type TestMapTfSdk struct {
 	Attributes types.Map `tfsdk:"attributes" tf:"optional"`
 }
 
-func (TestMapTfSdk) GetComplexFieldTypes() map[string]reflect.Type {
+func (TestMapTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"attributes": reflect.TypeOf(types.StringType),
-	}
-}
-
-func (TestMapTfSdk) ToAttrType(context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"attributes": types.MapType{
-				ElemType: types.StringType,
-			},
-		},
+		"attributes": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -80,19 +60,9 @@ type TestNestedListTfSdk struct {
 	NestedList types.List `tfsdk:"nested_list" tf:"optional"`
 }
 
-func (TestNestedListTfSdk) GetComplexFieldTypes() map[string]reflect.Type {
+func (TestNestedListTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"nested_list": reflect.TypeOf(DummyNested{}),
-	}
-}
-
-func (TestNestedListTfSdk) ToAttrType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"nested_list": types.ListType{
-				ElemType: DummyNested{}.ToAttrType(ctx),
-			},
-		},
 	}
 }
 
@@ -101,11 +71,7 @@ type DummyNested struct {
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
 }
 
-func (DummyNested) GetComplexFieldTypes() map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-func (DummyNested) ToAttrType(context.Context) types.ObjectType {
+func (DummyNested) ToObjectType(context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name":    types.StringType,
@@ -124,15 +90,7 @@ func (TestNestedMapTfSdk) GetComplexFieldTypes(context.Context) map[string]refle
 	}
 }
 
-func (TestNestedMapTfSdk) ToAttrType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"nested_map": types.MapType{
-				ElemType: DummyNested{}.ToAttrType(ctx),
-			},
-		},
-	}
-}
+var dummyType = DummyNested{}.ToObjectType(context.Background())
 
 var tests = []struct {
 	name       string
@@ -164,13 +122,13 @@ var tests = []struct {
 	},
 	{
 		"nested list conversion",
-		TestNestedListTfSdk{NestedList: types.ListValueMust(DummyNested{}.ToAttrType(context.Background()),
+		TestNestedListTfSdk{NestedList: types.ListValueMust(dummyType,
 			[]attr.Value{
-				types.ObjectValueMust(DummyNested{}.ToAttrType(context.Background()).AttrTypes, map[string]attr.Value{
+				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
 					"name":    types.StringValue("abc"),
 					"enabled": types.BoolValue(true),
 				}),
-				types.ObjectValueMust(DummyNested{}.ToAttrType(context.Background()).AttrTypes, map[string]attr.Value{
+				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
 					"name":    types.StringValue("def"),
 					"enabled": types.BoolValue(false),
 				}),
@@ -179,12 +137,12 @@ var tests = []struct {
 	},
 	{
 		"nested map conversion",
-		TestNestedMapTfSdk{NestedMap: types.MapValueMust(DummyNested{}.ToAttrType(context.Background()), map[string]attr.Value{
-			"key1": types.ObjectValueMust(DummyNested{}.ToAttrType(context.Background()).AttrTypes, map[string]attr.Value{
+		TestNestedMapTfSdk{NestedMap: types.MapValueMust(dummyType, map[string]attr.Value{
+			"key1": types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
 				"name":    types.StringValue("abc"),
 				"enabled": types.BoolValue(true),
 			}),
-			"key2": types.ObjectValueMust(DummyNested{}.ToAttrType(context.Background()).AttrTypes, map[string]attr.Value{
+			"key2": types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
 				"name":    types.StringValue("def"),
 				"enabled": types.BoolValue(false),
 			}),
@@ -255,16 +213,12 @@ type TestTfSdkList struct {
 	Description types.List `tfsdk:"description" tf:"optional"`
 }
 
-type TestTfSdkMap struct {
+type TestTfSdkMapWithoutMetadata struct {
 	Description types.Map `tfsdk:"description" tf:"optional"`
 }
 
 type TestSliceOfSlice struct {
 	NestedList [][]string `tfsdk:"nested_list" tf:"optional"`
-}
-
-type TestMapOfMap struct {
-	NestedMap map[string]map[string]string `tfsdk:"nested_map" tf:"optional"`
 }
 
 var error_tests = []struct {
@@ -273,14 +227,9 @@ var error_tests = []struct {
 	expectedError string
 }{
 	{
-		"tf list conversion",
-		TestTfSdkList{},
-		fmt.Sprintf("types.List should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage),
-	},
-	{
-		"tf map conversion",
-		TestTfSdkMap{},
-		fmt.Sprintf("types.Map should never be used in tfsdk structs. %s", common.TerraformBugErrorMessage),
+		"tfsdk struct without complex field types conversion",
+		TestTfSdkMapWithoutMetadata{},
+		fmt.Sprintf("complex field types not provided for type: tfschema.TestTfSdkMapWithoutMetadata. %s", common.TerraformBugErrorMessage),
 	},
 	{
 		"non-struct conversion",
@@ -290,12 +239,7 @@ var error_tests = []struct {
 	{
 		"slice of slice conversion",
 		TestSliceOfSlice{},
-		fmt.Sprintf("unsupported slice value for nested_list: slice. %s", common.TerraformBugErrorMessage),
-	},
-	{
-		"map of map conversion",
-		TestMapOfMap{},
-		fmt.Sprintf("unsupported map value for nested_map: map. %s", common.TerraformBugErrorMessage),
+		fmt.Sprintf("unexpected type [][]string in tfsdk structs, expected a plugin framework type. %s", common.TerraformBugErrorMessage),
 	},
 }
 

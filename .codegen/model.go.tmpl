@@ -60,6 +60,13 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
   {{- end}}
 }
 
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in {{.PascalName}}.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
 func (a {{.PascalName}}) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
   return map[string]reflect.Type{
     {{- range .Fields -}}
@@ -71,6 +78,8 @@ func (a {{.PascalName}}) GetComplexFieldTypes(ctx context.Context) map[string]re
   }
 }
 
+// ToAttrType returns the representation of {{.PascalName}} in the Terraform plugin framework type
+// system.
 func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
   return types.ObjectType{
     AttrTypes: map[string]attr.Type{
@@ -84,7 +93,13 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
 
 {{end}}
 {{end}}
-{{/* TODO: Handle recursive Jobs structure */}}
+
+{{/*
+Jobs has a recursive structure: Tasks contain ForEachTasks, which contain Tasks.
+Because of this, GetComplexFieldTypes and ToAttrType will never terminate.
+TODO: capture visited types in the context to ensure these methods terminate,
+even when they are called recursively.
+*/}}
 {{- define "attr-type" -}}
   {{- if .ArrayValue -}}
     {{- if .ArrayValue.IsObject -}}{{/* Objects are wraped in lists automatically. */}}

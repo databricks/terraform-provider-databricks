@@ -167,7 +167,9 @@ func tfsdkToGoSdkStructField(
 			return
 		}
 
-		// Recursively call TFSDK to GOSDK conversion for each element in the list
+		// Recursively call TFSDK to GOSDK conversion for each element in the list. If this corresponds to a slice,
+		// the target type is the slice element type. If it corresponds to a struct, the target type is the struct type.
+		// If it corresponds to a pointer, the target type is the type pointed to by the pointer.
 		var destInnerType reflect.Type
 		if destField.Type().Kind() == reflect.Slice {
 			destInnerType = destField.Type().Elem()
@@ -184,11 +186,13 @@ func tfsdkToGoSdkStructField(
 			}
 		}
 
+		// Recursively call TFSDK to GOSDK conversion for each element in the list
 		converted := reflect.MakeSlice(reflect.SliceOf(destInnerType), 0, innerValue.Elem().Len())
 		for i := 0; i < innerValue.Elem().Len(); i++ {
-			// Convert from the TF Value to our TFSDK struct
 			vv := innerValue.Elem().Index(i).Interface()
 			nextDest := reflect.New(destInnerType)
+			// If the element is a primitive type, we can convert it by recursively calling this function.
+			// Otherwise, it is a TF SDK struct, and we need to call TfSdkToGoSdkStruct to convert it.
 			switch typedVv := vv.(type) {
 			case types.Bool, types.String, types.Int64, types.Float64:
 				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), srcFieldName, forceSendFieldsField, innerType)...)
@@ -228,6 +232,8 @@ func tfsdkToGoSdkStructField(
 		for _, key := range innerValue.Elem().MapKeys() {
 			vv := innerValue.Elem().MapIndex(key).Interface()
 			nextDest := reflect.New(destType)
+			// If the element is a primitive type, we can convert it by recursively calling this function.
+			// Otherwise, it is a TF SDK struct, and we need to call TfSdkToGoSdkStruct to convert it.
 			switch typedVv := vv.(type) {
 			case types.Bool, types.String, types.Int64, types.Float64:
 				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), srcFieldName, forceSendFieldsField, innerType)...)

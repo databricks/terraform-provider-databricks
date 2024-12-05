@@ -2747,8 +2747,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
 				}
 			}
-			if ic.isServiceInListing("uc-tables") {
-				// list tables
+			isTablesListingEnabled := ic.isServiceInListing("uc-tables")
+			isOnlineTablesListingEnabled := ic.isServiceInListing("uc-online-tables")
+			isVectorSearchListingEnabled := ic.isServiceInListing("vector-search")
+			if isTablesListingEnabled || isOnlineTablesListingEnabled || isVectorSearchListingEnabled {
 				it := ic.workspaceClient.Tables.List(ic.Context, catalog.ListTablesRequest{
 					CatalogName: catalogName,
 					SchemaName:  schemaName,
@@ -2760,25 +2762,31 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 					switch table.TableType {
 					case "MANAGED", "EXTERNAL", "VIEW":
-						ic.EmitIfUpdatedAfterMillis(&resource{
-							Resource:  "databricks_sql_table",
-							ID:        table.FullName,
-							DependsOn: dependsOn,
-						}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+						if isTablesListingEnabled {
+							ic.EmitIfUpdatedAfterMillis(&resource{
+								Resource:  "databricks_sql_table",
+								ID:        table.FullName,
+								DependsOn: dependsOn,
+							}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+						}
 					case "FOREIGN":
 						// TODO: it's better to use SecurableKind if it will be added to the Go SDK
 						switch table.DataSourceFormat {
 						case "VECTOR_INDEX_FORMAT":
-							ic.Emit(&resource{
-								Resource: "databricks_vector_search_index",
-								ID:       table.FullName,
-							})
+							if isVectorSearchListingEnabled {
+								ic.Emit(&resource{
+									Resource: "databricks_vector_search_index",
+									ID:       table.FullName,
+								})
+							}
 						case "MYSQL_FORMAT":
-							ic.EmitIfUpdatedAfterMillis(&resource{
-								Resource:  "databricks_online_table",
-								ID:        table.FullName,
-								DependsOn: dependsOn,
-							}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+							if isOnlineTablesListingEnabled {
+								ic.EmitIfUpdatedAfterMillis(&resource{
+									Resource:  "databricks_online_table",
+									ID:        table.FullName,
+									DependsOn: dependsOn,
+								}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+							}
 						default:
 							log.Printf("[DEBUG] Skipping foreign table %s of format %s", table.FullName, table.DataSourceFormat)
 						}

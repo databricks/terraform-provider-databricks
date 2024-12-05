@@ -18,6 +18,15 @@ type SingleNestedBlockBuilder struct {
 	PlanModifiers      []planmodifier.Object
 }
 
+func (a SingleNestedBlockBuilder) ToAttribute() AttributeBuilder {
+	return SingleNestedAttributeBuilder{
+		Attributes:         a.NestedObject.ToNestedAttributeObject().Attributes,
+		DeprecationMessage: a.DeprecationMessage,
+		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
+	}
+}
+
 func (a SingleNestedBlockBuilder) BuildDataSourceAttribute() dataschema.Attribute {
 	panic(fmt.Errorf("BuildDataSourceBlock should never be called for SingleNestedBlockBuilder. %s", common.TerraformBugErrorMessage))
 }
@@ -57,5 +66,21 @@ func (a SingleNestedBlockBuilder) AddValidator(v validator.Object) BaseSchemaBui
 
 func (a SingleNestedBlockBuilder) AddPlanModifier(v planmodifier.Object) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
+	return a
+}
+
+func (a SingleNestedBlockBuilder) ConvertBlockToAttribute(field string) BaseSchemaBuilder {
+	elem, ok := a.NestedObject.Blocks[field]
+	if !ok {
+		panic(fmt.Errorf("field %s does not exist in nested block", field))
+	}
+	if a.NestedObject.Attributes == nil {
+		a.NestedObject.Attributes = make(map[string]AttributeBuilder)
+	}
+	a.NestedObject.Attributes[field] = elem.ToAttribute()
+	delete(a.NestedObject.Blocks, field)
+	if len(a.NestedObject.Blocks) == 0 {
+		a.NestedObject.Blocks = nil
+	}
 	return a
 }

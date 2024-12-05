@@ -94,6 +94,14 @@ func ResourceCredential() common.Resource {
 			if err != nil {
 				return err
 			}
+			// azure client secret is sensitive, so we need to preserve it
+			var credOrig catalog.CredentialInfo
+			common.DataToStructPointer(d, credentialSchema, &credOrig)
+			if credOrig.AzureServicePrincipal != nil {
+				if credOrig.AzureServicePrincipal.ClientSecret != "" {
+					cred.AzureServicePrincipal.ClientSecret = credOrig.AzureServicePrincipal.ClientSecret
+				}
+			}
 			d.Set("credential_id", cred.Id)
 			return common.StructToData(cred, credentialSchema, d)
 		},

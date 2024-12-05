@@ -2,76 +2,122 @@ package access
 
 import (
 	"context"
+	"errors"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-type ipAccessListUpdateRequest struct {
-	Label       string            `json:"label"`
-	ListType    settings.ListType `json:"list_type"`
-	IpAddresses []string          `json:"ip_addresses"`
-	Enabled     bool              `json:"enabled,omitempty" tf:"default:true"`
+func isRetriable(err error) *retry.RetryError {
+	var apiErr *apierr.APIError
+	if !errors.As(err, &apiErr) {
+		return retry.NonRetryableError(err)
+	}
+	if apiErr.StatusCode == 404 {
+		return retry.RetryableError(err)
+	} else {
+		return retry.NonRetryableError(err)
+	}
 }
+
+var ipAclTimeout = 10 * time.Minute
 
 // ResourceIPAccessList manages IP access lists
 func ResourceIPAccessList() common.Resource {
-	s := common.StructToSchema(ipAccessListUpdateRequest{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		// nolint
-		s["list_type"].ValidateFunc = validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false)
-		s["ip_addresses"].Elem = &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validation.Any(validation.IsIPv4Address, validation.IsCIDR),
+	s := common.StructToSchema(settings.IpAccessListInfo{}, func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		for _, required := range []string{"list_type", "label"} {
+			common.CustomizeSchemaPath(s, required).SetRequired()
 		}
+
+		for _, computed := range []string{"address_count", "created_at", "created_by", "list_id", "updated_at", "updated_by"} {
+			common.CustomizeSchemaPath(s, computed).SetComputed()
+		}
+
+		common.CustomizeSchemaPath(s, "enabled").SetDefault(true)
+
+		common.CustomizeSchemaPath(s, "list_type").SetValidateFunc(validation.StringInSlice([]string{"ALLOW", "BLOCK"}, false))
 		return s
 	})
 	return common.Resource{
 		Schema: s,
+		CanSkipReadAfterCreateAndUpdate: func(d *schema.ResourceData) bool {
+			return true
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			var iacl settings.CreateIpAccessList
+			var updateIacl settings.UpdateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
-			status, err := w.IpAccessLists.Create(ctx, iacl)
-			if err != nil {
-				return err
-			}
-			d.SetId(status.IpAccessList.ListId)
-			return nil
+			common.DataToStructPointer(d, s, &updateIacl)
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				status, err := acc.IpAccessLists.Create(ctx, iacl)
+				if err != nil {
+					return err
+				}
+				ipAclId := status.IpAccessList.ListId
+				// need to wait until the ip access list is available from get
+				retry.RetryContext(ctx, ipAclTimeout, func() *retry.RetryError {
+					_, err := acc.IpAccessLists.GetByIpAccessListId(ctx, ipAclId)
+					return isRetriable(err)
+				})
+				//need to enable the IP Access List with update, retry if 404 is returned due to eventual consistency
+				if d.Get("enabled").(bool) {
+					updateIacl.IpAccessListId = ipAclId
+					retry.RetryContext(ctx, ipAclTimeout, func() *retry.RetryError {
+						err = acc.IpAccessLists.Update(ctx, updateIacl)
+						return isRetriable(err)
+					})
+				}
+				d.SetId(ipAclId)
+				return common.StructToData(status.IpAccessList, s, d)
+			}, func(w *databricks.WorkspaceClient) error {
+				status, err := w.IpAccessLists.Create(ctx, iacl)
+				if err != nil {
+					return err
+				}
+				d.SetId(status.IpAccessList.ListId)
+				return common.StructToData(status.IpAccessList, s, d)
+			})
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			status, err := w.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
-			if err != nil {
-				return err
-			}
-			common.StructToData(status.IpAccessList, s, d)
-			return nil
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				status, err := acc.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
+				if err != nil {
+					return err
+				}
+				common.StructToData(status.IpAccessList, s, d)
+				return nil
+			}, func(w *databricks.WorkspaceClient) error {
+				status, err := w.IpAccessLists.GetByIpAccessListId(ctx, d.Id())
+				if err != nil {
+					return err
+				}
+				common.StructToData(status.IpAccessList, s, d)
+				return nil
+			})
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			var iacl settings.UpdateIpAccessList
 			common.DataToStructPointer(d, s, &iacl)
 			iacl.IpAccessListId = d.Id()
-			return w.IpAccessLists.Update(ctx, iacl)
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				return acc.IpAccessLists.Update(ctx, iacl)
+			}, func(w *databricks.WorkspaceClient) error {
+				return w.IpAccessLists.Update(ctx, iacl)
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			w, err := c.WorkspaceClient()
-			if err != nil {
-				return err
-			}
-			return w.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
+			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
+				return acc.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
+			}, func(w *databricks.WorkspaceClient) error {
+				return w.IpAccessLists.DeleteByIpAccessListId(ctx, d.Id())
+			})
 		},
 	}
 }

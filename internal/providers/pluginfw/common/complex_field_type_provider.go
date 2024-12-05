@@ -4,7 +4,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // ComplexFieldTypeProvider must be implemented by any TFSDK structure that contains
@@ -26,8 +25,4 @@ type ComplexFieldTypeProvider interface {
 	// If the field has type types.Object, the reflect.Type instance must correspond
 	// to a TFSDK structure.
 	GetComplexFieldTypes(context.Context) map[string]reflect.Type
-}
-
-type ObjectTypable interface {
-	ToObjectType(context.Context) types.ObjectType
 }

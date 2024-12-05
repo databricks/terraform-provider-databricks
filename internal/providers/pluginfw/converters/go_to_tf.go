@@ -20,21 +20,22 @@ const goSdkToTfSdkFieldConversionFailureMessage = "gosdk to tfsdk field conversi
 
 // GoSdkToTfSdkStruct converts a gosdk struct into a tfsdk struct, with the folowing rules.
 //
-//	string -> types.String
-//	bool -> types.Bool
-//	int64 -> types.Int64
-//	float64 -> types.Float64
-//	string -> types.String
+// string -> types.String
+// bool -> types.Bool
+// int64 -> types.Int64
+// float64 -> types.Float64
+// Struct and pointer to struct -> types.List
+// Slice -> types.List
+// Map -> types.Map
 //
-// NOTE:
+// `gosdk` parameter must be a struct or pointer to a struct. `tfsdk` must be a pointer to the corresponding
+// TF SDK structure.
 //
-// # Structs in gosdk are represented as slices of structs in tfsdk, and pointers are removed
-//
+// Structs in Go SDK are represented as types.Lists.
 // If field name doesn't show up in ForceSendFields and the field is zero value, we set the null value on the tfsdk.
-// types.list and types.map are not supported
-// map keys should always be a string
-// tfsdk structs use types.String for all enum values
-// non-json fields will be omitted
+// Map keys must always be strings.
+// TF SDK structs use types.String for all enum values.
+// Non-JSON fields will be omitted.
 func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{}) (d diag.Diagnostics) {
 	srcVal := reflect.ValueOf(gosdk)
 	destVal := reflect.ValueOf(tfsdk)
@@ -110,38 +111,39 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 	return
 }
 
+// goSdkToTfSdkSingleField converts a single field from a Go SDK struct to a TF SDK struct.
+// The `srcField` is the field in the Go SDK struct, and `destField` is the field on which
+// the value will be set in the TF SDK struct. Note that unlike GoSdkToTfSdkStruct, the
+// `destField` parameter is not a pointer to the field, but the field itself. The `tfType`
+// parameter is the Terraform type of the field, and `complexFieldType` is the runtime
+// type of the field. These parameters are only needed when the field is a list, object, or
+// map.
 func goSdkToTfSdkSingleField(
 	ctx context.Context,
 	srcField reflect.Value,
 	destField reflect.Value,
 	forceSendField bool,
-	innerType attr.Type,
-	complexFieldType reflect.Type) (d diag.Diagnostics) {
+	tfType attr.Type,
+	innerType reflect.Type) (d diag.Diagnostics) {
 	if !destField.CanSet() {
 		d.AddError(goSdkToTfSdkStructConversionFailureMessage, fmt.Sprintf("destination field can not be set: %s. %s", destField.Type().Name(), common.TerraformBugErrorMessage))
 		return d
 	}
 
-	srcFieldValue := srcField.Interface()
-
-	// Skip nils, but make sure to set the destination fields of type list to an empty list.
-	if srcField.Kind() == reflect.Ptr && srcField.IsNil() {
-		// If the destination field is a types.List, treat the source field as an empty slice.
-		if destField.Type() == reflect.TypeOf(types.List{}) {
-			listType := innerType.(types.ListType)
-			emptyList := types.ListNull(listType.ElemType)
-			destField.Set(reflect.ValueOf(emptyList))
-		}
-		return nil
-	}
-
 	switch srcField.Kind() {
 	case reflect.Ptr:
-		// Dereference the pointer and continue.
+		// This corresponds to either a types.List or types.Object.
+		// If nil, set the destination field to the null value of the appropriate type.
+		if srcField.IsNil() {
+			setFieldToNull(destField, tfType)
+			return nil
+		}
+
+		// Otherwise, dereference the pointer and continue.
 		srcField = srcField.Elem()
-		d.Append(goSdkToTfSdkSingleField(ctx, srcField, destField, forceSendField, innerType, complexFieldType)...)
+		d.Append(goSdkToTfSdkSingleField(ctx, srcField, destField, forceSendField, tfType, innerType)...)
 	case reflect.Bool:
-		boolVal := srcFieldValue.(bool)
+		boolVal := srcField.Interface().(bool)
 		// check if the value is non-zero or if the field is in the forceSendFields list
 		if boolVal || forceSendField {
 			destField.Set(reflect.ValueOf(types.BoolValue(boolVal)))
@@ -177,7 +179,7 @@ func goSdkToTfSdkSingleField(
 				return
 			}
 		} else {
-			strVal = srcFieldValue.(string)
+			strVal = srcField.Interface().(string)
 		}
 		// check if the value is non-zero or if the field is in the forceSendFields list
 		if strVal != "" || forceSendField {
@@ -186,21 +188,10 @@ func goSdkToTfSdkSingleField(
 			destField.Set(reflect.ValueOf(types.StringNull()))
 		}
 	case reflect.Struct:
+		// This corresponds to either a types.List or types.Object.
+		// If the struct is zero value, set the destination field to the null value of the appropriate type.
 		if srcField.IsZero() {
-			// If the destination field is a types.List, treat the source field as an empty slice.
-			if destField.Type() == reflect.TypeOf(types.List{}) {
-				listType := innerType.(types.ListType)
-				emptyList := types.ListNull(listType.ElemType)
-				destField.Set(reflect.ValueOf(emptyList))
-				return
-			}
-			if destField.Type() == reflect.TypeOf(types.Object{}) {
-				// If the destination field is a types.Object, treat the source field as an empty object.
-				innerType := innerType.(types.ObjectType)
-				destField.Set(reflect.ValueOf(types.ObjectNull(innerType.AttrTypes)))
-				return
-			}
-			// Skip zeros
+			setFieldToNull(destField, tfType)
 			return
 		}
 
@@ -209,19 +200,19 @@ func goSdkToTfSdkSingleField(
 		if destField.Type() == reflect.TypeOf(types.List{}) {
 			listSrc := reflect.MakeSlice(reflect.SliceOf(srcField.Type()), 1, 1)
 			listSrc.Index(0).Set(srcField)
-			return goSdkToTfSdkSingleField(ctx, listSrc, destField, forceSendField, innerType, complexFieldType)
+			return goSdkToTfSdkSingleField(ctx, listSrc, destField, forceSendField, tfType, innerType)
 		}
 
 		// Otherwise, the destination field is a types.Object. Convert the nested struct to the corresponding
 		// TFSDK struct, then set the destination field to the object
-		dest := reflect.New(complexFieldType).Interface()
-		d.Append(GoSdkToTfSdkStruct(ctx, srcFieldValue, dest)...)
+		dest := reflect.New(innerType).Interface()
+		d.Append(GoSdkToTfSdkStruct(ctx, srcField.Interface(), dest)...)
 		if d.HasError() {
 			return
 		}
-		objectType, ok := innerType.(types.ObjectType)
+		objectType, ok := tfType.(types.ObjectType)
 		if !ok {
-			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not an object type: %s. %s", innerType, common.TerraformBugErrorMessage))
+			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not an object type: %s. %s", tfType, common.TerraformBugErrorMessage))
 			return
 		}
 		objectVal, ds := types.ObjectValueFrom(ctx, objectType.AttrTypes, dest)
@@ -231,9 +222,10 @@ func goSdkToTfSdkSingleField(
 		}
 		destField.Set(reflect.ValueOf(objectVal))
 	case reflect.Slice:
-		listType, ok := innerType.(types.ListType)
+		// This always corresponds to a types.List.
+		listType, ok := tfType.(types.ListType)
 		if !ok {
-			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a list type: %s. %s", innerType, common.TerraformBugErrorMessage))
+			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a list type: %s. %s", tfType, common.TerraformBugErrorMessage))
 			return
 		}
 		if srcField.Len() == 0 {
@@ -246,10 +238,12 @@ func goSdkToTfSdkSingleField(
 		// Convert each element of the slice to the corresponding inner type.
 		elements := make([]any, 0, srcField.Len())
 		for i := 0; i < srcField.Len(); i++ {
-			element := reflect.New(complexFieldType)
-			switch complexFieldType {
+			element := reflect.New(innerType)
+			// If the element is a primitive type, we can convert it by recursively calling this function.
+			// Otherwise, it is a struct, and we need to convert it by calling GoSdkToTfSdkStruct.
+			switch innerType {
 			case reflect.TypeOf(types.String{}), reflect.TypeOf(types.Bool{}), reflect.TypeOf(types.Int64{}), reflect.TypeOf(types.Float64{}):
-				d.Append(goSdkToTfSdkSingleField(ctx, srcField.Index(i), element.Elem(), true, listType.ElemType, complexFieldType)...)
+				d.Append(goSdkToTfSdkSingleField(ctx, srcField.Index(i), element.Elem(), true, listType.ElemType, innerType)...)
 			default:
 				d.Append(GoSdkToTfSdkStruct(ctx, srcField.Index(i).Interface(), element.Interface())...)
 			}
@@ -267,9 +261,10 @@ func goSdkToTfSdkSingleField(
 		}
 		destField.Set(reflect.ValueOf(destVal))
 	case reflect.Map:
-		mapType, ok := innerType.(types.MapType)
+		// This always corresponds to a types.Map.
+		mapType, ok := tfType.(types.MapType)
 		if !ok {
-			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a map type: %s. %s", innerType, common.TerraformBugErrorMessage))
+			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a map type: %s. %s", tfType, common.TerraformBugErrorMessage))
 			return
 		}
 		if srcField.Len() == 0 {
@@ -283,10 +278,12 @@ func goSdkToTfSdkSingleField(
 		destMap := map[string]any{}
 		for _, key := range srcField.MapKeys() {
 			srcMapValue := srcField.MapIndex(key)
-			destMapValue := reflect.New(complexFieldType)
-			switch complexFieldType {
+			destMapValue := reflect.New(innerType)
+			// If the element is a primitive type, we can convert it by recursively calling this function.
+			// Otherwise, it is a struct, and we need to convert it by calling GoSdkToTfSdkStruct.
+			switch innerType {
 			case reflect.TypeOf(types.String{}), reflect.TypeOf(types.Bool{}), reflect.TypeOf(types.Int64{}), reflect.TypeOf(types.Float64{}):
-				d.Append(goSdkToTfSdkSingleField(ctx, srcMapValue, destMapValue.Elem(), true, mapType.ElemType, complexFieldType)...)
+				d.Append(goSdkToTfSdkSingleField(ctx, srcMapValue, destMapValue.Elem(), true, mapType.ElemType, innerType)...)
 			default:
 				d.Append(GoSdkToTfSdkStruct(ctx, srcMapValue.Interface(), destMapValue.Interface())...)
 			}
@@ -307,6 +304,21 @@ func goSdkToTfSdkSingleField(
 		d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("%s is not currently supported as a source field. %s", srcField.Type().Name(), common.TerraformBugErrorMessage))
 	}
 	return
+}
+
+// setFieldToNull sets the destination field to the null value of the appropriate type.
+func setFieldToNull(destField reflect.Value, innerType attr.Type) {
+	switch destField.Type() {
+	case reflect.TypeOf(types.List{}):
+		// If the destination field is a types.List, treat the source field as an empty slice.
+		listType := innerType.(types.ListType)
+		emptyList := types.ListNull(listType.ElemType)
+		destField.Set(reflect.ValueOf(emptyList))
+	case reflect.TypeOf(types.Object{}):
+		// If the destination field is a types.Object, treat the source field as an empty object.
+		innerType := innerType.(types.ObjectType)
+		destField.Set(reflect.ValueOf(types.ObjectNull(innerType.AttrTypes)))
+	}
 }
 
 // Get the string value of an enum by calling the .String() method on the enum object.

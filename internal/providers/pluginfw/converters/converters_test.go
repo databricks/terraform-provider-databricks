@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -143,14 +143,9 @@ type DummyNestedGoSdk struct {
 	ForceSendFields []string `json:"-"`
 }
 
-func diagToString(d diag.Diagnostics) string {
-	b := strings.Builder{}
-	for _, diag := range d {
-		b.WriteString(fmt.Sprintf("[%s] %s: %s\n", diag.Severity(), diag.Summary(), diag.Detail()))
-	}
-	return b.String()
-}
-
+// This function is used to populate empty fields in the tfsdk struct with null values.
+// This is required because the Go->TF conversion function instantiates list, map, and
+// object fields with empty values, which are not equal to null values in the tfsdk struct.
 func populateEmptyFields(c DummyTfSdk) DummyTfSdk {
 	complexFields := c.GetComplexFieldTypes(context.Background())
 	v := reflect.ValueOf(&c).Elem()
@@ -196,14 +191,14 @@ func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, 
 	convertedGoSdkStruct := DummyGoSdk{}
 	d := TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, &convertedGoSdkStruct)
 	if d.HasError() {
-		t.Errorf("tfsdk to gosdk conversion: %s", diagToString(d))
+		t.Errorf("tfsdk to gosdk conversion: %s", pluginfwcommon.DiagToString(d))
 	}
 	assert.Equal(t, goSdkStruct, convertedGoSdkStruct, fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
 
 	convertedTfSdkStruct := DummyTfSdk{}
 	d = GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct)
 	if d.HasError() {
-		t.Errorf("gosdk to tfsdk conversion: %s", diagToString(d))
+		t.Errorf("gosdk to tfsdk conversion: %s", pluginfwcommon.DiagToString(d))
 	}
 	assert.Equal(t, populateEmptyFields(tfSdkStruct), convertedTfSdkStruct, fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
 }

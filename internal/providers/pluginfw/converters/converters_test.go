@@ -6,30 +6,73 @@ import (
 	"reflect"
 	"testing"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
 
 type DummyTfSdk struct {
-	Enabled           types.Bool                  `tfsdk:"enabled" tf:"optional"`
-	Workers           types.Int64                 `tfsdk:"workers" tf:""`
-	Floats            types.Float64               `tfsdk:"floats" tf:""`
-	Description       types.String                `tfsdk:"description" tf:""`
-	Tasks             types.String                `tfsdk:"task" tf:"optional"`
-	NoPointerNested   DummyNestedTfSdk            `tfsdk:"no_pointer_nested" tf:"optional"`
-	NestedList        []DummyNestedTfSdk          `tfsdk:"nested_list" tf:"optional"`
-	NestedPointerList []*DummyNestedTfSdk         `tfsdk:"nested_pointer_list" tf:"optional"`
-	Map               map[string]types.String     `tfsdk:"map" tf:"optional"`
-	NestedMap         map[string]DummyNestedTfSdk `tfsdk:"nested_map" tf:"optional"`
-	Repeated          []types.Int64               `tfsdk:"repeated" tf:"optional"`
-	Attributes        map[string]types.String     `tfsdk:"attributes" tf:"optional"`
-	EnumField         types.String                `tfsdk:"enum_field" tf:"optional"`
-	AdditionalField   types.String                `tfsdk:"additional_field" tf:"optional"`
-	DistinctField     types.String                `tfsdk:"distinct_field" tf:"optional"`
-	SliceStruct       []DummyNestedTfSdk          `tfsdk:"slice_struct" tf:"optional"`
-	SliceStructPtr    []DummyNestedTfSdk          `tfsdk:"slice_struct_ptr" tf:"optional"`
-	Irrelevant        types.String                `tfsdk:"-"`
+	Enabled           types.Bool    `tfsdk:"enabled" tf:"optional"`
+	Workers           types.Int64   `tfsdk:"workers" tf:""`
+	Floats            types.Float64 `tfsdk:"floats" tf:""`
+	Description       types.String  `tfsdk:"description" tf:""`
+	Tasks             types.String  `tfsdk:"task" tf:"optional"`
+	NoPointerNested   types.List    `tfsdk:"no_pointer_nested" tf:"optional"`
+	NestedList        types.List    `tfsdk:"nested_list" tf:"optional"`
+	NestedPointerList types.List    `tfsdk:"nested_pointer_list" tf:"optional"`
+	Map               types.Map     `tfsdk:"map" tf:"optional"`
+	NestedMap         types.Map     `tfsdk:"nested_map" tf:"optional"`
+	Repeated          types.List    `tfsdk:"repeated" tf:"optional"`
+	Attributes        types.Map     `tfsdk:"attributes" tf:"optional"`
+	EnumField         types.String  `tfsdk:"enum_field" tf:"optional"`
+	AdditionalField   types.String  `tfsdk:"additional_field" tf:"optional"`
+	DistinctField     types.String  `tfsdk:"distinct_field" tf:"optional"`
+	SliceStructPtr    types.List    `tfsdk:"slice_struct_ptr" tf:"optional"`
+	Irrelevant        types.String  `tfsdk:"-"`
+	Object            types.Object  `tfsdk:"object" tf:"optional"`
+}
+
+func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"no_pointer_nested":   reflect.TypeOf(DummyNestedTfSdk{}),
+		"nested_list":         reflect.TypeOf(DummyNestedTfSdk{}),
+		"nested_pointer_list": reflect.TypeOf(DummyNestedTfSdk{}),
+		"map":                 reflect.TypeOf(types.String{}),
+		"nested_map":          reflect.TypeOf(DummyNestedTfSdk{}),
+		"repeated":            reflect.TypeOf(types.Int64{}),
+		"attributes":          reflect.TypeOf(types.String{}),
+		"slice_struct":        reflect.TypeOf(DummyNestedTfSdk{}),
+		"slice_struct_ptr":    reflect.TypeOf(DummyNestedTfSdk{}),
+		"object":              reflect.TypeOf(DummyNestedTfSdk{}),
+	}
+}
+
+func (DummyTfSdk) ToObjectType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enabled":             types.BoolType,
+			"workers":             types.Int64Type,
+			"floats":              types.Float64Type,
+			"description":         types.StringType,
+			"task":                types.StringType,
+			"no_pointer_nested":   types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
+			"nested_list":         types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
+			"nested_pointer_list": types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
+			"map":                 types.MapType{ElemType: types.StringType},
+			"nested_map":          types.MapType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
+			"repeated":            types.ListType{ElemType: types.Int64Type},
+			"attributes":          types.MapType{ElemType: types.StringType},
+			"enum_field":          types.StringType,
+			"additional_field":    types.StringType,
+			"distinct_field":      types.StringType,
+			"slice_struct_ptr":    types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
+			"object": types.ObjectType{
+				AttrTypes: DummyNestedTfSdk{}.ToObjectType(ctx).AttrTypes,
+			},
+		},
+	}
 }
 
 type TestEnum string
@@ -64,6 +107,15 @@ type DummyNestedTfSdk struct {
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
 }
 
+func (DummyNestedTfSdk) ToObjectType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":    types.StringType,
+			"enabled": types.BoolType,
+		},
+	}
+}
+
 type DummyGoSdk struct {
 	Enabled           bool                        `json:"enabled"`
 	Workers           int64                       `json:"workers"`
@@ -80,9 +132,9 @@ type DummyGoSdk struct {
 	EnumField         TestEnum                    `json:"enum_field"`
 	AdditionalField   string                      `json:"additional_field"`
 	DistinctField     string                      `json:"distinct_field"` // distinct field that the tfsdk struct doesn't have
-	SliceStruct       DummyNestedGoSdk            `json:"slice_struct"`
 	SliceStructPtr    *DummyNestedGoSdk           `json:"slice_struct_ptr"`
 	ForceSendFields   []string                    `json:"-"`
+	Object            DummyNestedGoSdk            `json:"object"`
 }
 
 type DummyNestedGoSdk struct {
@@ -91,16 +143,64 @@ type DummyNestedGoSdk struct {
 	ForceSendFields []string `json:"-"`
 }
 
+// This function is used to populate empty fields in the tfsdk struct with null values.
+// This is required because the Go->TF conversion function instantiates list, map, and
+// object fields with empty values, which are not equal to null values in the tfsdk struct.
+func populateEmptyFields(c DummyTfSdk) DummyTfSdk {
+	complexFields := c.GetComplexFieldTypes(context.Background())
+	v := reflect.ValueOf(&c).Elem()
+	for i := 0; i < v.NumField(); i++ {
+		name := v.Type().Field(i).Name
+		tfsdkName := v.Type().Field(i).Tag.Get("tfsdk")
+		complexType, ok := complexFields[tfsdkName]
+		if !ok {
+			continue
+		}
+		field := v.FieldByName(name)
+		if !field.IsZero() {
+			continue
+		}
+		innerVal := reflect.New(complexType).Elem().Interface()
+		var typ attr.Type
+		if ot, ok := innerVal.(interface {
+			ToObjectType(context.Context) types.ObjectType
+		}); ok {
+			typ = ot.ToObjectType(context.Background())
+		} else {
+			typ = innerVal.(attr.Value).Type(context.Background())
+		}
+		switch field.Type() {
+		case reflect.TypeOf(types.List{}):
+			value := types.ListNull(typ)
+			field.Set(reflect.ValueOf(value))
+		case reflect.TypeOf(types.Map{}):
+			value := types.MapNull(typ)
+			field.Set(reflect.ValueOf(value))
+		case reflect.TypeOf(types.Object{}):
+			objectType := typ.(types.ObjectType)
+			value := types.ObjectNull(objectType.AttrTypes)
+			field.Set(reflect.ValueOf(value))
+		}
+	}
+	return v.Interface().(DummyTfSdk)
+}
+
 // Function to construct individual test case with a pair of matching tfSdkStruct and gosdkStruct.
 // Verifies that the conversion both ways are working as expected.
 func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, goSdkStruct DummyGoSdk) {
 	convertedGoSdkStruct := DummyGoSdk{}
-	assert.True(t, !TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, &convertedGoSdkStruct).HasError())
-	assert.True(t, reflect.DeepEqual(convertedGoSdkStruct, goSdkStruct), fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
+	d := TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, &convertedGoSdkStruct)
+	if d.HasError() {
+		t.Errorf("tfsdk to gosdk conversion: %s", pluginfwcommon.DiagToString(d))
+	}
+	assert.Equal(t, goSdkStruct, convertedGoSdkStruct, fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
 
 	convertedTfSdkStruct := DummyTfSdk{}
-	assert.True(t, !GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct).HasError())
-	assert.True(t, reflect.DeepEqual(convertedTfSdkStruct, tfSdkStruct), fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
+	d = GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct)
+	if d.HasError() {
+		t.Errorf("gosdk to tfsdk conversion: %s", pluginfwcommon.DiagToString(d))
+	}
+	assert.Equal(t, populateEmptyFields(tfSdkStruct), convertedTfSdkStruct, fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
 }
 
 func TestTfSdkToGoSdkStructConversionFailure(t *testing.T) {
@@ -120,6 +220,8 @@ func TestGoSdkToTfSdkStructConversionFailure(t *testing.T) {
 	assert.True(t, actualDiagnostics.HasError())
 	assert.True(t, actualDiagnostics.Equal(expectedDiagnostics))
 }
+
+var dummyType = DummyNestedTfSdk{}.ToObjectType(context.Background())
 
 var tests = []struct {
 	name        string
@@ -178,38 +280,44 @@ var tests = []struct {
 	},
 	{
 		"struct conversion",
-		DummyTfSdk{NoPointerNested: DummyNestedTfSdk{
-			Name:    types.StringValue("def"),
-			Enabled: types.BoolValue(true),
-		}},
+		DummyTfSdk{NoPointerNested: types.ListValueMust(
+			dummyType, []attr.Value{
+				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+					"name":    types.StringValue("def"),
+					"enabled": types.BoolValue(true),
+				}),
+			}),
+		},
 		DummyGoSdk{NoPointerNested: DummyNestedGoSdk{
 			Name:            "def",
 			Enabled:         true,
 			ForceSendFields: []string{"Name", "Enabled"},
-		}},
+		}, ForceSendFields: []string{"NoPointerNested"}},
 	},
 	{
 		"list conversion",
-		DummyTfSdk{Repeated: []types.Int64{types.Int64Value(12), types.Int64Value(34)}},
+		DummyTfSdk{Repeated: types.ListValueMust(types.Int64Type, []attr.Value{types.Int64Value(12), types.Int64Value(34)})},
 		DummyGoSdk{Repeated: []int64{12, 34}},
 	},
 	{
 		"map conversion",
-		DummyTfSdk{Attributes: map[string]types.String{"key": types.StringValue("value")}},
-		DummyGoSdk{Attributes: map[string]string{"key": "value"}},
+		DummyTfSdk{Attributes: types.MapValueMust(types.StringType, map[string]attr.Value{"key": types.StringValue("value")})},
+		DummyGoSdk{Attributes: map[string]string{"key": "value"}, ForceSendFields: []string{"Attributes"}},
 	},
 	{
 		"nested list conversion",
-		DummyTfSdk{NestedList: []DummyNestedTfSdk{
-			{
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(true),
-			},
-			{
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(true),
-			},
-		}},
+		DummyTfSdk{NestedList: types.ListValueMust(dummyType,
+			[]attr.Value{
+				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+					"name":    types.StringValue("def"),
+					"enabled": types.BoolValue(true),
+				}),
+				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+					"name":    types.StringValue("def"),
+					"enabled": types.BoolValue(true),
+				}),
+			}),
+		},
 		DummyGoSdk{NestedList: []DummyNestedGoSdk{
 			{
 				Name:            "def",
@@ -225,16 +333,16 @@ var tests = []struct {
 	},
 	{
 		"nested map conversion",
-		DummyTfSdk{NestedMap: map[string]DummyNestedTfSdk{
-			"key1": {
-				Name:    types.StringValue("abc"),
-				Enabled: types.BoolValue(true),
-			},
-			"key2": {
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(false),
-			},
-		}},
+		DummyTfSdk{NestedMap: types.MapValueMust(dummyType, map[string]attr.Value{
+			"key1": types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+				"name":    types.StringValue("abc"),
+				"enabled": types.BoolValue(true),
+			}),
+			"key2": types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+				"name":    types.StringValue("def"),
+				"enabled": types.BoolValue(false),
+			}),
+		})},
 		DummyGoSdk{NestedMap: map[string]DummyNestedGoSdk{
 			"key1": {
 				Name:            "abc",
@@ -246,35 +354,35 @@ var tests = []struct {
 				Enabled:         false,
 				ForceSendFields: []string{"Name", "Enabled"},
 			},
-		}},
-	},
-	{
-		"list representation of struct conversion", // we use list with one element in the tfsdk to represent struct in gosdk
-		DummyTfSdk{SliceStruct: []DummyNestedTfSdk{
-			{
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(true),
-			},
-		}},
-		DummyGoSdk{SliceStruct: DummyNestedGoSdk{
-			Name:            "def",
-			Enabled:         true,
-			ForceSendFields: []string{"Name", "Enabled"},
-		}},
+		}, ForceSendFields: []string{"NestedMap"}},
 	},
 	{
 		"list representation of struct pointer conversion", // we use list with one element in the tfsdk to represent struct in gosdk
-		DummyTfSdk{SliceStructPtr: []DummyNestedTfSdk{
-			{
-				Name:    types.StringValue("def"),
-				Enabled: types.BoolValue(true),
-			},
-		}},
+		DummyTfSdk{SliceStructPtr: types.ListValueMust(dummyType,
+			[]attr.Value{
+				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+					"name":    types.StringValue("def"),
+					"enabled": types.BoolValue(true),
+				}),
+			}),
+		},
 		DummyGoSdk{SliceStructPtr: &DummyNestedGoSdk{
 			Name:            "def",
 			Enabled:         true,
 			ForceSendFields: []string{"Name", "Enabled"},
-		}},
+		}, ForceSendFields: []string{"SliceStructPtr"}},
+	},
+	{
+		"object conversion",
+		DummyTfSdk{Object: types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+			"name":    types.StringValue("def"),
+			"enabled": types.BoolValue(true),
+		})},
+		DummyGoSdk{Object: DummyNestedGoSdk{
+			Name:            "def",
+			Enabled:         true,
+			ForceSendFields: []string{"Name", "Enabled"},
+		}, ForceSendFields: []string{"Object"}},
 	},
 }
 

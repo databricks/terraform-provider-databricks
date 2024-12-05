@@ -48,20 +48,31 @@ func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
 func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
 }
 
-func (a BaseJob) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BaseJob.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a BaseJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Settings": reflect.TypeOf(JobSettings{}),
+		"settings": reflect.TypeOf(JobSettings{}),
 	}
 }
 
+// ToAttrType returns the representation of BaseJob in the Terraform plugin framework type
+// system.
 func (a BaseJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreatedTime":             types.Int64Type,
-			"CreatorUserName":         types.StringType,
-			"EffectiveBudgetPolicyId": types.StringType,
-			"JobId":                   types.Int64Type,
-			"Settings":                JobSettings{}.ToAttrType(ctx),
+			"created_time":               types.Int64Type,
+			"creator_user_name":          types.StringType,
+			"effective_budget_policy_id": types.StringType,
+			"job_id":                     types.Int64Type,
+			"settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -202,65 +213,90 @@ func (newState *BaseRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseRun) {
 func (newState *BaseRun) SyncEffectiveFieldsDuringRead(existingState BaseRun) {
 }
 
-func (a BaseRun) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BaseRun.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a BaseRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ClusterInstance":      reflect.TypeOf(ClusterInstance{}),
-		"ClusterSpec":          reflect.TypeOf(ClusterSpec{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"JobClusters":          reflect.TypeOf(JobCluster{}),
-		"JobParameters":        reflect.TypeOf(JobParameter{}),
-		"OverridingParameters": reflect.TypeOf(RunParameters{}),
-		"RepairHistory":        reflect.TypeOf(RepairHistoryItem{}),
-		"Schedule":             reflect.TypeOf(CronSchedule{}),
-		"State":                reflect.TypeOf(RunState{}),
-		"Status":               reflect.TypeOf(RunStatus{}),
-		"Tasks":                reflect.TypeOf(RunTask{}),
-		"TriggerInfo":          reflect.TypeOf(TriggerInfo{}),
+		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
+		"cluster_spec":          reflect.TypeOf(ClusterSpec{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"job_clusters":          reflect.TypeOf(JobCluster{}),
+		"job_parameters":        reflect.TypeOf(JobParameter{}),
+		"overriding_parameters": reflect.TypeOf(RunParameters{}),
+		"repair_history":        reflect.TypeOf(RepairHistoryItem{}),
+		"schedule":              reflect.TypeOf(CronSchedule{}),
+		"state":                 reflect.TypeOf(RunState{}),
+		"status":                reflect.TypeOf(RunStatus{}),
+		"tasks":                 reflect.TypeOf(RunTask{}),
+		"trigger_info":          reflect.TypeOf(TriggerInfo{}),
 	}
 }
 
+// ToAttrType returns the representation of BaseRun in the Terraform plugin framework type
+// system.
 func (a BaseRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AttemptNumber":     types.Int64Type,
-			"CleanupDuration":   types.Int64Type,
-			"ClusterInstance":   ClusterInstance{}.ToAttrType(ctx),
-			"ClusterSpec":       ClusterSpec{}.ToAttrType(ctx),
-			"CreatorUserName":   types.StringType,
-			"Description":       types.StringType,
-			"EndTime":           types.Int64Type,
-			"ExecutionDuration": types.Int64Type,
-			"GitSource":         GitSource{}.ToAttrType(ctx),
-			"JobClusters": basetypes.ListType{
+			"attempt_number":   types.Int64Type,
+			"cleanup_duration": types.Int64Type,
+			"cluster_instance": basetypes.ListType{
+				ElemType: ClusterInstance{}.ToAttrType(ctx),
+			},
+			"cluster_spec": basetypes.ListType{
+				ElemType: ClusterSpec{}.ToAttrType(ctx),
+			},
+			"creator_user_name":  types.StringType,
+			"description":        types.StringType,
+			"end_time":           types.Int64Type,
+			"execution_duration": types.Int64Type,
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"job_clusters": basetypes.ListType{
 				ElemType: JobCluster{}.ToAttrType(ctx),
 			},
-			"JobId": types.Int64Type,
-			"JobParameters": basetypes.ListType{
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.ListType{
 				ElemType: JobParameter{}.ToAttrType(ctx),
 			},
-			"JobRunId":             types.Int64Type,
-			"NumberInJob":          types.Int64Type,
-			"OriginalAttemptRunId": types.Int64Type,
-			"OverridingParameters": RunParameters{}.ToAttrType(ctx),
-			"QueueDuration":        types.Int64Type,
-			"RepairHistory": basetypes.ListType{
+			"job_run_id":              types.Int64Type,
+			"number_in_job":           types.Int64Type,
+			"original_attempt_run_id": types.Int64Type,
+			"overriding_parameters": basetypes.ListType{
+				ElemType: RunParameters{}.ToAttrType(ctx),
+			},
+			"queue_duration": types.Int64Type,
+			"repair_history": basetypes.ListType{
 				ElemType: RepairHistoryItem{}.ToAttrType(ctx),
 			},
-			"RunDuration":   types.Int64Type,
-			"RunId":         types.Int64Type,
-			"RunName":       types.StringType,
-			"RunPageUrl":    types.StringType,
-			"RunType":       types.StringType,
-			"Schedule":      CronSchedule{}.ToAttrType(ctx),
-			"SetupDuration": types.Int64Type,
-			"StartTime":     types.Int64Type,
-			"State":         RunState{}.ToAttrType(ctx),
-			"Status":        RunStatus{}.ToAttrType(ctx),
-			"Tasks": basetypes.ListType{
+			"run_duration": types.Int64Type,
+			"run_id":       types.Int64Type,
+			"run_name":     types.StringType,
+			"run_page_url": types.StringType,
+			"run_type":     types.StringType,
+			"schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"setup_duration": types.Int64Type,
+			"start_time":     types.Int64Type,
+			"state": basetypes.ListType{
+				ElemType: RunState{}.ToAttrType(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: RunStatus{}.ToAttrType(ctx),
+			},
+			"tasks": basetypes.ListType{
 				ElemType: RunTask{}.ToAttrType(ctx),
 			},
-			"Trigger":     types.StringType,
-			"TriggerInfo": TriggerInfo{}.ToAttrType(ctx),
+			"trigger": types.StringType,
+			"trigger_info": basetypes.ListType{
+				ElemType: TriggerInfo{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -279,15 +315,24 @@ func (newState *CancelAllRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan Canc
 func (newState *CancelAllRuns) SyncEffectiveFieldsDuringRead(existingState CancelAllRuns) {
 }
 
-func (a CancelAllRuns) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRuns.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CancelAllRuns) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of CancelAllRuns in the Terraform plugin framework type
+// system.
 func (a CancelAllRuns) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllQueuedRuns": types.BoolType,
-			"JobId":         types.Int64Type,
+			"all_queued_runs": types.BoolType,
+			"job_id":          types.Int64Type,
 		},
 	}
 }
@@ -301,10 +346,19 @@ func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringRead(existingState CancelAllRunsResponse) {
 }
 
-func (a CancelAllRunsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRunsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CancelAllRunsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of CancelAllRunsResponse in the Terraform plugin framework type
+// system.
 func (a CancelAllRunsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
@@ -322,14 +376,23 @@ func (newState *CancelRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRu
 func (newState *CancelRun) SyncEffectiveFieldsDuringRead(existingState CancelRun) {
 }
 
-func (a CancelRun) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRun.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CancelRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of CancelRun in the Terraform plugin framework type
+// system.
 func (a CancelRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -343,10 +406,19 @@ func (newState *CancelRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *CancelRunResponse) SyncEffectiveFieldsDuringRead(existingState CancelRunResponse) {
 }
 
-func (a CancelRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRunResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CancelRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of CancelRunResponse in the Terraform plugin framework type
+// system.
 func (a CancelRunResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
@@ -380,15 +452,24 @@ func (newState *ClusterInstance) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cl
 func (newState *ClusterInstance) SyncEffectiveFieldsDuringRead(existingState ClusterInstance) {
 }
 
-func (a ClusterInstance) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterInstance.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ClusterInstance) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ClusterInstance in the Terraform plugin framework type
+// system.
 func (a ClusterInstance) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ClusterId":      types.StringType,
-			"SparkContextId": types.StringType,
+			"cluster_id":       types.StringType,
+			"spark_context_id": types.StringType,
 		},
 	}
 }
@@ -416,22 +497,33 @@ func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cluste
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
 }
 
-func (a ClusterSpec) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ClusterSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Libraries":  reflect.TypeOf(compute.Library{}),
-		"NewCluster": reflect.TypeOf(compute.ClusterSpec{}),
+		"library":     reflect.TypeOf(compute.Library{}),
+		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
 	}
 }
 
+// ToAttrType returns the representation of ClusterSpec in the Terraform plugin framework type
+// system.
 func (a ClusterSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ExistingClusterId": types.StringType,
-			"JobClusterKey":     types.StringType,
-			"Libraries": basetypes.ListType{
+			"existing_cluster_id": types.StringType,
+			"job_cluster_key":     types.StringType,
+			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.ToAttrType(ctx),
 			},
-			"NewCluster": compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -462,16 +554,25 @@ func (newState *ConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cond
 func (newState *ConditionTask) SyncEffectiveFieldsDuringRead(existingState ConditionTask) {
 }
 
-func (a ConditionTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ConditionTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ConditionTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ConditionTask in the Terraform plugin framework type
+// system.
 func (a ConditionTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Left":  types.StringType,
-			"Op":    types.StringType,
-			"Right": types.StringType,
+			"left":  types.StringType,
+			"op":    types.StringType,
+			"right": types.StringType,
 		},
 	}
 }
@@ -488,14 +589,23 @@ func (newState *Continuous) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continu
 func (newState *Continuous) SyncEffectiveFieldsDuringRead(existingState Continuous) {
 }
 
-func (a Continuous) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Continuous.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Continuous) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of Continuous in the Terraform plugin framework type
+// system.
 func (a Continuous) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PauseStatus": types.StringType,
+			"pause_status": types.StringType,
 		},
 	}
 }
@@ -612,67 +722,98 @@ func (newState *CreateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateJo
 func (newState *CreateJob) SyncEffectiveFieldsDuringRead(existingState CreateJob) {
 }
 
-func (a CreateJob) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateJob.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList":    reflect.TypeOf(JobAccessControlRequest{}),
-		"Continuous":           reflect.TypeOf(Continuous{}),
-		"Deployment":           reflect.TypeOf(JobDeployment{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"Environments":         reflect.TypeOf(JobEnvironment{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"JobClusters":          reflect.TypeOf(JobCluster{}),
-		"NotificationSettings": reflect.TypeOf(JobNotificationSettings{}),
-		"Parameters":           reflect.TypeOf(JobParameterDefinition{}),
-		"Queue":                reflect.TypeOf(QueueSettings{}),
-		"RunAs":                reflect.TypeOf(JobRunAs{}),
-		"Schedule":             reflect.TypeOf(CronSchedule{}),
-		"Tags":                 reflect.TypeOf(types.StringType),
-		"Tasks":                reflect.TypeOf(Task{}),
-		"Trigger":              reflect.TypeOf(TriggerSettings{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"access_control_list":   reflect.TypeOf(JobAccessControlRequest{}),
+		"continuous":            reflect.TypeOf(Continuous{}),
+		"deployment":            reflect.TypeOf(JobDeployment{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environment":           reflect.TypeOf(JobEnvironment{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"job_cluster":           reflect.TypeOf(JobCluster{}),
+		"notification_settings": reflect.TypeOf(JobNotificationSettings{}),
+		"parameter":             reflect.TypeOf(JobParameterDefinition{}),
+		"queue":                 reflect.TypeOf(QueueSettings{}),
+		"run_as":                reflect.TypeOf(JobRunAs{}),
+		"schedule":              reflect.TypeOf(CronSchedule{}),
+		"tags":                  reflect.TypeOf(types.String{}),
+		"task":                  reflect.TypeOf(Task{}),
+		"trigger":               reflect.TypeOf(TriggerSettings{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
+// ToAttrType returns the representation of CreateJob in the Terraform plugin framework type
+// system.
 func (a CreateJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: JobAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"BudgetPolicyId":     types.StringType,
-			"Continuous":         Continuous{}.ToAttrType(ctx),
-			"Deployment":         JobDeployment{}.ToAttrType(ctx),
-			"Description":        types.StringType,
-			"EditMode":           types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"Environments": basetypes.ListType{
+			"budget_policy_id": types.StringType,
+			"continuous": basetypes.ListType{
+				ElemType: Continuous{}.ToAttrType(ctx),
+			},
+			"deployment": basetypes.ListType{
+				ElemType: JobDeployment{}.ToAttrType(ctx),
+			},
+			"description": types.StringType,
+			"edit_mode":   types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environment": basetypes.ListType{
 				ElemType: JobEnvironment{}.ToAttrType(ctx),
 			},
-			"Format":    types.StringType,
-			"GitSource": GitSource{}.ToAttrType(ctx),
-			"Health":    JobsHealthRules{}.ToAttrType(ctx),
-			"JobClusters": basetypes.ListType{
+			"format": types.StringType,
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"job_cluster": basetypes.ListType{
 				ElemType: JobCluster{}.ToAttrType(ctx),
 			},
-			"MaxConcurrentRuns":    types.Int64Type,
-			"Name":                 types.StringType,
-			"NotificationSettings": JobNotificationSettings{}.ToAttrType(ctx),
-			"Parameters": basetypes.ListType{
+			"max_concurrent_runs": types.Int64Type,
+			"name":                types.StringType,
+			"notification_settings": basetypes.ListType{
+				ElemType: JobNotificationSettings{}.ToAttrType(ctx),
+			},
+			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition{}.ToAttrType(ctx),
 			},
-			"Queue":    QueueSettings{}.ToAttrType(ctx),
-			"RunAs":    JobRunAs{}.ToAttrType(ctx),
-			"Schedule": CronSchedule{}.ToAttrType(ctx),
-			"Tags": basetypes.MapType{
+			"queue": basetypes.ListType{
+				ElemType: QueueSettings{}.ToAttrType(ctx),
+			},
+			"run_as": basetypes.ListType{
+				ElemType: JobRunAs{}.ToAttrType(ctx),
+			},
+			"schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Tasks": basetypes.ListType{
+			"task": basetypes.ListType{
 				ElemType: Task{}.ToAttrType(ctx),
 			},
-			"TimeoutSeconds":       types.Int64Type,
-			"Trigger":              TriggerSettings{}.ToAttrType(ctx),
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"timeout_seconds": types.Int64Type,
+			"trigger": basetypes.ListType{
+				ElemType: TriggerSettings{}.ToAttrType(ctx),
+			},
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -689,14 +830,23 @@ func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
-func (a CreateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of CreateResponse in the Terraform plugin framework type
+// system.
 func (a CreateResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.Int64Type,
+			"job_id": types.Int64Type,
 		},
 	}
 }
@@ -722,16 +872,25 @@ func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronS
 func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
 }
 
-func (a CronSchedule) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CronSchedule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CronSchedule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of CronSchedule in the Terraform plugin framework type
+// system.
 func (a CronSchedule) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PauseStatus":          types.StringType,
-			"QuartzCronExpression": types.StringType,
-			"TimezoneId":           types.StringType,
+			"pause_status":           types.StringType,
+			"quartz_cron_expression": types.StringType,
+			"timezone_id":            types.StringType,
 		},
 	}
 }
@@ -752,19 +911,28 @@ func (newState *DbtOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtOutpu
 func (newState *DbtOutput) SyncEffectiveFieldsDuringRead(existingState DbtOutput) {
 }
 
-func (a DbtOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DbtOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DbtOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ArtifactsHeaders": reflect.TypeOf(types.StringType),
+		"artifacts_headers": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of DbtOutput in the Terraform plugin framework type
+// system.
 func (a DbtOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ArtifactsHeaders": basetypes.MapType{
+			"artifacts_headers": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"ArtifactsLink": types.StringType,
+			"artifacts_link": types.StringType,
 		},
 	}
 }
@@ -812,24 +980,33 @@ func (newState *DbtTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtTask) {
 func (newState *DbtTask) SyncEffectiveFieldsDuringRead(existingState DbtTask) {
 }
 
-func (a DbtTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DbtTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DbtTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Commands": reflect.TypeOf(types.StringType),
+		"commands": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of DbtTask in the Terraform plugin framework type
+// system.
 func (a DbtTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Catalog": types.StringType,
-			"Commands": basetypes.ListType{
+			"catalog": types.StringType,
+			"commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"ProfilesDirectory": types.StringType,
-			"ProjectDirectory":  types.StringType,
-			"Schema":            types.StringType,
-			"Source":            types.StringType,
-			"WarehouseId":       types.StringType,
+			"profiles_directory": types.StringType,
+			"project_directory":  types.StringType,
+			"schema":             types.StringType,
+			"source":             types.StringType,
+			"warehouse_id":       types.StringType,
 		},
 	}
 }
@@ -845,14 +1022,23 @@ func (newState *DeleteJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteJo
 func (newState *DeleteJob) SyncEffectiveFieldsDuringRead(existingState DeleteJob) {
 }
 
-func (a DeleteJob) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteJob.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of DeleteJob in the Terraform plugin framework type
+// system.
 func (a DeleteJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.Int64Type,
+			"job_id": types.Int64Type,
 		},
 	}
 }
@@ -866,10 +1052,19 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
-func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of DeleteResponse in the Terraform plugin framework type
+// system.
 func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
@@ -887,14 +1082,23 @@ func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRu
 func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
 }
 
-func (a DeleteRun) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRun.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of DeleteRun in the Terraform plugin framework type
+// system.
 func (a DeleteRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -908,10 +1112,19 @@ func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunResponse) {
 }
 
-func (a DeleteRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRunResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of DeleteRunResponse in the Terraform plugin framework type
+// system.
 func (a DeleteRunResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
@@ -942,16 +1155,25 @@ func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) S
 func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
-func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceForJobResponseJobClusterSettingsChange.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of EnforcePolicyComplianceForJobResponseJobClusterSettingsChange in the Terraform plugin framework type
+// system.
 func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Field":         types.StringType,
-			"NewValue":      types.StringType,
-			"PreviousValue": types.StringType,
+			"field":          types.StringType,
+			"new_value":      types.StringType,
+			"previous_value": types.StringType,
 		},
 	}
 }
@@ -970,15 +1192,24 @@ func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceRequest) {
 }
 
-func (a EnforcePolicyComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EnforcePolicyComplianceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of EnforcePolicyComplianceRequest in the Terraform plugin framework type
+// system.
 func (a EnforcePolicyComplianceRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId":        types.Int64Type,
-			"ValidateOnly": types.BoolType,
+			"job_id":        types.Int64Type,
+			"validate_only": types.BoolType,
 		},
 	}
 }
@@ -1006,21 +1237,32 @@ func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringCreate
 func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceResponse) {
 }
 
-func (a EnforcePolicyComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EnforcePolicyComplianceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"JobClusterChanges": reflect.TypeOf(EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}),
-		"Settings":          reflect.TypeOf(JobSettings{}),
+		"job_cluster_changes": reflect.TypeOf(EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}),
+		"settings":            reflect.TypeOf(JobSettings{}),
 	}
 }
 
+// ToAttrType returns the representation of EnforcePolicyComplianceResponse in the Terraform plugin framework type
+// system.
 func (a EnforcePolicyComplianceResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"HasChanges": types.BoolType,
-			"JobClusterChanges": basetypes.ListType{
+			"has_changes": types.BoolType,
+			"job_cluster_changes": basetypes.ListType{
 				ElemType: EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}.ToAttrType(ctx),
 			},
-			"Settings": JobSettings{}.ToAttrType(ctx),
+			"settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1041,16 +1283,25 @@ func (newState *ExportRunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ex
 func (newState *ExportRunOutput) SyncEffectiveFieldsDuringRead(existingState ExportRunOutput) {
 }
 
-func (a ExportRunOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportRunOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExportRunOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Views": reflect.TypeOf(ViewItem{}),
+		"views": reflect.TypeOf(ViewItem{}),
 	}
 }
 
+// ToAttrType returns the representation of ExportRunOutput in the Terraform plugin framework type
+// system.
 func (a ExportRunOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Views": basetypes.ListType{
+			"views": basetypes.ListType{
 				ElemType: ViewItem{}.ToAttrType(ctx),
 			},
 		},
@@ -1071,15 +1322,24 @@ func (newState *ExportRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan E
 func (newState *ExportRunRequest) SyncEffectiveFieldsDuringRead(existingState ExportRunRequest) {
 }
 
-func (a ExportRunRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportRunRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExportRunRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ExportRunRequest in the Terraform plugin framework type
+// system.
 func (a ExportRunRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId":         types.Int64Type,
-			"ViewsToExport": types.StringType,
+			"run_id":          types.Int64Type,
+			"views_to_export": types.StringType,
 		},
 	}
 }
@@ -1105,16 +1365,25 @@ func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringCreate
 func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState FileArrivalTriggerConfiguration) {
 }
 
-func (a FileArrivalTriggerConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FileArrivalTriggerConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FileArrivalTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of FileArrivalTriggerConfiguration in the Terraform plugin framework type
+// system.
 func (a FileArrivalTriggerConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"MinTimeBetweenTriggersSeconds": types.Int64Type,
-			"Url":                           types.StringType,
-			"WaitAfterLastChangeSeconds":    types.Int64Type,
+			"min_time_between_triggers_seconds": types.Int64Type,
+			"url":                               types.StringType,
+			"wait_after_last_change_seconds":    types.Int64Type,
 		},
 	}
 }
@@ -1132,20 +1401,31 @@ func (newState *ForEachStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEa
 func (newState *ForEachStats) SyncEffectiveFieldsDuringRead(existingState ForEachStats) {
 }
 
-func (a ForEachStats) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ForEachStats.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ForEachStats) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ErrorMessageStats": reflect.TypeOf(ForEachTaskErrorMessageStats{}),
-		"TaskRunStats":      reflect.TypeOf(ForEachTaskTaskRunStats{}),
+		"error_message_stats": reflect.TypeOf(ForEachTaskErrorMessageStats{}),
+		"task_run_stats":      reflect.TypeOf(ForEachTaskTaskRunStats{}),
 	}
 }
 
+// ToAttrType returns the representation of ForEachStats in the Terraform plugin framework type
+// system.
 func (a ForEachStats) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ErrorMessageStats": basetypes.ListType{
+			"error_message_stats": basetypes.ListType{
 				ElemType: ForEachTaskErrorMessageStats{}.ToAttrType(ctx),
 			},
-			"TaskRunStats": ForEachTaskTaskRunStats{}.ToAttrType(ctx),
+			"task_run_stats": basetypes.ListType{
+				ElemType: ForEachTaskTaskRunStats{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1168,18 +1448,29 @@ func (newState *ForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEac
 func (newState *ForEachTask) SyncEffectiveFieldsDuringRead(existingState ForEachTask) {
 }
 
-func (a ForEachTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ForEachTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ForEachTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Task": reflect.TypeOf(Task{}),
+		"task": reflect.TypeOf(Task{}),
 	}
 }
 
+// ToAttrType returns the representation of ForEachTask in the Terraform plugin framework type
+// system.
 func (a ForEachTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Concurrency": types.Int64Type,
-			"Inputs":      types.StringType,
-			"Task":        Task{}.ToAttrType(ctx),
+			"concurrency": types.Int64Type,
+			"inputs":      types.StringType,
+			"task": basetypes.ListType{
+				ElemType: Task{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1200,16 +1491,25 @@ func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringCreateOrU
 func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskErrorMessageStats) {
 }
 
-func (a ForEachTaskErrorMessageStats) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ForEachTaskErrorMessageStats.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ForEachTaskErrorMessageStats) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ForEachTaskErrorMessageStats in the Terraform plugin framework type
+// system.
 func (a ForEachTaskErrorMessageStats) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Count":               types.Int64Type,
-			"ErrorMessage":        types.StringType,
-			"TerminationCategory": types.StringType,
+			"count":                types.Int64Type,
+			"error_message":        types.StringType,
+			"termination_category": types.StringType,
 		},
 	}
 }
@@ -1236,19 +1536,28 @@ func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskTaskRunStats) {
 }
 
-func (a ForEachTaskTaskRunStats) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ForEachTaskTaskRunStats.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ForEachTaskTaskRunStats) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ForEachTaskTaskRunStats in the Terraform plugin framework type
+// system.
 func (a ForEachTaskTaskRunStats) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ActiveIterations":    types.Int64Type,
-			"CompletedIterations": types.Int64Type,
-			"FailedIterations":    types.Int64Type,
-			"ScheduledIterations": types.Int64Type,
-			"SucceededIterations": types.Int64Type,
-			"TotalIterations":     types.Int64Type,
+			"active_iterations":    types.Int64Type,
+			"completed_iterations": types.Int64Type,
+			"failed_iterations":    types.Int64Type,
+			"scheduled_iterations": types.Int64Type,
+			"succeeded_iterations": types.Int64Type,
+			"total_iterations":     types.Int64Type,
 		},
 	}
 }
@@ -1265,14 +1574,23 @@ func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsRequest) {
 }
 
-func (a GetJobPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionLevelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetJobPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetJobPermissionLevelsRequest in the Terraform plugin framework type
+// system.
 func (a GetJobPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.StringType,
+			"job_id": types.StringType,
 		},
 	}
 }
@@ -1288,16 +1606,25 @@ func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsResponse) {
 }
 
-func (a GetJobPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionLevelsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetJobPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PermissionLevels": reflect.TypeOf(JobPermissionsDescription{}),
+		"permission_levels": reflect.TypeOf(JobPermissionsDescription{}),
 	}
 }
 
+// ToAttrType returns the representation of GetJobPermissionLevelsResponse in the Terraform plugin framework type
+// system.
 func (a GetJobPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PermissionLevels": basetypes.ListType{
+			"permission_levels": basetypes.ListType{
 				ElemType: JobPermissionsDescription{}.ToAttrType(ctx),
 			},
 		},
@@ -1316,14 +1643,23 @@ func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionsRequest) {
 }
 
-func (a GetJobPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetJobPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetJobPermissionsRequest in the Terraform plugin framework type
+// system.
 func (a GetJobPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.StringType,
+			"job_id": types.StringType,
 		},
 	}
 }
@@ -1341,14 +1677,23 @@ func (newState *GetJobRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJ
 func (newState *GetJobRequest) SyncEffectiveFieldsDuringRead(existingState GetJobRequest) {
 }
 
-func (a GetJobRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetJobRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetJobRequest in the Terraform plugin framework type
+// system.
 func (a GetJobRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.Int64Type,
+			"job_id": types.Int64Type,
 		},
 	}
 }
@@ -1365,14 +1710,23 @@ func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceRequest) {
 }
 
-func (a GetPolicyComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyComplianceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPolicyComplianceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetPolicyComplianceRequest in the Terraform plugin framework type
+// system.
 func (a GetPolicyComplianceRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId": types.Int64Type,
+			"job_id": types.Int64Type,
 		},
 	}
 }
@@ -1397,17 +1751,26 @@ func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceResponse) {
 }
 
-func (a GetPolicyComplianceResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyComplianceResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPolicyComplianceResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Violations": reflect.TypeOf(types.StringType),
+		"violations": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of GetPolicyComplianceResponse in the Terraform plugin framework type
+// system.
 func (a GetPolicyComplianceResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IsCompliant": types.BoolType,
-			"Violations": basetypes.MapType{
+			"is_compliant": types.BoolType,
+			"violations": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1426,14 +1789,23 @@ func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringRead(existingState GetRunOutputRequest) {
 }
 
-func (a GetRunOutputRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunOutputRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetRunOutputRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetRunOutputRequest in the Terraform plugin framework type
+// system.
 func (a GetRunOutputRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -1458,17 +1830,26 @@ func (newState *GetRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetR
 func (newState *GetRunRequest) SyncEffectiveFieldsDuringRead(existingState GetRunRequest) {
 }
 
-func (a GetRunRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetRunRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetRunRequest in the Terraform plugin framework type
+// system.
 func (a GetRunRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IncludeHistory":        types.BoolType,
-			"IncludeResolvedValues": types.BoolType,
-			"PageToken":             types.StringType,
-			"RunId":                 types.Int64Type,
+			"include_history":         types.BoolType,
+			"include_resolved_values": types.BoolType,
+			"page_token":              types.StringType,
+			"run_id":                  types.Int64Type,
 		},
 	}
 }
@@ -1488,14 +1869,23 @@ func (newState *GitSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSna
 func (newState *GitSnapshot) SyncEffectiveFieldsDuringRead(existingState GitSnapshot) {
 }
 
-func (a GitSnapshot) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GitSnapshot.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GitSnapshot) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GitSnapshot in the Terraform plugin framework type
+// system.
 func (a GitSnapshot) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"UsedCommit": types.StringType,
+			"used_commit": types.StringType,
 		},
 	}
 }
@@ -1539,23 +1929,36 @@ func (newState *GitSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSourc
 func (newState *GitSource) SyncEffectiveFieldsDuringRead(existingState GitSource) {
 }
 
-func (a GitSource) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GitSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GitSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"GitSnapshot": reflect.TypeOf(GitSnapshot{}),
-		"JobSource":   reflect.TypeOf(JobSource{}),
+		"git_snapshot": reflect.TypeOf(GitSnapshot{}),
+		"job_source":   reflect.TypeOf(JobSource{}),
 	}
 }
 
+// ToAttrType returns the representation of GitSource in the Terraform plugin framework type
+// system.
 func (a GitSource) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GitBranch":   types.StringType,
-			"GitCommit":   types.StringType,
-			"GitProvider": types.StringType,
-			"GitSnapshot": GitSnapshot{}.ToAttrType(ctx),
-			"GitTag":      types.StringType,
-			"GitUrl":      types.StringType,
-			"JobSource":   JobSource{}.ToAttrType(ctx),
+			"branch":       types.StringType,
+			"commit":       types.StringType,
+			"git_provider": types.StringType,
+			"git_snapshot": basetypes.ListType{
+				ElemType: GitSnapshot{}.ToAttrType(ctx),
+			},
+			"tag": types.StringType,
+			"url": types.StringType,
+			"job_source": basetypes.ListType{
+				ElemType: JobSource{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1596,21 +1999,32 @@ func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
 func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
 }
 
-func (a Job) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Job.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Job) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Settings": reflect.TypeOf(JobSettings{}),
+		"settings": reflect.TypeOf(JobSettings{}),
 	}
 }
 
+// ToAttrType returns the representation of Job in the Terraform plugin framework type
+// system.
 func (a Job) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreatedTime":             types.Int64Type,
-			"CreatorUserName":         types.StringType,
-			"EffectiveBudgetPolicyId": types.StringType,
-			"JobId":                   types.Int64Type,
-			"RunAsUserName":           types.StringType,
-			"Settings":                JobSettings{}.ToAttrType(ctx),
+			"created_time":               types.Int64Type,
+			"creator_user_name":          types.StringType,
+			"effective_budget_policy_id": types.StringType,
+			"job_id":                     types.Int64Type,
+			"run_as_user_name":           types.StringType,
+			"settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1632,17 +2046,26 @@ func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState JobAccessControlRequest) {
 }
 
-func (a JobAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobAccessControlRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobAccessControlRequest in the Terraform plugin framework type
+// system.
 func (a JobAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GroupName":            types.StringType,
-			"PermissionLevel":      types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -1666,22 +2089,31 @@ func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState JobAccessControlResponse) {
 }
 
-func (a JobAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobAccessControlResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AllPermissions": reflect.TypeOf(JobPermission{}),
+		"all_permissions": reflect.TypeOf(JobPermission{}),
 	}
 }
 
+// ToAttrType returns the representation of JobAccessControlResponse in the Terraform plugin framework type
+// system.
 func (a JobAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllPermissions": basetypes.ListType{
+			"all_permissions": basetypes.ListType{
 				ElemType: JobPermission{}.ToAttrType(ctx),
 			},
-			"DisplayName":          types.StringType,
-			"GroupName":            types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -1701,17 +2133,28 @@ func (newState *JobCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobClus
 func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobCluster) {
 }
 
-func (a JobCluster) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCluster.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"NewCluster": reflect.TypeOf(compute.ClusterSpec{}),
+		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
 	}
 }
 
+// ToAttrType returns the representation of JobCluster in the Terraform plugin framework type
+// system.
 func (a JobCluster) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobClusterKey": types.StringType,
-			"NewCluster":    compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			"job_cluster_key": types.StringType,
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1735,18 +2178,27 @@ func (newState *JobCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobC
 func (newState *JobCompliance) SyncEffectiveFieldsDuringRead(existingState JobCompliance) {
 }
 
-func (a JobCompliance) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCompliance.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobCompliance) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Violations": reflect.TypeOf(types.StringType),
+		"violations": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of JobCompliance in the Terraform plugin framework type
+// system.
 func (a JobCompliance) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"IsCompliant": types.BoolType,
-			"JobId":       types.Int64Type,
-			"Violations": basetypes.MapType{
+			"is_compliant": types.BoolType,
+			"job_id":       types.Int64Type,
+			"violations": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1768,15 +2220,24 @@ func (newState *JobDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobD
 func (newState *JobDeployment) SyncEffectiveFieldsDuringRead(existingState JobDeployment) {
 }
 
-func (a JobDeployment) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobDeployment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobDeployment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobDeployment in the Terraform plugin framework type
+// system.
 func (a JobDeployment) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Kind":             types.StringType,
-			"MetadataFilePath": types.StringType,
+			"kind":               types.StringType,
+			"metadata_file_path": types.StringType,
 		},
 	}
 }
@@ -1823,33 +2284,42 @@ func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringRead(existingState JobEmailNotifications) {
 }
 
-func (a JobEmailNotifications) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobEmailNotifications.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobEmailNotifications) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OnDurationWarningThresholdExceeded": reflect.TypeOf(types.StringType),
-		"OnFailure":                          reflect.TypeOf(types.StringType),
-		"OnStart":                            reflect.TypeOf(types.StringType),
-		"OnStreamingBacklogExceeded":         reflect.TypeOf(types.StringType),
-		"OnSuccess":                          reflect.TypeOf(types.StringType),
+		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.String{}),
+		"on_failure":                             reflect.TypeOf(types.String{}),
+		"on_start":                               reflect.TypeOf(types.String{}),
+		"on_streaming_backlog_exceeded":          reflect.TypeOf(types.String{}),
+		"on_success":                             reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of JobEmailNotifications in the Terraform plugin framework type
+// system.
 func (a JobEmailNotifications) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NoAlertForSkippedRuns": types.BoolType,
-			"OnDurationWarningThresholdExceeded": basetypes.ListType{
+			"no_alert_for_skipped_runs": types.BoolType,
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnFailure": basetypes.ListType{
+			"on_failure": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnStart": basetypes.ListType{
+			"on_start": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnStreamingBacklogExceeded": basetypes.ListType{
+			"on_streaming_backlog_exceeded": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnSuccess": basetypes.ListType{
+			"on_success": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -1871,17 +2341,28 @@ func (newState *JobEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobEnvironment) {
 }
 
-func (a JobEnvironment) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobEnvironment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Spec": reflect.TypeOf(compute.Environment{}),
+		"spec": reflect.TypeOf(compute.Environment{}),
 	}
 }
 
+// ToAttrType returns the representation of JobEnvironment in the Terraform plugin framework type
+// system.
 func (a JobEnvironment) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EnvironmentKey": types.StringType,
-			"Spec":           compute_tf.Environment{}.ToAttrType(ctx),
+			"environment_key": types.StringType,
+			"spec": basetypes.ListType{
+				ElemType: compute_tf.Environment{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1901,15 +2382,24 @@ func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringRead(existingState JobNotificationSettings) {
 }
 
-func (a JobNotificationSettings) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobNotificationSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobNotificationSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobNotificationSettings in the Terraform plugin framework type
+// system.
 func (a JobNotificationSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NoAlertForCanceledRuns": types.BoolType,
-			"NoAlertForSkippedRuns":  types.BoolType,
+			"no_alert_for_canceled_runs": types.BoolType,
+			"no_alert_for_skipped_runs":  types.BoolType,
 		},
 	}
 }
@@ -1929,16 +2419,25 @@ func (newState *JobParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPa
 func (newState *JobParameter) SyncEffectiveFieldsDuringRead(existingState JobParameter) {
 }
 
-func (a JobParameter) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobParameter.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobParameter) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobParameter in the Terraform plugin framework type
+// system.
 func (a JobParameter) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Default": types.StringType,
-			"Name":    types.StringType,
-			"Value":   types.StringType,
+			"default": types.StringType,
+			"name":    types.StringType,
+			"value":   types.StringType,
 		},
 	}
 }
@@ -1957,15 +2456,24 @@ func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringRead(existingState JobParameterDefinition) {
 }
 
-func (a JobParameterDefinition) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobParameterDefinition.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobParameterDefinition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobParameterDefinition in the Terraform plugin framework type
+// system.
 func (a JobParameterDefinition) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Default": types.StringType,
-			"Name":    types.StringType,
+			"default": types.StringType,
+			"name":    types.StringType,
 		},
 	}
 }
@@ -1984,20 +2492,29 @@ func (newState *JobPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobP
 func (newState *JobPermission) SyncEffectiveFieldsDuringRead(existingState JobPermission) {
 }
 
-func (a JobPermission) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermission.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of JobPermission in the Terraform plugin framework type
+// system.
 func (a JobPermission) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Inherited": types.BoolType,
-			"InheritedFromObject": basetypes.ListType{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PermissionLevel": types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2016,20 +2533,29 @@ func (newState *JobPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobPermissions) SyncEffectiveFieldsDuringRead(existingState JobPermissions) {
 }
 
-func (a JobPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(JobAccessControlResponse{}),
+		"access_control_list": reflect.TypeOf(JobAccessControlResponse{}),
 	}
 }
 
+// ToAttrType returns the representation of JobPermissions in the Terraform plugin framework type
+// system.
 func (a JobPermissions) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: JobAccessControlResponse{}.ToAttrType(ctx),
 			},
-			"ObjectId":   types.StringType,
-			"ObjectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -2046,15 +2572,24 @@ func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState JobPermissionsDescription) {
 }
 
-func (a JobPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissionsDescription.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobPermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobPermissionsDescription in the Terraform plugin framework type
+// system.
 func (a JobPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description":     types.StringType,
-			"PermissionLevel": types.StringType,
+			"description":      types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2071,19 +2606,28 @@ func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState JobPermissionsRequest) {
 }
 
-func (a JobPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(JobAccessControlRequest{}),
+		"access_control_list": reflect.TypeOf(JobAccessControlRequest{}),
 	}
 }
 
+// ToAttrType returns the representation of JobPermissionsRequest in the Terraform plugin framework type
+// system.
 func (a JobPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: JobAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"JobId": types.StringType,
+			"job_id": types.StringType,
 		},
 	}
 }
@@ -2109,15 +2653,24 @@ func (newState *JobRunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobRunAs)
 func (newState *JobRunAs) SyncEffectiveFieldsDuringRead(existingState JobRunAs) {
 }
 
-func (a JobRunAs) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobRunAs.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobRunAs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobRunAs in the Terraform plugin framework type
+// system.
 func (a JobRunAs) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -2232,63 +2785,94 @@ func (newState *JobSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSet
 func (newState *JobSettings) SyncEffectiveFieldsDuringRead(existingState JobSettings) {
 }
 
-func (a JobSettings) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Continuous":           reflect.TypeOf(Continuous{}),
-		"Deployment":           reflect.TypeOf(JobDeployment{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"Environments":         reflect.TypeOf(JobEnvironment{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"JobClusters":          reflect.TypeOf(JobCluster{}),
-		"NotificationSettings": reflect.TypeOf(JobNotificationSettings{}),
-		"Parameters":           reflect.TypeOf(JobParameterDefinition{}),
-		"Queue":                reflect.TypeOf(QueueSettings{}),
-		"RunAs":                reflect.TypeOf(JobRunAs{}),
-		"Schedule":             reflect.TypeOf(CronSchedule{}),
-		"Tags":                 reflect.TypeOf(types.StringType),
-		"Tasks":                reflect.TypeOf(Task{}),
-		"Trigger":              reflect.TypeOf(TriggerSettings{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"continuous":            reflect.TypeOf(Continuous{}),
+		"deployment":            reflect.TypeOf(JobDeployment{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environment":           reflect.TypeOf(JobEnvironment{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"job_cluster":           reflect.TypeOf(JobCluster{}),
+		"notification_settings": reflect.TypeOf(JobNotificationSettings{}),
+		"parameter":             reflect.TypeOf(JobParameterDefinition{}),
+		"queue":                 reflect.TypeOf(QueueSettings{}),
+		"run_as":                reflect.TypeOf(JobRunAs{}),
+		"schedule":              reflect.TypeOf(CronSchedule{}),
+		"tags":                  reflect.TypeOf(types.String{}),
+		"task":                  reflect.TypeOf(Task{}),
+		"trigger":               reflect.TypeOf(TriggerSettings{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
+// ToAttrType returns the representation of JobSettings in the Terraform plugin framework type
+// system.
 func (a JobSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BudgetPolicyId":     types.StringType,
-			"Continuous":         Continuous{}.ToAttrType(ctx),
-			"Deployment":         JobDeployment{}.ToAttrType(ctx),
-			"Description":        types.StringType,
-			"EditMode":           types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"Environments": basetypes.ListType{
+			"budget_policy_id": types.StringType,
+			"continuous": basetypes.ListType{
+				ElemType: Continuous{}.ToAttrType(ctx),
+			},
+			"deployment": basetypes.ListType{
+				ElemType: JobDeployment{}.ToAttrType(ctx),
+			},
+			"description": types.StringType,
+			"edit_mode":   types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environment": basetypes.ListType{
 				ElemType: JobEnvironment{}.ToAttrType(ctx),
 			},
-			"Format":    types.StringType,
-			"GitSource": GitSource{}.ToAttrType(ctx),
-			"Health":    JobsHealthRules{}.ToAttrType(ctx),
-			"JobClusters": basetypes.ListType{
+			"format": types.StringType,
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"job_cluster": basetypes.ListType{
 				ElemType: JobCluster{}.ToAttrType(ctx),
 			},
-			"MaxConcurrentRuns":    types.Int64Type,
-			"Name":                 types.StringType,
-			"NotificationSettings": JobNotificationSettings{}.ToAttrType(ctx),
-			"Parameters": basetypes.ListType{
+			"max_concurrent_runs": types.Int64Type,
+			"name":                types.StringType,
+			"notification_settings": basetypes.ListType{
+				ElemType: JobNotificationSettings{}.ToAttrType(ctx),
+			},
+			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition{}.ToAttrType(ctx),
 			},
-			"Queue":    QueueSettings{}.ToAttrType(ctx),
-			"RunAs":    JobRunAs{}.ToAttrType(ctx),
-			"Schedule": CronSchedule{}.ToAttrType(ctx),
-			"Tags": basetypes.MapType{
+			"queue": basetypes.ListType{
+				ElemType: QueueSettings{}.ToAttrType(ctx),
+			},
+			"run_as": basetypes.ListType{
+				ElemType: JobRunAs{}.ToAttrType(ctx),
+			},
+			"schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Tasks": basetypes.ListType{
+			"task": basetypes.ListType{
 				ElemType: Task{}.ToAttrType(ctx),
 			},
-			"TimeoutSeconds":       types.Int64Type,
-			"Trigger":              TriggerSettings{}.ToAttrType(ctx),
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"timeout_seconds": types.Int64Type,
+			"trigger": basetypes.ListType{
+				ElemType: TriggerSettings{}.ToAttrType(ctx),
+			},
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -2318,16 +2902,25 @@ func (newState *JobSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSourc
 func (newState *JobSource) SyncEffectiveFieldsDuringRead(existingState JobSource) {
 }
 
-func (a JobSource) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobSource in the Terraform plugin framework type
+// system.
 func (a JobSource) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DirtyState":          types.StringType,
-			"ImportFromGitBranch": types.StringType,
-			"JobConfigPath":       types.StringType,
+			"dirty_state":            types.StringType,
+			"import_from_git_branch": types.StringType,
+			"job_config_path":        types.StringType,
 		},
 	}
 }
@@ -2360,16 +2953,25 @@ func (newState *JobsHealthRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobsHealthRule) SyncEffectiveFieldsDuringRead(existingState JobsHealthRule) {
 }
 
-func (a JobsHealthRule) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobsHealthRule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobsHealthRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of JobsHealthRule in the Terraform plugin framework type
+// system.
 func (a JobsHealthRule) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Metric": types.StringType,
-			"Op":     types.StringType,
-			"Value":  types.Int64Type,
+			"metric": types.StringType,
+			"op":     types.StringType,
+			"value":  types.Int64Type,
 		},
 	}
 }
@@ -2385,16 +2987,25 @@ func (newState *JobsHealthRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan Jo
 func (newState *JobsHealthRules) SyncEffectiveFieldsDuringRead(existingState JobsHealthRules) {
 }
 
-func (a JobsHealthRules) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobsHealthRules.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a JobsHealthRules) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Rules": reflect.TypeOf(JobsHealthRule{}),
+		"rules": reflect.TypeOf(JobsHealthRule{}),
 	}
 }
 
+// ToAttrType returns the representation of JobsHealthRules in the Terraform plugin framework type
+// system.
 func (a JobsHealthRules) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Rules": basetypes.ListType{
+			"rules": basetypes.ListType{
 				ElemType: JobsHealthRule{}.ToAttrType(ctx),
 			},
 		},
@@ -2420,20 +3031,29 @@ func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringCre
 func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceForPolicyResponse) {
 }
 
-func (a ListJobComplianceForPolicyResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobComplianceForPolicyResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListJobComplianceForPolicyResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Jobs": reflect.TypeOf(JobCompliance{}),
+		"jobs": reflect.TypeOf(JobCompliance{}),
 	}
 }
 
+// ToAttrType returns the representation of ListJobComplianceForPolicyResponse in the Terraform plugin framework type
+// system.
 func (a ListJobComplianceForPolicyResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Jobs": basetypes.ListType{
+			"jobs": basetypes.ListType{
 				ElemType: JobCompliance{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
-			"PrevPageToken": types.StringType,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
 		},
 	}
 }
@@ -2457,16 +3077,25 @@ func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceRequest) {
 }
 
-func (a ListJobComplianceRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobComplianceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListJobComplianceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ListJobComplianceRequest in the Terraform plugin framework type
+// system.
 func (a ListJobComplianceRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PageSize":  types.Int64Type,
-			"PageToken": types.StringType,
-			"PolicyId":  types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"policy_id":  types.StringType,
 		},
 	}
 }
@@ -2495,18 +3124,27 @@ func (newState *ListJobsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Li
 func (newState *ListJobsRequest) SyncEffectiveFieldsDuringRead(existingState ListJobsRequest) {
 }
 
-func (a ListJobsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListJobsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ListJobsRequest in the Terraform plugin framework type
+// system.
 func (a ListJobsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ExpandTasks": types.BoolType,
-			"Limit":       types.Int64Type,
-			"Name":        types.StringType,
-			"Offset":      types.Int64Type,
-			"PageToken":   types.StringType,
+			"expand_tasks": types.BoolType,
+			"limit":        types.Int64Type,
+			"name":         types.StringType,
+			"offset":       types.Int64Type,
+			"page_token":   types.StringType,
 		},
 	}
 }
@@ -2532,21 +3170,30 @@ func (newState *ListJobsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListJobsResponse) SyncEffectiveFieldsDuringRead(existingState ListJobsResponse) {
 }
 
-func (a ListJobsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListJobsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Jobs": reflect.TypeOf(BaseJob{}),
+		"jobs": reflect.TypeOf(BaseJob{}),
 	}
 }
 
+// ToAttrType returns the representation of ListJobsResponse in the Terraform plugin framework type
+// system.
 func (a ListJobsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"HasMore": types.BoolType,
-			"Jobs": basetypes.ListType{
+			"has_more": types.BoolType,
+			"jobs": basetypes.ListType{
 				ElemType: BaseJob{}.ToAttrType(ctx),
 			},
-			"NextPageToken": types.StringType,
-			"PrevPageToken": types.StringType,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
 		},
 	}
 }
@@ -2597,23 +3244,32 @@ func (newState *ListRunsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Li
 func (newState *ListRunsRequest) SyncEffectiveFieldsDuringRead(existingState ListRunsRequest) {
 }
 
-func (a ListRunsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRunsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListRunsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ListRunsRequest in the Terraform plugin framework type
+// system.
 func (a ListRunsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ActiveOnly":    types.BoolType,
-			"CompletedOnly": types.BoolType,
-			"ExpandTasks":   types.BoolType,
-			"JobId":         types.Int64Type,
-			"Limit":         types.Int64Type,
-			"Offset":        types.Int64Type,
-			"PageToken":     types.StringType,
-			"RunType":       types.StringType,
-			"StartTimeFrom": types.Int64Type,
-			"StartTimeTo":   types.Int64Type,
+			"active_only":     types.BoolType,
+			"completed_only":  types.BoolType,
+			"expand_tasks":    types.BoolType,
+			"job_id":          types.Int64Type,
+			"limit":           types.Int64Type,
+			"offset":          types.Int64Type,
+			"page_token":      types.StringType,
+			"run_type":        types.StringType,
+			"start_time_from": types.Int64Type,
+			"start_time_to":   types.Int64Type,
 		},
 	}
 }
@@ -2639,19 +3295,28 @@ func (newState *ListRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListRunsResponse) {
 }
 
-func (a ListRunsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRunsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListRunsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Runs": reflect.TypeOf(BaseRun{}),
+		"runs": reflect.TypeOf(BaseRun{}),
 	}
 }
 
+// ToAttrType returns the representation of ListRunsResponse in the Terraform plugin framework type
+// system.
 func (a ListRunsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"HasMore":       types.BoolType,
-			"NextPageToken": types.StringType,
-			"PrevPageToken": types.StringType,
-			"Runs": basetypes.ListType{
+			"has_more":        types.BoolType,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
+			"runs": basetypes.ListType{
 				ElemType: BaseRun{}.ToAttrType(ctx),
 			},
 		},
@@ -2676,15 +3341,24 @@ func (newState *NotebookOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Not
 func (newState *NotebookOutput) SyncEffectiveFieldsDuringRead(existingState NotebookOutput) {
 }
 
-func (a NotebookOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NotebookOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NotebookOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of NotebookOutput in the Terraform plugin framework type
+// system.
 func (a NotebookOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Result":    types.StringType,
-			"Truncated": types.BoolType,
+			"result":    types.StringType,
+			"truncated": types.BoolType,
 		},
 	}
 }
@@ -2736,21 +3410,30 @@ func (newState *NotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Noteb
 func (newState *NotebookTask) SyncEffectiveFieldsDuringRead(existingState NotebookTask) {
 }
 
-func (a NotebookTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NotebookTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NotebookTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"BaseParameters": reflect.TypeOf(types.StringType),
+		"base_parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of NotebookTask in the Terraform plugin framework type
+// system.
 func (a NotebookTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BaseParameters": basetypes.MapType{
+			"base_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"NotebookPath": types.StringType,
-			"Source":       types.StringType,
-			"WarehouseId":  types.StringType,
+			"notebook_path": types.StringType,
+			"source":        types.StringType,
+			"warehouse_id":  types.StringType,
 		},
 	}
 }
@@ -2768,15 +3451,24 @@ func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState PeriodicTriggerConfiguration) {
 }
 
-func (a PeriodicTriggerConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PeriodicTriggerConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PeriodicTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of PeriodicTriggerConfiguration in the Terraform plugin framework type
+// system.
 func (a PeriodicTriggerConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Interval": types.Int64Type,
-			"Unit":     types.StringType,
+			"interval": types.Int64Type,
+			"unit":     types.StringType,
 		},
 	}
 }
@@ -2792,14 +3484,23 @@ func (newState *PipelineParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pip
 func (newState *PipelineParams) SyncEffectiveFieldsDuringRead(existingState PipelineParams) {
 }
 
-func (a PipelineParams) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineParams.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PipelineParams) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of PipelineParams in the Terraform plugin framework type
+// system.
 func (a PipelineParams) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FullRefresh": types.BoolType,
+			"full_refresh": types.BoolType,
 		},
 	}
 }
@@ -2817,15 +3518,24 @@ func (newState *PipelineTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pipel
 func (newState *PipelineTask) SyncEffectiveFieldsDuringRead(existingState PipelineTask) {
 }
 
-func (a PipelineTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PipelineTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of PipelineTask in the Terraform plugin framework type
+// system.
 func (a PipelineTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FullRefresh": types.BoolType,
-			"PipelineId":  types.StringType,
+			"full_refresh": types.BoolType,
+			"pipeline_id":  types.StringType,
 		},
 	}
 }
@@ -2852,22 +3562,31 @@ func (newState *PythonWheelTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Py
 func (newState *PythonWheelTask) SyncEffectiveFieldsDuringRead(existingState PythonWheelTask) {
 }
 
-func (a PythonWheelTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PythonWheelTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PythonWheelTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"NamedParameters": reflect.TypeOf(types.StringType),
-		"Parameters":      reflect.TypeOf(types.StringType),
+		"named_parameters": reflect.TypeOf(types.String{}),
+		"parameters":       reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of PythonWheelTask in the Terraform plugin framework type
+// system.
 func (a PythonWheelTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EntryPoint": types.StringType,
-			"NamedParameters": basetypes.MapType{
+			"entry_point": types.StringType,
+			"named_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PackageName": types.StringType,
-			"Parameters": basetypes.ListType{
+			"package_name": types.StringType,
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -2893,15 +3612,24 @@ func (newState *QueueDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan Queue
 func (newState *QueueDetails) SyncEffectiveFieldsDuringRead(existingState QueueDetails) {
 }
 
-func (a QueueDetails) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QueueDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a QueueDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of QueueDetails in the Terraform plugin framework type
+// system.
 func (a QueueDetails) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Code":    types.StringType,
-			"Message": types.StringType,
+			"code":    types.StringType,
+			"message": types.StringType,
 		},
 	}
 }
@@ -2917,14 +3645,23 @@ func (newState *QueueSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan Queu
 func (newState *QueueSettings) SyncEffectiveFieldsDuringRead(existingState QueueSettings) {
 }
 
-func (a QueueSettings) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QueueSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a QueueSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of QueueSettings in the Terraform plugin framework type
+// system.
 func (a QueueSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Enabled": types.BoolType,
+			"enabled": types.BoolType,
 		},
 	}
 }
@@ -2955,26 +3692,39 @@ func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringRead(existingState RepairHistoryItem) {
 }
 
-func (a RepairHistoryItem) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairHistoryItem.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RepairHistoryItem) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"State":      reflect.TypeOf(RunState{}),
-		"Status":     reflect.TypeOf(RunStatus{}),
-		"TaskRunIds": reflect.TypeOf(types.Int64Type),
+		"state":        reflect.TypeOf(RunState{}),
+		"status":       reflect.TypeOf(RunStatus{}),
+		"task_run_ids": reflect.TypeOf(types.Int64{}),
 	}
 }
 
+// ToAttrType returns the representation of RepairHistoryItem in the Terraform plugin framework type
+// system.
 func (a RepairHistoryItem) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndTime":   types.Int64Type,
-			"Id":        types.Int64Type,
-			"StartTime": types.Int64Type,
-			"State":     RunState{}.ToAttrType(ctx),
-			"Status":    RunStatus{}.ToAttrType(ctx),
-			"TaskRunIds": basetypes.ListType{
+			"end_time":   types.Int64Type,
+			"id":         types.Int64Type,
+			"start_time": types.Int64Type,
+			"state": basetypes.ListType{
+				ElemType: RunState{}.ToAttrType(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: RunStatus{}.ToAttrType(ctx),
+			},
+			"task_run_ids": basetypes.ListType{
 				ElemType: types.Int64Type,
 			},
-			"Type": types.StringType,
+			"type": types.StringType,
 		},
 	}
 }
@@ -3088,54 +3838,65 @@ func (newState *RepairRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRu
 func (newState *RepairRun) SyncEffectiveFieldsDuringRead(existingState RepairRun) {
 }
 
-func (a RepairRun) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairRun.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RepairRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtCommands":       reflect.TypeOf(types.StringType),
-		"JarParams":         reflect.TypeOf(types.StringType),
-		"JobParameters":     reflect.TypeOf(types.StringType),
-		"NotebookParams":    reflect.TypeOf(types.StringType),
-		"PipelineParams":    reflect.TypeOf(PipelineParams{}),
-		"PythonNamedParams": reflect.TypeOf(types.StringType),
-		"PythonParams":      reflect.TypeOf(types.StringType),
-		"RerunTasks":        reflect.TypeOf(types.StringType),
-		"SparkSubmitParams": reflect.TypeOf(types.StringType),
-		"SqlParams":         reflect.TypeOf(types.StringType),
+		"dbt_commands":        reflect.TypeOf(types.String{}),
+		"jar_params":          reflect.TypeOf(types.String{}),
+		"job_parameters":      reflect.TypeOf(types.String{}),
+		"notebook_params":     reflect.TypeOf(types.String{}),
+		"pipeline_params":     reflect.TypeOf(PipelineParams{}),
+		"python_named_params": reflect.TypeOf(types.String{}),
+		"python_params":       reflect.TypeOf(types.String{}),
+		"rerun_tasks":         reflect.TypeOf(types.String{}),
+		"spark_submit_params": reflect.TypeOf(types.String{}),
+		"sql_params":          reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of RepairRun in the Terraform plugin framework type
+// system.
 func (a RepairRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtCommands": basetypes.ListType{
+			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JarParams": basetypes.ListType{
+			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JobParameters": basetypes.MapType{
+			"job_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"LatestRepairId": types.Int64Type,
-			"NotebookParams": basetypes.MapType{
+			"latest_repair_id": types.Int64Type,
+			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PipelineParams": PipelineParams{}.ToAttrType(ctx),
-			"PythonNamedParams": basetypes.MapType{
+			"pipeline_params": basetypes.ListType{
+				ElemType: PipelineParams{}.ToAttrType(ctx),
+			},
+			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PythonParams": basetypes.ListType{
+			"python_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"RerunAllFailedTasks": types.BoolType,
-			"RerunDependentTasks": types.BoolType,
-			"RerunTasks": basetypes.ListType{
+			"rerun_all_failed_tasks": types.BoolType,
+			"rerun_dependent_tasks":  types.BoolType,
+			"rerun_tasks": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"RunId": types.Int64Type,
-			"SparkSubmitParams": basetypes.ListType{
+			"run_id": types.Int64Type,
+			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SqlParams": basetypes.MapType{
+			"sql_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3155,14 +3916,23 @@ func (newState *RepairRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *RepairRunResponse) SyncEffectiveFieldsDuringRead(existingState RepairRunResponse) {
 }
 
-func (a RepairRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairRunResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RepairRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of RepairRunResponse in the Terraform plugin framework type
+// system.
 func (a RepairRunResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RepairId": types.Int64Type,
+			"repair_id": types.Int64Type,
 		},
 	}
 }
@@ -3184,17 +3954,28 @@ func (newState *ResetJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetJob)
 func (newState *ResetJob) SyncEffectiveFieldsDuringRead(existingState ResetJob) {
 }
 
-func (a ResetJob) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetJob.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResetJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"NewSettings": reflect.TypeOf(JobSettings{}),
+		"new_settings": reflect.TypeOf(JobSettings{}),
 	}
 }
 
+// ToAttrType returns the representation of ResetJob in the Terraform plugin framework type
+// system.
 func (a ResetJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobId":       types.Int64Type,
-			"NewSettings": JobSettings{}.ToAttrType(ctx),
+			"job_id": types.Int64Type,
+			"new_settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -3208,10 +3989,19 @@ func (newState *ResetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Rese
 func (newState *ResetResponse) SyncEffectiveFieldsDuringRead(existingState ResetResponse) {
 }
 
-func (a ResetResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResetResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ResetResponse in the Terraform plugin framework type
+// system.
 func (a ResetResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
@@ -3230,15 +4020,24 @@ func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedConditionTaskValues) {
 }
 
-func (a ResolvedConditionTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedConditionTaskValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResolvedConditionTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ResolvedConditionTaskValues in the Terraform plugin framework type
+// system.
 func (a ResolvedConditionTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Left":  types.StringType,
-			"Right": types.StringType,
+			"left":  types.StringType,
+			"right": types.StringType,
 		},
 	}
 }
@@ -3253,16 +4052,25 @@ func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedDbtTaskValues) {
 }
 
-func (a ResolvedDbtTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedDbtTaskValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResolvedDbtTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Commands": reflect.TypeOf(types.StringType),
+		"commands": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of ResolvedDbtTaskValues in the Terraform plugin framework type
+// system.
 func (a ResolvedDbtTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Commands": basetypes.ListType{
+			"commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3279,16 +4087,25 @@ func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedNotebookTaskValues) {
 }
 
-func (a ResolvedNotebookTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedNotebookTaskValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResolvedNotebookTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"BaseParameters": reflect.TypeOf(types.StringType),
+		"base_parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of ResolvedNotebookTaskValues in the Terraform plugin framework type
+// system.
 func (a ResolvedNotebookTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"BaseParameters": basetypes.MapType{
+			"base_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3305,16 +4122,25 @@ func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringRead(existingState ResolvedParamPairValues) {
 }
 
-func (a ResolvedParamPairValues) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedParamPairValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResolvedParamPairValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of ResolvedParamPairValues in the Terraform plugin framework type
+// system.
 func (a ResolvedParamPairValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Parameters": basetypes.MapType{
+			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3333,20 +4159,29 @@ func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringCreateOr
 func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedPythonWheelTaskValues) {
 }
 
-func (a ResolvedPythonWheelTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedPythonWheelTaskValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResolvedPythonWheelTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"NamedParameters": reflect.TypeOf(types.StringType),
-		"Parameters":      reflect.TypeOf(types.StringType),
+		"named_parameters": reflect.TypeOf(types.String{}),
+		"parameters":       reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of ResolvedPythonWheelTaskValues in the Terraform plugin framework type
+// system.
 func (a ResolvedPythonWheelTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NamedParameters": basetypes.MapType{
+			"named_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Parameters": basetypes.ListType{
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3365,20 +4200,29 @@ func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedRunJobTaskValues) {
 }
 
-func (a ResolvedRunJobTaskValues) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedRunJobTaskValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResolvedRunJobTaskValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"JobParameters": reflect.TypeOf(types.StringType),
-		"Parameters":    reflect.TypeOf(types.StringType),
+		"job_parameters": reflect.TypeOf(types.String{}),
+		"parameters":     reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of ResolvedRunJobTaskValues in the Terraform plugin framework type
+// system.
 func (a ResolvedRunJobTaskValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JobParameters": basetypes.MapType{
+			"job_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Parameters": basetypes.MapType{
+			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3395,16 +4239,25 @@ func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringRead(existingState ResolvedStringParamsValues) {
 }
 
-func (a ResolvedStringParamsValues) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedStringParamsValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResolvedStringParamsValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of ResolvedStringParamsValues in the Terraform plugin framework type
+// system.
 func (a ResolvedStringParamsValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Parameters": basetypes.ListType{
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -3439,34 +4292,63 @@ func (newState *ResolvedValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan Res
 func (newState *ResolvedValues) SyncEffectiveFieldsDuringRead(existingState ResolvedValues) {
 }
 
-func (a ResolvedValues) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ResolvedValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ConditionTask":   reflect.TypeOf(ResolvedConditionTaskValues{}),
-		"DbtTask":         reflect.TypeOf(ResolvedDbtTaskValues{}),
-		"NotebookTask":    reflect.TypeOf(ResolvedNotebookTaskValues{}),
-		"PythonWheelTask": reflect.TypeOf(ResolvedPythonWheelTaskValues{}),
-		"RunJobTask":      reflect.TypeOf(ResolvedRunJobTaskValues{}),
-		"SimulationTask":  reflect.TypeOf(ResolvedParamPairValues{}),
-		"SparkJarTask":    reflect.TypeOf(ResolvedStringParamsValues{}),
-		"SparkPythonTask": reflect.TypeOf(ResolvedStringParamsValues{}),
-		"SparkSubmitTask": reflect.TypeOf(ResolvedStringParamsValues{}),
-		"SqlTask":         reflect.TypeOf(ResolvedParamPairValues{}),
+		"condition_task":    reflect.TypeOf(ResolvedConditionTaskValues{}),
+		"dbt_task":          reflect.TypeOf(ResolvedDbtTaskValues{}),
+		"notebook_task":     reflect.TypeOf(ResolvedNotebookTaskValues{}),
+		"python_wheel_task": reflect.TypeOf(ResolvedPythonWheelTaskValues{}),
+		"run_job_task":      reflect.TypeOf(ResolvedRunJobTaskValues{}),
+		"simulation_task":   reflect.TypeOf(ResolvedParamPairValues{}),
+		"spark_jar_task":    reflect.TypeOf(ResolvedStringParamsValues{}),
+		"spark_python_task": reflect.TypeOf(ResolvedStringParamsValues{}),
+		"spark_submit_task": reflect.TypeOf(ResolvedStringParamsValues{}),
+		"sql_task":          reflect.TypeOf(ResolvedParamPairValues{}),
 	}
 }
 
+// ToAttrType returns the representation of ResolvedValues in the Terraform plugin framework type
+// system.
 func (a ResolvedValues) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConditionTask":   ResolvedConditionTaskValues{}.ToAttrType(ctx),
-			"DbtTask":         ResolvedDbtTaskValues{}.ToAttrType(ctx),
-			"NotebookTask":    ResolvedNotebookTaskValues{}.ToAttrType(ctx),
-			"PythonWheelTask": ResolvedPythonWheelTaskValues{}.ToAttrType(ctx),
-			"RunJobTask":      ResolvedRunJobTaskValues{}.ToAttrType(ctx),
-			"SimulationTask":  ResolvedParamPairValues{}.ToAttrType(ctx),
-			"SparkJarTask":    ResolvedStringParamsValues{}.ToAttrType(ctx),
-			"SparkPythonTask": ResolvedStringParamsValues{}.ToAttrType(ctx),
-			"SparkSubmitTask": ResolvedStringParamsValues{}.ToAttrType(ctx),
-			"SqlTask":         ResolvedParamPairValues{}.ToAttrType(ctx),
+			"condition_task": basetypes.ListType{
+				ElemType: ResolvedConditionTaskValues{}.ToAttrType(ctx),
+			},
+			"dbt_task": basetypes.ListType{
+				ElemType: ResolvedDbtTaskValues{}.ToAttrType(ctx),
+			},
+			"notebook_task": basetypes.ListType{
+				ElemType: ResolvedNotebookTaskValues{}.ToAttrType(ctx),
+			},
+			"python_wheel_task": basetypes.ListType{
+				ElemType: ResolvedPythonWheelTaskValues{}.ToAttrType(ctx),
+			},
+			"run_job_task": basetypes.ListType{
+				ElemType: ResolvedRunJobTaskValues{}.ToAttrType(ctx),
+			},
+			"simulation_task": basetypes.ListType{
+				ElemType: ResolvedParamPairValues{}.ToAttrType(ctx),
+			},
+			"spark_jar_task": basetypes.ListType{
+				ElemType: ResolvedStringParamsValues{}.ToAttrType(ctx),
+			},
+			"spark_python_task": basetypes.ListType{
+				ElemType: ResolvedStringParamsValues{}.ToAttrType(ctx),
+			},
+			"spark_submit_task": basetypes.ListType{
+				ElemType: ResolvedStringParamsValues{}.ToAttrType(ctx),
+			},
+			"sql_task": basetypes.ListType{
+				ElemType: ResolvedParamPairValues{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -3613,70 +4495,95 @@ func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
 func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
 }
 
-func (a Run) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Run.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Run) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ClusterInstance":      reflect.TypeOf(ClusterInstance{}),
-		"ClusterSpec":          reflect.TypeOf(ClusterSpec{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Iterations":           reflect.TypeOf(RunTask{}),
-		"JobClusters":          reflect.TypeOf(JobCluster{}),
-		"JobParameters":        reflect.TypeOf(JobParameter{}),
-		"OverridingParameters": reflect.TypeOf(RunParameters{}),
-		"RepairHistory":        reflect.TypeOf(RepairHistoryItem{}),
-		"Schedule":             reflect.TypeOf(CronSchedule{}),
-		"State":                reflect.TypeOf(RunState{}),
-		"Status":               reflect.TypeOf(RunStatus{}),
-		"Tasks":                reflect.TypeOf(RunTask{}),
-		"TriggerInfo":          reflect.TypeOf(TriggerInfo{}),
+		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
+		"cluster_spec":          reflect.TypeOf(ClusterSpec{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"iterations":            reflect.TypeOf(RunTask{}),
+		"job_clusters":          reflect.TypeOf(JobCluster{}),
+		"job_parameters":        reflect.TypeOf(JobParameter{}),
+		"overriding_parameters": reflect.TypeOf(RunParameters{}),
+		"repair_history":        reflect.TypeOf(RepairHistoryItem{}),
+		"schedule":              reflect.TypeOf(CronSchedule{}),
+		"state":                 reflect.TypeOf(RunState{}),
+		"status":                reflect.TypeOf(RunStatus{}),
+		"tasks":                 reflect.TypeOf(RunTask{}),
+		"trigger_info":          reflect.TypeOf(TriggerInfo{}),
 	}
 }
 
+// ToAttrType returns the representation of Run in the Terraform plugin framework type
+// system.
 func (a Run) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AttemptNumber":     types.Int64Type,
-			"CleanupDuration":   types.Int64Type,
-			"ClusterInstance":   ClusterInstance{}.ToAttrType(ctx),
-			"ClusterSpec":       ClusterSpec{}.ToAttrType(ctx),
-			"CreatorUserName":   types.StringType,
-			"Description":       types.StringType,
-			"EndTime":           types.Int64Type,
-			"ExecutionDuration": types.Int64Type,
-			"GitSource":         GitSource{}.ToAttrType(ctx),
-			"Iterations": basetypes.ListType{
+			"attempt_number":   types.Int64Type,
+			"cleanup_duration": types.Int64Type,
+			"cluster_instance": basetypes.ListType{
+				ElemType: ClusterInstance{}.ToAttrType(ctx),
+			},
+			"cluster_spec": basetypes.ListType{
+				ElemType: ClusterSpec{}.ToAttrType(ctx),
+			},
+			"creator_user_name":  types.StringType,
+			"description":        types.StringType,
+			"end_time":           types.Int64Type,
+			"execution_duration": types.Int64Type,
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"iterations": basetypes.ListType{
 				ElemType: RunTask{}.ToAttrType(ctx),
 			},
-			"JobClusters": basetypes.ListType{
+			"job_clusters": basetypes.ListType{
 				ElemType: JobCluster{}.ToAttrType(ctx),
 			},
-			"JobId": types.Int64Type,
-			"JobParameters": basetypes.ListType{
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.ListType{
 				ElemType: JobParameter{}.ToAttrType(ctx),
 			},
-			"JobRunId":             types.Int64Type,
-			"NextPageToken":        types.StringType,
-			"NumberInJob":          types.Int64Type,
-			"OriginalAttemptRunId": types.Int64Type,
-			"OverridingParameters": RunParameters{}.ToAttrType(ctx),
-			"QueueDuration":        types.Int64Type,
-			"RepairHistory": basetypes.ListType{
+			"job_run_id":              types.Int64Type,
+			"next_page_token":         types.StringType,
+			"number_in_job":           types.Int64Type,
+			"original_attempt_run_id": types.Int64Type,
+			"overriding_parameters": basetypes.ListType{
+				ElemType: RunParameters{}.ToAttrType(ctx),
+			},
+			"queue_duration": types.Int64Type,
+			"repair_history": basetypes.ListType{
 				ElemType: RepairHistoryItem{}.ToAttrType(ctx),
 			},
-			"RunDuration":   types.Int64Type,
-			"RunId":         types.Int64Type,
-			"RunName":       types.StringType,
-			"RunPageUrl":    types.StringType,
-			"RunType":       types.StringType,
-			"Schedule":      CronSchedule{}.ToAttrType(ctx),
-			"SetupDuration": types.Int64Type,
-			"StartTime":     types.Int64Type,
-			"State":         RunState{}.ToAttrType(ctx),
-			"Status":        RunStatus{}.ToAttrType(ctx),
-			"Tasks": basetypes.ListType{
+			"run_duration": types.Int64Type,
+			"run_id":       types.Int64Type,
+			"run_name":     types.StringType,
+			"run_page_url": types.StringType,
+			"run_type":     types.StringType,
+			"schedule": basetypes.ListType{
+				ElemType: CronSchedule{}.ToAttrType(ctx),
+			},
+			"setup_duration": types.Int64Type,
+			"start_time":     types.Int64Type,
+			"state": basetypes.ListType{
+				ElemType: RunState{}.ToAttrType(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: RunStatus{}.ToAttrType(ctx),
+			},
+			"tasks": basetypes.ListType{
 				ElemType: RunTask{}.ToAttrType(ctx),
 			},
-			"Trigger":     types.StringType,
-			"TriggerInfo": TriggerInfo{}.ToAttrType(ctx),
+			"trigger": types.StringType,
+			"trigger_info": basetypes.ListType{
+				ElemType: TriggerInfo{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -3710,17 +4617,26 @@ func (newState *RunConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan R
 func (newState *RunConditionTask) SyncEffectiveFieldsDuringRead(existingState RunConditionTask) {
 }
 
-func (a RunConditionTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunConditionTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunConditionTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of RunConditionTask in the Terraform plugin framework type
+// system.
 func (a RunConditionTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Left":    types.StringType,
-			"Op":      types.StringType,
-			"Outcome": types.StringType,
-			"Right":   types.StringType,
+			"left":    types.StringType,
+			"op":      types.StringType,
+			"outcome": types.StringType,
+			"right":   types.StringType,
 		},
 	}
 }
@@ -3746,20 +4662,33 @@ func (newState *RunForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run
 func (newState *RunForEachTask) SyncEffectiveFieldsDuringRead(existingState RunForEachTask) {
 }
 
-func (a RunForEachTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunForEachTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunForEachTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Stats": reflect.TypeOf(ForEachStats{}),
-		"Task":  reflect.TypeOf(Task{}),
+		"stats": reflect.TypeOf(ForEachStats{}),
+		"task":  reflect.TypeOf(Task{}),
 	}
 }
 
+// ToAttrType returns the representation of RunForEachTask in the Terraform plugin framework type
+// system.
 func (a RunForEachTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Concurrency": types.Int64Type,
-			"Inputs":      types.StringType,
-			"Stats":       ForEachStats{}.ToAttrType(ctx),
-			"Task":        Task{}.ToAttrType(ctx),
+			"concurrency": types.Int64Type,
+			"inputs":      types.StringType,
+			"stats": basetypes.ListType{
+				ElemType: ForEachStats{}.ToAttrType(ctx),
+			},
+			"task": basetypes.ListType{
+				ElemType: Task{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -3775,14 +4704,23 @@ func (newState *RunJobOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJo
 func (newState *RunJobOutput) SyncEffectiveFieldsDuringRead(existingState RunJobOutput) {
 }
 
-func (a RunJobOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunJobOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunJobOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of RunJobOutput in the Terraform plugin framework type
+// system.
 func (a RunJobOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -3882,47 +4820,58 @@ func (newState *RunJobTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobT
 func (newState *RunJobTask) SyncEffectiveFieldsDuringRead(existingState RunJobTask) {
 }
 
-func (a RunJobTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunJobTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunJobTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtCommands":       reflect.TypeOf(types.StringType),
-		"JarParams":         reflect.TypeOf(types.StringType),
-		"JobParameters":     reflect.TypeOf(types.StringType),
-		"NotebookParams":    reflect.TypeOf(types.StringType),
-		"PipelineParams":    reflect.TypeOf(PipelineParams{}),
-		"PythonNamedParams": reflect.TypeOf(types.StringType),
-		"PythonParams":      reflect.TypeOf(types.StringType),
-		"SparkSubmitParams": reflect.TypeOf(types.StringType),
-		"SqlParams":         reflect.TypeOf(types.StringType),
+		"dbt_commands":        reflect.TypeOf(types.String{}),
+		"jar_params":          reflect.TypeOf(types.String{}),
+		"job_parameters":      reflect.TypeOf(types.String{}),
+		"notebook_params":     reflect.TypeOf(types.String{}),
+		"pipeline_params":     reflect.TypeOf(PipelineParams{}),
+		"python_named_params": reflect.TypeOf(types.String{}),
+		"python_params":       reflect.TypeOf(types.String{}),
+		"spark_submit_params": reflect.TypeOf(types.String{}),
+		"sql_params":          reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of RunJobTask in the Terraform plugin framework type
+// system.
 func (a RunJobTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtCommands": basetypes.ListType{
+			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JarParams": basetypes.ListType{
+			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JobId": types.Int64Type,
-			"JobParameters": basetypes.MapType{
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"NotebookParams": basetypes.MapType{
+			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PipelineParams": PipelineParams{}.ToAttrType(ctx),
-			"PythonNamedParams": basetypes.MapType{
+			"pipeline_params": basetypes.ListType{
+				ElemType: PipelineParams{}.ToAttrType(ctx),
+			},
+			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PythonParams": basetypes.ListType{
+			"python_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SparkSubmitParams": basetypes.ListType{
+			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SqlParams": basetypes.MapType{
+			"sql_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4045,54 +4994,67 @@ func (newState *RunNow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNow) {
 func (newState *RunNow) SyncEffectiveFieldsDuringRead(existingState RunNow) {
 }
 
-func (a RunNow) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunNow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunNow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtCommands":       reflect.TypeOf(types.StringType),
-		"JarParams":         reflect.TypeOf(types.StringType),
-		"JobParameters":     reflect.TypeOf(types.StringType),
-		"NotebookParams":    reflect.TypeOf(types.StringType),
-		"Only":              reflect.TypeOf(types.StringType),
-		"PipelineParams":    reflect.TypeOf(PipelineParams{}),
-		"PythonNamedParams": reflect.TypeOf(types.StringType),
-		"PythonParams":      reflect.TypeOf(types.StringType),
-		"Queue":             reflect.TypeOf(QueueSettings{}),
-		"SparkSubmitParams": reflect.TypeOf(types.StringType),
-		"SqlParams":         reflect.TypeOf(types.StringType),
+		"dbt_commands":        reflect.TypeOf(types.String{}),
+		"jar_params":          reflect.TypeOf(types.String{}),
+		"job_parameters":      reflect.TypeOf(types.String{}),
+		"notebook_params":     reflect.TypeOf(types.String{}),
+		"only":                reflect.TypeOf(types.String{}),
+		"pipeline_params":     reflect.TypeOf(PipelineParams{}),
+		"python_named_params": reflect.TypeOf(types.String{}),
+		"python_params":       reflect.TypeOf(types.String{}),
+		"queue":               reflect.TypeOf(QueueSettings{}),
+		"spark_submit_params": reflect.TypeOf(types.String{}),
+		"sql_params":          reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of RunNow in the Terraform plugin framework type
+// system.
 func (a RunNow) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtCommands": basetypes.ListType{
+			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"IdempotencyToken": types.StringType,
-			"JarParams": basetypes.ListType{
+			"idempotency_token": types.StringType,
+			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JobId": types.Int64Type,
-			"JobParameters": basetypes.MapType{
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"NotebookParams": basetypes.MapType{
+			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Only": basetypes.ListType{
+			"only": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PipelineParams": PipelineParams{}.ToAttrType(ctx),
-			"PythonNamedParams": basetypes.MapType{
+			"pipeline_params": basetypes.ListType{
+				ElemType: PipelineParams{}.ToAttrType(ctx),
+			},
+			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PythonParams": basetypes.ListType{
+			"python_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Queue": QueueSettings{}.ToAttrType(ctx),
-			"SparkSubmitParams": basetypes.ListType{
+			"queue": basetypes.ListType{
+				ElemType: QueueSettings{}.ToAttrType(ctx),
+			},
+			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SqlParams": basetypes.MapType{
+			"sql_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4114,15 +5076,24 @@ func (newState *RunNowResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run
 func (newState *RunNowResponse) SyncEffectiveFieldsDuringRead(existingState RunNowResponse) {
 }
 
-func (a RunNowResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunNowResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunNowResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of RunNowResponse in the Terraform plugin framework type
+// system.
 func (a RunNowResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NumberInJob": types.Int64Type,
-			"RunId":       types.Int64Type,
+			"number_in_job": types.Int64Type,
+			"run_id":        types.Int64Type,
 		},
 	}
 }
@@ -4173,29 +5144,48 @@ func (newState *RunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunOutpu
 func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput) {
 }
 
-func (a RunOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtOutput":      reflect.TypeOf(DbtOutput{}),
-		"Metadata":       reflect.TypeOf(Run{}),
-		"NotebookOutput": reflect.TypeOf(NotebookOutput{}),
-		"RunJobOutput":   reflect.TypeOf(RunJobOutput{}),
-		"SqlOutput":      reflect.TypeOf(SqlOutput{}),
+		"dbt_output":      reflect.TypeOf(DbtOutput{}),
+		"metadata":        reflect.TypeOf(Run{}),
+		"notebook_output": reflect.TypeOf(NotebookOutput{}),
+		"run_job_output":  reflect.TypeOf(RunJobOutput{}),
+		"sql_output":      reflect.TypeOf(SqlOutput{}),
 	}
 }
 
+// ToAttrType returns the representation of RunOutput in the Terraform plugin framework type
+// system.
 func (a RunOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtOutput":      DbtOutput{}.ToAttrType(ctx),
-			"Error":          types.StringType,
-			"ErrorTrace":     types.StringType,
-			"Info":           types.StringType,
-			"Logs":           types.StringType,
-			"LogsTruncated":  types.BoolType,
-			"Metadata":       Run{}.ToAttrType(ctx),
-			"NotebookOutput": NotebookOutput{}.ToAttrType(ctx),
-			"RunJobOutput":   RunJobOutput{}.ToAttrType(ctx),
-			"SqlOutput":      SqlOutput{}.ToAttrType(ctx),
+			"dbt_output": basetypes.ListType{
+				ElemType: DbtOutput{}.ToAttrType(ctx),
+			},
+			"error":          types.StringType,
+			"error_trace":    types.StringType,
+			"info":           types.StringType,
+			"logs":           types.StringType,
+			"logs_truncated": types.BoolType,
+			"metadata": basetypes.ListType{
+				ElemType: Run{}.ToAttrType(ctx),
+			},
+			"notebook_output": basetypes.ListType{
+				ElemType: NotebookOutput{}.ToAttrType(ctx),
+			},
+			"run_job_output": basetypes.ListType{
+				ElemType: RunJobOutput{}.ToAttrType(ctx),
+			},
+			"sql_output": basetypes.ListType{
+				ElemType: SqlOutput{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -4291,42 +5281,53 @@ func (newState *RunParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunP
 func (newState *RunParameters) SyncEffectiveFieldsDuringRead(existingState RunParameters) {
 }
 
-func (a RunParameters) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunParameters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DbtCommands":       reflect.TypeOf(types.StringType),
-		"JarParams":         reflect.TypeOf(types.StringType),
-		"NotebookParams":    reflect.TypeOf(types.StringType),
-		"PipelineParams":    reflect.TypeOf(PipelineParams{}),
-		"PythonNamedParams": reflect.TypeOf(types.StringType),
-		"PythonParams":      reflect.TypeOf(types.StringType),
-		"SparkSubmitParams": reflect.TypeOf(types.StringType),
-		"SqlParams":         reflect.TypeOf(types.StringType),
+		"dbt_commands":        reflect.TypeOf(types.String{}),
+		"jar_params":          reflect.TypeOf(types.String{}),
+		"notebook_params":     reflect.TypeOf(types.String{}),
+		"pipeline_params":     reflect.TypeOf(PipelineParams{}),
+		"python_named_params": reflect.TypeOf(types.String{}),
+		"python_params":       reflect.TypeOf(types.String{}),
+		"spark_submit_params": reflect.TypeOf(types.String{}),
+		"sql_params":          reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of RunParameters in the Terraform plugin framework type
+// system.
 func (a RunParameters) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DbtCommands": basetypes.ListType{
+			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JarParams": basetypes.ListType{
+			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"NotebookParams": basetypes.MapType{
+			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PipelineParams": PipelineParams{}.ToAttrType(ctx),
-			"PythonNamedParams": basetypes.MapType{
+			"pipeline_params": basetypes.ListType{
+				ElemType: PipelineParams{}.ToAttrType(ctx),
+			},
+			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"PythonParams": basetypes.ListType{
+			"python_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SparkSubmitParams": basetypes.ListType{
+			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"SqlParams": basetypes.MapType{
+			"sql_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4357,18 +5358,27 @@ func (newState *RunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunState)
 func (newState *RunState) SyncEffectiveFieldsDuringRead(existingState RunState) {
 }
 
-func (a RunState) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of RunState in the Terraform plugin framework type
+// system.
 func (a RunState) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"LifeCycleState":          types.StringType,
-			"QueueReason":             types.StringType,
-			"ResultState":             types.StringType,
-			"StateMessage":            types.StringType,
-			"UserCancelledOrTimedout": types.BoolType,
+			"life_cycle_state":           types.StringType,
+			"queue_reason":               types.StringType,
+			"result_state":               types.StringType,
+			"state_message":              types.StringType,
+			"user_cancelled_or_timedout": types.BoolType,
 		},
 	}
 }
@@ -4390,19 +5400,32 @@ func (newState *RunStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunStatu
 func (newState *RunStatus) SyncEffectiveFieldsDuringRead(existingState RunStatus) {
 }
 
-func (a RunStatus) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"QueueDetails":       reflect.TypeOf(QueueDetails{}),
-		"TerminationDetails": reflect.TypeOf(TerminationDetails{}),
+		"queue_details":       reflect.TypeOf(QueueDetails{}),
+		"termination_details": reflect.TypeOf(TerminationDetails{}),
 	}
 }
 
+// ToAttrType returns the representation of RunStatus in the Terraform plugin framework type
+// system.
 func (a RunStatus) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"QueueDetails":       QueueDetails{}.ToAttrType(ctx),
-			"State":              types.StringType,
-			"TerminationDetails": TerminationDetails{}.ToAttrType(ctx),
+			"queue_details": basetypes.ListType{
+				ElemType: QueueDetails{}.ToAttrType(ctx),
+			},
+			"state": types.StringType,
+			"termination_details": basetypes.ListType{
+				ElemType: TerminationDetails{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -4581,79 +5604,128 @@ func (newState *RunTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTask) {
 func (newState *RunTask) SyncEffectiveFieldsDuringRead(existingState RunTask) {
 }
 
-func (a RunTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ClusterInstance":      reflect.TypeOf(ClusterInstance{}),
-		"ConditionTask":        reflect.TypeOf(RunConditionTask{}),
-		"DbtTask":              reflect.TypeOf(DbtTask{}),
-		"DependsOn":            reflect.TypeOf(TaskDependency{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"ForEachTask":          reflect.TypeOf(RunForEachTask{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Libraries":            reflect.TypeOf(compute.Library{}),
-		"NewCluster":           reflect.TypeOf(compute.ClusterSpec{}),
-		"NotebookTask":         reflect.TypeOf(NotebookTask{}),
-		"NotificationSettings": reflect.TypeOf(TaskNotificationSettings{}),
-		"PipelineTask":         reflect.TypeOf(PipelineTask{}),
-		"PythonWheelTask":      reflect.TypeOf(PythonWheelTask{}),
-		"ResolvedValues":       reflect.TypeOf(ResolvedValues{}),
-		"RunJobTask":           reflect.TypeOf(RunJobTask{}),
-		"SparkJarTask":         reflect.TypeOf(SparkJarTask{}),
-		"SparkPythonTask":      reflect.TypeOf(SparkPythonTask{}),
-		"SparkSubmitTask":      reflect.TypeOf(SparkSubmitTask{}),
-		"SqlTask":              reflect.TypeOf(SqlTask{}),
-		"State":                reflect.TypeOf(RunState{}),
-		"Status":               reflect.TypeOf(RunStatus{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
+		"condition_task":        reflect.TypeOf(RunConditionTask{}),
+		"dbt_task":              reflect.TypeOf(DbtTask{}),
+		"depends_on":            reflect.TypeOf(TaskDependency{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"for_each_task":         reflect.TypeOf(RunForEachTask{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"library":               reflect.TypeOf(compute.Library{}),
+		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"notebook_task":         reflect.TypeOf(NotebookTask{}),
+		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
+		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
+		"python_wheel_task":     reflect.TypeOf(PythonWheelTask{}),
+		"resolved_values":       reflect.TypeOf(ResolvedValues{}),
+		"run_job_task":          reflect.TypeOf(RunJobTask{}),
+		"spark_jar_task":        reflect.TypeOf(SparkJarTask{}),
+		"spark_python_task":     reflect.TypeOf(SparkPythonTask{}),
+		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask{}),
+		"sql_task":              reflect.TypeOf(SqlTask{}),
+		"state":                 reflect.TypeOf(RunState{}),
+		"status":                reflect.TypeOf(RunStatus{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
+// ToAttrType returns the representation of RunTask in the Terraform plugin framework type
+// system.
 func (a RunTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AttemptNumber":   types.Int64Type,
-			"CleanupDuration": types.Int64Type,
-			"ClusterInstance": ClusterInstance{}.ToAttrType(ctx),
-			"ConditionTask":   RunConditionTask{}.ToAttrType(ctx),
-			"DbtTask":         DbtTask{}.ToAttrType(ctx),
-			"DependsOn": basetypes.ListType{
+			"attempt_number":   types.Int64Type,
+			"cleanup_duration": types.Int64Type,
+			"cluster_instance": basetypes.ListType{
+				ElemType: ClusterInstance{}.ToAttrType(ctx),
+			},
+			"condition_task": basetypes.ListType{
+				ElemType: RunConditionTask{}.ToAttrType(ctx),
+			},
+			"dbt_task": basetypes.ListType{
+				ElemType: DbtTask{}.ToAttrType(ctx),
+			},
+			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.ToAttrType(ctx),
 			},
-			"Description":        types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"EndTime":            types.Int64Type,
-			"EnvironmentKey":     types.StringType,
-			"ExecutionDuration":  types.Int64Type,
-			"ExistingClusterId":  types.StringType,
-			"ForEachTask":        RunForEachTask{}.ToAttrType(ctx),
-			"GitSource":          GitSource{}.ToAttrType(ctx),
-			"JobClusterKey":      types.StringType,
-			"Libraries": basetypes.ListType{
+			"description": types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"end_time":            types.Int64Type,
+			"environment_key":     types.StringType,
+			"execution_duration":  types.Int64Type,
+			"existing_cluster_id": types.StringType,
+			"for_each_task": basetypes.ListType{
+				ElemType: RunForEachTask{}.ToAttrType(ctx),
+			},
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"job_cluster_key": types.StringType,
+			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.ToAttrType(ctx),
 			},
-			"NewCluster":           compute_tf.ClusterSpec{}.ToAttrType(ctx),
-			"NotebookTask":         NotebookTask{}.ToAttrType(ctx),
-			"NotificationSettings": TaskNotificationSettings{}.ToAttrType(ctx),
-			"PipelineTask":         PipelineTask{}.ToAttrType(ctx),
-			"PythonWheelTask":      PythonWheelTask{}.ToAttrType(ctx),
-			"QueueDuration":        types.Int64Type,
-			"ResolvedValues":       ResolvedValues{}.ToAttrType(ctx),
-			"RunDuration":          types.Int64Type,
-			"RunId":                types.Int64Type,
-			"RunIf":                types.StringType,
-			"RunJobTask":           RunJobTask{}.ToAttrType(ctx),
-			"RunPageUrl":           types.StringType,
-			"SetupDuration":        types.Int64Type,
-			"SparkJarTask":         SparkJarTask{}.ToAttrType(ctx),
-			"SparkPythonTask":      SparkPythonTask{}.ToAttrType(ctx),
-			"SparkSubmitTask":      SparkSubmitTask{}.ToAttrType(ctx),
-			"SqlTask":              SqlTask{}.ToAttrType(ctx),
-			"StartTime":            types.Int64Type,
-			"State":                RunState{}.ToAttrType(ctx),
-			"Status":               RunStatus{}.ToAttrType(ctx),
-			"TaskKey":              types.StringType,
-			"TimeoutSeconds":       types.Int64Type,
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
+			"notebook_task": basetypes.ListType{
+				ElemType: NotebookTask{}.ToAttrType(ctx),
+			},
+			"notification_settings": basetypes.ListType{
+				ElemType: TaskNotificationSettings{}.ToAttrType(ctx),
+			},
+			"pipeline_task": basetypes.ListType{
+				ElemType: PipelineTask{}.ToAttrType(ctx),
+			},
+			"python_wheel_task": basetypes.ListType{
+				ElemType: PythonWheelTask{}.ToAttrType(ctx),
+			},
+			"queue_duration": types.Int64Type,
+			"resolved_values": basetypes.ListType{
+				ElemType: ResolvedValues{}.ToAttrType(ctx),
+			},
+			"run_duration": types.Int64Type,
+			"run_id":       types.Int64Type,
+			"run_if":       types.StringType,
+			"run_job_task": basetypes.ListType{
+				ElemType: RunJobTask{}.ToAttrType(ctx),
+			},
+			"run_page_url":   types.StringType,
+			"setup_duration": types.Int64Type,
+			"spark_jar_task": basetypes.ListType{
+				ElemType: SparkJarTask{}.ToAttrType(ctx),
+			},
+			"spark_python_task": basetypes.ListType{
+				ElemType: SparkPythonTask{}.ToAttrType(ctx),
+			},
+			"spark_submit_task": basetypes.ListType{
+				ElemType: SparkSubmitTask{}.ToAttrType(ctx),
+			},
+			"sql_task": basetypes.ListType{
+				ElemType: SqlTask{}.ToAttrType(ctx),
+			},
+			"start_time": types.Int64Type,
+			"state": basetypes.ListType{
+				ElemType: RunState{}.ToAttrType(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: RunStatus{}.ToAttrType(ctx),
+			},
+			"task_key":        types.StringType,
+			"timeout_seconds": types.Int64Type,
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -4683,18 +5755,27 @@ func (newState *SparkJarTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Spark
 func (newState *SparkJarTask) SyncEffectiveFieldsDuringRead(existingState SparkJarTask) {
 }
 
-func (a SparkJarTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkJarTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SparkJarTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of SparkJarTask in the Terraform plugin framework type
+// system.
 func (a SparkJarTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"JarUri":        types.StringType,
-			"MainClassName": types.StringType,
-			"Parameters": basetypes.ListType{
+			"jar_uri":         types.StringType,
+			"main_class_name": types.StringType,
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4733,20 +5814,29 @@ func (newState *SparkPythonTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sp
 func (newState *SparkPythonTask) SyncEffectiveFieldsDuringRead(existingState SparkPythonTask) {
 }
 
-func (a SparkPythonTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkPythonTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SparkPythonTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of SparkPythonTask in the Terraform plugin framework type
+// system.
 func (a SparkPythonTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Parameters": basetypes.ListType{
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PythonFile": types.StringType,
-			"Source":     types.StringType,
+			"python_file": types.StringType,
+			"source":      types.StringType,
 		},
 	}
 }
@@ -4767,16 +5857,25 @@ func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sp
 func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringRead(existingState SparkSubmitTask) {
 }
 
-func (a SparkSubmitTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkSubmitTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SparkSubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Parameters": reflect.TypeOf(types.StringType),
+		"parameters": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of SparkSubmitTask in the Terraform plugin framework type
+// system.
 func (a SparkSubmitTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Parameters": basetypes.ListType{
+			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -4807,22 +5906,31 @@ func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringRead(existingState SqlAlertOutput) {
 }
 
-func (a SqlAlertOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlAlertOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlAlertOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SqlStatements": reflect.TypeOf(SqlStatementOutput{}),
+		"sql_statements": reflect.TypeOf(SqlStatementOutput{}),
 	}
 }
 
+// ToAttrType returns the representation of SqlAlertOutput in the Terraform plugin framework type
+// system.
 func (a SqlAlertOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AlertState": types.StringType,
-			"OutputLink": types.StringType,
-			"QueryText":  types.StringType,
-			"SqlStatements": basetypes.ListType{
+			"alert_state": types.StringType,
+			"output_link": types.StringType,
+			"query_text":  types.StringType,
+			"sql_statements": basetypes.ListType{
 				ElemType: SqlStatementOutput{}.ToAttrType(ctx),
 			},
-			"WarehouseId": types.StringType,
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -4840,17 +5948,26 @@ func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardOutput) {
 }
 
-func (a SqlDashboardOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlDashboardOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlDashboardOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Widgets": reflect.TypeOf(SqlDashboardWidgetOutput{}),
+		"widgets": reflect.TypeOf(SqlDashboardWidgetOutput{}),
 	}
 }
 
+// ToAttrType returns the representation of SqlDashboardOutput in the Terraform plugin framework type
+// system.
 func (a SqlDashboardOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"WarehouseId": types.StringType,
-			"Widgets": basetypes.ListType{
+			"warehouse_id": types.StringType,
+			"widgets": basetypes.ListType{
 				ElemType: SqlDashboardWidgetOutput{}.ToAttrType(ctx),
 			},
 		},
@@ -4880,22 +5997,33 @@ func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardWidgetOutput) {
 }
 
-func (a SqlDashboardWidgetOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlDashboardWidgetOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlDashboardWidgetOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Error": reflect.TypeOf(SqlOutputError{}),
+		"error": reflect.TypeOf(SqlOutputError{}),
 	}
 }
 
+// ToAttrType returns the representation of SqlDashboardWidgetOutput in the Terraform plugin framework type
+// system.
 func (a SqlDashboardWidgetOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndTime":     types.Int64Type,
-			"Error":       SqlOutputError{}.ToAttrType(ctx),
-			"OutputLink":  types.StringType,
-			"StartTime":   types.Int64Type,
-			"Status":      types.StringType,
-			"WidgetId":    types.StringType,
-			"WidgetTitle": types.StringType,
+			"end_time": types.Int64Type,
+			"error": basetypes.ListType{
+				ElemType: SqlOutputError{}.ToAttrType(ctx),
+			},
+			"output_link":  types.StringType,
+			"start_time":   types.Int64Type,
+			"status":       types.StringType,
+			"widget_id":    types.StringType,
+			"widget_title": types.StringType,
 		},
 	}
 }
@@ -4915,20 +6043,35 @@ func (newState *SqlOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutpu
 func (newState *SqlOutput) SyncEffectiveFieldsDuringRead(existingState SqlOutput) {
 }
 
-func (a SqlOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AlertOutput":     reflect.TypeOf(SqlAlertOutput{}),
-		"DashboardOutput": reflect.TypeOf(SqlDashboardOutput{}),
-		"QueryOutput":     reflect.TypeOf(SqlQueryOutput{}),
+		"alert_output":     reflect.TypeOf(SqlAlertOutput{}),
+		"dashboard_output": reflect.TypeOf(SqlDashboardOutput{}),
+		"query_output":     reflect.TypeOf(SqlQueryOutput{}),
 	}
 }
 
+// ToAttrType returns the representation of SqlOutput in the Terraform plugin framework type
+// system.
 func (a SqlOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AlertOutput":     SqlAlertOutput{}.ToAttrType(ctx),
-			"DashboardOutput": SqlDashboardOutput{}.ToAttrType(ctx),
-			"QueryOutput":     SqlQueryOutput{}.ToAttrType(ctx),
+			"alert_output": basetypes.ListType{
+				ElemType: SqlAlertOutput{}.ToAttrType(ctx),
+			},
+			"dashboard_output": basetypes.ListType{
+				ElemType: SqlDashboardOutput{}.ToAttrType(ctx),
+			},
+			"query_output": basetypes.ListType{
+				ElemType: SqlQueryOutput{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -4944,14 +6087,23 @@ func (newState *SqlOutputError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlOutputError) SyncEffectiveFieldsDuringRead(existingState SqlOutputError) {
 }
 
-func (a SqlOutputError) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlOutputError.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlOutputError) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of SqlOutputError in the Terraform plugin framework type
+// system.
 func (a SqlOutputError) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Message": types.StringType,
+			"message": types.StringType,
 		},
 	}
 }
@@ -4975,22 +6127,31 @@ func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringRead(existingState SqlQueryOutput) {
 }
 
-func (a SqlQueryOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlQueryOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlQueryOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"SqlStatements": reflect.TypeOf(SqlStatementOutput{}),
+		"sql_statements": reflect.TypeOf(SqlStatementOutput{}),
 	}
 }
 
+// ToAttrType returns the representation of SqlQueryOutput in the Terraform plugin framework type
+// system.
 func (a SqlQueryOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EndpointId": types.StringType,
-			"OutputLink": types.StringType,
-			"QueryText":  types.StringType,
-			"SqlStatements": basetypes.ListType{
+			"endpoint_id": types.StringType,
+			"output_link": types.StringType,
+			"query_text":  types.StringType,
+			"sql_statements": basetypes.ListType{
 				ElemType: SqlStatementOutput{}.ToAttrType(ctx),
 			},
-			"WarehouseId": types.StringType,
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -5006,14 +6167,23 @@ func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringRead(existingState SqlStatementOutput) {
 }
 
-func (a SqlStatementOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlStatementOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of SqlStatementOutput in the Terraform plugin framework type
+// system.
 func (a SqlStatementOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"LookupKey": types.StringType,
+			"lookup_key": types.StringType,
 		},
 	}
 }
@@ -5044,27 +6214,44 @@ func (newState *SqlTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTask) {
 func (newState *SqlTask) SyncEffectiveFieldsDuringRead(existingState SqlTask) {
 }
 
-func (a SqlTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Alert":      reflect.TypeOf(SqlTaskAlert{}),
-		"Dashboard":  reflect.TypeOf(SqlTaskDashboard{}),
-		"File":       reflect.TypeOf(SqlTaskFile{}),
-		"Parameters": reflect.TypeOf(types.StringType),
-		"Query":      reflect.TypeOf(SqlTaskQuery{}),
+		"alert":      reflect.TypeOf(SqlTaskAlert{}),
+		"dashboard":  reflect.TypeOf(SqlTaskDashboard{}),
+		"file":       reflect.TypeOf(SqlTaskFile{}),
+		"parameters": reflect.TypeOf(types.String{}),
+		"query":      reflect.TypeOf(SqlTaskQuery{}),
 	}
 }
 
+// ToAttrType returns the representation of SqlTask in the Terraform plugin framework type
+// system.
 func (a SqlTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Alert":     SqlTaskAlert{}.ToAttrType(ctx),
-			"Dashboard": SqlTaskDashboard{}.ToAttrType(ctx),
-			"File":      SqlTaskFile{}.ToAttrType(ctx),
-			"Parameters": basetypes.MapType{
+			"alert": basetypes.ListType{
+				ElemType: SqlTaskAlert{}.ToAttrType(ctx),
+			},
+			"dashboard": basetypes.ListType{
+				ElemType: SqlTaskDashboard{}.ToAttrType(ctx),
+			},
+			"file": basetypes.ListType{
+				ElemType: SqlTaskFile{}.ToAttrType(ctx),
+			},
+			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Query":       SqlTaskQuery{}.ToAttrType(ctx),
-			"WarehouseId": types.StringType,
+			"query": basetypes.ListType{
+				ElemType: SqlTaskQuery{}.ToAttrType(ctx),
+			},
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -5084,18 +6271,27 @@ func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTa
 func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringRead(existingState SqlTaskAlert) {
 }
 
-func (a SqlTaskAlert) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskAlert.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlTaskAlert) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
+		"subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
 	}
 }
 
+// ToAttrType returns the representation of SqlTaskAlert in the Terraform plugin framework type
+// system.
 func (a SqlTaskAlert) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AlertId":            types.StringType,
-			"PauseSubscriptions": types.BoolType,
-			"Subscriptions": basetypes.ListType{
+			"alert_id":            types.StringType,
+			"pause_subscriptions": types.BoolType,
+			"subscriptions": basetypes.ListType{
 				ElemType: SqlTaskSubscription{}.ToAttrType(ctx),
 			},
 		},
@@ -5120,19 +6316,28 @@ func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringRead(existingState SqlTaskDashboard) {
 }
 
-func (a SqlTaskDashboard) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskDashboard.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlTaskDashboard) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
+		"subscriptions": reflect.TypeOf(SqlTaskSubscription{}),
 	}
 }
 
+// ToAttrType returns the representation of SqlTaskDashboard in the Terraform plugin framework type
+// system.
 func (a SqlTaskDashboard) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CustomSubject":      types.StringType,
-			"DashboardId":        types.StringType,
-			"PauseSubscriptions": types.BoolType,
-			"Subscriptions": basetypes.ListType{
+			"custom_subject":      types.StringType,
+			"dashboard_id":        types.StringType,
+			"pause_subscriptions": types.BoolType,
+			"subscriptions": basetypes.ListType{
 				ElemType: SqlTaskSubscription{}.ToAttrType(ctx),
 			},
 		},
@@ -5160,15 +6365,24 @@ func (newState *SqlTaskFile) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTas
 func (newState *SqlTaskFile) SyncEffectiveFieldsDuringRead(existingState SqlTaskFile) {
 }
 
-func (a SqlTaskFile) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskFile.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlTaskFile) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of SqlTaskFile in the Terraform plugin framework type
+// system.
 func (a SqlTaskFile) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Path":   types.StringType,
-			"Source": types.StringType,
+			"path":   types.StringType,
+			"source": types.StringType,
 		},
 	}
 }
@@ -5184,14 +6398,23 @@ func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTa
 func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringRead(existingState SqlTaskQuery) {
 }
 
-func (a SqlTaskQuery) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskQuery.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlTaskQuery) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of SqlTaskQuery in the Terraform plugin framework type
+// system.
 func (a SqlTaskQuery) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"QueryId": types.StringType,
+			"query_id": types.StringType,
 		},
 	}
 }
@@ -5214,15 +6437,24 @@ func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringRead(existingState SqlTaskSubscription) {
 }
 
-func (a SqlTaskSubscription) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskSubscription.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SqlTaskSubscription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of SqlTaskSubscription in the Terraform plugin framework type
+// system.
 func (a SqlTaskSubscription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DestinationId": types.StringType,
-			"UserName":      types.StringType,
+			"destination_id": types.StringType,
+			"user_name":      types.StringType,
 		},
 	}
 }
@@ -5295,44 +6527,67 @@ func (newState *SubmitRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRu
 func (newState *SubmitRun) SyncEffectiveFieldsDuringRead(existingState SubmitRun) {
 }
 
-func (a SubmitRun) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitRun.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SubmitRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList":    reflect.TypeOf(JobAccessControlRequest{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"Environments":         reflect.TypeOf(JobEnvironment{}),
-		"GitSource":            reflect.TypeOf(GitSource{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"NotificationSettings": reflect.TypeOf(JobNotificationSettings{}),
-		"Queue":                reflect.TypeOf(QueueSettings{}),
-		"RunAs":                reflect.TypeOf(JobRunAs{}),
-		"Tasks":                reflect.TypeOf(SubmitTask{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"access_control_list":   reflect.TypeOf(JobAccessControlRequest{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environments":          reflect.TypeOf(JobEnvironment{}),
+		"git_source":            reflect.TypeOf(GitSource{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"notification_settings": reflect.TypeOf(JobNotificationSettings{}),
+		"queue":                 reflect.TypeOf(QueueSettings{}),
+		"run_as":                reflect.TypeOf(JobRunAs{}),
+		"tasks":                 reflect.TypeOf(SubmitTask{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
+// ToAttrType returns the representation of SubmitRun in the Terraform plugin framework type
+// system.
 func (a SubmitRun) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: JobAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"BudgetPolicyId":     types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"Environments": basetypes.ListType{
+			"budget_policy_id": types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environments": basetypes.ListType{
 				ElemType: JobEnvironment{}.ToAttrType(ctx),
 			},
-			"GitSource":            GitSource{}.ToAttrType(ctx),
-			"Health":               JobsHealthRules{}.ToAttrType(ctx),
-			"IdempotencyToken":     types.StringType,
-			"NotificationSettings": JobNotificationSettings{}.ToAttrType(ctx),
-			"Queue":                QueueSettings{}.ToAttrType(ctx),
-			"RunAs":                JobRunAs{}.ToAttrType(ctx),
-			"RunName":              types.StringType,
-			"Tasks": basetypes.ListType{
+			"git_source": basetypes.ListType{
+				ElemType: GitSource{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"idempotency_token": types.StringType,
+			"notification_settings": basetypes.ListType{
+				ElemType: JobNotificationSettings{}.ToAttrType(ctx),
+			},
+			"queue": basetypes.ListType{
+				ElemType: QueueSettings{}.ToAttrType(ctx),
+			},
+			"run_as": basetypes.ListType{
+				ElemType: JobRunAs{}.ToAttrType(ctx),
+			},
+			"run_name": types.StringType,
+			"tasks": basetypes.ListType{
 				ElemType: SubmitTask{}.ToAttrType(ctx),
 			},
-			"TimeoutSeconds":       types.Int64Type,
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"timeout_seconds": types.Int64Type,
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -5349,14 +6604,23 @@ func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringRead(existingState SubmitRunResponse) {
 }
 
-func (a SubmitRunResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitRunResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SubmitRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of SubmitRunResponse in the Terraform plugin framework type
+// system.
 func (a SubmitRunResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -5467,60 +6731,101 @@ func (newState *SubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitT
 func (newState *SubmitTask) SyncEffectiveFieldsDuringRead(existingState SubmitTask) {
 }
 
-func (a SubmitTask) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ConditionTask":        reflect.TypeOf(ConditionTask{}),
-		"DbtTask":              reflect.TypeOf(DbtTask{}),
-		"DependsOn":            reflect.TypeOf(TaskDependency{}),
-		"EmailNotifications":   reflect.TypeOf(JobEmailNotifications{}),
-		"ForEachTask":          reflect.TypeOf(ForEachTask{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"Libraries":            reflect.TypeOf(compute.Library{}),
-		"NewCluster":           reflect.TypeOf(compute.ClusterSpec{}),
-		"NotebookTask":         reflect.TypeOf(NotebookTask{}),
-		"NotificationSettings": reflect.TypeOf(TaskNotificationSettings{}),
-		"PipelineTask":         reflect.TypeOf(PipelineTask{}),
-		"PythonWheelTask":      reflect.TypeOf(PythonWheelTask{}),
-		"RunJobTask":           reflect.TypeOf(RunJobTask{}),
-		"SparkJarTask":         reflect.TypeOf(SparkJarTask{}),
-		"SparkPythonTask":      reflect.TypeOf(SparkPythonTask{}),
-		"SparkSubmitTask":      reflect.TypeOf(SparkSubmitTask{}),
-		"SqlTask":              reflect.TypeOf(SqlTask{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"condition_task":        reflect.TypeOf(ConditionTask{}),
+		"dbt_task":              reflect.TypeOf(DbtTask{}),
+		"depends_on":            reflect.TypeOf(TaskDependency{}),
+		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"for_each_task":         reflect.TypeOf(ForEachTask{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"library":               reflect.TypeOf(compute.Library{}),
+		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"notebook_task":         reflect.TypeOf(NotebookTask{}),
+		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
+		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
+		"python_wheel_task":     reflect.TypeOf(PythonWheelTask{}),
+		"run_job_task":          reflect.TypeOf(RunJobTask{}),
+		"spark_jar_task":        reflect.TypeOf(SparkJarTask{}),
+		"spark_python_task":     reflect.TypeOf(SparkPythonTask{}),
+		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask{}),
+		"sql_task":              reflect.TypeOf(SqlTask{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
+// ToAttrType returns the representation of SubmitTask in the Terraform plugin framework type
+// system.
 func (a SubmitTask) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConditionTask": ConditionTask{}.ToAttrType(ctx),
-			"DbtTask":       DbtTask{}.ToAttrType(ctx),
-			"DependsOn": basetypes.ListType{
+			"condition_task": basetypes.ListType{
+				ElemType: ConditionTask{}.ToAttrType(ctx),
+			},
+			"dbt_task": basetypes.ListType{
+				ElemType: DbtTask{}.ToAttrType(ctx),
+			},
+			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.ToAttrType(ctx),
 			},
-			"Description":        types.StringType,
-			"EmailNotifications": JobEmailNotifications{}.ToAttrType(ctx),
-			"EnvironmentKey":     types.StringType,
-			"ExistingClusterId":  types.StringType,
-			"ForEachTask":        ForEachTask{}.ToAttrType(ctx),
-			"Health":             JobsHealthRules{}.ToAttrType(ctx),
-			"Libraries": basetypes.ListType{
+			"description": types.StringType,
+			"email_notifications": basetypes.ListType{
+				ElemType: JobEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environment_key":     types.StringType,
+			"existing_cluster_id": types.StringType,
+			"for_each_task": basetypes.ListType{
+				ElemType: ForEachTask{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.ToAttrType(ctx),
 			},
-			"NewCluster":           compute_tf.ClusterSpec{}.ToAttrType(ctx),
-			"NotebookTask":         NotebookTask{}.ToAttrType(ctx),
-			"NotificationSettings": TaskNotificationSettings{}.ToAttrType(ctx),
-			"PipelineTask":         PipelineTask{}.ToAttrType(ctx),
-			"PythonWheelTask":      PythonWheelTask{}.ToAttrType(ctx),
-			"RunIf":                types.StringType,
-			"RunJobTask":           RunJobTask{}.ToAttrType(ctx),
-			"SparkJarTask":         SparkJarTask{}.ToAttrType(ctx),
-			"SparkPythonTask":      SparkPythonTask{}.ToAttrType(ctx),
-			"SparkSubmitTask":      SparkSubmitTask{}.ToAttrType(ctx),
-			"SqlTask":              SqlTask{}.ToAttrType(ctx),
-			"TaskKey":              types.StringType,
-			"TimeoutSeconds":       types.Int64Type,
-			"WebhookNotifications": WebhookNotifications{}.ToAttrType(ctx),
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
+			"notebook_task": basetypes.ListType{
+				ElemType: NotebookTask{}.ToAttrType(ctx),
+			},
+			"notification_settings": basetypes.ListType{
+				ElemType: TaskNotificationSettings{}.ToAttrType(ctx),
+			},
+			"pipeline_task": basetypes.ListType{
+				ElemType: PipelineTask{}.ToAttrType(ctx),
+			},
+			"python_wheel_task": basetypes.ListType{
+				ElemType: PythonWheelTask{}.ToAttrType(ctx),
+			},
+			"run_if": types.StringType,
+			"run_job_task": basetypes.ListType{
+				ElemType: RunJobTask{}.ToAttrType(ctx),
+			},
+			"spark_jar_task": basetypes.ListType{
+				ElemType: SparkJarTask{}.ToAttrType(ctx),
+			},
+			"spark_python_task": basetypes.ListType{
+				ElemType: SparkPythonTask{}.ToAttrType(ctx),
+			},
+			"spark_submit_task": basetypes.ListType{
+				ElemType: SparkSubmitTask{}.ToAttrType(ctx),
+			},
+			"sql_task": basetypes.ListType{
+				ElemType: SqlTask{}.ToAttrType(ctx),
+			},
+			"task_key":        types.StringType,
+			"timeout_seconds": types.Int64Type,
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -5548,21 +6853,30 @@ func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringCreate
 func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState TableUpdateTriggerConfiguration) {
 }
 
-func (a TableUpdateTriggerConfiguration) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TableUpdateTriggerConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TableUpdateTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"TableNames": reflect.TypeOf(types.StringType),
+		"table_names": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of TableUpdateTriggerConfiguration in the Terraform plugin framework type
+// system.
 func (a TableUpdateTriggerConfiguration) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Condition":                     types.StringType,
-			"MinTimeBetweenTriggersSeconds": types.Int64Type,
-			"TableNames": basetypes.ListType{
+			"condition":                         types.StringType,
+			"min_time_between_triggers_seconds": types.Int64Type,
+			"table_names": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"WaitAfterLastChangeSeconds": types.Int64Type,
+			"wait_after_last_change_seconds": types.Int64Type,
 		},
 	}
 }
@@ -5696,65 +7010,106 @@ func (newState *Task) SyncEffectiveFieldsDuringCreateOrUpdate(plan Task) {
 func (newState *Task) SyncEffectiveFieldsDuringRead(existingState Task) {
 }
 
-func (a Task) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Task.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Task) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ConditionTask":        reflect.TypeOf(ConditionTask{}),
-		"DbtTask":              reflect.TypeOf(DbtTask{}),
-		"DependsOn":            reflect.TypeOf(TaskDependency{}),
-		"EmailNotifications":   reflect.TypeOf(TaskEmailNotifications{}),
-		"ForEachTask":          reflect.TypeOf(ForEachTask{}),
-		"Health":               reflect.TypeOf(JobsHealthRules{}),
-		"Libraries":            reflect.TypeOf(compute.Library{}),
-		"NewCluster":           reflect.TypeOf(compute.ClusterSpec{}),
-		"NotebookTask":         reflect.TypeOf(NotebookTask{}),
-		"NotificationSettings": reflect.TypeOf(TaskNotificationSettings{}),
-		"PipelineTask":         reflect.TypeOf(PipelineTask{}),
-		"PythonWheelTask":      reflect.TypeOf(PythonWheelTask{}),
-		"RunJobTask":           reflect.TypeOf(RunJobTask{}),
-		"SparkJarTask":         reflect.TypeOf(SparkJarTask{}),
-		"SparkPythonTask":      reflect.TypeOf(SparkPythonTask{}),
-		"SparkSubmitTask":      reflect.TypeOf(SparkSubmitTask{}),
-		"SqlTask":              reflect.TypeOf(SqlTask{}),
-		"WebhookNotifications": reflect.TypeOf(WebhookNotifications{}),
+		"condition_task":        reflect.TypeOf(ConditionTask{}),
+		"dbt_task":              reflect.TypeOf(DbtTask{}),
+		"depends_on":            reflect.TypeOf(TaskDependency{}),
+		"email_notifications":   reflect.TypeOf(TaskEmailNotifications{}),
+		"for_each_task":         reflect.TypeOf(ForEachTask{}),
+		"health":                reflect.TypeOf(JobsHealthRules{}),
+		"library":               reflect.TypeOf(compute.Library{}),
+		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"notebook_task":         reflect.TypeOf(NotebookTask{}),
+		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
+		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
+		"python_wheel_task":     reflect.TypeOf(PythonWheelTask{}),
+		"run_job_task":          reflect.TypeOf(RunJobTask{}),
+		"spark_jar_task":        reflect.TypeOf(SparkJarTask{}),
+		"spark_python_task":     reflect.TypeOf(SparkPythonTask{}),
+		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask{}),
+		"sql_task":              reflect.TypeOf(SqlTask{}),
+		"webhook_notifications": reflect.TypeOf(WebhookNotifications{}),
 	}
 }
 
+// ToAttrType returns the representation of Task in the Terraform plugin framework type
+// system.
 func (a Task) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConditionTask": ConditionTask{}.ToAttrType(ctx),
-			"DbtTask":       DbtTask{}.ToAttrType(ctx),
-			"DependsOn": basetypes.ListType{
+			"condition_task": basetypes.ListType{
+				ElemType: ConditionTask{}.ToAttrType(ctx),
+			},
+			"dbt_task": basetypes.ListType{
+				ElemType: DbtTask{}.ToAttrType(ctx),
+			},
+			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.ToAttrType(ctx),
 			},
-			"Description":             types.StringType,
-			"DisableAutoOptimization": types.BoolType,
-			"EmailNotifications":      TaskEmailNotifications{}.ToAttrType(ctx),
-			"EnvironmentKey":          types.StringType,
-			"ExistingClusterId":       types.StringType,
-			"ForEachTask":             ForEachTask{}.ToAttrType(ctx),
-			"Health":                  JobsHealthRules{}.ToAttrType(ctx),
-			"JobClusterKey":           types.StringType,
-			"Libraries": basetypes.ListType{
+			"description":               types.StringType,
+			"disable_auto_optimization": types.BoolType,
+			"email_notifications": basetypes.ListType{
+				ElemType: TaskEmailNotifications{}.ToAttrType(ctx),
+			},
+			"environment_key":     types.StringType,
+			"existing_cluster_id": types.StringType,
+			"for_each_task": basetypes.ListType{
+				ElemType: ForEachTask{}.ToAttrType(ctx),
+			},
+			"health": basetypes.ListType{
+				ElemType: JobsHealthRules{}.ToAttrType(ctx),
+			},
+			"job_cluster_key": types.StringType,
+			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.ToAttrType(ctx),
 			},
-			"MaxRetries":             types.Int64Type,
-			"MinRetryIntervalMillis": types.Int64Type,
-			"NewCluster":             compute_tf.ClusterSpec{}.ToAttrType(ctx),
-			"NotebookTask":           NotebookTask{}.ToAttrType(ctx),
-			"NotificationSettings":   TaskNotificationSettings{}.ToAttrType(ctx),
-			"PipelineTask":           PipelineTask{}.ToAttrType(ctx),
-			"PythonWheelTask":        PythonWheelTask{}.ToAttrType(ctx),
-			"RetryOnTimeout":         types.BoolType,
-			"RunIf":                  types.StringType,
-			"RunJobTask":             RunJobTask{}.ToAttrType(ctx),
-			"SparkJarTask":           SparkJarTask{}.ToAttrType(ctx),
-			"SparkPythonTask":        SparkPythonTask{}.ToAttrType(ctx),
-			"SparkSubmitTask":        SparkSubmitTask{}.ToAttrType(ctx),
-			"SqlTask":                SqlTask{}.ToAttrType(ctx),
-			"TaskKey":                types.StringType,
-			"TimeoutSeconds":         types.Int64Type,
-			"WebhookNotifications":   WebhookNotifications{}.ToAttrType(ctx),
+			"max_retries":               types.Int64Type,
+			"min_retry_interval_millis": types.Int64Type,
+			"new_cluster": basetypes.ListType{
+				ElemType: compute_tf.ClusterSpec{}.ToAttrType(ctx),
+			},
+			"notebook_task": basetypes.ListType{
+				ElemType: NotebookTask{}.ToAttrType(ctx),
+			},
+			"notification_settings": basetypes.ListType{
+				ElemType: TaskNotificationSettings{}.ToAttrType(ctx),
+			},
+			"pipeline_task": basetypes.ListType{
+				ElemType: PipelineTask{}.ToAttrType(ctx),
+			},
+			"python_wheel_task": basetypes.ListType{
+				ElemType: PythonWheelTask{}.ToAttrType(ctx),
+			},
+			"retry_on_timeout": types.BoolType,
+			"run_if":           types.StringType,
+			"run_job_task": basetypes.ListType{
+				ElemType: RunJobTask{}.ToAttrType(ctx),
+			},
+			"spark_jar_task": basetypes.ListType{
+				ElemType: SparkJarTask{}.ToAttrType(ctx),
+			},
+			"spark_python_task": basetypes.ListType{
+				ElemType: SparkPythonTask{}.ToAttrType(ctx),
+			},
+			"spark_submit_task": basetypes.ListType{
+				ElemType: SparkSubmitTask{}.ToAttrType(ctx),
+			},
+			"sql_task": basetypes.ListType{
+				ElemType: SqlTask{}.ToAttrType(ctx),
+			},
+			"task_key":        types.StringType,
+			"timeout_seconds": types.Int64Type,
+			"webhook_notifications": basetypes.ListType{
+				ElemType: WebhookNotifications{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -5773,15 +7128,24 @@ func (newState *TaskDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tas
 func (newState *TaskDependency) SyncEffectiveFieldsDuringRead(existingState TaskDependency) {
 }
 
-func (a TaskDependency) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskDependency.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TaskDependency) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of TaskDependency in the Terraform plugin framework type
+// system.
 func (a TaskDependency) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Outcome": types.StringType,
-			"TaskKey": types.StringType,
+			"outcome":  types.StringType,
+			"task_key": types.StringType,
 		},
 	}
 }
@@ -5828,33 +7192,42 @@ func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringRead(existingState TaskEmailNotifications) {
 }
 
-func (a TaskEmailNotifications) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskEmailNotifications.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TaskEmailNotifications) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OnDurationWarningThresholdExceeded": reflect.TypeOf(types.StringType),
-		"OnFailure":                          reflect.TypeOf(types.StringType),
-		"OnStart":                            reflect.TypeOf(types.StringType),
-		"OnStreamingBacklogExceeded":         reflect.TypeOf(types.StringType),
-		"OnSuccess":                          reflect.TypeOf(types.StringType),
+		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.String{}),
+		"on_failure":                             reflect.TypeOf(types.String{}),
+		"on_start":                               reflect.TypeOf(types.String{}),
+		"on_streaming_backlog_exceeded":          reflect.TypeOf(types.String{}),
+		"on_success":                             reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of TaskEmailNotifications in the Terraform plugin framework type
+// system.
 func (a TaskEmailNotifications) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"NoAlertForSkippedRuns": types.BoolType,
-			"OnDurationWarningThresholdExceeded": basetypes.ListType{
+			"no_alert_for_skipped_runs": types.BoolType,
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnFailure": basetypes.ListType{
+			"on_failure": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnStart": basetypes.ListType{
+			"on_start": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnStreamingBacklogExceeded": basetypes.ListType{
+			"on_streaming_backlog_exceeded": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"OnSuccess": basetypes.ListType{
+			"on_success": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -5880,16 +7253,25 @@ func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringRead(existingState TaskNotificationSettings) {
 }
 
-func (a TaskNotificationSettings) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskNotificationSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TaskNotificationSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of TaskNotificationSettings in the Terraform plugin framework type
+// system.
 func (a TaskNotificationSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AlertOnLastAttempt":     types.BoolType,
-			"NoAlertForCanceledRuns": types.BoolType,
-			"NoAlertForSkippedRuns":  types.BoolType,
+			"alert_on_last_attempt":      types.BoolType,
+			"no_alert_for_canceled_runs": types.BoolType,
+			"no_alert_for_skipped_runs":  types.BoolType,
 		},
 	}
 }
@@ -5961,16 +7343,25 @@ func (newState *TerminationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *TerminationDetails) SyncEffectiveFieldsDuringRead(existingState TerminationDetails) {
 }
 
-func (a TerminationDetails) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TerminationDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TerminationDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of TerminationDetails in the Terraform plugin framework type
+// system.
 func (a TerminationDetails) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Code":    types.StringType,
-			"Message": types.StringType,
-			"Type":    types.StringType,
+			"code":    types.StringType,
+			"message": types.StringType,
+			"type":    types.StringType,
 		},
 	}
 }
@@ -5987,14 +7378,23 @@ func (newState *TriggerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Trigge
 func (newState *TriggerInfo) SyncEffectiveFieldsDuringRead(existingState TriggerInfo) {
 }
 
-func (a TriggerInfo) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TriggerInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TriggerInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of TriggerInfo in the Terraform plugin framework type
+// system.
 func (a TriggerInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RunId": types.Int64Type,
+			"run_id": types.Int64Type,
 		},
 	}
 }
@@ -6018,23 +7418,40 @@ func (newState *TriggerSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tr
 func (newState *TriggerSettings) SyncEffectiveFieldsDuringRead(existingState TriggerSettings) {
 }
 
-func (a TriggerSettings) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TriggerSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TriggerSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FileArrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
-		"Periodic":    reflect.TypeOf(PeriodicTriggerConfiguration{}),
-		"Table":       reflect.TypeOf(TableUpdateTriggerConfiguration{}),
-		"TableUpdate": reflect.TypeOf(TableUpdateTriggerConfiguration{}),
+		"file_arrival": reflect.TypeOf(FileArrivalTriggerConfiguration{}),
+		"periodic":     reflect.TypeOf(PeriodicTriggerConfiguration{}),
+		"table":        reflect.TypeOf(TableUpdateTriggerConfiguration{}),
+		"table_update": reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 	}
 }
 
+// ToAttrType returns the representation of TriggerSettings in the Terraform plugin framework type
+// system.
 func (a TriggerSettings) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FileArrival": FileArrivalTriggerConfiguration{}.ToAttrType(ctx),
-			"PauseStatus": types.StringType,
-			"Periodic":    PeriodicTriggerConfiguration{}.ToAttrType(ctx),
-			"Table":       TableUpdateTriggerConfiguration{}.ToAttrType(ctx),
-			"TableUpdate": TableUpdateTriggerConfiguration{}.ToAttrType(ctx),
+			"file_arrival": basetypes.ListType{
+				ElemType: FileArrivalTriggerConfiguration{}.ToAttrType(ctx),
+			},
+			"pause_status": types.StringType,
+			"periodic": basetypes.ListType{
+				ElemType: PeriodicTriggerConfiguration{}.ToAttrType(ctx),
+			},
+			"table": basetypes.ListType{
+				ElemType: TableUpdateTriggerConfiguration{}.ToAttrType(ctx),
+			},
+			"table_update": basetypes.ListType{
+				ElemType: TableUpdateTriggerConfiguration{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -6066,21 +7483,32 @@ func (newState *UpdateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateJo
 func (newState *UpdateJob) SyncEffectiveFieldsDuringRead(existingState UpdateJob) {
 }
 
-func (a UpdateJob) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateJob.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"FieldsToRemove": reflect.TypeOf(types.StringType),
-		"NewSettings":    reflect.TypeOf(JobSettings{}),
+		"fields_to_remove": reflect.TypeOf(types.String{}),
+		"new_settings":     reflect.TypeOf(JobSettings{}),
 	}
 }
 
+// ToAttrType returns the representation of UpdateJob in the Terraform plugin framework type
+// system.
 func (a UpdateJob) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FieldsToRemove": basetypes.ListType{
+			"fields_to_remove": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"JobId":       types.Int64Type,
-			"NewSettings": JobSettings{}.ToAttrType(ctx),
+			"job_id": types.Int64Type,
+			"new_settings": basetypes.ListType{
+				ElemType: JobSettings{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -6094,10 +7522,19 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Upd
 func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
-func (a UpdateResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of UpdateResponse in the Terraform plugin framework type
+// system.
 func (a UpdateResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
@@ -6121,16 +7558,25 @@ func (newState *ViewItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan ViewItem)
 func (newState *ViewItem) SyncEffectiveFieldsDuringRead(existingState ViewItem) {
 }
 
-func (a ViewItem) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ViewItem.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ViewItem) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ViewItem in the Terraform plugin framework type
+// system.
 func (a ViewItem) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content": types.StringType,
-			"Name":    types.StringType,
-			"Type":    types.StringType,
+			"content": types.StringType,
+			"name":    types.StringType,
+			"type":    types.StringType,
 		},
 	}
 }
@@ -6145,14 +7591,23 @@ func (newState *Webhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan Webhook) {
 func (newState *Webhook) SyncEffectiveFieldsDuringRead(existingState Webhook) {
 }
 
-func (a Webhook) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Webhook.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Webhook) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of Webhook in the Terraform plugin framework type
+// system.
 func (a Webhook) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Id": types.StringType,
+			"id": types.StringType,
 		},
 	}
 }
@@ -6190,32 +7645,41 @@ func (newState *WebhookNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *WebhookNotifications) SyncEffectiveFieldsDuringRead(existingState WebhookNotifications) {
 }
 
-func (a WebhookNotifications) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in WebhookNotifications.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a WebhookNotifications) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"OnDurationWarningThresholdExceeded": reflect.TypeOf(Webhook{}),
-		"OnFailure":                          reflect.TypeOf(Webhook{}),
-		"OnStart":                            reflect.TypeOf(Webhook{}),
-		"OnStreamingBacklogExceeded":         reflect.TypeOf(Webhook{}),
-		"OnSuccess":                          reflect.TypeOf(Webhook{}),
+		"on_duration_warning_threshold_exceeded": reflect.TypeOf(Webhook{}),
+		"on_failure":                             reflect.TypeOf(Webhook{}),
+		"on_start":                               reflect.TypeOf(Webhook{}),
+		"on_streaming_backlog_exceeded":          reflect.TypeOf(Webhook{}),
+		"on_success":                             reflect.TypeOf(Webhook{}),
 	}
 }
 
+// ToAttrType returns the representation of WebhookNotifications in the Terraform plugin framework type
+// system.
 func (a WebhookNotifications) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"OnDurationWarningThresholdExceeded": basetypes.ListType{
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
-			"OnFailure": basetypes.ListType{
+			"on_failure": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
-			"OnStart": basetypes.ListType{
+			"on_start": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
-			"OnStreamingBacklogExceeded": basetypes.ListType{
+			"on_streaming_backlog_exceeded": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
-			"OnSuccess": basetypes.ListType{
+			"on_success": basetypes.ListType{
 				ElemType: Webhook{}.ToAttrType(ctx),
 			},
 		},

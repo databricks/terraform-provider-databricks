@@ -20,7 +20,7 @@ type AzureADLSGen1Mount struct {
 }
 
 // Source ...
-func (m AzureADLSGen1Mount) Source() string {
+func (m AzureADLSGen1Mount) Source(_ *common.DatabricksClient) string {
 	return fmt.Sprintf("adl://%s.azuredatalakestore.net%s", m.StorageResource, m.Directory)
 }
 

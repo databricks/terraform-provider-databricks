@@ -32,7 +32,7 @@ func (d *ServingEndpointsDataSource) Metadata(ctx context.Context, req datasourc
 }
 
 func (d *ServingEndpointsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ServingEndpointsData{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, ServingEndpointsData{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,

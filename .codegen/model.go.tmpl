@@ -25,7 +25,12 @@ type {{.PascalName}} struct {
     {{- range .Fields}}
     {{.Comment "    // " 80}}
 	{{- $data := dict "field" . }}
-	{{template "field" $data}}{{if and (ne .Entity.Terraform nil) .Entity.Terraform.IsServiceProposedIfEmpty}}{{ $data := dict "field" . "effective" true }}{{printf "\n"}}{{template "field" $data}}{{end}}{{end}}
+	{{template "field" $data}}
+  {{- if and .Entity.Terraform .Entity.Terraform.IsServiceProposedIfEmpty -}}
+    {{- $data := dict "field" . "effective" true }}
+    {{template "field" $data}}
+  {{- end -}}
+  {{end}}
 }
 
 func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringCreateOrUpdate(plan {{.PascalName}}) {
@@ -55,21 +60,32 @@ func (newState *{{.PascalName}}) SyncEffectiveFieldsDuringRead(existingState {{.
   {{- end}}
 }
 
-func (a {{.PascalName}}) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in {{.PascalName}}.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a {{.PascalName}}) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
   return map[string]reflect.Type{
     {{- range .Fields -}}
     {{- if or .Entity.IsObject .Entity.ArrayValue .Entity.MapValue}}
-    "{{.PascalName}}": reflect.TypeOf({{ template "complex-field-value" .Entity }}),
+    {{ $data := dict "field" . -}}
+    "{{template "tfsdk-name" $data}}": reflect.TypeOf({{ template "complex-field-value" .Entity }}),
     {{- end}}
     {{- end}}
   }
 }
 
+// ToAttrType returns the representation of {{.PascalName}} in the Terraform plugin framework type
+// system.
 func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
   return types.ObjectType{
     AttrTypes: map[string]attr.Type{
       {{ range .Fields -}}
-      "{{.PascalName}}": {{ template "attr-type" .Entity }},
+      {{ $data := dict "field" . -}}
+      "{{template "tfsdk-name" $data}}": {{ template "attr-type" .Entity }},
       {{ end}}
     },
   }
@@ -77,16 +93,26 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
 
 {{end}}
 {{end}}
-{{/* TODO: Handle recursive Jobs structure */}}
+
+{{/*
+Jobs has a recursive structure: Tasks contain ForEachTasks, which contain Tasks.
+Because of this, GetComplexFieldTypes and ToAttrType will never terminate.
+TODO: capture visited types in the context to ensure these methods terminate,
+even when they are called recursively.
+*/}}
 {{- define "attr-type" -}}
-  {{- if .ArrayValue }}basetypes.ListType{
-    ElemType: {{ template "attr-type" .ArrayValue }},
-  }
+  {{- if .ArrayValue -}}
+    {{- if .ArrayValue.IsObject -}}{{/* Objects are wraped in lists automatically. */}}
+      {{ template "attr-type" .ArrayValue }}
+    {{- else -}}
+      basetypes.ListType{
+        ElemType: {{ template "attr-type" .ArrayValue }},
+      }
+    {{- end -}}
   {{- else if .MapValue }}basetypes.MapType{
     ElemType: {{ template "attr-type" .MapValue }},
   }
   {{- else -}}
-    {{- if .IsExternal -}}{{.Package.Name}}_tf.{{- end -}}
     {{- if or .IsString .Enum -}}types.StringType
     {{- else if .IsBool -}}types.BoolType
     {{- else if .IsInt64 -}}types.Int64Type
@@ -94,7 +120,9 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
     {{- else if .IsInt -}}types.Int64Type
     {{- else if .IsAny -}}types.ObjectType{}
     {{- else if .IsByteStream}}types.ObjectType{}
-    {{- else if .IsObject -}}{{.PascalName}}{}.ToAttrType(ctx)
+    {{- else if .IsObject -}}{{/* Objects are treated as lists from a TFSDK type perspective. */}}basetypes.ListType{
+      ElemType: {{- if .IsExternal -}}{{.Package.Name}}_tf.{{- end -}}{{.PascalName}}{}.ToAttrType(ctx),
+    }
     {{- end -}}
   {{- end -}}
 {{- end -}}
@@ -104,11 +132,11 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
   {{- else if .MapValue }}{{ template "complex-field-value" .MapValue }}
   {{- else -}}
     {{- if .IsExternal -}}{{.Package.Name}}.{{- end -}}
-    {{- if or .IsString .Enum -}}types.StringType
-    {{- else if .IsBool -}}types.BoolType
-    {{- else if .IsInt64 -}}types.Int64Type
-    {{- else if .IsFloat64 -}}types.Float64Type
-    {{- else if .IsInt -}}types.Int64Type
+    {{- if or .IsString .Enum -}}types.String{}
+    {{- else if .IsBool -}}types.Bool{}
+    {{- else if .IsInt64 -}}types.Int64{}
+    {{- else if .IsFloat64 -}}types.Float64{}
+    {{- else if .IsInt -}}types.Int64{}
     {{- else if .IsAny -}}struct{}{}
     {{- else if .IsObject -}}{{.PascalName}}{}
     {{- end -}}
@@ -134,7 +162,15 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
  	{{- if gt (len $annotations) 0 -}}
  	   {{- $annotations = (printf "%s" (trimSuffix "," $annotations)) -}}
  	{{- end -}}
-	{{if .field.IsJson}}tfsdk:"{{if and (ne .field.Entity.Terraform nil) (ne .field.Entity.Terraform.Alias "") }}{{.field.Entity.Terraform.Alias}}{{else}}{{if .effective}}effective_{{end}}{{.field.Name}}{{end}}" tf:"{{$annotations}}"{{else}}tfsdk:"-"{{end -}}
+	{{if .field.IsJson}}tfsdk:"{{ template "tfsdk-name" . }}" tf:"{{$annotations}}"{{else}}tfsdk:"-"{{end -}}
+{{- end -}}
+
+{{- define "tfsdk-name" -}}
+{{- if and (ne .field.Entity.Terraform nil) (ne .field.Entity.Terraform.Alias "") -}}
+{{.field.Entity.Terraform.Alias}}
+{{- else -}}
+{{if .effective}}effective_{{end}}{{.field.Name}}
+{{- end -}}
 {{- end -}}
 
 {{- define "type" -}}
@@ -149,8 +185,8 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
     {{- else if .IsInt}}types.Int64
     {{- else if .IsByteStream}}io.ReadCloser
     {{- else if .ArrayValue }}types.List
-    {{- else if .MapValue }}types.Map{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}
-    {{- else if .IsObject }}types.List
+    {{- else if .MapValue }}types.Map
+    {{- else if .IsObject }}types.List{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}
     {{- else if .Enum }}types.String
     {{- else}}any /* MISSING TYPE */
     {{- end -}}

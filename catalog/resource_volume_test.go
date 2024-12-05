@@ -23,14 +23,14 @@ func TestVolumesCreateWithoutInitialOwner(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes",
 				ExpectedRequest: catalog.CreateVolumeRequestContent{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
@@ -43,7 +43,7 @@ func TestVolumesCreateWithoutInitialOwner(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
@@ -56,7 +56,7 @@ func TestVolumesCreateWithoutInitialOwner(t *testing.T) {
 		Create:   true,
 		HCL: `
 		name = "testName"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a test comment."
@@ -65,7 +65,7 @@ func TestVolumesCreateWithoutInitialOwner(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "testName", d.Get("name"))
 	assert.Equal(t, "InitialOwner", d.Get("owner"))
-	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
+	assert.Equal(t, "MANAGED", d.Get("volume_type"))
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
@@ -79,14 +79,14 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes",
 				ExpectedRequest: catalog.CreateVolumeRequestContent{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
@@ -99,7 +99,7 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
@@ -117,7 +117,7 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
@@ -131,7 +131,7 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 		HCL: `
 		name = "testName"
 		owner = "testOwner"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a test comment."
@@ -140,7 +140,7 @@ func TestVolumesCreateWithInitialOwner(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "testName", d.Get("name"))
 	assert.Equal(t, "testOwner", d.Get("owner"))
-	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
+	assert.Equal(t, "MANAGED", d.Get("volume_type"))
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
@@ -164,7 +164,7 @@ func TestVolumesCreateWithoutInitialOwner_Error(t *testing.T) {
 		HCL: `
 		name = "testName"
 		owner = "testOwner"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a test comment."
@@ -183,14 +183,14 @@ func TestVolumesCreateWithInitialOwner_Error(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes",
 				ExpectedRequest: catalog.CreateVolumeRequestContent{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
@@ -203,7 +203,7 @@ func TestVolumesCreateWithInitialOwner_Error(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
@@ -226,7 +226,7 @@ func TestVolumesCreateWithInitialOwner_Error(t *testing.T) {
 		HCL: `
 		name = "testName"
 		owner = "testOwner"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a test comment."
@@ -243,7 +243,7 @@ func TestVolumesRead(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a test comment.",
@@ -256,7 +256,7 @@ func TestVolumesRead(t *testing.T) {
 		ID:       "testCatalogName.testSchemaName.testName",
 		HCL: `
 		name = "testName"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a test comment."
@@ -264,7 +264,7 @@ func TestVolumesRead(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "testName", d.Get("name"))
-	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
+	assert.Equal(t, "MANAGED", d.Get("volume_type"))
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
@@ -311,7 +311,7 @@ func TestVolumesUpdate(t *testing.T) {
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
@@ -324,7 +324,7 @@ func TestVolumesUpdate(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
@@ -338,12 +338,12 @@ func TestVolumesUpdate(t *testing.T) {
 		InstanceState: map[string]string{
 			"catalog_name": "testCatalogName",
 			"schema_name":  "testSchemaName",
-			"volume_type":  "testVolumeType",
+			"volume_type":  "MANAGED",
 		},
 		ID: "testCatalogName.testSchemaName.testName",
 		HCL: `
 		name = "testNameNew"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a new test comment."
@@ -352,7 +352,7 @@ func TestVolumesUpdate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "testNameNew", d.Get("name"))
-	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
+	assert.Equal(t, "MANAGED", d.Get("volume_type"))
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
@@ -371,7 +371,7 @@ func TestVolumesUpdateCommentOnly(t *testing.T) {
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "",
@@ -383,7 +383,7 @@ func TestVolumesUpdateCommentOnly(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testName",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "",
@@ -397,20 +397,20 @@ func TestVolumesUpdateCommentOnly(t *testing.T) {
 			"name":         "testName",
 			"catalog_name": "testCatalogName",
 			"schema_name":  "testSchemaName",
-			"volume_type":  "testVolumeType",
+			"volume_type":  "MANAGED",
 			"comment":      "this is a comment",
 		},
 		ID: "testCatalogName.testSchemaName.testName",
 		HCL: `
 		name = "testName"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = ""
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"name":         "testName",
-		"volume_type":  "testVolumeType",
+		"volume_type":  "MANAGED",
 		"catalog_name": "testCatalogName",
 		"schema_name":  "testSchemaName",
 		"comment":      "",
@@ -426,7 +426,7 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogNameNew.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogNameNew",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
@@ -450,7 +450,7 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogNameNew",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
@@ -465,7 +465,7 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 		ID:          "testCatalogName.testSchemaName.testName",
 		HCL: `
 		name = "testNameNew"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogNameNew"
 		schema_name = "testSchemaName"
 		comment = "This is a new test comment."
@@ -474,10 +474,28 @@ func TestVolumesUpdateForceNewOnCatalog(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "testNameNew", d.Get("name"))
-	assert.Equal(t, "testVolumeType", d.Get("volume_type"))
+	assert.Equal(t, "MANAGED", d.Get("volume_type"))
 	assert.Equal(t, "testCatalogNameNew", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
+}
+
+func TestVolumesValidateOnVolumesType(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures:    []qa.HTTPFixture{},
+		Resource:    ResourceVolume(),
+		RequiresNew: true,
+		Update:      true,
+		ID:          "testCatalogName.testSchemaName.testName",
+		HCL: `
+		name = "testName"
+		volume_type = "unknown"
+		catalog_name = "testCatalogName"
+		schema_name = "testSchemaName"
+		comment = "This is a new test comment."		
+		`,
+	}.Apply(t)
+	assert.ErrorContains(t, err, "expected volume_type to be one of [MANAGED EXTERNAL], got unknown")
 }
 
 func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
@@ -488,7 +506,7 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeTypeNew"),
+					VolumeType:  catalog.VolumeType("EXTERNAL"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
@@ -512,7 +530,7 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeTypeNew"),
+					VolumeType:  catalog.VolumeType("EXTERNAL"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
@@ -528,11 +546,11 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 		InstanceState: map[string]string{
 			"catalog_name": "testCatalogName",
 			"schema_name":  "testSchemaName",
-			"volume_type":  "testVolumeType",
+			"volume_type":  "MANAGED",
 		},
 		HCL: `
 		name = "testName"
-		volume_type = "testVolumeTypeNew"
+		volume_type = "EXTERNAL"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a new test comment."
@@ -541,7 +559,7 @@ func TestVolumesUpdateForceNewOnVolumeType(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "testNameNew", d.Get("name"))
-	assert.Equal(t, "testVolumeTypeNew", d.Get("volume_type"))
+	assert.Equal(t, "EXTERNAL", d.Get("volume_type"))
 	assert.Equal(t, "testCatalogName", d.Get("catalog_name"))
 	assert.Equal(t, "testSchemaName", d.Get("schema_name"))
 	assert.Equal(t, "This is a new test comment.", d.Get("comment"))
@@ -555,7 +573,7 @@ func TestVolumesUpdateWithOwner(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName?",
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
@@ -579,7 +597,7 @@ func TestVolumesUpdateWithOwner(t *testing.T) {
 				},
 				Response: catalog.VolumeInfo{
 					Name:        "testNameNew",
-					VolumeType:  catalog.VolumeType("testVolumeType"),
+					VolumeType:  catalog.VolumeType("MANAGED"),
 					CatalogName: "testCatalogName",
 					SchemaName:  "testSchemaName",
 					Comment:     "This is a new test comment.",
@@ -594,12 +612,12 @@ func TestVolumesUpdateWithOwner(t *testing.T) {
 		InstanceState: map[string]string{
 			"catalog_name": "testCatalogName",
 			"schema_name":  "testSchemaName",
-			"volume_type":  "testVolumeType",
+			"volume_type":  "MANAGED",
 			"owner":        "testOwnerOld",
 		},
 		HCL: `
 		name = "testName"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a new test comment."
@@ -651,12 +669,12 @@ func TestVolumesUpdateRollback(t *testing.T) {
 		InstanceState: map[string]string{
 			"catalog_name": "testCatalogName",
 			"schema_name":  "testSchemaName",
-			"volume_type":  "testVolumeType",
+			"volume_type":  "MANAGED",
 			"owner":        "testOwnerOld",
 		},
 		HCL: `
 		name = "testName"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a new test comment."
@@ -710,12 +728,12 @@ func TestVolumesUpdateRollback_Error(t *testing.T) {
 		InstanceState: map[string]string{
 			"catalog_name": "testCatalogName",
 			"schema_name":  "testSchemaName",
-			"volume_type":  "testVolumeType",
+			"volume_type":  "MANAGED",
 			"owner":        "testOwnerOld",
 		},
 		HCL: `
 		name = "testName"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a new test comment."
@@ -747,12 +765,12 @@ func TestVolumeUpdate_Error(t *testing.T) {
 		InstanceState: map[string]string{
 			"catalog_name": "testCatalogName",
 			"schema_name":  "testSchemaName",
-			"volume_type":  "testVolumeType",
+			"volume_type":  "MANAGED",
 		},
 		ID: "testCatalogName.testSchemaName.testName",
 		HCL: `
 		name = "testNameNew"
-		volume_type = "testVolumeType"
+		volume_type = "MANAGED"
 		catalog_name = "testCatalogName"
 		schema_name = "testSchemaName"
 		comment = "This is a new test comment."

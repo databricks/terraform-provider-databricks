@@ -41,15 +41,24 @@ func (newState *Ai21LabsConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ai2
 func (newState *Ai21LabsConfig) SyncEffectiveFieldsDuringRead(existingState Ai21LabsConfig) {
 }
 
-func (a Ai21LabsConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Ai21LabsConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Ai21LabsConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of Ai21LabsConfig in the Terraform plugin framework type
+// system.
 func (a Ai21LabsConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Ai21labsApiKey":          types.StringType,
-			"Ai21labsApiKeyPlaintext": types.StringType,
+			"ai21labs_api_key":           types.StringType,
+			"ai21labs_api_key_plaintext": types.StringType,
 		},
 	}
 }
@@ -76,24 +85,39 @@ func (newState *AiGatewayConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ai
 func (newState *AiGatewayConfig) SyncEffectiveFieldsDuringRead(existingState AiGatewayConfig) {
 }
 
-func (a AiGatewayConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AiGatewayConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Guardrails":           reflect.TypeOf(AiGatewayGuardrails{}),
-		"InferenceTableConfig": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
-		"RateLimits":           reflect.TypeOf(AiGatewayRateLimit{}),
-		"UsageTrackingConfig":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
+		"guardrails":             reflect.TypeOf(AiGatewayGuardrails{}),
+		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
+		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit{}),
+		"usage_tracking_config":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
 	}
 }
 
+// ToAttrType returns the representation of AiGatewayConfig in the Terraform plugin framework type
+// system.
 func (a AiGatewayConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Guardrails":           AiGatewayGuardrails{}.ToAttrType(ctx),
-			"InferenceTableConfig": AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
-			"RateLimits": basetypes.ListType{
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.ToAttrType(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
+			},
+			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.ToAttrType(ctx),
 			},
-			"UsageTrackingConfig": AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -117,23 +141,34 @@ func (newState *AiGatewayGuardrailParameters) SyncEffectiveFieldsDuringCreateOrU
 func (newState *AiGatewayGuardrailParameters) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailParameters) {
 }
 
-func (a AiGatewayGuardrailParameters) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayGuardrailParameters.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AiGatewayGuardrailParameters) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InvalidKeywords": reflect.TypeOf(types.StringType),
-		"Pii":             reflect.TypeOf(AiGatewayGuardrailPiiBehavior{}),
-		"ValidTopics":     reflect.TypeOf(types.StringType),
+		"invalid_keywords": reflect.TypeOf(types.String{}),
+		"pii":              reflect.TypeOf(AiGatewayGuardrailPiiBehavior{}),
+		"valid_topics":     reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of AiGatewayGuardrailParameters in the Terraform plugin framework type
+// system.
 func (a AiGatewayGuardrailParameters) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"InvalidKeywords": basetypes.ListType{
+			"invalid_keywords": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Pii":    AiGatewayGuardrailPiiBehavior{}.ToAttrType(ctx),
-			"Safety": types.BoolType,
-			"ValidTopics": basetypes.ListType{
+			"pii": basetypes.ListType{
+				ElemType: AiGatewayGuardrailPiiBehavior{}.ToAttrType(ctx),
+			},
+			"safety": types.BoolType,
+			"valid_topics": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -156,14 +191,23 @@ func (newState *AiGatewayGuardrailPiiBehavior) SyncEffectiveFieldsDuringCreateOr
 func (newState *AiGatewayGuardrailPiiBehavior) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailPiiBehavior) {
 }
 
-func (a AiGatewayGuardrailPiiBehavior) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayGuardrailPiiBehavior.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AiGatewayGuardrailPiiBehavior) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of AiGatewayGuardrailPiiBehavior in the Terraform plugin framework type
+// system.
 func (a AiGatewayGuardrailPiiBehavior) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Behavior": types.StringType,
+			"behavior": types.StringType,
 		},
 	}
 }
@@ -181,18 +225,31 @@ func (newState *AiGatewayGuardrails) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *AiGatewayGuardrails) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrails) {
 }
 
-func (a AiGatewayGuardrails) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayGuardrails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AiGatewayGuardrails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Input":  reflect.TypeOf(AiGatewayGuardrailParameters{}),
-		"Output": reflect.TypeOf(AiGatewayGuardrailParameters{}),
+		"input":  reflect.TypeOf(AiGatewayGuardrailParameters{}),
+		"output": reflect.TypeOf(AiGatewayGuardrailParameters{}),
 	}
 }
 
+// ToAttrType returns the representation of AiGatewayGuardrails in the Terraform plugin framework type
+// system.
 func (a AiGatewayGuardrails) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Input":  AiGatewayGuardrailParameters{}.ToAttrType(ctx),
-			"Output": AiGatewayGuardrailParameters{}.ToAttrType(ctx),
+			"input": basetypes.ListType{
+				ElemType: AiGatewayGuardrailParameters{}.ToAttrType(ctx),
+			},
+			"output": basetypes.ListType{
+				ElemType: AiGatewayGuardrailParameters{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -219,17 +276,26 @@ func (newState *AiGatewayInferenceTableConfig) SyncEffectiveFieldsDuringCreateOr
 func (newState *AiGatewayInferenceTableConfig) SyncEffectiveFieldsDuringRead(existingState AiGatewayInferenceTableConfig) {
 }
 
-func (a AiGatewayInferenceTableConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayInferenceTableConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AiGatewayInferenceTableConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of AiGatewayInferenceTableConfig in the Terraform plugin framework type
+// system.
 func (a AiGatewayInferenceTableConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CatalogName":     types.StringType,
-			"Enabled":         types.BoolType,
-			"SchemaName":      types.StringType,
-			"TableNamePrefix": types.StringType,
+			"catalog_name":      types.StringType,
+			"enabled":           types.BoolType,
+			"schema_name":       types.StringType,
+			"table_name_prefix": types.StringType,
 		},
 	}
 }
@@ -252,16 +318,25 @@ func (newState *AiGatewayRateLimit) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *AiGatewayRateLimit) SyncEffectiveFieldsDuringRead(existingState AiGatewayRateLimit) {
 }
 
-func (a AiGatewayRateLimit) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayRateLimit.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AiGatewayRateLimit) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of AiGatewayRateLimit in the Terraform plugin framework type
+// system.
 func (a AiGatewayRateLimit) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Calls":         types.Int64Type,
-			"Key":           types.StringType,
-			"RenewalPeriod": types.StringType,
+			"calls":          types.Int64Type,
+			"key":            types.StringType,
+			"renewal_period": types.StringType,
 		},
 	}
 }
@@ -277,14 +352,23 @@ func (newState *AiGatewayUsageTrackingConfig) SyncEffectiveFieldsDuringCreateOrU
 func (newState *AiGatewayUsageTrackingConfig) SyncEffectiveFieldsDuringRead(existingState AiGatewayUsageTrackingConfig) {
 }
 
-func (a AiGatewayUsageTrackingConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayUsageTrackingConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AiGatewayUsageTrackingConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of AiGatewayUsageTrackingConfig in the Terraform plugin framework type
+// system.
 func (a AiGatewayUsageTrackingConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Enabled": types.BoolType,
+			"enabled": types.BoolType,
 		},
 	}
 }
@@ -329,19 +413,28 @@ func (newState *AmazonBedrockConfig) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *AmazonBedrockConfig) SyncEffectiveFieldsDuringRead(existingState AmazonBedrockConfig) {
 }
 
-func (a AmazonBedrockConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AmazonBedrockConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AmazonBedrockConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of AmazonBedrockConfig in the Terraform plugin framework type
+// system.
 func (a AmazonBedrockConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AwsAccessKeyId":              types.StringType,
-			"AwsAccessKeyIdPlaintext":     types.StringType,
-			"AwsRegion":                   types.StringType,
-			"AwsSecretAccessKey":          types.StringType,
-			"AwsSecretAccessKeyPlaintext": types.StringType,
-			"BedrockProvider":             types.StringType,
+			"aws_access_key_id":               types.StringType,
+			"aws_access_key_id_plaintext":     types.StringType,
+			"aws_region":                      types.StringType,
+			"aws_secret_access_key":           types.StringType,
+			"aws_secret_access_key_plaintext": types.StringType,
+			"bedrock_provider":                types.StringType,
 		},
 	}
 }
@@ -365,15 +458,24 @@ func (newState *AnthropicConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan An
 func (newState *AnthropicConfig) SyncEffectiveFieldsDuringRead(existingState AnthropicConfig) {
 }
 
-func (a AnthropicConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AnthropicConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AnthropicConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of AnthropicConfig in the Terraform plugin framework type
+// system.
 func (a AnthropicConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AnthropicApiKey":          types.StringType,
-			"AnthropicApiKeyPlaintext": types.StringType,
+			"anthropic_api_key":           types.StringType,
+			"anthropic_api_key_plaintext": types.StringType,
 		},
 	}
 }
@@ -398,17 +500,26 @@ func (newState *AutoCaptureConfigInput) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *AutoCaptureConfigInput) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigInput) {
 }
 
-func (a AutoCaptureConfigInput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoCaptureConfigInput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AutoCaptureConfigInput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of AutoCaptureConfigInput in the Terraform plugin framework type
+// system.
 func (a AutoCaptureConfigInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CatalogName":     types.StringType,
-			"Enabled":         types.BoolType,
-			"SchemaName":      types.StringType,
-			"TableNamePrefix": types.StringType,
+			"catalog_name":      types.StringType,
+			"enabled":           types.BoolType,
+			"schema_name":       types.StringType,
+			"table_name_prefix": types.StringType,
 		},
 	}
 }
@@ -432,20 +543,31 @@ func (newState *AutoCaptureConfigOutput) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *AutoCaptureConfigOutput) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigOutput) {
 }
 
-func (a AutoCaptureConfigOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoCaptureConfigOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AutoCaptureConfigOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"State": reflect.TypeOf(AutoCaptureState{}),
+		"state": reflect.TypeOf(AutoCaptureState{}),
 	}
 }
 
+// ToAttrType returns the representation of AutoCaptureConfigOutput in the Terraform plugin framework type
+// system.
 func (a AutoCaptureConfigOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CatalogName":     types.StringType,
-			"Enabled":         types.BoolType,
-			"SchemaName":      types.StringType,
-			"State":           AutoCaptureState{}.ToAttrType(ctx),
-			"TableNamePrefix": types.StringType,
+			"catalog_name": types.StringType,
+			"enabled":      types.BoolType,
+			"schema_name":  types.StringType,
+			"state": basetypes.ListType{
+				ElemType: AutoCaptureState{}.ToAttrType(ctx),
+			},
+			"table_name_prefix": types.StringType,
 		},
 	}
 }
@@ -460,16 +582,27 @@ func (newState *AutoCaptureState) SyncEffectiveFieldsDuringCreateOrUpdate(plan A
 func (newState *AutoCaptureState) SyncEffectiveFieldsDuringRead(existingState AutoCaptureState) {
 }
 
-func (a AutoCaptureState) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoCaptureState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AutoCaptureState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PayloadTable": reflect.TypeOf(PayloadTable{}),
+		"payload_table": reflect.TypeOf(PayloadTable{}),
 	}
 }
 
+// ToAttrType returns the representation of AutoCaptureState in the Terraform plugin framework type
+// system.
 func (a AutoCaptureState) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PayloadTable": PayloadTable{}.ToAttrType(ctx),
+			"payload_table": basetypes.ListType{
+				ElemType: PayloadTable{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -490,15 +623,24 @@ func (newState *BuildLogsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan B
 func (newState *BuildLogsRequest) SyncEffectiveFieldsDuringRead(existingState BuildLogsRequest) {
 }
 
-func (a BuildLogsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BuildLogsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a BuildLogsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of BuildLogsRequest in the Terraform plugin framework type
+// system.
 func (a BuildLogsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name":            types.StringType,
-			"ServedModelName": types.StringType,
+			"name":              types.StringType,
+			"served_model_name": types.StringType,
 		},
 	}
 }
@@ -514,14 +656,23 @@ func (newState *BuildLogsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *BuildLogsResponse) SyncEffectiveFieldsDuringRead(existingState BuildLogsResponse) {
 }
 
-func (a BuildLogsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BuildLogsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a BuildLogsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of BuildLogsResponse in the Terraform plugin framework type
+// system.
 func (a BuildLogsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Logs": types.StringType,
+			"logs": types.StringType,
 		},
 	}
 }
@@ -539,15 +690,24 @@ func (newState *ChatMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChatMe
 func (newState *ChatMessage) SyncEffectiveFieldsDuringRead(existingState ChatMessage) {
 }
 
-func (a ChatMessage) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ChatMessage.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ChatMessage) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ChatMessage in the Terraform plugin framework type
+// system.
 func (a ChatMessage) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Content": types.StringType,
-			"Role":    types.StringType,
+			"content": types.StringType,
+			"role":    types.StringType,
 		},
 	}
 }
@@ -574,16 +734,25 @@ func (newState *CohereConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan Coher
 func (newState *CohereConfig) SyncEffectiveFieldsDuringRead(existingState CohereConfig) {
 }
 
-func (a CohereConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CohereConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CohereConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of CohereConfig in the Terraform plugin framework type
+// system.
 func (a CohereConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CohereApiBase":         types.StringType,
-			"CohereApiKey":          types.StringType,
-			"CohereApiKeyPlaintext": types.StringType,
+			"cohere_api_base":          types.StringType,
+			"cohere_api_key":           types.StringType,
+			"cohere_api_key_plaintext": types.StringType,
 		},
 	}
 }
@@ -614,26 +783,39 @@ func (newState *CreateServingEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *CreateServingEndpoint) SyncEffectiveFieldsDuringRead(existingState CreateServingEndpoint) {
 }
 
-func (a CreateServingEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServingEndpoint.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateServingEndpoint) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AiGateway":  reflect.TypeOf(AiGatewayConfig{}),
-		"Config":     reflect.TypeOf(EndpointCoreConfigInput{}),
-		"RateLimits": reflect.TypeOf(RateLimit{}),
-		"Tags":       reflect.TypeOf(EndpointTag{}),
+		"ai_gateway":  reflect.TypeOf(AiGatewayConfig{}),
+		"config":      reflect.TypeOf(EndpointCoreConfigInput{}),
+		"rate_limits": reflect.TypeOf(RateLimit{}),
+		"tags":        reflect.TypeOf(EndpointTag{}),
 	}
 }
 
+// ToAttrType returns the representation of CreateServingEndpoint in the Terraform plugin framework type
+// system.
 func (a CreateServingEndpoint) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AiGateway": AiGatewayConfig{}.ToAttrType(ctx),
-			"Config":    EndpointCoreConfigInput{}.ToAttrType(ctx),
-			"Name":      types.StringType,
-			"RateLimits": basetypes.ListType{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.ToAttrType(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigInput{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
+			"rate_limits": basetypes.ListType{
 				ElemType: RateLimit{}.ToAttrType(ctx),
 			},
-			"RouteOptimized": types.BoolType,
-			"Tags": basetypes.ListType{
+			"route_optimized": types.BoolType,
+			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.ToAttrType(ctx),
 			},
 		},
@@ -666,16 +848,25 @@ func (newState *DatabricksModelServingConfig) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DatabricksModelServingConfig) SyncEffectiveFieldsDuringRead(existingState DatabricksModelServingConfig) {
 }
 
-func (a DatabricksModelServingConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabricksModelServingConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DatabricksModelServingConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of DatabricksModelServingConfig in the Terraform plugin framework type
+// system.
 func (a DatabricksModelServingConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DatabricksApiToken":          types.StringType,
-			"DatabricksApiTokenPlaintext": types.StringType,
-			"DatabricksWorkspaceUrl":      types.StringType,
+			"databricks_api_token":           types.StringType,
+			"databricks_api_token_plaintext": types.StringType,
+			"databricks_workspace_url":       types.StringType,
 		},
 	}
 }
@@ -694,24 +885,33 @@ func (newState *DataframeSplitInput) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *DataframeSplitInput) SyncEffectiveFieldsDuringRead(existingState DataframeSplitInput) {
 }
 
-func (a DataframeSplitInput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DataframeSplitInput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DataframeSplitInput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Columns": reflect.TypeOf(struct{}{}),
-		"Data":    reflect.TypeOf(struct{}{}),
-		"Index":   reflect.TypeOf(types.Int64Type),
+		"columns": reflect.TypeOf(struct{}{}),
+		"data":    reflect.TypeOf(struct{}{}),
+		"index":   reflect.TypeOf(types.Int64{}),
 	}
 }
 
+// ToAttrType returns the representation of DataframeSplitInput in the Terraform plugin framework type
+// system.
 func (a DataframeSplitInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Columns": basetypes.ListType{
+			"columns": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"Data": basetypes.ListType{
+			"data": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"Index": basetypes.ListType{
+			"index": basetypes.ListType{
 				ElemType: types.Int64Type,
 			},
 		},
@@ -727,10 +927,19 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
-func (a DeleteResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of DeleteResponse in the Terraform plugin framework type
+// system.
 func (a DeleteResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
@@ -749,14 +958,23 @@ func (newState *DeleteServingEndpointRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteServingEndpointRequest) SyncEffectiveFieldsDuringRead(existingState DeleteServingEndpointRequest) {
 }
 
-func (a DeleteServingEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServingEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteServingEndpointRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of DeleteServingEndpointRequest in the Terraform plugin framework type
+// system.
 func (a DeleteServingEndpointRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -775,20 +993,29 @@ func (newState *EmbeddingsV1ResponseEmbeddingElement) SyncEffectiveFieldsDuringC
 func (newState *EmbeddingsV1ResponseEmbeddingElement) SyncEffectiveFieldsDuringRead(existingState EmbeddingsV1ResponseEmbeddingElement) {
 }
 
-func (a EmbeddingsV1ResponseEmbeddingElement) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EmbeddingsV1ResponseEmbeddingElement.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EmbeddingsV1ResponseEmbeddingElement) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Embedding": reflect.TypeOf(types.Float64Type),
+		"embedding": reflect.TypeOf(types.Float64{}),
 	}
 }
 
+// ToAttrType returns the representation of EmbeddingsV1ResponseEmbeddingElement in the Terraform plugin framework type
+// system.
 func (a EmbeddingsV1ResponseEmbeddingElement) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Embedding": basetypes.ListType{
+			"embedding": basetypes.ListType{
 				ElemType: types.Float64Type,
 			},
-			"Index":  types.Int64Type,
-			"Object": types.StringType,
+			"index":  types.Int64Type,
+			"object": types.StringType,
 		},
 	}
 }
@@ -816,27 +1043,40 @@ func (newState *EndpointCoreConfigInput) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *EndpointCoreConfigInput) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigInput) {
 }
 
-func (a EndpointCoreConfigInput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointCoreConfigInput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EndpointCoreConfigInput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AutoCaptureConfig": reflect.TypeOf(AutoCaptureConfigInput{}),
-		"ServedEntities":    reflect.TypeOf(ServedEntityInput{}),
-		"ServedModels":      reflect.TypeOf(ServedModelInput{}),
-		"TrafficConfig":     reflect.TypeOf(TrafficConfig{}),
+		"auto_capture_config": reflect.TypeOf(AutoCaptureConfigInput{}),
+		"served_entities":     reflect.TypeOf(ServedEntityInput{}),
+		"served_models":       reflect.TypeOf(ServedModelInput{}),
+		"traffic_config":      reflect.TypeOf(TrafficConfig{}),
 	}
 }
 
+// ToAttrType returns the representation of EndpointCoreConfigInput in the Terraform plugin framework type
+// system.
 func (a EndpointCoreConfigInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AutoCaptureConfig": AutoCaptureConfigInput{}.ToAttrType(ctx),
-			"Name":              types.StringType,
-			"ServedEntities": basetypes.ListType{
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigInput{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
+			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityInput{}.ToAttrType(ctx),
 			},
-			"ServedModels": basetypes.ListType{
+			"served_models": basetypes.ListType{
 				ElemType: ServedModelInput{}.ToAttrType(ctx),
 			},
-			"TrafficConfig": TrafficConfig{}.ToAttrType(ctx),
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -862,27 +1102,40 @@ func (newState *EndpointCoreConfigOutput) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *EndpointCoreConfigOutput) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigOutput) {
 }
 
-func (a EndpointCoreConfigOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointCoreConfigOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EndpointCoreConfigOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AutoCaptureConfig": reflect.TypeOf(AutoCaptureConfigOutput{}),
-		"ServedEntities":    reflect.TypeOf(ServedEntityOutput{}),
-		"ServedModels":      reflect.TypeOf(ServedModelOutput{}),
-		"TrafficConfig":     reflect.TypeOf(TrafficConfig{}),
+		"auto_capture_config": reflect.TypeOf(AutoCaptureConfigOutput{}),
+		"served_entities":     reflect.TypeOf(ServedEntityOutput{}),
+		"served_models":       reflect.TypeOf(ServedModelOutput{}),
+		"traffic_config":      reflect.TypeOf(TrafficConfig{}),
 	}
 }
 
+// ToAttrType returns the representation of EndpointCoreConfigOutput in the Terraform plugin framework type
+// system.
 func (a EndpointCoreConfigOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AutoCaptureConfig": AutoCaptureConfigOutput{}.ToAttrType(ctx),
-			"ConfigVersion":     types.Int64Type,
-			"ServedEntities": basetypes.ListType{
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigOutput{}.ToAttrType(ctx),
+			},
+			"config_version": types.Int64Type,
+			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityOutput{}.ToAttrType(ctx),
 			},
-			"ServedModels": basetypes.ListType{
+			"served_models": basetypes.ListType{
 				ElemType: ServedModelOutput{}.ToAttrType(ctx),
 			},
-			"TrafficConfig": TrafficConfig{}.ToAttrType(ctx),
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -901,20 +1154,29 @@ func (newState *EndpointCoreConfigSummary) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *EndpointCoreConfigSummary) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigSummary) {
 }
 
-func (a EndpointCoreConfigSummary) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointCoreConfigSummary.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EndpointCoreConfigSummary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ServedEntities": reflect.TypeOf(ServedEntitySpec{}),
-		"ServedModels":   reflect.TypeOf(ServedModelSpec{}),
+		"served_entities": reflect.TypeOf(ServedEntitySpec{}),
+		"served_models":   reflect.TypeOf(ServedModelSpec{}),
 	}
 }
 
+// ToAttrType returns the representation of EndpointCoreConfigSummary in the Terraform plugin framework type
+// system.
 func (a EndpointCoreConfigSummary) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServedEntities": basetypes.ListType{
+			"served_entities": basetypes.ListType{
 				ElemType: ServedEntitySpec{}.ToAttrType(ctx),
 			},
-			"ServedModels": basetypes.ListType{
+			"served_models": basetypes.ListType{
 				ElemType: ServedModelSpec{}.ToAttrType(ctx),
 			},
 		},
@@ -946,28 +1208,41 @@ func (newState *EndpointPendingConfig) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *EndpointPendingConfig) SyncEffectiveFieldsDuringRead(existingState EndpointPendingConfig) {
 }
 
-func (a EndpointPendingConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointPendingConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EndpointPendingConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AutoCaptureConfig": reflect.TypeOf(AutoCaptureConfigOutput{}),
-		"ServedEntities":    reflect.TypeOf(ServedEntityOutput{}),
-		"ServedModels":      reflect.TypeOf(ServedModelOutput{}),
-		"TrafficConfig":     reflect.TypeOf(TrafficConfig{}),
+		"auto_capture_config": reflect.TypeOf(AutoCaptureConfigOutput{}),
+		"served_entities":     reflect.TypeOf(ServedEntityOutput{}),
+		"served_models":       reflect.TypeOf(ServedModelOutput{}),
+		"traffic_config":      reflect.TypeOf(TrafficConfig{}),
 	}
 }
 
+// ToAttrType returns the representation of EndpointPendingConfig in the Terraform plugin framework type
+// system.
 func (a EndpointPendingConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AutoCaptureConfig": AutoCaptureConfigOutput{}.ToAttrType(ctx),
-			"ConfigVersion":     types.Int64Type,
-			"ServedEntities": basetypes.ListType{
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigOutput{}.ToAttrType(ctx),
+			},
+			"config_version": types.Int64Type,
+			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityOutput{}.ToAttrType(ctx),
 			},
-			"ServedModels": basetypes.ListType{
+			"served_models": basetypes.ListType{
 				ElemType: ServedModelOutput{}.ToAttrType(ctx),
 			},
-			"StartTime":     types.Int64Type,
-			"TrafficConfig": TrafficConfig{}.ToAttrType(ctx),
+			"start_time": types.Int64Type,
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -992,15 +1267,24 @@ func (newState *EndpointState) SyncEffectiveFieldsDuringCreateOrUpdate(plan Endp
 func (newState *EndpointState) SyncEffectiveFieldsDuringRead(existingState EndpointState) {
 }
 
-func (a EndpointState) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EndpointState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of EndpointState in the Terraform plugin framework type
+// system.
 func (a EndpointState) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ConfigUpdate": types.StringType,
-			"Ready":        types.StringType,
+			"config_update": types.StringType,
+			"ready":         types.StringType,
 		},
 	}
 }
@@ -1018,15 +1302,24 @@ func (newState *EndpointTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan Endpoi
 func (newState *EndpointTag) SyncEffectiveFieldsDuringRead(existingState EndpointTag) {
 }
 
-func (a EndpointTag) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointTag.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EndpointTag) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of EndpointTag in the Terraform plugin framework type
+// system.
 func (a EndpointTag) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Key":   types.StringType,
-			"Value": types.StringType,
+			"key":   types.StringType,
+			"value": types.StringType,
 		},
 	}
 }
@@ -1044,14 +1337,23 @@ func (newState *ExportMetricsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ExportMetricsRequest) SyncEffectiveFieldsDuringRead(existingState ExportMetricsRequest) {
 }
 
-func (a ExportMetricsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportMetricsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExportMetricsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ExportMetricsRequest in the Terraform plugin framework type
+// system.
 func (a ExportMetricsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1066,14 +1368,23 @@ func (newState *ExportMetricsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ExportMetricsResponse) SyncEffectiveFieldsDuringRead(existingState ExportMetricsResponse) {
 }
 
-func (a ExportMetricsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportMetricsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExportMetricsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ExportMetricsResponse in the Terraform plugin framework type
+// system.
 func (a ExportMetricsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Contents": types.ObjectType{},
+			"contents": types.ObjectType{},
 		},
 	}
 }
@@ -1114,33 +1425,58 @@ func (newState *ExternalModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exte
 func (newState *ExternalModel) SyncEffectiveFieldsDuringRead(existingState ExternalModel) {
 }
 
-func (a ExternalModel) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalModel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalModel) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Ai21labsConfig":               reflect.TypeOf(Ai21LabsConfig{}),
-		"AmazonBedrockConfig":          reflect.TypeOf(AmazonBedrockConfig{}),
-		"AnthropicConfig":              reflect.TypeOf(AnthropicConfig{}),
-		"CohereConfig":                 reflect.TypeOf(CohereConfig{}),
-		"DatabricksModelServingConfig": reflect.TypeOf(DatabricksModelServingConfig{}),
-		"GoogleCloudVertexAiConfig":    reflect.TypeOf(GoogleCloudVertexAiConfig{}),
-		"OpenaiConfig":                 reflect.TypeOf(OpenAiConfig{}),
-		"PalmConfig":                   reflect.TypeOf(PaLmConfig{}),
+		"ai21labs_config":                 reflect.TypeOf(Ai21LabsConfig{}),
+		"amazon_bedrock_config":           reflect.TypeOf(AmazonBedrockConfig{}),
+		"anthropic_config":                reflect.TypeOf(AnthropicConfig{}),
+		"cohere_config":                   reflect.TypeOf(CohereConfig{}),
+		"databricks_model_serving_config": reflect.TypeOf(DatabricksModelServingConfig{}),
+		"google_cloud_vertex_ai_config":   reflect.TypeOf(GoogleCloudVertexAiConfig{}),
+		"openai_config":                   reflect.TypeOf(OpenAiConfig{}),
+		"palm_config":                     reflect.TypeOf(PaLmConfig{}),
 	}
 }
 
+// ToAttrType returns the representation of ExternalModel in the Terraform plugin framework type
+// system.
 func (a ExternalModel) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Ai21labsConfig":               Ai21LabsConfig{}.ToAttrType(ctx),
-			"AmazonBedrockConfig":          AmazonBedrockConfig{}.ToAttrType(ctx),
-			"AnthropicConfig":              AnthropicConfig{}.ToAttrType(ctx),
-			"CohereConfig":                 CohereConfig{}.ToAttrType(ctx),
-			"DatabricksModelServingConfig": DatabricksModelServingConfig{}.ToAttrType(ctx),
-			"GoogleCloudVertexAiConfig":    GoogleCloudVertexAiConfig{}.ToAttrType(ctx),
-			"Name":                         types.StringType,
-			"OpenaiConfig":                 OpenAiConfig{}.ToAttrType(ctx),
-			"PalmConfig":                   PaLmConfig{}.ToAttrType(ctx),
-			"Provider":                     types.StringType,
-			"Task":                         types.StringType,
+			"ai21labs_config": basetypes.ListType{
+				ElemType: Ai21LabsConfig{}.ToAttrType(ctx),
+			},
+			"amazon_bedrock_config": basetypes.ListType{
+				ElemType: AmazonBedrockConfig{}.ToAttrType(ctx),
+			},
+			"anthropic_config": basetypes.ListType{
+				ElemType: AnthropicConfig{}.ToAttrType(ctx),
+			},
+			"cohere_config": basetypes.ListType{
+				ElemType: CohereConfig{}.ToAttrType(ctx),
+			},
+			"databricks_model_serving_config": basetypes.ListType{
+				ElemType: DatabricksModelServingConfig{}.ToAttrType(ctx),
+			},
+			"google_cloud_vertex_ai_config": basetypes.ListType{
+				ElemType: GoogleCloudVertexAiConfig{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
+			"openai_config": basetypes.ListType{
+				ElemType: OpenAiConfig{}.ToAttrType(ctx),
+			},
+			"palm_config": basetypes.ListType{
+				ElemType: PaLmConfig{}.ToAttrType(ctx),
+			},
+			"provider": types.StringType,
+			"task":     types.StringType,
 		},
 	}
 }
@@ -1160,16 +1496,25 @@ func (newState *ExternalModelUsageElement) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ExternalModelUsageElement) SyncEffectiveFieldsDuringRead(existingState ExternalModelUsageElement) {
 }
 
-func (a ExternalModelUsageElement) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalModelUsageElement.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalModelUsageElement) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ExternalModelUsageElement in the Terraform plugin framework type
+// system.
 func (a ExternalModelUsageElement) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CompletionTokens": types.Int64Type,
-			"PromptTokens":     types.Int64Type,
-			"TotalTokens":      types.Int64Type,
+			"completion_tokens": types.Int64Type,
+			"prompt_tokens":     types.Int64Type,
+			"total_tokens":      types.Int64Type,
 		},
 	}
 }
@@ -1191,17 +1536,26 @@ func (newState *FoundationModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan Fo
 func (newState *FoundationModel) SyncEffectiveFieldsDuringRead(existingState FoundationModel) {
 }
 
-func (a FoundationModel) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FoundationModel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FoundationModel) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of FoundationModel in the Terraform plugin framework type
+// system.
 func (a FoundationModel) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description": types.StringType,
-			"DisplayName": types.StringType,
-			"Docs":        types.StringType,
-			"Name":        types.StringType,
+			"description":  types.StringType,
+			"display_name": types.StringType,
+			"docs":         types.StringType,
+			"name":         types.StringType,
 		},
 	}
 }
@@ -1219,14 +1573,23 @@ func (newState *GetOpenApiRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GetOpenApiRequest) SyncEffectiveFieldsDuringRead(existingState GetOpenApiRequest) {
 }
 
-func (a GetOpenApiRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetOpenApiRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetOpenApiRequest in the Terraform plugin framework type
+// system.
 func (a GetOpenApiRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1242,10 +1605,19 @@ func (newState *GetOpenApiResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GetOpenApiResponse) SyncEffectiveFieldsDuringRead(existingState GetOpenApiResponse) {
 }
 
-func (a GetOpenApiResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetOpenApiResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetOpenApiResponse in the Terraform plugin framework type
+// system.
 func (a GetOpenApiResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
@@ -1264,14 +1636,23 @@ func (newState *GetServingEndpointPermissionLevelsRequest) SyncEffectiveFieldsDu
 func (newState *GetServingEndpointPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsRequest) {
 }
 
-func (a GetServingEndpointPermissionLevelsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionLevelsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetServingEndpointPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetServingEndpointPermissionLevelsRequest in the Terraform plugin framework type
+// system.
 func (a GetServingEndpointPermissionLevelsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServingEndpointId": types.StringType,
+			"serving_endpoint_id": types.StringType,
 		},
 	}
 }
@@ -1287,16 +1668,25 @@ func (newState *GetServingEndpointPermissionLevelsResponse) SyncEffectiveFieldsD
 func (newState *GetServingEndpointPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsResponse) {
 }
 
-func (a GetServingEndpointPermissionLevelsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionLevelsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetServingEndpointPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"PermissionLevels": reflect.TypeOf(ServingEndpointPermissionsDescription{}),
+		"permission_levels": reflect.TypeOf(ServingEndpointPermissionsDescription{}),
 	}
 }
 
+// ToAttrType returns the representation of GetServingEndpointPermissionLevelsResponse in the Terraform plugin framework type
+// system.
 func (a GetServingEndpointPermissionLevelsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PermissionLevels": basetypes.ListType{
+			"permission_levels": basetypes.ListType{
 				ElemType: ServingEndpointPermissionsDescription{}.ToAttrType(ctx),
 			},
 		},
@@ -1315,14 +1705,23 @@ func (newState *GetServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringC
 func (newState *GetServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionsRequest) {
 }
 
-func (a GetServingEndpointPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetServingEndpointPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetServingEndpointPermissionsRequest in the Terraform plugin framework type
+// system.
 func (a GetServingEndpointPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServingEndpointId": types.StringType,
+			"serving_endpoint_id": types.StringType,
 		},
 	}
 }
@@ -1339,14 +1738,23 @@ func (newState *GetServingEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *GetServingEndpointRequest) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointRequest) {
 }
 
-func (a GetServingEndpointRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetServingEndpointRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GetServingEndpointRequest in the Terraform plugin framework type
+// system.
 func (a GetServingEndpointRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1387,17 +1795,26 @@ func (newState *GoogleCloudVertexAiConfig) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *GoogleCloudVertexAiConfig) SyncEffectiveFieldsDuringRead(existingState GoogleCloudVertexAiConfig) {
 }
 
-func (a GoogleCloudVertexAiConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GoogleCloudVertexAiConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GoogleCloudVertexAiConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of GoogleCloudVertexAiConfig in the Terraform plugin framework type
+// system.
 func (a GoogleCloudVertexAiConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PrivateKey":          types.StringType,
-			"PrivateKeyPlaintext": types.StringType,
-			"ProjectId":           types.StringType,
-			"Region":              types.StringType,
+			"private_key":           types.StringType,
+			"private_key_plaintext": types.StringType,
+			"project_id":            types.StringType,
+			"region":                types.StringType,
 		},
 	}
 }
@@ -1413,16 +1830,25 @@ func (newState *ListEndpointsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListEndpointsResponse) SyncEffectiveFieldsDuringRead(existingState ListEndpointsResponse) {
 }
 
-func (a ListEndpointsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEndpointsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListEndpointsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Endpoints": reflect.TypeOf(ServingEndpoint{}),
+		"endpoints": reflect.TypeOf(ServingEndpoint{}),
 	}
 }
 
+// ToAttrType returns the representation of ListEndpointsResponse in the Terraform plugin framework type
+// system.
 func (a ListEndpointsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Endpoints": basetypes.ListType{
+			"endpoints": basetypes.ListType{
 				ElemType: ServingEndpoint{}.ToAttrType(ctx),
 			},
 		},
@@ -1445,15 +1871,24 @@ func (newState *LogsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogsRe
 func (newState *LogsRequest) SyncEffectiveFieldsDuringRead(existingState LogsRequest) {
 }
 
-func (a LogsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LogsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LogsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of LogsRequest in the Terraform plugin framework type
+// system.
 func (a LogsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name":            types.StringType,
-			"ServedModelName": types.StringType,
+			"name":              types.StringType,
+			"served_model_name": types.StringType,
 		},
 	}
 }
@@ -1469,16 +1904,27 @@ func (newState *ModelDataPlaneInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ModelDataPlaneInfo) SyncEffectiveFieldsDuringRead(existingState ModelDataPlaneInfo) {
 }
 
-func (a ModelDataPlaneInfo) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelDataPlaneInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ModelDataPlaneInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"QueryInfo": reflect.TypeOf(oauth2.DataPlaneInfo{}),
+		"query_info": reflect.TypeOf(oauth2.DataPlaneInfo{}),
 	}
 }
 
+// ToAttrType returns the representation of ModelDataPlaneInfo in the Terraform plugin framework type
+// system.
 func (a ModelDataPlaneInfo) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"QueryInfo": oauth2_tf.DataPlaneInfo{}.ToAttrType(ctx),
+			"query_info": basetypes.ListType{
+				ElemType: oauth2_tf.DataPlaneInfo{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1543,24 +1989,33 @@ func (newState *OpenAiConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan OpenA
 func (newState *OpenAiConfig) SyncEffectiveFieldsDuringRead(existingState OpenAiConfig) {
 }
 
-func (a OpenAiConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OpenAiConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a OpenAiConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of OpenAiConfig in the Terraform plugin framework type
+// system.
 func (a OpenAiConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"MicrosoftEntraClientId":              types.StringType,
-			"MicrosoftEntraClientSecret":          types.StringType,
-			"MicrosoftEntraClientSecretPlaintext": types.StringType,
-			"MicrosoftEntraTenantId":              types.StringType,
-			"OpenaiApiBase":                       types.StringType,
-			"OpenaiApiKey":                        types.StringType,
-			"OpenaiApiKeyPlaintext":               types.StringType,
-			"OpenaiApiType":                       types.StringType,
-			"OpenaiApiVersion":                    types.StringType,
-			"OpenaiDeploymentName":                types.StringType,
-			"OpenaiOrganization":                  types.StringType,
+			"microsoft_entra_client_id":               types.StringType,
+			"microsoft_entra_client_secret":           types.StringType,
+			"microsoft_entra_client_secret_plaintext": types.StringType,
+			"microsoft_entra_tenant_id":               types.StringType,
+			"openai_api_base":                         types.StringType,
+			"openai_api_key":                          types.StringType,
+			"openai_api_key_plaintext":                types.StringType,
+			"openai_api_type":                         types.StringType,
+			"openai_api_version":                      types.StringType,
+			"openai_deployment_name":                  types.StringType,
+			"openai_organization":                     types.StringType,
 		},
 	}
 }
@@ -1584,15 +2039,24 @@ func (newState *PaLmConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan PaLmCon
 func (newState *PaLmConfig) SyncEffectiveFieldsDuringRead(existingState PaLmConfig) {
 }
 
-func (a PaLmConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PaLmConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PaLmConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of PaLmConfig in the Terraform plugin framework type
+// system.
 func (a PaLmConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"PalmApiKey":          types.StringType,
-			"PalmApiKeyPlaintext": types.StringType,
+			"palm_api_key":           types.StringType,
+			"palm_api_key_plaintext": types.StringType,
 		},
 	}
 }
@@ -1613,23 +2077,32 @@ func (newState *PatchServingEndpointTags) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *PatchServingEndpointTags) SyncEffectiveFieldsDuringRead(existingState PatchServingEndpointTags) {
 }
 
-func (a PatchServingEndpointTags) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchServingEndpointTags.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PatchServingEndpointTags) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AddTags":    reflect.TypeOf(EndpointTag{}),
-		"DeleteTags": reflect.TypeOf(types.StringType),
+		"add_tags":    reflect.TypeOf(EndpointTag{}),
+		"delete_tags": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of PatchServingEndpointTags in the Terraform plugin framework type
+// system.
 func (a PatchServingEndpointTags) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AddTags": basetypes.ListType{
+			"add_tags": basetypes.ListType{
 				ElemType: EndpointTag{}.ToAttrType(ctx),
 			},
-			"DeleteTags": basetypes.ListType{
+			"delete_tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Name": types.StringType,
+			"name": types.StringType,
 		},
 	}
 }
@@ -1649,16 +2122,25 @@ func (newState *PayloadTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan Paylo
 func (newState *PayloadTable) SyncEffectiveFieldsDuringRead(existingState PayloadTable) {
 }
 
-func (a PayloadTable) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PayloadTable.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PayloadTable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of PayloadTable in the Terraform plugin framework type
+// system.
 func (a PayloadTable) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name":          types.StringType,
-			"Status":        types.StringType,
-			"StatusMessage": types.StringType,
+			"name":           types.StringType,
+			"status":         types.StringType,
+			"status_message": types.StringType,
 		},
 	}
 }
@@ -1689,25 +2171,40 @@ func (newState *PutAiGatewayRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *PutAiGatewayRequest) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayRequest) {
 }
 
-func (a PutAiGatewayRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAiGatewayRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PutAiGatewayRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Guardrails":           reflect.TypeOf(AiGatewayGuardrails{}),
-		"InferenceTableConfig": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
-		"RateLimits":           reflect.TypeOf(AiGatewayRateLimit{}),
-		"UsageTrackingConfig":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
+		"guardrails":             reflect.TypeOf(AiGatewayGuardrails{}),
+		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
+		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit{}),
+		"usage_tracking_config":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
 	}
 }
 
+// ToAttrType returns the representation of PutAiGatewayRequest in the Terraform plugin framework type
+// system.
 func (a PutAiGatewayRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Guardrails":           AiGatewayGuardrails{}.ToAttrType(ctx),
-			"InferenceTableConfig": AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
-			"Name":                 types.StringType,
-			"RateLimits": basetypes.ListType{
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.ToAttrType(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
+			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.ToAttrType(ctx),
 			},
-			"UsageTrackingConfig": AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1734,24 +2231,39 @@ func (newState *PutAiGatewayResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *PutAiGatewayResponse) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayResponse) {
 }
 
-func (a PutAiGatewayResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAiGatewayResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PutAiGatewayResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Guardrails":           reflect.TypeOf(AiGatewayGuardrails{}),
-		"InferenceTableConfig": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
-		"RateLimits":           reflect.TypeOf(AiGatewayRateLimit{}),
-		"UsageTrackingConfig":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
+		"guardrails":             reflect.TypeOf(AiGatewayGuardrails{}),
+		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig{}),
+		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit{}),
+		"usage_tracking_config":  reflect.TypeOf(AiGatewayUsageTrackingConfig{}),
 	}
 }
 
+// ToAttrType returns the representation of PutAiGatewayResponse in the Terraform plugin framework type
+// system.
 func (a PutAiGatewayResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Guardrails":           AiGatewayGuardrails{}.ToAttrType(ctx),
-			"InferenceTableConfig": AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
-			"RateLimits": basetypes.ListType{
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.ToAttrType(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.ToAttrType(ctx),
+			},
+			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.ToAttrType(ctx),
 			},
-			"UsageTrackingConfig": AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -1771,17 +2283,26 @@ func (newState *PutRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutRequ
 func (newState *PutRequest) SyncEffectiveFieldsDuringRead(existingState PutRequest) {
 }
 
-func (a PutRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PutRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PutRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RateLimits": reflect.TypeOf(RateLimit{}),
+		"rate_limits": reflect.TypeOf(RateLimit{}),
 	}
 }
 
+// ToAttrType returns the representation of PutRequest in the Terraform plugin framework type
+// system.
 func (a PutRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Name": types.StringType,
-			"RateLimits": basetypes.ListType{
+			"name": types.StringType,
+			"rate_limits": basetypes.ListType{
 				ElemType: RateLimit{}.ToAttrType(ctx),
 			},
 		},
@@ -1799,16 +2320,25 @@ func (newState *PutResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutRes
 func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResponse) {
 }
 
-func (a PutResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PutResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PutResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"RateLimits": reflect.TypeOf(RateLimit{}),
+		"rate_limits": reflect.TypeOf(RateLimit{}),
 	}
 }
 
+// ToAttrType returns the representation of PutResponse in the Terraform plugin framework type
+// system.
 func (a PutResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"RateLimits": basetypes.ListType{
+			"rate_limits": basetypes.ListType{
 				ElemType: RateLimit{}.ToAttrType(ctx),
 			},
 		},
@@ -1873,44 +2403,55 @@ func (newState *QueryEndpointInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *QueryEndpointInput) SyncEffectiveFieldsDuringRead(existingState QueryEndpointInput) {
 }
 
-func (a QueryEndpointInput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEndpointInput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a QueryEndpointInput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"DataframeRecords": reflect.TypeOf(struct{}{}),
-		"DataframeSplit":   reflect.TypeOf(DataframeSplitInput{}),
-		"ExtraParams":      reflect.TypeOf(types.StringType),
-		"Instances":        reflect.TypeOf(struct{}{}),
-		"Messages":         reflect.TypeOf(ChatMessage{}),
-		"Stop":             reflect.TypeOf(types.StringType),
+		"dataframe_records": reflect.TypeOf(struct{}{}),
+		"dataframe_split":   reflect.TypeOf(DataframeSplitInput{}),
+		"extra_params":      reflect.TypeOf(types.String{}),
+		"instances":         reflect.TypeOf(struct{}{}),
+		"messages":          reflect.TypeOf(ChatMessage{}),
+		"stop":              reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of QueryEndpointInput in the Terraform plugin framework type
+// system.
 func (a QueryEndpointInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"DataframeRecords": basetypes.ListType{
+			"dataframe_records": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"DataframeSplit": DataframeSplitInput{}.ToAttrType(ctx),
-			"ExtraParams": basetypes.MapType{
+			"dataframe_split": basetypes.ListType{
+				ElemType: DataframeSplitInput{}.ToAttrType(ctx),
+			},
+			"extra_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"Input":  types.ObjectType{},
-			"Inputs": types.ObjectType{},
-			"Instances": basetypes.ListType{
+			"input":  types.ObjectType{},
+			"inputs": types.ObjectType{},
+			"instances": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"MaxTokens": types.Int64Type,
-			"Messages": basetypes.ListType{
+			"max_tokens": types.Int64Type,
+			"messages": basetypes.ListType{
 				ElemType: ChatMessage{}.ToAttrType(ctx),
 			},
-			"N":      types.Int64Type,
-			"Name":   types.StringType,
-			"Prompt": types.ObjectType{},
-			"Stop": basetypes.ListType{
+			"n":      types.Int64Type,
+			"name":   types.StringType,
+			"prompt": types.ObjectType{},
+			"stop": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"Stream":      types.BoolType,
-			"Temperature": types.Float64Type,
+			"stream":      types.BoolType,
+			"temperature": types.Float64Type,
 		},
 	}
 }
@@ -1952,33 +2493,44 @@ func (newState *QueryEndpointResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *QueryEndpointResponse) SyncEffectiveFieldsDuringRead(existingState QueryEndpointResponse) {
 }
 
-func (a QueryEndpointResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEndpointResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a QueryEndpointResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Choices":     reflect.TypeOf(V1ResponseChoiceElement{}),
-		"Data":        reflect.TypeOf(EmbeddingsV1ResponseEmbeddingElement{}),
-		"Predictions": reflect.TypeOf(struct{}{}),
-		"Usage":       reflect.TypeOf(ExternalModelUsageElement{}),
+		"choices":     reflect.TypeOf(V1ResponseChoiceElement{}),
+		"data":        reflect.TypeOf(EmbeddingsV1ResponseEmbeddingElement{}),
+		"predictions": reflect.TypeOf(struct{}{}),
+		"usage":       reflect.TypeOf(ExternalModelUsageElement{}),
 	}
 }
 
+// ToAttrType returns the representation of QueryEndpointResponse in the Terraform plugin framework type
+// system.
 func (a QueryEndpointResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Choices": basetypes.ListType{
+			"choices": basetypes.ListType{
 				ElemType: V1ResponseChoiceElement{}.ToAttrType(ctx),
 			},
-			"Created": types.Int64Type,
-			"Data": basetypes.ListType{
+			"created": types.Int64Type,
+			"data": basetypes.ListType{
 				ElemType: EmbeddingsV1ResponseEmbeddingElement{}.ToAttrType(ctx),
 			},
-			"Id":     types.StringType,
-			"Model":  types.StringType,
-			"Object": types.StringType,
-			"Predictions": basetypes.ListType{
+			"id":     types.StringType,
+			"model":  types.StringType,
+			"object": types.StringType,
+			"predictions": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"ServedModelName": types.StringType,
-			"Usage":           ExternalModelUsageElement{}.ToAttrType(ctx),
+			"served-model-name": types.StringType,
+			"usage": basetypes.ListType{
+				ElemType: ExternalModelUsageElement{}.ToAttrType(ctx),
+			},
 		},
 	}
 }
@@ -2002,16 +2554,25 @@ func (newState *RateLimit) SyncEffectiveFieldsDuringCreateOrUpdate(plan RateLimi
 func (newState *RateLimit) SyncEffectiveFieldsDuringRead(existingState RateLimit) {
 }
 
-func (a RateLimit) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RateLimit.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RateLimit) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of RateLimit in the Terraform plugin framework type
+// system.
 func (a RateLimit) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Calls":         types.Int64Type,
-			"Key":           types.StringType,
-			"RenewalPeriod": types.StringType,
+			"calls":          types.Int64Type,
+			"key":            types.StringType,
+			"renewal_period": types.StringType,
 		},
 	}
 }
@@ -2030,15 +2591,24 @@ func (newState *Route) SyncEffectiveFieldsDuringCreateOrUpdate(plan Route) {
 func (newState *Route) SyncEffectiveFieldsDuringRead(existingState Route) {
 }
 
-func (a Route) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Route.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Route) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of Route in the Terraform plugin framework type
+// system.
 func (a Route) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ServedModelName":   types.StringType,
-			"TrafficPercentage": types.Int64Type,
+			"served_model_name":  types.StringType,
+			"traffic_percentage": types.Int64Type,
 		},
 	}
 }
@@ -2110,29 +2680,40 @@ func (newState *ServedEntityInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ServedEntityInput) SyncEffectiveFieldsDuringRead(existingState ServedEntityInput) {
 }
 
-func (a ServedEntityInput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedEntityInput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServedEntityInput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EnvironmentVars": reflect.TypeOf(types.StringType),
-		"ExternalModel":   reflect.TypeOf(ExternalModel{}),
+		"environment_vars": reflect.TypeOf(types.String{}),
+		"external_model":   reflect.TypeOf(ExternalModel{}),
 	}
 }
 
+// ToAttrType returns the representation of ServedEntityInput in the Terraform plugin framework type
+// system.
 func (a ServedEntityInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EntityName":    types.StringType,
-			"EntityVersion": types.StringType,
-			"EnvironmentVars": basetypes.MapType{
+			"entity_name":    types.StringType,
+			"entity_version": types.StringType,
+			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"ExternalModel":            ExternalModel{}.ToAttrType(ctx),
-			"InstanceProfileArn":       types.StringType,
-			"MaxProvisionedThroughput": types.Int64Type,
-			"MinProvisionedThroughput": types.Int64Type,
-			"Name":                     types.StringType,
-			"ScaleToZeroEnabled":       types.BoolType,
-			"WorkloadSize":             types.StringType,
-			"WorkloadType":             types.StringType,
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.ToAttrType(ctx),
+			},
+			"instance_profile_arn":       types.StringType,
+			"max_provisioned_throughput": types.Int64Type,
+			"min_provisioned_throughput": types.Int64Type,
+			"name":                       types.StringType,
+			"scale_to_zero_enabled":      types.BoolType,
+			"workload_size":              types.StringType,
+			"workload_type":              types.StringType,
 		},
 	}
 }
@@ -2206,35 +2787,50 @@ func (newState *ServedEntityOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ServedEntityOutput) SyncEffectiveFieldsDuringRead(existingState ServedEntityOutput) {
 }
 
-func (a ServedEntityOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedEntityOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServedEntityOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EnvironmentVars": reflect.TypeOf(types.StringType),
-		"ExternalModel":   reflect.TypeOf(ExternalModel{}),
-		"FoundationModel": reflect.TypeOf(FoundationModel{}),
-		"State":           reflect.TypeOf(ServedModelState{}),
+		"environment_vars": reflect.TypeOf(types.String{}),
+		"external_model":   reflect.TypeOf(ExternalModel{}),
+		"foundation_model": reflect.TypeOf(FoundationModel{}),
+		"state":            reflect.TypeOf(ServedModelState{}),
 	}
 }
 
+// ToAttrType returns the representation of ServedEntityOutput in the Terraform plugin framework type
+// system.
 func (a ServedEntityOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreationTimestamp": types.Int64Type,
-			"Creator":           types.StringType,
-			"EntityName":        types.StringType,
-			"EntityVersion":     types.StringType,
-			"EnvironmentVars": basetypes.MapType{
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"entity_name":        types.StringType,
+			"entity_version":     types.StringType,
+			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"ExternalModel":            ExternalModel{}.ToAttrType(ctx),
-			"FoundationModel":          FoundationModel{}.ToAttrType(ctx),
-			"InstanceProfileArn":       types.StringType,
-			"MaxProvisionedThroughput": types.Int64Type,
-			"MinProvisionedThroughput": types.Int64Type,
-			"Name":                     types.StringType,
-			"ScaleToZeroEnabled":       types.BoolType,
-			"State":                    ServedModelState{}.ToAttrType(ctx),
-			"WorkloadSize":             types.StringType,
-			"WorkloadType":             types.StringType,
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.ToAttrType(ctx),
+			},
+			"foundation_model": basetypes.ListType{
+				ElemType: FoundationModel{}.ToAttrType(ctx),
+			},
+			"instance_profile_arn":       types.StringType,
+			"max_provisioned_throughput": types.Int64Type,
+			"min_provisioned_throughput": types.Int64Type,
+			"name":                       types.StringType,
+			"scale_to_zero_enabled":      types.BoolType,
+			"state": basetypes.ListType{
+				ElemType: ServedModelState{}.ToAttrType(ctx),
+			},
+			"workload_size": types.StringType,
+			"workload_type": types.StringType,
 		},
 	}
 }
@@ -2267,21 +2863,34 @@ func (newState *ServedEntitySpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *ServedEntitySpec) SyncEffectiveFieldsDuringRead(existingState ServedEntitySpec) {
 }
 
-func (a ServedEntitySpec) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedEntitySpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServedEntitySpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ExternalModel":   reflect.TypeOf(ExternalModel{}),
-		"FoundationModel": reflect.TypeOf(FoundationModel{}),
+		"external_model":   reflect.TypeOf(ExternalModel{}),
+		"foundation_model": reflect.TypeOf(FoundationModel{}),
 	}
 }
 
+// ToAttrType returns the representation of ServedEntitySpec in the Terraform plugin framework type
+// system.
 func (a ServedEntitySpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EntityName":      types.StringType,
-			"EntityVersion":   types.StringType,
-			"ExternalModel":   ExternalModel{}.ToAttrType(ctx),
-			"FoundationModel": FoundationModel{}.ToAttrType(ctx),
-			"Name":            types.StringType,
+			"entity_name":    types.StringType,
+			"entity_version": types.StringType,
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.ToAttrType(ctx),
+			},
+			"foundation_model": basetypes.ListType{
+				ElemType: FoundationModel{}.ToAttrType(ctx),
+			},
+			"name": types.StringType,
 		},
 	}
 }
@@ -2340,27 +2949,36 @@ func (newState *ServedModelInput) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *ServedModelInput) SyncEffectiveFieldsDuringRead(existingState ServedModelInput) {
 }
 
-func (a ServedModelInput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedModelInput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServedModelInput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EnvironmentVars": reflect.TypeOf(types.StringType),
+		"environment_vars": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of ServedModelInput in the Terraform plugin framework type
+// system.
 func (a ServedModelInput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"EnvironmentVars": basetypes.MapType{
+			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"InstanceProfileArn":       types.StringType,
-			"MaxProvisionedThroughput": types.Int64Type,
-			"MinProvisionedThroughput": types.Int64Type,
-			"ModelName":                types.StringType,
-			"ModelVersion":             types.StringType,
-			"Name":                     types.StringType,
-			"ScaleToZeroEnabled":       types.BoolType,
-			"WorkloadSize":             types.StringType,
-			"WorkloadType":             types.StringType,
+			"instance_profile_arn":       types.StringType,
+			"max_provisioned_throughput": types.Int64Type,
+			"min_provisioned_throughput": types.Int64Type,
+			"model_name":                 types.StringType,
+			"model_version":              types.StringType,
+			"name":                       types.StringType,
+			"scale_to_zero_enabled":      types.BoolType,
+			"workload_size":              types.StringType,
+			"workload_type":              types.StringType,
 		},
 	}
 }
@@ -2417,29 +3035,40 @@ func (newState *ServedModelOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ServedModelOutput) SyncEffectiveFieldsDuringRead(existingState ServedModelOutput) {
 }
 
-func (a ServedModelOutput) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedModelOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServedModelOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"EnvironmentVars": reflect.TypeOf(types.StringType),
-		"State":           reflect.TypeOf(ServedModelState{}),
+		"environment_vars": reflect.TypeOf(types.String{}),
+		"state":            reflect.TypeOf(ServedModelState{}),
 	}
 }
 
+// ToAttrType returns the representation of ServedModelOutput in the Terraform plugin framework type
+// system.
 func (a ServedModelOutput) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"CreationTimestamp": types.Int64Type,
-			"Creator":           types.StringType,
-			"EnvironmentVars": basetypes.MapType{
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"InstanceProfileArn": types.StringType,
-			"ModelName":          types.StringType,
-			"ModelVersion":       types.StringType,
-			"Name":               types.StringType,
-			"ScaleToZeroEnabled": types.BoolType,
-			"State":              ServedModelState{}.ToAttrType(ctx),
-			"WorkloadSize":       types.StringType,
-			"WorkloadType":       types.StringType,
+			"instance_profile_arn":  types.StringType,
+			"model_name":            types.StringType,
+			"model_version":         types.StringType,
+			"name":                  types.StringType,
+			"scale_to_zero_enabled": types.BoolType,
+			"state": basetypes.ListType{
+				ElemType: ServedModelState{}.ToAttrType(ctx),
+			},
+			"workload_size": types.StringType,
+			"workload_type": types.StringType,
 		},
 	}
 }
@@ -2461,16 +3090,25 @@ func (newState *ServedModelSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan Se
 func (newState *ServedModelSpec) SyncEffectiveFieldsDuringRead(existingState ServedModelSpec) {
 }
 
-func (a ServedModelSpec) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedModelSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServedModelSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ServedModelSpec in the Terraform plugin framework type
+// system.
 func (a ServedModelSpec) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ModelName":    types.StringType,
-			"ModelVersion": types.StringType,
-			"Name":         types.StringType,
+			"model_name":    types.StringType,
+			"model_version": types.StringType,
+			"name":          types.StringType,
 		},
 	}
 }
@@ -2499,15 +3137,24 @@ func (newState *ServedModelState) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *ServedModelState) SyncEffectiveFieldsDuringRead(existingState ServedModelState) {
 }
 
-func (a ServedModelState) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedModelState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServedModelState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ServedModelState in the Terraform plugin framework type
+// system.
 func (a ServedModelState) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Deployment":             types.StringType,
-			"DeploymentStateMessage": types.StringType,
+			"deployment":               types.StringType,
+			"deployment_state_message": types.StringType,
 		},
 	}
 }
@@ -2524,14 +3171,23 @@ func (newState *ServerLogsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ServerLogsResponse) SyncEffectiveFieldsDuringRead(existingState ServerLogsResponse) {
 }
 
-func (a ServerLogsResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServerLogsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServerLogsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ServerLogsResponse in the Terraform plugin framework type
+// system.
 func (a ServerLogsResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Logs": types.StringType,
+			"logs": types.StringType,
 		},
 	}
 }
@@ -2567,30 +3223,45 @@ func (newState *ServingEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan Se
 func (newState *ServingEndpoint) SyncEffectiveFieldsDuringRead(existingState ServingEndpoint) {
 }
 
-func (a ServingEndpoint) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpoint.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServingEndpoint) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AiGateway": reflect.TypeOf(AiGatewayConfig{}),
-		"Config":    reflect.TypeOf(EndpointCoreConfigSummary{}),
-		"State":     reflect.TypeOf(EndpointState{}),
-		"Tags":      reflect.TypeOf(EndpointTag{}),
+		"ai_gateway": reflect.TypeOf(AiGatewayConfig{}),
+		"config":     reflect.TypeOf(EndpointCoreConfigSummary{}),
+		"state":      reflect.TypeOf(EndpointState{}),
+		"tags":       reflect.TypeOf(EndpointTag{}),
 	}
 }
 
+// ToAttrType returns the representation of ServingEndpoint in the Terraform plugin framework type
+// system.
 func (a ServingEndpoint) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AiGateway":            AiGatewayConfig{}.ToAttrType(ctx),
-			"Config":               EndpointCoreConfigSummary{}.ToAttrType(ctx),
-			"CreationTimestamp":    types.Int64Type,
-			"Creator":              types.StringType,
-			"Id":                   types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
-			"Name":                 types.StringType,
-			"State":                EndpointState{}.ToAttrType(ctx),
-			"Tags": basetypes.ListType{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.ToAttrType(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigSummary{}.ToAttrType(ctx),
+			},
+			"creation_timestamp":     types.Int64Type,
+			"creator":                types.StringType,
+			"id":                     types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"name":                   types.StringType,
+			"state": basetypes.ListType{
+				ElemType: EndpointState{}.ToAttrType(ctx),
+			},
+			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.ToAttrType(ctx),
 			},
-			"Task": types.StringType,
+			"task": types.StringType,
 		},
 	}
 }
@@ -2612,17 +3283,26 @@ func (newState *ServingEndpointAccessControlRequest) SyncEffectiveFieldsDuringCr
 func (newState *ServingEndpointAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlRequest) {
 }
 
-func (a ServingEndpointAccessControlRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointAccessControlRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServingEndpointAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ServingEndpointAccessControlRequest in the Terraform plugin framework type
+// system.
 func (a ServingEndpointAccessControlRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"GroupName":            types.StringType,
-			"PermissionLevel":      types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"group_name":             types.StringType,
+			"permission_level":       types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -2646,22 +3326,31 @@ func (newState *ServingEndpointAccessControlResponse) SyncEffectiveFieldsDuringC
 func (newState *ServingEndpointAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlResponse) {
 }
 
-func (a ServingEndpointAccessControlResponse) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointAccessControlResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServingEndpointAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AllPermissions": reflect.TypeOf(ServingEndpointPermission{}),
+		"all_permissions": reflect.TypeOf(ServingEndpointPermission{}),
 	}
 }
 
+// ToAttrType returns the representation of ServingEndpointAccessControlResponse in the Terraform plugin framework type
+// system.
 func (a ServingEndpointAccessControlResponse) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AllPermissions": basetypes.ListType{
+			"all_permissions": basetypes.ListType{
 				ElemType: ServingEndpointPermission{}.ToAttrType(ctx),
 			},
-			"DisplayName":          types.StringType,
-			"GroupName":            types.StringType,
-			"ServicePrincipalName": types.StringType,
-			"UserName":             types.StringType,
+			"display_name":           types.StringType,
+			"group_name":             types.StringType,
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
 		},
 	}
 }
@@ -2708,37 +3397,56 @@ func (newState *ServingEndpointDetailed) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ServingEndpointDetailed) SyncEffectiveFieldsDuringRead(existingState ServingEndpointDetailed) {
 }
 
-func (a ServingEndpointDetailed) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointDetailed.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServingEndpointDetailed) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AiGateway":     reflect.TypeOf(AiGatewayConfig{}),
-		"Config":        reflect.TypeOf(EndpointCoreConfigOutput{}),
-		"DataPlaneInfo": reflect.TypeOf(ModelDataPlaneInfo{}),
-		"PendingConfig": reflect.TypeOf(EndpointPendingConfig{}),
-		"State":         reflect.TypeOf(EndpointState{}),
-		"Tags":          reflect.TypeOf(EndpointTag{}),
+		"ai_gateway":      reflect.TypeOf(AiGatewayConfig{}),
+		"config":          reflect.TypeOf(EndpointCoreConfigOutput{}),
+		"data_plane_info": reflect.TypeOf(ModelDataPlaneInfo{}),
+		"pending_config":  reflect.TypeOf(EndpointPendingConfig{}),
+		"state":           reflect.TypeOf(EndpointState{}),
+		"tags":            reflect.TypeOf(EndpointTag{}),
 	}
 }
 
+// ToAttrType returns the representation of ServingEndpointDetailed in the Terraform plugin framework type
+// system.
 func (a ServingEndpointDetailed) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AiGateway":            AiGatewayConfig{}.ToAttrType(ctx),
-			"Config":               EndpointCoreConfigOutput{}.ToAttrType(ctx),
-			"CreationTimestamp":    types.Int64Type,
-			"Creator":              types.StringType,
-			"DataPlaneInfo":        ModelDataPlaneInfo{}.ToAttrType(ctx),
-			"EndpointUrl":          types.StringType,
-			"Id":                   types.StringType,
-			"LastUpdatedTimestamp": types.Int64Type,
-			"Name":                 types.StringType,
-			"PendingConfig":        EndpointPendingConfig{}.ToAttrType(ctx),
-			"PermissionLevel":      types.StringType,
-			"RouteOptimized":       types.BoolType,
-			"State":                EndpointState{}.ToAttrType(ctx),
-			"Tags": basetypes.ListType{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.ToAttrType(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigOutput{}.ToAttrType(ctx),
+			},
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"data_plane_info": basetypes.ListType{
+				ElemType: ModelDataPlaneInfo{}.ToAttrType(ctx),
+			},
+			"endpoint_url":           types.StringType,
+			"id":                     types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"name":                   types.StringType,
+			"pending_config": basetypes.ListType{
+				ElemType: EndpointPendingConfig{}.ToAttrType(ctx),
+			},
+			"permission_level": types.StringType,
+			"route_optimized":  types.BoolType,
+			"state": basetypes.ListType{
+				ElemType: EndpointState{}.ToAttrType(ctx),
+			},
+			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.ToAttrType(ctx),
 			},
-			"Task": types.StringType,
+			"task": types.StringType,
 		},
 	}
 }
@@ -2757,20 +3465,29 @@ func (newState *ServingEndpointPermission) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ServingEndpointPermission) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermission) {
 }
 
-func (a ServingEndpointPermission) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermission.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServingEndpointPermission) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"InheritedFromObject": reflect.TypeOf(types.StringType),
+		"inherited_from_object": reflect.TypeOf(types.String{}),
 	}
 }
 
+// ToAttrType returns the representation of ServingEndpointPermission in the Terraform plugin framework type
+// system.
 func (a ServingEndpointPermission) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Inherited": types.BoolType,
-			"InheritedFromObject": basetypes.ListType{
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"PermissionLevel": types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2789,20 +3506,29 @@ func (newState *ServingEndpointPermissions) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ServingEndpointPermissions) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissions) {
 }
 
-func (a ServingEndpointPermissions) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermissions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServingEndpointPermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(ServingEndpointAccessControlResponse{}),
+		"access_control_list": reflect.TypeOf(ServingEndpointAccessControlResponse{}),
 	}
 }
 
+// ToAttrType returns the representation of ServingEndpointPermissions in the Terraform plugin framework type
+// system.
 func (a ServingEndpointPermissions) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: ServingEndpointAccessControlResponse{}.ToAttrType(ctx),
 			},
-			"ObjectId":   types.StringType,
-			"ObjectType": types.StringType,
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -2819,15 +3545,24 @@ func (newState *ServingEndpointPermissionsDescription) SyncEffectiveFieldsDuring
 func (newState *ServingEndpointPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsDescription) {
 }
 
-func (a ServingEndpointPermissionsDescription) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermissionsDescription.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServingEndpointPermissionsDescription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
+// ToAttrType returns the representation of ServingEndpointPermissionsDescription in the Terraform plugin framework type
+// system.
 func (a ServingEndpointPermissionsDescription) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Description":     types.StringType,
-			"PermissionLevel": types.StringType,
+			"description":      types.StringType,
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -2844,19 +3579,28 @@ func (newState *ServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringCrea
 func (newState *ServingEndpointPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsRequest) {
 }
 
-func (a ServingEndpointPermissionsRequest) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermissionsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ServingEndpointPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"AccessControlList": reflect.TypeOf(ServingEndpointAccessControlRequest{}),
+		"access_control_list": reflect.TypeOf(ServingEndpointAccessControlRequest{}),
 	}
 }
 
+// ToAttrType returns the representation of ServingEndpointPermissionsRequest in the Terraform plugin framework type
+// system.
 func (a ServingEndpointPermissionsRequest) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"AccessControlList": basetypes.ListType{
+			"access_control_list": basetypes.ListType{
 				ElemType: ServingEndpointAccessControlRequest{}.ToAttrType(ctx),
 			},
-			"ServingEndpointId": types.StringType,
+			"serving_endpoint_id": types.StringType,
 		},
 	}
 }
@@ -2872,16 +3616,25 @@ func (newState *TrafficConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan Traf
 func (newState *TrafficConfig) SyncEffectiveFieldsDuringRead(existingState TrafficConfig) {
 }
 
-func (a TrafficConfig) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TrafficConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TrafficConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Routes": reflect.TypeOf(Route{}),
+		"routes": reflect.TypeOf(Route{}),
 	}
 }
 
+// ToAttrType returns the representation of TrafficConfig in the Terraform plugin framework type
+// system.
 func (a TrafficConfig) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"Routes": basetypes.ListType{
+			"routes": basetypes.ListType{
 				ElemType: Route{}.ToAttrType(ctx),
 			},
 		},
@@ -2907,20 +3660,31 @@ func (newState *V1ResponseChoiceElement) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *V1ResponseChoiceElement) SyncEffectiveFieldsDuringRead(existingState V1ResponseChoiceElement) {
 }
 
-func (a V1ResponseChoiceElement) GetComplexFieldTypes() map[string]reflect.Type {
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in V1ResponseChoiceElement.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a V1ResponseChoiceElement) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"Message": reflect.TypeOf(ChatMessage{}),
+		"message": reflect.TypeOf(ChatMessage{}),
 	}
 }
 
+// ToAttrType returns the representation of V1ResponseChoiceElement in the Terraform plugin framework type
+// system.
 func (a V1ResponseChoiceElement) ToAttrType(ctx context.Context) types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"FinishReason": types.StringType,
-			"Index":        types.Int64Type,
-			"Logprobs":     types.Int64Type,
-			"Message":      ChatMessage{}.ToAttrType(ctx),
-			"Text":         types.StringType,
+			"finishReason": types.StringType,
+			"index":        types.Int64Type,
+			"logprobs":     types.Int64Type,
+			"message": basetypes.ListType{
+				ElemType: ChatMessage{}.ToAttrType(ctx),
+			},
+			"text": types.StringType,
 		},
 	}
 }

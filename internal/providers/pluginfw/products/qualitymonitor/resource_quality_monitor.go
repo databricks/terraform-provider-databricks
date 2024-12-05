@@ -3,6 +3,7 @@ package qualitymonitor
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -61,6 +62,21 @@ type MonitorInfoExtended struct {
 	ID                   types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
 }
 
+var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
+var _ pluginfwcommon.ObjectTypable = MonitorInfoExtended{}
+
+func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.MonitorInfo.GetComplexFieldTypes(ctx)
+}
+
+func (m MonitorInfoExtended) ToObjectType(ctx context.Context) types.ObjectType {
+	tpe := m.MonitorInfo.ToAttrType(ctx)
+	tpe.AttrTypes["warehouse_id"] = types.StringType
+	tpe.AttrTypes["skip_builtin_dashboard"] = types.BoolType
+	tpe.AttrTypes["id"] = types.StringType
+	return tpe
+}
+
 type QualityMonitorResource struct {
 	Client *common.DatabricksClient
 }
@@ -70,7 +86,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetRequired("assets_dir")
 		c.SetRequired("output_schema_name")
 		c.SetReadOnly("monitor_version")

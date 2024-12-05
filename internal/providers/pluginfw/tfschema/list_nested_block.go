@@ -1,6 +1,8 @@
 package tfschema
 
 import (
+	"fmt"
+
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -54,5 +56,21 @@ func (a ListNestedBlockBuilder) AddValidator(v validator.List) BaseSchemaBuilder
 
 func (a ListNestedBlockBuilder) AddPlanModifier(v planmodifier.List) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
+	return a
+}
+
+func (a ListNestedBlockBuilder) ConvertBlockToAttribute(field string) BaseSchemaBuilder {
+	elem, ok := a.NestedObject.Blocks[field]
+	if !ok {
+		panic(fmt.Errorf("field %s does not exist in nested block", field))
+	}
+	if a.NestedObject.Attributes == nil {
+		a.NestedObject.Attributes = make(map[string]AttributeBuilder)
+	}
+	a.NestedObject.Attributes[field] = elem.ToAttribute()
+	delete(a.NestedObject.Blocks, field)
+	if len(a.NestedObject.Blocks) == 0 {
+		a.NestedObject.Blocks = nil
+	}
 	return a
 }

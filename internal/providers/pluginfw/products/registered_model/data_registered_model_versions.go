@@ -34,7 +34,7 @@ func (d *RegisteredModelVersionsDataSource) Metadata(ctx context.Context, req da
 }
 
 func (d *RegisteredModelVersionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(RegisteredModelVersionsData{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, RegisteredModelVersionsData{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,

@@ -68,3 +68,19 @@ func (a SingleNestedBlockBuilder) AddPlanModifier(v planmodifier.Object) BaseSch
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }
+
+func (a SingleNestedBlockBuilder) ConvertBlockToAttribute(field string) BaseSchemaBuilder {
+	elem, ok := a.NestedObject.Blocks[field]
+	if !ok {
+		panic(fmt.Errorf("field %s does not exist in nested block", field))
+	}
+	if a.NestedObject.Attributes == nil {
+		a.NestedObject.Attributes = make(map[string]AttributeBuilder)
+	}
+	a.NestedObject.Attributes[field] = elem.ToAttribute()
+	delete(a.NestedObject.Blocks, field)
+	if len(a.NestedObject.Blocks) == 0 {
+		a.NestedObject.Blocks = nil
+	}
+	return a
+}

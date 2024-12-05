@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
@@ -32,6 +33,17 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo
+}
+
+var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
+var _ pluginfwcommon.ObjectTypable = ShareInfoExtended{}
+
+func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return s.ShareInfo.GetComplexFieldTypes(ctx)
+}
+
+func (s ShareInfoExtended) ToObjectType(ctx context.Context) types.ObjectType {
+	return s.ShareInfo.ToAttrType(ctx)
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
@@ -139,7 +151,7 @@ func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataReque
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetRequired("name")
 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
@@ -215,22 +227,13 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan.ShareInfo)
-	planObjects := []sharing_tf.SharedDataObject{}
-	resp.Diagnostics.Append(plan.Objects.ElementsAs(ctx, &planObjects, true)...)
-	newStateObjects := []sharing_tf.SharedDataObject{}
-	resp.Diagnostics.Append(newState.Objects.ElementsAs(ctx, &newStateObjects, true)...)
-	for i := range newStateObjects {
-		newStateObjects[i].SyncEffectiveFieldsDuringCreateOrUpdate(planObjects[i])
-	}
-	var d diag.Diagnostics
-	newState.Objects, d = basetypes.NewListValueFrom(ctx, newState.Objects.ElementType(ctx), newStateObjects)
+	newState, d := r.syncEffectiveFields(ctx, plan, newState, effectiveFieldsActionCreateOrUpdate{})
 	resp.Diagnostics.Append(d...)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -280,17 +283,11 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState.ShareInfo)
-	var existingObjects []sharing_tf.SharedDataObject
-	resp.Diagnostics.Append(existingState.Objects.ElementsAs(ctx, &existingObjects, true)...)
-	var newStateObjects []sharing_tf.SharedDataObject
-	resp.Diagnostics.Append(newState.Objects.ElementsAs(ctx, &newStateObjects, true)...)
-	for i := range newStateObjects {
-		newStateObjects[i].SyncEffectiveFieldsDuringRead(existingObjects[i])
-	}
-	var d diag.Diagnostics
-	newState.Objects, d = basetypes.NewListValueFrom(ctx, newState.Objects.ElementType(ctx), newStateObjects)
+	newState, d := r.syncEffectiveFields(ctx, existingState, newState, effectiveFieldsActionRead{})
 	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
@@ -386,17 +383,11 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
-	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan.ShareInfo)
-	planObjects := []sharing_tf.SharedDataObject{}
-	resp.Diagnostics.Append(plan.Objects.ElementsAs(ctx, &planObjects, true)...)
-	stateObjects := []sharing_tf.SharedDataObject{}
-	resp.Diagnostics.Append(state.Objects.ElementsAs(ctx, &stateObjects, true)...)
-	for i := range stateObjects {
-		stateObjects[i].SyncEffectiveFieldsDuringCreateOrUpdate(planObjects[i])
-	}
-	var d diag.Diagnostics
-	state.Objects, d = basetypes.NewListValueFrom(ctx, state.Objects.ElementType(ctx), stateObjects)
+	state, d := r.syncEffectiveFields(ctx, plan, state, effectiveFieldsActionCreateOrUpdate{})
 	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
@@ -420,4 +411,51 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		resp.Diagnostics.AddError("failed to delete share", err.Error())
 		return
 	}
+}
+
+type effectiveFieldsAction interface {
+	resourceLevel(*ShareInfoExtended, sharing_tf.ShareInfo)
+	objectLevel(*sharing_tf.SharedDataObject, sharing_tf.SharedDataObject)
+}
+
+type effectiveFieldsActionCreateOrUpdate struct{}
+
+func (effectiveFieldsActionCreateOrUpdate) resourceLevel(state *ShareInfoExtended, plan sharing_tf.ShareInfo) {
+	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+}
+
+func (effectiveFieldsActionCreateOrUpdate) objectLevel(state *sharing_tf.SharedDataObject, plan sharing_tf.SharedDataObject) {
+	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+}
+
+type effectiveFieldsActionRead struct{}
+
+func (effectiveFieldsActionRead) resourceLevel(state *ShareInfoExtended, plan sharing_tf.ShareInfo) {
+	state.SyncEffectiveFieldsDuringRead(plan)
+}
+
+func (effectiveFieldsActionRead) objectLevel(state *sharing_tf.SharedDataObject, plan sharing_tf.SharedDataObject) {
+	state.SyncEffectiveFieldsDuringRead(plan)
+}
+
+func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
+	var d diag.Diagnostics
+	mode.resourceLevel(&state, plan.ShareInfo)
+	planObjects := []sharing_tf.SharedDataObject{}
+	d.Append(plan.Objects.ElementsAs(ctx, &planObjects, true)...)
+	if d.HasError() {
+		return state, d
+	}
+	stateObjects := []sharing_tf.SharedDataObject{}
+	d.Append(state.Objects.ElementsAs(ctx, &stateObjects, true)...)
+	if d.HasError() {
+		return state, d
+	}
+	for i := range stateObjects {
+		mode.objectLevel(&stateObjects[i], planObjects[i])
+	}
+	var dd diag.Diagnostics
+	state.Objects, dd = basetypes.NewListValueFrom(ctx, state.Objects.ElementType(ctx), stateObjects)
+	d.Append(dd...)
+	return state, d
 }

@@ -194,6 +194,12 @@ func goSdkToTfSdkSingleField(
 				destField.Set(reflect.ValueOf(emptyList))
 				return
 			}
+			if destField.Type() == reflect.TypeOf(types.Object{}) {
+				// If the destination field is a types.Object, treat the source field as an empty object.
+				innerType := innerType.(types.ObjectType)
+				destField.Set(reflect.ValueOf(types.ObjectNull(innerType.AttrTypes)))
+				return
+			}
 			// Skip zeros
 			return
 		}

@@ -242,7 +242,17 @@ func tfsdkToGoSdkStructField(
 
 		destField.Set(converted)
 	case types.Object:
-		d.Append(v.As(ctx, destField.Addr().Interface(), basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})...)
+		if v.IsNull() {
+			return
+		}
+
+		innerValue := reflect.New(innerType)
+		d.Append(v.As(ctx, innerValue.Interface(), basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})...)
+		if d.HasError() {
+			return
+		}
+
+		d.Append(TfSdkToGoSdkStruct(ctx, innerValue.Interface(), destField.Addr().Interface())...)
 	case types.Set, types.Tuple:
 		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("%T is not currently supported as a source field. %s", v, common.TerraformBugErrorMessage))
 		return

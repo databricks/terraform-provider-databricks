@@ -31,6 +31,7 @@ type DummyTfSdk struct {
 	DistinctField     types.String  `tfsdk:"distinct_field" tf:"optional"`
 	SliceStructPtr    types.List    `tfsdk:"slice_struct_ptr" tf:"optional"`
 	Irrelevant        types.String  `tfsdk:"-"`
+	Object            types.Object  `tfsdk:"object" tf:"optional"`
 }
 
 func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -44,6 +45,7 @@ func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 		"attributes":          reflect.TypeOf(types.String{}),
 		"slice_struct":        reflect.TypeOf(DummyNestedTfSdk{}),
 		"slice_struct_ptr":    reflect.TypeOf(DummyNestedTfSdk{}),
+		"object":              reflect.TypeOf(DummyNestedTfSdk{}),
 	}
 }
 
@@ -66,6 +68,9 @@ func (DummyTfSdk) ToObjectType(ctx context.Context) types.ObjectType {
 			"additional_field":    types.StringType,
 			"distinct_field":      types.StringType,
 			"slice_struct_ptr":    types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
+			"object": types.ObjectType{
+				AttrTypes: DummyNestedTfSdk{}.ToObjectType(ctx).AttrTypes,
+			},
 		},
 	}
 }
@@ -129,6 +134,7 @@ type DummyGoSdk struct {
 	DistinctField     string                      `json:"distinct_field"` // distinct field that the tfsdk struct doesn't have
 	SliceStructPtr    *DummyNestedGoSdk           `json:"slice_struct_ptr"`
 	ForceSendFields   []string                    `json:"-"`
+	Object            DummyNestedGoSdk            `json:"object"`
 }
 
 type DummyNestedGoSdk struct {
@@ -370,6 +376,18 @@ var tests = []struct {
 			Enabled:         true,
 			ForceSendFields: []string{"Name", "Enabled"},
 		}, ForceSendFields: []string{"SliceStructPtr"}},
+	},
+	{
+		"object conversion",
+		DummyTfSdk{Object: types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+			"name":    types.StringValue("def"),
+			"enabled": types.BoolValue(true),
+		})},
+		DummyGoSdk{Object: DummyNestedGoSdk{
+			Name:            "def",
+			Enabled:         true,
+			ForceSendFields: []string{"Name", "Enabled"},
+		}, ForceSendFields: []string{"Object"}},
 	},
 }
 

@@ -56,6 +56,16 @@ func (TestMapTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 	}
 }
 
+type TestObjectTfSdk struct {
+	Object types.Object `tfsdk:"object" tf:"optional"`
+}
+
+func (TestObjectTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"object": reflect.TypeOf(DummyNested{}),
+	}
+}
+
 type TestNestedListTfSdk struct {
 	NestedList types.List `tfsdk:"nested_list" tf:"optional"`
 }
@@ -119,6 +129,13 @@ var tests = []struct {
 	{
 		"map conversion",
 		TestMapTfSdk{Attributes: types.MapValueMust(types.StringType, map[string]attr.Value{"key": types.StringValue("value")})},
+	},
+	{
+		"object conversion",
+		TestObjectTfSdk{Object: types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+			"name":    types.StringValue("abc"),
+			"enabled": types.BoolValue(true),
+		})},
 	},
 	{
 		"nested list conversion",

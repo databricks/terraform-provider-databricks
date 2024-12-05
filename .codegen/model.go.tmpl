@@ -185,8 +185,8 @@ even when they are called recursively.
     {{- else if .IsInt}}types.Int64
     {{- else if .IsByteStream}}io.ReadCloser
     {{- else if .ArrayValue }}types.List
-    {{- else if .MapValue }}types.Map{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}
-    {{- else if .IsObject }}types.List
+    {{- else if .MapValue }}types.Map
+    {{- else if .IsObject }}types.List{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}
     {{- else if .Enum }}types.String
     {{- else}}any /* MISSING TYPE */
     {{- end -}}

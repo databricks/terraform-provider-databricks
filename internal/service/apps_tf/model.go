@@ -59,12 +59,6 @@ type App struct {
 	Url types.String `tfsdk:"url" tf:"computed,optional"`
 }
 
-func (a *App) GetNestedTypes() map[string]any {
-	return map[string]any{
-		"active_deployment": AppDeployment{},
-	}
-}
-
 func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
 }
 

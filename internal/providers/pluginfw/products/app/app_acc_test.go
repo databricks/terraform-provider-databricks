@@ -54,31 +54,32 @@ const baseResources = `
 `
 
 /*
+	resources {
+		name = "warehouse"
+		description = "warehouse for app"
+		job {
+			id = databricks_job.this.id
+			permission = "CAN_MANAGE"
+		}
+	}
 
-		resources {
-			name = "warehouse"
-			description = "warehouse for app"
-			job {
-				id = databricks_job.this.id
-				permission = "CAN_MANAGE"
-			}
+	resources {
+		name = "serving endpoint"
+		description = "serving endpoint for app"
+		serving_endpoint {
+			name = databricks_model_serving.this.name
+			permission = "CAN_MANAGE"
 		}
-		resources {
-			name = "serving endpoint"
-			description = "serving endpoint for app"
-			serving_endpoint {
-				name = databricks_model_serving.this.name
-				permission = "CAN_MANAGE"
-			}
-		}	
-		resources {
-			name = "sql warehouse"
-			description = "sql warehouse for app"
-			sql_warehouse {
-				id = databricks_sql_endpoint.this.id
-				permission = "CAN_MANAGE"
-			}
+	}
+
+	resources {
+		name = "sql warehouse"
+		description = "sql warehouse for app"
+		sql_warehouse {
+			id = databricks_sql_endpoint.this.id
+			permission = "CAN_MANAGE"
 		}
+	}
 */
 func makeTemplate(description string) string {
 	appTemplate := baseResources + `

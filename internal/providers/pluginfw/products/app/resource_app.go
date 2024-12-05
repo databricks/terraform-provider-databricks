@@ -112,13 +112,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	appStatus := newApp.AppStatus[0]
-	computeStatus := newApp.ComputeStatus[0]
-	newApp.AppStatus = nil
-	newApp.ComputeStatus = nil
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Empty().AtName("app_status"), appStatus)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Empty().AtName("compute_status"), computeStatus)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -167,13 +161,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	appStatus := newApp.AppStatus[0]
-	computeStatus := newApp.ComputeStatus[0]
-	newApp.AppStatus = nil
-	newApp.ComputeStatus = nil
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Empty().AtName("app_status"), appStatus)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Empty().AtName("compute_status"), computeStatus)...)
 }
 
 func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -208,13 +196,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	appStatus := newApp.AppStatus[0]
-	computeStatus := newApp.ComputeStatus[0]
-	newApp.AppStatus = nil
-	newApp.ComputeStatus = nil
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Empty().AtName("app_status"), appStatus)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Empty().AtName("compute_status"), computeStatus)...)
 }
 
 func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

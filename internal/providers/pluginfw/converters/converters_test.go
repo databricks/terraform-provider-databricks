@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -168,14 +167,14 @@ func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, 
 	convertedGoSdkStruct := DummyGoSdk{}
 	d := TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, &convertedGoSdkStruct)
 	if d.HasError() {
-		t.Errorf("tfsdk to gosdk conversion: %s", pluginfwcommon.DiagToString(d))
+		t.Errorf("tfsdk to gosdk conversion: %s", tfcommon.DiagToString(d))
 	}
 	assert.Equal(t, goSdkStruct, convertedGoSdkStruct, fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
 
 	convertedTfSdkStruct := DummyTfSdk{}
 	d = GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct)
 	if d.HasError() {
-		t.Errorf("gosdk to tfsdk conversion: %s", pluginfwcommon.DiagToString(d))
+		t.Errorf("gosdk to tfsdk conversion: %s", tfcommon.DiagToString(d))
 	}
 	assert.Equal(t, populateEmptyFields(tfSdkStruct), convertedTfSdkStruct, fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
 }

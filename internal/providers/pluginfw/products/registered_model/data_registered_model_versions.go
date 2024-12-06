@@ -81,7 +81,7 @@ func (d *RegisteredModelVersionsDataSource) Read(ctx context.Context, req dataso
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		tfModelVersions = append(tfModelVersions, modelVersion)
+		tfModelVersions = append(tfModelVersions, modelVersion.ToObjectValue(ctx))
 	}
 	registeredModelVersions.ModelVersions = types.ListValueMust(catalog_tf.ModelVersionInfo{}.Type(ctx), tfModelVersions)
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModelVersions)...)

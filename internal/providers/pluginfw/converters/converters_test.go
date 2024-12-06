@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -49,32 +49,6 @@ func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	}
 }
 
-func (DummyTfSdk) ToObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"enabled":             types.BoolType,
-			"workers":             types.Int64Type,
-			"floats":              types.Float64Type,
-			"description":         types.StringType,
-			"task":                types.StringType,
-			"no_pointer_nested":   types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
-			"nested_list":         types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
-			"nested_pointer_list": types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
-			"map":                 types.MapType{ElemType: types.StringType},
-			"nested_map":          types.MapType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
-			"repeated":            types.ListType{ElemType: types.Int64Type},
-			"attributes":          types.MapType{ElemType: types.StringType},
-			"enum_field":          types.StringType,
-			"additional_field":    types.StringType,
-			"distinct_field":      types.StringType,
-			"slice_struct_ptr":    types.ListType{ElemType: DummyNestedTfSdk{}.ToObjectType(ctx)},
-			"object": types.ObjectType{
-				AttrTypes: DummyNestedTfSdk{}.ToObjectType(ctx).AttrTypes,
-			},
-		},
-	}
-}
-
 type TestEnum string
 
 const TestEnumA TestEnum = `TEST_ENUM_A`
@@ -105,15 +79,6 @@ func (f *TestEnum) Type() string {
 type DummyNestedTfSdk struct {
 	Name    types.String `tfsdk:"name" tf:"optional"`
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
-}
-
-func (DummyNestedTfSdk) ToObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":    types.StringType,
-			"enabled": types.BoolType,
-		},
-	}
 }
 
 type DummyGoSdk struct {
@@ -150,24 +115,35 @@ func populateEmptyFields(c DummyTfSdk) DummyTfSdk {
 	complexFields := c.GetComplexFieldTypes(context.Background())
 	v := reflect.ValueOf(&c).Elem()
 	for i := 0; i < v.NumField(); i++ {
-		name := v.Type().Field(i).Name
+		field := v.Field(i)
+		// If the field is a simple type, the zero value is OK.
+		switch field.Type() {
+		case reflect.TypeOf(types.Bool{}), reflect.TypeOf(types.Int64{}), reflect.TypeOf(types.Float64{}), reflect.TypeOf(types.String{}):
+			continue
+		}
+		if !field.IsZero() {
+			continue
+		}
+
 		tfsdkName := v.Type().Field(i).Tag.Get("tfsdk")
 		complexType, ok := complexFields[tfsdkName]
 		if !ok {
 			continue
 		}
-		field := v.FieldByName(name)
-		if !field.IsZero() {
-			continue
-		}
-		innerVal := reflect.New(complexType).Elem().Interface()
+
 		var typ attr.Type
-		if ot, ok := innerVal.(interface {
-			ToObjectType(context.Context) types.ObjectType
-		}); ok {
-			typ = ot.ToObjectType(context.Background())
-		} else {
-			typ = innerVal.(attr.Value).Type(context.Background())
+		switch complexType {
+		case reflect.TypeOf(types.Bool{}):
+			typ = types.BoolType
+		case reflect.TypeOf(types.Int64{}):
+			typ = types.Int64Type
+		case reflect.TypeOf(types.Float64{}):
+			typ = types.Float64Type
+		case reflect.TypeOf(types.String{}):
+			typ = types.StringType
+		default:
+			innerVal := reflect.New(complexType).Elem().Interface()
+			typ = tfcommon.NewObjectTyper(innerVal).Type(context.Background())
 		}
 		switch field.Type() {
 		case reflect.TypeOf(types.List{}):
@@ -191,14 +167,14 @@ func RunConverterTest(t *testing.T, description string, tfSdkStruct DummyTfSdk, 
 	convertedGoSdkStruct := DummyGoSdk{}
 	d := TfSdkToGoSdkStruct(context.Background(), tfSdkStruct, &convertedGoSdkStruct)
 	if d.HasError() {
-		t.Errorf("tfsdk to gosdk conversion: %s", pluginfwcommon.DiagToString(d))
+		t.Errorf("tfsdk to gosdk conversion: %s", tfcommon.DiagToString(d))
 	}
 	assert.Equal(t, goSdkStruct, convertedGoSdkStruct, fmt.Sprintf("tfsdk to gosdk conversion - %s", description))
 
 	convertedTfSdkStruct := DummyTfSdk{}
 	d = GoSdkToTfSdkStruct(context.Background(), goSdkStruct, &convertedTfSdkStruct)
 	if d.HasError() {
-		t.Errorf("gosdk to tfsdk conversion: %s", pluginfwcommon.DiagToString(d))
+		t.Errorf("gosdk to tfsdk conversion: %s", tfcommon.DiagToString(d))
 	}
 	assert.Equal(t, populateEmptyFields(tfSdkStruct), convertedTfSdkStruct, fmt.Sprintf("gosdk to tfsdk conversion - %s", description))
 }
@@ -221,7 +197,7 @@ func TestGoSdkToTfSdkStructConversionFailure(t *testing.T) {
 	assert.True(t, actualDiagnostics.Equal(expectedDiagnostics))
 }
 
-var dummyType = DummyNestedTfSdk{}.ToObjectType(context.Background())
+var dummyType = tfcommon.NewObjectTyper(DummyNestedTfSdk{}).Type(context.Background()).(types.ObjectType)
 
 var tests = []struct {
 	name        string

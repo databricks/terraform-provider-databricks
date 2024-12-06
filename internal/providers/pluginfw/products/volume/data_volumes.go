@@ -42,16 +42,6 @@ func (VolumesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type
 	}
 }
 
-func (VolumesList) ToObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"catalog_name": types.StringType,
-			"schema_name":  types.StringType,
-			"ids":          types.ListType{ElemType: types.StringType},
-		},
-	}
-}
-
 func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceName)
 }

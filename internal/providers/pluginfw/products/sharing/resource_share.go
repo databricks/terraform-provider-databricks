@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 const resourceName = "share"
@@ -435,21 +434,13 @@ func (effectiveFieldsActionRead) objectLevel(state *sharing_tf.SharedDataObject,
 func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
 	var d diag.Diagnostics
 	mode.resourceLevel(&state, plan.ShareInfo)
-	planObjects := []sharing_tf.SharedDataObject{}
-	d.Append(plan.Objects.ElementsAs(ctx, &planObjects, true)...)
-	if d.HasError() {
-		return state, d
-	}
-	stateObjects := []sharing_tf.SharedDataObject{}
-	d.Append(state.Objects.ElementsAs(ctx, &stateObjects, true)...)
-	if d.HasError() {
-		return state, d
-	}
+	planObjects, _ := plan.GetObjects(ctx)
+	stateObjects, _ := state.GetObjects(ctx)
+	finalObjects := []sharing_tf.SharedDataObject{}
 	for i := range stateObjects {
 		mode.objectLevel(&stateObjects[i], planObjects[i])
+		finalObjects = append(finalObjects, stateObjects[i])
 	}
-	var dd diag.Diagnostics
-	state.Objects, dd = basetypes.NewListValueFrom(ctx, state.Objects.ElementType(ctx), stateObjects)
-	d.Append(dd...)
+	state.SetObjects(ctx, finalObjects)
 	return state, d
 }

@@ -63,17 +63,17 @@ func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{
 	allFields := tfreflect.ListAllFields(srcVal)
 	for _, field := range allFields {
 		srcField := field.Value
-		srcFieldName := field.StructField.Name
+		destFieldName := toGoSdkName(field.StructField.Name)
 
 		srcFieldTag := field.StructField.Tag.Get("tfsdk")
 		if srcFieldTag == "-" {
 			continue
 		}
 
-		destField := destVal.FieldByName(toGoSdkName(srcFieldName))
+		destField := destVal.FieldByName(destFieldName)
 		innerType := innerTypes[srcFieldTag]
 
-		d.Append(tfSdkToGoSdkSingleField(ctx, srcField, destField, srcFieldName, &forceSendFieldsField, innerType)...)
+		d.Append(tfSdkToGoSdkSingleField(ctx, srcField, destField, destFieldName, &forceSendFieldsField, innerType)...)
 		if d.HasError() {
 			return
 		}
@@ -86,23 +86,18 @@ func tfSdkToGoSdkSingleField(
 	ctx context.Context,
 	srcField reflect.Value,
 	destField reflect.Value,
-	srcFieldName string,
+	destFieldName string,
 	forceSendFieldsField *reflect.Value,
 	innerType reflect.Type) (d diag.Diagnostics) {
 
 	if !destField.IsValid() {
 		// Skip field that destination struct does not have.
-		tflog.Trace(ctx, fmt.Sprintf("field skipped in tfsdk to gosdk conversion: destination struct does not have field %s", srcFieldName))
+		tflog.Trace(ctx, fmt.Sprintf("field skipped in tfsdk to gosdk conversion: destination struct does not have field %s", destFieldName))
 		return
 	}
 
 	if !destField.CanSet() {
 		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("destination field can not be set: %T. %s", destField.Type(), common.TerraformBugErrorMessage))
-		return
-	}
-
-	if srcField.Kind() != reflect.Struct {
-		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("unexpected type %T in tfsdk structs, expected a plugin framework type. %s", srcField.Interface(), common.TerraformBugErrorMessage))
 		return
 	}
 
@@ -116,11 +111,12 @@ func tfSdkToGoSdkSingleField(
 	if v.IsUnknown() {
 		return
 	}
+
 	if shouldSetForceSendFields(v, destField) {
-		addToForceSendFields(ctx, srcFieldName, forceSendFieldsField)
+		addToForceSendFields(ctx, destFieldName, forceSendFieldsField)
 	}
 
-	d.Append(tfsdkToGoSdkStructField(ctx, v, destField, srcFieldName, forceSendFieldsField, innerType)...)
+	d.Append(tfsdkToGoSdkStructField(ctx, v, destField, destFieldName, forceSendFieldsField, innerType)...)
 	return
 }
 
@@ -128,7 +124,7 @@ func tfsdkToGoSdkStructField(
 	ctx context.Context,
 	srcFieldValue attr.Value,
 	destField reflect.Value,
-	srcFieldName string,
+	destFieldName string,
 	forceSendFieldsField *reflect.Value,
 	innerType reflect.Type) (d diag.Diagnostics) {
 	switch v := srcFieldValue.(type) {
@@ -194,7 +190,7 @@ func tfsdkToGoSdkStructField(
 			// Otherwise, it is a TF SDK struct, and we need to call TfSdkToGoSdkStruct to convert it.
 			switch typedVv := vv.(type) {
 			case types.Bool, types.String, types.Int64, types.Float64:
-				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), srcFieldName, forceSendFieldsField, innerType)...)
+				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), destFieldName, forceSendFieldsField, innerType)...)
 			default:
 				d.Append(TfSdkToGoSdkStruct(ctx, vv, nextDest.Interface())...)
 			}
@@ -235,7 +231,7 @@ func tfsdkToGoSdkStructField(
 			// Otherwise, it is a TF SDK struct, and we need to call TfSdkToGoSdkStruct to convert it.
 			switch typedVv := vv.(type) {
 			case types.Bool, types.String, types.Int64, types.Float64:
-				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), srcFieldName, forceSendFieldsField, innerType)...)
+				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), destFieldName, forceSendFieldsField, innerType)...)
 			default:
 				d.Append(TfSdkToGoSdkStruct(ctx, vv, nextDest.Interface())...)
 			}
@@ -258,11 +254,8 @@ func tfsdkToGoSdkStructField(
 		}
 
 		d.Append(TfSdkToGoSdkStruct(ctx, innerValue.Interface(), destField.Addr().Interface())...)
-	case types.Set, types.Tuple:
-		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("%T is not currently supported as a source field. %s", v, common.TerraformBugErrorMessage))
-		return
 	default:
-		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("unexpected type %T in tfsdk structs, expected a plugin framework type. %s", v, common.TerraformBugErrorMessage))
+		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("%T is not currently supported as a source field. %s", v, common.TerraformBugErrorMessage))
 		return
 	}
 	return
@@ -287,7 +280,7 @@ func shouldSetForceSendFields(srcFieldValue attr.Value, destField reflect.Value)
 
 func addToForceSendFields(ctx context.Context, fieldName string, forceSendFieldsField *reflect.Value) {
 	if forceSendFieldsField == nil || !forceSendFieldsField.IsValid() || !forceSendFieldsField.CanSet() {
-		tflog.Debug(ctx, fmt.Sprintf("[Debug] forceSendFieldsField is nil, invalid or not settable. %s", fieldName))
+		tflog.Debug(ctx, fmt.Sprintf("forceSendFieldsField is nil, invalid or not settable. %s", fieldName))
 		return
 	}
 	// Initialize forceSendFields if it is a zero Value

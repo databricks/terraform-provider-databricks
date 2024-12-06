@@ -80,52 +80,22 @@ func (a {{.PascalName}}) GetComplexFieldTypes(ctx context.Context) map[string]re
   }
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = {{.PascalName}}{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, {{.PascalName}}
+// only implements ToObjectValue() and Type().
+func (o {{.PascalName}}) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+      {{ range .Fields -}}
+      {{- $data := dict "field" . -}}
+      "{{template "tfsdk-name" $data}}": o.{{template "field-name" $data}},
+      {{if and .Entity.Terraform .Entity.Terraform.IsServiceProposedIfEmpty -}}
+        {{- $data := dict "field" . "effective" true }}
+        "{{template "tfsdk-name" $data}}": o.{{template "field-name" $data}},
+      {{- end -}}
+      {{- end}}
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -140,28 +110,92 @@ func (o {{.PascalName}}) Type(ctx context.Context) attr.Type {
   }
 }
 
+{{/* Getters and setters for types.List and types.Map fields. */}}
+{{ $parent := . }}
+{{ range .Fields }}
+{{ if or .Entity.IsObject .Entity.ArrayValue .Entity.MapValue }}
+// Get{{.PascalName}} returns the value of the {{.PascalName}} field in {{ $parent.PascalName}} as
+// {{ if .Entity.IsObject }}a {{template "complex-field-type" .Entity}} value{{ else if .Entity.ArrayValue }}a slice of {{template "complex-field-type" .Entity}} values{{ else }}a map of string to {{template "complex-field-type" .Entity}} values{{ end }}.
+// If the field is unknown or null, the boolean return value is false.
+func (o *{{ $parent.PascalName}}) Get{{.PascalName}}(ctx context.Context) {{template "getter-type" .Entity}} {
+  {{if .Entity.IsObject -}}
+  var e {{template "complex-field-type" .Entity}}
+  {{ end -}}
+  if o.{{.PascalName}}.IsNull() || o.{{.PascalName}}.IsUnknown() {
+    {{if .Entity.IsObject -}}
+    return e, false
+    {{- else -}}
+    return nil, false
+    {{- end}}
+  }
+  var v {{if .Entity.IsObject}}[]{{end}}{{template "getter-setter-type" .Entity}}
+  d := o.{{.PascalName}}.ElementsAs(ctx, &v, true)
+  if d.HasError() {
+    panic(pluginfwcommon.DiagToString(d))
+  }
+  {{if .Entity.IsObject -}}
+  if len(v) == 0 {
+    return e, false
+  }
+  return v[0], true
+  {{- else -}}
+  return v, true
+  {{- end}}
+}
+
+// Set{{.PascalName}} sets the value of the {{.PascalName}} field in {{ $parent.PascalName}}.
+func (o *{{ $parent.PascalName}}) Set{{.PascalName}}(ctx context.Context, v {{template "getter-setter-type" .Entity}}) {
+  {{ if .Entity.IsObject -}}
+  vs := []attr.Value{v.ToObjectValue(ctx)}
+  {{- else if .Entity.ArrayValue -}}
+  vs := make([]attr.Value, 0, len(v))
+  for _, e := range v {
+    vs = append(vs, e{{if or (and .Entity.ArrayValue .Entity.ArrayValue.IsObject) (and .Entity.MapValue .Entity.MapValue.IsObject)}}.ToObjectValue(ctx){{end}})
+  }
+  {{- else -}}
+  vs := make(map[string]attr.Value, len(v))
+  for k, e := range v {
+    vs[k] = e{{if or (and .Entity.ArrayValue .Entity.ArrayValue.IsObject) (and .Entity.MapValue .Entity.MapValue.IsObject)}}.ToObjectValue(ctx){{end}}
+  }
+  {{- end}}
+  t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["{{template "tfsdk-name" (dict "field" .)}}"]
+  o.{{.PascalName}}{{if eq .PascalName "Type"}}_{{end}} = types.{{if .Entity.MapValue}}Map{{else}}List{{end}}ValueMust(t, vs)
+}
+{{end}}
+
+{{end}}
 {{end}}
 {{end}}
 
-{{range .Types}}
-{{- if .IsEnum}}
-{{.Comment "// " 80}}
+{{- define "getter-type" -}}
+({{ template "getter-setter-type" . }}, bool)
+{{- end -}}
 
-{{end}}
-{{end}}
+{{- define "getter-setter-type" -}}
+{{- if .ArrayValue -}}
+  []{{ template "complex-field-type" . }}
+{{- else if .IsObject -}}
+  {{ template "complex-field-type" . }}
+{{- else -}}
+  map[string]{{ template "complex-field-type" . }}
+{{- end -}}
+{{- end -}}
 
 {{- define "complex-field-value" -}}
-  {{- if .ArrayValue }}{{ template "complex-field-value" .ArrayValue }}
-  {{- else if .MapValue }}{{ template "complex-field-value" .MapValue }}
+{{ template "complex-field-type" . }}{}
+{{- end -}}
+
+{{- define "complex-field-type" -}}
+  {{- if .ArrayValue }}{{ template "complex-field-type" .ArrayValue }}
+  {{- else if .MapValue }}{{ template "complex-field-type" .MapValue }}
   {{- else -}}
-    {{- if .IsExternal -}}{{.Package.Name}}.{{- end -}}
-    {{- if or .IsString .Enum -}}types.String{}
-    {{- else if .IsBool -}}types.Bool{}
-    {{- else if .IsInt64 -}}types.Int64{}
-    {{- else if .IsFloat64 -}}types.Float64{}
-    {{- else if .IsInt -}}types.Int64{}
-    {{- else if .IsAny -}}struct{}{}
-    {{- else if or .IsEmpty .IsObject -}}{{.PascalName}}{}
+    {{- if or .IsString .Enum -}}types.String
+    {{- else if .IsBool -}}types.Bool
+    {{- else if .IsInt64 -}}types.Int64
+    {{- else if .IsFloat64 -}}types.Float64
+    {{- else if .IsInt -}}types.Int64
+    {{- else if .IsAny -}}types.Object
+    {{- else if or .IsEmpty .IsObject -}}{{if .IsExternal}}{{.Package.Name}}_tf.{{end}}{{.PascalName}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
@@ -201,7 +235,11 @@ even when they are called recursively.
 
 
 {{- define "field" -}}
-{{if .effective}}Effective{{end}}{{.field.PascalName}}{{if eq .field.PascalName "Type"}}_{{end}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
+{{template "field-name" .}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
+{{- end -}}
+
+{{- define "field-name" -}}
+{{if .effective}}Effective{{end}}{{.field.PascalName}}{{if eq .field.PascalName "Type"}}_{{end}}
 {{- end -}}
 
 {{- define "field-tag" -}}
@@ -232,15 +270,15 @@ even when they are called recursively.
 
 {{- define "type" -}}
     {{- if not . }}any /* ERROR */
-    {{- else if .IsExternal }}{{.Package.Name}}.{{.PascalName}}
-    {{- else if .IsAny}}any
+    {{- else if .IsExternal }}types.List{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}
+    {{- else if .IsAny}}types.Object
     {{- else if .IsEmpty}}types.List
     {{- else if .IsString}}types.String
     {{- else if .IsBool}}types.Bool
     {{- else if .IsInt64}}types.Int64
     {{- else if .IsFloat64}}types.Float64
     {{- else if .IsInt}}types.Int64
-    {{- else if .IsByteStream}}io.ReadCloser
+    {{- else if .IsByteStream}}types.Object
     {{- else if .ArrayValue }}types.List
     {{- else if .MapValue }}types.Map
     {{- else if .IsObject }}types.List{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}

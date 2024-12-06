@@ -12,17 +12,13 @@ package jobs_tf
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/compute"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 type BaseJob struct {
@@ -65,52 +61,19 @@ func (a BaseJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = BaseJob{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o BaseJob) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o BaseJob) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o BaseJob) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o BaseJob) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o BaseJob) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BaseJob
+// only implements ToObjectValue() and Type().
+func (o BaseJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o BaseJob) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"created_time":               o.CreatedTime,
+			"creator_user_name":          o.CreatorUserName,
+			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"job_id":                     o.JobId,
+			"settings":                   o.Settings,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -126,6 +89,32 @@ func (o BaseJob) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSettings returns the value of the Settings field in BaseJob as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseJob) GetSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.Settings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSettings sets the value of the Settings field in BaseJob.
+func (o *BaseJob) SetSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	o.Settings = types.ListValueMust(t, vs)
 }
 
 type BaseRun struct {
@@ -288,52 +277,45 @@ func (a BaseRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = BaseRun{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o BaseRun) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o BaseRun) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o BaseRun) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o BaseRun) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o BaseRun) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BaseRun
+// only implements ToObjectValue() and Type().
+func (o BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o BaseRun) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"attempt_number":          o.AttemptNumber,
+			"cleanup_duration":        o.CleanupDuration,
+			"cluster_instance":        o.ClusterInstance,
+			"cluster_spec":            o.ClusterSpec,
+			"creator_user_name":       o.CreatorUserName,
+			"description":             o.Description,
+			"end_time":                o.EndTime,
+			"execution_duration":      o.ExecutionDuration,
+			"git_source":              o.GitSource,
+			"job_clusters":            o.JobClusters,
+			"job_id":                  o.JobId,
+			"job_parameters":          o.JobParameters,
+			"job_run_id":              o.JobRunId,
+			"number_in_job":           o.NumberInJob,
+			"original_attempt_run_id": o.OriginalAttemptRunId,
+			"overriding_parameters":   o.OverridingParameters,
+			"queue_duration":          o.QueueDuration,
+			"repair_history":          o.RepairHistory,
+			"run_duration":            o.RunDuration,
+			"run_id":                  o.RunId,
+			"run_name":                o.RunName,
+			"run_page_url":            o.RunPageUrl,
+			"run_type":                o.RunType,
+			"schedule":                o.Schedule,
+			"setup_duration":          o.SetupDuration,
+			"start_time":              o.StartTime,
+			"state":                   o.State,
+			"status":                  o.Status,
+			"tasks":                   o.Tasks,
+			"trigger":                 o.Trigger,
+			"trigger_info":            o.TriggerInfo,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -399,6 +381,314 @@ func (o BaseRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusterInstance returns the value of the ClusterInstance field in BaseRun as
+// a ClusterInstance value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetClusterInstance(ctx context.Context) (ClusterInstance, bool) {
+	var e ClusterInstance
+	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterInstance
+	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterInstance sets the value of the ClusterInstance field in BaseRun.
+func (o *BaseRun) SetClusterInstance(ctx context.Context, v ClusterInstance) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	o.ClusterInstance = types.ListValueMust(t, vs)
+}
+
+// GetClusterSpec returns the value of the ClusterSpec field in BaseRun as
+// a ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
+	var e ClusterSpec
+	if o.ClusterSpec.IsNull() || o.ClusterSpec.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterSpec
+	d := o.ClusterSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterSpec sets the value of the ClusterSpec field in BaseRun.
+func (o *BaseRun) SetClusterSpec(ctx context.Context, v ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_spec"]
+	o.ClusterSpec = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in BaseRun as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in BaseRun.
+func (o *BaseRun) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetJobClusters returns the value of the JobClusters field in BaseRun as
+// a slice of JobCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetJobClusters(ctx context.Context) ([]JobCluster, bool) {
+	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCluster
+	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusters sets the value of the JobClusters field in BaseRun.
+func (o *BaseRun) SetJobClusters(ctx context.Context, v []JobCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
+	o.JobClusters = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in BaseRun as
+// a slice of JobParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetJobParameters(ctx context.Context) ([]JobParameter, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobParameter
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in BaseRun.
+func (o *BaseRun) SetJobParameters(ctx context.Context, v []JobParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.ListValueMust(t, vs)
+}
+
+// GetOverridingParameters returns the value of the OverridingParameters field in BaseRun as
+// a RunParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetOverridingParameters(ctx context.Context) (RunParameters, bool) {
+	var e RunParameters
+	if o.OverridingParameters.IsNull() || o.OverridingParameters.IsUnknown() {
+		return e, false
+	}
+	var v []RunParameters
+	d := o.OverridingParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOverridingParameters sets the value of the OverridingParameters field in BaseRun.
+func (o *BaseRun) SetOverridingParameters(ctx context.Context, v RunParameters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["overriding_parameters"]
+	o.OverridingParameters = types.ListValueMust(t, vs)
+}
+
+// GetRepairHistory returns the value of the RepairHistory field in BaseRun as
+// a slice of RepairHistoryItem values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem, bool) {
+	if o.RepairHistory.IsNull() || o.RepairHistory.IsUnknown() {
+		return nil, false
+	}
+	var v []RepairHistoryItem
+	d := o.RepairHistory.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRepairHistory sets the value of the RepairHistory field in BaseRun.
+func (o *BaseRun) SetRepairHistory(ctx context.Context, v []RepairHistoryItem) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
+	o.RepairHistory = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in BaseRun as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in BaseRun.
+func (o *BaseRun) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in BaseRun as
+// a RunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetState(ctx context.Context) (RunState, bool) {
+	var e RunState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []RunState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in BaseRun.
+func (o *BaseRun) SetState(ctx context.Context, v RunState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in BaseRun as
+// a RunStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetStatus(ctx context.Context) (RunStatus, bool) {
+	var e RunStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []RunStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in BaseRun.
+func (o *BaseRun) SetStatus(ctx context.Context, v RunStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in BaseRun as
+// a slice of RunTask values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetTasks(ctx context.Context) ([]RunTask, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTask
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in BaseRun.
+func (o *BaseRun) SetTasks(ctx context.Context, v []RunTask) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetTriggerInfo returns the value of the TriggerInfo field in BaseRun as
+// a TriggerInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetTriggerInfo(ctx context.Context) (TriggerInfo, bool) {
+	var e TriggerInfo
+	if o.TriggerInfo.IsNull() || o.TriggerInfo.IsUnknown() {
+		return e, false
+	}
+	var v []TriggerInfo
+	d := o.TriggerInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTriggerInfo sets the value of the TriggerInfo field in BaseRun.
+func (o *BaseRun) SetTriggerInfo(ctx context.Context, v TriggerInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_info"]
+	o.TriggerInfo = types.ListValueMust(t, vs)
+}
+
 type CancelAllRuns struct {
 	// Optional boolean parameter to cancel all queued runs. If no job_id is
 	// provided, all queued runs in the workspace are canceled.
@@ -424,52 +714,16 @@ func (a CancelAllRuns) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CancelAllRuns{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CancelAllRuns) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CancelAllRuns) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CancelAllRuns) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CancelAllRuns) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CancelAllRuns) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelAllRuns
+// only implements ToObjectValue() and Type().
+func (o CancelAllRuns) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CancelAllRuns) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"all_queued_runs": o.AllQueuedRuns,
+			"job_id":          o.JobId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -502,52 +756,13 @@ func (a CancelAllRunsResponse) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CancelAllRunsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CancelAllRunsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CancelAllRunsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CancelAllRunsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CancelAllRunsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CancelAllRunsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelAllRunsResponse
+// only implements ToObjectValue() and Type().
+func (o CancelAllRunsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CancelAllRunsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -579,52 +794,15 @@ func (a CancelRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CancelRun{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CancelRun) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CancelRun) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CancelRun) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CancelRun) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CancelRun) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelRun
+// only implements ToObjectValue() and Type().
+func (o CancelRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CancelRun) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"run_id": o.RunId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -656,52 +834,13 @@ func (a CancelRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CancelRunResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CancelRunResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CancelRunResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CancelRunResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CancelRunResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CancelRunResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CancelRunResponse
+// only implements ToObjectValue() and Type().
+func (o CancelRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CancelRunResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -749,52 +888,16 @@ func (a ClusterInstance) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ClusterInstance{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ClusterInstance) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ClusterInstance) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ClusterInstance) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ClusterInstance) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ClusterInstance) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ClusterInstance
+// only implements ToObjectValue() and Type().
+func (o ClusterInstance) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ClusterInstance) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"cluster_id":       o.ClusterId,
+			"spark_context_id": o.SparkContextId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -821,7 +924,7 @@ type ClusterSpec struct {
 	Libraries types.List `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+	NewCluster types.List `tfsdk:"new_cluster" tf:"optional,object"`
 }
 
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
@@ -839,57 +942,23 @@ func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState Cluster
 // SDK values.
 func (a ClusterSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"library":     reflect.TypeOf(compute.Library{}),
-		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
+		"library":     reflect.TypeOf(compute_tf.Library{}),
+		"new_cluster": reflect.TypeOf(compute_tf.ClusterSpec{}),
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ClusterSpec{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ClusterSpec) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ClusterSpec) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ClusterSpec) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ClusterSpec) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ClusterSpec) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ClusterSpec
+// only implements ToObjectValue() and Type().
+func (o ClusterSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ClusterSpec) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"existing_cluster_id": o.ExistingClusterId,
+			"job_cluster_key":     o.JobClusterKey,
+			"library":             o.Libraries,
+			"new_cluster":         o.NewCluster,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -906,6 +975,57 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetLibraries returns the value of the Libraries field in ClusterSpec as
+// a slice of compute_tf.Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetLibraries(ctx context.Context) ([]compute_tf.Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in ClusterSpec.
+func (o *ClusterSpec) SetLibraries(ctx context.Context, v []compute_tf.Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNewCluster returns the value of the NewCluster field in ClusterSpec as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in ClusterSpec.
+func (o *ClusterSpec) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
 }
 
 type ConditionTask struct {
@@ -945,52 +1065,17 @@ func (a ConditionTask) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ConditionTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ConditionTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ConditionTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ConditionTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ConditionTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ConditionTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ConditionTask
+// only implements ToObjectValue() and Type().
+func (o ConditionTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ConditionTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"left":  o.Left,
+			"op":    o.Op,
+			"right": o.Right,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1027,52 +1112,15 @@ func (a Continuous) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = Continuous{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o Continuous) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o Continuous) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o Continuous) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o Continuous) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o Continuous) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Continuous
+// only implements ToObjectValue() and Type().
+func (o Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o Continuous) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"pause_status": o.PauseStatus,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1225,52 +1273,38 @@ func (a CreateJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CreateJob{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CreateJob) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CreateJob) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CreateJob) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CreateJob) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CreateJob) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateJob
+// only implements ToObjectValue() and Type().
+func (o CreateJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CreateJob) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"access_control_list":   o.AccessControlList,
+			"budget_policy_id":      o.BudgetPolicyId,
+			"continuous":            o.Continuous,
+			"deployment":            o.Deployment,
+			"description":           o.Description,
+			"edit_mode":             o.EditMode,
+			"email_notifications":   o.EmailNotifications,
+			"environment":           o.Environments,
+			"format":                o.Format,
+			"git_source":            o.GitSource,
+			"health":                o.Health,
+			"job_cluster":           o.JobClusters,
+			"max_concurrent_runs":   o.MaxConcurrentRuns,
+			"name":                  o.Name,
+			"notification_settings": o.NotificationSettings,
+			"parameter":             o.Parameters,
+			"queue":                 o.Queue,
+			"run_as":                o.RunAs,
+			"schedule":              o.Schedule,
+			"tags":                  o.Tags,
+			"task":                  o.Tasks,
+			"timeout_seconds":       o.TimeoutSeconds,
+			"trigger":               o.Trigger,
+			"webhook_notifications": o.WebhookNotifications,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1339,6 +1373,442 @@ func (o CreateJob) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in CreateJob as
+// a slice of JobAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []JobAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in CreateJob.
+func (o *CreateJob) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
+// GetContinuous returns the value of the Continuous field in CreateJob as
+// a Continuous value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetContinuous(ctx context.Context) (Continuous, bool) {
+	var e Continuous
+	if o.Continuous.IsNull() || o.Continuous.IsUnknown() {
+		return e, false
+	}
+	var v []Continuous
+	d := o.Continuous.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetContinuous sets the value of the Continuous field in CreateJob.
+func (o *CreateJob) SetContinuous(ctx context.Context, v Continuous) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
+	o.Continuous = types.ListValueMust(t, vs)
+}
+
+// GetDeployment returns the value of the Deployment field in CreateJob as
+// a JobDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetDeployment(ctx context.Context) (JobDeployment, bool) {
+	var e JobDeployment
+	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v []JobDeployment
+	d := o.Deployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeployment sets the value of the Deployment field in CreateJob.
+func (o *CreateJob) SetDeployment(ctx context.Context, v JobDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in CreateJob as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in CreateJob.
+func (o *CreateJob) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetEnvironments returns the value of the Environments field in CreateJob as
+// a slice of JobEnvironment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetEnvironments(ctx context.Context) ([]JobEnvironment, bool) {
+	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironment
+	d := o.Environments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironments sets the value of the Environments field in CreateJob.
+func (o *CreateJob) SetEnvironments(ctx context.Context, v []JobEnvironment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	o.Environments = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in CreateJob as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in CreateJob.
+func (o *CreateJob) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in CreateJob as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in CreateJob.
+func (o *CreateJob) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetJobClusters returns the value of the JobClusters field in CreateJob as
+// a slice of JobCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetJobClusters(ctx context.Context) ([]JobCluster, bool) {
+	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCluster
+	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusters sets the value of the JobClusters field in CreateJob.
+func (o *CreateJob) SetJobClusters(ctx context.Context, v []JobCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
+	o.JobClusters = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in CreateJob as
+// a JobNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetNotificationSettings(ctx context.Context) (JobNotificationSettings, bool) {
+	var e JobNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in CreateJob.
+func (o *CreateJob) SetNotificationSettings(ctx context.Context, v JobNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in CreateJob as
+// a slice of JobParameterDefinition values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetParameters(ctx context.Context) ([]JobParameterDefinition, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobParameterDefinition
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in CreateJob.
+func (o *CreateJob) SetParameters(ctx context.Context, v []JobParameterDefinition) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetQueue returns the value of the Queue field in CreateJob as
+// a QueueSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetQueue(ctx context.Context) (QueueSettings, bool) {
+	var e QueueSettings
+	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+		return e, false
+	}
+	var v []QueueSettings
+	d := o.Queue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueue sets the value of the Queue field in CreateJob.
+func (o *CreateJob) SetQueue(ctx context.Context, v QueueSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	o.Queue = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in CreateJob as
+// a JobRunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetRunAs(ctx context.Context) (JobRunAs, bool) {
+	var e JobRunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []JobRunAs
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in CreateJob.
+func (o *CreateJob) SetRunAs(ctx context.Context, v JobRunAs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in CreateJob as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in CreateJob.
+func (o *CreateJob) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreateJob as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateJob.
+func (o *CreateJob) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.MapValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in CreateJob as
+// a slice of Task values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetTasks(ctx context.Context) ([]Task, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []Task
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in CreateJob.
+func (o *CreateJob) SetTasks(ctx context.Context, v []Task) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetTrigger returns the value of the Trigger field in CreateJob as
+// a TriggerSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetTrigger(ctx context.Context) (TriggerSettings, bool) {
+	var e TriggerSettings
+	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+		return e, false
+	}
+	var v []TriggerSettings
+	d := o.Trigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrigger sets the value of the Trigger field in CreateJob.
+func (o *CreateJob) SetTrigger(ctx context.Context, v TriggerSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	o.Trigger = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in CreateJob as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in CreateJob.
+func (o *CreateJob) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 // Job was created successfully
 type CreateResponse struct {
 	// The canonical identifier for the newly created job.
@@ -1362,52 +1832,15 @@ func (a CreateResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CreateResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CreateResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CreateResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CreateResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CreateResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CreateResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateResponse
+// only implements ToObjectValue() and Type().
+func (o CreateResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CreateResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_id": o.JobId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1451,52 +1884,17 @@ func (a CronSchedule) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CronSchedule{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CronSchedule) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CronSchedule) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CronSchedule) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CronSchedule) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CronSchedule) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CronSchedule
+// only implements ToObjectValue() and Type().
+func (o CronSchedule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CronSchedule) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"pause_status":           o.PauseStatus,
+			"quartz_cron_expression": o.QuartzCronExpression,
+			"timezone_id":            o.TimezoneId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1539,52 +1937,16 @@ func (a DbtOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DbtOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DbtOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DbtOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DbtOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DbtOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DbtOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DbtOutput
+// only implements ToObjectValue() and Type().
+func (o DbtOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DbtOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"artifacts_headers": o.ArtifactsHeaders,
+			"artifacts_link":    o.ArtifactsLink,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1597,6 +1959,31 @@ func (o DbtOutput) Type(ctx context.Context) attr.Type {
 			"artifacts_link": types.StringType,
 		},
 	}
+}
+
+// GetArtifactsHeaders returns the value of the ArtifactsHeaders field in DbtOutput as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DbtOutput) GetArtifactsHeaders(ctx context.Context) (map[string]types.String, bool) {
+	if o.ArtifactsHeaders.IsNull() || o.ArtifactsHeaders.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.ArtifactsHeaders.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetArtifactsHeaders sets the value of the ArtifactsHeaders field in DbtOutput.
+func (o *DbtOutput) SetArtifactsHeaders(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifacts_headers"]
+	o.ArtifactsHeaders = types.MapValueMust(t, vs)
 }
 
 type DbtTask struct {
@@ -1655,52 +2042,21 @@ func (a DbtTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DbtTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DbtTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DbtTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DbtTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DbtTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DbtTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DbtTask
+// only implements ToObjectValue() and Type().
+func (o DbtTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DbtTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"catalog":            o.Catalog,
+			"commands":           o.Commands,
+			"profiles_directory": o.ProfilesDirectory,
+			"project_directory":  o.ProjectDirectory,
+			"schema":             o.Schema,
+			"source":             o.Source,
+			"warehouse_id":       o.WarehouseId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1718,6 +2074,31 @@ func (o DbtTask) Type(ctx context.Context) attr.Type {
 			"warehouse_id":       types.StringType,
 		},
 	}
+}
+
+// GetCommands returns the value of the Commands field in DbtTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DbtTask) GetCommands(ctx context.Context) ([]types.String, bool) {
+	if o.Commands.IsNull() || o.Commands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Commands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCommands sets the value of the Commands field in DbtTask.
+func (o *DbtTask) SetCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
+	o.Commands = types.ListValueMust(t, vs)
 }
 
 type DeleteJob struct {
@@ -1742,52 +2123,15 @@ func (a DeleteJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteJob{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteJob) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteJob) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteJob) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteJob) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteJob) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteJob
+// only implements ToObjectValue() and Type().
+func (o DeleteJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteJob) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_id": o.JobId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1819,52 +2163,13 @@ func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1896,52 +2201,15 @@ func (a DeleteRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteRun{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteRun) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteRun) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteRun) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteRun) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteRun) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRun
+// only implements ToObjectValue() and Type().
+func (o DeleteRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteRun) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"run_id": o.RunId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1973,52 +2241,13 @@ func (a DeleteRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteRunResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteRunResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteRunResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteRunResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteRunResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteRunResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRunResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteRunResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2063,52 +2292,17 @@ func (a EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) GetComple
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnforcePolicyComplianceForJobResponseJobClusterSettingsChange
+// only implements ToObjectValue() and Type().
+func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"field":          o.Field,
+			"new_value":      o.NewValue,
+			"previous_value": o.PreviousValue,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2147,52 +2341,16 @@ func (a EnforcePolicyComplianceRequest) GetComplexFieldTypes(ctx context.Context
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = EnforcePolicyComplianceRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnforcePolicyComplianceRequest
+// only implements ToObjectValue() and Type().
+func (o EnforcePolicyComplianceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_id":        o.JobId,
+			"validate_only": o.ValidateOnly,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2242,52 +2400,17 @@ func (a EnforcePolicyComplianceResponse) GetComplexFieldTypes(ctx context.Contex
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = EnforcePolicyComplianceResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnforcePolicyComplianceResponse
+// only implements ToObjectValue() and Type().
+func (o EnforcePolicyComplianceResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o EnforcePolicyComplianceResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"has_changes":         o.HasChanges,
+			"job_cluster_changes": o.JobClusterChanges,
+			"settings":            o.Settings,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2303,6 +2426,57 @@ func (o EnforcePolicyComplianceResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetJobClusterChanges returns the value of the JobClusterChanges field in EnforcePolicyComplianceResponse as
+// a slice of EnforcePolicyComplianceForJobResponseJobClusterSettingsChange values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnforcePolicyComplianceResponse) GetJobClusterChanges(ctx context.Context) ([]EnforcePolicyComplianceForJobResponseJobClusterSettingsChange, bool) {
+	if o.JobClusterChanges.IsNull() || o.JobClusterChanges.IsUnknown() {
+		return nil, false
+	}
+	var v []EnforcePolicyComplianceForJobResponseJobClusterSettingsChange
+	d := o.JobClusterChanges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusterChanges sets the value of the JobClusterChanges field in EnforcePolicyComplianceResponse.
+func (o *EnforcePolicyComplianceResponse) SetJobClusterChanges(ctx context.Context, v []EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster_changes"]
+	o.JobClusterChanges = types.ListValueMust(t, vs)
+}
+
+// GetSettings returns the value of the Settings field in EnforcePolicyComplianceResponse as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnforcePolicyComplianceResponse) GetSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.Settings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSettings sets the value of the Settings field in EnforcePolicyComplianceResponse.
+func (o *EnforcePolicyComplianceResponse) SetSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	o.Settings = types.ListValueMust(t, vs)
 }
 
 // Run was exported successfully.
@@ -2334,52 +2508,15 @@ func (a ExportRunOutput) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ExportRunOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ExportRunOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ExportRunOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ExportRunOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ExportRunOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ExportRunOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExportRunOutput
+// only implements ToObjectValue() and Type().
+func (o ExportRunOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ExportRunOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"views": o.Views,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2391,6 +2528,31 @@ func (o ExportRunOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetViews returns the value of the Views field in ExportRunOutput as
+// a slice of ViewItem values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExportRunOutput) GetViews(ctx context.Context) ([]ViewItem, bool) {
+	if o.Views.IsNull() || o.Views.IsUnknown() {
+		return nil, false
+	}
+	var v []ViewItem
+	d := o.Views.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViews sets the value of the Views field in ExportRunOutput.
+func (o *ExportRunOutput) SetViews(ctx context.Context, v []ViewItem) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["views"]
+	o.Views = types.ListValueMust(t, vs)
 }
 
 // Export and retrieve a job run
@@ -2418,52 +2580,16 @@ func (a ExportRunRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ExportRunRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ExportRunRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ExportRunRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ExportRunRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ExportRunRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ExportRunRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExportRunRequest
+// only implements ToObjectValue() and Type().
+func (o ExportRunRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ExportRunRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"run_id":          o.RunId,
+			"views_to_export": o.ViewsToExport,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2508,52 +2634,17 @@ func (a FileArrivalTriggerConfiguration) GetComplexFieldTypes(ctx context.Contex
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = FileArrivalTriggerConfiguration{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o FileArrivalTriggerConfiguration) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o FileArrivalTriggerConfiguration) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o FileArrivalTriggerConfiguration) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o FileArrivalTriggerConfiguration) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o FileArrivalTriggerConfiguration) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FileArrivalTriggerConfiguration
+// only implements ToObjectValue() and Type().
+func (o FileArrivalTriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o FileArrivalTriggerConfiguration) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"min_time_between_triggers_seconds": o.MinTimeBetweenTriggersSeconds,
+			"url":                               o.Url,
+			"wait_after_last_change_seconds":    o.WaitAfterLastChangeSeconds,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2594,52 +2685,16 @@ func (a ForEachStats) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ForEachStats{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ForEachStats) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ForEachStats) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ForEachStats) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ForEachStats) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ForEachStats) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ForEachStats
+// only implements ToObjectValue() and Type().
+func (o ForEachStats) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ForEachStats) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"error_message_stats": o.ErrorMessageStats,
+			"task_run_stats":      o.TaskRunStats,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2654,6 +2709,57 @@ func (o ForEachStats) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetErrorMessageStats returns the value of the ErrorMessageStats field in ForEachStats as
+// a slice of ForEachTaskErrorMessageStats values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ForEachStats) GetErrorMessageStats(ctx context.Context) ([]ForEachTaskErrorMessageStats, bool) {
+	if o.ErrorMessageStats.IsNull() || o.ErrorMessageStats.IsUnknown() {
+		return nil, false
+	}
+	var v []ForEachTaskErrorMessageStats
+	d := o.ErrorMessageStats.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetErrorMessageStats sets the value of the ErrorMessageStats field in ForEachStats.
+func (o *ForEachStats) SetErrorMessageStats(ctx context.Context, v []ForEachTaskErrorMessageStats) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error_message_stats"]
+	o.ErrorMessageStats = types.ListValueMust(t, vs)
+}
+
+// GetTaskRunStats returns the value of the TaskRunStats field in ForEachStats as
+// a ForEachTaskTaskRunStats value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ForEachStats) GetTaskRunStats(ctx context.Context) (ForEachTaskTaskRunStats, bool) {
+	var e ForEachTaskTaskRunStats
+	if o.TaskRunStats.IsNull() || o.TaskRunStats.IsUnknown() {
+		return e, false
+	}
+	var v []ForEachTaskTaskRunStats
+	d := o.TaskRunStats.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTaskRunStats sets the value of the TaskRunStats field in ForEachStats.
+func (o *ForEachStats) SetTaskRunStats(ctx context.Context, v ForEachTaskTaskRunStats) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_stats"]
+	o.TaskRunStats = types.ListValueMust(t, vs)
 }
 
 type ForEachTask struct {
@@ -2687,52 +2793,17 @@ func (a ForEachTask) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ForEachTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ForEachTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ForEachTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ForEachTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ForEachTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ForEachTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ForEachTask
+// only implements ToObjectValue() and Type().
+func (o ForEachTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ForEachTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"concurrency": o.Concurrency,
+			"inputs":      o.Inputs,
+			"task":        o.Task,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2746,6 +2817,32 @@ func (o ForEachTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTask returns the value of the Task field in ForEachTask as
+// a Task value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ForEachTask) GetTask(ctx context.Context) (Task, bool) {
+	var e Task
+	if o.Task.IsNull() || o.Task.IsUnknown() {
+		return e, false
+	}
+	var v []Task
+	d := o.Task.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTask sets the value of the Task field in ForEachTask.
+func (o *ForEachTask) SetTask(ctx context.Context, v Task) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	o.Task = types.ListValueMust(t, vs)
 }
 
 type ForEachTaskErrorMessageStats struct {
@@ -2775,52 +2872,17 @@ func (a ForEachTaskErrorMessageStats) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ForEachTaskErrorMessageStats{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ForEachTaskErrorMessageStats) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ForEachTaskErrorMessageStats) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ForEachTaskErrorMessageStats) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ForEachTaskErrorMessageStats) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ForEachTaskErrorMessageStats) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ForEachTaskErrorMessageStats
+// only implements ToObjectValue() and Type().
+func (o ForEachTaskErrorMessageStats) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ForEachTaskErrorMessageStats) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"count":                o.Count,
+			"error_message":        o.ErrorMessage,
+			"termination_category": o.TerminationCategory,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2867,52 +2929,20 @@ func (a ForEachTaskTaskRunStats) GetComplexFieldTypes(ctx context.Context) map[s
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ForEachTaskTaskRunStats{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ForEachTaskTaskRunStats) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ForEachTaskTaskRunStats) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ForEachTaskTaskRunStats) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ForEachTaskTaskRunStats) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ForEachTaskTaskRunStats) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ForEachTaskTaskRunStats
+// only implements ToObjectValue() and Type().
+func (o ForEachTaskTaskRunStats) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ForEachTaskTaskRunStats) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"active_iterations":    o.ActiveIterations,
+			"completed_iterations": o.CompletedIterations,
+			"failed_iterations":    o.FailedIterations,
+			"scheduled_iterations": o.ScheduledIterations,
+			"succeeded_iterations": o.SucceededIterations,
+			"total_iterations":     o.TotalIterations,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2952,52 +2982,15 @@ func (a GetJobPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context)
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetJobPermissionLevelsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetJobPermissionLevelsRequest
+// only implements ToObjectValue() and Type().
+func (o GetJobPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_id": o.JobId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3033,52 +3026,15 @@ func (a GetJobPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Context
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetJobPermissionLevelsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetJobPermissionLevelsResponse
+// only implements ToObjectValue() and Type().
+func (o GetJobPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetJobPermissionLevelsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"permission_levels": o.PermissionLevels,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3090,6 +3046,31 @@ func (o GetJobPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetJobPermissionLevelsResponse as
+// a slice of JobPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetJobPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]JobPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []JobPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetJobPermissionLevelsResponse.
+func (o *GetJobPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []JobPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get job permissions
@@ -3115,52 +3096,15 @@ func (a GetJobPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetJobPermissionsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetJobPermissionsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetJobPermissionsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetJobPermissionsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetJobPermissionsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetJobPermissionsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetJobPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (o GetJobPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetJobPermissionsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_id": o.JobId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3196,52 +3140,15 @@ func (a GetJobRequest) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetJobRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetJobRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetJobRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetJobRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetJobRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetJobRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetJobRequest
+// only implements ToObjectValue() and Type().
+func (o GetJobRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetJobRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_id": o.JobId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3276,52 +3183,15 @@ func (a GetPolicyComplianceRequest) GetComplexFieldTypes(ctx context.Context) ma
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetPolicyComplianceRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPolicyComplianceRequest
+// only implements ToObjectValue() and Type().
+func (o GetPolicyComplianceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_id": o.JobId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3366,52 +3236,16 @@ func (a GetPolicyComplianceResponse) GetComplexFieldTypes(ctx context.Context) m
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetPolicyComplianceResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPolicyComplianceResponse
+// only implements ToObjectValue() and Type().
+func (o GetPolicyComplianceResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetPolicyComplianceResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"is_compliant": o.IsCompliant,
+			"violations":   o.Violations,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3424,6 +3258,31 @@ func (o GetPolicyComplianceResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetViolations returns the value of the Violations field in GetPolicyComplianceResponse as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPolicyComplianceResponse) GetViolations(ctx context.Context) (map[string]types.String, bool) {
+	if o.Violations.IsNull() || o.Violations.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Violations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViolations sets the value of the Violations field in GetPolicyComplianceResponse.
+func (o *GetPolicyComplianceResponse) SetViolations(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	o.Violations = types.MapValueMust(t, vs)
 }
 
 // Get the output for a single run
@@ -3449,52 +3308,15 @@ func (a GetRunOutputRequest) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetRunOutputRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetRunOutputRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetRunOutputRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetRunOutputRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetRunOutputRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetRunOutputRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRunOutputRequest
+// only implements ToObjectValue() and Type().
+func (o GetRunOutputRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetRunOutputRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"run_id": o.RunId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3537,52 +3359,18 @@ func (a GetRunRequest) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetRunRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetRunRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetRunRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetRunRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetRunRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetRunRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRunRequest
+// only implements ToObjectValue() and Type().
+func (o GetRunRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetRunRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"include_history":         o.IncludeHistory,
+			"include_resolved_values": o.IncludeResolvedValues,
+			"page_token":              o.PageToken,
+			"run_id":                  o.RunId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3623,52 +3411,15 @@ func (a GitSnapshot) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GitSnapshot{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GitSnapshot) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GitSnapshot) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GitSnapshot) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GitSnapshot) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GitSnapshot) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GitSnapshot
+// only implements ToObjectValue() and Type().
+func (o GitSnapshot) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GitSnapshot) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"used_commit": o.UsedCommit,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3733,52 +3484,21 @@ func (a GitSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GitSource{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GitSource) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GitSource) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GitSource) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GitSource) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GitSource) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GitSource
+// only implements ToObjectValue() and Type().
+func (o GitSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GitSource) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"branch":       o.GitBranch,
+			"commit":       o.GitCommit,
+			"git_provider": o.GitProvider,
+			"git_snapshot": o.GitSnapshot,
+			"tag":          o.GitTag,
+			"url":          o.GitUrl,
+			"job_source":   o.JobSource,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3798,6 +3518,58 @@ func (o GitSource) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetGitSnapshot returns the value of the GitSnapshot field in GitSource as
+// a GitSnapshot value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GitSource) GetGitSnapshot(ctx context.Context) (GitSnapshot, bool) {
+	var e GitSnapshot
+	if o.GitSnapshot.IsNull() || o.GitSnapshot.IsUnknown() {
+		return e, false
+	}
+	var v []GitSnapshot
+	d := o.GitSnapshot.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSnapshot sets the value of the GitSnapshot field in GitSource.
+func (o *GitSource) SetGitSnapshot(ctx context.Context, v GitSnapshot) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_snapshot"]
+	o.GitSnapshot = types.ListValueMust(t, vs)
+}
+
+// GetJobSource returns the value of the JobSource field in GitSource as
+// a JobSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GitSource) GetJobSource(ctx context.Context) (JobSource, bool) {
+	var e JobSource
+	if o.JobSource.IsNull() || o.JobSource.IsUnknown() {
+		return e, false
+	}
+	var v []JobSource
+	d := o.JobSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetJobSource sets the value of the JobSource field in GitSource.
+func (o *GitSource) SetJobSource(ctx context.Context, v JobSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_source"]
+	o.JobSource = types.ListValueMust(t, vs)
 }
 
 // Job was retrieved successfully.
@@ -3849,52 +3621,20 @@ func (a Job) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = Job{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o Job) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o Job) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o Job) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o Job) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o Job) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Job
+// only implements ToObjectValue() and Type().
+func (o Job) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o Job) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"created_time":               o.CreatedTime,
+			"creator_user_name":          o.CreatorUserName,
+			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"job_id":                     o.JobId,
+			"run_as_user_name":           o.RunAsUserName,
+			"settings":                   o.Settings,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3911,6 +3651,32 @@ func (o Job) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSettings returns the value of the Settings field in Job as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Job) GetSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.Settings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSettings sets the value of the Settings field in Job.
+func (o *Job) SetSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	o.Settings = types.ListValueMust(t, vs)
 }
 
 type JobAccessControlRequest struct {
@@ -3941,52 +3707,18 @@ func (a JobAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[s
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobAccessControlRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobAccessControlRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobAccessControlRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobAccessControlRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobAccessControlRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobAccessControlRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobAccessControlRequest
+// only implements ToObjectValue() and Type().
+func (o JobAccessControlRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobAccessControlRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"group_name":             o.GroupName,
+			"permission_level":       o.PermissionLevel,
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4033,52 +3765,19 @@ func (a JobAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map[
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobAccessControlResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobAccessControlResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobAccessControlResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobAccessControlResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobAccessControlResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobAccessControlResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobAccessControlResponse
+// only implements ToObjectValue() and Type().
+func (o JobAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobAccessControlResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"all_permissions":        o.AllPermissions,
+			"display_name":           o.DisplayName,
+			"group_name":             o.GroupName,
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4096,13 +3795,38 @@ func (o JobAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in JobAccessControlResponse as
+// a slice of JobPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobAccessControlResponse) GetAllPermissions(ctx context.Context) ([]JobPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []JobPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in JobAccessControlResponse.
+func (o *JobAccessControlResponse) SetAllPermissions(ctx context.Context, v []JobPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type JobCluster struct {
 	// A unique name for the job cluster. This field is required and must be
 	// unique within the job. `JobTaskSettings` may refer to this field to
 	// determine which cluster to launch for the task execution.
 	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:""`
 	// If new_cluster, a description of a cluster that is created for each task.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"object"`
+	NewCluster types.List `tfsdk:"new_cluster" tf:"object"`
 }
 
 func (newState *JobCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCluster) {
@@ -4120,56 +3844,20 @@ func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobClust
 // SDK values.
 func (a JobCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
+		"new_cluster": reflect.TypeOf(compute_tf.ClusterSpec{}),
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobCluster{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobCluster) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobCluster) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobCluster) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobCluster) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobCluster) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobCluster
+// only implements ToObjectValue() and Type().
+func (o JobCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobCluster) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_cluster_key": o.JobClusterKey,
+			"new_cluster":     o.NewCluster,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4182,6 +3870,32 @@ func (o JobCluster) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetNewCluster returns the value of the NewCluster field in JobCluster as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobCluster) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in JobCluster.
+func (o *JobCluster) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
 }
 
 type JobCompliance struct {
@@ -4216,52 +3930,17 @@ func (a JobCompliance) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobCompliance{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobCompliance) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobCompliance) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobCompliance) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobCompliance) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobCompliance) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobCompliance
+// only implements ToObjectValue() and Type().
+func (o JobCompliance) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobCompliance) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"is_compliant": o.IsCompliant,
+			"job_id":       o.JobId,
+			"violations":   o.Violations,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4275,6 +3954,31 @@ func (o JobCompliance) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetViolations returns the value of the Violations field in JobCompliance as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobCompliance) GetViolations(ctx context.Context) (map[string]types.String, bool) {
+	if o.Violations.IsNull() || o.Violations.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Violations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViolations sets the value of the Violations field in JobCompliance.
+func (o *JobCompliance) SetViolations(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	o.Violations = types.MapValueMust(t, vs)
 }
 
 type JobDeployment struct {
@@ -4303,52 +4007,16 @@ func (a JobDeployment) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobDeployment{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobDeployment) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobDeployment) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobDeployment) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobDeployment) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobDeployment) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobDeployment
+// only implements ToObjectValue() and Type().
+func (o JobDeployment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobDeployment) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"kind":               o.Kind,
+			"metadata_file_path": o.MetadataFilePath,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4420,52 +4088,20 @@ func (a JobEmailNotifications) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobEmailNotifications{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobEmailNotifications) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobEmailNotifications) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobEmailNotifications) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobEmailNotifications) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobEmailNotifications) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobEmailNotifications
+// only implements ToObjectValue() and Type().
+func (o JobEmailNotifications) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobEmailNotifications) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"no_alert_for_skipped_runs":              o.NoAlertForSkippedRuns,
+			"on_duration_warning_threshold_exceeded": o.OnDurationWarningThresholdExceeded,
+			"on_failure":                             o.OnFailure,
+			"on_start":                               o.OnStart,
+			"on_streaming_backlog_exceeded":          o.OnStreamingBacklogExceeded,
+			"on_success":                             o.OnSuccess,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4492,13 +4128,138 @@ func (o JobEmailNotifications) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]types.String, bool) {
+	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+}
+
+// GetOnFailure returns the value of the OnFailure field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnFailure(ctx context.Context) ([]types.String, bool) {
+	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnFailure sets the value of the OnFailure field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnFailure(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	o.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnStart returns the value of the OnStart field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnStart(ctx context.Context) ([]types.String, bool) {
+	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnStart sets the value of the OnStart field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnStart(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	o.OnStart = types.ListValueMust(t, vs)
+}
+
+// GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnStreamingBacklogExceeded(ctx context.Context) ([]types.String, bool) {
+	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnStreamingBacklogExceeded(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+}
+
+// GetOnSuccess returns the value of the OnSuccess field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnSuccess(ctx context.Context) ([]types.String, bool) {
+	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnSuccess sets the value of the OnSuccess field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnSuccess(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	o.OnSuccess = types.ListValueMust(t, vs)
+}
+
 type JobEnvironment struct {
 	// The key of an environment. It has to be unique within a job.
 	EnvironmentKey types.String `tfsdk:"environment_key" tf:""`
 	// The environment entity used to preserve serverless environment side panel
 	// and jobs' environment for non-notebook task. In this minimal environment
 	// spec, only pip dependencies are supported.
-	Spec compute.Environment `tfsdk:"spec" tf:"optional,object"`
+	Spec types.List `tfsdk:"spec" tf:"optional,object"`
 }
 
 func (newState *JobEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEnvironment) {
@@ -4516,56 +4277,20 @@ func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobE
 // SDK values.
 func (a JobEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"spec": reflect.TypeOf(compute.Environment{}),
+		"spec": reflect.TypeOf(compute_tf.Environment{}),
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobEnvironment{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobEnvironment) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobEnvironment) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobEnvironment) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobEnvironment) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobEnvironment) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobEnvironment
+// only implements ToObjectValue() and Type().
+func (o JobEnvironment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobEnvironment) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"environment_key": o.EnvironmentKey,
+			"spec":            o.Spec,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4578,6 +4303,32 @@ func (o JobEnvironment) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSpec returns the value of the Spec field in JobEnvironment as
+// a compute_tf.Environment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEnvironment) GetSpec(ctx context.Context) (compute_tf.Environment, bool) {
+	var e compute_tf.Environment
+	if o.Spec.IsNull() || o.Spec.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.Environment
+	d := o.Spec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSpec sets the value of the Spec field in JobEnvironment.
+func (o *JobEnvironment) SetSpec(ctx context.Context, v compute_tf.Environment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
+	o.Spec = types.ListValueMust(t, vs)
 }
 
 type JobNotificationSettings struct {
@@ -4606,52 +4357,16 @@ func (a JobNotificationSettings) GetComplexFieldTypes(ctx context.Context) map[s
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobNotificationSettings{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobNotificationSettings) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobNotificationSettings) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobNotificationSettings) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobNotificationSettings) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobNotificationSettings) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobNotificationSettings
+// only implements ToObjectValue() and Type().
+func (o JobNotificationSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobNotificationSettings) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"no_alert_for_canceled_runs": o.NoAlertForCanceledRuns,
+			"no_alert_for_skipped_runs":  o.NoAlertForSkippedRuns,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4690,52 +4405,17 @@ func (a JobParameter) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobParameter{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobParameter) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobParameter) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobParameter) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobParameter) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobParameter) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobParameter
+// only implements ToObjectValue() and Type().
+func (o JobParameter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobParameter) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"default": o.Default,
+			"name":    o.Name,
+			"value":   o.Value,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4774,52 +4454,16 @@ func (a JobParameterDefinition) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobParameterDefinition{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobParameterDefinition) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobParameterDefinition) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobParameterDefinition) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobParameterDefinition) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobParameterDefinition) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobParameterDefinition
+// only implements ToObjectValue() and Type().
+func (o JobParameterDefinition) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobParameterDefinition) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"default": o.Default,
+			"name":    o.Name,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4859,52 +4503,17 @@ func (a JobPermission) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobPermission{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobPermission) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobPermission) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobPermission) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobPermission) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobPermission) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobPermission
+// only implements ToObjectValue() and Type().
+func (o JobPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobPermission) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"inherited":             o.Inherited,
+			"inherited_from_object": o.InheritedFromObject,
+			"permission_level":      o.PermissionLevel,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4918,6 +4527,31 @@ func (o JobPermission) Type(ctx context.Context) attr.Type {
 			"permission_level": types.StringType,
 		},
 	}
+}
+
+// GetInheritedFromObject returns the value of the InheritedFromObject field in JobPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in JobPermission.
+func (o *JobPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
 type JobPermissions struct {
@@ -4947,52 +4581,17 @@ func (a JobPermissions) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobPermissions{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobPermissions) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobPermissions) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobPermissions) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobPermissions) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobPermissions) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobPermissions
+// only implements ToObjectValue() and Type().
+func (o JobPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobPermissions) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"object_id":           o.ObjectId,
+			"object_type":         o.ObjectType,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5006,6 +4605,31 @@ func (o JobPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in JobPermissions as
+// a slice of JobAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobPermissions) GetAccessControlList(ctx context.Context) ([]JobAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []JobAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in JobPermissions.
+func (o *JobPermissions) SetAccessControlList(ctx context.Context, v []JobAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type JobPermissionsDescription struct {
@@ -5031,52 +4655,16 @@ func (a JobPermissionsDescription) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobPermissionsDescription{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobPermissionsDescription) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobPermissionsDescription) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobPermissionsDescription) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobPermissionsDescription) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobPermissionsDescription) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobPermissionsDescription
+// only implements ToObjectValue() and Type().
+func (o JobPermissionsDescription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobPermissionsDescription) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"description":      o.Description,
+			"permission_level": o.PermissionLevel,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5114,52 +4702,16 @@ func (a JobPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobPermissionsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobPermissionsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobPermissionsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobPermissionsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobPermissionsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobPermissionsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (o JobPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobPermissionsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"job_id":              o.JobId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5172,6 +4724,31 @@ func (o JobPermissionsRequest) Type(ctx context.Context) attr.Type {
 			"job_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in JobPermissionsRequest as
+// a slice of JobAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobPermissionsRequest) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []JobAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in JobPermissionsRequest.
+func (o *JobPermissionsRequest) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 // Write-only setting. Specifies the user, service principal or group that the
@@ -5206,52 +4783,16 @@ func (a JobRunAs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobRunAs{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobRunAs) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobRunAs) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobRunAs) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobRunAs) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobRunAs) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobRunAs
+// only implements ToObjectValue() and Type().
+func (o JobRunAs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobRunAs) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5402,52 +4943,37 @@ func (a JobSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobSettings{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobSettings) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobSettings) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobSettings) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobSettings) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobSettings) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobSettings
+// only implements ToObjectValue() and Type().
+func (o JobSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobSettings) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"budget_policy_id":      o.BudgetPolicyId,
+			"continuous":            o.Continuous,
+			"deployment":            o.Deployment,
+			"description":           o.Description,
+			"edit_mode":             o.EditMode,
+			"email_notifications":   o.EmailNotifications,
+			"environment":           o.Environments,
+			"format":                o.Format,
+			"git_source":            o.GitSource,
+			"health":                o.Health,
+			"job_cluster":           o.JobClusters,
+			"max_concurrent_runs":   o.MaxConcurrentRuns,
+			"name":                  o.Name,
+			"notification_settings": o.NotificationSettings,
+			"parameter":             o.Parameters,
+			"queue":                 o.Queue,
+			"run_as":                o.RunAs,
+			"schedule":              o.Schedule,
+			"tags":                  o.Tags,
+			"task":                  o.Tasks,
+			"timeout_seconds":       o.TimeoutSeconds,
+			"trigger":               o.Trigger,
+			"webhook_notifications": o.WebhookNotifications,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5513,6 +5039,417 @@ func (o JobSettings) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetContinuous returns the value of the Continuous field in JobSettings as
+// a Continuous value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetContinuous(ctx context.Context) (Continuous, bool) {
+	var e Continuous
+	if o.Continuous.IsNull() || o.Continuous.IsUnknown() {
+		return e, false
+	}
+	var v []Continuous
+	d := o.Continuous.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetContinuous sets the value of the Continuous field in JobSettings.
+func (o *JobSettings) SetContinuous(ctx context.Context, v Continuous) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
+	o.Continuous = types.ListValueMust(t, vs)
+}
+
+// GetDeployment returns the value of the Deployment field in JobSettings as
+// a JobDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetDeployment(ctx context.Context) (JobDeployment, bool) {
+	var e JobDeployment
+	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v []JobDeployment
+	d := o.Deployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeployment sets the value of the Deployment field in JobSettings.
+func (o *JobSettings) SetDeployment(ctx context.Context, v JobDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in JobSettings as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in JobSettings.
+func (o *JobSettings) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetEnvironments returns the value of the Environments field in JobSettings as
+// a slice of JobEnvironment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetEnvironments(ctx context.Context) ([]JobEnvironment, bool) {
+	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironment
+	d := o.Environments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironments sets the value of the Environments field in JobSettings.
+func (o *JobSettings) SetEnvironments(ctx context.Context, v []JobEnvironment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	o.Environments = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in JobSettings as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in JobSettings.
+func (o *JobSettings) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in JobSettings as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in JobSettings.
+func (o *JobSettings) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetJobClusters returns the value of the JobClusters field in JobSettings as
+// a slice of JobCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetJobClusters(ctx context.Context) ([]JobCluster, bool) {
+	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCluster
+	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusters sets the value of the JobClusters field in JobSettings.
+func (o *JobSettings) SetJobClusters(ctx context.Context, v []JobCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
+	o.JobClusters = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in JobSettings as
+// a JobNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetNotificationSettings(ctx context.Context) (JobNotificationSettings, bool) {
+	var e JobNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in JobSettings.
+func (o *JobSettings) SetNotificationSettings(ctx context.Context, v JobNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in JobSettings as
+// a slice of JobParameterDefinition values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetParameters(ctx context.Context) ([]JobParameterDefinition, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobParameterDefinition
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in JobSettings.
+func (o *JobSettings) SetParameters(ctx context.Context, v []JobParameterDefinition) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetQueue returns the value of the Queue field in JobSettings as
+// a QueueSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetQueue(ctx context.Context) (QueueSettings, bool) {
+	var e QueueSettings
+	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+		return e, false
+	}
+	var v []QueueSettings
+	d := o.Queue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueue sets the value of the Queue field in JobSettings.
+func (o *JobSettings) SetQueue(ctx context.Context, v QueueSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	o.Queue = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in JobSettings as
+// a JobRunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetRunAs(ctx context.Context) (JobRunAs, bool) {
+	var e JobRunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []JobRunAs
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in JobSettings.
+func (o *JobSettings) SetRunAs(ctx context.Context, v JobRunAs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in JobSettings as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in JobSettings.
+func (o *JobSettings) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in JobSettings as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in JobSettings.
+func (o *JobSettings) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.MapValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in JobSettings as
+// a slice of Task values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetTasks(ctx context.Context) ([]Task, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []Task
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in JobSettings.
+func (o *JobSettings) SetTasks(ctx context.Context, v []Task) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetTrigger returns the value of the Trigger field in JobSettings as
+// a TriggerSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetTrigger(ctx context.Context) (TriggerSettings, bool) {
+	var e TriggerSettings
+	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+		return e, false
+	}
+	var v []TriggerSettings
+	d := o.Trigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrigger sets the value of the Trigger field in JobSettings.
+func (o *JobSettings) SetTrigger(ctx context.Context, v TriggerSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	o.Trigger = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in JobSettings as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in JobSettings.
+func (o *JobSettings) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 // The source of the job specification in the remote repository when the job is
 // source controlled.
 type JobSource struct {
@@ -5549,52 +5486,17 @@ func (a JobSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobSource{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobSource) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobSource) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobSource) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobSource) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobSource) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobSource
+// only implements ToObjectValue() and Type().
+func (o JobSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobSource) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"dirty_state":            o.DirtyState,
+			"import_from_git_branch": o.ImportFromGitBranch,
+			"job_config_path":        o.JobConfigPath,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5647,52 +5549,17 @@ func (a JobsHealthRule) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobsHealthRule{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobsHealthRule) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobsHealthRule) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobsHealthRule) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobsHealthRule) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobsHealthRule) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobsHealthRule
+// only implements ToObjectValue() and Type().
+func (o JobsHealthRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobsHealthRule) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"metric": o.Metric,
+			"op":     o.Op,
+			"value":  o.Value,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5730,52 +5597,15 @@ func (a JobsHealthRules) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = JobsHealthRules{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o JobsHealthRules) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o JobsHealthRules) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o JobsHealthRules) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o JobsHealthRules) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o JobsHealthRules) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobsHealthRules
+// only implements ToObjectValue() and Type().
+func (o JobsHealthRules) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o JobsHealthRules) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"rules": o.Rules,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5787,6 +5617,31 @@ func (o JobsHealthRules) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRules returns the value of the Rules field in JobsHealthRules as
+// a slice of JobsHealthRule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobsHealthRules) GetRules(ctx context.Context) ([]JobsHealthRule, bool) {
+	if o.Rules.IsNull() || o.Rules.IsUnknown() {
+		return nil, false
+	}
+	var v []JobsHealthRule
+	d := o.Rules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRules sets the value of the Rules field in JobsHealthRules.
+func (o *JobsHealthRules) SetRules(ctx context.Context, v []JobsHealthRule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rules"]
+	o.Rules = types.ListValueMust(t, vs)
 }
 
 type ListJobComplianceForPolicyResponse struct {
@@ -5821,52 +5676,17 @@ func (a ListJobComplianceForPolicyResponse) GetComplexFieldTypes(ctx context.Con
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListJobComplianceForPolicyResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListJobComplianceForPolicyResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListJobComplianceForPolicyResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListJobComplianceForPolicyResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListJobComplianceForPolicyResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListJobComplianceForPolicyResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListJobComplianceForPolicyResponse
+// only implements ToObjectValue() and Type().
+func (o ListJobComplianceForPolicyResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListJobComplianceForPolicyResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"jobs":            o.Jobs,
+			"next_page_token": o.NextPageToken,
+			"prev_page_token": o.PrevPageToken,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5880,6 +5700,31 @@ func (o ListJobComplianceForPolicyResponse) Type(ctx context.Context) attr.Type 
 			"prev_page_token": types.StringType,
 		},
 	}
+}
+
+// GetJobs returns the value of the Jobs field in ListJobComplianceForPolicyResponse as
+// a slice of JobCompliance values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListJobComplianceForPolicyResponse) GetJobs(ctx context.Context) ([]JobCompliance, bool) {
+	if o.Jobs.IsNull() || o.Jobs.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCompliance
+	d := o.Jobs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobs sets the value of the Jobs field in ListJobComplianceForPolicyResponse.
+func (o *ListJobComplianceForPolicyResponse) SetJobs(ctx context.Context, v []JobCompliance) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	o.Jobs = types.ListValueMust(t, vs)
 }
 
 // List job policy compliance
@@ -5912,52 +5757,17 @@ func (a ListJobComplianceRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListJobComplianceRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListJobComplianceRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListJobComplianceRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListJobComplianceRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListJobComplianceRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListJobComplianceRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListJobComplianceRequest
+// only implements ToObjectValue() and Type().
+func (o ListJobComplianceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListJobComplianceRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+			"policy_id":  o.PolicyId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6006,52 +5816,19 @@ func (a ListJobsRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListJobsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListJobsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListJobsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListJobsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListJobsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListJobsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListJobsRequest
+// only implements ToObjectValue() and Type().
+func (o ListJobsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListJobsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"expand_tasks": o.ExpandTasks,
+			"limit":        o.Limit,
+			"name":         o.Name,
+			"offset":       o.Offset,
+			"page_token":   o.PageToken,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6101,52 +5878,18 @@ func (a ListJobsResponse) GetComplexFieldTypes(ctx context.Context) map[string]r
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListJobsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListJobsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListJobsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListJobsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListJobsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListJobsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListJobsResponse
+// only implements ToObjectValue() and Type().
+func (o ListJobsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListJobsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"has_more":        o.HasMore,
+			"jobs":            o.Jobs,
+			"next_page_token": o.NextPageToken,
+			"prev_page_token": o.PrevPageToken,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6161,6 +5904,31 @@ func (o ListJobsResponse) Type(ctx context.Context) attr.Type {
 			"prev_page_token": types.StringType,
 		},
 	}
+}
+
+// GetJobs returns the value of the Jobs field in ListJobsResponse as
+// a slice of BaseJob values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListJobsResponse) GetJobs(ctx context.Context) ([]BaseJob, bool) {
+	if o.Jobs.IsNull() || o.Jobs.IsUnknown() {
+		return nil, false
+	}
+	var v []BaseJob
+	d := o.Jobs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobs sets the value of the Jobs field in ListJobsResponse.
+func (o *ListJobsResponse) SetJobs(ctx context.Context, v []BaseJob) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	o.Jobs = types.ListValueMust(t, vs)
 }
 
 // List job runs
@@ -6220,52 +5988,24 @@ func (a ListRunsRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListRunsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListRunsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListRunsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListRunsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListRunsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListRunsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListRunsRequest
+// only implements ToObjectValue() and Type().
+func (o ListRunsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListRunsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"active_only":     o.ActiveOnly,
+			"completed_only":  o.CompletedOnly,
+			"expand_tasks":    o.ExpandTasks,
+			"job_id":          o.JobId,
+			"limit":           o.Limit,
+			"offset":          o.Offset,
+			"page_token":      o.PageToken,
+			"run_type":        o.RunType,
+			"start_time_from": o.StartTimeFrom,
+			"start_time_to":   o.StartTimeTo,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6320,52 +6060,18 @@ func (a ListRunsResponse) GetComplexFieldTypes(ctx context.Context) map[string]r
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListRunsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListRunsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListRunsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListRunsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListRunsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListRunsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListRunsResponse
+// only implements ToObjectValue() and Type().
+func (o ListRunsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListRunsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"has_more":        o.HasMore,
+			"next_page_token": o.NextPageToken,
+			"prev_page_token": o.PrevPageToken,
+			"runs":            o.Runs,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6380,6 +6086,31 @@ func (o ListRunsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRuns returns the value of the Runs field in ListRunsResponse as
+// a slice of BaseRun values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListRunsResponse) GetRuns(ctx context.Context) ([]BaseRun, bool) {
+	if o.Runs.IsNull() || o.Runs.IsUnknown() {
+		return nil, false
+	}
+	var v []BaseRun
+	d := o.Runs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRuns sets the value of the Runs field in ListRunsResponse.
+func (o *ListRunsResponse) SetRuns(ctx context.Context, v []BaseRun) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
+	o.Runs = types.ListValueMust(t, vs)
 }
 
 type NotebookOutput struct {
@@ -6411,52 +6142,16 @@ func (a NotebookOutput) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = NotebookOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o NotebookOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o NotebookOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o NotebookOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o NotebookOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o NotebookOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NotebookOutput
+// only implements ToObjectValue() and Type().
+func (o NotebookOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o NotebookOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"result":    o.Result,
+			"truncated": o.Truncated,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6529,52 +6224,18 @@ func (a NotebookTask) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = NotebookTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o NotebookTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o NotebookTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o NotebookTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o NotebookTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o NotebookTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NotebookTask
+// only implements ToObjectValue() and Type().
+func (o NotebookTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o NotebookTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"base_parameters": o.BaseParameters,
+			"notebook_path":   o.NotebookPath,
+			"source":          o.Source,
+			"warehouse_id":    o.WarehouseId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6589,6 +6250,31 @@ func (o NotebookTask) Type(ctx context.Context) attr.Type {
 			"warehouse_id":  types.StringType,
 		},
 	}
+}
+
+// GetBaseParameters returns the value of the BaseParameters field in NotebookTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NotebookTask) GetBaseParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.BaseParameters.IsNull() || o.BaseParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.BaseParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBaseParameters sets the value of the BaseParameters field in NotebookTask.
+func (o *NotebookTask) SetBaseParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
+	o.BaseParameters = types.MapValueMust(t, vs)
 }
 
 type PeriodicTriggerConfiguration struct {
@@ -6615,52 +6301,16 @@ func (a PeriodicTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) 
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = PeriodicTriggerConfiguration{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o PeriodicTriggerConfiguration) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o PeriodicTriggerConfiguration) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o PeriodicTriggerConfiguration) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o PeriodicTriggerConfiguration) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o PeriodicTriggerConfiguration) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PeriodicTriggerConfiguration
+// only implements ToObjectValue() and Type().
+func (o PeriodicTriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o PeriodicTriggerConfiguration) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"interval": o.Interval,
+			"unit":     o.Unit,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6695,52 +6345,15 @@ func (a PipelineParams) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = PipelineParams{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o PipelineParams) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o PipelineParams) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o PipelineParams) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o PipelineParams) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o PipelineParams) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PipelineParams
+// only implements ToObjectValue() and Type().
+func (o PipelineParams) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o PipelineParams) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"full_refresh": o.FullRefresh,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6776,52 +6389,16 @@ func (a PipelineTask) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = PipelineTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o PipelineTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o PipelineTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o PipelineTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o PipelineTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o PipelineTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PipelineTask
+// only implements ToObjectValue() and Type().
+func (o PipelineTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o PipelineTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"full_refresh": o.FullRefresh,
+			"pipeline_id":  o.PipelineId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6870,52 +6447,18 @@ func (a PythonWheelTask) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = PythonWheelTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o PythonWheelTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o PythonWheelTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o PythonWheelTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o PythonWheelTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o PythonWheelTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PythonWheelTask
+// only implements ToObjectValue() and Type().
+func (o PythonWheelTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o PythonWheelTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"entry_point":      o.EntryPoint,
+			"named_parameters": o.NamedParameters,
+			"package_name":     o.PackageName,
+			"parameters":       o.Parameters,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6932,6 +6475,56 @@ func (o PythonWheelTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetNamedParameters returns the value of the NamedParameters field in PythonWheelTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PythonWheelTask) GetNamedParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.NamedParameters.IsNull() || o.NamedParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NamedParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNamedParameters sets the value of the NamedParameters field in PythonWheelTask.
+func (o *PythonWheelTask) SetNamedParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
+	o.NamedParameters = types.MapValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in PythonWheelTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PythonWheelTask) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in PythonWheelTask.
+func (o *PythonWheelTask) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type QueueDetails struct {
@@ -6964,52 +6557,16 @@ func (a QueueDetails) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = QueueDetails{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o QueueDetails) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o QueueDetails) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o QueueDetails) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o QueueDetails) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o QueueDetails) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QueueDetails
+// only implements ToObjectValue() and Type().
+func (o QueueDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o QueueDetails) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"code":    o.Code,
+			"message": o.Message,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7044,52 +6601,15 @@ func (a QueueSettings) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = QueueSettings{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o QueueSettings) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o QueueSettings) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o QueueSettings) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o QueueSettings) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o QueueSettings) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QueueSettings
+// only implements ToObjectValue() and Type().
+func (o QueueSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o QueueSettings) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"enabled": o.Enabled,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7142,52 +6662,21 @@ func (a RepairHistoryItem) GetComplexFieldTypes(ctx context.Context) map[string]
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepairHistoryItem{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepairHistoryItem) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepairHistoryItem) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepairHistoryItem) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepairHistoryItem) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepairHistoryItem) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepairHistoryItem
+// only implements ToObjectValue() and Type().
+func (o RepairHistoryItem) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepairHistoryItem) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"end_time":     o.EndTime,
+			"id":           o.Id,
+			"start_time":   o.StartTime,
+			"state":        o.State,
+			"status":       o.Status,
+			"task_run_ids": o.TaskRunIds,
+			"type":         o.Type_,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7209,6 +6698,83 @@ func (o RepairHistoryItem) Type(ctx context.Context) attr.Type {
 			"type": types.StringType,
 		},
 	}
+}
+
+// GetState returns the value of the State field in RepairHistoryItem as
+// a RunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairHistoryItem) GetState(ctx context.Context) (RunState, bool) {
+	var e RunState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []RunState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in RepairHistoryItem.
+func (o *RepairHistoryItem) SetState(ctx context.Context, v RunState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in RepairHistoryItem as
+// a RunStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairHistoryItem) GetStatus(ctx context.Context) (RunStatus, bool) {
+	var e RunStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []RunStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in RepairHistoryItem.
+func (o *RepairHistoryItem) SetStatus(ctx context.Context, v RunStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
+// GetTaskRunIds returns the value of the TaskRunIds field in RepairHistoryItem as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairHistoryItem) GetTaskRunIds(ctx context.Context) ([]types.Int64, bool) {
+	if o.TaskRunIds.IsNull() || o.TaskRunIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.TaskRunIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTaskRunIds sets the value of the TaskRunIds field in RepairHistoryItem.
+func (o *RepairHistoryItem) SetTaskRunIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_ids"]
+	o.TaskRunIds = types.ListValueMust(t, vs)
 }
 
 type RepairRun struct {
@@ -7342,52 +6908,28 @@ func (a RepairRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepairRun{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepairRun) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepairRun) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepairRun) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepairRun) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepairRun) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepairRun
+// only implements ToObjectValue() and Type().
+func (o RepairRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepairRun) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"dbt_commands":           o.DbtCommands,
+			"jar_params":             o.JarParams,
+			"job_parameters":         o.JobParameters,
+			"latest_repair_id":       o.LatestRepairId,
+			"notebook_params":        o.NotebookParams,
+			"pipeline_params":        o.PipelineParams,
+			"python_named_params":    o.PythonNamedParams,
+			"python_params":          o.PythonParams,
+			"rerun_all_failed_tasks": o.RerunAllFailedTasks,
+			"rerun_dependent_tasks":  o.RerunDependentTasks,
+			"rerun_tasks":            o.RerunTasks,
+			"run_id":                 o.RunId,
+			"spark_submit_params":    o.SparkSubmitParams,
+			"sql_params":             o.SqlParams,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7432,6 +6974,257 @@ func (o RepairRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDbtCommands returns the value of the DbtCommands field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtCommands sets the value of the DbtCommands field in RepairRun.
+func (o *RepairRun) SetDbtCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	o.DbtCommands = types.ListValueMust(t, vs)
+}
+
+// GetJarParams returns the value of the JarParams field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarParams sets the value of the JarParams field in RepairRun.
+func (o *RepairRun) SetJarParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	o.JarParams = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in RepairRun as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in RepairRun.
+func (o *RepairRun) SetJobParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.MapValueMust(t, vs)
+}
+
+// GetNotebookParams returns the value of the NotebookParams field in RepairRun as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookParams sets the value of the NotebookParams field in RepairRun.
+func (o *RepairRun) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	o.NotebookParams = types.MapValueMust(t, vs)
+}
+
+// GetPipelineParams returns the value of the PipelineParams field in RepairRun as
+// a PipelineParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
+	var e PipelineParams
+	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineParams
+	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineParams sets the value of the PipelineParams field in RepairRun.
+func (o *RepairRun) SetPipelineParams(ctx context.Context, v PipelineParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	o.PipelineParams = types.ListValueMust(t, vs)
+}
+
+// GetPythonNamedParams returns the value of the PythonNamedParams field in RepairRun as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonNamedParams sets the value of the PythonNamedParams field in RepairRun.
+func (o *RepairRun) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	o.PythonNamedParams = types.MapValueMust(t, vs)
+}
+
+// GetPythonParams returns the value of the PythonParams field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonParams sets the value of the PythonParams field in RepairRun.
+func (o *RepairRun) SetPythonParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	o.PythonParams = types.ListValueMust(t, vs)
+}
+
+// GetRerunTasks returns the value of the RerunTasks field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetRerunTasks(ctx context.Context) ([]types.String, bool) {
+	if o.RerunTasks.IsNull() || o.RerunTasks.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RerunTasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRerunTasks sets the value of the RerunTasks field in RepairRun.
+func (o *RepairRun) SetRerunTasks(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rerun_tasks"]
+	o.RerunTasks = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitParams returns the value of the SparkSubmitParams field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkSubmitParams sets the value of the SparkSubmitParams field in RepairRun.
+func (o *RepairRun) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	o.SparkSubmitParams = types.ListValueMust(t, vs)
+}
+
+// GetSqlParams returns the value of the SqlParams field in RepairRun as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlParams sets the value of the SqlParams field in RepairRun.
+func (o *RepairRun) SetSqlParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	o.SqlParams = types.MapValueMust(t, vs)
+}
+
 // Run repair was initiated.
 type RepairRunResponse struct {
 	// The ID of the repair. Must be provided in subsequent repairs using the
@@ -7456,52 +7249,15 @@ func (a RepairRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepairRunResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepairRunResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepairRunResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepairRunResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepairRunResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepairRunResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepairRunResponse
+// only implements ToObjectValue() and Type().
+func (o RepairRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepairRunResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"repair_id": o.RepairId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7543,52 +7299,16 @@ func (a ResetJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResetJob{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResetJob) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResetJob) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResetJob) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResetJob) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResetJob) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResetJob
+// only implements ToObjectValue() and Type().
+func (o ResetJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResetJob) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_id":       o.JobId,
+			"new_settings": o.NewSettings,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7601,6 +7321,32 @@ func (o ResetJob) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetNewSettings returns the value of the NewSettings field in ResetJob as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResetJob) GetNewSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.NewSettings.IsNull() || o.NewSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.NewSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewSettings sets the value of the NewSettings field in ResetJob.
+func (o *ResetJob) SetNewSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
+	o.NewSettings = types.ListValueMust(t, vs)
 }
 
 type ResetResponse struct {
@@ -7623,52 +7369,13 @@ func (a ResetResponse) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResetResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResetResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResetResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResetResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResetResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResetResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResetResponse
+// only implements ToObjectValue() and Type().
+func (o ResetResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResetResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7701,52 +7408,16 @@ func (a ResolvedConditionTaskValues) GetComplexFieldTypes(ctx context.Context) m
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResolvedConditionTaskValues{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResolvedConditionTaskValues) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResolvedConditionTaskValues) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResolvedConditionTaskValues) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResolvedConditionTaskValues) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResolvedConditionTaskValues) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedConditionTaskValues
+// only implements ToObjectValue() and Type().
+func (o ResolvedConditionTaskValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResolvedConditionTaskValues) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"left":  o.Left,
+			"right": o.Right,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7782,52 +7453,15 @@ func (a ResolvedDbtTaskValues) GetComplexFieldTypes(ctx context.Context) map[str
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResolvedDbtTaskValues{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResolvedDbtTaskValues) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResolvedDbtTaskValues) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResolvedDbtTaskValues) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResolvedDbtTaskValues) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResolvedDbtTaskValues) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedDbtTaskValues
+// only implements ToObjectValue() and Type().
+func (o ResolvedDbtTaskValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResolvedDbtTaskValues) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"commands": o.Commands,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7839,6 +7473,31 @@ func (o ResolvedDbtTaskValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCommands returns the value of the Commands field in ResolvedDbtTaskValues as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedDbtTaskValues) GetCommands(ctx context.Context) ([]types.String, bool) {
+	if o.Commands.IsNull() || o.Commands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Commands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCommands sets the value of the Commands field in ResolvedDbtTaskValues.
+func (o *ResolvedDbtTaskValues) SetCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
+	o.Commands = types.ListValueMust(t, vs)
 }
 
 type ResolvedNotebookTaskValues struct {
@@ -7864,52 +7523,15 @@ func (a ResolvedNotebookTaskValues) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResolvedNotebookTaskValues{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResolvedNotebookTaskValues) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResolvedNotebookTaskValues) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResolvedNotebookTaskValues) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResolvedNotebookTaskValues) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResolvedNotebookTaskValues) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedNotebookTaskValues
+// only implements ToObjectValue() and Type().
+func (o ResolvedNotebookTaskValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResolvedNotebookTaskValues) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"base_parameters": o.BaseParameters,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -7921,6 +7543,31 @@ func (o ResolvedNotebookTaskValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetBaseParameters returns the value of the BaseParameters field in ResolvedNotebookTaskValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedNotebookTaskValues) GetBaseParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.BaseParameters.IsNull() || o.BaseParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.BaseParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBaseParameters sets the value of the BaseParameters field in ResolvedNotebookTaskValues.
+func (o *ResolvedNotebookTaskValues) SetBaseParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
+	o.BaseParameters = types.MapValueMust(t, vs)
 }
 
 type ResolvedParamPairValues struct {
@@ -7946,52 +7593,15 @@ func (a ResolvedParamPairValues) GetComplexFieldTypes(ctx context.Context) map[s
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResolvedParamPairValues{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResolvedParamPairValues) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResolvedParamPairValues) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResolvedParamPairValues) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResolvedParamPairValues) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResolvedParamPairValues) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedParamPairValues
+// only implements ToObjectValue() and Type().
+func (o ResolvedParamPairValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResolvedParamPairValues) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"parameters": o.Parameters,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -8003,6 +7613,31 @@ func (o ResolvedParamPairValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedParamPairValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedParamPairValues) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedParamPairValues.
+func (o *ResolvedParamPairValues) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.MapValueMust(t, vs)
 }
 
 type ResolvedPythonWheelTaskValues struct {
@@ -8031,52 +7666,16 @@ func (a ResolvedPythonWheelTaskValues) GetComplexFieldTypes(ctx context.Context)
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResolvedPythonWheelTaskValues{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResolvedPythonWheelTaskValues) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResolvedPythonWheelTaskValues) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResolvedPythonWheelTaskValues) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResolvedPythonWheelTaskValues) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResolvedPythonWheelTaskValues) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedPythonWheelTaskValues
+// only implements ToObjectValue() and Type().
+func (o ResolvedPythonWheelTaskValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResolvedPythonWheelTaskValues) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"named_parameters": o.NamedParameters,
+			"parameters":       o.Parameters,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -8091,6 +7690,56 @@ func (o ResolvedPythonWheelTaskValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetNamedParameters returns the value of the NamedParameters field in ResolvedPythonWheelTaskValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedPythonWheelTaskValues) GetNamedParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.NamedParameters.IsNull() || o.NamedParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NamedParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNamedParameters sets the value of the NamedParameters field in ResolvedPythonWheelTaskValues.
+func (o *ResolvedPythonWheelTaskValues) SetNamedParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
+	o.NamedParameters = types.MapValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedPythonWheelTaskValues as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedPythonWheelTaskValues) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedPythonWheelTaskValues.
+func (o *ResolvedPythonWheelTaskValues) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type ResolvedRunJobTaskValues struct {
@@ -8119,52 +7768,16 @@ func (a ResolvedRunJobTaskValues) GetComplexFieldTypes(ctx context.Context) map[
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResolvedRunJobTaskValues{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResolvedRunJobTaskValues) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResolvedRunJobTaskValues) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResolvedRunJobTaskValues) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResolvedRunJobTaskValues) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResolvedRunJobTaskValues) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedRunJobTaskValues
+// only implements ToObjectValue() and Type().
+func (o ResolvedRunJobTaskValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResolvedRunJobTaskValues) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"job_parameters": o.JobParameters,
+			"parameters":     o.Parameters,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -8179,6 +7792,56 @@ func (o ResolvedRunJobTaskValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetJobParameters returns the value of the JobParameters field in ResolvedRunJobTaskValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedRunJobTaskValues) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in ResolvedRunJobTaskValues.
+func (o *ResolvedRunJobTaskValues) SetJobParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.MapValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedRunJobTaskValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedRunJobTaskValues) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedRunJobTaskValues.
+func (o *ResolvedRunJobTaskValues) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.MapValueMust(t, vs)
 }
 
 type ResolvedStringParamsValues struct {
@@ -8204,52 +7867,15 @@ func (a ResolvedStringParamsValues) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResolvedStringParamsValues{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResolvedStringParamsValues) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResolvedStringParamsValues) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResolvedStringParamsValues) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResolvedStringParamsValues) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResolvedStringParamsValues) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedStringParamsValues
+// only implements ToObjectValue() and Type().
+func (o ResolvedStringParamsValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResolvedStringParamsValues) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"parameters": o.Parameters,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -8261,6 +7887,31 @@ func (o ResolvedStringParamsValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedStringParamsValues as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedStringParamsValues) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedStringParamsValues.
+func (o *ResolvedStringParamsValues) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type ResolvedValues struct {
@@ -8313,52 +7964,24 @@ func (a ResolvedValues) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ResolvedValues{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ResolvedValues) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ResolvedValues) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ResolvedValues) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ResolvedValues) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ResolvedValues) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedValues
+// only implements ToObjectValue() and Type().
+func (o ResolvedValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ResolvedValues) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"condition_task":    o.ConditionTask,
+			"dbt_task":          o.DbtTask,
+			"notebook_task":     o.NotebookTask,
+			"python_wheel_task": o.PythonWheelTask,
+			"run_job_task":      o.RunJobTask,
+			"simulation_task":   o.SimulationTask,
+			"spark_jar_task":    o.SparkJarTask,
+			"spark_python_task": o.SparkPythonTask,
+			"spark_submit_task": o.SparkSubmitTask,
+			"sql_task":          o.SqlTask,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -8397,6 +8020,266 @@ func (o ResolvedValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetConditionTask returns the value of the ConditionTask field in ResolvedValues as
+// a ResolvedConditionTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetConditionTask(ctx context.Context) (ResolvedConditionTaskValues, bool) {
+	var e ResolvedConditionTaskValues
+	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedConditionTaskValues
+	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConditionTask sets the value of the ConditionTask field in ResolvedValues.
+func (o *ResolvedValues) SetConditionTask(ctx context.Context, v ResolvedConditionTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	o.ConditionTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtTask returns the value of the DbtTask field in ResolvedValues as
+// a ResolvedDbtTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetDbtTask(ctx context.Context) (ResolvedDbtTaskValues, bool) {
+	var e ResolvedDbtTaskValues
+	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedDbtTaskValues
+	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtTask sets the value of the DbtTask field in ResolvedValues.
+func (o *ResolvedValues) SetDbtTask(ctx context.Context, v ResolvedDbtTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	o.DbtTask = types.ListValueMust(t, vs)
+}
+
+// GetNotebookTask returns the value of the NotebookTask field in ResolvedValues as
+// a ResolvedNotebookTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetNotebookTask(ctx context.Context) (ResolvedNotebookTaskValues, bool) {
+	var e ResolvedNotebookTaskValues
+	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedNotebookTaskValues
+	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookTask sets the value of the NotebookTask field in ResolvedValues.
+func (o *ResolvedValues) SetNotebookTask(ctx context.Context, v ResolvedNotebookTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	o.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonWheelTask returns the value of the PythonWheelTask field in ResolvedValues as
+// a ResolvedPythonWheelTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetPythonWheelTask(ctx context.Context) (ResolvedPythonWheelTaskValues, bool) {
+	var e ResolvedPythonWheelTaskValues
+	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedPythonWheelTaskValues
+	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonWheelTask sets the value of the PythonWheelTask field in ResolvedValues.
+func (o *ResolvedValues) SetPythonWheelTask(ctx context.Context, v ResolvedPythonWheelTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	o.PythonWheelTask = types.ListValueMust(t, vs)
+}
+
+// GetRunJobTask returns the value of the RunJobTask field in ResolvedValues as
+// a ResolvedRunJobTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetRunJobTask(ctx context.Context) (ResolvedRunJobTaskValues, bool) {
+	var e ResolvedRunJobTaskValues
+	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedRunJobTaskValues
+	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobTask sets the value of the RunJobTask field in ResolvedValues.
+func (o *ResolvedValues) SetRunJobTask(ctx context.Context, v ResolvedRunJobTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	o.RunJobTask = types.ListValueMust(t, vs)
+}
+
+// GetSimulationTask returns the value of the SimulationTask field in ResolvedValues as
+// a ResolvedParamPairValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSimulationTask(ctx context.Context) (ResolvedParamPairValues, bool) {
+	var e ResolvedParamPairValues
+	if o.SimulationTask.IsNull() || o.SimulationTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedParamPairValues
+	d := o.SimulationTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSimulationTask sets the value of the SimulationTask field in ResolvedValues.
+func (o *ResolvedValues) SetSimulationTask(ctx context.Context, v ResolvedParamPairValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["simulation_task"]
+	o.SimulationTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkJarTask returns the value of the SparkJarTask field in ResolvedValues as
+// a ResolvedStringParamsValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSparkJarTask(ctx context.Context) (ResolvedStringParamsValues, bool) {
+	var e ResolvedStringParamsValues
+	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedStringParamsValues
+	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkJarTask sets the value of the SparkJarTask field in ResolvedValues.
+func (o *ResolvedValues) SetSparkJarTask(ctx context.Context, v ResolvedStringParamsValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	o.SparkJarTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkPythonTask returns the value of the SparkPythonTask field in ResolvedValues as
+// a ResolvedStringParamsValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSparkPythonTask(ctx context.Context) (ResolvedStringParamsValues, bool) {
+	var e ResolvedStringParamsValues
+	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedStringParamsValues
+	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkPythonTask sets the value of the SparkPythonTask field in ResolvedValues.
+func (o *ResolvedValues) SetSparkPythonTask(ctx context.Context, v ResolvedStringParamsValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	o.SparkPythonTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitTask returns the value of the SparkSubmitTask field in ResolvedValues as
+// a ResolvedStringParamsValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSparkSubmitTask(ctx context.Context) (ResolvedStringParamsValues, bool) {
+	var e ResolvedStringParamsValues
+	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedStringParamsValues
+	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkSubmitTask sets the value of the SparkSubmitTask field in ResolvedValues.
+func (o *ResolvedValues) SetSparkSubmitTask(ctx context.Context, v ResolvedStringParamsValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	o.SparkSubmitTask = types.ListValueMust(t, vs)
+}
+
+// GetSqlTask returns the value of the SqlTask field in ResolvedValues as
+// a ResolvedParamPairValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSqlTask(ctx context.Context) (ResolvedParamPairValues, bool) {
+	var e ResolvedParamPairValues
+	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedParamPairValues
+	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlTask sets the value of the SqlTask field in ResolvedValues.
+func (o *ResolvedValues) SetSqlTask(ctx context.Context, v ResolvedParamPairValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	o.SqlTask = types.ListValueMust(t, vs)
 }
 
 // Run was retrieved successfully
@@ -8566,52 +8449,47 @@ func (a Run) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = Run{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o Run) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o Run) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o Run) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o Run) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o Run) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Run
+// only implements ToObjectValue() and Type().
+func (o Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o Run) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"attempt_number":          o.AttemptNumber,
+			"cleanup_duration":        o.CleanupDuration,
+			"cluster_instance":        o.ClusterInstance,
+			"cluster_spec":            o.ClusterSpec,
+			"creator_user_name":       o.CreatorUserName,
+			"description":             o.Description,
+			"end_time":                o.EndTime,
+			"execution_duration":      o.ExecutionDuration,
+			"git_source":              o.GitSource,
+			"iterations":              o.Iterations,
+			"job_clusters":            o.JobClusters,
+			"job_id":                  o.JobId,
+			"job_parameters":          o.JobParameters,
+			"job_run_id":              o.JobRunId,
+			"next_page_token":         o.NextPageToken,
+			"number_in_job":           o.NumberInJob,
+			"original_attempt_run_id": o.OriginalAttemptRunId,
+			"overriding_parameters":   o.OverridingParameters,
+			"queue_duration":          o.QueueDuration,
+			"repair_history":          o.RepairHistory,
+			"run_duration":            o.RunDuration,
+			"run_id":                  o.RunId,
+			"run_name":                o.RunName,
+			"run_page_url":            o.RunPageUrl,
+			"run_type":                o.RunType,
+			"schedule":                o.Schedule,
+			"setup_duration":          o.SetupDuration,
+			"start_time":              o.StartTime,
+			"state":                   o.State,
+			"status":                  o.Status,
+			"tasks":                   o.Tasks,
+			"trigger":                 o.Trigger,
+			"trigger_info":            o.TriggerInfo,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -8681,6 +8559,339 @@ func (o Run) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusterInstance returns the value of the ClusterInstance field in Run as
+// a ClusterInstance value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetClusterInstance(ctx context.Context) (ClusterInstance, bool) {
+	var e ClusterInstance
+	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterInstance
+	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterInstance sets the value of the ClusterInstance field in Run.
+func (o *Run) SetClusterInstance(ctx context.Context, v ClusterInstance) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	o.ClusterInstance = types.ListValueMust(t, vs)
+}
+
+// GetClusterSpec returns the value of the ClusterSpec field in Run as
+// a ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
+	var e ClusterSpec
+	if o.ClusterSpec.IsNull() || o.ClusterSpec.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterSpec
+	d := o.ClusterSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterSpec sets the value of the ClusterSpec field in Run.
+func (o *Run) SetClusterSpec(ctx context.Context, v ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_spec"]
+	o.ClusterSpec = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in Run as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in Run.
+func (o *Run) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetIterations returns the value of the Iterations field in Run as
+// a slice of RunTask values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetIterations(ctx context.Context) ([]RunTask, bool) {
+	if o.Iterations.IsNull() || o.Iterations.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTask
+	d := o.Iterations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIterations sets the value of the Iterations field in Run.
+func (o *Run) SetIterations(ctx context.Context, v []RunTask) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["iterations"]
+	o.Iterations = types.ListValueMust(t, vs)
+}
+
+// GetJobClusters returns the value of the JobClusters field in Run as
+// a slice of JobCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetJobClusters(ctx context.Context) ([]JobCluster, bool) {
+	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCluster
+	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusters sets the value of the JobClusters field in Run.
+func (o *Run) SetJobClusters(ctx context.Context, v []JobCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
+	o.JobClusters = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in Run as
+// a slice of JobParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetJobParameters(ctx context.Context) ([]JobParameter, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobParameter
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in Run.
+func (o *Run) SetJobParameters(ctx context.Context, v []JobParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.ListValueMust(t, vs)
+}
+
+// GetOverridingParameters returns the value of the OverridingParameters field in Run as
+// a RunParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetOverridingParameters(ctx context.Context) (RunParameters, bool) {
+	var e RunParameters
+	if o.OverridingParameters.IsNull() || o.OverridingParameters.IsUnknown() {
+		return e, false
+	}
+	var v []RunParameters
+	d := o.OverridingParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOverridingParameters sets the value of the OverridingParameters field in Run.
+func (o *Run) SetOverridingParameters(ctx context.Context, v RunParameters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["overriding_parameters"]
+	o.OverridingParameters = types.ListValueMust(t, vs)
+}
+
+// GetRepairHistory returns the value of the RepairHistory field in Run as
+// a slice of RepairHistoryItem values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem, bool) {
+	if o.RepairHistory.IsNull() || o.RepairHistory.IsUnknown() {
+		return nil, false
+	}
+	var v []RepairHistoryItem
+	d := o.RepairHistory.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRepairHistory sets the value of the RepairHistory field in Run.
+func (o *Run) SetRepairHistory(ctx context.Context, v []RepairHistoryItem) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
+	o.RepairHistory = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in Run as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in Run.
+func (o *Run) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in Run as
+// a RunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetState(ctx context.Context) (RunState, bool) {
+	var e RunState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []RunState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in Run.
+func (o *Run) SetState(ctx context.Context, v RunState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in Run as
+// a RunStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetStatus(ctx context.Context) (RunStatus, bool) {
+	var e RunStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []RunStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in Run.
+func (o *Run) SetStatus(ctx context.Context, v RunStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in Run as
+// a slice of RunTask values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetTasks(ctx context.Context) ([]RunTask, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTask
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in Run.
+func (o *Run) SetTasks(ctx context.Context, v []RunTask) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetTriggerInfo returns the value of the TriggerInfo field in Run as
+// a TriggerInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetTriggerInfo(ctx context.Context) (TriggerInfo, bool) {
+	var e TriggerInfo
+	if o.TriggerInfo.IsNull() || o.TriggerInfo.IsUnknown() {
+		return e, false
+	}
+	var v []TriggerInfo
+	d := o.TriggerInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTriggerInfo sets the value of the TriggerInfo field in Run.
+func (o *Run) SetTriggerInfo(ctx context.Context, v TriggerInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_info"]
+	o.TriggerInfo = types.ListValueMust(t, vs)
+}
+
 type RunConditionTask struct {
 	// The left operand of the condition task. Can be either a string value or a
 	// job state or parameter reference.
@@ -8721,52 +8932,18 @@ func (a RunConditionTask) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunConditionTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunConditionTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunConditionTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunConditionTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunConditionTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunConditionTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunConditionTask
+// only implements ToObjectValue() and Type().
+func (o RunConditionTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunConditionTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"left":    o.Left,
+			"op":      o.Op,
+			"outcome": o.Outcome,
+			"right":   o.Right,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -8816,52 +8993,18 @@ func (a RunForEachTask) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunForEachTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunForEachTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunForEachTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunForEachTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunForEachTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunForEachTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunForEachTask
+// only implements ToObjectValue() and Type().
+func (o RunForEachTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunForEachTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"concurrency": o.Concurrency,
+			"inputs":      o.Inputs,
+			"stats":       o.Stats,
+			"task":        o.Task,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -8878,6 +9021,58 @@ func (o RunForEachTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetStats returns the value of the Stats field in RunForEachTask as
+// a ForEachStats value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunForEachTask) GetStats(ctx context.Context) (ForEachStats, bool) {
+	var e ForEachStats
+	if o.Stats.IsNull() || o.Stats.IsUnknown() {
+		return e, false
+	}
+	var v []ForEachStats
+	d := o.Stats.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStats sets the value of the Stats field in RunForEachTask.
+func (o *RunForEachTask) SetStats(ctx context.Context, v ForEachStats) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stats"]
+	o.Stats = types.ListValueMust(t, vs)
+}
+
+// GetTask returns the value of the Task field in RunForEachTask as
+// a Task value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunForEachTask) GetTask(ctx context.Context) (Task, bool) {
+	var e Task
+	if o.Task.IsNull() || o.Task.IsUnknown() {
+		return e, false
+	}
+	var v []Task
+	d := o.Task.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTask sets the value of the Task field in RunForEachTask.
+func (o *RunForEachTask) SetTask(ctx context.Context, v Task) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	o.Task = types.ListValueMust(t, vs)
 }
 
 type RunJobOutput struct {
@@ -8902,52 +9097,15 @@ func (a RunJobOutput) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunJobOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunJobOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunJobOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunJobOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunJobOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunJobOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunJobOutput
+// only implements ToObjectValue() and Type().
+func (o RunJobOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunJobOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"run_id": o.RunId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -9075,52 +9233,24 @@ func (a RunJobTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunJobTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunJobTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunJobTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunJobTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunJobTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunJobTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunJobTask
+// only implements ToObjectValue() and Type().
+func (o RunJobTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunJobTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"dbt_commands":        o.DbtCommands,
+			"jar_params":          o.JarParams,
+			"job_id":              o.JobId,
+			"job_parameters":      o.JobParameters,
+			"notebook_params":     o.NotebookParams,
+			"pipeline_params":     o.PipelineParams,
+			"python_named_params": o.PythonNamedParams,
+			"python_params":       o.PythonParams,
+			"spark_submit_params": o.SparkSubmitParams,
+			"sql_params":          o.SqlParams,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -9157,6 +9287,232 @@ func (o RunJobTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDbtCommands returns the value of the DbtCommands field in RunJobTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtCommands sets the value of the DbtCommands field in RunJobTask.
+func (o *RunJobTask) SetDbtCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	o.DbtCommands = types.ListValueMust(t, vs)
+}
+
+// GetJarParams returns the value of the JarParams field in RunJobTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarParams sets the value of the JarParams field in RunJobTask.
+func (o *RunJobTask) SetJarParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	o.JarParams = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in RunJobTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in RunJobTask.
+func (o *RunJobTask) SetJobParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.MapValueMust(t, vs)
+}
+
+// GetNotebookParams returns the value of the NotebookParams field in RunJobTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookParams sets the value of the NotebookParams field in RunJobTask.
+func (o *RunJobTask) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	o.NotebookParams = types.MapValueMust(t, vs)
+}
+
+// GetPipelineParams returns the value of the PipelineParams field in RunJobTask as
+// a PipelineParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
+	var e PipelineParams
+	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineParams
+	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineParams sets the value of the PipelineParams field in RunJobTask.
+func (o *RunJobTask) SetPipelineParams(ctx context.Context, v PipelineParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	o.PipelineParams = types.ListValueMust(t, vs)
+}
+
+// GetPythonNamedParams returns the value of the PythonNamedParams field in RunJobTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonNamedParams sets the value of the PythonNamedParams field in RunJobTask.
+func (o *RunJobTask) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	o.PythonNamedParams = types.MapValueMust(t, vs)
+}
+
+// GetPythonParams returns the value of the PythonParams field in RunJobTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonParams sets the value of the PythonParams field in RunJobTask.
+func (o *RunJobTask) SetPythonParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	o.PythonParams = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunJobTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunJobTask.
+func (o *RunJobTask) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	o.SparkSubmitParams = types.ListValueMust(t, vs)
+}
+
+// GetSqlParams returns the value of the SqlParams field in RunJobTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlParams sets the value of the SqlParams field in RunJobTask.
+func (o *RunJobTask) SetSqlParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	o.SqlParams = types.MapValueMust(t, vs)
 }
 
 type RunNow struct {
@@ -9298,52 +9654,27 @@ func (a RunNow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunNow{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunNow) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunNow) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunNow) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunNow) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunNow) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunNow
+// only implements ToObjectValue() and Type().
+func (o RunNow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunNow) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"dbt_commands":        o.DbtCommands,
+			"idempotency_token":   o.IdempotencyToken,
+			"jar_params":          o.JarParams,
+			"job_id":              o.JobId,
+			"job_parameters":      o.JobParameters,
+			"notebook_params":     o.NotebookParams,
+			"only":                o.Only,
+			"pipeline_params":     o.PipelineParams,
+			"python_named_params": o.PythonNamedParams,
+			"python_params":       o.PythonParams,
+			"queue":               o.Queue,
+			"spark_submit_params": o.SparkSubmitParams,
+			"sql_params":          o.SqlParams,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -9389,6 +9720,283 @@ func (o RunNow) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDbtCommands returns the value of the DbtCommands field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtCommands sets the value of the DbtCommands field in RunNow.
+func (o *RunNow) SetDbtCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	o.DbtCommands = types.ListValueMust(t, vs)
+}
+
+// GetJarParams returns the value of the JarParams field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarParams sets the value of the JarParams field in RunNow.
+func (o *RunNow) SetJarParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	o.JarParams = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in RunNow as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in RunNow.
+func (o *RunNow) SetJobParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.MapValueMust(t, vs)
+}
+
+// GetNotebookParams returns the value of the NotebookParams field in RunNow as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookParams sets the value of the NotebookParams field in RunNow.
+func (o *RunNow) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	o.NotebookParams = types.MapValueMust(t, vs)
+}
+
+// GetOnly returns the value of the Only field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetOnly(ctx context.Context) ([]types.String, bool) {
+	if o.Only.IsNull() || o.Only.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Only.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnly sets the value of the Only field in RunNow.
+func (o *RunNow) SetOnly(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["only"]
+	o.Only = types.ListValueMust(t, vs)
+}
+
+// GetPipelineParams returns the value of the PipelineParams field in RunNow as
+// a PipelineParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
+	var e PipelineParams
+	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineParams
+	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineParams sets the value of the PipelineParams field in RunNow.
+func (o *RunNow) SetPipelineParams(ctx context.Context, v PipelineParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	o.PipelineParams = types.ListValueMust(t, vs)
+}
+
+// GetPythonNamedParams returns the value of the PythonNamedParams field in RunNow as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonNamedParams sets the value of the PythonNamedParams field in RunNow.
+func (o *RunNow) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	o.PythonNamedParams = types.MapValueMust(t, vs)
+}
+
+// GetPythonParams returns the value of the PythonParams field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonParams sets the value of the PythonParams field in RunNow.
+func (o *RunNow) SetPythonParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	o.PythonParams = types.ListValueMust(t, vs)
+}
+
+// GetQueue returns the value of the Queue field in RunNow as
+// a QueueSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetQueue(ctx context.Context) (QueueSettings, bool) {
+	var e QueueSettings
+	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+		return e, false
+	}
+	var v []QueueSettings
+	d := o.Queue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueue sets the value of the Queue field in RunNow.
+func (o *RunNow) SetQueue(ctx context.Context, v QueueSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	o.Queue = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunNow.
+func (o *RunNow) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	o.SparkSubmitParams = types.ListValueMust(t, vs)
+}
+
+// GetSqlParams returns the value of the SqlParams field in RunNow as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlParams sets the value of the SqlParams field in RunNow.
+func (o *RunNow) SetSqlParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	o.SqlParams = types.MapValueMust(t, vs)
+}
+
 // Run was started successfully.
 type RunNowResponse struct {
 	// A unique identifier for this job run. This is set to the same value as
@@ -9415,52 +10023,16 @@ func (a RunNowResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunNowResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunNowResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunNowResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunNowResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunNowResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunNowResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunNowResponse
+// only implements ToObjectValue() and Type().
+func (o RunNowResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunNowResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"number_in_job": o.NumberInJob,
+			"run_id":        o.RunId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -9536,52 +10108,24 @@ func (a RunOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunOutput
+// only implements ToObjectValue() and Type().
+func (o RunOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"dbt_output":      o.DbtOutput,
+			"error":           o.Error,
+			"error_trace":     o.ErrorTrace,
+			"info":            o.Info,
+			"logs":            o.Logs,
+			"logs_truncated":  o.LogsTruncated,
+			"metadata":        o.Metadata,
+			"notebook_output": o.NotebookOutput,
+			"run_job_output":  o.RunJobOutput,
+			"sql_output":      o.SqlOutput,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -9610,6 +10154,136 @@ func (o RunOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDbtOutput returns the value of the DbtOutput field in RunOutput as
+// a DbtOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetDbtOutput(ctx context.Context) (DbtOutput, bool) {
+	var e DbtOutput
+	if o.DbtOutput.IsNull() || o.DbtOutput.IsUnknown() {
+		return e, false
+	}
+	var v []DbtOutput
+	d := o.DbtOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtOutput sets the value of the DbtOutput field in RunOutput.
+func (o *RunOutput) SetDbtOutput(ctx context.Context, v DbtOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_output"]
+	o.DbtOutput = types.ListValueMust(t, vs)
+}
+
+// GetMetadata returns the value of the Metadata field in RunOutput as
+// a Run value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetMetadata(ctx context.Context) (Run, bool) {
+	var e Run
+	if o.Metadata.IsNull() || o.Metadata.IsUnknown() {
+		return e, false
+	}
+	var v []Run
+	d := o.Metadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetadata sets the value of the Metadata field in RunOutput.
+func (o *RunOutput) SetMetadata(ctx context.Context, v Run) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metadata"]
+	o.Metadata = types.ListValueMust(t, vs)
+}
+
+// GetNotebookOutput returns the value of the NotebookOutput field in RunOutput as
+// a NotebookOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetNotebookOutput(ctx context.Context) (NotebookOutput, bool) {
+	var e NotebookOutput
+	if o.NotebookOutput.IsNull() || o.NotebookOutput.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookOutput
+	d := o.NotebookOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookOutput sets the value of the NotebookOutput field in RunOutput.
+func (o *RunOutput) SetNotebookOutput(ctx context.Context, v NotebookOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_output"]
+	o.NotebookOutput = types.ListValueMust(t, vs)
+}
+
+// GetRunJobOutput returns the value of the RunJobOutput field in RunOutput as
+// a RunJobOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetRunJobOutput(ctx context.Context) (RunJobOutput, bool) {
+	var e RunJobOutput
+	if o.RunJobOutput.IsNull() || o.RunJobOutput.IsUnknown() {
+		return e, false
+	}
+	var v []RunJobOutput
+	d := o.RunJobOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobOutput sets the value of the RunJobOutput field in RunOutput.
+func (o *RunOutput) SetRunJobOutput(ctx context.Context, v RunJobOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_output"]
+	o.RunJobOutput = types.ListValueMust(t, vs)
+}
+
+// GetSqlOutput returns the value of the SqlOutput field in RunOutput as
+// a SqlOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetSqlOutput(ctx context.Context) (SqlOutput, bool) {
+	var e SqlOutput
+	if o.SqlOutput.IsNull() || o.SqlOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlOutput
+	d := o.SqlOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlOutput sets the value of the SqlOutput field in RunOutput.
+func (o *RunOutput) SetSqlOutput(ctx context.Context, v SqlOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_output"]
+	o.SqlOutput = types.ListValueMust(t, vs)
 }
 
 type RunParameters struct {
@@ -9723,52 +10397,22 @@ func (a RunParameters) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunParameters{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunParameters) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunParameters) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunParameters) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunParameters) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunParameters) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunParameters
+// only implements ToObjectValue() and Type().
+func (o RunParameters) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunParameters) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"dbt_commands":        o.DbtCommands,
+			"jar_params":          o.JarParams,
+			"notebook_params":     o.NotebookParams,
+			"pipeline_params":     o.PipelineParams,
+			"python_named_params": o.PythonNamedParams,
+			"python_params":       o.PythonParams,
+			"spark_submit_params": o.SparkSubmitParams,
+			"sql_params":          o.SqlParams,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -9801,6 +10445,207 @@ func (o RunParameters) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDbtCommands returns the value of the DbtCommands field in RunParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtCommands sets the value of the DbtCommands field in RunParameters.
+func (o *RunParameters) SetDbtCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	o.DbtCommands = types.ListValueMust(t, vs)
+}
+
+// GetJarParams returns the value of the JarParams field in RunParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarParams sets the value of the JarParams field in RunParameters.
+func (o *RunParameters) SetJarParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	o.JarParams = types.ListValueMust(t, vs)
+}
+
+// GetNotebookParams returns the value of the NotebookParams field in RunParameters as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookParams sets the value of the NotebookParams field in RunParameters.
+func (o *RunParameters) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	o.NotebookParams = types.MapValueMust(t, vs)
+}
+
+// GetPipelineParams returns the value of the PipelineParams field in RunParameters as
+// a PipelineParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
+	var e PipelineParams
+	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineParams
+	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineParams sets the value of the PipelineParams field in RunParameters.
+func (o *RunParameters) SetPipelineParams(ctx context.Context, v PipelineParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	o.PipelineParams = types.ListValueMust(t, vs)
+}
+
+// GetPythonNamedParams returns the value of the PythonNamedParams field in RunParameters as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonNamedParams sets the value of the PythonNamedParams field in RunParameters.
+func (o *RunParameters) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	o.PythonNamedParams = types.MapValueMust(t, vs)
+}
+
+// GetPythonParams returns the value of the PythonParams field in RunParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonParams sets the value of the PythonParams field in RunParameters.
+func (o *RunParameters) SetPythonParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	o.PythonParams = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunParameters.
+func (o *RunParameters) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	o.SparkSubmitParams = types.ListValueMust(t, vs)
+}
+
+// GetSqlParams returns the value of the SqlParams field in RunParameters as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlParams sets the value of the SqlParams field in RunParameters.
+func (o *RunParameters) SetSqlParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	o.SqlParams = types.MapValueMust(t, vs)
 }
 
 // The current state of the run.
@@ -9838,52 +10683,19 @@ func (a RunState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunState{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunState) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunState) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunState) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunState) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunState) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunState
+// only implements ToObjectValue() and Type().
+func (o RunState) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunState) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"life_cycle_state":           o.LifeCycleState,
+			"queue_reason":               o.QueueReason,
+			"result_state":               o.ResultState,
+			"state_message":              o.StateMessage,
+			"user_cancelled_or_timedout": o.UserCancelledOrTimedout,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -9930,52 +10742,17 @@ func (a RunStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunStatus{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunStatus) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunStatus) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunStatus) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunStatus) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunStatus) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunStatus
+// only implements ToObjectValue() and Type().
+func (o RunStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunStatus) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"queue_details":       o.QueueDetails,
+			"state":               o.State,
+			"termination_details": o.TerminationDetails,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -9991,6 +10768,58 @@ func (o RunStatus) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetQueueDetails returns the value of the QueueDetails field in RunStatus as
+// a QueueDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunStatus) GetQueueDetails(ctx context.Context) (QueueDetails, bool) {
+	var e QueueDetails
+	if o.QueueDetails.IsNull() || o.QueueDetails.IsUnknown() {
+		return e, false
+	}
+	var v []QueueDetails
+	d := o.QueueDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueueDetails sets the value of the QueueDetails field in RunStatus.
+func (o *RunStatus) SetQueueDetails(ctx context.Context, v QueueDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue_details"]
+	o.QueueDetails = types.ListValueMust(t, vs)
+}
+
+// GetTerminationDetails returns the value of the TerminationDetails field in RunStatus as
+// a TerminationDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunStatus) GetTerminationDetails(ctx context.Context) (TerminationDetails, bool) {
+	var e TerminationDetails
+	if o.TerminationDetails.IsNull() || o.TerminationDetails.IsUnknown() {
+		return e, false
+	}
+	var v []TerminationDetails
+	d := o.TerminationDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTerminationDetails sets the value of the TerminationDetails field in RunStatus.
+func (o *RunStatus) SetTerminationDetails(ctx context.Context, v TerminationDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["termination_details"]
+	o.TerminationDetails = types.ListValueMust(t, vs)
 }
 
 // Used when outputting a child run, in GetRun or ListRuns.
@@ -10072,7 +10901,7 @@ type RunTask struct {
 	Libraries types.List `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+	NewCluster types.List `tfsdk:"new_cluster" tf:"optional,object"`
 	// The task runs a notebook when the `notebook_task` field is present.
 	NotebookTask types.List `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
@@ -10183,8 +11012,8 @@ func (a RunTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
 		"for_each_task":         reflect.TypeOf(RunForEachTask{}),
 		"git_source":            reflect.TypeOf(GitSource{}),
-		"library":               reflect.TypeOf(compute.Library{}),
-		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"library":               reflect.TypeOf(compute_tf.Library{}),
+		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec{}),
 		"notebook_task":         reflect.TypeOf(NotebookTask{}),
 		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
@@ -10201,52 +11030,53 @@ func (a RunTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RunTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RunTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RunTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RunTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RunTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RunTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunTask
+// only implements ToObjectValue() and Type().
+func (o RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RunTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"attempt_number":        o.AttemptNumber,
+			"cleanup_duration":      o.CleanupDuration,
+			"cluster_instance":      o.ClusterInstance,
+			"condition_task":        o.ConditionTask,
+			"dbt_task":              o.DbtTask,
+			"depends_on":            o.DependsOn,
+			"description":           o.Description,
+			"email_notifications":   o.EmailNotifications,
+			"end_time":              o.EndTime,
+			"environment_key":       o.EnvironmentKey,
+			"execution_duration":    o.ExecutionDuration,
+			"existing_cluster_id":   o.ExistingClusterId,
+			"for_each_task":         o.ForEachTask,
+			"git_source":            o.GitSource,
+			"job_cluster_key":       o.JobClusterKey,
+			"library":               o.Libraries,
+			"new_cluster":           o.NewCluster,
+			"notebook_task":         o.NotebookTask,
+			"notification_settings": o.NotificationSettings,
+			"pipeline_task":         o.PipelineTask,
+			"python_wheel_task":     o.PythonWheelTask,
+			"queue_duration":        o.QueueDuration,
+			"resolved_values":       o.ResolvedValues,
+			"run_duration":          o.RunDuration,
+			"run_id":                o.RunId,
+			"run_if":                o.RunIf,
+			"run_job_task":          o.RunJobTask,
+			"run_page_url":          o.RunPageUrl,
+			"setup_duration":        o.SetupDuration,
+			"spark_jar_task":        o.SparkJarTask,
+			"spark_python_task":     o.SparkPythonTask,
+			"spark_submit_task":     o.SparkSubmitTask,
+			"sql_task":              o.SqlTask,
+			"start_time":            o.StartTime,
+			"state":                 o.State,
+			"status":                o.Status,
+			"task_key":              o.TaskKey,
+			"timeout_seconds":       o.TimeoutSeconds,
+			"webhook_notifications": o.WebhookNotifications,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -10340,6 +11170,576 @@ func (o RunTask) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusterInstance returns the value of the ClusterInstance field in RunTask as
+// a ClusterInstance value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetClusterInstance(ctx context.Context) (ClusterInstance, bool) {
+	var e ClusterInstance
+	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterInstance
+	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterInstance sets the value of the ClusterInstance field in RunTask.
+func (o *RunTask) SetClusterInstance(ctx context.Context, v ClusterInstance) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	o.ClusterInstance = types.ListValueMust(t, vs)
+}
+
+// GetConditionTask returns the value of the ConditionTask field in RunTask as
+// a RunConditionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetConditionTask(ctx context.Context) (RunConditionTask, bool) {
+	var e RunConditionTask
+	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunConditionTask
+	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConditionTask sets the value of the ConditionTask field in RunTask.
+func (o *RunTask) SetConditionTask(ctx context.Context, v RunConditionTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	o.ConditionTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtTask returns the value of the DbtTask field in RunTask as
+// a DbtTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetDbtTask(ctx context.Context) (DbtTask, bool) {
+	var e DbtTask
+	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtTask
+	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtTask sets the value of the DbtTask field in RunTask.
+func (o *RunTask) SetDbtTask(ctx context.Context, v DbtTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	o.DbtTask = types.ListValueMust(t, vs)
+}
+
+// GetDependsOn returns the value of the DependsOn field in RunTask as
+// a slice of TaskDependency values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetDependsOn(ctx context.Context) ([]TaskDependency, bool) {
+	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+		return nil, false
+	}
+	var v []TaskDependency
+	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependsOn sets the value of the DependsOn field in RunTask.
+func (o *RunTask) SetDependsOn(ctx context.Context, v []TaskDependency) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	o.DependsOn = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in RunTask as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in RunTask.
+func (o *RunTask) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetForEachTask returns the value of the ForEachTask field in RunTask as
+// a RunForEachTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetForEachTask(ctx context.Context) (RunForEachTask, bool) {
+	var e RunForEachTask
+	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunForEachTask
+	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetForEachTask sets the value of the ForEachTask field in RunTask.
+func (o *RunTask) SetForEachTask(ctx context.Context, v RunForEachTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in RunTask as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in RunTask.
+func (o *RunTask) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in RunTask as
+// a slice of compute_tf.Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetLibraries(ctx context.Context) ([]compute_tf.Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in RunTask.
+func (o *RunTask) SetLibraries(ctx context.Context, v []compute_tf.Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNewCluster returns the value of the NewCluster field in RunTask as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in RunTask.
+func (o *RunTask) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
+}
+
+// GetNotebookTask returns the value of the NotebookTask field in RunTask as
+// a NotebookTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
+	var e NotebookTask
+	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookTask
+	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookTask sets the value of the NotebookTask field in RunTask.
+func (o *RunTask) SetNotebookTask(ctx context.Context, v NotebookTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	o.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in RunTask as
+// a TaskNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings, bool) {
+	var e TaskNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []TaskNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in RunTask.
+func (o *RunTask) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetPipelineTask returns the value of the PipelineTask field in RunTask as
+// a PipelineTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
+	var e PipelineTask
+	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTask
+	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineTask sets the value of the PipelineTask field in RunTask.
+func (o *RunTask) SetPipelineTask(ctx context.Context, v PipelineTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	o.PipelineTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonWheelTask returns the value of the PythonWheelTask field in RunTask as
+// a PythonWheelTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool) {
+	var e PythonWheelTask
+	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonWheelTask
+	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonWheelTask sets the value of the PythonWheelTask field in RunTask.
+func (o *RunTask) SetPythonWheelTask(ctx context.Context, v PythonWheelTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	o.PythonWheelTask = types.ListValueMust(t, vs)
+}
+
+// GetResolvedValues returns the value of the ResolvedValues field in RunTask as
+// a ResolvedValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetResolvedValues(ctx context.Context) (ResolvedValues, bool) {
+	var e ResolvedValues
+	if o.ResolvedValues.IsNull() || o.ResolvedValues.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedValues
+	d := o.ResolvedValues.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetResolvedValues sets the value of the ResolvedValues field in RunTask.
+func (o *RunTask) SetResolvedValues(ctx context.Context, v ResolvedValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resolved_values"]
+	o.ResolvedValues = types.ListValueMust(t, vs)
+}
+
+// GetRunJobTask returns the value of the RunJobTask field in RunTask as
+// a RunJobTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
+	var e RunJobTask
+	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunJobTask
+	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobTask sets the value of the RunJobTask field in RunTask.
+func (o *RunTask) SetRunJobTask(ctx context.Context, v RunJobTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	o.RunJobTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkJarTask returns the value of the SparkJarTask field in RunTask as
+// a SparkJarTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
+	var e SparkJarTask
+	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkJarTask
+	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkJarTask sets the value of the SparkJarTask field in RunTask.
+func (o *RunTask) SetSparkJarTask(ctx context.Context, v SparkJarTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	o.SparkJarTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkPythonTask returns the value of the SparkPythonTask field in RunTask as
+// a SparkPythonTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool) {
+	var e SparkPythonTask
+	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkPythonTask
+	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkPythonTask sets the value of the SparkPythonTask field in RunTask.
+func (o *RunTask) SetSparkPythonTask(ctx context.Context, v SparkPythonTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	o.SparkPythonTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitTask returns the value of the SparkSubmitTask field in RunTask as
+// a SparkSubmitTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool) {
+	var e SparkSubmitTask
+	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkSubmitTask
+	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkSubmitTask sets the value of the SparkSubmitTask field in RunTask.
+func (o *RunTask) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	o.SparkSubmitTask = types.ListValueMust(t, vs)
+}
+
+// GetSqlTask returns the value of the SqlTask field in RunTask as
+// a SqlTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetSqlTask(ctx context.Context) (SqlTask, bool) {
+	var e SqlTask
+	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTask
+	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlTask sets the value of the SqlTask field in RunTask.
+func (o *RunTask) SetSqlTask(ctx context.Context, v SqlTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	o.SqlTask = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in RunTask as
+// a RunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetState(ctx context.Context) (RunState, bool) {
+	var e RunState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []RunState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in RunTask.
+func (o *RunTask) SetState(ctx context.Context, v RunState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in RunTask as
+// a RunStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetStatus(ctx context.Context) (RunStatus, bool) {
+	var e RunStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []RunStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in RunTask.
+func (o *RunTask) SetStatus(ctx context.Context, v RunStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in RunTask as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in RunTask.
+func (o *RunTask) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 type SparkJarTask struct {
 	// Deprecated since 04/2016. Provide a `jar` through the `libraries` field
 	// instead. For an example, see :method:jobs/create.
@@ -10378,52 +11778,17 @@ func (a SparkJarTask) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SparkJarTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SparkJarTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SparkJarTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SparkJarTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SparkJarTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SparkJarTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SparkJarTask
+// only implements ToObjectValue() and Type().
+func (o SparkJarTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SparkJarTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"jar_uri":         o.JarUri,
+			"main_class_name": o.MainClassName,
+			"parameters":      o.Parameters,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -10437,6 +11802,31 @@ func (o SparkJarTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in SparkJarTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparkJarTask) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in SparkJarTask.
+func (o *SparkJarTask) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type SparkPythonTask struct {
@@ -10484,52 +11874,17 @@ func (a SparkPythonTask) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SparkPythonTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SparkPythonTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SparkPythonTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SparkPythonTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SparkPythonTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SparkPythonTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SparkPythonTask
+// only implements ToObjectValue() and Type().
+func (o SparkPythonTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SparkPythonTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"parameters":  o.Parameters,
+			"python_file": o.PythonFile,
+			"source":      o.Source,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -10543,6 +11898,31 @@ func (o SparkPythonTask) Type(ctx context.Context) attr.Type {
 			"source":      types.StringType,
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in SparkPythonTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparkPythonTask) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in SparkPythonTask.
+func (o *SparkPythonTask) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type SparkSubmitTask struct {
@@ -10574,52 +11954,15 @@ func (a SparkSubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SparkSubmitTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SparkSubmitTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SparkSubmitTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SparkSubmitTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SparkSubmitTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SparkSubmitTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SparkSubmitTask
+// only implements ToObjectValue() and Type().
+func (o SparkSubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SparkSubmitTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"parameters": o.Parameters,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -10631,6 +11974,31 @@ func (o SparkSubmitTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in SparkSubmitTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparkSubmitTask) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in SparkSubmitTask.
+func (o *SparkSubmitTask) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type SqlAlertOutput struct {
@@ -10670,52 +12038,19 @@ func (a SqlAlertOutput) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlAlertOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlAlertOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlAlertOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlAlertOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlAlertOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlAlertOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlAlertOutput
+// only implements ToObjectValue() and Type().
+func (o SqlAlertOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlAlertOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"alert_state":    o.AlertState,
+			"output_link":    o.OutputLink,
+			"query_text":     o.QueryText,
+			"sql_statements": o.SqlStatements,
+			"warehouse_id":   o.WarehouseId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -10731,6 +12066,31 @@ func (o SqlAlertOutput) Type(ctx context.Context) attr.Type {
 			"warehouse_id": types.StringType,
 		},
 	}
+}
+
+// GetSqlStatements returns the value of the SqlStatements field in SqlAlertOutput as
+// a slice of SqlStatementOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlAlertOutput) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput, bool) {
+	if o.SqlStatements.IsNull() || o.SqlStatements.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementOutput
+	d := o.SqlStatements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlStatements sets the value of the SqlStatements field in SqlAlertOutput.
+func (o *SqlAlertOutput) SetSqlStatements(ctx context.Context, v []SqlStatementOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	o.SqlStatements = types.ListValueMust(t, vs)
 }
 
 type SqlDashboardOutput struct {
@@ -10759,52 +12119,16 @@ func (a SqlDashboardOutput) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlDashboardOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlDashboardOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlDashboardOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlDashboardOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlDashboardOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlDashboardOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlDashboardOutput
+// only implements ToObjectValue() and Type().
+func (o SqlDashboardOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlDashboardOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"warehouse_id": o.WarehouseId,
+			"widgets":      o.Widgets,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -10817,6 +12141,31 @@ func (o SqlDashboardOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetWidgets returns the value of the Widgets field in SqlDashboardOutput as
+// a slice of SqlDashboardWidgetOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlDashboardOutput) GetWidgets(ctx context.Context) ([]SqlDashboardWidgetOutput, bool) {
+	if o.Widgets.IsNull() || o.Widgets.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlDashboardWidgetOutput
+	d := o.Widgets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWidgets sets the value of the Widgets field in SqlDashboardOutput.
+func (o *SqlDashboardOutput) SetWidgets(ctx context.Context, v []SqlDashboardWidgetOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
+	o.Widgets = types.ListValueMust(t, vs)
 }
 
 type SqlDashboardWidgetOutput struct {
@@ -10855,52 +12204,21 @@ func (a SqlDashboardWidgetOutput) GetComplexFieldTypes(ctx context.Context) map[
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlDashboardWidgetOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlDashboardWidgetOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlDashboardWidgetOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlDashboardWidgetOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlDashboardWidgetOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlDashboardWidgetOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlDashboardWidgetOutput
+// only implements ToObjectValue() and Type().
+func (o SqlDashboardWidgetOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlDashboardWidgetOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"end_time":     o.EndTime,
+			"error":        o.Error,
+			"output_link":  o.OutputLink,
+			"start_time":   o.StartTime,
+			"status":       o.Status,
+			"widget_id":    o.WidgetId,
+			"widget_title": o.WidgetTitle,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -10918,6 +12236,32 @@ func (o SqlDashboardWidgetOutput) Type(ctx context.Context) attr.Type {
 			"widget_title": types.StringType,
 		},
 	}
+}
+
+// GetError returns the value of the Error field in SqlDashboardWidgetOutput as
+// a SqlOutputError value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlDashboardWidgetOutput) GetError(ctx context.Context) (SqlOutputError, bool) {
+	var e SqlOutputError
+	if o.Error.IsNull() || o.Error.IsUnknown() {
+		return e, false
+	}
+	var v []SqlOutputError
+	d := o.Error.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetError sets the value of the Error field in SqlDashboardWidgetOutput.
+func (o *SqlDashboardWidgetOutput) SetError(ctx context.Context, v SqlOutputError) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error"]
+	o.Error = types.ListValueMust(t, vs)
 }
 
 type SqlOutput struct {
@@ -10950,52 +12294,17 @@ func (a SqlOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlOutput
+// only implements ToObjectValue() and Type().
+func (o SqlOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"alert_output":     o.AlertOutput,
+			"dashboard_output": o.DashboardOutput,
+			"query_output":     o.QueryOutput,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11013,6 +12322,84 @@ func (o SqlOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAlertOutput returns the value of the AlertOutput field in SqlOutput as
+// a SqlAlertOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlOutput) GetAlertOutput(ctx context.Context) (SqlAlertOutput, bool) {
+	var e SqlAlertOutput
+	if o.AlertOutput.IsNull() || o.AlertOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlAlertOutput
+	d := o.AlertOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAlertOutput sets the value of the AlertOutput field in SqlOutput.
+func (o *SqlOutput) SetAlertOutput(ctx context.Context, v SqlAlertOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_output"]
+	o.AlertOutput = types.ListValueMust(t, vs)
+}
+
+// GetDashboardOutput returns the value of the DashboardOutput field in SqlOutput as
+// a SqlDashboardOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlOutput) GetDashboardOutput(ctx context.Context) (SqlDashboardOutput, bool) {
+	var e SqlDashboardOutput
+	if o.DashboardOutput.IsNull() || o.DashboardOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlDashboardOutput
+	d := o.DashboardOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboardOutput sets the value of the DashboardOutput field in SqlOutput.
+func (o *SqlOutput) SetDashboardOutput(ctx context.Context, v SqlDashboardOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_output"]
+	o.DashboardOutput = types.ListValueMust(t, vs)
+}
+
+// GetQueryOutput returns the value of the QueryOutput field in SqlOutput as
+// a SqlQueryOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlOutput) GetQueryOutput(ctx context.Context) (SqlQueryOutput, bool) {
+	var e SqlQueryOutput
+	if o.QueryOutput.IsNull() || o.QueryOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlQueryOutput
+	d := o.QueryOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryOutput sets the value of the QueryOutput field in SqlOutput.
+func (o *SqlOutput) SetQueryOutput(ctx context.Context, v SqlQueryOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_output"]
+	o.QueryOutput = types.ListValueMust(t, vs)
 }
 
 type SqlOutputError struct {
@@ -11037,52 +12424,15 @@ func (a SqlOutputError) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlOutputError{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlOutputError) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlOutputError) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlOutputError) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlOutputError) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlOutputError) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlOutputError
+// only implements ToObjectValue() and Type().
+func (o SqlOutputError) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlOutputError) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"message": o.Message,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11126,52 +12476,19 @@ func (a SqlQueryOutput) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlQueryOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlQueryOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlQueryOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlQueryOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlQueryOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlQueryOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlQueryOutput
+// only implements ToObjectValue() and Type().
+func (o SqlQueryOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlQueryOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"endpoint_id":    o.EndpointId,
+			"output_link":    o.OutputLink,
+			"query_text":     o.QueryText,
+			"sql_statements": o.SqlStatements,
+			"warehouse_id":   o.WarehouseId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11187,6 +12504,31 @@ func (o SqlQueryOutput) Type(ctx context.Context) attr.Type {
 			"warehouse_id": types.StringType,
 		},
 	}
+}
+
+// GetSqlStatements returns the value of the SqlStatements field in SqlQueryOutput as
+// a slice of SqlStatementOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlQueryOutput) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput, bool) {
+	if o.SqlStatements.IsNull() || o.SqlStatements.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementOutput
+	d := o.SqlStatements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlStatements sets the value of the SqlStatements field in SqlQueryOutput.
+func (o *SqlQueryOutput) SetSqlStatements(ctx context.Context, v []SqlStatementOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	o.SqlStatements = types.ListValueMust(t, vs)
 }
 
 type SqlStatementOutput struct {
@@ -11211,52 +12553,15 @@ func (a SqlStatementOutput) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlStatementOutput{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlStatementOutput) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlStatementOutput) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlStatementOutput) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlStatementOutput) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlStatementOutput) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementOutput
+// only implements ToObjectValue() and Type().
+func (o SqlStatementOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlStatementOutput) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"lookup_key": o.LookupKey,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11311,52 +12616,20 @@ func (a SqlTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTask
+// only implements ToObjectValue() and Type().
+func (o SqlTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"alert":        o.Alert,
+			"dashboard":    o.Dashboard,
+			"file":         o.File,
+			"parameters":   o.Parameters,
+			"query":        o.Query,
+			"warehouse_id": o.WarehouseId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11381,6 +12654,135 @@ func (o SqlTask) Type(ctx context.Context) attr.Type {
 			"warehouse_id": types.StringType,
 		},
 	}
+}
+
+// GetAlert returns the value of the Alert field in SqlTask as
+// a SqlTaskAlert value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetAlert(ctx context.Context) (SqlTaskAlert, bool) {
+	var e SqlTaskAlert
+	if o.Alert.IsNull() || o.Alert.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskAlert
+	d := o.Alert.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAlert sets the value of the Alert field in SqlTask.
+func (o *SqlTask) SetAlert(ctx context.Context, v SqlTaskAlert) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert"]
+	o.Alert = types.ListValueMust(t, vs)
+}
+
+// GetDashboard returns the value of the Dashboard field in SqlTask as
+// a SqlTaskDashboard value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetDashboard(ctx context.Context) (SqlTaskDashboard, bool) {
+	var e SqlTaskDashboard
+	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskDashboard
+	d := o.Dashboard.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboard sets the value of the Dashboard field in SqlTask.
+func (o *SqlTask) SetDashboard(ctx context.Context, v SqlTaskDashboard) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard"]
+	o.Dashboard = types.ListValueMust(t, vs)
+}
+
+// GetFile returns the value of the File field in SqlTask as
+// a SqlTaskFile value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetFile(ctx context.Context) (SqlTaskFile, bool) {
+	var e SqlTaskFile
+	if o.File.IsNull() || o.File.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskFile
+	d := o.File.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFile sets the value of the File field in SqlTask.
+func (o *SqlTask) SetFile(ctx context.Context, v SqlTaskFile) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
+	o.File = types.ListValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in SqlTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in SqlTask.
+func (o *SqlTask) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.MapValueMust(t, vs)
+}
+
+// GetQuery returns the value of the Query field in SqlTask as
+// a SqlTaskQuery value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetQuery(ctx context.Context) (SqlTaskQuery, bool) {
+	var e SqlTaskQuery
+	if o.Query.IsNull() || o.Query.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskQuery
+	d := o.Query.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuery sets the value of the Query field in SqlTask.
+func (o *SqlTask) SetQuery(ctx context.Context, v SqlTaskQuery) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
+	o.Query = types.ListValueMust(t, vs)
 }
 
 type SqlTaskAlert struct {
@@ -11411,52 +12813,17 @@ func (a SqlTaskAlert) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlTaskAlert{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlTaskAlert) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlTaskAlert) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlTaskAlert) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlTaskAlert) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlTaskAlert) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskAlert
+// only implements ToObjectValue() and Type().
+func (o SqlTaskAlert) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlTaskAlert) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"alert_id":            o.AlertId,
+			"pause_subscriptions": o.PauseSubscriptions,
+			"subscriptions":       o.Subscriptions,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11470,6 +12837,31 @@ func (o SqlTaskAlert) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSubscriptions returns the value of the Subscriptions field in SqlTaskAlert as
+// a slice of SqlTaskSubscription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTaskAlert) GetSubscriptions(ctx context.Context) ([]SqlTaskSubscription, bool) {
+	if o.Subscriptions.IsNull() || o.Subscriptions.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlTaskSubscription
+	d := o.Subscriptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubscriptions sets the value of the Subscriptions field in SqlTaskAlert.
+func (o *SqlTaskAlert) SetSubscriptions(ctx context.Context, v []SqlTaskSubscription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	o.Subscriptions = types.ListValueMust(t, vs)
 }
 
 type SqlTaskDashboard struct {
@@ -11503,52 +12895,18 @@ func (a SqlTaskDashboard) GetComplexFieldTypes(ctx context.Context) map[string]r
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlTaskDashboard{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlTaskDashboard) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlTaskDashboard) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlTaskDashboard) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlTaskDashboard) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlTaskDashboard) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskDashboard
+// only implements ToObjectValue() and Type().
+func (o SqlTaskDashboard) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlTaskDashboard) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"custom_subject":      o.CustomSubject,
+			"dashboard_id":        o.DashboardId,
+			"pause_subscriptions": o.PauseSubscriptions,
+			"subscriptions":       o.Subscriptions,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11563,6 +12921,31 @@ func (o SqlTaskDashboard) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSubscriptions returns the value of the Subscriptions field in SqlTaskDashboard as
+// a slice of SqlTaskSubscription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTaskDashboard) GetSubscriptions(ctx context.Context) ([]SqlTaskSubscription, bool) {
+	if o.Subscriptions.IsNull() || o.Subscriptions.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlTaskSubscription
+	d := o.Subscriptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubscriptions sets the value of the Subscriptions field in SqlTaskDashboard.
+func (o *SqlTaskDashboard) SetSubscriptions(ctx context.Context, v []SqlTaskSubscription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	o.Subscriptions = types.ListValueMust(t, vs)
 }
 
 type SqlTaskFile struct {
@@ -11597,52 +12980,16 @@ func (a SqlTaskFile) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlTaskFile{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlTaskFile) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlTaskFile) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlTaskFile) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlTaskFile) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlTaskFile) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskFile
+// only implements ToObjectValue() and Type().
+func (o SqlTaskFile) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlTaskFile) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"path":   o.Path,
+			"source": o.Source,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11677,52 +13024,15 @@ func (a SqlTaskQuery) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlTaskQuery{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlTaskQuery) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlTaskQuery) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlTaskQuery) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlTaskQuery) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlTaskQuery) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskQuery
+// only implements ToObjectValue() and Type().
+func (o SqlTaskQuery) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlTaskQuery) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"query_id": o.QueryId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11763,52 +13073,16 @@ func (a SqlTaskSubscription) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SqlTaskSubscription{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SqlTaskSubscription) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SqlTaskSubscription) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SqlTaskSubscription) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SqlTaskSubscription) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SqlTaskSubscription) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskSubscription
+// only implements ToObjectValue() and Type().
+func (o SqlTaskSubscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SqlTaskSubscription) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"destination_id": o.DestinationId,
+			"user_name":      o.UserName,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -11911,52 +13185,28 @@ func (a SubmitRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SubmitRun{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SubmitRun) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SubmitRun) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SubmitRun) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SubmitRun) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SubmitRun) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubmitRun
+// only implements ToObjectValue() and Type().
+func (o SubmitRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SubmitRun) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"access_control_list":   o.AccessControlList,
+			"budget_policy_id":      o.BudgetPolicyId,
+			"email_notifications":   o.EmailNotifications,
+			"environments":          o.Environments,
+			"git_source":            o.GitSource,
+			"health":                o.Health,
+			"idempotency_token":     o.IdempotencyToken,
+			"notification_settings": o.NotificationSettings,
+			"queue":                 o.Queue,
+			"run_as":                o.RunAs,
+			"run_name":              o.RunName,
+			"tasks":                 o.Tasks,
+			"timeout_seconds":       o.TimeoutSeconds,
+			"webhook_notifications": o.WebhookNotifications,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -12001,6 +13251,263 @@ func (o SubmitRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in SubmitRun as
+// a slice of JobAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []JobAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in SubmitRun.
+func (o *SubmitRun) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in SubmitRun as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in SubmitRun.
+func (o *SubmitRun) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetEnvironments returns the value of the Environments field in SubmitRun as
+// a slice of JobEnvironment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetEnvironments(ctx context.Context) ([]JobEnvironment, bool) {
+	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironment
+	d := o.Environments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironments sets the value of the Environments field in SubmitRun.
+func (o *SubmitRun) SetEnvironments(ctx context.Context, v []JobEnvironment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environments"]
+	o.Environments = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in SubmitRun as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in SubmitRun.
+func (o *SubmitRun) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in SubmitRun as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in SubmitRun.
+func (o *SubmitRun) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in SubmitRun as
+// a JobNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetNotificationSettings(ctx context.Context) (JobNotificationSettings, bool) {
+	var e JobNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in SubmitRun.
+func (o *SubmitRun) SetNotificationSettings(ctx context.Context, v JobNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetQueue returns the value of the Queue field in SubmitRun as
+// a QueueSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetQueue(ctx context.Context) (QueueSettings, bool) {
+	var e QueueSettings
+	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+		return e, false
+	}
+	var v []QueueSettings
+	d := o.Queue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueue sets the value of the Queue field in SubmitRun.
+func (o *SubmitRun) SetQueue(ctx context.Context, v QueueSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	o.Queue = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in SubmitRun as
+// a JobRunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetRunAs(ctx context.Context) (JobRunAs, bool) {
+	var e JobRunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []JobRunAs
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in SubmitRun.
+func (o *SubmitRun) SetRunAs(ctx context.Context, v JobRunAs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in SubmitRun as
+// a slice of SubmitTask values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetTasks(ctx context.Context) ([]SubmitTask, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []SubmitTask
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in SubmitRun.
+func (o *SubmitRun) SetTasks(ctx context.Context, v []SubmitTask) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in SubmitRun as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in SubmitRun.
+func (o *SubmitRun) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 // Run was created and started successfully.
 type SubmitRunResponse struct {
 	// The canonical identifier for the newly submitted run.
@@ -12024,52 +13531,15 @@ func (a SubmitRunResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SubmitRunResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SubmitRunResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SubmitRunResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SubmitRunResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SubmitRunResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SubmitRunResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubmitRunResponse
+// only implements ToObjectValue() and Type().
+func (o SubmitRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SubmitRunResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"run_id": o.RunId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -12120,7 +13590,7 @@ type SubmitTask struct {
 	Libraries types.List `tfsdk:"library" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+	NewCluster types.List `tfsdk:"new_cluster" tf:"optional,object"`
 	// The task runs a notebook when the `notebook_task` field is present.
 	NotebookTask types.List `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
@@ -12202,8 +13672,8 @@ func (a SubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
 		"for_each_task":         reflect.TypeOf(ForEachTask{}),
 		"health":                reflect.TypeOf(JobsHealthRules{}),
-		"library":               reflect.TypeOf(compute.Library{}),
-		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"library":               reflect.TypeOf(compute_tf.Library{}),
+		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec{}),
 		"notebook_task":         reflect.TypeOf(NotebookTask{}),
 		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
@@ -12217,52 +13687,38 @@ func (a SubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SubmitTask{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SubmitTask) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SubmitTask) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SubmitTask) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SubmitTask) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SubmitTask) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubmitTask
+// only implements ToObjectValue() and Type().
+func (o SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SubmitTask) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"condition_task":        o.ConditionTask,
+			"dbt_task":              o.DbtTask,
+			"depends_on":            o.DependsOn,
+			"description":           o.Description,
+			"email_notifications":   o.EmailNotifications,
+			"environment_key":       o.EnvironmentKey,
+			"existing_cluster_id":   o.ExistingClusterId,
+			"for_each_task":         o.ForEachTask,
+			"health":                o.Health,
+			"library":               o.Libraries,
+			"new_cluster":           o.NewCluster,
+			"notebook_task":         o.NotebookTask,
+			"notification_settings": o.NotificationSettings,
+			"pipeline_task":         o.PipelineTask,
+			"python_wheel_task":     o.PythonWheelTask,
+			"run_if":                o.RunIf,
+			"run_job_task":          o.RunJobTask,
+			"spark_jar_task":        o.SparkJarTask,
+			"spark_python_task":     o.SparkPythonTask,
+			"spark_submit_task":     o.SparkSubmitTask,
+			"sql_task":              o.SqlTask,
+			"task_key":              o.TaskKey,
+			"timeout_seconds":       o.TimeoutSeconds,
+			"webhook_notifications": o.WebhookNotifications,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -12333,6 +13789,472 @@ func (o SubmitTask) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetConditionTask returns the value of the ConditionTask field in SubmitTask as
+// a ConditionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetConditionTask(ctx context.Context) (ConditionTask, bool) {
+	var e ConditionTask
+	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+		return e, false
+	}
+	var v []ConditionTask
+	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConditionTask sets the value of the ConditionTask field in SubmitTask.
+func (o *SubmitTask) SetConditionTask(ctx context.Context, v ConditionTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	o.ConditionTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtTask returns the value of the DbtTask field in SubmitTask as
+// a DbtTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetDbtTask(ctx context.Context) (DbtTask, bool) {
+	var e DbtTask
+	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtTask
+	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtTask sets the value of the DbtTask field in SubmitTask.
+func (o *SubmitTask) SetDbtTask(ctx context.Context, v DbtTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	o.DbtTask = types.ListValueMust(t, vs)
+}
+
+// GetDependsOn returns the value of the DependsOn field in SubmitTask as
+// a slice of TaskDependency values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetDependsOn(ctx context.Context) ([]TaskDependency, bool) {
+	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+		return nil, false
+	}
+	var v []TaskDependency
+	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependsOn sets the value of the DependsOn field in SubmitTask.
+func (o *SubmitTask) SetDependsOn(ctx context.Context, v []TaskDependency) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	o.DependsOn = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in SubmitTask as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in SubmitTask.
+func (o *SubmitTask) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetForEachTask returns the value of the ForEachTask field in SubmitTask as
+// a ForEachTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetForEachTask(ctx context.Context) (ForEachTask, bool) {
+	var e ForEachTask
+	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+		return e, false
+	}
+	var v []ForEachTask
+	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetForEachTask sets the value of the ForEachTask field in SubmitTask.
+func (o *SubmitTask) SetForEachTask(ctx context.Context, v ForEachTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in SubmitTask as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in SubmitTask.
+func (o *SubmitTask) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in SubmitTask as
+// a slice of compute_tf.Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetLibraries(ctx context.Context) ([]compute_tf.Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in SubmitTask.
+func (o *SubmitTask) SetLibraries(ctx context.Context, v []compute_tf.Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNewCluster returns the value of the NewCluster field in SubmitTask as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in SubmitTask.
+func (o *SubmitTask) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
+}
+
+// GetNotebookTask returns the value of the NotebookTask field in SubmitTask as
+// a NotebookTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
+	var e NotebookTask
+	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookTask
+	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookTask sets the value of the NotebookTask field in SubmitTask.
+func (o *SubmitTask) SetNotebookTask(ctx context.Context, v NotebookTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	o.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in SubmitTask as
+// a TaskNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings, bool) {
+	var e TaskNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []TaskNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in SubmitTask.
+func (o *SubmitTask) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetPipelineTask returns the value of the PipelineTask field in SubmitTask as
+// a PipelineTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
+	var e PipelineTask
+	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTask
+	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineTask sets the value of the PipelineTask field in SubmitTask.
+func (o *SubmitTask) SetPipelineTask(ctx context.Context, v PipelineTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	o.PipelineTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonWheelTask returns the value of the PythonWheelTask field in SubmitTask as
+// a PythonWheelTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool) {
+	var e PythonWheelTask
+	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonWheelTask
+	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonWheelTask sets the value of the PythonWheelTask field in SubmitTask.
+func (o *SubmitTask) SetPythonWheelTask(ctx context.Context, v PythonWheelTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	o.PythonWheelTask = types.ListValueMust(t, vs)
+}
+
+// GetRunJobTask returns the value of the RunJobTask field in SubmitTask as
+// a RunJobTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
+	var e RunJobTask
+	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunJobTask
+	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobTask sets the value of the RunJobTask field in SubmitTask.
+func (o *SubmitTask) SetRunJobTask(ctx context.Context, v RunJobTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	o.RunJobTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkJarTask returns the value of the SparkJarTask field in SubmitTask as
+// a SparkJarTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
+	var e SparkJarTask
+	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkJarTask
+	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkJarTask sets the value of the SparkJarTask field in SubmitTask.
+func (o *SubmitTask) SetSparkJarTask(ctx context.Context, v SparkJarTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	o.SparkJarTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkPythonTask returns the value of the SparkPythonTask field in SubmitTask as
+// a SparkPythonTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool) {
+	var e SparkPythonTask
+	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkPythonTask
+	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkPythonTask sets the value of the SparkPythonTask field in SubmitTask.
+func (o *SubmitTask) SetSparkPythonTask(ctx context.Context, v SparkPythonTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	o.SparkPythonTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitTask returns the value of the SparkSubmitTask field in SubmitTask as
+// a SparkSubmitTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool) {
+	var e SparkSubmitTask
+	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkSubmitTask
+	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkSubmitTask sets the value of the SparkSubmitTask field in SubmitTask.
+func (o *SubmitTask) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	o.SparkSubmitTask = types.ListValueMust(t, vs)
+}
+
+// GetSqlTask returns the value of the SqlTask field in SubmitTask as
+// a SqlTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetSqlTask(ctx context.Context) (SqlTask, bool) {
+	var e SqlTask
+	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTask
+	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlTask sets the value of the SqlTask field in SubmitTask.
+func (o *SubmitTask) SetSqlTask(ctx context.Context, v SqlTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	o.SqlTask = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in SubmitTask as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in SubmitTask.
+func (o *SubmitTask) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 type TableUpdateTriggerConfiguration struct {
 	// The table(s) condition based on which to trigger a job run.
 	Condition types.String `tfsdk:"condition" tf:"optional"`
@@ -12369,52 +14291,18 @@ func (a TableUpdateTriggerConfiguration) GetComplexFieldTypes(ctx context.Contex
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = TableUpdateTriggerConfiguration{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o TableUpdateTriggerConfiguration) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o TableUpdateTriggerConfiguration) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o TableUpdateTriggerConfiguration) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o TableUpdateTriggerConfiguration) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o TableUpdateTriggerConfiguration) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TableUpdateTriggerConfiguration
+// only implements ToObjectValue() and Type().
+func (o TableUpdateTriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o TableUpdateTriggerConfiguration) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"condition":                         o.Condition,
+			"min_time_between_triggers_seconds": o.MinTimeBetweenTriggersSeconds,
+			"table_names":                       o.TableNames,
+			"wait_after_last_change_seconds":    o.WaitAfterLastChangeSeconds,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -12429,6 +14317,31 @@ func (o TableUpdateTriggerConfiguration) Type(ctx context.Context) attr.Type {
 			"wait_after_last_change_seconds": types.Int64Type,
 		},
 	}
+}
+
+// GetTableNames returns the value of the TableNames field in TableUpdateTriggerConfiguration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableUpdateTriggerConfiguration) GetTableNames(ctx context.Context) ([]types.String, bool) {
+	if o.TableNames.IsNull() || o.TableNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.TableNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTableNames sets the value of the TableNames field in TableUpdateTriggerConfiguration.
+func (o *TableUpdateTriggerConfiguration) SetTableNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_names"]
+	o.TableNames = types.ListValueMust(t, vs)
 }
 
 type Task struct {
@@ -12485,7 +14398,7 @@ type Task struct {
 	MinRetryIntervalMillis types.Int64 `tfsdk:"min_retry_interval_millis" tf:"optional"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster compute.ClusterSpec `tfsdk:"new_cluster" tf:"optional,object"`
+	NewCluster types.List `tfsdk:"new_cluster" tf:"optional,object"`
 	// The task runs a notebook when the `notebook_task` field is present.
 	NotebookTask types.List `tfsdk:"notebook_task" tf:"optional,object"`
 	// Optional notification settings that are used when sending notifications
@@ -12575,8 +14488,8 @@ func (a Task) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 		"email_notifications":   reflect.TypeOf(TaskEmailNotifications{}),
 		"for_each_task":         reflect.TypeOf(ForEachTask{}),
 		"health":                reflect.TypeOf(JobsHealthRules{}),
-		"library":               reflect.TypeOf(compute.Library{}),
-		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"library":               reflect.TypeOf(compute_tf.Library{}),
+		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec{}),
 		"notebook_task":         reflect.TypeOf(NotebookTask{}),
 		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
@@ -12590,52 +14503,43 @@ func (a Task) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = Task{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o Task) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o Task) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o Task) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o Task) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o Task) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Task
+// only implements ToObjectValue() and Type().
+func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o Task) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"condition_task":            o.ConditionTask,
+			"dbt_task":                  o.DbtTask,
+			"depends_on":                o.DependsOn,
+			"description":               o.Description,
+			"disable_auto_optimization": o.DisableAutoOptimization,
+			"email_notifications":       o.EmailNotifications,
+			"environment_key":           o.EnvironmentKey,
+			"existing_cluster_id":       o.ExistingClusterId,
+			"for_each_task":             o.ForEachTask,
+			"health":                    o.Health,
+			"job_cluster_key":           o.JobClusterKey,
+			"library":                   o.Libraries,
+			"max_retries":               o.MaxRetries,
+			"min_retry_interval_millis": o.MinRetryIntervalMillis,
+			"new_cluster":               o.NewCluster,
+			"notebook_task":             o.NotebookTask,
+			"notification_settings":     o.NotificationSettings,
+			"pipeline_task":             o.PipelineTask,
+			"python_wheel_task":         o.PythonWheelTask,
+			"retry_on_timeout":          o.RetryOnTimeout,
+			"run_if":                    o.RunIf,
+			"run_job_task":              o.RunJobTask,
+			"spark_jar_task":            o.SparkJarTask,
+			"spark_python_task":         o.SparkPythonTask,
+			"spark_submit_task":         o.SparkSubmitTask,
+			"sql_task":                  o.SqlTask,
+			"task_key":                  o.TaskKey,
+			"timeout_seconds":           o.TimeoutSeconds,
+			"webhook_notifications":     o.WebhookNotifications,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -12711,6 +14615,472 @@ func (o Task) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetConditionTask returns the value of the ConditionTask field in Task as
+// a ConditionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetConditionTask(ctx context.Context) (ConditionTask, bool) {
+	var e ConditionTask
+	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+		return e, false
+	}
+	var v []ConditionTask
+	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConditionTask sets the value of the ConditionTask field in Task.
+func (o *Task) SetConditionTask(ctx context.Context, v ConditionTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	o.ConditionTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtTask returns the value of the DbtTask field in Task as
+// a DbtTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetDbtTask(ctx context.Context) (DbtTask, bool) {
+	var e DbtTask
+	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtTask
+	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtTask sets the value of the DbtTask field in Task.
+func (o *Task) SetDbtTask(ctx context.Context, v DbtTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	o.DbtTask = types.ListValueMust(t, vs)
+}
+
+// GetDependsOn returns the value of the DependsOn field in Task as
+// a slice of TaskDependency values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetDependsOn(ctx context.Context) ([]TaskDependency, bool) {
+	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+		return nil, false
+	}
+	var v []TaskDependency
+	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependsOn sets the value of the DependsOn field in Task.
+func (o *Task) SetDependsOn(ctx context.Context, v []TaskDependency) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	o.DependsOn = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in Task as
+// a TaskEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetEmailNotifications(ctx context.Context) (TaskEmailNotifications, bool) {
+	var e TaskEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []TaskEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in Task.
+func (o *Task) SetEmailNotifications(ctx context.Context, v TaskEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetForEachTask returns the value of the ForEachTask field in Task as
+// a ForEachTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetForEachTask(ctx context.Context) (ForEachTask, bool) {
+	var e ForEachTask
+	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+		return e, false
+	}
+	var v []ForEachTask
+	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetForEachTask sets the value of the ForEachTask field in Task.
+func (o *Task) SetForEachTask(ctx context.Context, v ForEachTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in Task as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in Task.
+func (o *Task) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in Task as
+// a slice of compute_tf.Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetLibraries(ctx context.Context) ([]compute_tf.Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in Task.
+func (o *Task) SetLibraries(ctx context.Context, v []compute_tf.Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNewCluster returns the value of the NewCluster field in Task as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in Task.
+func (o *Task) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
+}
+
+// GetNotebookTask returns the value of the NotebookTask field in Task as
+// a NotebookTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
+	var e NotebookTask
+	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookTask
+	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookTask sets the value of the NotebookTask field in Task.
+func (o *Task) SetNotebookTask(ctx context.Context, v NotebookTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	o.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in Task as
+// a TaskNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings, bool) {
+	var e TaskNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []TaskNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in Task.
+func (o *Task) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetPipelineTask returns the value of the PipelineTask field in Task as
+// a PipelineTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
+	var e PipelineTask
+	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTask
+	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineTask sets the value of the PipelineTask field in Task.
+func (o *Task) SetPipelineTask(ctx context.Context, v PipelineTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	o.PipelineTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonWheelTask returns the value of the PythonWheelTask field in Task as
+// a PythonWheelTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool) {
+	var e PythonWheelTask
+	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonWheelTask
+	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonWheelTask sets the value of the PythonWheelTask field in Task.
+func (o *Task) SetPythonWheelTask(ctx context.Context, v PythonWheelTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	o.PythonWheelTask = types.ListValueMust(t, vs)
+}
+
+// GetRunJobTask returns the value of the RunJobTask field in Task as
+// a RunJobTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
+	var e RunJobTask
+	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunJobTask
+	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobTask sets the value of the RunJobTask field in Task.
+func (o *Task) SetRunJobTask(ctx context.Context, v RunJobTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	o.RunJobTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkJarTask returns the value of the SparkJarTask field in Task as
+// a SparkJarTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
+	var e SparkJarTask
+	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkJarTask
+	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkJarTask sets the value of the SparkJarTask field in Task.
+func (o *Task) SetSparkJarTask(ctx context.Context, v SparkJarTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	o.SparkJarTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkPythonTask returns the value of the SparkPythonTask field in Task as
+// a SparkPythonTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool) {
+	var e SparkPythonTask
+	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkPythonTask
+	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkPythonTask sets the value of the SparkPythonTask field in Task.
+func (o *Task) SetSparkPythonTask(ctx context.Context, v SparkPythonTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	o.SparkPythonTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitTask returns the value of the SparkSubmitTask field in Task as
+// a SparkSubmitTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool) {
+	var e SparkSubmitTask
+	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkSubmitTask
+	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkSubmitTask sets the value of the SparkSubmitTask field in Task.
+func (o *Task) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	o.SparkSubmitTask = types.ListValueMust(t, vs)
+}
+
+// GetSqlTask returns the value of the SqlTask field in Task as
+// a SqlTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetSqlTask(ctx context.Context) (SqlTask, bool) {
+	var e SqlTask
+	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTask
+	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlTask sets the value of the SqlTask field in Task.
+func (o *Task) SetSqlTask(ctx context.Context, v SqlTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	o.SqlTask = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in Task as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in Task.
+func (o *Task) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 type TaskDependency struct {
 	// Can only be specified on condition task dependencies. The outcome of the
 	// dependent task that must be met for this task to run.
@@ -12736,52 +15106,16 @@ func (a TaskDependency) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = TaskDependency{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o TaskDependency) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o TaskDependency) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o TaskDependency) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o TaskDependency) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o TaskDependency) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TaskDependency
+// only implements ToObjectValue() and Type().
+func (o TaskDependency) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o TaskDependency) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"outcome":  o.Outcome,
+			"task_key": o.TaskKey,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -12853,52 +15187,20 @@ func (a TaskEmailNotifications) GetComplexFieldTypes(ctx context.Context) map[st
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = TaskEmailNotifications{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o TaskEmailNotifications) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o TaskEmailNotifications) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o TaskEmailNotifications) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o TaskEmailNotifications) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o TaskEmailNotifications) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TaskEmailNotifications
+// only implements ToObjectValue() and Type().
+func (o TaskEmailNotifications) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o TaskEmailNotifications) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"no_alert_for_skipped_runs":              o.NoAlertForSkippedRuns,
+			"on_duration_warning_threshold_exceeded": o.OnDurationWarningThresholdExceeded,
+			"on_failure":                             o.OnFailure,
+			"on_start":                               o.OnStart,
+			"on_streaming_backlog_exceeded":          o.OnStreamingBacklogExceeded,
+			"on_success":                             o.OnSuccess,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -12923,6 +15225,131 @@ func (o TaskEmailNotifications) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]types.String, bool) {
+	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+}
+
+// GetOnFailure returns the value of the OnFailure field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnFailure(ctx context.Context) ([]types.String, bool) {
+	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnFailure sets the value of the OnFailure field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnFailure(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	o.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnStart returns the value of the OnStart field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnStart(ctx context.Context) ([]types.String, bool) {
+	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnStart sets the value of the OnStart field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnStart(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	o.OnStart = types.ListValueMust(t, vs)
+}
+
+// GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnStreamingBacklogExceeded(ctx context.Context) ([]types.String, bool) {
+	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnStreamingBacklogExceeded(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+}
+
+// GetOnSuccess returns the value of the OnSuccess field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnSuccess(ctx context.Context) ([]types.String, bool) {
+	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnSuccess sets the value of the OnSuccess field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnSuccess(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	o.OnSuccess = types.ListValueMust(t, vs)
 }
 
 type TaskNotificationSettings struct {
@@ -12955,52 +15382,17 @@ func (a TaskNotificationSettings) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = TaskNotificationSettings{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o TaskNotificationSettings) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o TaskNotificationSettings) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o TaskNotificationSettings) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o TaskNotificationSettings) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o TaskNotificationSettings) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TaskNotificationSettings
+// only implements ToObjectValue() and Type().
+func (o TaskNotificationSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o TaskNotificationSettings) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"alert_on_last_attempt":      o.AlertOnLastAttempt,
+			"no_alert_for_canceled_runs": o.NoAlertForCanceledRuns,
+			"no_alert_for_skipped_runs":  o.NoAlertForSkippedRuns,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13092,52 +15484,17 @@ func (a TerminationDetails) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = TerminationDetails{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o TerminationDetails) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o TerminationDetails) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o TerminationDetails) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o TerminationDetails) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o TerminationDetails) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TerminationDetails
+// only implements ToObjectValue() and Type().
+func (o TerminationDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o TerminationDetails) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"code":    o.Code,
+			"message": o.Message,
+			"type":    o.Type_,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13174,52 +15531,15 @@ func (a TriggerInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = TriggerInfo{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o TriggerInfo) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o TriggerInfo) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o TriggerInfo) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o TriggerInfo) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o TriggerInfo) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TriggerInfo
+// only implements ToObjectValue() and Type().
+func (o TriggerInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o TriggerInfo) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"run_id": o.RunId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13266,52 +15586,19 @@ func (a TriggerSettings) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = TriggerSettings{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o TriggerSettings) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o TriggerSettings) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o TriggerSettings) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o TriggerSettings) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o TriggerSettings) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TriggerSettings
+// only implements ToObjectValue() and Type().
+func (o TriggerSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o TriggerSettings) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"file_arrival": o.FileArrival,
+			"pause_status": o.PauseStatus,
+			"periodic":     o.Periodic,
+			"table":        o.Table,
+			"table_update": o.TableUpdate,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13333,6 +15620,110 @@ func (o TriggerSettings) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFileArrival returns the value of the FileArrival field in TriggerSettings as
+// a FileArrivalTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetFileArrival(ctx context.Context) (FileArrivalTriggerConfiguration, bool) {
+	var e FileArrivalTriggerConfiguration
+	if o.FileArrival.IsNull() || o.FileArrival.IsUnknown() {
+		return e, false
+	}
+	var v []FileArrivalTriggerConfiguration
+	d := o.FileArrival.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileArrival sets the value of the FileArrival field in TriggerSettings.
+func (o *TriggerSettings) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_arrival"]
+	o.FileArrival = types.ListValueMust(t, vs)
+}
+
+// GetPeriodic returns the value of the Periodic field in TriggerSettings as
+// a PeriodicTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetPeriodic(ctx context.Context) (PeriodicTriggerConfiguration, bool) {
+	var e PeriodicTriggerConfiguration
+	if o.Periodic.IsNull() || o.Periodic.IsUnknown() {
+		return e, false
+	}
+	var v []PeriodicTriggerConfiguration
+	d := o.Periodic.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPeriodic sets the value of the Periodic field in TriggerSettings.
+func (o *TriggerSettings) SetPeriodic(ctx context.Context, v PeriodicTriggerConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["periodic"]
+	o.Periodic = types.ListValueMust(t, vs)
+}
+
+// GetTable returns the value of the Table field in TriggerSettings as
+// a TableUpdateTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetTable(ctx context.Context) (TableUpdateTriggerConfiguration, bool) {
+	var e TableUpdateTriggerConfiguration
+	if o.Table.IsNull() || o.Table.IsUnknown() {
+		return e, false
+	}
+	var v []TableUpdateTriggerConfiguration
+	d := o.Table.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTable sets the value of the Table field in TriggerSettings.
+func (o *TriggerSettings) SetTable(ctx context.Context, v TableUpdateTriggerConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	o.Table = types.ListValueMust(t, vs)
+}
+
+// GetTableUpdate returns the value of the TableUpdate field in TriggerSettings as
+// a TableUpdateTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetTableUpdate(ctx context.Context) (TableUpdateTriggerConfiguration, bool) {
+	var e TableUpdateTriggerConfiguration
+	if o.TableUpdate.IsNull() || o.TableUpdate.IsUnknown() {
+		return e, false
+	}
+	var v []TableUpdateTriggerConfiguration
+	d := o.TableUpdate.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableUpdate sets the value of the TableUpdate field in TriggerSettings.
+func (o *TriggerSettings) SetTableUpdate(ctx context.Context, v TableUpdateTriggerConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_update"]
+	o.TableUpdate = types.ListValueMust(t, vs)
 }
 
 type UpdateJob struct {
@@ -13376,52 +15767,17 @@ func (a UpdateJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = UpdateJob{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o UpdateJob) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o UpdateJob) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o UpdateJob) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o UpdateJob) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o UpdateJob) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateJob
+// only implements ToObjectValue() and Type().
+func (o UpdateJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o UpdateJob) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"fields_to_remove": o.FieldsToRemove,
+			"job_id":           o.JobId,
+			"new_settings":     o.NewSettings,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13437,6 +15793,57 @@ func (o UpdateJob) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFieldsToRemove returns the value of the FieldsToRemove field in UpdateJob as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateJob) GetFieldsToRemove(ctx context.Context) ([]types.String, bool) {
+	if o.FieldsToRemove.IsNull() || o.FieldsToRemove.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.FieldsToRemove.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFieldsToRemove sets the value of the FieldsToRemove field in UpdateJob.
+func (o *UpdateJob) SetFieldsToRemove(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fields_to_remove"]
+	o.FieldsToRemove = types.ListValueMust(t, vs)
+}
+
+// GetNewSettings returns the value of the NewSettings field in UpdateJob as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateJob) GetNewSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.NewSettings.IsNull() || o.NewSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.NewSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewSettings sets the value of the NewSettings field in UpdateJob.
+func (o *UpdateJob) SetNewSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
+	o.NewSettings = types.ListValueMust(t, vs)
 }
 
 type UpdateResponse struct {
@@ -13459,52 +15866,13 @@ func (a UpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = UpdateResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o UpdateResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o UpdateResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o UpdateResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o UpdateResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o UpdateResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateResponse
+// only implements ToObjectValue() and Type().
+func (o UpdateResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o UpdateResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13542,52 +15910,17 @@ func (a ViewItem) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ViewItem{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ViewItem) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ViewItem) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ViewItem) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ViewItem) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ViewItem) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ViewItem
+// only implements ToObjectValue() and Type().
+func (o ViewItem) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ViewItem) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"content": o.Content,
+			"name":    o.Name,
+			"type":    o.Type_,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13622,52 +15955,15 @@ func (a Webhook) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = Webhook{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o Webhook) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o Webhook) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o Webhook) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o Webhook) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o Webhook) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Webhook
+// only implements ToObjectValue() and Type().
+func (o Webhook) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o Webhook) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"id": o.Id,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13729,52 +16025,19 @@ func (a WebhookNotifications) GetComplexFieldTypes(ctx context.Context) map[stri
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = WebhookNotifications{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o WebhookNotifications) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o WebhookNotifications) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o WebhookNotifications) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o WebhookNotifications) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o WebhookNotifications) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WebhookNotifications
+// only implements ToObjectValue() and Type().
+func (o WebhookNotifications) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o WebhookNotifications) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"on_duration_warning_threshold_exceeded": o.OnDurationWarningThresholdExceeded,
+			"on_failure":                             o.OnFailure,
+			"on_start":                               o.OnStart,
+			"on_streaming_backlog_exceeded":          o.OnStreamingBacklogExceeded,
+			"on_success":                             o.OnSuccess,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -13800,189 +16063,127 @@ func (o WebhookNotifications) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// * `EQUAL_TO`, `NOT_EQUAL` operators perform string comparison of their
-// operands. This means that `“12.0” == “12”` will evaluate to `false`.
-// * `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`
-// operators perform numeric comparison of their operands. `“12.0” >=
-// “12”` will evaluate to `true`, `“10.0” >= “12”` will evaluate to
-// `false`.
-//
-// The boolean comparison to task values can be implemented with operators
-// `EQUAL_TO`, `NOT_EQUAL`. If a task value was set to a boolean value, it will
-// be serialized to `“true”` or `“false”` for the comparison.
+// GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]Webhook, bool) {
+	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// * `BUNDLE`: The job is managed by Databricks Asset Bundle.
+// SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+}
 
-// Edit mode of the job.
-//
-// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
-// `EDITABLE`: The job is in an editable state and can be modified.
+// GetOnFailure returns the value of the OnFailure field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnFailure(ctx context.Context) ([]Webhook, bool) {
+	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// Permission level
+// SetOnFailure sets the value of the OnFailure field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnFailure(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	o.OnFailure = types.ListValueMust(t, vs)
+}
 
-// Dirty state indicates the job is not fully synced with the job specification
-// in the remote repository.
-//
-// Possible values are: * `NOT_SYNCED`: The job is not yet synced with the
-// remote job specification. Import the remote job specification from UI to make
-// the job fully synced. * `DISCONNECTED`: The job is temporary disconnected
-// from the remote job specification and is allowed for live edit. Import the
-// remote job specification again from UI to make the job fully synced.
+// GetOnStart returns the value of the OnStart field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnStart(ctx context.Context) ([]Webhook, bool) {
+	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// Specifies the health metric that is being evaluated for a particular health
-// rule.
-//
-// * `RUN_DURATION_SECONDS`: Expected total time for a run in seconds. *
-// `STREAMING_BACKLOG_BYTES`: An estimate of the maximum bytes of data waiting
-// to be consumed across all streams. This metric is in Private Preview. *
-// `STREAMING_BACKLOG_RECORDS`: An estimate of the maximum offset lag across all
-// streams. This metric is in Private Preview. * `STREAMING_BACKLOG_SECONDS`: An
-// estimate of the maximum consumer delay across all streams. This metric is in
-// Private Preview. * `STREAMING_BACKLOG_FILES`: An estimate of the maximum
-// number of outstanding files across all streams. This metric is in Private
-// Preview.
+// SetOnStart sets the value of the OnStart field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnStart(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	o.OnStart = types.ListValueMust(t, vs)
+}
 
-// Specifies the operator used to compare the health metric value with the
-// specified threshold.
+// GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnStreamingBacklogExceeded(ctx context.Context) ([]Webhook, bool) {
+	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// The reason for queuing the run. * `ACTIVE_RUNS_LIMIT_REACHED`: The run was
-// queued due to reaching the workspace limit of active task runs. *
-// `MAX_CONCURRENT_RUNS_REACHED`: The run was queued due to reaching the per-job
-// limit of concurrent job runs. * `ACTIVE_RUN_JOB_TASKS_LIMIT_REACHED`: The run
-// was queued due to reaching the workspace limit of active run job tasks.
+// SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnStreamingBacklogExceeded(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+}
 
-// The repair history item type. Indicates whether a run is the original run or
-// a repair run.
+// GetOnSuccess returns the value of the OnSuccess field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnSuccess(ctx context.Context) ([]Webhook, bool) {
+	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// An optional value indicating the condition that determines whether the task
-// should be run once its dependencies have been completed. When omitted,
-// defaults to `ALL_SUCCESS`.
-//
-// Possible values are: * `ALL_SUCCESS`: All dependencies have executed and
-// succeeded * `AT_LEAST_ONE_SUCCESS`: At least one dependency has succeeded *
-// `NONE_FAILED`: None of the dependencies have failed and at least one was
-// executed * `ALL_DONE`: All dependencies have been completed *
-// `AT_LEAST_ONE_FAILED`: At least one dependency failed * `ALL_FAILED`: ALl
-// dependencies have failed
-
-// A value indicating the run's lifecycle state. The possible values are: *
-// `QUEUED`: The run is queued. * `PENDING`: The run is waiting to be executed
-// while the cluster and execution context are being prepared. * `RUNNING`: The
-// task of this run is being executed. * `TERMINATING`: The task of this run has
-// completed, and the cluster and execution context are being cleaned up. *
-// `TERMINATED`: The task of this run has completed, and the cluster and
-// execution context have been cleaned up. This state is terminal. * `SKIPPED`:
-// This run was aborted because a previous run of the same job was already
-// active. This state is terminal. * `INTERNAL_ERROR`: An exceptional state that
-// indicates a failure in the Jobs service, such as network failure over a long
-// period. If a run on a new cluster ends in the `INTERNAL_ERROR` state, the
-// Jobs service terminates the cluster as soon as possible. This state is
-// terminal. * `BLOCKED`: The run is blocked on an upstream dependency. *
-// `WAITING_FOR_RETRY`: The run is waiting for a retry.
-
-// The current state of the run.
-
-// A value indicating the run's result. The possible values are: * `SUCCESS`:
-// The task completed successfully. * `FAILED`: The task completed with an
-// error. * `TIMEDOUT`: The run was stopped after reaching the timeout. *
-// `CANCELED`: The run was canceled at user request. *
-// `MAXIMUM_CONCURRENT_RUNS_REACHED`: The run was skipped because the maximum
-// concurrent runs were reached. * `EXCLUDED`: The run was skipped because the
-// necessary conditions were not met. * `SUCCESS_WITH_FAILURES`: The job run
-// completed successfully with some failures; leaf tasks were successful. *
-// `UPSTREAM_FAILED`: The run was skipped because of an upstream failure. *
-// `UPSTREAM_CANCELED`: The run was skipped because an upstream task was
-// canceled. * `DISABLED`: The run was skipped because it was disabled
-// explicitly by the user.
-
-// The type of a run. * `JOB_RUN`: Normal job run. A run created with
-// :method:jobs/runNow. * `WORKFLOW_RUN`: Workflow run. A run created with
-// [dbutils.notebook.run]. * `SUBMIT_RUN`: Submit run. A run created with
-// :method:jobs/submit.
-//
-// [dbutils.notebook.run]: https://docs.databricks.com/dev-tools/databricks-utils.html#dbutils-workflow
-
-// Optional location type of the SQL file. When set to `WORKSPACE`, the SQL file
-// will be retrieved\ from the local Databricks workspace. When set to `GIT`,
-// the SQL file will be retrieved from a Git repository defined in `git_source`.
-// If the value is empty, the task will use `GIT` if `git_source` is defined and
-// `WORKSPACE` otherwise.
-//
-// * `WORKSPACE`: SQL file is located in Databricks workspace. * `GIT`: SQL file
-// is located in cloud Git provider.
-
-// The state of the SQL alert.
-//
-// * UNKNOWN: alert yet to be evaluated * OK: alert evaluated and did not
-// fulfill trigger conditions * TRIGGERED: alert evaluated and fulfilled trigger
-// conditions
-
-// The code indicates why the run was terminated. Additional codes might be
-// introduced in future releases. * `SUCCESS`: The run was completed
-// successfully. * `USER_CANCELED`: The run was successfully canceled during
-// execution by a user. * `CANCELED`: The run was canceled during execution by
-// the Databricks platform; for example, if the maximum run duration was
-// exceeded. * `SKIPPED`: Run was never executed, for example, if the upstream
-// task run failed, the dependency type condition was not met, or there were no
-// material tasks to execute. * `INTERNAL_ERROR`: The run encountered an
-// unexpected error. Refer to the state message for further details. *
-// `DRIVER_ERROR`: The run encountered an error while communicating with the
-// Spark Driver. * `CLUSTER_ERROR`: The run failed due to a cluster error. Refer
-// to the state message for further details. * `REPOSITORY_CHECKOUT_FAILED`:
-// Failed to complete the checkout due to an error when communicating with the
-// third party service. * `INVALID_CLUSTER_REQUEST`: The run failed because it
-// issued an invalid request to start the cluster. *
-// `WORKSPACE_RUN_LIMIT_EXCEEDED`: The workspace has reached the quota for the
-// maximum number of concurrent active runs. Consider scheduling the runs over a
-// larger time frame. * `FEATURE_DISABLED`: The run failed because it tried to
-// access a feature unavailable for the workspace. *
-// `CLUSTER_REQUEST_LIMIT_EXCEEDED`: The number of cluster creation, start, and
-// upsize requests have exceeded the allotted rate limit. Consider spreading the
-// run execution over a larger time frame. * `STORAGE_ACCESS_ERROR`: The run
-// failed due to an error when accessing the customer blob storage. Refer to the
-// state message for further details. * `RUN_EXECUTION_ERROR`: The run was
-// completed with task failures. For more details, refer to the state message or
-// run output. * `UNAUTHORIZED_ERROR`: The run failed due to a permission issue
-// while accessing a resource. Refer to the state message for further details. *
-// `LIBRARY_INSTALLATION_ERROR`: The run failed while installing the
-// user-requested library. Refer to the state message for further details. The
-// causes might include, but are not limited to: The provided library is
-// invalid, there are insufficient permissions to install the library, and so
-// forth. * `MAX_CONCURRENT_RUNS_EXCEEDED`: The scheduled run exceeds the limit
-// of maximum concurrent runs set for the job. * `MAX_SPARK_CONTEXTS_EXCEEDED`:
-// The run is scheduled on a cluster that has already reached the maximum number
-// of contexts it is configured to create. See: [Link]. * `RESOURCE_NOT_FOUND`:
-// A resource necessary for run execution does not exist. Refer to the state
-// message for further details. * `INVALID_RUN_CONFIGURATION`: The run failed
-// due to an invalid configuration. Refer to the state message for further
-// details. * `CLOUD_FAILURE`: The run failed due to a cloud provider issue.
-// Refer to the state message for further details. *
-// `MAX_JOB_QUEUE_SIZE_EXCEEDED`: The run was skipped due to reaching the job
-// level queue size limit.
-//
-// [Link]: https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now
-
-// * `SUCCESS`: The run terminated without any issues * `INTERNAL_ERROR`: An
-// error occurred in the Databricks platform. Please look at the [status page]
-// or contact support if the issue persists. * `CLIENT_ERROR`: The run was
-// terminated because of an error caused by user input or the job configuration.
-// * `CLOUD_FAILURE`: The run was terminated because of an issue with your cloud
-// provider.
-//
-// [status page]: https://status.databricks.com/
-
-// The type of trigger that fired this run.
-//
-// * `PERIODIC`: Schedules that periodically trigger runs, such as a cron
-// scheduler. * `ONE_TIME`: One time triggers that fire a single run. This
-// occurs you triggered a single run on demand through the UI or the API. *
-// `RETRY`: Indicates a run that is triggered as a retry of a previously failed
-// run. This occurs when you request to re-run the job in case of failures. *
-// `RUN_JOB_TASK`: Indicates a run that is triggered using a Run Job task. *
-// `FILE_ARRIVAL`: Indicates a run that is triggered by a file arrival. *
-// `TABLE`: Indicates a run that is triggered by a table update.
-
-// * `NOTEBOOK`: Notebook view item. * `DASHBOARD`: Dashboard view item.
-
-// * `CODE`: Code view of the notebook. * `DASHBOARDS`: All dashboard views of
-// the notebook. * `ALL`: All views of the notebook.
+// SetOnSuccess sets the value of the OnSuccess field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnSuccess(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	o.OnSuccess = types.ListValueMust(t, vs)
+}

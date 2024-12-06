@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -30,37 +29,9 @@ func (TestTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	}
 }
 
-func (TestTfSdk) ToAttrType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"description": types.StringType,
-			"nested": types.ListType{
-				ElemType: NestedTfSdk{}.ToAttrType(ctx),
-			},
-			"nested_slice_object": types.ListType{
-				ElemType: NestedTfSdk{}.ToAttrType(ctx),
-			},
-			"map": types.StringType,
-		},
-	}
-}
-
 type NestedTfSdk struct {
 	Name    types.String `tfsdk:"name" tf:"optional"`
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
-}
-
-func (NestedTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-func (NestedTfSdk) ToAttrType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":    types.StringType,
-			"enabled": types.BoolType,
-		},
-	}
 }
 
 type stringLengthBetweenValidator struct {

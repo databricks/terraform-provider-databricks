@@ -8,76 +8,40 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-type ObjectValuable struct {
+// An ObjectTypable is an object that has a corresponding attr.Type.
+// Note that this is different from the plugin framework's ObjectTypable interface,
+// which is used to implement custom types in the plugin framework. Today, the
+// serialization to plugin framework types is done in the converters package.
+type ObjectTypable interface {
+	// Type returns the corresponding attr.Type for the object. For TF SDK types,
+	// this must always return an instance of basetypes.ObjectType.
+	Type(context.Context) attr.Type
+}
+
+type ObjectTyper struct {
 	// A TF SDK structure.
 	// If this contains types.List, types.Map, or types.Object, it must implement the
 	// ComplexFieldTypesProvider interface.
 	inner any
 }
 
-// Construct a new ObjectValuable.
-// TFSDK structs automatically implement ObjectValuable, so they are returned as-is.
-// Hand-written structs do not necessarily implement ObjectValuable, so this is a
+// Construct a new ObjectTyper.
+// TFSDK structs automatically implement ObjectTypable, so they are returned as-is.
+// Hand-written structs do not necessarily implement ObjectTypable, so this is a
 // convenience implementation using reflection.
-func NewObjectValuable(inner any) ObjectValuable {
-	if ov, ok := inner.(ObjectValuable); ok {
+func NewObjectTyper(inner any) ObjectTypable {
+	if ov, ok := inner.(ObjectTypable); ok {
 		return ov
 	}
-	return ObjectValuable{inner: inner}
-}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ObjectValuable) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ObjectValuable) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ObjectValuable) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ObjectValuable) String() string {
-	return fmt.Sprintf("%v", o.inner)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ObjectValuable) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o.inner,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ObjectValuable) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+	return ObjectTyper{inner: inner}
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ObjectValuable) Type(ctx context.Context) attr.Type {
+func (o ObjectTyper) Type(ctx context.Context) attr.Type {
 	attrs := map[string]attr.Type{}
 
 	// Tolerate pointers.
@@ -113,7 +77,7 @@ func (o ObjectValuable) Type(ctx context.Context) attr.Type {
 		} else {
 			// If this is a TF SDK structure, we need to recursively determine the type.
 			nested := reflect.New(fieldType).Elem().Interface()
-			ov := ObjectValuable{inner: nested}
+			ov := NewObjectTyper(nested)
 			innerType = ov.Type(ctx)
 		}
 
@@ -159,5 +123,3 @@ func getAttrType(v any) (attr.Type, bool) {
 	t, ok := simpleTypeMap[reflect.TypeOf(v)]
 	return t, ok
 }
-
-var _ basetypes.ObjectValuable = ObjectValuable{}

@@ -16,7 +16,9 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/{{.Name}}"
 	"io"
 	"github.com/databricks/databricks-sdk-go/marshal"
-    "github.com/hashicorp/terraform-plugin-framework/types"
+  pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+  "github.com/hashicorp/terraform-plugin-framework/types"
+  "github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 {{range .Types}}
 {{- if or .Fields .IsEmpty}}
@@ -78,9 +80,56 @@ func (a {{.PascalName}}) GetComplexFieldTypes(ctx context.Context) map[string]re
   }
 }
 
-// ToAttrType returns the representation of {{.PascalName}} in the Terraform plugin framework type
-// system.
-func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
+// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
+// and as elements in lists and maps.
+var _ basetypes.ObjectValuable = {{.PascalName}}{}
+
+// Equal implements basetypes.ObjectValuable.
+func (o {{.PascalName}}) Equal(v attr.Value) bool {
+	ov, d := o.ToObjectValue(context.Background())
+	if d.HasError() {
+		return false
+	}
+	return ov.Equal(v)
+}
+
+// IsNull implements basetypes.ObjectValuable.
+func (o {{.PascalName}}) IsNull() bool {
+	// TF SDK structures are never null.
+	return false
+}
+
+// IsUnknown implements basetypes.ObjectValuable.
+func (o {{.PascalName}}) IsUnknown() bool {
+	// TF SDK structures are never unknown.
+	return false
+}
+
+// String implements basetypes.ObjectValuable.
+func (o {{.PascalName}}) String() string {
+	return fmt.Sprintf("%#v", o)
+}
+
+// ToObjectValue implements basetypes.ObjectValuable.
+func (o {{.PascalName}}) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	return types.ObjectValueFrom(
+		ctx,
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		o,
+	)
+}
+
+// ToTerraformValue implements basetypes.ObjectValuable.
+func (o {{.PascalName}}) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	ov, d := o.ToObjectValue(ctx)
+	if d.HasError() {
+		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
+	}
+	return ov.ToTerraformValue(ctx)
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o {{.PascalName}}) Type(ctx context.Context) attr.Type {
   return types.ObjectType{
     AttrTypes: map[string]attr.Type{
       {{ range .Fields -}}
@@ -94,9 +143,32 @@ func (a {{.PascalName}}) ToAttrType(ctx context.Context) types.ObjectType {
 {{end}}
 {{end}}
 
+{{range .Types}}
+{{- if .IsEnum}}
+{{.Comment "// " 80}}
+
+{{end}}
+{{end}}
+
+{{- define "complex-field-value" -}}
+  {{- if .ArrayValue }}{{ template "complex-field-value" .ArrayValue }}
+  {{- else if .MapValue }}{{ template "complex-field-value" .MapValue }}
+  {{- else -}}
+    {{- if .IsExternal -}}{{.Package.Name}}.{{- end -}}
+    {{- if or .IsString .Enum -}}types.String{}
+    {{- else if .IsBool -}}types.Bool{}
+    {{- else if .IsInt64 -}}types.Int64{}
+    {{- else if .IsFloat64 -}}types.Float64{}
+    {{- else if .IsInt -}}types.Int64{}
+    {{- else if .IsAny -}}struct{}{}
+    {{- else if or .IsEmpty .IsObject -}}{{.PascalName}}{}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
 {{/*
 Jobs has a recursive structure: Tasks contain ForEachTasks, which contain Tasks.
-Because of this, GetComplexFieldTypes and ToAttrType will never terminate.
+Because of this, GetComplexFieldTypes and ToObjectType will never terminate.
 TODO: capture visited types in the context to ensure these methods terminate,
 even when they are called recursively.
 */}}
@@ -120,31 +192,16 @@ even when they are called recursively.
     {{- else if .IsInt -}}types.Int64Type
     {{- else if .IsAny -}}types.ObjectType{}
     {{- else if .IsByteStream}}types.ObjectType{}
-    {{- else if .IsObject -}}{{/* Objects are treated as lists from a TFSDK type perspective. */}}basetypes.ListType{
-      ElemType: {{- if .IsExternal -}}{{.Package.Name}}_tf.{{- end -}}{{.PascalName}}{}.ToAttrType(ctx),
+    {{- else if or .IsEmpty .IsObject -}}{{/* Objects are treated as lists from a TFSDK type perspective. */}}basetypes.ListType{
+      ElemType: {{- if .IsExternal -}}{{.Package.Name}}_tf.{{- end -}}{{.PascalName}}{}.Type(ctx),
     }
     {{- end -}}
   {{- end -}}
 {{- end -}}
 
-{{- define "complex-field-value" -}}
-  {{- if .ArrayValue }}{{ template "complex-field-value" .ArrayValue }}
-  {{- else if .MapValue }}{{ template "complex-field-value" .MapValue }}
-  {{- else -}}
-    {{- if .IsExternal -}}{{.Package.Name}}.{{- end -}}
-    {{- if or .IsString .Enum -}}types.String{}
-    {{- else if .IsBool -}}types.Bool{}
-    {{- else if .IsInt64 -}}types.Int64{}
-    {{- else if .IsFloat64 -}}types.Float64{}
-    {{- else if .IsInt -}}types.Int64{}
-    {{- else if .IsAny -}}struct{}{}
-    {{- else if .IsObject -}}{{.PascalName}}{}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
 
 {{- define "field" -}}
-{{if .effective}}Effective{{end}}{{.field.PascalName}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
+{{if .effective}}Effective{{end}}{{.field.PascalName}}{{if eq .field.PascalName "Type"}}_{{end}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
 {{- end -}}
 
 {{- define "field-tag" -}}
@@ -177,7 +234,7 @@ even when they are called recursively.
     {{- if not . }}any /* ERROR */
     {{- else if .IsExternal }}{{.Package.Name}}.{{.PascalName}}
     {{- else if .IsAny}}any
-    {{- else if .IsEmpty}}[]{{.PascalName}}
+    {{- else if .IsEmpty}}types.List
     {{- else if .IsString}}types.String
     {{- else if .IsBool}}types.Bool
     {{- else if .IsInt64}}types.Int64

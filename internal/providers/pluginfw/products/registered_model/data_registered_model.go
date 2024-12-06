@@ -3,6 +3,7 @@ package registered_model
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -12,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -32,10 +34,16 @@ type RegisteredModelDataSource struct {
 }
 
 type RegisteredModelData struct {
-	FullName       types.String                     `tfsdk:"full_name"`
-	IncludeAliases types.Bool                       `tfsdk:"include_aliases" tf:"optional"`
-	IncludeBrowse  types.Bool                       `tfsdk:"include_browse" tf:"optional"`
-	ModelInfo      []catalog_tf.RegisteredModelInfo `tfsdk:"model_info" tf:"optional,computed"`
+	FullName       types.String `tfsdk:"full_name"`
+	IncludeAliases types.Bool   `tfsdk:"include_aliases" tf:"optional"`
+	IncludeBrowse  types.Bool   `tfsdk:"include_browse" tf:"optional"`
+	ModelInfo      types.List   `tfsdk:"model_info" tf:"optional,computed"`
+}
+
+func (RegisteredModelData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"model_info": reflect.TypeOf(catalog_tf.RegisteredModelInfo{}),
+	}
 }
 
 func (d *RegisteredModelDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -93,6 +101,6 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 		modelInfo.Aliases, d = basetypes.NewListValueFrom(ctx, modelInfo.Aliases.ElementType(ctx), []catalog_tf.RegisteredModelAlias{})
 		resp.Diagnostics.Append(d...)
 	}
-	registeredModel.ModelInfo = append(registeredModel.ModelInfo, modelInfo)
+	registeredModel.ModelInfo = types.ListValueMust(catalog_tf.RegisteredModelInfo{}.Type(ctx), []attr.Value{modelInfo})
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModel)...)
 }

@@ -63,18 +63,9 @@ type MonitorInfoExtended struct {
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
-var _ pluginfwcommon.ObjectTypable = MonitorInfoExtended{}
 
 func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return m.MonitorInfo.GetComplexFieldTypes(ctx)
-}
-
-func (m MonitorInfoExtended) ToObjectType(ctx context.Context) types.ObjectType {
-	tpe := m.MonitorInfo.ToAttrType(ctx)
-	tpe.AttrTypes["warehouse_id"] = types.StringType
-	tpe.AttrTypes["skip_builtin_dashboard"] = types.BoolType
-	tpe.AttrTypes["id"] = types.StringType
-	return tpe
 }
 
 type QualityMonitorResource struct {

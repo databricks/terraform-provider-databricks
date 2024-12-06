@@ -70,7 +70,7 @@ func TfSdkToGoSdkStruct(ctx context.Context, tfsdk interface{}, gosdk interface{
 			continue
 		}
 
-		destField := destVal.FieldByName(srcFieldName)
+		destField := destVal.FieldByName(toGoSdkName(srcFieldName))
 		innerType := innerTypes[srcFieldTag]
 
 		d.Append(tfSdkToGoSdkSingleField(ctx, srcField, destField, srcFieldName, &forceSendFieldsField, innerType)...)

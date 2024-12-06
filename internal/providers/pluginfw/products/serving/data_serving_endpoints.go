@@ -2,6 +2,7 @@ package serving
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -9,8 +10,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/serving_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func DataSourceServingEndpoints() datasource.DataSource {
@@ -24,7 +27,13 @@ type ServingEndpointsDataSource struct {
 }
 
 type ServingEndpointsData struct {
-	Endpoints []serving_tf.ServingEndpoint `tfsdk:"endpoints" tf:"optional,computed"`
+	Endpoints types.List `tfsdk:"endpoints" tf:"optional,computed"`
+}
+
+func (ServingEndpointsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"endpoints": reflect.TypeOf(serving_tf.ServingEndpoint{}),
+	}
 }
 
 func (d *ServingEndpointsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -66,13 +75,15 @@ func (d *ServingEndpointsDataSource) Read(ctx context.Context, req datasource.Re
 		resp.Diagnostics.AddError("failed to list endpoints", err.Error())
 		return
 	}
+	tfEndpoints := []attr.Value{}
 	for _, endpoint := range endpointsInfoSdk {
 		var endpointsInfo serving_tf.ServingEndpoint
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, endpoint, &endpointsInfo)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		endpoints.Endpoints = append(endpoints.Endpoints, endpointsInfo)
+		tfEndpoints = append(tfEndpoints, endpointsInfo)
 	}
+	endpoints.Endpoints = types.ListValueMust(serving_tf.ServingEndpoint{}.Type(ctx), tfEndpoints)
 	resp.Diagnostics.Append(resp.State.Set(ctx, endpoints)...)
 }

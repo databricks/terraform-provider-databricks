@@ -44,7 +44,7 @@ output "x" {
 
 ## Argument Reference
 
-* `job_name_contains` - (Optional) Only return [databricks_job](../resources/job.md#) ids that match the given name string.
+* `job_name_contains` - (Optional) Only return [databricks_job](../resources/job.md#) ids that match the given name string (case-insensitive).
 
 ## Attribute Reference
 

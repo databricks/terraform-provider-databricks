@@ -676,21 +676,8 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 }
 
 // List all jobs
-func (a JobsAPI) List(nameFilter string) (l []Job, err error) {
-	if nameFilter == "" {
-		return a.ListByName("", false)
-	}
-
-	allJobs, err := a.ListByName("", false)
-	if err != nil {
-		return l, err
-	}
-	for _, job := range allJobs {
-		if strings.Contains(job.Settings.Name, nameFilter) {
-			l = append(l, job)
-		}
-	}
-	return
+func (a JobsAPI) List() (l []Job, err error) {
+	return a.ListByName("", false)
 }
 
 // RunsList returns a job runs list

@@ -354,13 +354,24 @@ func (newState *Partition) SyncEffectiveFieldsDuringCreateOrUpdate(plan Partitio
 func (newState *Partition) SyncEffectiveFieldsDuringRead(existingState Partition) {
 }
 
+type PartitionSpecificationPartition struct {
+	// An array of partition values.
+	Values []PartitionValue `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionSpecificationPartition) {
+}
+
+func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringRead(existingState PartitionSpecificationPartition) {
+}
+
 type PartitionValue struct {
 	// The name of the partition column.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// The operator to apply for the value.
 	Op types.String `tfsdk:"op" tf:"optional"`
 	// The key of a Delta Sharing recipient's property. For example
-	// `databricks-account-id`. When this field is set, field `value` can not be
+	// "databricks-account-id". When this field is set, field `value` can not be
 	// set.
 	RecipientPropertyKey types.String `tfsdk:"recipient_property_key" tf:"optional"`
 	// The value of the partition column. When this value is not set, it means
@@ -606,8 +617,7 @@ type ShareInfo struct {
 	// A list of shared data objects within the share.
 	Objects []SharedDataObject `tfsdk:"object" tf:"optional"`
 	// Username of current owner of share.
-	Owner          types.String `tfsdk:"owner" tf:"optional"`
-	EffectiveOwner types.String `tfsdk:"effective_owner" tf:"computed,optional"`
+	Owner types.String `tfsdk:"owner" tf:"computed,optional"`
 	// Storage Location URL (full path) for the share.
 	StorageLocation types.String `tfsdk:"storage_location" tf:"optional"`
 	// Storage root URL for the share.
@@ -619,15 +629,9 @@ type ShareInfo struct {
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo) {
-	newState.EffectiveOwner = newState.Owner
-	newState.Owner = plan.Owner
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
-	newState.EffectiveOwner = existingState.EffectiveOwner
-	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
-		newState.Owner = existingState.Owner
-	}
 }
 
 // Get recipient share permissions
@@ -836,8 +840,7 @@ type UpdateShare struct {
 	// New name for the share.
 	NewName types.String `tfsdk:"new_name" tf:"optional"`
 	// Username of current owner of share.
-	Owner          types.String `tfsdk:"owner" tf:"optional"`
-	EffectiveOwner types.String `tfsdk:"effective_owner" tf:"computed,optional"`
+	Owner types.String `tfsdk:"owner" tf:"computed,optional"`
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 	// Array of shared data object updates.
@@ -845,15 +848,9 @@ type UpdateShare struct {
 }
 
 func (newState *UpdateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateShare) {
-	newState.EffectiveOwner = newState.Owner
-	newState.Owner = plan.Owner
 }
 
 func (newState *UpdateShare) SyncEffectiveFieldsDuringRead(existingState UpdateShare) {
-	newState.EffectiveOwner = existingState.EffectiveOwner
-	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
-		newState.Owner = existingState.Owner
-	}
 }
 
 type UpdateSharePermissions struct {

@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_metastore Data Source
 
--> **Note** This data source could be only used with account-level provider!
+-> **Note** This data source can only be used with an account-level provider!
 
 Retrieves information about metastore for a given id of [databricks_metastore](../resources/metastore.md) object, that was created by Terraform or manually, so that special handling could be applied.
 
@@ -14,6 +14,10 @@ Retrieves information about metastore for a given id of [databricks_metastore](.
 MetastoreInfo response for a given metastore id
 
 ```hcl
+resource "aws_s3_bucket" "metastore" {
+  bucket        = "${var.prefix}-metastore"
+  force_destroy = true
+}
 
 resource "databricks_metastore" "this" {
   provider      = databricks.workspace
@@ -34,12 +38,18 @@ output "some_metastore" {
 
 ## Argument Reference
 
-* `metastore_id` - Id of the metastore to be fetched
+Provide one of the arguments to get information about a metastore:
+
+* `metastore_id` - ID of the metastore
+* `name` - Name of the metastore
+* `region` - Region of the metastore
+
 
 ## Attribute Reference
 
 This data source exports the following attributes:
 
+* `id` - ID of the metastore
 * `metastore_info` - MetastoreInfo object for a [databricks_metastore](../resources/metastore.md). This contains the following attributes:
   * `name` - Name of metastore.
   * `storage_root` - Path on cloud storage account, where managed `databricks_table` are stored.

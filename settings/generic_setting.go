@@ -9,6 +9,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -52,7 +53,7 @@ func getEtagFromError(err error) (string, error) {
 			return etag, nil
 		}
 	}
-	return "", fmt.Errorf("error fetching the default workspace namespace settings: %w", err)
+	return "", fmt.Errorf("error fetching the settings: %w", err)
 }
 
 type genericSettingDefinition[T, U any] interface {
@@ -76,6 +77,9 @@ type genericSettingDefinition[T, U any] interface {
 
 	// Generate resource ID from settings instance
 	GetId(t *T) string
+
+	// Schema customization function
+	GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
 func getEtag[T any](t T) string {
@@ -115,6 +119,9 @@ type workspaceSetting[T any] struct {
 
 	// Optional function to generate resource ID from the settings. If not provided, will use predefined value `global`
 	generateIdFunc func(setting *T) string
+
+	// Optional function to customize the schema. If not provided, will use the default customization
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
 func (w workspaceSetting[T]) SettingStruct() T {
@@ -127,6 +134,10 @@ func (w workspaceSetting[T]) Update(ctx context.Context, c *databricks.Workspace
 	return w.updateFunc(ctx, c, t)
 }
 func (w workspaceSetting[T]) Delete(ctx context.Context, c *databricks.WorkspaceClient, etag string) (string, error) {
+	if w.deleteFunc == nil {
+		tflog.Warn(ctx, "The `delete` function isn't defined for this resource. Most probably it's not supported.")
+		return etag, nil
+	}
 	return w.deleteFunc(ctx, c, etag)
 }
 func (w workspaceSetting[T]) GetETag(t *T) string {
@@ -141,6 +152,20 @@ func (w workspaceSetting[T]) GetId(t *T) string {
 	return id
 }
 
+func (w workspaceSetting[T]) GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema {
+	return func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s[etagAttrName].Computed = true
+		// Note: this may not always be computed, but it is for the default namespace setting. If other settings
+		// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
+		// definition.
+		s["setting_name"].Computed = true
+		if w.customizeSchemaFunc != nil {
+			return w.customizeSchemaFunc(s)
+		}
+		return s
+	}
+}
+
 func (w workspaceSetting[T]) SetETag(t *T, newEtag string) {
 	setEtag(t, newEtag)
 }
@@ -149,7 +174,7 @@ var _ workspaceSettingDefinition[struct{}] = workspaceSetting[struct{}]{}
 
 type accountSettingDefinition[T any] genericSettingDefinition[T, *databricks.AccountClient]
 
-// An account setting is a setting that is scoped to a workspace.
+// An account setting is a setting that is scoped to an account.
 type accountSetting[T any] struct {
 	// The struct corresponding to the setting. The schema of the Terraform resource will be generated from this struct.
 	// This struct must have an Etag field of type string.
@@ -168,6 +193,9 @@ type accountSetting[T any] struct {
 
 	// Optional function to generate resource ID from the settings. If not provided, will use predefined value `global`
 	generateIdFunc func(setting *T) string
+
+	// Optional function to customize the schema. If not provided, will use the default customization
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema
 }
 
 func (w accountSetting[T]) SettingStruct() T {
@@ -180,6 +208,10 @@ func (w accountSetting[T]) Update(ctx context.Context, c *databricks.AccountClie
 	return w.updateFunc(ctx, c, t)
 }
 func (w accountSetting[T]) Delete(ctx context.Context, c *databricks.AccountClient, etag string) (string, error) {
+	if w.deleteFunc == nil {
+		tflog.Warn(ctx, "The `delete` function isn't defined for this resource. Most probably it's not supported.")
+		return etag, nil
+	}
 	return w.deleteFunc(ctx, c, etag)
 }
 func (w accountSetting[T]) GetETag(t *T) string {
@@ -197,18 +229,136 @@ func (w accountSetting[T]) GetId(t *T) string {
 	return id
 }
 
+func (w accountSetting[T]) GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema {
+	if w.customizeSchemaFunc != nil {
+		return w.customizeSchemaFunc
+	}
+	return func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s[etagAttrName].Computed = true
+		// Note: this may not always be computed, but it is for the default namespace setting. If other settings
+		// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
+		// definition.
+		s["setting_name"].Computed = true
+		return s
+	}
+}
+
 var _ accountSettingDefinition[struct{}] = accountSetting[struct{}]{}
+
+type accountWorkspaceSettingDefinition[T any] genericSettingDefinition[T, *common.DatabricksClient]
+
+// An account workspace setting is a setting that can be scoped to either an account or a workspace.
+type accountWorkspaceSetting[T any] struct {
+	// The struct corresponding to the setting. The schema of the Terraform resource will be generated from this struct.
+	// This struct must have an Etag field of type string.
+	settingStruct T
+
+	// Read the setting from the server. The etag is provided as the third argument.
+	readAccFunc func(ctx context.Context, acc *databricks.AccountClient, etag string) (*T, error)
+
+	readWsFunc func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*T, error)
+
+	// Update the setting to the value specified by t, and return the new etag. If the setting name is user-settable,
+	// it will be provided in the third argument. If not, you must set the SettingName field appropriately. You must
+	// also set AllowMissing: true and the field mask to the field to update.
+	updateAccFunc func(ctx context.Context, w *databricks.AccountClient, setting T) (string, error)
+
+	updateWsFunc func(ctx context.Context, w *databricks.WorkspaceClient, setting T) (string, error)
+
+	// Delete the setting with the given etag, and return the new etag.
+	deleteAccFunc func(ctx context.Context, acc *databricks.AccountClient, etag string) (string, error)
+
+	deleteWsFunc func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (string, error)
+
+	// Optional function to generate resource ID from the settings. If not provided, will use predefined value `global`
+	generateIdFunc func(setting *T) string
+
+	// Optional function to customize the schema. If not provided, will use the default customization
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema
+}
+
+func (aw accountWorkspaceSetting[T]) SettingStruct() T {
+	return aw.settingStruct
+}
+func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.DatabricksClient, etag string) (*T, error) {
+	if c.Config.IsAccountClient() {
+		a, err := c.AccountClient()
+		if err != nil {
+			return nil, err
+		}
+		return aw.readAccFunc(ctx, a, etag)
+	} else {
+		ws, err := c.WorkspaceClient()
+		if err != nil {
+			return nil, err
+		}
+		return aw.readWsFunc(ctx, ws, etag)
+	}
+}
+func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.DatabricksClient, t T) (string, error) {
+	if c.Config.IsAccountClient() {
+		a, err := c.AccountClient()
+		if err != nil {
+			return "", err
+		}
+		return aw.updateAccFunc(ctx, a, t)
+	} else {
+		ws, err := c.WorkspaceClient()
+		if err != nil {
+			return "", err
+		}
+		return aw.updateWsFunc(ctx, ws, t)
+	}
+}
+func (aw accountWorkspaceSetting[T]) Delete(ctx context.Context, c *common.DatabricksClient, etag string) (string, error) {
+	if c.Config.IsAccountClient() {
+		a, err := c.AccountClient()
+		if err != nil {
+			return "", err
+		}
+		return aw.deleteAccFunc(ctx, a, etag)
+	} else {
+		ws, err := c.WorkspaceClient()
+		if err != nil {
+			return "", err
+		}
+		return aw.deleteWsFunc(ctx, ws, etag)
+	}
+}
+func (aw accountWorkspaceSetting[T]) GetETag(t *T) string {
+	return getEtag(t)
+}
+func (aw accountWorkspaceSetting[T]) SetETag(t *T, newEtag string) {
+	setEtag(t, newEtag)
+}
+
+func (aw accountWorkspaceSetting[T]) GetId(t *T) string {
+	id := defaultSettingId
+	if aw.generateIdFunc != nil {
+		id = aw.generateIdFunc(t)
+	}
+	return id
+}
+
+func (aw accountWorkspaceSetting[T]) GetCustomizeSchemaFunc() func(map[string]*schema.Schema) map[string]*schema.Schema {
+	if aw.customizeSchemaFunc != nil {
+		return aw.customizeSchemaFunc
+	}
+	return func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		s[etagAttrName].Computed = true
+		// Note: this may not always be computed, but it is for the default namespace setting. If other settings
+		// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
+		// definition.
+		s["setting_name"].Computed = true
+		return s
+	}
+}
+
+var _ accountWorkspaceSettingDefinition[struct{}] = accountWorkspaceSetting[struct{}]{}
 
 func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.Resource {
 	resourceSchema := common.StructToSchema(defn.SettingStruct(),
-		func(s map[string]*schema.Schema) map[string]*schema.Schema {
-			s[etagAttrName].Computed = true
-			// Note: this may not always be computed, but it is for the default namespace setting. If other settings
-			// are added for which setting_name is not computed, we'll need to expose this somehow as part of the setting
-			// definition.
-			s["setting_name"].Computed = true
-			return s
-		})
+		defn.GetCustomizeSchemaFunc())
 	createOrUpdateRetriableErrors := []error{apierr.ErrNotFound, apierr.ErrResourceConflict}
 	deleteRetriableErrors := []error{apierr.ErrResourceConflict}
 	createOrUpdate := func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, setting T) error {
@@ -238,6 +388,18 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 			res, err = retryOnEtagError(
 				func(setting T) (string, error) {
 					return defn.Update(ctx, a, setting)
+				},
+				setting,
+				defn.SetETag,
+				createOrUpdateRetriableErrors)
+			if err != nil {
+				return err
+			}
+		case accountWorkspaceSettingDefinition[T]:
+			var err error
+			res, err = retryOnEtagError(
+				func(setting T) (string, error) {
+					return defn.Update(ctx, c, setting)
 				},
 				setting,
 				defn.SetETag,
@@ -277,6 +439,12 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 					return err
 				}
 				res, err = defn.Read(ctx, a, d.Get(etagAttrName).(string))
+				if err != nil {
+					return err
+				}
+			case accountWorkspaceSettingDefinition[T]:
+				var err error
+				res, err = defn.Read(ctx, c, d.Get(etagAttrName).(string))
 				if err != nil {
 					return err
 				}
@@ -326,6 +494,18 @@ func makeSettingResource[T, U any](defn genericSettingDefinition[T, U]) common.R
 				etag, err = retryOnEtagError(
 					func(etag string) (string, error) {
 						return defn.Delete(ctx, a, etag)
+					},
+					d.Get(etagAttrName).(string),
+					updateETag,
+					deleteRetriableErrors)
+				if err != nil {
+					return err
+				}
+			case accountWorkspaceSettingDefinition[T]:
+				var err error
+				etag, err = retryOnEtagError(
+					func(etag string) (string, error) {
+						return defn.Delete(ctx, c, etag)
 					},
 					d.Get(etagAttrName).(string),
 					updateETag,

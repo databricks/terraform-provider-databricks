@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
@@ -61,6 +61,34 @@ func TestResourceDirectoryDelete(t *testing.T) {
 	assert.Equal(t, path, d.Id())
 }
 
+func TestResourceDirectoryDelete_NotFound(t *testing.T) {
+	path := "/test/path"
+	delete_recursive := true
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:          http.MethodPost,
+				Resource:        "/api/2.0/workspace/delete",
+				ExpectedRequest: DeletePath{Path: path, Recursive: delete_recursive},
+				Response: common.APIErrorBody{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "Path (/test/path) doesn't exist.",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourceDirectory(),
+		Delete:   true,
+		ID:       path,
+		State: map[string]any{
+			"path":             "/foo/path.py",
+			"delete_recursive": delete_recursive,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, path, d.Id())
+}
+
 func TestResourceDirectoryRead_NotFound(t *testing.T) {
 	path := "/test/path"
 	qa.ResourceFixture{
@@ -68,7 +96,7 @@ func TestResourceDirectoryRead_NotFound(t *testing.T) {
 			{ // read log output for correct url...
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "NOT_FOUND",
 					Message:   "Item not found",
 				},
@@ -89,7 +117,7 @@ func TestResourceDirectoryRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: fmt.Sprintf("/api/2.0/workspace/get-status?path=%s", url.PathEscape(path)),
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -147,7 +175,7 @@ func TestResourceDirectoryCreate_Error(t *testing.T) {
 				ExpectedRequest: map[string]string{
 					"path": path,
 				},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},
@@ -172,7 +200,7 @@ func TestResourceDirectoryDelete_Error(t *testing.T) {
 				Method:          "POST",
 				Resource:        "/api/2.0/workspace/delete",
 				ExpectedRequest: DeletePath{Path: path, Recursive: false},
-				Response: apierr.APIErrorBody{
+				Response: common.APIErrorBody{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
 				},

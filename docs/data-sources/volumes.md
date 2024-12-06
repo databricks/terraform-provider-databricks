@@ -3,9 +3,12 @@ subcategory: "Unity Catalog"
 ---
 # databricks_volumes Data Source
 
--> **Note** This data source could be only used with workspace-level provider!
+-> **Note** This data source can only be used with a workspace-level provider!
 
 Retrieves a list of [databricks_volume](../resources/volume.md) ids (full names), that were created by Terraform or manually.
+
+## Plugin Framework Migration
+The volumes data source has been migrated from sdkv2 to plugin framework in version 1.57。 If you encounter any problem with this data source and suspect it is due to the migration, you can fallback to sdkv2 by setting the environment variable in the following way `export USE_SDK_V2_DATA_SOURCES="databricks_volumes"`.
 
 ## Example Usage
 

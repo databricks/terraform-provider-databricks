@@ -3,6 +3,7 @@ package workspace
 import (
 	"context"
 
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -45,10 +46,18 @@ func DataSourceNotebook() common.Resource {
 			Optional: true,
 			Computed: true,
 		},
+		"workspace_path": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 	}
 	return common.Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
+			w, err := m.WorkspaceClient()
+			if err != nil {
+				return err
+			}
 			notebooksAPI := NewNotebooksAPI(ctx, m)
 			path := d.Get("path").(string)
 			format := d.Get("format").(string)
@@ -59,7 +68,9 @@ func DataSourceNotebook() common.Resource {
 			d.SetId(path)
 			// nolint
 			d.Set("content", notebookContent)
-			objectStatus, err := notebooksAPI.Read(d.Id())
+			objectStatus, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
+				return w.Workspace.GetStatusByPath(ctx, d.Id())
+			})
 			if err != nil {
 				return err
 			}
@@ -67,6 +78,7 @@ func DataSourceNotebook() common.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("workspace_path", "/Workspace"+objectStatus.Path)
 			return nil
 		},
 	}

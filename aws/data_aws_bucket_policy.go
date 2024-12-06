@@ -16,6 +16,13 @@ func DataAwsBucketPolicy() common.Resource {
 	return common.Resource{
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			bucket := d.Get("bucket").(string)
+			awsPartition := d.Get("aws_partition").(string)
+			databricksAwsAccountId := AwsConfig[awsPartition]["accountId"]
+
+			if databricksAwsAccountId == "" {
+				databricksAwsAccountId = AwsConfig[awsPartition]["accountId"]
+			}
+
 			policy := awsIamPolicy{
 				Version: "2012-10-17",
 				Statements: []*awsIamPolicyStatement{
@@ -30,11 +37,11 @@ func DataAwsBucketPolicy() common.Resource {
 							"s3:GetBucketLocation",
 						},
 						Resources: []string{
-							fmt.Sprintf("arn:aws:s3:::%s/*", bucket),
-							fmt.Sprintf("arn:aws:s3:::%s", bucket),
+							fmt.Sprintf("arn:%s:s3:::%s/*", awsPartition, bucket),
+							fmt.Sprintf("arn:%s:s3:::%s", awsPartition, bucket),
 						},
 						Principal: map[string]string{
-							"AWS": fmt.Sprintf("arn:aws:iam::%s:root", d.Get("databricks_account_id").(string)),
+							"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsPartition, databricksAwsAccountId),
 						},
 					},
 				},
@@ -60,10 +67,16 @@ func DataAwsBucketPolicy() common.Resource {
 			return nil
 		},
 		Schema: map[string]*schema.Schema{
+			"aws_partition": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(AwsPartitions, false),
+				Default:      "aws",
+			},
 			"databricks_account_id": {
-				Type:     schema.TypeString,
-				Default:  "414351767826",
-				Optional: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "databricks_account_id will be will be removed in the next major release.",
 			},
 			"databricks_e2_account_id": {
 				Type:     schema.TypeString,

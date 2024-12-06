@@ -81,7 +81,7 @@ func (a *AlertEntity) toEditAlertApiObject(s map[string]*schema.Schema, data *sc
 	return ea, err
 }
 
-func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Schema, data *schema.ResourceData) error {
+func (a *AlertEntity) fromAPIObject(apiAlert *sql.LegacyAlert, s map[string]*schema.Schema, data *schema.ResourceData) error {
 	a.Name = apiAlert.Name
 	a.Parent = apiAlert.Parent
 	if apiAlert.Query != nil {
@@ -124,8 +124,7 @@ func (a *AlertEntity) fromAPIObject(apiAlert *sql.Alert, s map[string]*schema.Sc
 
 func ResourceSqlAlert() common.Resource {
 	s := common.StructToSchema(AlertEntity{}, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		options := m["options"].Elem.(*schema.Resource)
-		options.Schema["op"].ValidateFunc = validation.StringInSlice([]string{">", ">=", "<", "<=", "==", "!="}, true)
+		common.MustSchemaPath(m, "options", "op").ValidateFunc = validation.StringInSlice([]string{">", ">=", "<", "<=", "==", "!="}, true)
 		return m
 	})
 
@@ -140,7 +139,7 @@ func ResourceSqlAlert() common.Resource {
 			if err != nil {
 				return err
 			}
-			apiAlert, err := w.Alerts.Create(ctx, ca)
+			apiAlert, err := w.AlertsLegacy.Create(ctx, ca)
 			if err != nil {
 				return err
 			}
@@ -152,7 +151,7 @@ func ResourceSqlAlert() common.Resource {
 			if err != nil {
 				return err
 			}
-			apiAlert, err := w.Alerts.GetByAlertId(ctx, data.Id())
+			apiAlert, err := w.AlertsLegacy.GetByAlertId(ctx, data.Id())
 			if err != nil {
 				log.Printf("[WARN] error getting alert by ID: %v", err)
 				return err
@@ -170,15 +169,16 @@ func ResourceSqlAlert() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Alerts.Update(ctx, ca)
+			return w.AlertsLegacy.Update(ctx, ca)
 		},
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			return w.Alerts.DeleteByAlertId(ctx, data.Id())
+			return w.AlertsLegacy.DeleteByAlertId(ctx, data.Id())
 		},
-		Schema: s,
+		Schema:             s,
+		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_alert` resource instead.",
 	}
 }

@@ -45,7 +45,7 @@ jobs:
       - name: "Setup Go"
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21.x
+          go-version: 1.22.x
 
       - name: "Setup Terraform"
         uses: hashicorp/setup-terraform@v2
@@ -53,7 +53,7 @@ jobs:
           terraform_wrapper: false
 
       - name: "Install jd"
-        run: go install github.com/josephburnett/jd@latest
+        run: go install github.com/josephburnett/jd@v1.8.1
 
       - run: make diff-schema
         env:

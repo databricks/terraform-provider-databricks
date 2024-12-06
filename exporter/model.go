@@ -30,10 +30,9 @@ type instanceApproximation struct {
 type resourceApproximation struct {
 	Type      string                  `json:"type"`
 	Name      string                  `json:"name"`
-	Provider  string                  `json:"provider"`
 	Mode      string                  `json:"mode"`
-	Module    string                  `json:"module,omitempty"`
 	Instances []instanceApproximation `json:"instances"`
+	Resource  *resource
 }
 
 func (ra *resourceApproximation) Get(attr string) (any, bool) {
@@ -154,6 +153,8 @@ type importable struct {
 	Ignore func(ic *importContext, r *resource) bool
 	// Function to check if the field in the given resource should be omitted or not
 	ShouldOmitField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
+	// Function to check if the field in the given resource should be generated or not independently of the value
+	ShouldGenerateField func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool
 	// Defines which API version should be used for this specific resource
 	ApiVersion common.ApiVersion
 	// Defines if specific service is account level resource
@@ -204,6 +205,8 @@ type reference struct {
 	IsValidApproximation isValidAproximationFunc
 	// if we should skip direct lookups (for example, we need it for UC schemas matching)
 	SkipDirectLookup bool
+	// Extra Lookup key - if we need to search for the resource in a different way
+	ExtraLookupKey string
 }
 
 func (r reference) MatchAttribute() string {
@@ -238,6 +241,8 @@ type resource struct {
 	Data *schema.ResourceData
 	// Arbitrary data to be used by importable
 	ExtraData map[string]any
+	// References to dependencies - it could be fully resolved resource, with Data, etc., or it could be just resource type + ID
+	DependsOn []*resource
 }
 
 func (r *resource) AddExtraData(key string, value any) {
@@ -245,6 +250,10 @@ func (r *resource) AddExtraData(key string, value any) {
 		r.ExtraData = map[string]any{}
 	}
 	r.ExtraData[key] = value
+}
+
+func (r *resource) AddDependsOn(dep *resource) {
+	r.DependsOn = append(r.DependsOn, dep)
 }
 
 func (r *resource) GetExtraData(key string) (any, bool) {
@@ -336,12 +345,16 @@ func (r *resource) ImportResource(ic *importContext) {
 			return pr.ReadContext(ctx, r.Data, ic.Client)
 		},
 			fmt.Sprintf("reading %s#%s", r.Resource, r.ID))
-		if dia != nil {
+		if dia.HasError() {
 			log.Printf("[ERROR] Error reading %s#%s: %v", r.Resource, r.ID, dia)
 			return
 		}
 		if r.Data.Id() == "" {
-			r.Data.SetId(r.ID)
+			if r.Resource != "databricks_permissions" && r.Resource != "databricks_grants" {
+				log.Printf("[WARN] %s %s has empty ID because it's deleted or empty", r.Resource, r.ID)
+				ic.addIgnoredResource(fmt.Sprintf("%s. id=%s", r.Resource, r.ID))
+			}
+			return
 		}
 	}
 	r.Name = ic.ResourceName(r)
@@ -396,4 +409,16 @@ func (a *importedResources) Sorted() []*resource {
 	copy(c, a.resources)
 	sort.Sort(c)
 	return c
+}
+
+func (a *importedResources) FindById(resourceType, id string) *resource {
+	defer a.mutex.RLocker().Unlock()
+	a.mutex.RLocker().Lock()
+	for _, r := range a.resources {
+		if r.Resource == resourceType && r.ID == id {
+			return r
+		}
+	}
+
+	return nil
 }

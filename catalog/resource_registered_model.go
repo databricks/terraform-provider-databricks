@@ -12,6 +12,10 @@ func ResourceRegisteredModel() common.Resource {
 	s := common.StructToSchema(
 		catalog.CreateRegisteredModelRequest{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
+			caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
+			for _, field := range caseInsensitiveFields {
+				m[field].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			}
 			m["name"].ForceNew = true
 			m["catalog_name"].ForceNew = true
 			m["schema_name"].ForceNew = true
@@ -88,6 +92,9 @@ func ResourceRegisteredModel() common.Resource {
 				return nil
 			}
 
+			if d.HasChange("comment") && u.Comment == "" {
+				u.ForceSendFields = append(u.ForceSendFields, "Comment")
+			}
 			u.Owner = ""
 			_, err = w.RegisteredModels.Update(ctx, u)
 			if err != nil {

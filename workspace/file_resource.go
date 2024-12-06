@@ -1,42 +1,28 @@
 package workspace
 
 import (
-	"bufio"
 	"context"
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
 	"hash/fnv"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func readFileContent(s any) (content []byte, err error) {
-	source := s.(string)
-	log.Printf("[INFO] Reading %s", source)
-	f, err := os.Open(source)
-	if err != nil {
-		return
-	}
-	// TODO: size error
-	defer f.Close()
-	reader := bufio.NewReader(f)
-	return ioutil.ReadAll(reader)
-}
-
 // ReadContent to work with `content_base64` and `source` properties accordingly and set MD5 checksum
 func ReadContent(d *schema.ResourceData) (content []byte, err error) {
 	b64 := d.Get("content_base64").(string)
 	if b64 == "" {
-		content, err = readFileContent(d.Get("source"))
+		content, err = common.ReadFileContent(d.Get("source").(string))
 	} else {
 		log.Printf("[INFO] Reading `content_base64` of %d bytes", len(b64))
 		content, err = base64.StdEncoding.DecodeString(b64)
@@ -62,7 +48,7 @@ func MigrateV0(ctx context.Context,
 		case "source":
 			newState["source"] = v
 			if v != nil {
-				if content, err := readFileContent(v); err == nil {
+				if content, err := common.ReadFileContent(v.(string)); err == nil {
 					newState["md5"] = fmt.Sprintf("%x", md5.Sum(content))
 					log.Printf("[INFO] State of %s file is migrated from v0.2.x", newState["md5"])
 				}

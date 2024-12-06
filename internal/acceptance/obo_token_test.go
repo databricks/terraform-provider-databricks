@@ -7,7 +7,7 @@ import (
 func TestAccAwsOboTokenResource(t *testing.T) {
 	// running this test temporarily on the UC WS level
 	// until infrastructure gets AWS specific markers
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: `
 		// dummy: {env.TEST_GLOBAL_METASTORE_ID}
 		resource "databricks_service_principal" "this" {

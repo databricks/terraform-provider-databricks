@@ -2,219 +2,28 @@ package pipelines
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/marshal"
+	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/libraries"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // DefaultTimeout is the default amount of time that Terraform will wait when creating, updating and deleting pipelines.
 const DefaultTimeout = 20 * time.Minute
 
-// dltAutoScale is a struct the describes auto scaling for DLT clusters
-type dltAutoScale struct {
-	MinWorkers int32  `json:"min_workers,omitempty"`
-	MaxWorkers int32  `json:"max_workers,omitempty"`
-	Mode       string `json:"mode,omitempty"`
-}
-
-// We separate this struct from Cluster for two reasons:
-// 1. Pipeline clusters include a `Label` field.
-// 2. Spark version is not required (and shouldn't be specified) for pipeline clusters.
-// 3. num_workers is optional, and there is no single-node support for pipelines clusters.
-type pipelineCluster struct {
-	Label string `json:"label,omitempty"` // used only by pipelines
-
-	NumWorkers int32         `json:"num_workers,omitempty" tf:"group:size"`
-	Autoscale  *dltAutoScale `json:"autoscale,omitempty" tf:"group:size"`
-
-	NodeTypeID           string                    `json:"node_type_id,omitempty" tf:"group:node_type,computed"`
-	DriverNodeTypeID     string                    `json:"driver_node_type_id,omitempty" tf:"computed"`
-	InstancePoolID       string                    `json:"instance_pool_id,omitempty" tf:"group:node_type"`
-	DriverInstancePoolID string                    `json:"driver_instance_pool_id,omitempty"`
-	AwsAttributes        *clusters.AwsAttributes   `json:"aws_attributes,omitempty"`
-	GcpAttributes        *clusters.GcpAttributes   `json:"gcp_attributes,omitempty"`
-	AzureAttributes      *clusters.AzureAttributes `json:"azure_attributes,omitempty"`
-
-	EnableLocalDiskEncryption bool `json:"enable_local_disk_encryption,omitempty" tf:"computed"`
-
-	PolicyID                 string `json:"policy_id,omitempty"`
-	ApplyPolicyDefaultValues bool   `json:"apply_policy_default_values,omitempty"`
-
-	SparkConf    map[string]string `json:"spark_conf,omitempty"`
-	SparkEnvVars map[string]string `json:"spark_env_vars,omitempty"`
-	CustomTags   map[string]string `json:"custom_tags,omitempty"`
-
-	SSHPublicKeys  []string                         `json:"ssh_public_keys,omitempty" tf:"max_items:10"`
-	InitScripts    []clusters.InitScriptStorageInfo `json:"init_scripts,omitempty" tf:"max_items:10"` // TODO: tf:alias
-	ClusterLogConf *clusters.StorageInfo            `json:"cluster_log_conf,omitempty"`
-
-	ForceSendFields []string `json:"-"`
-}
-
-func (s *pipelineCluster) UnmarshalJSON(b []byte) error {
-	return marshal.Unmarshal(b, s)
-}
-
-func (s pipelineCluster) MarshalJSON() ([]byte, error) {
-	return marshal.Marshal(s)
-}
-
-type NotebookLibrary struct {
-	Path string `json:"path"`
-}
-
-type FileLibrary struct {
-	Path string `json:"path"`
-}
-
-type PipelineLibrary struct {
-	Jar      string           `json:"jar,omitempty"`
-	Maven    *libraries.Maven `json:"maven,omitempty"`
-	Whl      string           `json:"whl,omitempty"`
-	Notebook *NotebookLibrary `json:"notebook,omitempty"`
-	File     *FileLibrary     `json:"file,omitempty"`
-}
-
-type filters struct {
-	Include []string `json:"include,omitempty"`
-	Exclude []string `json:"exclude,omitempty"`
-}
-
-type Notification struct {
-	EmailRecipients []string `json:"email_recipients" tf:"min_items:1"`
-	Alerts          []string `json:"alerts" tf:"min_items:1"`
-}
-
-type PipelineSpec struct {
-	ID                  string            `json:"id,omitempty" tf:"computed"`
-	Name                string            `json:"name,omitempty"`
-	Storage             string            `json:"storage,omitempty" tf:"force_new"`
-	Catalog             string            `json:"catalog,omitempty" tf:"force_new"`
-	Configuration       map[string]string `json:"configuration,omitempty"`
-	Clusters            []pipelineCluster `json:"clusters,omitempty" tf:"alias:cluster"`
-	Libraries           []PipelineLibrary `json:"libraries,omitempty" tf:"slice_set,alias:library"`
-	Filters             *filters          `json:"filters,omitempty"`
-	Continuous          bool              `json:"continuous,omitempty"`
-	Development         bool              `json:"development,omitempty"`
-	AllowDuplicateNames bool              `json:"allow_duplicate_names,omitempty"`
-	Target              string            `json:"target,omitempty"`
-	Photon              bool              `json:"photon,omitempty"`
-	Edition             string            `json:"edition,omitempty" tf:"suppress_diff,default:ADVANCED"`
-	Channel             string            `json:"channel,omitempty" tf:"suppress_diff,default:CURRENT"`
-	Notifications       []Notification    `json:"notifications,omitempty" tf:"alias:notification"`
-	Serverless          bool              `json:"serverless" tf:"optional"`
-}
-
-type createPipelineResponse struct {
-	PipelineID string `json:"pipeline_id"`
-}
-
-// PipelineState ...
-type PipelineState string
-
-// Constants for PipelineStates
-const (
-	StateDeploying  PipelineState = "DEPLOYING"
-	StateStarting   PipelineState = "STARTING"
-	StateRunning    PipelineState = "RUNNING"
-	StateStopping   PipelineState = "STOPPPING"
-	StateDeleted    PipelineState = "DELETED"
-	StateRecovering PipelineState = "RECOVERING"
-	StateFailed     PipelineState = "FAILED"
-	StateResetting  PipelineState = "RESETTING"
-	StateIdle       PipelineState = "IDLE"
-)
-
-// PipelineHealthStatus ...
-type PipelineHealthStatus string
-
-// Constants for PipelineHealthStatus
-const (
-	HealthStatusHealthy   PipelineHealthStatus = "HEALTHY"
-	HealthStatusUnhealthy PipelineHealthStatus = "UNHEALTHY"
-)
-
-type PipelineInfo struct {
-	PipelineID      string                `json:"pipeline_id"`
-	Spec            *PipelineSpec         `json:"spec"`
-	State           *PipelineState        `json:"state"`
-	Cause           string                `json:"cause"`
-	ClusterID       string                `json:"cluster_id"`
-	Name            string                `json:"name"`
-	Health          *PipelineHealthStatus `json:"health"`
-	CreatorUserName string                `json:"creator_user_name"`
-	LastModified    int64                 `json:"last_modified"`
-}
-
-type PipelineUpdateStateInfo struct {
-	UpdateID     string         `json:"update_id"`
-	State        *PipelineState `json:"state"`
-	CreationTime string         `json:"creation_time"`
-}
-
-type PipelineStateInfo struct {
-	PipelineID      string                    `json:"pipeline_id"`
-	State           *PipelineState            `json:"state"`
-	ClusterID       string                    `json:"cluster_id"`
-	Name            string                    `json:"name"`
-	Health          *PipelineHealthStatus     `json:"health"`
-	CreatorUserName string                    `json:"creator_user_name"`
-	RunAsUserName   string                    `json:"run_as_user_name"`
-	LatestUpdates   []PipelineUpdateStateInfo `json:"latest_updates,omitempty"`
-}
-
-type PipelineListResponse struct {
-	Statuses      []PipelineStateInfo `json:"statuses"`
-	NextPageToken string              `json:"next_page_token,omitempty"`
-	PrevPageToken string              `json:"prev_page_token,omitempty"`
-}
-
-type PipelinesAPI struct {
-	client *common.DatabricksClient
-	ctx    context.Context
-}
-
-func NewPipelinesAPI(ctx context.Context, m any) PipelinesAPI {
-	return PipelinesAPI{m.(*common.DatabricksClient), ctx}
-}
-
-func (a PipelinesAPI) Create(s PipelineSpec, timeout time.Duration) (string, error) {
-	adjustForceSendFields(&s)
-
-	var resp createPipelineResponse
-	err := a.client.Post(a.ctx, "/pipelines", s, &resp)
-	if err != nil {
-		return "", err
-	}
-	id := resp.PipelineID
-	err = a.waitForState(id, timeout, StateRunning)
-	if err != nil {
-		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
-		err2 := a.Delete(id, timeout)
-		if err2 != nil {
-			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
-			return "", fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
-		}
-		log.Printf("[INFO] Successfully cleaned up pipeline %s", id)
-		return "", err
-	}
-	return id, nil
-}
-
-func adjustForceSendFields(s *PipelineSpec) {
-	for i := range s.Clusters {
-		cluster := &s.Clusters[i]
+func adjustForceSendFields(clusterList *[]pipelines.PipelineCluster) {
+	for i := range *clusterList {
+		cluster := &((*clusterList)[i])
 		// TF Go SDK doesn't differentiate between the default and not set values.
 		// If nothing is specified, DLT creates a cluster with enhanced autoscaling
 		// from 1 to 5 nodes, which is different than sending a request for zero workers.
@@ -226,77 +35,85 @@ func adjustForceSendFields(s *PipelineSpec) {
 	}
 }
 
-func (a PipelinesAPI) Read(id string) (p PipelineInfo, err error) {
-	err = a.client.Get(a.ctx, "/pipelines/"+id, nil, &p)
-	return
-}
+func Create(w *databricks.WorkspaceClient, ctx context.Context, d *schema.ResourceData, timeout time.Duration) error {
+	var createPipelineRequest createPipelineRequestStruct
+	common.DataToStructPointer(d, pipelineSchema, &createPipelineRequest)
+	adjustForceSendFields(&createPipelineRequest.Clusters)
 
-func (a PipelinesAPI) Update(id string, s PipelineSpec, timeout time.Duration) error {
-	adjustForceSendFields(&s)
-	err := a.client.Put(a.ctx, "/pipelines/"+id, s)
+	createdPipeline, err := w.Pipelines.Create(ctx, createPipelineRequest.CreatePipeline)
 	if err != nil {
 		return err
 	}
-	return a.waitForState(id, timeout, StateRunning)
+	id := createdPipeline.PipelineId
+	err = waitForState(w, ctx, id, timeout, pipelines.PipelineStateRunning)
+	if err != nil {
+		log.Printf("[INFO] Pipeline creation failed, attempting to clean up pipeline %s", id)
+		err2 := Delete(w, ctx, id, timeout)
+		if err2 != nil {
+			log.Printf("[WARN] Unable to delete pipeline %s; this resource needs to be manually cleaned up", id)
+			return fmt.Errorf("multiple errors occurred when creating pipeline. Error while waiting for creation: \"%v\"; error while attempting to clean up failed pipeline: \"%v\"", err, err2)
+		}
+		log.Printf("[INFO] Successfully cleaned up pipeline %s", id)
+		return err
+	}
+	d.SetId(id)
+	return nil
 }
 
-func (a PipelinesAPI) Delete(id string, timeout time.Duration) error {
-	err := a.client.Delete(a.ctx, "/pipelines/"+id, map[string]string{})
+func Read(w *databricks.WorkspaceClient, ctx context.Context, id string) (*pipelines.GetPipelineResponse, error) {
+	return w.Pipelines.Get(ctx, pipelines.GetPipelineRequest{
+		PipelineId: id,
+	})
+}
+
+func Update(w *databricks.WorkspaceClient, ctx context.Context, d *schema.ResourceData, timeout time.Duration) error {
+	var updatePipelineRequest updatePipelineRequestStruct
+	common.DataToStructPointer(d, pipelineSchema, &updatePipelineRequest)
+	updatePipelineRequest.EditPipeline.PipelineId = d.Id()
+	adjustForceSendFields(&updatePipelineRequest.Clusters)
+
+	err := w.Pipelines.Update(ctx, updatePipelineRequest.EditPipeline)
 	if err != nil {
 		return err
 	}
-	return resource.RetryContext(a.ctx, timeout,
-		func() *resource.RetryError {
-			i, err := a.Read(id)
+	return waitForState(w, ctx, d.Id(), timeout, pipelines.PipelineStateRunning)
+}
+
+func Delete(w *databricks.WorkspaceClient, ctx context.Context, id string, timeout time.Duration) error {
+	err := w.Pipelines.Delete(ctx, pipelines.DeletePipelineRequest{
+		PipelineId: id,
+	})
+	if err != nil {
+		return err
+	}
+	return retry.RetryContext(ctx, timeout,
+		func() *retry.RetryError {
+			i, err := Read(w, ctx, id)
 			if err != nil {
 				if apierr.IsMissing(err) {
 					return nil
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
-			message := fmt.Sprintf("Pipeline %s is in state %s, not yet deleted", id, *i.State)
+			message := fmt.Sprintf("Pipeline %s is in state %s, not yet deleted", id, i.State)
 			log.Printf("[DEBUG] %s", message)
-			return resource.RetryableError(fmt.Errorf(message))
+			return retry.RetryableError(errors.New(message))
 		})
 }
 
-// List returns a list of the DLT pipelines. List could be filtered by name
-func (a PipelinesAPI) List(pageSize int, filter string) ([]PipelineStateInfo, error) {
-	payload := map[string]any{"max_results": pageSize}
-	if filter != "" {
-		payload["filter"] = filter
-	}
-	result := []PipelineStateInfo{}
-
-	for {
-		var resp PipelineListResponse
-		err := a.client.Get(a.ctx, "/pipelines", payload, &resp)
-		if err != nil {
-			return []PipelineStateInfo{}, err
-		}
-		result = append(result, resp.Statuses...)
-		if resp.NextPageToken == "" {
-			break
-		}
-		payload["page_token"] = resp.NextPageToken
-	}
-
-	return result, nil
-}
-
-func (a PipelinesAPI) waitForState(id string, timeout time.Duration, desiredState PipelineState) error {
-	return resource.RetryContext(a.ctx, timeout,
-		func() *resource.RetryError {
-			i, err := a.Read(id)
+func waitForState(w *databricks.WorkspaceClient, ctx context.Context, id string, timeout time.Duration, desiredState pipelines.PipelineState) error {
+	return retry.RetryContext(ctx, timeout,
+		func() *retry.RetryError {
+			i, err := Read(w, ctx, id)
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
-			state := *i.State
+			state := i.State
 			if state == desiredState {
 				return nil
 			}
-			if state == StateFailed {
-				return resource.NonRetryableError(fmt.Errorf("pipeline %s has failed", id))
+			if state == pipelines.PipelineStateFailed {
+				return retry.NonRetryableError(fmt.Errorf("pipeline %s has failed", id))
 			}
 			if !i.Spec.Continuous {
 				// continuous pipelines just need a non-FAILED check
@@ -304,8 +121,66 @@ func (a PipelinesAPI) waitForState(id string, timeout time.Duration, desiredStat
 			}
 			message := fmt.Sprintf("Pipeline %s is in state %s, not yet in state %s", id, state, desiredState)
 			log.Printf("[DEBUG] %s", message)
-			return resource.RetryableError(fmt.Errorf(message))
+			return retry.RetryableError(errors.New(message))
 		})
+}
+
+type createPipelineRequestStruct struct {
+	pipelines.CreatePipeline
+}
+
+var aliasMap = map[string]string{
+	"clusters":      "cluster",
+	"libraries":     "library",
+	"notifications": "notification",
+}
+
+func (createPipelineRequestStruct) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"pipelines.createPipelineRequestStruct": aliasMap,
+	}
+}
+
+func (createPipelineRequestStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	return s
+}
+
+type updatePipelineRequestStruct struct {
+	pipelines.EditPipeline
+}
+
+func (updatePipelineRequestStruct) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"pipelines.updatePipelineRequestStruct": aliasMap,
+	}
+}
+
+func (updatePipelineRequestStruct) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
+	return s
+}
+
+type Pipeline struct {
+	pipelines.PipelineSpec
+	AllowDuplicateNames  bool                                `json:"allow_duplicate_names,omitempty"`
+	Cause                string                              `json:"cause,omitempty"`
+	ClusterId            string                              `json:"cluster_id,omitempty"`
+	CreatorUserName      string                              `json:"creator_user_name,omitempty"`
+	Health               pipelines.GetPipelineResponseHealth `json:"health,omitempty"`
+	LastModified         int64                               `json:"last_modified,omitempty"`
+	LatestUpdates        []pipelines.UpdateStateInfo         `json:"latest_updates,omitempty"`
+	RunAsUserName        string                              `json:"run_as_user_name,omitempty"`
+	ExpectedLastModified int64                               `json:"expected_last_modified,omitempty"`
+	State                pipelines.PipelineState             `json:"state,omitempty"`
+	// Provides the URL to the pipeline in the Databricks UI.
+	URL string `json:"url,omitempty"`
+}
+
+func (Pipeline) Aliases() map[string]map[string]string {
+	return map[string]map[string]string{
+		"pipelines.Pipeline":     aliasMap,
+		"pipelines.PipelineSpec": aliasMap,
+	}
+
 }
 
 func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
@@ -319,72 +194,141 @@ func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
-func adjustPipelineResourceSchema(m map[string]*schema.Schema) map[string]*schema.Schema {
-	cluster, _ := m["cluster"].Elem.(*schema.Resource)
-	clustersSchema := cluster.Schema
-	clustersSchema["spark_conf"].DiffSuppressFunc = clusters.SparkConfDiffSuppressFunc
-	common.MustSchemaPath(clustersSchema,
-		"aws_attributes", "zone_id").DiffSuppressFunc = clusters.ZoneDiffSuppress
-	common.MustSchemaPath(clustersSchema, "autoscale", "mode").DiffSuppressFunc = common.EqualFoldDiffSuppress
+func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 
-	common.MustSchemaPath(clustersSchema, "init_scripts", "dbfs").Deprecated = clusters.DbfsDeprecationWarning
+	// ForceNew fields
+	s.SchemaPath("storage").SetForceNew()
+	s.SchemaPath("catalog").SetForceNew()
+	s.SchemaPath("gateway_definition", "connection_id").SetForceNew()
+	s.SchemaPath("gateway_definition", "gateway_storage_catalog").SetForceNew()
+	s.SchemaPath("gateway_definition", "gateway_storage_schema").SetForceNew()
+	s.SchemaPath("ingestion_definition", "connection_name").SetForceNew()
+	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
 
-	gcpAttributes, _ := clustersSchema["gcp_attributes"].Elem.(*schema.Resource)
-	gcpAttributesSchema := gcpAttributes.Schema
-	delete(gcpAttributesSchema, "use_preemptible_executors")
-	delete(gcpAttributesSchema, "boot_disk_size")
+	// Computed fields
+	s.SchemaPath("id").SetComputed()
+	s.SchemaPath("cluster", "node_type_id").SetComputed()
+	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()
+	s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
+	s.SchemaPath("url").SetComputed()
 
-	m["library"].MinItems = 1
-	m["url"] = &schema.Schema{
-		Type:     schema.TypeString,
-		Computed: true,
-	}
-	m["channel"].ValidateFunc = validation.StringInSlice([]string{"current", "preview"}, true)
-	m["edition"].ValidateFunc = validation.StringInSlice([]string{"pro", "core", "advanced"}, true)
-	m["edition"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+	s.SchemaPath("state").SetComputed()
+	s.SchemaPath("latest_updates").SetComputed()
+	s.SchemaPath("last_modified").SetComputed()
+	s.SchemaPath("health").SetComputed()
+	s.SchemaPath("cause").SetComputed()
+	s.SchemaPath("cluster_id").SetComputed()
+	s.SchemaPath("creator_user_name").SetComputed()
+	s.SchemaPath("run_as_user_name").SetComputed()
 
-	m["storage"].DiffSuppressFunc = suppressStorageDiff
-	m["storage"].ConflictsWith = []string{"catalog"}
-	m["catalog"].ConflictsWith = []string{"storage"}
+	// SuppressDiff fields
+	s.SchemaPath("edition").SetSuppressDiff()
+	s.SchemaPath("channel").SetSuppressDiff()
+	s.SchemaPath("cluster", "spark_conf").SetCustomSuppressDiff(clusters.SparkConfDiffSuppressFunc)
+	s.SchemaPath("cluster", "aws_attributes", "zone_id").SetCustomSuppressDiff(clusters.ZoneDiffSuppress)
+	s.SchemaPath("cluster", "autoscale", "mode").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+	s.SchemaPath("edition").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+	s.SchemaPath("storage").SetCustomSuppressDiff(suppressStorageDiff)
 
-	return m
+	// As of 6th Nov 2024, the DLT API only normalizes the catalog name when creating
+	// a pipeline. So we only ignore the equal fold diff for the catalog name and not other
+	// UC resources like target, schema or ingestion_definition.connection_name.
+	s.SchemaPath("catalog").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+
+	// Deprecated fields
+	s.SchemaPath("cluster", "init_scripts", "dbfs").SetDeprecated(clusters.DbfsDeprecationWarning)
+	s.SchemaPath("library", "whl").SetDeprecated("The 'whl' field is deprecated")
+
+	// Delete fields
+	s.SchemaPath("cluster", "gcp_attributes").RemoveField("use_preemptible_executors")
+	s.SchemaPath("cluster", "gcp_attributes").RemoveField("boot_disk_size")
+
+	// Default values
+	s.SchemaPath("edition").SetDefault("ADVANCED")
+	s.SchemaPath("channel").SetDefault("CURRENT")
+
+	// ConflictsWith fields
+	s.SchemaPath("storage").SetConflictsWith([]string{"catalog"})
+	s.SchemaPath("catalog").SetConflictsWith([]string{"storage"})
+	s.SchemaPath("ingestion_definition", "connection_name").SetConflictsWith([]string{"ingestion_definition.0.ingestion_gateway_id"})
+	s.SchemaPath("target").SetConflictsWith([]string{"schema"})
+	s.SchemaPath("schema").SetConflictsWith([]string{"target"})
+
+	// MinItems fields
+	s.SchemaPath("library").SetMinItems(1)
+	s.SchemaPath("notification", "email_recipients").SetMinItems(1)
+	s.SchemaPath("notification", "alerts").SetMinItems(1)
+
+	// MaxItems fields
+	s.SchemaPath("cluster", "ssh_public_keys").SetMaxItems(10)
+	s.SchemaPath("cluster", "init_scripts").SetMaxItems(10)
+
+	// ValidateFunc fields
+	s.SchemaPath("channel").SetValidateFunc(validation.StringInSlice([]string{"current", "preview"}, true))
+	s.SchemaPath("edition").SetValidateFunc(validation.StringInSlice([]string{"pro", "core", "advanced"}, true))
+
+	// RequiredWith fields
+	s.SchemaPath("gateway_definition").SetRequiredWith([]string{"gateway_definition.0.gateway_storage_name", "gateway_definition.0.gateway_storage_catalog", "gateway_definition.0.gateway_storage_schema"})
+	s.SchemaPath("ingestion_definition").SetRequiredWith([]string{"ingestion_definition.0.objects"})
+
+	return s
 }
 
-// ResourcePipeline defines the Terraform resource for pipelines.
+var pipelineSchema = common.StructToSchema(Pipeline{}, nil)
+
 func ResourcePipeline() common.Resource {
-	var pipelineSchema = common.StructToSchema(PipelineSpec{}, adjustPipelineResourceSchema)
 	return common.Resource{
 		Schema: pipelineSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var s PipelineSpec
-			common.DataToStructPointer(d, pipelineSchema, &s)
-			api := NewPipelinesAPI(ctx, c)
-			id, err := api.Create(s, d.Timeout(schema.TimeoutCreate))
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			d.SetId(id)
-			d.Set("url", c.FormatURL("#joblist/pipelines/", d.Id()))
-			return nil
+			return Create(w, ctx, d, d.Timeout(schema.TimeoutCreate))
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			i, err := NewPipelinesAPI(ctx, c).Read(d.Id())
+			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err
 			}
-			if i.Spec == nil {
-				return fmt.Errorf("pipeline spec is nil for '%v'", i.PipelineID)
+			readPipeline, err := Read(w, ctx, d.Id())
+
+			if err != nil {
+				return err
 			}
-			return common.StructToData(*i.Spec, pipelineSchema, d)
+			if readPipeline.Spec == nil {
+				return fmt.Errorf("pipeline spec is nil for '%v'", readPipeline.PipelineId)
+			}
+			p := Pipeline{
+				PipelineSpec:    *readPipeline.Spec,
+				Cause:           readPipeline.Cause,
+				ClusterId:       readPipeline.ClusterId,
+				CreatorUserName: readPipeline.CreatorUserName,
+				Health:          readPipeline.Health,
+				LastModified:    readPipeline.LastModified,
+				LatestUpdates:   readPipeline.LatestUpdates,
+				RunAsUserName:   readPipeline.RunAsUserName,
+				State:           readPipeline.State,
+				// Provides the URL to the pipeline in the Databricks UI.
+				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
+			}
+			return common.StructToData(p, pipelineSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var s PipelineSpec
-			common.DataToStructPointer(d, pipelineSchema, &s)
-			return NewPipelinesAPI(ctx, c).Update(d.Id(), s, d.Timeout(schema.TimeoutUpdate))
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return Update(w, ctx, d, d.Timeout(schema.TimeoutUpdate))
+
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			api := NewPipelinesAPI(ctx, c)
-			return api.Delete(d.Id(), d.Timeout(schema.TimeoutDelete))
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			return Delete(w, ctx, d.Id(), d.Timeout(schema.TimeoutDelete))
+
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),

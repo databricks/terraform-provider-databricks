@@ -3,14 +3,13 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/qa/lock"
 	"github.com/databricks/databricks-sdk-go/qa/lock/core"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,8 +37,8 @@ resource "databricks_sql_global_config" "this" {
 }
 
 func TestAccSQLGlobalConfig(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	workspaceLevel(t, step{
+	loadWorkspaceEnv(t)
+	WorkspaceLevel(t, Step{
 		PreConfig: func() {
 			ctx := context.Background()
 			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
@@ -50,8 +49,8 @@ func TestAccSQLGlobalConfig(t *testing.T) {
 }
 
 func TestAccSQLGlobalConfigServerless(t *testing.T) {
-	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if strings.Contains(os.Getenv("CLOUD_ENV"), "gcp") {
+	loadWorkspaceEnv(t)
+	if isGcp(t) {
 		skipf(t)("GCP does not support serverless compute")
 	}
 
@@ -65,7 +64,7 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 		}
 	}
 
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		PreConfig: func() {
 			ctx := context.Background()
 			_, err := lock.Acquire(ctx, getSqlGlobalConfigLockable(t), lock.InTest(t))
@@ -73,10 +72,10 @@ func TestAccSQLGlobalConfigServerless(t *testing.T) {
 		},
 		Template: makeSqlGlobalConfig("enable_serverless_compute = true"),
 		Check:    checkServerlessEnabled(true),
-	}, step{
+	}, Step{
 		Template: makeSqlGlobalConfig(""),
 		Check:    checkServerlessEnabled(true),
-	}, step{
+	}, Step{
 		Template: makeSqlGlobalConfig("enable_serverless_compute = false"),
 		Check:    checkServerlessEnabled(false),
 	})

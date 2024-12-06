@@ -1,10 +1,9 @@
 package acceptance
 
 import (
-	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,20 +22,19 @@ func checkCurrentConfig(t *testing.T, cloudType string, isAccount string) func(s
 }
 
 func TestAccDataCurrentConfig(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	switch cloudEnv {
-	case "aws":
-		workspaceLevel(t, step{
+	loadWorkspaceEnv(t)
+	if isAws(t) {
+		WorkspaceLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "aws", "false"),
 		})
-	case "azure":
-		workspaceLevel(t, step{
+	} else if isAzure(t) {
+		WorkspaceLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "azure", "false"),
 		})
-	case "gcp":
-		workspaceLevel(t, step{
+	} else if isGcp(t) {
+		WorkspaceLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "gcp", "false"),
 		})
@@ -44,20 +42,19 @@ func TestAccDataCurrentConfig(t *testing.T) {
 }
 
 func TestMwsAccDataCurrentConfig(t *testing.T) {
-	cloudEnv := os.Getenv("CLOUD_ENV")
-	switch cloudEnv {
-	case "MWS":
-		accountLevel(t, step{
+	loadAccountEnv(t)
+	if isAws(t) {
+		AccountLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "aws", "true"),
 		})
-	case "azure-ucacct":
-		accountLevel(t, step{
+	} else if isAzure(t) {
+		AccountLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "azure", "true"),
 		})
-	case "gcp-accounts":
-		accountLevel(t, step{
+	} else if isGcp(t) {
+		AccountLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "gcp", "true"),
 		})

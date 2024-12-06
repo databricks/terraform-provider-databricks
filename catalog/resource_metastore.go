@@ -55,6 +55,7 @@ func ResourceMetastore() common.Resource {
 				}
 				return false
 			}
+			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			return m
 		})
 
@@ -66,15 +67,15 @@ func ResourceMetastore() common.Resource {
 			common.DataToStructPointer(d, s, &create)
 			common.DataToStructPointer(d, s, &update)
 			updateForceSendFields(&update)
+			emptyRequest, err := common.IsRequestEmpty(update)
+			if err != nil {
+				return err
+			}
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				mi, err := acc.Metastores.Create(ctx,
 					catalog.AccountsCreateMetastore{
 						MetastoreInfo: &create,
 					})
-				if err != nil {
-					return err
-				}
-				emptyRequest, err := common.IsRequestEmpty(update)
 				if err != nil {
 					return err
 				}
@@ -96,6 +97,9 @@ func ResourceMetastore() common.Resource {
 					return err
 				}
 				d.SetId(mi.MetastoreId)
+				if emptyRequest {
+					return nil
+				}
 				update.Id = mi.MetastoreId
 				_, err = w.Metastores.Update(ctx, update)
 				if err != nil {

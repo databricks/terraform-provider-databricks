@@ -32,7 +32,7 @@ func DataSourceGroup() common.Resource {
 		s["display_name"].ValidateFunc = validation.StringIsNotEmpty
 		s["recursive"].Default = true
 		s["members"].Deprecated = "Please use `users`, `service_principals`, and `child_groups` instead"
-		addEntitlementsToSchema(&s)
+		addEntitlementsToSchema(s)
 		return s
 	})
 

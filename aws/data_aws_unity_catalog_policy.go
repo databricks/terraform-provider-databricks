@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,6 +15,7 @@ import (
 func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
 	bucket := d.Get("bucket_name").(string)
 	awsAccountId := d.Get("aws_account_id").(string)
+	awsPartition := d.Get("aws_partition").(string)
 	roleName := d.Get("role_name").(string)
 	policy := awsIamPolicy{
 		Version: "2012-10-17",
@@ -28,8 +30,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 					"s3:GetBucketLocation",
 				},
 				Resources: []string{
-					fmt.Sprintf("arn:aws:s3:::%s/*", bucket),
-					fmt.Sprintf("arn:aws:s3:::%s", bucket),
+					fmt.Sprintf("arn:%s:s3:::%s/*", awsPartition, bucket),
+					fmt.Sprintf("arn:%s:s3:::%s", awsPartition, bucket),
 				},
 			},
 			{
@@ -38,12 +40,16 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 					"sts:AssumeRole",
 				},
 				Resources: []string{
-					fmt.Sprintf("arn:aws:iam::%s:role/%s", awsAccountId, roleName),
+					fmt.Sprintf("arn:%s:iam::%s:role/%s", awsPartition, awsAccountId, roleName),
 				},
 			},
 		},
 	}
 	if kmsKey, ok := d.GetOk("kms_name"); ok {
+		kmsArn := fmt.Sprintf("arn:%s:kms:%s", awsPartition, kmsKey)
+		if strings.HasPrefix(kmsKey.(string), fmt.Sprintf("arn:%s", awsPartition)) {
+			kmsArn = kmsKey.(string)
+		}
 		policy.Statements = append(policy.Statements, &awsIamPolicyStatement{
 			Effect: "Allow",
 			Actions: []string{
@@ -51,9 +57,7 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 				"kms:Encrypt",
 				"kms:GenerateDataKey*",
 			},
-			Resources: []string{
-				fmt.Sprintf("arn:aws:kms:%s", kmsKey),
-			},
+			Resources: []string{kmsArn},
 		})
 	}
 	policyJSON, err := json.MarshalIndent(policy, "", "  ")
@@ -73,9 +77,6 @@ func validateSchema() map[string]*schema.Schema {
 		"kms_name": {
 			Type:     schema.TypeString,
 			Optional: true,
-			ValidateFunc: validation.StringMatch(
-				regexp.MustCompile(`^[0-9a-zA-Z/_-]+$`),
-				"must contain only alphanumeric, hyphens, forward slashes, and underscores characters"),
 		},
 		"bucket_name": {
 			Type:     schema.TypeString,
@@ -91,6 +92,12 @@ func validateSchema() map[string]*schema.Schema {
 		"aws_account_id": {
 			Type:     schema.TypeString,
 			Required: true,
+		},
+		"aws_partition": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringInSlice(AwsPartitions, false),
+			Default:      "aws",
 		},
 		"json": {
 			Type:     schema.TypeString,

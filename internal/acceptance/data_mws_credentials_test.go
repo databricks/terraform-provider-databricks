@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccDataSourceMwsCredentials(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		data "databricks_mws_credentials" "this" {
 		}`,

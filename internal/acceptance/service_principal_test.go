@@ -3,12 +3,12 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"os"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const azureSpn = `resource "databricks_service_principal" "this" {
@@ -22,36 +22,34 @@ const awsSpn = `resource "databricks_service_principal" "this" {
 }`
 
 func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
-	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
-	workspaceLevel(t, step{
-		Template: `
-			resource "databricks_service_principal" "a" {
-				application_id = "{var.RANDOM_UUID}"
-				force_delete_home_dir = true
-			}`,
+	loadWorkspaceEnv(t)
+	if !isAzure(t) {
+		skipf(t)("Test only valid for Azure")
+	}
+	uuid := createUuid()
+	template := `
+	resource "databricks_service_principal" "a" {
+		application_id = "` + uuid + `"
+		force_delete_home_dir = true
+	}`
+	var spId string
+	WorkspaceLevel(t, Step{
+		Template: template,
 		Check: func(s *terraform.State) error {
-			appId := s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
-			os.Setenv("application_id_a", appId)
+			spId = s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
 			return nil
 		},
-	}, step{
-		Template: `
-			resource "databricks_service_principal" "b" {
-				application_id = "{var.RANDOM_UUID}"
-			}
-			`,
+	}, Step{
+		Template: template,
+		Destroy:  true,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
 			if err != nil {
 				return err
 			}
 			ctx := context.Background()
-			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", os.Getenv("application_id_a")))
-			os.Remove("application_id_a")
-			if err != nil {
-				if apierr.IsMissing(err) {
-					return nil
-				}
+			_, err = w.Workspace.GetStatusByPath(ctx, fmt.Sprintf("/Users/%v", spId))
+			if err != nil && !apierr.IsMissing(err) {
 				return err
 			}
 			return nil
@@ -60,24 +58,26 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 }
 
 func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
-	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
+	loadWorkspaceEnv(t)
+	if !isAzure(t) {
+		skipf(t)("Test only valid for Azure")
+	}
+	uuid := createUuid()
+	template := `
+	resource "databricks_service_principal" "a" {
+		application_id = "` + uuid + `"
+		force_delete_home_dir = false 
+	}`
 	var appId string
-	workspaceLevel(t, step{
-		Template: `
-			resource "databricks_service_principal" "a" {
-				application_id = "{var.RANDOM_UUID}"
-				force_delete_home_dir = false 
-			}`,
+	WorkspaceLevel(t, Step{
+		Template: template,
 		Check: func(s *terraform.State) error {
 			appId = s.RootModule().Resources["databricks_service_principal.a"].Primary.Attributes["application_id"]
 			return provisionHomeFolder(context.Background(), s, "databricks_service_principal.a", appId)
 		},
-	}, step{
-		Template: `
-			resource "databricks_service_principal" "b" {
-				application_id = "{var.RANDOM_UUID}"
-			}
-			`,
+	}, Step{
+		Template: template,
+		Destroy:  true,
 		Check: func(s *terraform.State) error {
 			w, err := databricks.NewWorkspaceClient()
 			if err != nil {
@@ -92,28 +92,40 @@ func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 
 func TestMwsAccServicePrincipalResourceOnAzure(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
-	accountLevel(t, step{
+	azureSpnRenamed := strings.ReplaceAll(azureSpn, `"SPN `, `"SPN Renamed `)
+	AccountLevel(t, Step{
 		Template: azureSpn,
+	}, Step{
+		Template: azureSpnRenamed,
 	})
 }
 
 func TestAccServicePrincipalResourceOnAzure(t *testing.T) {
 	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
-	workspaceLevel(t, step{
+	azureSpnRenamed := strings.ReplaceAll(azureSpn, `"SPN `, `"SPN Renamed `)
+	WorkspaceLevel(t, Step{
 		Template: azureSpn,
+	}, Step{
+		Template: azureSpnRenamed,
 	})
 }
 
 func TestMwsAccServicePrincipalResourceOnAws(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_ROOT_BUCKET")
-	accountLevel(t, step{
+	awsSpnRenamed := strings.ReplaceAll(awsSpn, `"SPN `, `"SPN Renamed `)
+	AccountLevel(t, Step{
 		Template: awsSpn,
+	}, Step{
+		Template: awsSpnRenamed,
 	})
 }
 
 func TestAccServicePrincipalResourceOnAws(t *testing.T) {
 	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	workspaceLevel(t, step{
+	awsSpnRenamed := strings.ReplaceAll(awsSpn, `"SPN `, `"SPN Renamed `)
+	WorkspaceLevel(t, Step{
 		Template: awsSpn,
+	}, Step{
+		Template: awsSpnRenamed,
 	})
 }

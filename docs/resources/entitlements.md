@@ -5,7 +5,7 @@ subcategory: "Security"
 
 This resource allows you to set entitlements to existing [databricks_users](user.md), [databricks_group](group.md) or [databricks_service_principal](service_principal.md).
 
--> **Note** You must define entitlements of a principal using either `databricks_entitlements` or directly within one of [databricks_users](user.md), [databricks_group](group.md) or [databricks_service_principal](service_principal.md). Having entitlements defined in both resources will result in non-deterministic behaviour.
+-> You must define entitlements of a principal using either `databricks_entitlements` or directly within one of [databricks_users](user.md), [databricks_group](group.md) or [databricks_service_principal](service_principal.md). Having entitlements defined in both resources will result in non-deterministic behaviour.
 
 ## Example Usage
 

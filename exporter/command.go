@@ -41,10 +41,15 @@ func (ic *importContext) allServicesAndListing() (string, string) {
 			listing[ir.Service] = struct{}{}
 		}
 	}
+	// We need this to specify default listings of UC & Workspace objects...
+	for _, ir := range []string{"uc-schemas", "uc-models", "uc-tables", "uc-volumes",
+		"notebooks", "directories", "wsfiles"} {
+		listing[ir] = struct{}{}
+	}
 	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")
 }
 
-func (ic *importContext) interactivePrompts() {
+func (ic *importContext) interactivePrompts() string {
 	req, _ := http.NewRequest("GET", "/", nil)
 	for ic.Client.DatabricksClient.Config.Authenticate(req) != nil {
 		ic.Client.DatabricksClient.Config.Host = askFor("🔑 Databricks Workspace URL:")
@@ -66,20 +71,23 @@ func (ic *importContext) interactivePrompts() {
 		}
 	}
 
-	ic.listing = map[string]struct{}{}
 	keys := maps.Keys(services)
 	slices.Sort(keys)
+	enabledServices := map[string]struct{}{}
 	for _, service := range keys {
 		resources := services[service]
 		if !askFlag(fmt.Sprintf("✅ Generate for service `%s` (%s) and related resources?",
 			service, strings.Join(resources, ","))) {
 			continue
 		}
-		ic.listing[service] = struct{}{}
 		if service == "mounts" {
 			ic.mounts = true
 		}
+		enabledServices[service] = struct{}{}
 	}
+	keys = maps.Keys(enabledServices)
+	slices.Sort(keys)
+	return strings.Join(keys, ",")
 }
 
 // Run import according to flags
@@ -116,6 +124,7 @@ func Run(args ...string) error {
 	flags.Int64Var(&ic.lastActiveDays, "last-active-days", 3650,
 		"Items with older than activity specified won't be imported.")
 	flags.BoolVar(&ic.incremental, "incremental", false, "Incremental export of the data. Requires -updated-since parameter")
+	flags.BoolVar(&ic.exportSecrets, "export-secrets", false, "Generate terraform.tfvars with secrets")
 	flags.BoolVar(&ic.noFormat, "noformat", false, "Don't run `terraform fmt` on exported files")
 	flags.BoolVar(&ic.nativeImportSupported, "native-import", false, "Generate native import blocks (requires Terraform 1.5+)")
 	flags.StringVar(&ic.updatedSinceStr, "updated-since", "",
@@ -125,6 +134,8 @@ func Run(args ...string) error {
 	flags.BoolVar(&ic.mounts, "mounts", false, "List DBFS mount points.")
 	flags.BoolVar(&ic.generateDeclaration, "generateProviderDeclaration", true,
 		"Generate Databricks provider declaration.")
+	flags.BoolVar(&ic.filterDirectoriesDuringWorkspaceWalking, "filterDirectoriesDuringWorkspaceWalking", false,
+		"Apply filtering to directory names during workspace walking")
 	flags.StringVar(&ic.notebooksFormat, "notebooksFormat", "SOURCE",
 		"Format to export notebooks: SOURCE, DBC, JUPYTER. Default: SOURCE")
 	services, listing := ic.allServicesAndListing()
@@ -139,6 +150,12 @@ func Run(args ...string) error {
 	flags.StringVar(&ic.match, "match", "", "Match resource names during listing operation. "+
 		"This filter applies to all resources that are getting listed, so if you want to import "+
 		"all dependencies of just one cluster, specify -listing=compute")
+	flags.StringVar(&ic.matchRegexStr, "matchRegex", "", "Match resource names during listing operation against a regex. "+
+		"This filter applies to all resources that are getting listed, so if you want to import "+
+		"all dependencies of just one cluster, specify -listing=compute")
+	flags.StringVar(&ic.excludeRegexStr, "excludeRegex", "", "Exclude resource names matching regex during listing operation. "+
+		"This filter applies to all resources that are getting listed, so if you want to import "+
+		"all dependencies of just one cluster, specify -listing=compute")
 	prefix := ""
 	flags.StringVar(&prefix, "prefix", "", "Prefix that will be added to the name of all exported resources")
 	newArgs := args
@@ -150,7 +167,7 @@ func Run(args ...string) error {
 		return err
 	}
 	if !skipInteractive {
-		ic.interactivePrompts()
+		configuredListing = ic.interactivePrompts()
 	}
 	if len(prefix) > 0 {
 		ic.prefix = prefix + "_"

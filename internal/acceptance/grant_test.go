@@ -99,10 +99,12 @@ resource "databricks_grant" "some" {
 }`
 
 func TestUcAccGrant(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_ENG_GROUP}"),
-	}, step{
+	}, Step{
 		Template: strings.ReplaceAll(grantTemplate, "%s", "{env.TEST_DATA_SCI_GROUP}"),
+	}, Step{
+		Template: strings.ReplaceAll(strings.ReplaceAll(grantTemplate, "ALL_PRIVILEGES", "ALL PRIVILEGES"), "%s", "{env.TEST_DATA_ENG_GROUP}"),
 	})
 }
 
@@ -125,12 +127,12 @@ func grantTemplateForNamePermissionChange(suffix string, permission string) stri
 }
 
 func TestUcAccGrantForIdChange(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: grantTemplateForNamePermissionChange("-old", "ALL_PRIVILEGES"),
-	}, step{
+	}, Step{
 		Template: grantTemplateForNamePermissionChange("-new", "ALL_PRIVILEGES"),
-	}, step{
+	}, Step{
 		Template:    grantTemplateForNamePermissionChange("-fail", "abc"),
-		ExpectError: regexp.MustCompile(`cannot create grant: Privilege abc is not applicable to this entity`),
+		ExpectError: regexp.MustCompile(`cannot create grant: Privilege ABC is not applicable to this entity`),
 	})
 }

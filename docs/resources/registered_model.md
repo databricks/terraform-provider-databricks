@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_registered_model Resource
 
--> **Note** This resource could be only used with workspace-level provider!
+-> This resource can only be used with a workspace-level provider!
 
 This resource allows you to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
 
@@ -52,6 +52,5 @@ The following resources are often used in the same context:
 
 * [databricks_model_serving](model_serving.md) to serve this model on a Databricks serving endpoint.
 * [databricks_mlflow_experiment](mlflow_experiment.md) to manage [MLflow experiments](https://docs.databricks.com/data/data-sources/mlflow-experiment.html) in Databricks.
-* [databricks_table](tables.md) data to manage tables within Unity Catalog.
-* [databricks_schema](schemas.md) data to manage schemas within Unity Catalog.
-* [databricks_catalog](catalogs.md) data to manage catalogs within Unity Catalog.
+* [databricks_schema](schema.md) to manage schemas within Unity Catalog.
+* [databricks_catalog](catalog.md) to manage catalogs within Unity Catalog.

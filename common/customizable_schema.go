@@ -1,6 +1,11 @@
 package common
 
 import (
+	"fmt"
+	"log"
+	"slices"
+	"strings"
+
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,6 +15,32 @@ type CustomizableSchema struct {
 	Schema         *schema.Schema
 	path           []string
 	isSuppressDiff bool
+	context        schemaPathContext
+}
+
+func (s *CustomizableSchema) pathContainsMultipleItemsList() bool {
+	schemaPath := s.context.schemaPath
+	for _, scm := range schemaPath {
+		if scm.Type == schema.TypeList && scm.MaxItems != 1 {
+			return true
+		}
+	}
+	return false
+}
+
+// Used to get the prefix path for functions like ConflictsWith, by joining `path` in SchemaPathContext.
+func getPrefixedValue(path []string, value []string) []string {
+	var prefix string
+	if len(path) != 0 {
+		prefix = strings.Join(path, ".") + "."
+	} else {
+		prefix = ""
+	}
+	prefixedPaths := make([]string, len(value))
+	for i, item := range value {
+		prefixedPaths[i] = prefix + item
+	}
+	return prefixedPaths
 }
 
 func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *CustomizableSchema {
@@ -27,6 +58,22 @@ func CustomizeSchemaPath(s map[string]*schema.Schema, path ...string) *Customiza
 	return &CustomizableSchema{Schema: sch, path: path}
 }
 
+func (s *CustomizableSchema) SchemaPath(path ...string) *CustomizableSchema {
+	sch := MustSchemaPath(s.GetSchemaMap(), path...)
+	return &CustomizableSchema{Schema: sch, path: path, context: s.context}
+}
+
+func (s *CustomizableSchema) GetSchemaMap() map[string]*schema.Schema {
+	if s.Schema.Elem == nil {
+		panic("Elem of Schema field for CustomizableSchema is nil.")
+	}
+	schemaResource, ok := s.Schema.Elem.(*schema.Resource)
+	if !ok {
+		panic("Elem of Schema field for CustomizableSchema is not a *schema.Resource.")
+	}
+	return schemaResource.Schema
+}
+
 func (s *CustomizableSchema) SetOptional() *CustomizableSchema {
 	s.Schema.Optional = true
 	s.Schema.Required = false
@@ -35,6 +82,11 @@ func (s *CustomizableSchema) SetOptional() *CustomizableSchema {
 
 func (s *CustomizableSchema) SetComputed() *CustomizableSchema {
 	s.Schema.Computed = true
+	return s
+}
+
+func (s *CustomizableSchema) SetSliceSet() *CustomizableSchema {
+	s.Schema.Type = schema.TypeSet
 	return s
 }
 
@@ -82,6 +134,36 @@ func (s *CustomizableSchema) SetSuppressDiff() *CustomizableSchema {
 	return s
 }
 
+// SetSuppressDiffWithDefault suppresses the diff if the
+// new value (ie value from HCL config) is not set and
+// the old value (ie value from state / platform) is equal to the default value.
+//
+// Often Databricks HTTP APIs will return values for fields that were not set by
+// the author in their terraform configuration. This function allows us to suppress
+// the diff in these cases.
+func (s *CustomizableSchema) SetSuppressDiffWithDefault(dv any) *CustomizableSchema {
+	primitiveTypes := []schema.ValueType{schema.TypeBool, schema.TypeString, schema.TypeInt, schema.TypeFloat}
+	if !slices.Contains(primitiveTypes, s.Schema.Type) {
+		panic(fmt.Errorf("expected primitive type, got: %s", s.Schema.Type))
+	}
+
+	// Get zero value for the schema type
+	zero := fmt.Sprintf("%v", s.Schema.Type.Zero())
+
+	// Get string representation of the default value
+	sv := fmt.Sprintf("%v", dv)
+
+	// Suppress diff if the new value (ie value from HCL config) is not set and
+	// the old value (ie value from state / platform) is equal to the default value.
+	s.Schema.DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+		if new == zero && old == sv {
+			return true
+		}
+		return false
+	}
+	return s
+}
+
 func (s *CustomizableSchema) SetCustomSuppressDiff(suppressor func(k, old, new string, d *schema.ResourceData) bool) *CustomizableSchema {
 	s.Schema.DiffSuppressFunc = suppressor
 	return s
@@ -111,7 +193,11 @@ func (s *CustomizableSchema) SetConflictsWith(value []string) *CustomizableSchem
 	if len(value) == 0 {
 		panic("SetConflictsWith cannot take in an empty list")
 	}
-	s.Schema.ConflictsWith = value
+	if s.pathContainsMultipleItemsList() {
+		log.Printf("[DEBUG] ConflictsWith skipped for %v, path contains TypeList block with MaxItems not equal to 1", getPrefixedValue(s.context.path, value))
+		return s
+	}
+	s.Schema.ConflictsWith = getPrefixedValue(s.context.path, value)
 	return s
 }
 
@@ -119,7 +205,11 @@ func (s *CustomizableSchema) SetExactlyOneOf(value []string) *CustomizableSchema
 	if len(value) == 0 {
 		panic("SetExactlyOneOf cannot take in an empty list")
 	}
-	s.Schema.ExactlyOneOf = value
+	if s.pathContainsMultipleItemsList() {
+		log.Printf("[DEBUG] ExactlyOneOf skipped for %v, path contains TypeList block with MaxItems not equal to 1", getPrefixedValue(s.context.path, value))
+		return s
+	}
+	s.Schema.ExactlyOneOf = getPrefixedValue(s.context.path, value)
 	return s
 }
 
@@ -127,7 +217,11 @@ func (s *CustomizableSchema) SetAtLeastOneOf(value []string) *CustomizableSchema
 	if len(value) == 0 {
 		panic("SetAtLeastOneOf cannot take in an empty list")
 	}
-	s.Schema.AtLeastOneOf = value
+	if s.pathContainsMultipleItemsList() {
+		log.Printf("[DEBUG] AtLeastOneOf skipped for %v, path contains TypeList block with MaxItems not equal to 1", getPrefixedValue(s.context.path, value))
+		return s
+	}
+	s.Schema.AtLeastOneOf = getPrefixedValue(s.context.path, value)
 	return s
 }
 
@@ -135,7 +229,11 @@ func (s *CustomizableSchema) SetRequiredWith(value []string) *CustomizableSchema
 	if len(value) == 0 {
 		panic("SetRequiredWith cannot take in an empty list")
 	}
-	s.Schema.RequiredWith = value
+	if s.pathContainsMultipleItemsList() {
+		log.Printf("[DEBUG] SetRequiredWith skipped for %v, path contains TypeList block with MaxItems not equal to 1", getPrefixedValue(s.context.path, value))
+		return s
+	}
+	s.Schema.RequiredWith = getPrefixedValue(s.context.path, value)
 	return s
 }
 
@@ -155,17 +253,24 @@ func (s *CustomizableSchema) SetValidateDiagFunc(validate func(interface{}, cty.
 }
 
 func (s *CustomizableSchema) AddNewField(key string, newField *schema.Schema) *CustomizableSchema {
-	cv, ok := s.Schema.Elem.(*schema.Resource)
-	if !ok {
-		panic("Cannot add new field, target is not nested resource")
-	}
-	_, exists := cv.Schema[key]
+	scm := s.GetSchemaMap()
+	_, exists := scm[key]
 	if exists {
 		panic("Cannot add new field, " + key + " already exists in the schema")
 	}
-	cv.Schema[key] = newField
+	scm[key] = newField
 	if s.isSuppressDiff {
 		newField.DiffSuppressFunc = diffSuppressor(key, newField)
 	}
+	return s
+}
+
+func (s *CustomizableSchema) RemoveField(key string) *CustomizableSchema {
+	scm := s.GetSchemaMap()
+	_, exists := scm[key]
+	if !exists {
+		panic("Cannot remove new field, " + key + " does not exist in the schema")
+	}
+	delete(scm, key)
 	return s
 }

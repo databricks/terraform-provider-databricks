@@ -2,16 +2,27 @@ package acceptance
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"regexp"
 	"testing"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/tokens"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMwsAccWorkspaces(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_credentials" "this" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -65,7 +76,7 @@ func TestMwsAccWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_credentials" "this" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -125,7 +136,7 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 				return nil
 			}),
 	},
-		step{
+		Step{
 			Template: `
 		resource "databricks_mws_credentials" "this" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -188,7 +199,7 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 }
 
 func TestMwsAccGcpWorkspaces(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -207,7 +218,7 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 	t.Skip()
 	// FIXME: flaky with `Secondary IP range (pods, svc) is already in use by another GKE cluster`
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_networks" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -244,7 +255,7 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpPscWorkspaces(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: `
 		resource "databricks_mws_networks" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -286,5 +297,136 @@ func TestMwsAccGcpPscWorkspaces(t *testing.T) {
 				master_ip_range = "10.3.0.0/28"
 			}
 		}`,
+	})
+}
+
+func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
+	if !isAws(t) {
+		skipf(t)("TestMwsAccAwsChangeToServicePrincipal should only run on AWS")
+	}
+	workspaceTemplate := func(tokenBlock string) string {
+		return `
+		resource "databricks_mws_credentials" "this" {
+			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
+			credentials_name = "credentials-ws-{var.STICKY_RANDOM}"
+			role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
+		}
+		resource "databricks_mws_customer_managed_keys" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			aws_key_info {
+				key_arn   = "{env.TEST_MANAGED_KMS_KEY_ARN}"
+				key_alias = "{env.TEST_MANAGED_KMS_KEY_ALIAS}"
+			}
+			use_cases = ["MANAGED_SERVICES"]
+		}
+		resource "databricks_mws_storage_configurations" "this" {
+			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
+			storage_configuration_name = "storage-ws-{var.STICKY_RANDOM}"
+			bucket_name                = "{env.TEST_ROOT_BUCKET}"
+		}
+		resource "databricks_mws_networks" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "network-ws-{var.STICKY_RANDOM}"
+			vpc_id       = "{env.TEST_VPC_ID}"
+			subnet_ids   = [
+				"{env.TEST_SUBNET_PRIVATE}",
+				"{env.TEST_SUBNET_PRIVATE2}",
+			]
+			security_group_ids = [
+				"{env.TEST_SECURITY_GROUP}",
+			]
+		}
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "terra-{var.STICKY_RANDOM}"
+			aws_region      = "{env.AWS_REGION}"
+
+			network_id = databricks_mws_networks.this.network_id
+			credentials_id = databricks_mws_credentials.this.credentials_id
+			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
+			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+
+			custom_tags = {
+				"randomkey" = "randomvalue"
+			}
+
+			` + tokenBlock + `
+		}
+		`
+	}
+	servicePrincipal := `
+		resource "databricks_service_principal" "this" {
+		    display_name = "tf-new-sp-{var.STICKY_RANDOM}"
+			disable_as_user_deletion = false
+		}
+		resource "databricks_service_principal_role" "this" {
+		    service_principal_id = databricks_service_principal.this.id
+			role = "account_admin"
+		}
+		resource "databricks_service_principal_secret" "this" {
+		    service_principal_id = databricks_service_principal.this.id
+		}
+		`
+
+	var pr *schema.Provider
+	providerFactory := map[string]func() (tfprotov6.ProviderServer, error){
+		"databricks": func() (tfprotov6.ProviderServer, error) {
+			return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(pr))
+		},
+	}
+	AccountLevel(t, Step{
+		Template: workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
+		Check: func(s *terraform.State) error {
+			spId := s.RootModule().Resources["databricks_service_principal.this"].Primary.ID
+			spAppId := s.RootModule().Resources["databricks_service_principal.this"].Primary.Attributes["application_id"]
+			spSecret := s.RootModule().Resources["databricks_service_principal_secret.this"].Primary.Attributes["secret"]
+			pr = sdkv2.DatabricksProvider()
+			rd := schema.TestResourceDataRaw(t, pr.Schema, map[string]interface{}{
+				"client_id":     spAppId,
+				"client_secret": spSecret,
+			})
+			fmt.Printf("client_id: %s, client_secret: %s\n", spAppId, spSecret)
+			pr.ConfigureContextFunc = func(ctx context.Context, c *schema.ResourceData) (interface{}, diag.Diagnostics) {
+				return sdkv2.ConfigureDatabricksClient(ctx, rd)
+			}
+			logger.DefaultLogger = &logger.SimpleLogger{
+				Level: logger.LevelDebug,
+			}
+			// wait until SP exists
+			for i := 100; i >= 0; i-- {
+				a := databricks.Must(databricks.NewAccountClient(&databricks.Config{
+					ClientID:     spAppId,
+					ClientSecret: spSecret,
+				}))
+				_, err := a.ServicePrincipals.GetById(context.Background(), spId)
+				if err == nil {
+					break
+				}
+				if i == 0 {
+					return errors.New("service principal not found")
+				}
+				if errors.Is(err, databricks.ErrUnauthenticated) {
+					fmt.Println("waiting for SP to be ready (sleeping 5 seconds, trying ", i, " more times)")
+					time.Sleep(5 * time.Second)
+				}
+			}
+			return nil
+		},
+	}, Step{
+		// Tolerate existing token
+		Template:                 workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
+	}, Step{
+		// Allow the token to be removed
+		Template:                 workspaceTemplate(``) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
+	}, Step{
+		// Fail when adding the token back
+		Template:                 workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
+		ProtoV6ProviderFactories: providerFactory,
+		ExpectError:              regexp.MustCompile(`cannot create token: the principal used by Databricks \(client ID .*\) is not authorized to create a token in this workspace`),
+	}, Step{
+		// Use the original provider for a final step to clean up the newly created service principal
+		Template: workspaceTemplate(``) + servicePrincipal,
 	})
 }

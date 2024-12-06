@@ -4,45 +4,32 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // DataSourceDirectory ...
 func DataSourceDirectory() common.Resource {
-	s := map[string]*schema.Schema{
-		"path": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		"object_id": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			Computed: true,
-		},
-		"workspace_path": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
+	type Directory struct {
+		Id            string `json:"id,omitempty" tf:"computed"`
+		Path          string `json:"path"`
+		ObjectId      int64  `json:"object_id,omitempty" tf:"computed"`
+		WorkspacePath string `json:"workspace_path,omitempty" tf:"computed"`
 	}
-	return common.Resource{
-		Schema: s,
-		Read: func(ctx context.Context, d *schema.ResourceData, m *common.DatabricksClient) error {
-			notebooksAPI := NewNotebooksAPI(ctx, m)
-			path := d.Get("path").(string)
-			data, err := notebooksAPI.Read(path)
-			if err != nil {
-				return err
-			}
-			if data.ObjectType != Directory { // should we support Repos as well?
-				return fmt.Errorf("'%s' isn't a directory", path)
-			}
-			d.SetId(data.Path)
-			d.Set("object_id", data.ObjectID)
-			d.Set("path", path)
-			d.Set("workspace_path", "/Workspace"+data.Path)
-			return nil
-		},
-	}
+	return common.WorkspaceData(func(ctx context.Context, d *Directory, client *databricks.WorkspaceClient) error {
+		data, err := common.RetryOnTimeout(ctx, func(ctx context.Context) (*workspace.ObjectInfo, error) {
+			return client.Workspace.GetStatusByPath(ctx, d.Path)
+		})
+		if err != nil {
+			return err
+		}
+		if data.ObjectType != workspace.ObjectTypeDirectory {
+			return fmt.Errorf("'%s' isn't a directory", d.Path)
+		}
+		d.Id = data.Path
+		d.ObjectId = data.ObjectId
+		d.WorkspacePath = "/Workspace" + data.Path
+		return nil
+	})
 }

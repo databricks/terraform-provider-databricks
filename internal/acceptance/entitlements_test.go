@@ -1,97 +1,169 @@
 package acceptance
 
 import (
+	"context"
+	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestAccEntitlementResource(t *testing.T) {
-	var conf = `
-	resource "databricks_user" "first" {
-		user_name = "tf-eerste+{var.RANDOM}@example.com"
-		display_name = "Eerste {var.RANDOM}"
-		allow_cluster_create       = true
-		allow_instance_pool_create = true		
-	}
+type entitlement struct {
+	name  string
+	value bool
+}
 
-	resource "databricks_group" "second" {
-		display_name = "{var.RANDOM} group"
-		allow_cluster_create       = true
-		allow_instance_pool_create = true		
-	}
+func (e entitlement) String() string {
+	return fmt.Sprintf("%s = %t", e.name, e.value)
+}
 
-	resource "databricks_group" "third" {
-		display_name = "{var.RANDOM} group 2"
-	}	
-	
-	resource "databricks_entitlements" "first_entitlements" {
-		user_id                    = databricks_user.first.id
-		allow_cluster_create       = true
-		allow_instance_pool_create = true
-	}	
+func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitlements []entitlement) Step {
+	return func(entitlements []entitlement) Step {
+		entitlementsBuf := strings.Builder{}
+		for _, entitlement := range entitlements {
+			entitlementsBuf.WriteString(fmt.Sprintf("%s\n", entitlement.String()))
+		}
+		return Step{
+			Template: fmt.Sprintf(`
+			%s
+			resource "databricks_entitlements" "entitlements_users" {
+				%s
+				%s
+			}
+		`, r.dataSourceTemplate(), r.tfReference(), entitlementsBuf.String()),
+			Check: func(s *terraform.State) error {
+				remoteEntitlements, err := r.getEntitlements(context.Background())
+				assert.NoError(t, err)
+				receivedEntitlements := make([]string, 0, len(remoteEntitlements))
+				for _, entitlement := range remoteEntitlements {
+					receivedEntitlements = append(receivedEntitlements, entitlement.Value)
+				}
+				expectedEntitlements := make([]string, 0, len(entitlements))
+				for _, entitlement := range entitlements {
+					if entitlement.value {
+						expectedEntitlements = append(expectedEntitlements, strings.ReplaceAll(entitlement.name, "_", "-"))
+					}
+				}
+				assert.ElementsMatch(t, expectedEntitlements, receivedEntitlements)
+				return nil
+			},
+		}
 
-	resource "databricks_entitlements" "second_entitlements" {
-		group_id                   = databricks_group.second.id
-		allow_cluster_create       = true
-		allow_instance_pool_create = true
 	}
-	
-	resource "databricks_entitlements" "third_entitlements" {
-		group_id                   = databricks_group.third.id
-		allow_cluster_create       = false
-		allow_instance_pool_create = false
-		databricks_sql_access      = false
-		workspace_access           = false
-	}`
-	workspaceLevel(t, step{
-		Template: conf,
-		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttr("databricks_entitlements.first_entitlements", "allow_cluster_create", "true"),
-			resource.TestCheckResourceAttr("databricks_entitlements.first_entitlements", "allow_instance_pool_create", "true"),
-			resource.TestCheckResourceAttr("databricks_entitlements.second_entitlements", "allow_cluster_create", "true"),
-			resource.TestCheckResourceAttr("databricks_entitlements.second_entitlements", "allow_instance_pool_create", "true"),
-		),
-	}, step{
-		Template: conf,
+}
+
+func makeEntitlementsSteps(t *testing.T, r entitlementResource, entitlementsSteps [][]entitlement) []Step {
+	r.setDisplayName(RandomName("entitlements-"))
+	makeEntitlementsStep := entitlementsStepBuilder(t, r)
+	steps := make([]Step, len(entitlementsSteps))
+	for i, entitlements := range entitlementsSteps {
+		steps[i] = makeEntitlementsStep(entitlements)
+	}
+	steps[0].PreConfig = makePreconfig(t, r)
+	return steps
+}
+
+func makePreconfig(t *testing.T, r entitlementResource) func() {
+	logger.DefaultLogger = &logger.SimpleLogger{
+		Level: logger.LevelDebug,
+	}
+	return func() {
+		w := databricks.Must(databricks.NewWorkspaceClient())
+		r.setWorkspaceClient(w)
+		ctx := context.Background()
+		err := r.create(ctx)
+		assert.NoError(t, err)
+		t.Cleanup(func() {
+			r.cleanUp(ctx)
+		})
+	}
+}
+
+func entitlementsTest(t *testing.T, f func(*testing.T, entitlementResource)) {
+	loadWorkspaceEnv(t)
+	sp := &servicePrincipalResource{}
+	if isAzure(t) {
+		// A long-lived application is used in Azure.
+		sp.applicationId = GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+		sp.cleanup = false
+	}
+	resources := []entitlementResource{
+		&groupResource{},
+		&userResource{},
+		sp,
+	}
+	for _, r := range resources {
+		t.Run(r.resourceType(), func(t *testing.T) {
+			f(t, r)
+		})
+	}
+}
+
+func TestAccEntitlementsAddToEmpty(t *testing.T) {
+	entitlementsTest(t, func(t *testing.T, r entitlementResource) {
+		steps := makeEntitlementsSteps(t, r, [][]entitlement{
+			{},
+			{
+				{"allow_cluster_create", true},
+				{"allow_instance_pool_create", true},
+				{"workspace_access", true},
+				{"databricks_sql_access", true},
+			},
+		})
+		WorkspaceLevel(t, steps...)
 	})
 }
 
-func TestAccServicePrincipalEntitlementsResourceOnAzure(t *testing.T) {
-	// this test should run only on Azure, so just expect SPN config to be there or fail
-	// TODO: change to SDK so that we can be explicit if we want to fetch entitlements
-	GetEnvOrSkipTest(t, "ARM_CLIENT_ID")
-	workspaceLevel(t, step{
-		Template: `resource "databricks_service_principal" "this" {
-			application_id = "{var.RANDOM_UUID}"
-			allow_cluster_create       = true
-			allow_instance_pool_create = true
-			display_name = "SPN {var.RANDOM}"
-			force = true			
-		}
-
-		resource "databricks_entitlements" "service_principal" {
-			service_principal_id       = databricks_service_principal.this.id
-			allow_cluster_create       = true
-			allow_instance_pool_create = true
-		}`,
+func TestAccEntitlementsSetExplicitlyToFalse(t *testing.T) {
+	entitlementsTest(t, func(t *testing.T, r entitlementResource) {
+		steps := makeEntitlementsSteps(t, r, [][]entitlement{
+			{
+				{"allow_cluster_create", false},
+				{"allow_instance_pool_create", false},
+				{"workspace_access", false},
+				{"databricks_sql_access", false},
+			},
+			{},
+			{
+				{"allow_cluster_create", false},
+				{"allow_instance_pool_create", false},
+				{"workspace_access", false},
+				{"databricks_sql_access", false},
+			},
+		})
+		WorkspaceLevel(t, steps...)
 	})
 }
 
-func TestAccServicePrincipalEntitlementsResourceOnAws(t *testing.T) {
-	GetEnvOrSkipTest(t, "TEST_EC2_INSTANCE_PROFILE")
-	workspaceLevel(t, step{
-		Template: `
-		resource "databricks_service_principal" "this" {
-			display_name = "SPN {var.RANDOM}"
-			allow_cluster_create       = true
-			allow_instance_pool_create = true				
-		}
+func TestAccEntitlementsRemoveExisting(t *testing.T) {
+	entitlementsTest(t, func(t *testing.T, r entitlementResource) {
+		steps := makeEntitlementsSteps(t, r, [][]entitlement{
+			{
+				{"allow_cluster_create", true},
+				{"allow_instance_pool_create", true},
+				{"workspace_access", true},
+				{"databricks_sql_access", true},
+			},
+			{},
+		})
+		WorkspaceLevel(t, steps...)
+	})
+}
 
-		resource "databricks_entitlements" "service_principal" {
-			service_principal_id       = databricks_service_principal.this.id
-			allow_cluster_create       = true
-			allow_instance_pool_create = true
-		}`,
+func TestAccEntitlementsSomeTrueSomeFalse(t *testing.T) {
+	entitlementsTest(t, func(t *testing.T, r entitlementResource) {
+		steps := makeEntitlementsSteps(t, r, [][]entitlement{
+			{
+				{"allow_cluster_create", false},
+				{"allow_instance_pool_create", false},
+				{"workspace_access", true},
+				{"databricks_sql_access", true},
+			},
+		})
+		WorkspaceLevel(t, steps...)
 	})
 }

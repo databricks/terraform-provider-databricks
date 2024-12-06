@@ -16,17 +16,18 @@ import (
 
 // Resource aims to simplify things like error & deleted entities handling
 type Resource struct {
-	Create             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Read               func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Update             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	Delete             func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
-	CustomizeDiff      func(ctx context.Context, d *schema.ResourceDiff) error
-	StateUpgraders     []schema.StateUpgrader
-	Schema             map[string]*schema.Schema
-	SchemaVersion      int
-	Timeouts           *schema.ResourceTimeout
-	DeprecationMessage string
-	Importer           *schema.ResourceImporter
+	Create                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Read                            func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Update                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	Delete                          func(ctx context.Context, d *schema.ResourceData, c *DatabricksClient) error
+	CustomizeDiff                   func(ctx context.Context, d *schema.ResourceDiff) error
+	StateUpgraders                  []schema.StateUpgrader
+	Schema                          map[string]*schema.Schema
+	SchemaVersion                   int
+	Timeouts                        *schema.ResourceTimeout
+	DeprecationMessage              string
+	Importer                        *schema.ResourceImporter
+	CanSkipReadAfterCreateAndUpdate func(d *schema.ResourceData) bool
 }
 
 func nicerError(ctx context.Context, err error, action string) error {
@@ -93,6 +94,9 @@ func (r Resource) ToResource() *schema.Resource {
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
 				return diag.FromErr(err)
+			}
+			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
+				return nil
 			}
 			if err := recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
@@ -162,6 +166,9 @@ func (r Resource) ToResource() *schema.Resource {
 				err = nicerError(ctx, err, "create")
 				return diag.FromErr(err)
 			}
+			if r.CanSkipReadAfterCreateAndUpdate != nil && r.CanSkipReadAfterCreateAndUpdate(d) {
+				return nil
+			}
 			if err = recoverable(r.Read)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "read")
 				return diag.FromErr(err)
@@ -173,7 +180,6 @@ func (r Resource) ToResource() *schema.Resource {
 		resource.DeleteContext = func(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 			err := recoverable(r.Delete)(ctx, d, m.(*DatabricksClient))
 			if apierr.IsMissing(err) {
-				// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 				log.Printf("[INFO] %s[id=%s] is removed on backend",
 					ResourceName.GetOrUnknown(ctx), d.Id())
 				d.SetId("")
@@ -251,20 +257,20 @@ func DataResource(sc any, read func(context.Context, any, *DatabricksClient) err
 func WorkspaceData[T any](read func(context.Context, *T, *databricks.WorkspaceClient) error) Resource {
 	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
 		return read(ctx, t, wc)
-	}, false)
+	}, false, NoCustomize)
 }
 
 // WorkspaceDataWithParams defines a data source that can be used to read data from the workspace API.
 // It differs from WorkspaceData in that it separates the definition of the computed fields (the resource type)
 // from the definition of the user-supplied parameters.
 //
-// The first type parameter is the type of the resource. This can be a type directly from the SDK, or a custom
-// type defined in the provider that embeds the SDK type.
-//
-// The second type parameter is the type representing parameters that a user may provide to the data source. These
+// The first type parameter is the type representing parameters that a user may provide to the data source. These
 // are the attributes that the user can specify in the data source configuration, but are not part of the resource
 // type. If there are no extra attributes, this should be `struct{}`. If there are any fields with the same JSON
 // name as fields in the resource type, these fields will override the values from the resource type.
+//
+// The second type parameter is the type of the resource. This can be a type directly from the SDK, or a custom
+// type defined in the provider that embeds the SDK type.
 //
 // The single argument is a function that will be called to read the data from the workspace API, returning the
 // value of the resource type. The function should return an error if the data cannot be read or the resource cannot
@@ -293,7 +299,21 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 		}
 		*s = *res
 		return nil
-	}, true)
+	}, true, NoCustomize)
+}
+
+// WorkspaceDataWithCustomizeFunc defines a data source that can be used to read data from the workspace API.
+// It differs from WorkspaceData in that it allows the schema to be customized further using a
+// customizeSchemaFunc function.
+//
+// The additional argument is a function that will be called to customize the schema of the data source.
+
+func WorkspaceDataWithCustomizeFunc[T any](
+	read func(context.Context, *T, *databricks.WorkspaceClient) error,
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
+	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
+		return read(ctx, t, wc)
+	}, false, customizeSchemaFunc)
 }
 
 // AccountData is a generic way to define account data resources in Terraform provider.
@@ -310,10 +330,10 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 func AccountData[T any](read func(context.Context, *T, *databricks.AccountClient) error) Resource {
 	return genericDatabricksData((*DatabricksClient).AccountClient, func(ctx context.Context, s struct{}, t *T, ac *databricks.AccountClient) error {
 		return read(ctx, t, ac)
-	}, false)
+	}, false, NoCustomize)
 }
 
-// AccountDataWithParams defines a data source that can be used to read data from the workspace API.
+// AccountDataWithParams defines a data source that can be used to read data from the account API.
 // It differs from AccountData in that it allows extra attributes to be provided as a separate argument,
 // so the original type used to define the resource can also be used to define the data source.
 //
@@ -352,7 +372,7 @@ func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.A
 		}
 		*s = *res
 		return nil
-	}, true)
+	}, true, NoCustomize)
 }
 
 // genericDatabricksData is generic and common way to define both account and workspace data and calls their respective clients.
@@ -363,33 +383,36 @@ func AccountDataWithParams[T, P any](read func(context.Context, P, *databricks.A
 func genericDatabricksData[T, P, C any](
 	getClient func(*DatabricksClient) (C, error),
 	read func(context.Context, P, *T, C) error,
-	hasOther bool) Resource {
+	hasOther bool,
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
 	var dummy T
 	var other P
-	otherFields := StructToSchema(other, NoCustomize)
-	s := StructToSchema(dummy, func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		// For WorkspaceData and AccountData, a single data type is used to represent all of the fields of
-		// the resource, so its configuration is correct. For the *WithParams methods, the SdkType parameter
-		// is copied directly from the resource definition, which means that all fields from that type are
-		// computed and optional, and the fields from OtherFields are overlaid on top of the schema generated
-		// by SdkType.
-		if hasOther {
-			for k := range m {
-				m[k].Computed = true
-				m[k].Required = false
-				m[k].Optional = true
-			}
-			for k, v := range otherFields {
-				m[k] = v
-			}
+	otherFields := StructToSchema(other, nil)
+
+	s := StructToSchema(dummy, nil)
+	// For WorkspaceData and AccountData, a single data type is used to represent all of the fields of
+	// the resource, so its configuration is correct. For the *WithParams methods, the SdkType parameter
+	// is copied directly from the resource definition, which means that all fields from that type are
+	// computed and optional, and the fields from OtherFields are overlaid on top of the schema generated
+	// by SdkType.
+	if hasOther {
+		for k := range s {
+			s[k].Computed = true
+			s[k].Required = false
+			s[k].Optional = true
 		}
-		// `id` attribute must be marked as computed, otherwise it's not set!
-		if v, ok := m["id"]; ok {
-			v.Computed = true
-			v.Required = false
+		for k, v := range otherFields {
+			s[k] = v
 		}
-		return m
-	})
+	}
+	// `id` attribute must be marked as computed, otherwise it's not set!
+	if v, ok := s["id"]; ok {
+		v.Computed = true
+		v.Required = false
+	}
+	// allow c
+	s = customizeSchemaFunc(s)
+
 	return Resource{
 		Schema: s,
 		Read: func(ctx context.Context, d *schema.ResourceData, client *DatabricksClient) (err error) {
@@ -424,6 +447,23 @@ func genericDatabricksData[T, P, C any](
 	}
 }
 
+// WorkspacePathPrefixDiffSuppress suppresses diffs for workspace paths where both sides
+// may or may not include the `/Workspace` prefix.
+//
+// This is the case for dashboards, alerts and queries where at create time, the user may include the `/Workspace`
+// prefix for the `parent_path` field, but the read response will not include the prefix.
+func WorkspacePathPrefixDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	const prefix = "/Workspace"
+	return strings.TrimPrefix(old, prefix) == strings.TrimPrefix(new, prefix)
+}
+
+// WorkspaceOrEmptyPathPrefixDiffSuppress is similar WorkspacePathPrefixDiffSuppress but also suppresses diffs
+// when the new value is empty (not specified by user).
+func WorkspaceOrEmptyPathPrefixDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	const prefix = "/Workspace"
+	return (old != "" && new == "") || strings.TrimPrefix(old, prefix) == strings.TrimPrefix(new, prefix)
+}
+
 func EqualFoldDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	if strings.EqualFold(old, new) {
 		log.Printf("[INFO] Suppressing diff on %s", k)
@@ -448,4 +488,13 @@ func AddAccountIdField(s map[string]*schema.Schema) map[string]*schema.Schema {
 		Deprecated: "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
 	}
 	return s
+}
+
+// NoClientData is a generic way to define data resources in Terraform provider that doesn't require any client.
+// usage is similar to AccountData and WorkspaceData, but the read function doesn't take a client.
+func NoClientData[T any](read func(context.Context, *T) error) Resource {
+	return genericDatabricksData(func(*DatabricksClient) (any, error) { return nil, nil },
+		func(ctx context.Context, s struct{}, t *T, ac any) error {
+			return read(ctx, t)
+		}, false, NoCustomize)
 }

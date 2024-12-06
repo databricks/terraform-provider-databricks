@@ -15,12 +15,13 @@ func TestStorageCredentialDataVerify(t *testing.T) {
 			e := w.GetMockStorageCredentialsAPI().EXPECT()
 			e.GetByName(mock.Anything, "abc").Return(
 				&catalog.StorageCredentialInfo{
+					Id:    "1234",
 					Name:  "abc",
 					Owner: "admin",
-					AwsIamRole: &catalog.AwsIamRole{
+					AwsIamRole: &catalog.AwsIamRoleResponse{
 						RoleArn: "test",
 					},
-					AzureManagedIdentity: &catalog.AzureManagedIdentity{
+					AzureManagedIdentity: &catalog.AzureManagedIdentityResponse{
 						AccessConnectorId: "test",
 					},
 					DatabricksGcpServiceAccount: &catalog.DatabricksGcpServiceAccountResponse{
@@ -37,7 +38,8 @@ func TestStorageCredentialDataVerify(t *testing.T) {
 		name = "abc"
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"storage_credential_info.0.owner":                                        "admin",
+		"id":                              "1234",
+		"storage_credential_info.0.owner": "admin",
 		"storage_credential_info.0.aws_iam_role.0.role_arn":                      "test",
 		"storage_credential_info.0.azure_managed_identity.0.access_connector_id": "test",
 		"storage_credential_info.0.databricks_gcp_service_account.0.email":       "test",

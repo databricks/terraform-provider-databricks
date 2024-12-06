@@ -7,13 +7,13 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAccSecretAclResource(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_group" "ds" {
 			display_name = "data-scientists-{var.RANDOM}"
@@ -52,7 +52,7 @@ func TestAccSecretAclResource(t *testing.T) {
 }
 
 func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_secret_scope" "app" {
 			name = "app-{var.RANDOM}"
@@ -71,6 +71,11 @@ func TestAccSecretAclResourceDefaultPrincipal(t *testing.T) {
 				require.NoError(t, err)
 				acls := acls_resp.Items
 				assert.Equal(t, 1, len(acls))
+				// assert does not stop execution on failure, but this test must stop if no
+				// ACLs are returned, otherwise it panics, stopping all other test executions.
+				if len(acls) == 0 {
+					t.FailNow()
+				}
 				assert.Equal(t, "users", acls[0].Principal)
 				assert.Equal(t, "READ", string(acls[0].Permission))
 				return nil

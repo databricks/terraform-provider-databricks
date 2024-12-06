@@ -7,7 +7,8 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/databricks/terraform-provider-databricks/workspace"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,11 +21,11 @@ func assertEnableIpAccessList(t *testing.T, expected string) {
 	})
 	require.NoError(t, err)
 	assert.Len(t, *conf, 1)
-	assert.Equal(t, (*conf)["enableIpAccessLists"], expected)
+	assert.Equal(t, expected, (*conf)["enableIpAccessLists"])
 }
 
 func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: `resource "databricks_workspace_conf" "this" {
 			custom_config = {
 				"enableIpAccessLists": true
@@ -34,7 +35,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			assertEnableIpAccessList(t, "true")
 			return nil
 		},
-	}, step{
+	}, Step{
 		// Set enableIpAccessLists to false
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
@@ -50,7 +51,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 			assert.Equal(t, "false", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
 			return nil
 		},
-	}, step{
+	}, Step{
 		// Set invalid configuration
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
@@ -58,22 +59,70 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 				}
 			}`,
 		// Assert on server side error returned
-		ExpectError: regexp.MustCompile(`cannot update workspace conf: Invalid keys`),
-	}, step{
-		// Set enableIpAccessLists to true
+		ExpectError: regexp.MustCompile(`cannot update workspace conf: failed to set workspace conf because some new keys are invalid: enableIpAccessLissss`),
+	}, Step{
+		// Set enableIpAccessLists to true with strange case and maxTokenLifetimeDays to verify
+		// failed deletion case
 		Template: `resource "databricks_workspace_conf" "this" {
 				custom_config = {
-					"enableIpAccessLists": "true"
+					"enableIpAccessLists": "TRue",
+					"maxTokenLifetimeDays": 90
 				}
 			}`,
 		Check: func(s *terraform.State) error {
 			// Assert server side configuration is updated
-			assertEnableIpAccessList(t, "true")
+			assertEnableIpAccessList(t, "TRue")
 
 			// Assert state is persisted
 			conf := s.RootModule().Resources["databricks_workspace_conf.this"]
-			assert.Equal(t, "true", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
+			assert.Equal(t, "TRue", conf.Primary.Attributes["custom_config.enableIpAccessLists"])
 			return nil
 		},
 	})
+}
+
+func TestAccWorkspaceConf_GetValidKey(t *testing.T) {
+	loadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	conf, err := workspace.SafeGetStatus(ctx, w, []string{"enableIpAccessLists"})
+	assert.NoError(t, err)
+	assert.Contains(t, conf, "enableIpAccessLists")
+}
+
+func TestAccWorkspaceConf_GetInvalidKey(t *testing.T) {
+	loadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	conf, err := workspace.SafeGetStatus(ctx, w, []string{"invalidKey", "enableIpAccessLists"})
+	assert.NoError(t, err)
+	assert.Contains(t, conf, "enableIpAccessLists")
+}
+
+func TestAccWorkspaceConf_GetOnlyInvalidKeys(t *testing.T) {
+	loadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	_, err := workspace.SafeGetStatus(ctx, w, []string{"invalidKey"})
+	assert.ErrorContains(t, err, "failed to get workspace conf because all keys are invalid: invalidKey")
+}
+
+func TestAccWorkspaceConf_SetInvalidKey(t *testing.T) {
+	loadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	err := workspace.SafeSetStatus(ctx, w, map[string]struct{}{}, map[string]string{
+		"invalidKey": "invalidValue",
+	})
+	assert.ErrorContains(t, err, "failed to set workspace conf because some new keys are invalid: invalidKey")
+}
+
+func TestAccWorkspaceConf_DeleteInvalidKey(t *testing.T) {
+	loadWorkspaceEnv(t)
+	ctx := context.Background()
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	err := workspace.SafeSetStatus(ctx, w, map[string]struct{}{"invalidKey": {}}, map[string]string{
+		"invalidKey": "",
+	})
+	assert.NoError(t, err)
 }

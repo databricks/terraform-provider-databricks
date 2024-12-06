@@ -20,7 +20,7 @@ import (
 
 // Mount exposes generic url & extra config map options
 type Mount interface {
-	Source() string
+	Source(client *common.DatabricksClient) string
 	Config(client *common.DatabricksClient) map[string]string
 
 	Name() string
@@ -96,7 +96,7 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 				raise e
 		mount_source = safe_mount("/mnt/%s", "%v", %s, "%s")
 		dbutils.notebook.exit(mount_source)
-	`, mp.Name, mo.Source(), extraConfigs, mp.EncryptionType) // lgtm[go/unsafe-quoting]
+	`, mp.Name, mo.Source(client), extraConfigs, mp.EncryptionType) // lgtm[go/unsafe-quoting]
 	result := mp.Exec.Execute(mp.ClusterID, "python", command)
 	return result.Text(), result.Err()
 }
@@ -137,11 +137,10 @@ func getCommonClusterObject(clustersAPI clusters.ClustersAPI, clusterName string
 	return clusters.Cluster{
 		NumWorkers:  0,
 		ClusterName: clusterName,
-		SparkVersion: clustersAPI.LatestSparkVersionOrDefault(
-			clusters.SparkVersionRequest{
-				Latest:          true,
-				LongTermSupport: true,
-			}),
+		SparkVersion: clusters.LatestSparkVersionOrDefault(clustersAPI.Context(), clustersAPI.WorkspaceClient(), compute.SparkVersionRequest{
+			Latest:          true,
+			LongTermSupport: true,
+		}),
 		NodeTypeID: clustersAPI.GetSmallestNodeType(
 			compute.NodeTypeRequest{
 				LocalDisk: true,
@@ -165,7 +164,7 @@ func getOrCreateMountingCluster(clustersAPI clusters.ClustersAPI) (string, error
 		if apierr.IsMissing(err) {
 			err = errors.New(err.Error())
 		}
-		return "", fmt.Errorf("failed to get mouting cluster: %w", err)
+		return "", fmt.Errorf("failed to get mounting cluster: %w", err)
 	}
 	return cluster.ClusterID, nil
 }
@@ -236,7 +235,7 @@ func mountCreate(tpl any, r common.Resource) func(context.Context, *schema.Resou
 		if err != nil {
 			return err
 		}
-		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(), d.Id())
+		log.Printf("[INFO] Mounting %s at /mnt/%s", mountConfig.Source(client), d.Id())
 		source, err := mountPoint.Mount(mountConfig, client)
 		if err != nil {
 			return err

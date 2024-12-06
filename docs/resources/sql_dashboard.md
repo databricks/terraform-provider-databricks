@@ -3,9 +3,12 @@ subcategory: "Databricks SQL"
 ---
 # databricks_sql_dashboard Resource
 
-This resource is used to manage [Databricks SQL Dashboards](https://docs.databricks.com/sql/user/dashboards/index.html). To manage [SQLA resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
+-> Please switch to [databricks_dashboard](dashboard.md) to author new AI/BI dashboards using the latest tooling.
 
-**Note:** documentation for this resource is a work in progress.
+This resource is used to manage [Legacy dashboards](https://docs.databricks.com/sql/user/dashboards/index.html). To manage [SQL resources](https://docs.databricks.com/sql/get-started/concepts.html) you must have `databricks_sql_access` on your [databricks_group](group.md#databricks_sql_access) or [databricks_user](user.md#databricks_sql_access).
+
+
+-> documentation for this resource is a work in progress.
 
 A dashboard may have one or more [widgets](sql_widget.md).
 

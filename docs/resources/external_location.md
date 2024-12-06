@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_external_location Resource
 
--> **Note** This resource could be only used with workspace-level provider!
+-> This resource can only be used with a workspace-level provider!
 
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
 
@@ -129,6 +129,7 @@ The following arguments are required:
 - `force_update` - (Optional) Update external location regardless of its dependents.
 - `access_point` - (Optional) The ARN of the s3 access point to use with the external location (AWS).
 - `encryption_details` - (Optional) The options for Server-Side Encryption to be used by each Databricks s3 client when connecting to S3 cloud storage (AWS).
+- `isolation_mode` - (Optional) Whether the external location is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the external location to `ISOLATION_MODE_ISOLATED` will automatically allow access from the current workspace.
 
 ## Attribute Reference
 

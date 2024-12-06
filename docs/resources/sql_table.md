@@ -109,6 +109,46 @@ resource "databricks_sql_table" "thing_view" {
 }
 ```
 
+## Use an Identity Column
+
+```hcl
+resource "databricks_catalog" "sandbox" {
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
+  properties = {
+    purpose = "testing"
+  }
+}
+resource "databricks_schema" "things" {
+  catalog_name = databricks_catalog.sandbox.id
+  name         = "things"
+  comment      = "this database is managed by terraform"
+  properties = {
+    kind = "various"
+  }
+}
+resource "databricks_sql_table" "thing" {
+  provider           = databricks.workspace
+  name               = "quickstart_table"
+  catalog_name       = databricks_catalog.sandbox.name
+  schema_name        = databricks_schema.things.name
+  table_type         = "MANAGED"
+  data_source_format = "DELTA"
+  storage_location   = ""
+  column {
+    name     = "id"
+    type     = "bigint"
+    identity = "default"
+  }
+  column {
+    name    = "name"
+    type    = "string"
+    comment = "name of thing"
+  }
+  comment = "this table is managed by terraform"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -124,10 +164,11 @@ The following arguments are supported:
 * `warehouse_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a `warehouse_id` is specified, that SQL warehouse will be used to execute SQL commands to manage this table. Conflicts with `cluster_id`.
 * `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. Conflicts with `partitions`.
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.
+* `owner` - (Optional) Username/groupname/sp application_id of the schema owner.
 * `comment` - (Optional) User-supplied free-form text. Changing comment is not currently supported on `VIEW` table_type.
 * `options` - (Optional) Map of user defined table options. Change forces creation of a new resource.
 * `properties` - (Optional) Map of table properties.
-* `partitions` - (Optional) a subset of columns to partition the table by. Change forces creation of a new resource. Conflicts with `cluster_keys`.
+* `partitions` - (Optional) a subset of columns to partition the table by. Change forces creation of a new resource. Conflicts with `cluster_keys`. Change forces creation of a new resource.
 
 ### `column` configuration block
 
@@ -136,6 +177,7 @@ Currently, changing the column definitions for a table will require dropping and
 
 * `name` - User-visible name of column
 * `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
+* `identity` - (Optional) Whether field is an identity column. Can be `default`, `always` or unset. It is unset by default.
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 

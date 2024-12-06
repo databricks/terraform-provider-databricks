@@ -8,7 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 		}
 	}
 	`
-	workspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: template,
 		Check: resourceCheckWithState("databricks_restrict_workspace_admins_setting.this",
 			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
@@ -30,7 +30,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 				require.NoError(t, err)
 				etag := state.Attributes["etag"]
 				require.NotEmpty(t, etag)
-				res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminRequest{
+				res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
 					Etag: etag,
 				})
 				assert.NoError(t, err)
@@ -39,7 +39,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 				return nil
 			}),
 	},
-		step{
+		Step{
 			Template: template,
 			Destroy:  true,
 			Check: resourceCheck("databricks_restrict_workspace_admins_setting.this",
@@ -64,7 +64,7 @@ func TestAccRestrictWorkspaceAdminsSetting(t *testing.T) {
 						assert.FailNow(t, "cannot parse error message %v", err)
 					}
 					etag := aerr.Details[0].Metadata["etag"]
-					res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminRequest{
+					res, err := w.Settings.RestrictWorkspaceAdmins().Get(ctx, settings.GetRestrictWorkspaceAdminsSettingRequest{
 						Etag: etag,
 					})
 					// we should not be getting any error

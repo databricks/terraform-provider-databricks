@@ -3,12 +3,14 @@ subcategory: "Unity Catalog"
 ---
 # databricks_storage_credential Resource
 
--> **Note** This resource could be used with account or workspace-level provider.
+-> This resource can be used with an account or workspace-level provider.
 
 To work with external tables, Unity Catalog introduces two new objects to access and work with external cloud storage:
 
 - `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal/managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
 - [databricks_external_location](external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
+
+On AWS, the IAM role for a storage credential requires a trust policy. See [documentation](https://docs.databricks.com/en/connect/unity-catalog/cloud-storage/storage-credentials.html#step-1-create-an-iam-role) for more details. The data source [databricks_aws_unity_catalog_assume_role_policy](../data-sources/aws_unity_catalog_assume_role_policy.md) can be used to create the necessary AWS Unity Catalog assume role policy.
 
 ## Example Usage
 
@@ -80,12 +82,11 @@ The following arguments are required:
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the storage credential.
 - `force_destroy` - (Optional) Delete storage credential regardless of its dependencies.
 - `force_update` - (Optional) Update storage credential regardless of its dependents.
+- `isolation_mode` - (Optional) Whether the storage credential is accessible from all workspaces or a specific set of workspaces. Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the credential to `ISOLATION_MODE_ISOLATED` will automatically allow access from the current workspace.
 
 `aws_iam_role` optional configuration block for credential details for AWS:
 
 - `role_arn` - The Amazon Resource Name (ARN) of the AWS IAM role for S3 data access, of the form `arn:aws:iam::1234567890:role/MyRole-AJJHDSKSDF`
-- `external_id` (output only) - The external ID used in role assumption to prevent confused deputy problem.
-- `unity_catalog_iam_arn` (output only) - The Amazon Resource Name (ARN) of the AWS IAM user managed by Databricks. This is the identity that is going to assume the AWS IAM role.
 
 `azure_managed_identity` optional configuration block for using managed identity as credential details for Azure (recommended over service principal):
 
@@ -96,6 +97,12 @@ The following arguments are required:
 `databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
 
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
+
+`cloudflare_api_token` optional configuration block for using a Cloudflare API Token as credential details. This requires account admin access:
+
+- `account_id` - R2 account ID
+- `access_key_id` - R2 API token access key ID
+- `secret_access_key` - R2 API token secret access key
 
 `azure_service_principal` optional configuration block to use service principal as credential details for Azure (Legacy):
 
@@ -108,6 +115,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this storage credential - same as the `name`.
+- `storage_credential_id` - Unique ID of storage credential.
 
 ## Import
 

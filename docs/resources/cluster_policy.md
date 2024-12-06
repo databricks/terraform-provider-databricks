@@ -61,6 +61,11 @@ resource "databricks_cluster_policy" "fair_use" {
       // repo can also be specified here
     }
   }
+  libraries {
+    maven {
+      coordinates = "com.oracle.database.jdbc:ojdbc8:XXXX"
+    }
+  }
 }
 
 resource "databricks_permissions" "can_use_cluster_policyinstance_profile" {
@@ -127,7 +132,7 @@ locals {
 
 resource "databricks_cluster_policy" "personal_vm" {
   policy_family_id                   = "personal-vm"
-  policy_family_definition_overrides = jsonencode(personal_vm_override)
+  policy_family_definition_overrides = jsonencode(local.personal_vm_override)
   name                               = "Personal Compute"
 }
 ```
@@ -142,7 +147,10 @@ The following arguments are supported:
 * `max_clusters_per_user` - (Optional, integer) Maximum number of clusters allowed per user. When omitted, there is no limit. If specified, value must be greater than zero.
 * `policy_family_definition_overrides`(Optional) Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition inherited from the policy family. Policy rules specified here are merged into the inherited policy definition.
 * `policy_family_id` (Optional) ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition. Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy definition.
-* `libraries` (Optional) blocks defining individual libraries that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
+
+### libraries Configuration Block (Optional)
+
+One must specify each library in a separate configuration block, that will be installed on the cluster that uses a given cluster policy. See [databricks_cluster](cluster.md#library-configuration-block) for more details about supported library types.
 
 ## Attribute Reference
 

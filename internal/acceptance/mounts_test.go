@@ -8,7 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/databricks/databricks-sdk-go"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,8 +38,8 @@ resource "databricks_mount" "my_mount" {
 }`
 
 func TestAccCreateDatabricksMount(t *testing.T) {
-	workspaceLevel(t,
-		step{
+	WorkspaceLevel(t,
+		Step{
 			Template: mountHcl,
 		})
 }
@@ -48,9 +48,9 @@ func TestAccCreateDatabricksMountIsFineOnClusterRecreate(t *testing.T) {
 	clusterId1 := ""
 	clusterId2 := ""
 
-	workspaceLevel(t,
+	WorkspaceLevel(t,
 		// Step 1 creates the cluster and mount.
-		step{
+		Step{
 			Template: mountHcl,
 			Check: func(s *terraform.State) error {
 				resources := s.RootModule().Resources
@@ -72,7 +72,7 @@ func TestAccCreateDatabricksMountIsFineOnClusterRecreate(t *testing.T) {
 		},
 		// Step 2: Manually delete the cluster, and then reapply the config. The mount
 		// will be recreated in this case.
-		step{
+		Step{
 			PreConfig: func() {
 				w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 				require.NoError(t, err)

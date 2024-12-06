@@ -1,0 +1,20 @@
+ignored_tests:
+  go:
+    - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
+      test_name: TestAccGroupsUpdateDisplayName
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
+      test_name: TestMwsAccGroupDataSplitMembers
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
+      test_name: TestAccServicePrincipalResourceOnAws
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
+      test_name: TestMwsAccServicePrincipalResourceOnAws
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
+      test_name: TestUcAccAssignGroupToWorkspace
+      comment: Failures due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/internal/acceptance
+      test_name: TestUcAccVectorSearchEndpoint
+      comment: Failure due to read-after-create inconsistency. https://databricks.atlassian.net/browse/ES-1243690

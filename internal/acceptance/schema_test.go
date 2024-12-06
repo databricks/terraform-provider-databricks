@@ -16,7 +16,7 @@ const catalogTemplate = `
 `
 
 func TestUcAccSchema(t *testing.T) {
-	unityWorkspaceLevel(t, step{
+	UnityWorkspaceLevel(t, Step{
 		Template: catalogTemplate + `
 		data "databricks_catalogs" "all" {
 			depends_on = [databricks_catalog.sandbox]
@@ -41,6 +41,7 @@ func TestUcAccSchema(t *testing.T) {
 			properties = {
 				kind = "various"
 			}
+			enable_predictive_optimization = "DISABLE"
 		}
 
 		resource "databricks_schema" "stuff" {
@@ -74,7 +75,7 @@ func TestUcAccSchema(t *testing.T) {
 	})
 }
 
-func schemaTemplateWithOwner(comment string, owner string) string {
+func schemaTemplateWithOwner(t *testing.T, comment string, owner string) string {
 	return fmt.Sprintf(`
 		resource "databricks_schema" "things" {
 			catalog_name = databricks_catalog.sandbox.id
@@ -83,18 +84,31 @@ func schemaTemplateWithOwner(comment string, owner string) string {
 			properties = {
 				kind = "various"
 			}
+			%s
 			owner = "%s"
-		}`, comment, owner)
+		}`, comment, getPredictiveOptimizationSetting(t, true), owner)
+}
+
+func getPredictiveOptimizationSetting(t *testing.T, enabled bool) string {
+	if isGcp(t) {
+		return ""
+	}
+	value := "ENABLE"
+	if !enabled {
+		value = "DISABLE"
+	}
+	return fmt.Sprintf(`enable_predictive_optimization = "%s"`, value)
 }
 
 func TestUcAccSchemaUpdate(t *testing.T) {
-	unityWorkspaceLevel(t, step{
-		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform", "account users"),
-	}, step{
-		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment", "account users"),
-	}, step{
-		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment", "{env.TEST_DATA_ENG_GROUP}"),
-	}, step{
-		Template: catalogTemplate + schemaTemplateWithOwner("this database is managed by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
+	loadUcwsEnv(t)
+	UnityWorkspaceLevel(t, Step{
+		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform", "account users"),
+	}, Step{
+		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment", "account users"),
+	}, Step{
+		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment", "{env.TEST_DATA_ENG_GROUP}"),
+	}, Step{
+		Template: catalogTemplate + schemaTemplateWithOwner(t, "this database is managed by terraform -- updated comment 2", "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"),
 	})
 }

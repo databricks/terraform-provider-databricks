@@ -3,7 +3,7 @@ subcategory: "Deployment"
 ---
 # databricks_mws_storage_configurations Resource
 
--> **Note** Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
+-> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
 
 This resource to configure root bucket new workspaces within AWS.
 
@@ -55,16 +55,24 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
--> **Note** Importing this resource is not currently supported.
+This resource can be imported by Databricks account ID and storage configuration ID.
+
+```sh
+terraform import databricks_mws_storage_configurations.this '<account_id>/<storage_configuration_id>'
+```
+
+~> This resource does not support updates. If your configuration does not match the existing resource,
+   the next `terraform apply` will cause the resource to be destroyed and recreated. After importing,
+   verify that the configuration matches the existing resource by running `terraform plan`.
 
 ## Related Resources
 
 The following resources are used in the same context:
 
 * [Provisioning Databricks on AWS](../guides/aws-workspace.md) guide.
-* [Provisioning Databricks on AWS with PrivateLink](../guides/aws-private-link-workspace.md) guide.
+* [Provisioning Databricks on AWS with Private Link](../guides/aws-private-link-workspace.md) guide.
 * [databricks_mws_credentials](mws_credentials.md) to configure the cross-account role for creation of new workspaces within AWS.
 * [databricks_mws_customer_managed_keys](mws_customer_managed_keys.md) to configure KMS keys for new workspaces within AWS.
 * [databricks_mws_log_delivery](mws_log_delivery.md) to configure delivery of [billable usage logs](https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html) and [audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html).
 * [databricks_mws_networks](mws_networks.md) to [configure VPC](https://docs.databricks.com/administration-guide/cloud-configurations/aws/customer-managed-vpc.html) & subnets for new workspaces within AWS.
-* [databricks_mws_workspaces](mws_workspaces.md) to set up [workspaces in E2 architecture on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1).
+* [databricks_mws_workspaces](mws_workspaces.md) to set up [AWS and GCP workspaces](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1).

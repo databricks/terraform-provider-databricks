@@ -3,7 +3,7 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,14 +26,14 @@ func checkUserDataSourcePopulated(t *testing.T) func(s *terraform.State) error {
 }
 
 func TestMwsAccUserData(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: userDataSourceTemplate,
 		Check:    checkUserDataSourcePopulated(t),
 	})
 }
 
 func TestAccUserData(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: userDataSourceTemplate,
 		Check:    checkUserDataSourcePopulated(t),
 	})

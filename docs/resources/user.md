@@ -3,11 +3,11 @@ subcategory: "Security"
 ---
 # databricks_user Resource
 
-This resource allows you to manage [users in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/users.html), [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net). You can also [associate](group_member.md) Databricks users to [databricks_group](group.md). Upon user creation the user will receive a password reset email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
+This resource allows you to manage [users in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/users.html), [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net). You can also [associate](group_member.md) Databricks users to [databricks_group](group.md). Upon user creation the user will receive a welcome email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
 
--> **Note** To assign account level users to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
+-> To assign account level users to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
 
--> **Note** Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level users.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level users.
+-> Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level users.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level users.
 
 To create users in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments.
 
@@ -101,7 +101,7 @@ The following arguments are available:
 * `force` - (Optional) Ignore `cannot create user: User with username X already exists` errors and implicitly import the specific user into Terraform state, enforcing entitlements defined in the instance of resource. _This functionality is experimental_ and is designed to simplify corner cases, like Azure Active Directory synchronisation.
 * `force_delete_repos` - (Optional) This flag determines whether the user's repo directory is deleted when the user is deleted. It will have no impact when in the accounts SCIM API. False by default.
 * `force_delete_home_dir` - (Optional) This flag determines whether the user's home directory is deleted when the user is deleted. It will have not impact when in the accounts SCIM API. False by default.
-* `disable_as_user_deletion` - (Optional) Deactivate the user when deleting the resource, rather than deleting the user entirely. Defaults to `true` when the provider is configured at the account-level and `false` when configured at the workspace-level. This flag is exclusive to force_delete_repos and force_delete_home_dir flags. 
+* `disable_as_user_deletion` - (Optional) Deactivate the user when deleting the resource, rather than deleting the user entirely. Defaults to `true` when the provider is configured at the account-level and `false` when configured at the workspace-level. This flag is exclusive to force_delete_repos and force_delete_home_dir flags.
 
 ## Attribute Reference
 

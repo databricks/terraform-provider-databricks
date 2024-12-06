@@ -29,7 +29,7 @@ resource "databricks_group_member" "rs" {
 }`
 
 func TestMwsAccGroupMemberResource(t *testing.T) {
-	accountLevel(t, step{
+	AccountLevel(t, Step{
 		Template: groupMemberTest,
 		Check: resourceCheck("databricks_group.root",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {
@@ -44,7 +44,7 @@ func TestMwsAccGroupMemberResource(t *testing.T) {
 }
 
 func TestAccGroupMemberResource(t *testing.T) {
-	workspaceLevel(t, step{
+	WorkspaceLevel(t, Step{
 		Template: groupMemberTest,
 		Check: resourceCheck("databricks_group.root",
 			func(ctx context.Context, client *common.DatabricksClient, id string) error {

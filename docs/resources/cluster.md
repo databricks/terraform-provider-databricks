@@ -5,7 +5,7 @@ subcategory: "Compute"
 
 This resource allows you to manage [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 
--> **Note** In case of [`Cannot access cluster ####-######-####### that was terminated or unpinned more than 30 days ago`](https://github.com/databricks/terraform-provider-databricks/issues/1197#issuecomment-1069386670) errors, please upgrade to v0.5.5 or later. If for some reason you cannot upgrade the version of provider, then the other viable option to unblock the apply pipeline is [`terraform state rm path.to.databricks_cluster.resource`](https://www.terraform.io/cli/commands/state/rm) command.
+-> In case of [`Cannot access cluster ####-######-####### that was terminated or unpinned more than 30 days ago`](https://github.com/databricks/terraform-provider-databricks/issues/1197#issuecomment-1069386670) errors, please upgrade to v0.5.5 or later. If for some reason you cannot upgrade the version of provider, then the other viable option to unblock the apply pipeline is [`terraform state rm path.to.databricks_cluster.resource`](https://www.terraform.io/cli/commands/state/rm) command.
 
 ```hcl
 data "databricks_node_type" "smallest" {
@@ -43,7 +43,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 * `autotermination_minutes` - (Optional) Automatically terminate the cluster after being inactive for this time in minutes. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly disable automatic termination. Defaults to `60`.  *We highly recommend having this setting present for Interactive/BI clusters.*
 * `enable_elastic_disk` - (Optional) If you don’t want to allocate a fixed number of EBS volumes at cluster creation time, use autoscaling local storage. With autoscaling local storage, Databricks monitors the amount of free disk space available on your cluster’s Spark workers. If a worker begins to run too low on disk, Databricks automatically attaches a new EBS volume to the worker before it runs out of disk space. EBS volumes are attached up to a limit of 5 TB of total disk space per instance (including the instance’s local storage). To scale down EBS usage, make sure you have `autotermination_minutes` and `autoscale` attributes set. More documentation available at [cluster configuration page](https://docs.databricks.com/clusters/configure.html#autoscaling-local-storage-1).
 * `enable_local_disk_encryption` - (Optional) Some instance types you use to run clusters may have locally attached disks. Databricks may store shuffle data or temporary data on these locally attached disks. To ensure that all data at rest is encrypted for all storage types, including shuffle data stored temporarily on your cluster’s local disks, you can enable local disk encryption. When local disk encryption is enabled, Databricks generates an encryption key locally unique to each cluster node and uses it to encrypt all data stored on local disks. The scope of the key is local to each cluster node and is destroyed along with the cluster node itself. During its lifetime, the key resides in memory for encryption and decryption and is stored encrypted on the disk. *Your workloads may run more slowly because of the performance impact of reading and writing encrypted data to and from local volumes. This feature is not available for all Azure Databricks subscriptions. Contact your Microsoft or Databricks account representative to request access.*
-* `data_security_mode` - (Optional) Select the security features of the cluster. [Unity Catalog requires](https://docs.databricks.com/data-governance/unity-catalog/compute.html#create-clusters--sql-warehouses-with-unity-catalog-access) `SINGLE_USER` or `USER_ISOLATION` mode. `LEGACY_PASSTHROUGH` for passthrough cluster and `LEGACY_TABLE_ACL` for Table ACL cluster. If omitted, no security features are enabled. In the Databricks UI, this has been recently been renamed *Access Mode* and `USER_ISOLATION` has been renamed *Shared*, but use these terms here.
+* `data_security_mode` - (Optional) Select the security features of the cluster. [Unity Catalog requires](https://docs.databricks.com/data-governance/unity-catalog/compute.html#create-clusters--sql-warehouses-with-unity-catalog-access) `SINGLE_USER` or `USER_ISOLATION` mode. `LEGACY_PASSTHROUGH` for passthrough cluster and `LEGACY_TABLE_ACL` for Table ACL cluster. If omitted, default security features are enabled. To disable security features use `NONE` or legacy mode `NO_ISOLATION`. In the Databricks UI, this has been recently been renamed *Access Mode* and `USER_ISOLATION` has been renamed *Shared*, but use these terms here.
 * `single_user_name` - (Optional) The optional user name of the user to assign to an interactive cluster. This field is required when using `data_security_mode` set to `SINGLE_USER` or AAD Passthrough for Azure Data Lake Storage (ADLS) with a single-user cluster (i.e., not high-concurrency clusters).
 * `idempotency_token` - (Optional) An optional token to guarantee the idempotency of cluster creation requests. If an active cluster with the provided token already exists, the request will not create a new cluster, but it will return the existing running cluster's ID instead. If you specify the idempotency token, upon failure, you can retry until the request succeeds. Databricks platform guarantees to launch exactly one cluster with that idempotency token. This token should have at most 64 characters.
 * `ssh_public_keys` - (Optional) SSH public key contents that will be added to each Spark node in this cluster. The corresponding private keys can be used to login with the user name ubuntu on port 2200. You can specify up to 10 keys.
@@ -51,6 +51,7 @@ resource "databricks_cluster" "shared_autoscaling" {
 * `custom_tags` - (Optional) Additional tags for cluster resources. Databricks will tag all cluster resources (e.g., AWS EC2 instances and EBS volumes) with these tags in addition to `default_tags`. If a custom cluster tag has the same name as a default cluster tag, the custom tag is prefixed with an `x_` when it is propagated.
 * `spark_conf` - (Optional) Map with key-value pairs to fine-tune Spark clusters, where you can provide custom [Spark configuration properties](https://spark.apache.org/docs/latest/configuration.html) in a cluster configuration.
 * `is_pinned` - (Optional) boolean value specifying if the cluster is pinned (not pinned by default). You must be a Databricks administrator to use this.  The pinned clusters' maximum number is [limited to 100](https://docs.databricks.com/clusters/clusters-manage.html#pin-a-cluster), so `apply` may fail if you have more than that (this number may change over time, so check Databricks documentation for actual number).
+* `no_wait` - (Optional) If true, the provider will not wait for the cluster to reach `RUNNING` state when creating the cluster, allowing cluster creation and library installation to continue asynchronously. Defaults to false (the provider will wait for cluster creation and library installation to succeed).
 
 The following example demonstrates how to create an autoscaling cluster with [Delta Cache](https://docs.databricks.com/delta/optimizations/delta-cache.html) enabled:
 
@@ -129,7 +130,7 @@ resource "databricks_cluster" "single_node" {
 
 ### (Legacy) High-Concurrency clusters
 
--> **Note** This is a legacy cluster type, not related to the real serverless compute. See [Clusters UI changes and cluster access modes](https://docs.databricks.com/archive/compute/cluster-ui-preview.html#legacy) for information on what access mode to use when creating new clusters.
+~> This is a legacy cluster type, not related to the real serverless compute. See [Clusters UI changes and cluster access modes](https://docs.databricks.com/archive/compute/cluster-ui-preview.html#legacy) for information on what access mode to use when creating new clusters.
 
 To create High-Concurrency cluster, following settings should be provided:
 
@@ -162,7 +163,7 @@ resource "databricks_cluster" "cluster_with_table_access_control" {
 
 To install libraries, one must specify each library in a separate configuration block. Each different type of library has a slightly different syntax. It's possible to set only one type of library within one config block. Otherwise, the plan will fail with an error.
 
--> **Note** Please consider using [databricks_library](library.md) resource for a more flexible setup.
+-> Please consider using [databricks_library](library.md) resource for a more flexible setup.
 
 Installing JAR artifacts on a cluster. Location can be anything, that is DBFS or mounted object store (s3, adls, ...)
 
@@ -196,6 +197,14 @@ library {
     package = "fbprophet==0.6"
     // repo can also be specified here
   }
+}
+```
+
+Installing Python libraries listed in the `requirements.txt` file.  Only Workspace paths and Unity Catalog Volumes paths are supported.  Requires a cluster with DBR 15.0+.
+
+```hcl
+library {
+  requirements = "/Workspace/path/to/requirements.txt"
 }
 ```
 
@@ -405,7 +414,7 @@ The following options are [available](https://docs.microsoft.com/en-us/azure/dat
 
 * `availability` - (Optional) Availability type used for all subsequent nodes past the `first_on_demand` ones. Valid values are `SPOT_AZURE`, `SPOT_WITH_FALLBACK_AZURE`, and `ON_DEMAND_AZURE`. Note: If `first_on_demand` is zero, this availability type will be used for the entire cluster.
 * `first_on_demand` - (Optional) The first `first_on_demand` nodes of the cluster will be placed on on-demand instances. If this value is greater than 0, the cluster driver node will be placed on an on-demand instance. If this value is greater than or equal to the current cluster size, all nodes will be placed on on-demand instances. If this value is less than the current cluster size, `first_on_demand` nodes will be placed on on-demand instances, and the remainder will be placed on availability instances. This value does not affect cluster size and cannot be mutated over the lifetime of a cluster.
-* `spot_bid_max_price` - (Optional) The max price for Azure spot instances.  Use `-1` to specify the lowest price.
+* `spot_bid_max_price` - (Optional) The max bid price used for Azure spot instances. You can set this to greater than or equal to the current spot price. You can also set this to `-1`, which specifies that the instance cannot be evicted on the basis of price. The price for the instance will be the current price for spot instances or the price for a standard instance.
 
 ### gcp_attributes
 
@@ -475,7 +484,7 @@ resource "databricks_cluster" "this" {
 
 ### cluster_mount_info blocks (experimental)
 
--> **Note** The underlying API is experimental and may change in the future.
+~> The underlying API is experimental and may change in the future.
 
 It's possible to mount NFS (Network File System) resources into the Spark containers inside the cluster.  You can specify one or more `cluster_mount_info` blocks describing the mount. This block has following attributes:
 

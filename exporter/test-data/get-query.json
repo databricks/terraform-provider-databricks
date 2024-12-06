@@ -1,0 +1,13 @@
+{
+    "create_time":"2021-04-03T13:03:51Z",
+    "description":"",
+    "display_name":"Jobs per day per status last 30 days",
+    "id":"16c4f969-eea0-4aad-8f82-03d79b078dcc",
+    "last_modifier_user_name":"user@domain.com",
+    "lifecycle_state":"ACTIVE",
+    "owner_user_name":"user@domain.com",
+    "query_text":"select\n  to_date(job_runtime.startTS) as day,\n  job_terminal_state,\n  count(1) as cnt\nfrom\n  overwatch.jobrun\ngroup by\n  to_date(job_runtime.startTS),\n  job_terminal_state\nhaving day \u003e date_sub(current_date(), 30)\norder by\n  day desc",
+    "run_as_mode":"OWNER",
+    "update_time":"2021-04-03T13:03:51Z",
+    "warehouse_id":"f562046bc1272886"
+}

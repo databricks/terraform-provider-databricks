@@ -515,7 +515,7 @@ func ResourceSqlQuery() common.Resource {
 		QueryEntity{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["schedule"].Deprecated = "Operations on `databricks_sql_query` schedules are deprecated. Please use `databricks_job` resource to schedule a `sql_task`."
-			schedule := m["schedule"].Elem.(*schema.Resource)
+			schedule := common.MustSchemaMap(m, "schedule")
 
 			// Make different query schedule types mutually exclusive.
 			{
@@ -525,15 +525,15 @@ func ResourceSqlQuery() common.Resource {
 						if n1 == n2 {
 							continue
 						}
-						schedule.Schema[n1].ConflictsWith = append(schedule.Schema[n1].ConflictsWith, fmt.Sprintf("schedule.0.%s", n2))
+						schedule[n1].ConflictsWith = append(schedule[n1].ConflictsWith, fmt.Sprintf("schedule.0.%s", n2))
 					}
 				}
 			}
 
 			// Validate week of day in weekly schedule.
 			// Manually verified that this is case sensitive.
-			weekly := schedule.Schema["weekly"].Elem.(*schema.Resource)
-			weekly.Schema["day_of_week"].ValidateFunc = validation.StringInSlice([]string{
+			weekly := common.MustSchemaMap(schedule, "weekly")
+			weekly["day_of_week"].ValidateFunc = validation.StringInSlice([]string{
 				"Sunday",
 				"Monday",
 				"Tuesday",
@@ -587,6 +587,7 @@ func ResourceSqlQuery() common.Resource {
 		Delete: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewQueryAPI(ctx, c).Delete(data.Id())
 		},
-		Schema: s,
+		Schema:             s,
+		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_query` resource instead.",
 	}
 }

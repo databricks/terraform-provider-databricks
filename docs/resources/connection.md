@@ -3,7 +3,7 @@ subcategory: "Unity Catalog"
 ---
 # databricks_connection (Resource)
 
--> **Note** This resource could be only used with workspace-level provider!
+-> This resource can only be used with a workspace-level provider!
 
 Lakehouse Federation is the query federation platform for Databricks. Databricks uses Unity Catalog to manage query federation. To make a dataset available for read-only querying using Lakehouse Federation, you create the following:
 
@@ -66,7 +66,7 @@ resource "databricks_connection" "bigquery" {
 The following arguments are supported:
 
 - `name` - Name of the Connection.
-- `connection_type` - Connection type. `BIGQUERY` `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER` or `DATABRICKS` are supported. [Up-to-date list of connection type supported](https://docs.databricks.com/query-federation/index.html#supported-data-sources)
+- `connection_type` - Connection type. `BIGQUERY` `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER`, `SALESFORCE` or `DATABRICKS` are supported. [Up-to-date list of connection type supported](https://docs.databricks.com/query-federation/index.html#supported-data-sources)
 - `options` - The key value of options required by the connection, e.g. `host`, `port`, `user`, `password` or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required option.
 - `owner` - (Optional) Name of the connection owner.
 - `properties` -  (Optional) Free-form connection properties.

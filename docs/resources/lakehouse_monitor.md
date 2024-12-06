@@ -3,6 +3,8 @@ subcategory: "Unity Catalog"
 ---
 # databricks_lakehouse_monitor Resource
 
+NOTE: This resource has been deprecated and will be removed soon. Please use the [databricks_quality_monitor resource](./quality_monitor.md) instead.
+
 This resource allows you to manage [Lakehouse Monitors](https://docs.databricks.com/en/lakehouse-monitoring/index.html) in Databricks. 
 
 A `databricks_lakehouse_monitor` is attached to a [databricks_sql_table](sql_table.md) and can be of type timeseries, snapshot or inference. 
@@ -19,36 +21,35 @@ resource "databricks_catalog" "sandbox" {
 }
 
 resource "databricks_schema" "things" {
-    catalog_name = databricks_catalog.sandbox.id
-    name         = "things"
-    comment      = "this database is managed by terraform"
-    properties = {
-      kind = "various"
-    }
+  catalog_name = databricks_catalog.sandbox.id
+  name         = "things"
+  comment      = "this database is managed by terraform"
+  properties = {
+    kind = "various"
   }
-  
-resource "databricks_sql_table" "myTestTable" {
-    catalog_name = "main"
-    schema_name = databricks_schema.things.name
-    name = "bar"
-    table_type = "MANAGED"
-    data_source_format = "DELTA"
+}
 
-    column {
-        name      = "timestamp"
-        position  = 1
-        type = "int"
-    }
+resource "databricks_sql_table" "myTestTable" {
+  catalog_name       = "main"
+  schema_name        = databricks_schema.things.name
+  name               = "bar"
+  table_type         = "MANAGED"
+  data_source_format = "DELTA"
+
+  column {
+    name     = "timestamp"
+    type     = "int"
+  }
 }
 
 resource "databricks_lakehouse_monitor" "testTimeseriesMonitor" {
-    table_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_sql_table.myTestTable.name}"
-    assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_sql_table.myTestTable.name}"
-    output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
-    time_series  {
-        granularities = ["1 hour"]
-        timestamp_col = "timestamp"
-    }
+  table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_sql_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_sql_table.myTestTable.name}"
+  output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
+  time_series {
+    granularities = ["1 hour"]
+    timestamp_col = "timestamp"
+  }
 }
 ```
 
@@ -56,25 +57,25 @@ resource "databricks_lakehouse_monitor" "testTimeseriesMonitor" {
 
 ```hcl
 resource "databricks_lakehouse_monitor" "testMonitorInference" {
-    table_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
-    assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
-    output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
-    inference_log  {
-        granularities = ["1 hour"]
-        timestamp_col = "timestamp"
-        prediction_col = "prediction"
-        model_id_col = "model_id"
-        problem_type = "PROBLEM_TYPE_REGRESSION"
-    } 
+  table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
+  output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
+  inference_log {
+    granularities  = ["1 hour"]
+    timestamp_col  = "timestamp"
+    prediction_col = "prediction"
+    model_id_col   = "model_id"
+    problem_type   = "PROBLEM_TYPE_REGRESSION"
+  }
 }
 ```
 ### Snapshot Monitor
 ```hcl
 resource "databricks_lakehouse_monitor" "testMonitorInference" {
-    table_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
-    assets_dir = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
-    output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
-    snapshot  {} 
+  table_name         = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}.${databricks_table.myTestTable.name}"
+  assets_dir         = "/Shared/provider-test/databricks_lakehouse_monitoring/${databricks_table.myTestTable.name}"
+  output_schema_name = "${databricks_catalog.sandbox.name}.${databricks_schema.things.name}"
+  snapshot {}
 }
 ```
 
@@ -88,7 +89,7 @@ The following arguments are supported:
 * `baseline_table_name` - Name of the baseline table from which drift metrics are computed from.Columns in the monitored table should also be present in the baseline
 table.
 * `custom_metrics` - Custom metrics to compute on the monitored table. These can be aggregate metrics, derived metrics (from already computed aggregate metrics), or drift metrics (comparing metrics across time windows).
-    * `definition` - [create metric definition]: https://docs.databricks.com/en/lakehouse-monitoring/custom-metrics.html#create-definition
+    * `definition` - [create metric definition](https://docs.databricks.com/en/lakehouse-monitoring/custom-metrics.html#create-definition)
     * `input_columns` - Columns on the monitored table to apply the custom metrics to.
     * `name` - Name of the custom metric.
     * `output_data_type` - The output type of the custom metric.
@@ -106,8 +107,13 @@ table.
 * `time_series` - Configuration for monitoring timeseries tables.
     * `granularities` -  List of granularities to use when aggregating data into time windows based on their timestamp.
     * `timestamp_col` - Column of the timestamp of predictions
-* `notifications` - The notification settings for the monitor
-* `schedule` - The schedule for automatically updating and refreshing metric tables.
+* `notifications` - The notification settings for the monitor.  The following optional blocks are supported, each consisting of the single string array field with name `email_addresses` containing a list of emails to notify:
+    * `on_failure` - who to send notifications to on monitor failure.
+    * `on_new_classification_tag_detected` - Who to send notifications to when new data classification tags are detected.
+* `schedule` - The schedule for automatically updating and refreshing metric tables.  This block consists of following fields:
+    * `quartz_cron_expression` - string expression that determines when to run the monitor. See [Quartz documentation](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) for examples.
+    * `timezone_id` - string with timezone id (e.g., `PST`) in which to evaluate the Quartz expression.
+    * `pause_status` - optional string field that indicates whether a schedule is paused (`PAUSED`) or not (`UNPAUSED`).
 * `skip_builtin_dashboard` - Whether to skip creating a default dashboard summarizing data quality metrics.
 * `slicing_exprs` - List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.
 * `warehouse_id` - Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.

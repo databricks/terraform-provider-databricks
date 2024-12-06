@@ -11,7 +11,7 @@ func TestJobsData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
+				Resource: "/api/2.1/jobs/list?limit=100",
 				Response: JobListResponse{
 					Jobs: []Job{
 						{
@@ -37,6 +37,42 @@ func TestJobsData(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{
 		"ids": map[string]any{
 			"First":  "123",
+			"Second": "234",
+		},
+	})
+}
+
+func TestJobsDataWithFilter(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/jobs/list?limit=100",
+				Response: JobListResponse{
+					Jobs: []Job{
+						{
+							JobID: 123,
+							Settings: &JobSettings{
+								Name: "First",
+							},
+						},
+						{
+							JobID: 234,
+							Settings: &JobSettings{
+								Name: "Second",
+							},
+						},
+					},
+				},
+			},
+		},
+		Resource:    DataSourceJobs(),
+		Read:        true,
+		NonWritable: true,
+		ID:          "_",
+		HCL:         `job_name_contains = "Sec"`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"ids": map[string]any{
 			"Second": "234",
 		},
 	})
